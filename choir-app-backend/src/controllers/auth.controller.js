@@ -86,3 +86,18 @@ exports.switchChoir = async (req, res) => {
         });
     } catch (error) { res.status(500).send({ message: error.message }); }
 };
+
+exports.checkChoirAdminStatus = async (req, res) => {
+    try {
+        const association = await db.user_choir.findOne({
+            where: {
+                userId: req.userId,
+                choirId: req.activeChoirId // Prüft den aktiven Chor aus dem Token
+            }
+        });
+        const isChoirAdmin = association?.roleInChoir === 'choir_admin';
+        res.status(200).send({ isChoirAdmin: isChoirAdmin });
+    } catch (error) {
+        res.status(500).send({ message: "Could not verify role." });
+    }
+};

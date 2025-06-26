@@ -7,11 +7,12 @@ import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { Composer } from '../models/composer';
 import { Category } from '../models/category';
-import { User } from '../models/user';
+import { User, UserInChoir } from '../models/user';
 import { CreateEventResponse, Event } from '../models/event';
 import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
+import { Choir } from '@core/models/choir';
 
 @Injectable({
   providedIn: 'root'
@@ -194,5 +195,31 @@ export class ApiService {
 
   getPieceById(id: number): Observable<Piece> {
     return this.http.get<Piece>(`${this.apiUrl}/pieces/${id}`);
+  }
+
+  getMyChoirDetails(): Observable<Choir> {
+    return this.http.get<Choir>(`${this.apiUrl}/choir-management`);
+  }
+
+  updateMyChoir(choirData: { name: string, description: string, location: string }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/choir-management`, choirData);
+  }
+
+  getChoirMembers(): Observable<UserInChoir[]> {
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`);
+  }
+
+  inviteUserToChoir(email: string, roleInChoir: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, roleInChoir });
+  }
+
+  removeUserFromChoir(userId: number): Observable<any> {
+    // Senden der ID im Body mit der DELETE-Methode
+    const options = { body: { userId: userId } };
+    return this.http.delete(`${this.apiUrl}/choir-management/members`, options);
+  }
+
+  checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
+    return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
 }

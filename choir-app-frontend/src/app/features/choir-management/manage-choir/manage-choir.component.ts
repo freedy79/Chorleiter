@@ -10,10 +10,9 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
 import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
-
-// Importieren Sie die Dialog-Komponenten, die wir gleich erstellen werden
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from 'src/app/shared/components/confirm-dialog/confirm-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+
 
 @Component({
   selector: 'app-manage-choir',
@@ -66,7 +65,7 @@ export class ManageChoirComponent implements OnInit {
   loadMembers(): void {
     this.isLoadingMembers = true;
     this.apiService.getChoirMembers().subscribe({
-      next: (members) => {
+      next: (members: UserInChoir[]) => {
         this.dataSource.data = members;
         this.isLoadingMembers = false;
       },
@@ -98,7 +97,7 @@ export class ManageChoirComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.email && result.role) {
         this.apiService.inviteUserToChoir(result.email, result.role).subscribe({
-          next: (response) => {
+          next: (response: { message: string }) => {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
             this.loadMembers(); // Laden Sie die Mitgliederliste neu
           },

@@ -6,7 +6,7 @@ import { AuthService } from 'src/app/core/services/auth.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { map, Observable } from 'rxjs';
+import { combineLatest, map, Observable } from 'rxjs';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 
@@ -24,22 +24,16 @@ import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.compone
   ]
 })
 export class MainLayoutComponent {
-  isLoggedIn$: Observable<boolean>; // Ein Observable für den Login-Status
+  isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   currentTheme: Theme;
-  isChoirAdminOrAdmin$: Observable<boolean>;
 
   constructor(private authService: AuthService,
     private themeService: ThemeService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
-    this.isAdmin$ = this.authService.currentUser$.pipe(
-      map(user => user?.role === 'admin')
-    );
+    this.isAdmin$ = this.authService.isAdmin$;
     this.currentTheme = this.themeService.getCurrentTheme();
-    this.isChoirAdminOrAdmin$ = this.authService.currentUser$.pipe(
-      map(user => user?.role === 'admin' || user?.activeChoir?.membership?.roleInChoir === 'choir_admin')
-    );
   }
 
   logout(): void {

@@ -1,107 +1,87 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { User } from '@core/models/user';
-import { Choir } from '@core/models/choir';
-import { SwitchChoirResponse } from '@core/models/auth';
+import { environment } from 'src/environments/environment';
+import { User } from '../models/user';
+import { Choir } from '../models/choir';
+import { SwitchChoirResponse } from '../models/auth';
 
 const TOKEN_KEY = 'auth-token';
 const USER_KEY = 'user';
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root'
 })
 export class AuthService {
-    private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
-    isLoggedIn$ = this.loggedIn.asObservable();
+  private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
+  isLoggedIn$ = this.loggedIn.asObservable();
 
-    private currentUserSubject = new BehaviorSubject<User | null>(null);
-    public currentUser$ = this.currentUserSubject.asObservable();
-    public activeChoir$ = new BehaviorSubject<Choir | null>(null);
-    public availableChoirs$ = new BehaviorSubject<Choir[]>([]);
+  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-    constructor(private http: HttpClient, private router: Router) {
-        const user = localStorage.getItem('user');
-        if (user) {
-            const parsedUser = JSON.parse(user);
-            this.currentUserSubject.next(parsedUser);
-            this.activeChoir$.next(parsedUser.activeChoir);
-            this.availableChoirs$.next(parsedUser.availableChoirs);
+  public activeChoir$ = new BehaviorSubject<Choir | null>(this.getUserFromStorage()?.activeChoir || null);
+  public availableChoirs$ = new BehaviorSubject<Choir[]>(this.getUserFromStorage()?.availableChoirs || []);
+
+  // --- Wir leiten die Berechtigungen direkt vom currentUser$ ab ---
+  public isAdmin$: Observable<boolean>;
+
+  constructor(private http: HttpClient, private router: Router) {
+    this.isAdmin$ = this.currentUser$.pipe(map(user => user?.role === 'admin'));
+  }
+
+  private hasToken(): boolean {
+    return !!localStorage.getItem(TOKEN_KEY);
+  }
+
+  private getUserFromStorage(): User | null {
+    const user = localStorage.getItem(USER_KEY);
+    return user ? JSON.parse(user) : null;
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  }
+
+  login(credentials: any): Observable<User> {
+    return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials).pipe(
+      tap((user: User) => {
+        if (user.accessToken) {
+          localStorage.setItem(TOKEN_KEY, user.accessToken);
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+          this.loggedIn.next(true);
+          this.currentUserSubject.next(user);
+          this.activeChoir$.next(user.activeChoir || null);
+          this.availableChoirs$.next(user.availableChoirs || []);
         }
-    }
+      })
+    );
+  }
 
-    private hasToken(): boolean {
-        return !!localStorage.getItem(TOKEN_KEY);
-    }
+  logout(): void {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    this.loggedIn.next(false);
+    this.currentUserSubject.next(null);
+    this.activeChoir$.next(null);
+    this.availableChoirs$.next([]);
+    this.router.navigate(['/login']);
+  }
 
-    private getUserFromStorage(): User | null {
-        const user = localStorage.getItem(USER_KEY);
-        return user ? JSON.parse(user) : null;
-    }
-
-    login(credentials: any): Observable<User> {
-        return this.http
-            .post<User>(`${environment.apiUrl}/auth/signin`, credentials)
-            .pipe(
-                tap((user: User) => {
-                    if (user.accessToken) {
-                        localStorage.setItem(TOKEN_KEY, user.accessToken);
-                        localStorage.setItem(USER_KEY, JSON.stringify(user));
-                        this.loggedIn.next(true);
-                        this.currentUserSubject.next(user);
-                        this.activeChoir$.next(user.activeChoir!);
-                        this.availableChoirs$.next(user.availableChoirs!);
-                    }
-                })
-            );
-    }
-
-    logout(): void {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        this.activeChoir$.next(null);
-        this.availableChoirs$.next([]);
-        this.loggedIn.next(false);
-        this.currentUserSubject.next(null);
-        this.router.navigate(['/login']);
-    }
-
-    getToken(): string | null {
-        return localStorage.getItem(TOKEN_KEY);
-    }
-
-    isAdmin(): boolean {
-        return this.currentUserSubject.value?.role === 'admin';
-    }
-
-    switchChoir(choirId: number): Observable<SwitchChoirResponse> {
-        return this.http
-            .post<any>(`${environment.apiUrl}/auth/switch-choir/${choirId}`, {})
-            .pipe(
-                tap((response: SwitchChoirResponse) => {
-                    // Ersetzen Sie den alten Token und die Benutzerdaten
-                    localStorage.setItem('auth-token', response.accessToken);
-
-                    const currentUser = this.currentUserSubject.value;
-                    if (currentUser) {
-                        const updatedUser = {
-                            ...currentUser,
-                            activeChoir: response.activeChoir,
-                            accessToken: response.accessToken,
-                        };
-                        localStorage.setItem(
-                            'user',
-                            JSON.stringify(updatedUser)
-                        );
-                        this.currentUserSubject.next(updatedUser);
-                        this.activeChoir$.next(response.activeChoir);
-                    }
-
-                    // Wichtig: Neuladen der Seite, damit alle Komponenten die neuen Daten abrufen
-                    window.location.reload();
-                })
-            );
-    }
+  switchChoir(choirId: number): Observable<SwitchChoirResponse> {
+    return this.http.post<SwitchChoirResponse>(`${environment.apiUrl}/auth/switch-choir/${choirId}`, {}).pipe(
+      tap((response: SwitchChoirResponse) => {
+        localStorage.setItem('auth-token', response.accessToken);
+        const currentUser = this.currentUserSubject.value;
+        if (currentUser) {
+          const updatedUser: User = { ...currentUser, activeChoir: response.activeChoir, accessToken: response.accessToken };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          this.currentUserSubject.next(updatedUser);
+          this.activeChoir$.next(response.activeChoir);
+        }
+        window.location.reload();
+      })
+    );
+  }
 }
