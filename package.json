@@ -1,0 +1,7 @@
+{
+  "name": "chorleiter-root",
+  "private": true,
+  "scripts": {
+    "test": "npm test --prefix choir-app-frontend"
+  }
+}
