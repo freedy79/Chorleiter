@@ -220,26 +220,31 @@ export class PieceDialogComponent implements OnInit {
     }
 
     onSave(): void {
-        if (this.pieceForm.valid) {
-            // Step 1: Create the global piece
+        if (this.pieceForm.invalid) {
+            return;
+        }
+
+        if (this.isEditMode && this.data.pieceId) {
+            this.apiService
+                .updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
+                .subscribe({
+                    next: () => this.dialogRef.close(true),
+                    error: (err) => {
+                        console.error('Failed to update piece', err);
+                    },
+                });
+        } else {
             this.apiService
                 .createGlobalPiece(this.pieceForm.value)
                 .pipe(
-                    // Step 2: Use the new piece's ID to add it to the choir's repertoire
                     switchMap((newlyCreatedPiece) =>
-                        this.apiService.addPieceToMyRepertoire(
-                            newlyCreatedPiece.id
-                        )
+                        this.apiService.addPieceToMyRepertoire(newlyCreatedPiece.id)
                     )
                 )
                 .subscribe({
-                    next: () => {
-                        // Success! Close the dialog and return true.
-                        this.dialogRef.close(true);
-                    },
+                    next: () => this.dialogRef.close(true),
                     error: (err) => {
                         console.error('Failed to create and add piece', err);
-                        // Show error to user...
                     },
                 });
         }

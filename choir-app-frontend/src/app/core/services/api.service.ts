@@ -78,6 +78,10 @@ export class ApiService {
     return this.http.post<Piece>(`${this.apiUrl}/pieces`, pieceData);
   }
 
+  updateGlobalPiece(id: number, pieceData: any): Observable<Piece> {
+    return this.http.put<Piece>(`${this.apiUrl}/pieces/${id}`, pieceData);
+  }
+
 
   // --- Composer Methods ---
 
