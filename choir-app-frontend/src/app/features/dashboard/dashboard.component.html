@@ -1,22 +1,22 @@
 <div class="dashboard-header">
   <h1 *ngIf="(activeChoir$ | async)?.name as name">
-    Welcome to the {{ name }} Dashboard
+    Willkommen bei {{ name }}
   </h1>
   <button mat-flat-button color="primary" (click)="openAddEventDialog()">
     <mat-icon>add</mat-icon>
-    <span>Add New Event</span>
+    <span>Neues Ereignis erstellen</span>
   </button>
 </div>
 
 <div class="dashboard-grid">
   <app-event-card
-    cardTitle="Last Divine Service"
+    cardTitle="Letzter Gottesdienst"
     [event]="lastService$ | async">
   </app-event-card>
 
   <!-- Verwenden Sie die neue Komponente für die Probe -->
   <app-event-card
-    cardTitle="Last Rehearsal"
+    cardTitle="Letzte Probe"
     [event]="lastRehearsal$ | async">
   </app-event-card>
 </div>
