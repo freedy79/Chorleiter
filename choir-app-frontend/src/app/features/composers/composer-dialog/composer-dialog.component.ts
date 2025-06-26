@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 
 @Component({
@@ -16,15 +16,19 @@ import { MaterialModule } from '@modules/material.module';
   styleUrls: ['./composer-dialog.component.scss']
 })
 export class ComposerDialogComponent {
-  form: FormGroup; // <-- 1. Declare the property without initializing it here.
+  form: FormGroup;
+  title = 'Add New Composer';
 
   constructor(
-    private fb: FormBuilder, // fb is injected and available here
-    public dialogRef: MatDialogRef<ComposerDialogComponent>
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<ComposerDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { role: 'composer' | 'author' }
   ) {
-    // 2. Initialize the property inside the constructor where fb is defined.
+    this.title = data.role === 'author' ? 'Add New Author' : 'Add New Composer';
     this.form = this.fb.group({
-      name: ['', Validators.required]
+      name: ['', Validators.required],
+      birthYear: [''],
+      deathYear: ['']
     });
   }
 
@@ -34,7 +38,7 @@ export class ComposerDialogComponent {
 
   onSave(): void {
     if (this.form.valid) {
-      this.dialogRef.close(this.form.value.name); // Pass back only the name string
+      this.dialogRef.close(this.form.value);
     }
   }
 }

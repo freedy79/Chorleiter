@@ -5,6 +5,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
+      },
+      birthYear: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      deathYear: {
+        type: DataTypes.STRING,
+        allowNull: true
       }
     });
     return Author;
