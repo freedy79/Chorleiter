@@ -3,4 +3,5 @@ export interface Author {
   name: string;
   birthYear?: string;
   deathYear?: string;
+  canDelete?: boolean;
 }

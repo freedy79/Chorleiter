@@ -89,12 +89,28 @@ export class ApiService {
     return this.http.post<Composer>(`${this.apiUrl}/composers`, data);
   }
 
+  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
+    return this.http.put<Composer>(`${this.apiUrl}/composers/${id}`, data);
+  }
+
+  deleteComposer(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/composers/${id}`);
+  }
+
   getAuthors(): Observable<Author[]> {
     return this.http.get<Author[]>(`${this.apiUrl}/authors`);
   }
 
   createAuthor(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
     return this.http.post<Author>(`${this.apiUrl}/authors`, data);
+  }
+
+  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
+    return this.http.put<Author>(`${this.apiUrl}/authors/${id}`, data);
+  }
+
+  deleteAuthor(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/authors/${id}`);
   }
 
 

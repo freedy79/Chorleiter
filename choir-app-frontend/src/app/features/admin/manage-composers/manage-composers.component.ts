@@ -46,4 +46,23 @@ export class ManageComposersComponent implements OnInit {
       }
     });
   }
+
+  editComposer(composer: Composer): void {
+    const ref = this.dialog.open(ComposerDialogComponent, {
+      width: '500px',
+      data: { role: 'composer', record: composer }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.adminApiService.updateComposer(composer.id, result).subscribe(() => this.loadComposers());
+      }
+    });
+  }
+
+  deleteComposer(composer: Composer): void {
+    if (!composer.canDelete) return;
+    if (confirm('Delete composer?')) {
+      this.adminApiService.deleteComposer(composer.id).subscribe(() => this.loadComposers());
+    }
+  }
 }
