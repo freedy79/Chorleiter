@@ -22,13 +22,16 @@ export class ComposerDialogComponent {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ComposerDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { role: 'composer' | 'author' }
+    @Inject(MAT_DIALOG_DATA) public data: { role: 'composer' | 'author'; record?: any }
   ) {
-    this.title = data.role === 'author' ? 'Add New Author' : 'Add New Composer';
+    const isEdit = !!data.record;
+    this.title = data.role === 'author'
+      ? isEdit ? 'Edit Author' : 'Add New Author'
+      : isEdit ? 'Edit Composer' : 'Add New Composer';
     this.form = this.fb.group({
-      name: ['', Validators.required],
-      birthYear: [''],
-      deathYear: ['']
+      name: [data.record?.name || '', Validators.required],
+      birthYear: [data.record?.birthYear || ''],
+      deathYear: [data.record?.deathYear || '']
     });
   }
 

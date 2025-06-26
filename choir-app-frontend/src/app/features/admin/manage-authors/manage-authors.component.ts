@@ -43,4 +43,23 @@ export class ManageAuthorsComponent implements OnInit {
       }
     });
   }
+
+  editAuthor(author: Author): void {
+    const ref = this.dialog.open(ComposerDialogComponent, {
+      width: '500px',
+      data: { role: 'author', record: author }
+    });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.updateAuthor(author.id, result).subscribe(() => this.loadAuthors());
+      }
+    });
+  }
+
+  deleteAuthor(author: Author): void {
+    if (!author.canDelete) return;
+    if (confirm('Delete author?')) {
+      this.api.deleteAuthor(author.id).subscribe(() => this.loadAuthors());
+    }
+  }
 }
