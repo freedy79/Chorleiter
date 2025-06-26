@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { AuthService } from '@core/services/auth.service';
 import { Event } from '@core/models/event';
 import { Observable, switchMap } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -24,13 +25,15 @@ export class EventListComponent implements OnInit {
   events$!: Observable<Event[]>;
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
+  isAdmin = false;
 
-  constructor(private apiService: ApiService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
+  constructor(private apiService: ApiService, private authService: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
     this.loadEvents();
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
     this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
+    this.authService.isAdmin$.subscribe(isAdmin => this.isAdmin = isAdmin);
   }
 
   private loadEvents(): void {

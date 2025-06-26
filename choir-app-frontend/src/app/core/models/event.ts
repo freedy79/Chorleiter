@@ -5,6 +5,9 @@ export interface Event {
   date: string;
   type: 'REHEARSAL' | 'SERVICE';
   notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  director?: { name: string };
   pieces: Piece[];
 }
 

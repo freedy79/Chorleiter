@@ -12,11 +12,12 @@
 <mat-list>
   <mat-list-item *ngFor="let ev of events$ | async" (click)="selectEvent(ev)">
     <div matListItemTitle>{{ ev.date | date:'shortDate' }} - {{ ev.type }}</div>
+    <div matListItemLine class="meta-info">Zuletzt geändert am {{ ev.updatedAt | date:'short' }} von {{ ev.director?.name }}</div>
     <span class="spacer"></span>
     <button mat-icon-button (click)="editEvent(ev); $event.stopPropagation()">
       <mat-icon>edit</mat-icon>
     </button>
-    <button *ngIf="isChoirAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">
+    <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">
       <mat-icon>delete</mat-icon>
     </button>
   </mat-list-item>
