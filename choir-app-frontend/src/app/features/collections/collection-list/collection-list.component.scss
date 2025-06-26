@@ -1,0 +1,57 @@
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; // Vertically align items
+    margin-bottom: 2rem;
+    h1 {
+        margin-bottom: 0.25rem;
+    }
+    .subtitle {
+        font-size: 1rem;
+        color: #666;
+    }
+}
+
+.collection-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+mat-card-actions button mat-icon {
+    margin-right: 8px;
+}
+
+.loading-state, .empty-state {
+    grid-column: 1 / -1; // Span all columns
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    margin-top: 1.5rem;
+}
+
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    min-height: 200px;
+}
+
+
+.actions-cell {
+    text-align: right;
+
+    button {
+        margin-left: 8px;
+    }
+}
+
+// ADD THIS NEW STYLE
+.titles-cell {
+    text-align: center;
+    font-weight: 500;
+}

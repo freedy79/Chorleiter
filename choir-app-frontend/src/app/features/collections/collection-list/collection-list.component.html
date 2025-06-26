@@ -1,0 +1,83 @@
+
+<div class="header-container">
+  <div>
+    <h1>Collections</h1>
+    <p class="subtitle">Add global collections to your repertoire or manage them.</p>
+  </div>
+  <button mat-flat-button color="accent" routerLink="/collections/new">
+    <mat-icon>add</mat-icon>
+    <span>Neue Sammlung</span>
+  </button>
+</div>
+
+<div class="table-container mat-elevation-z8" *ngIf="(collections$ | async) as collections; else loading">
+  <table mat-table [dataSource]="collections">
+
+    <!-- Status Column -->
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <td mat-cell *matCellDef="let collection">
+        <mat-icon
+          class="status-icon"
+          [color]="collection.isAdded ? 'primary' : 'disabled'"
+          [matTooltip]="collection.isAdded ? 'This collection is in your repertoire' : 'Not in your repertoire'">
+          {{ collection.isAdded ? 'check_circle' : 'do_not_disturb_on' }}
+        </mat-icon>
+      </td>
+    </ng-container>
+
+    <!-- Title Column -->
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef> Titel </th>
+      <td mat-cell *matCellDef="let collection">
+        <strong>{{ collection.title }}</strong>
+        <div class="prefix-hint" *ngIf="collection.prefix">Prefix: {{ collection.prefix }}</div>
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="titles">
+      <th mat-header-cell *matHeaderCellDef> Stücke </th>
+      <td mat-cell *matCellDef="let collection" class="titles-cell">
+        {{ collection.pieceCount || 0 }}
+      </td>
+    </ng-container>
+
+    <!-- Publisher Column -->
+    <ng-container matColumnDef="publisher">
+      <th mat-header-cell *matHeaderCellDef> Verlag </th>
+      <td mat-cell *matCellDef="let collection"> {{ collection.publisher || '-' }} </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let collection" class="actions-cell">
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="addCollectionToChoir(collection)"
+              [disabled]="collection.isAdded">
+                <mat-icon>add_circle_outline</mat-icon>
+                <span>Add to Repertoire</span>
+            </button>
+            <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Edit Collection">
+                <mat-icon>edit</mat-icon>
+            </button>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <div *ngIf="collections.length === 0" class="empty-state">
+      <p>No collections have been created yet.</p>
+  </div>
+</div>
+
+<ng-template #loading>
+  <div class="loading-state">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading collections...</p>
+  </div>
+</ng-template>

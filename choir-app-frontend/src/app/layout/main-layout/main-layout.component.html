@@ -1,0 +1,70 @@
+<div class="site-container">
+  <mat-toolbar color="primary" class="main-toolbar">
+    <span><a href="/" class="page-title-link">NAK Chorleiter</a></span>
+
+    <!-- Die Navigationslinks werden jetzt mit *ngIf gesteuert -->
+    <ng-container *ngIf="isLoggedIn$ | async">
+      <a mat-button routerLink="/dashboard" routerLinkActive="active-link"
+        [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+      <a mat-button routerLink="/repertoire" routerLinkActive="active-link">Repertoire</a>
+      <a mat-button routerLink="/collections" routerLinkActive="active-link">Sammlungen</a>
+      <a *ngIf="isChoirAdminOrAdmin$ | async" mat-button routerLink="/manage-choir" routerLinkActive="active-link">
+        Chorverwaltung
+      </a>
+    </ng-container>
+
+    <a *ngIf="isAdmin$ | async" mat-button routerLink="/admin" routerLinkActive="active-link">
+      Admin
+    </a>
+
+    <span class="spacer"></span>
+
+    <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>
+
+    <span class="spacer"></span>
+
+    <!-- Das Benutzermenü wird ebenfalls mit *ngIf gesteuert -->
+    <ng-container *ngIf="isLoggedIn$ | async">
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
+        <mat-icon>account_circle</mat-icon>
+      </button>
+      <mat-menu #userMenu="matMenu">
+        <a mat-menu-item routerLink="/profile">
+          <mat-icon>person</mat-icon>
+          <span>Profil</span>
+        </a>
+        <button mat-menu-item [matMenuTriggerFor]="themeMenu">
+          <mat-icon>contrast</mat-icon>
+          <span>Theme</span>
+        </button>
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Abmelden</span>
+        </button>
+      </mat-menu>
+
+      <mat-menu #themeMenu="matMenu">
+        <button mat-menu-item (click)="setTheme('light')">
+          <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
+          <span>Light</span>
+        </button>
+        <button mat-menu-item (click)="setTheme('dark')">
+          <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
+          <span>Dark</span>
+        </button>
+        <button mat-menu-item (click)="setTheme('system')">
+          <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
+          <span>System</span>
+        </button>
+      </mat-menu>
+    </ng-container>
+  </mat-toolbar>
+
+  <main class="main-content">
+    <div class="container">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+
+  <app-footer></app-footer>
+</div>

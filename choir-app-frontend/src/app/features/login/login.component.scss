@@ -1,0 +1,26 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+mat-card {
+  max-width: 400px;
+  width: 100%;
+}
+
+.card-title {
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.in-button-spinner {
+  display: inline-block;
+  margin: 0 12px;
+}

@@ -1,0 +1,76 @@
+<div class="profile-container">
+  <h1>My Profile</h1>
+
+  <div *ngIf="isLoading; else profileContent" class="loading-state">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Loading profile...</p>
+  </div>
+
+  <ng-template #profileContent>
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Personal Details</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-form-field appearance="outline">
+            <mat-label>Full Name</mat-label>
+            <input matInput formControlName="name">
+            <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Name is required.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Email Address</mat-label>
+            <input matInput formControlName="email" type="email">
+            <mat-error *ngIf="profileForm.get('email')?.hasError('required')">Email is required.</mat-error>
+            <mat-error *ngIf="profileForm.get('email')?.hasError('email')">Please enter a valid email address.</mat-error>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card formGroupName="passwords">
+        <mat-card-header>
+          <mat-card-title>Change Password</mat-card-title>
+          <mat-card-subtitle>Leave all fields blank to keep your current password.</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-form-field appearance="outline">
+            <mat-label>Current Password</mat-label>
+            <input matInput formControlName="oldPassword" type="password" autocomplete="current-password">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>New Password</mat-label>
+            <input matInput formControlName="newPassword" type="password" autocomplete="new-password">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Confirm New Password</mat-label>
+            <input matInput formControlName="confirmPassword" type="password" autocomplete="new-password">
+            <!-- Fehlermeldung, wenn Passwörter nicht übereinstimmen -->
+            <mat-error *ngIf="profileForm.get('passwords')?.hasError('passwordsMismatch')">
+              The new passwords do not match.
+            </mat-error>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card *ngIf="(availableChoirs$ | async) as choirs">
+        <mat-card-header>
+          <mat-card-title>My Choir</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+         <div class="choir-name" *ngFor="let choir of choirs">
+            {{ choir.name }}
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <div class="actions-footer">
+        <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileForm.pristine">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </ng-template>
+</div>

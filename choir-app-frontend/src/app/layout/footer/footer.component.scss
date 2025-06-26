@@ -1,0 +1,34 @@
+.footer-toolbar {
+  background: #808080;
+  color: #000000;
+  border-top: 1px solid #ddd;
+  font-size: 0.9rem;
+  height: auto;
+  min-height: 56px;
+  padding: 0 16px;
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-wrap: wrap; // Für kleinere Bildschirme
+  gap: 1rem;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.footer-links a {
+  color: #666;
+  text-decoration: none;
+  margin-left: 16px;
+  transition: color 0.3s;
+
+  &:hover {
+    color: #005d9d; // NAK-Blau aus dem Theme
+    text-decoration: underline;
+  }
+}

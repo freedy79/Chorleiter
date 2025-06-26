@@ -1,0 +1,104 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 80vh;
+  // Verhindert, dass die Seite selbst scrollt.
+  overflow: hidden;
+}
+
+// Header der Seite (Titel und Button)
+.list-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  // Dieser Bereich hat eine feste Höhe und wächst nicht.
+  flex-shrink: 0;
+}
+
+// Filter-Controls
+.filter-controls {
+  padding: 1rem 0;
+  // Dieser Bereich hat ebenfalls eine feste Höhe.
+  flex-shrink: 0;
+  mat-form-field {
+    width: 300px;
+    .mat-mdc-select-value {
+      color: currentColor;
+    }
+  }
+}
+
+// Wrapper für Tabelle und Paginator
+.table-wrapper {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  position: relative; // Wichtig für den Lade-Spinner
+  // DIES IST DER SCHLÜSSEL: Dieser Container wächst, um den gesamten verbleibenden Platz einzunehmen.
+  flex-grow: 1;
+  // Verhindert, dass der Container selbst scrollt.
+  overflow: hidden;
+}
+
+// Der Container, der tatsächlich scrollt
+.table-scroll-container {
+  // Lässt den Container wachsen und schrumpfen
+  flex: 1 1 auto;
+  // Fügt eine vertikale Scrollleiste hinzu, wenn der Inhalt zu hoch ist.
+  overflow-y: auto;
+}
+
+// Der Paginator bleibt am unteren Rand des Wrappers
+mat-paginator {
+  // Dieser Bereich hat eine feste Höhe.
+  flex-shrink: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+// Styling für die Tabelle selbst
+table.mat-mdc-table {
+  // Die Tabelle soll immer die volle Breite des scrollbaren Containers einnehmen.
+  width: 100%;
+}
+
+// Styling für den Lade-Spinner
+.loading-shade {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.15);
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+// Andere Hilfs-Styles
+.actions-cell {
+  text-align: right;
+}
+
+// In dark mode, we'd want the opposite
+@media (prefers-color-scheme: dark) {
+    .filter-controls mat-form-field .mat-mdc-select-value {
+        color: white;
+    }
+}
+
+
+table-container {
+    border-radius: 4px;
+    overflow: hidden;
+    background: white; // Fügen Sie einen weißen Hintergrund hinzu
+    border: 1px solid #e0e0e0; // Eine feine graue Umrandung
+}
+// In Dark Mode anpassen:
+@media (prefers-color-scheme: dark) {
+    .table-container {
+        background: #303030; // Dunkler Hintergrund für den Container
+        border-color: #555;
+    }
+}

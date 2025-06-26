@@ -1,0 +1,71 @@
+:host {
+  --header-height: 64px;
+}
+
+.site-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-toolbar {
+  // --- DIE WICHTIGSTEN ÄNDERUNGEN SIND HIER ---
+  position: sticky; // Die Leiste "klebt" beim Scrollen.
+  top: 0; // Sie klebt am oberen Rand.
+  z-index: 1000; // Sie bleibt über allen anderen Inhalten.
+  height: var(--header-height); // Wir verwenden unsere definierte Höhe.
+
+  // Diese Stile sind für das Aussehen und die Funktionalität der Links.
+  a.mat-mdc-button {
+    border-radius: 4px;
+    margin: 0 4px;
+    padding: 0 16px;
+    line-height: 48px;
+    transition: background-color 0.3s;
+  }
+
+  a.active-link {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.main-content {
+  flex: 1; // Dieser Container wächst und füllt den verbleibenden Platz.
+
+  // Wir geben dem Hauptinhalt einen festen Abstand, damit er nicht
+  // unter der fixierten Kopfzeile beginnt. Dies ist optional, aber empfohlen.
+  // padding: 1rem; // Alter Stil
+
+  // Besser: Der Inhalt scrollt, aber der Container selbst hat Padding.
+  // Dies verhindert, dass Scrollbalken am Padding kleben bleiben.
+  & > .container {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    // Lässt den Container die verfügbare Höhe ausfüllen, abzüglich des Paddings des main-content.
+    height: calc(
+      92vh - 64px - 2rem
+    );
+    overflow: auto;
+    //background-color: aliceblue;
+  }
+}
+
+@media (max-width: 599px) {
+  :host {
+    --header-height: 56px; // Material Design Standard für mobile Header
+  }
+  .main-content > .container {
+    padding: 1rem;
+  }
+}
+
+.page-title-link {
+  text-decoration: none;
+  gap: 0.5rem; // Abstand zwischen Icon und Text
+  color: var(--primary-color, #ffffff); // Verwenden Sie Ihre primäre Theme-Farbe
+}

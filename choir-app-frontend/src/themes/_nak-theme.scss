@@ -1,0 +1,107 @@
+// Import the theming functions from Angular Material
+@use '@angular/material' as mat;
+
+// This is a required part of every custom theme.
+@include mat.core();
+
+// ----------------------------------------------------------------------------------
+// Custom NAK Color Palettes
+// Generated using a Material palette generator from the NAK website colors
+// ----------------------------------------------------------------------------------
+
+// Primary Color: NAK Blue (#005d9d)
+$nak-blue-palette: (
+  50: #e0f1fa,
+  100: #b3dff4,
+  200: #80caf0,
+  300: #4db4eb,
+  400: #26a4e7,
+  500: #0093e4,
+  600: #008be2,
+  700: #007fde,
+  800: #0074da,
+  900: #0060d2,
+  A100: #ffffff,
+  A200: #d7e9ff,
+  A400: #a4cfff,
+  A700: #8bc3ff,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  )
+);
+
+// Accent Color: NAK Gold (#ffc72c)
+$nak-gold-palette: (
+  50: #fff8e5,
+  100: #ffefbf,
+  200: #ffe694,
+  300: #ffdc69,
+  400: #ffd547,
+  500: #ffce2c,
+  600: #ffca2c,
+  700: #ffc52c,
+  800: #ffc12c,
+  900: #ffb82c,
+  A100: #ffffff,
+  A200: #fff9f6,
+  A400: #ffede3,
+  A700: #ffe3d3,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #000000,
+    600: #000000,
+    700: #000000,
+    800: #000000,
+    900: #000000,
+    A100: #000000,
+    A200: #000000,
+    A400: #000000,
+    A700: #000000,
+  )
+);
+
+// ----------------------------------------------------------------------------------
+// Define the Theme Objects
+// ----------------------------------------------------------------------------------
+
+// Define the primary and accent palettes from our custom colors.
+$choir-app-primary: mat.m2-define-palette($nak-blue-palette, 700, 500, 900);
+$choir-app-accent: mat.m2-define-palette($nak-gold-palette, 500, 300, 700);
+
+// The warn palette is optional (defaults to red).
+$choir-app-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+// Create the main theme object.
+$nak-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $choir-app-primary,
+    accent: $choir-app-accent,
+    warn: $choir-app-warn,
+  )
+));
+
+// (Optional but Recommended) Define a dark theme version as well.
+$nak-dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $choir-app-primary,
+    accent: $choir-app-accent,
+    warn: $choir-app-warn,
+  )
+));

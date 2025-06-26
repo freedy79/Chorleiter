@@ -1,0 +1,35 @@
+.profile-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+.choir-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.actions-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    min-height: 200px;
+    color: #666;
+}

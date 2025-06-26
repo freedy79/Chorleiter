@@ -1,0 +1,32 @@
+<div class="login-container">
+  <mat-card>
+    <mat-card-title class="card-title">Anmelden</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <p>
+          <mat-form-field appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput formControlName="email" type="email">
+          </mat-form-field>
+        </p>
+        <p>
+          <mat-form-field appearance="outline">
+            <mat-label>Passwort</mat-label>
+            <input matInput formControlName="password" type="password">
+          </mat-form-field>
+        </p>
+
+        <p>
+          <mat-checkbox formControlName="rememberMe" color="primary">Angemeldet bleiben</mat-checkbox>
+        </p>
+
+        <mat-card-actions align="end">
+          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
+            <span *ngIf="!isLoading">Anmelden</span>
+            <mat-spinner *ngIf="isLoading" diameter="24" class="in-button-spinner"></mat-spinner>
+          </button>
+        </mat-card-actions>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

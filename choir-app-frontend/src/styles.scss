@@ -1,0 +1,80 @@
+@use '@angular/material' as mat;
+@use 'themes/_nak-theme' as nak;
+
+// Apply the light theme by default.
+// This will render all Angular Material components with the NAK colors.
+@include mat.all-component-themes(nak.$nak-theme);
+
+
+/* You can keep your other global styles here */
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.container {
+    padding: 2rem;
+}
+
+// Wenden Sie das helle Theme standardmäßig auf den body an.
+// Dies ist wichtig, damit immer ein Theme vorhanden ist.
+@include mat.all-component-themes(nak.$nak-theme);
+
+// Definieren Sie die Styles für das dunkle Theme unter einer spezifischen Klasse.
+// Diese Regeln werden nur aktiv, wenn der body-Tag die Klasse '.dark-theme' hat.
+.dark-theme {
+  @include mat.all-component-themes(nak.$nak-dark-theme);
+
+  // Fügen Sie hier alle Ihre anderen Dark-Mode-Anpassungen hinzu
+  body {
+    background: #303030;
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .table-container {
+    background: #303030;
+    border-color: #555;
+  }
+
+  .mat-mdc-dialog-container {
+    background: #424242;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  h1[mat-dialog-title] {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .filter-controls mat-form-field .mat-mdc-select-value {
+    color: white;
+  }
+}
+
+
+
+// Import der Theming-Funktionen
+
+
+/*
+
+@use '@angular/material' as mat;
+
+// Ein Muss, um die Kern-Styles zu inkludieren (nur einmal in der App)
+@include mat.core();
+
+// Definition der Farbpaletten
+$choir-app-frontend-primary: mat.m2-define-palette(mat.$m2-indigo-palette);
+$choir-app-frontend-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200, A100, A400);
+$choir-app-frontend-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+// Erstellen des Theme-Objekts
+$choir-app-frontend-theme: mat.m2-define-light-theme((
+  color: (
+    primary: $choir-app-frontend-primary,
+    accent: $choir-app-frontend-accent,
+    warn: $choir-app-frontend-warn,
+  )
+));
+
+// Anwenden des Themes auf alle Material-Komponenten
+@include mat.all-component-themes($choir-app-frontend-theme);
+
+ */

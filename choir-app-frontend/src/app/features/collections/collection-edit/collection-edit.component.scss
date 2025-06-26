@@ -1,0 +1,68 @@
+.form-container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+.composer-hint {
+  color: #999;
+  font-style: italic;
+}
+
+mat-chip-listbox {
+    margin-top: 1rem;
+    display: block;
+}
+
+.no-pieces-message {
+    font-style: italic;
+    color: #666;
+    padding: 1rem;
+    text-align: center;
+}
+
+.actions-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; // Vertically align items
+    margin-bottom: 2rem;
+}
+
+mat-card-actions button mat-icon {
+    margin-right: 8px;
+}
+
+.add-new-option {
+  display: flex;
+  align-items: center;
+  font-style: italic;
+  color: #005d9d; // Ihre primäre Theme-Farbe
+
+  mat-icon {
+    margin-right: 8px;
+  }
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem; // Abstand zwischen Icon und Text
+  justify-self: space-between; // Verteilt den Platz zwischen Icon und Text
+  margin-bottom: 1rem;
+}

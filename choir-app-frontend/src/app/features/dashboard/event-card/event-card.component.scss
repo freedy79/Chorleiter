@@ -1,0 +1,37 @@
+mat-card {
+    // Stellt sicher, dass die Karte eine Mindesthöhe hat, auch wenn sie leer ist.
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+}
+
+mat-card-content {
+    flex-grow: 1; // Lässt den Inhalt wachsen, um den Platz zu füllen
+}
+
+mat-card-content h3 {
+    font-weight: 500;
+    color: #666;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+    margin: 0 0 1rem 0;
+}
+
+.no-data-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    color: #999;
+}
+
+// In dunklem Modus anpassen
+@media (prefers-color-scheme: dark) {
+    mat-card-content h3 {
+        color: #ccc;
+        border-bottom-color: #444;
+    }
+    .no-data-message {
+        color: #aaa;
+    }
+}

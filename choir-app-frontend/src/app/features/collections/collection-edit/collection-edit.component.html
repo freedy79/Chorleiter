@@ -1,0 +1,160 @@
+<div class="form-container">
+  <div class="page-header">
+    <div>
+      <h1>{{ pageTitle }}</h1>
+      <p class="subtitle">{{ pageSubtitle }}</p>
+    </div>
+    <!-- Fügen Sie den Button nur im Edit-Modus hinzu -->
+    <button
+      *ngIf="isEditMode"
+      mat-stroked-button
+      color="accent"
+      (click)="openImportDialog()">
+      <mat-icon>upload_file</mat-icon>
+      Import from CSV
+    </button>
+  </div>
+
+  <!-- This is the main form, wrapping everything -->
+  <form [formGroup]="collectionForm" (ngSubmit)="onSave()" class="edit-form">
+
+    <!-- Card 1: For the main collection details like title, publisher, etc. -->
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Sammlung</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline">
+          <mat-label>Titel</mat-label>
+          <input matInput formControlName="title" cdkFocusInitial>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Verlag</mat-label>
+          <input matInput formControlName="publisher">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Prefix (e.g., GL, EG)</mat-label>
+          <input matInput formControlName="prefix" placeholder="CB">
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Stücke in der Sammlung</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- This is the sub-form for adding a single piece-number link -->
+        <div class="add-piece-container">
+          <h3>Stücke hinzufügen</h3>
+          <form [formGroup]="addPieceForm" (ngSubmit)="addPieceToCollection()" class="add-piece-form">
+            <!-- Autocomplete field to search for and select a piece -->
+            <mat-form-field appearance="outline" class="piece-search-field">
+              <mat-label>Suche nach einem Stück</mat-label>
+              <input
+                type="text"
+                matInput
+                [formControl]="pieceCtrl"
+                [matAutocomplete]="auto">
+              <!-- The autocomplete panel itself -->
+              <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="onPieceSelected($event)">
+                <!-- The #auto MUST match the [matAutocomplete] above -->
+                <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
+                  <!-- Use *ngIf inside the mat-option to conditionally show content -->
+                  <div *ngIf="piece.id === addNewPieceOption.id; else regularOption" class="add-new-option">
+                    <mat-icon>add</mat-icon>
+                    <span>{{ piece.title }}</span>
+                  </div>
+
+                  <!-- This template will be shown for all regular pieces -->
+                  <ng-template #regularOption>
+                    {{ piece.title }}
+                    <small class="composer-hint"> - {{ piece.composer?.name }}</small>
+                  </ng-template>
+                </mat-option>
+              </mat-autocomplete>
+            </mat-form-field>
+
+            <!-- Input field for the piece's number within the collection -->
+            <mat-form-field appearance="outline" class="piece-number-field">
+              <mat-label>Nummer</mat-label>
+              <input matInput formControlName="number" placeholder="4">
+            </mat-form-field>
+
+            <!-- The "Add" button for the sub-form -->
+            <button mat-stroked-button color="primary" type="submit" [disabled]="addPieceForm.invalid">
+              <mat-icon>add</mat-icon> Hinzufügen
+            </button>
+          </form>
+        </div>
+
+        <br>
+        <mat-divider></mat-divider>
+
+        <!-- Container for the list of added pieces -->
+        <div class="piece-list-container">
+          <h3 *ngIf="selectedPieceLinks.length > 0">Stücke ({{ selectedPieceLinks.length }})</h3>
+
+          <div *ngIf="selectedPieceLinks.length > 0; else noPieces">
+          <!-- Using a mat-table for a clean, structured display -->
+          <table class="piece-link-table" mat-table [dataSource]="pieceLinkDataSource" matSort matSortActive="number" matSortDirection="asc">
+            <!-- Number Column Definition -->
+            <ng-container matColumnDef="number">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="number"> Number </th>
+              <td mat-cell *matCellDef="let link"> {{link.numberInCollection}} </td>
+            </ng-container>
+
+            <!-- Title Column Definition -->
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Title </th>
+              <td mat-cell *matCellDef="let link"> {{link.piece.title}} </td>
+            </ng-container>
+
+            <!-- Actions Column Definition -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let link" class="actions-cell">
+                <button mat-icon-button color="warn" (click)="removePieceFromCollection(link.piece)" matTooltip="Remove piece from collection">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+
+            <!-- Update the row definitions to use the new column array name -->
+            <tr mat-header-row *matHeaderRowDef="pieceLinkColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: pieceLinkColumns;"></tr>
+          </table>
+
+          <mat-paginator
+            *ngIf="selectedPieceLinks.length > 0"
+            [pageSizeOptions]="[10, 20, 50]"
+            showFirstLastButtons
+            aria-label="Select page of pieces">
+          </mat-paginator>
+          </div>
+
+          <ng-template #noPieces>
+            <div class="no-pieces-message">
+              No pieces have been added to this collection yet. Use the form above to add one.
+            </div>
+          </ng-template>
+
+          <!-- Message shown when no pieces have been added yet -->
+          <div *ngIf="selectedPieceLinks.length === 0" class="no-pieces-message">
+            No pieces have been added to this collection yet. Use the form above to add one.
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- The main actions footer for saving or canceling the entire collection -->
+    <div class="actions-footer">
+      <button type="button" mat-stroked-button routerLink="/collections">Cancel</button>
+      <button type="submit" mat-flat-button color="primary" [disabled]="collectionForm.invalid">
+        {{ isEditMode ? 'Save Changes' : 'Save Collection' }}
+      </button>
+    </div>
+  </form>
+</div>

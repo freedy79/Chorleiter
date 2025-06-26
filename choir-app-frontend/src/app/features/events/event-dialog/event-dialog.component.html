@@ -1,0 +1,75 @@
+<h1 mat-dialog-title>Add New Event</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="eventForm" id="event-form" (ngSubmit)="onSave()">
+    <div class="form-row">
+      <!-- Datepicker -->
+      <mat-form-field appearance="outline">
+        <mat-label>Event Date</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <!-- Event Type -->
+      <mat-form-field appearance="outline">
+        <mat-label>Event Type</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="SERVICE">Divine Service</mat-option>
+          <mat-option value="REHEARSAL">Rehearsal</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <!-- Notes -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notes (optional)</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+
+    <!-- Piece Lookup -->
+    <h3 class="mat-subheading-2">Pieces</h3>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Search by Title or Reference (e.g., CB45)</mat-label>
+      <input
+        type="text"
+        matInput
+        [formControl]="pieceCtrl"
+        [matAutocomplete]="auto"
+        #pieceInput
+      >
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="selected($event)">
+        <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
+          <div class="option-layout">
+            <!-- Zeigt den Titel und den Komponisten an -->
+            <div class="option-main">
+              <span class="option-title">{{ piece.title }}</span>
+              <small class="composer-hint"> - {{ piece.composerName }}</small>
+            </div>
+            <!-- Zeigt die Referenz an, wenn eine vorhanden ist -->
+            <span *ngIf="piece.reference" class="option-reference">{{ piece.reference }}</span>
+          </div>
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+
+    <!-- Display Selected Pieces as Chips -->
+    <mat-chip-listbox aria-label="Selected pieces">
+      <mat-chip *ngFor="let piece of selectedPieces" (removed)="remove(piece)">
+        {{ piece.title }}
+        <button matChipRemove>
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </mat-chip>
+    </mat-chip-listbox>
+    <div *ngIf="selectedPieces.length === 0" class="no-pieces-message">
+        No pieces selected for this event yet.
+    </div>
+
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-flat-button color="primary" type="submit" form="event-form" [disabled]="eventForm.invalid">Save Event</button>
+</div>

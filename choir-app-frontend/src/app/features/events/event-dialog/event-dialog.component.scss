@@ -1,0 +1,41 @@
+.form-row {
+  display: flex;
+  gap: 1rem;
+  > * {
+    flex: 1;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+h3.mat-subheading-2 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+// Styling für die Autocomplete-Optionen
+.option-layout {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.option-reference {
+    font-style: italic;
+    color: #888;
+}
+
+// Styling für die Chips
+mat-chip-listbox {
+    margin-top: 1rem;
+    display: block;
+}
+
+.no-pieces-message {
+    font-style: italic;
+    color: #888;
+    margin-top: 1rem;
+}
