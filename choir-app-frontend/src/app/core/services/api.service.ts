@@ -120,7 +120,7 @@ export class ApiService {
     return this.http.post<Collection>(`${this.apiUrl}/collections`, data);
   }
 
-  // ADD updateCollection method
+  // Update an existing collection
   updateCollection(id: number, data: any): Observable<any> {
     return this.http.put(`${this.apiUrl}/collections/${id}`, data);
   }
