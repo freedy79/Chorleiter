@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { LoadingService } from '@core/services/loading.service';
+import { LoadingService } from 'src/app/core/services/loading.service'; // Annahme des Pfades
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-loading-indicator',
@@ -11,6 +12,9 @@ import { LoadingService } from '@core/services/loading.service';
   styleUrls: ['./loading-indicator.component.scss']
 })
 export class LoadingIndicatorComponent {
-  loading$ = this.loadingService.loading$;
-  constructor(private loadingService: LoadingService) {}
+  public readonly loading$: Observable<boolean>;
+
+  constructor(private loadingService: LoadingService) {
+    this.loading$ = this.loadingService.loading$;
+  }
 }
