@@ -4,6 +4,7 @@ const Piece = db.piece;
 const Composer = db.composer;
 const Collection = db.collection;
 const CollectionPiece = db.collection_piece;
+const User = db.user;
 const { Op } = require("sequelize");
 
 exports.create = async (req, res) => {
@@ -60,11 +61,16 @@ exports.create = async (req, res) => {
             await event.setPieces(pieceIds);
         }
 
+        // Event inklusive Director neu laden, um den Namen zurückzugeben
+        const fullEvent = await Event.findByPk(event.id, {
+            include: [{ model: User, as: 'director', attributes: ['name'] }]
+        });
+
         // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
         res.status(200).send({
             message: wasUpdated ? "Event successfully updated." : "Event successfully created.",
             wasUpdated: wasUpdated,
-            event: event
+            event: fullEvent
         });
 
     } catch (err) {
@@ -144,7 +150,8 @@ exports.findAll = async (req, res) => {
     try {
         const events = await Event.findAll({
             where,
-            order: [['date', 'DESC']]
+            order: [['date', 'DESC']],
+            include: [{ model: User, as: 'director', attributes: ['name'] }]
         });
         res.status(200).send(events);
     } catch (err) {
@@ -179,7 +186,7 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }]
+            }, { model: User, as: 'director', attributes: ['name'] }]
         });
 
         if (!event) {
@@ -202,13 +209,18 @@ exports.update = async (req, res) => {
             return res.status(404).send({ message: 'Event not found.' });
         }
 
-        await event.update({ date, type, notes });
+        await event.update({ date, type, notes, directorId: req.userId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
         }
 
-        const updated = await Event.findByPk(id, { include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }] });
+        const updated = await Event.findByPk(id, {
+            include: [
+                { model: Piece, as: 'pieces', through: { attributes: [] } },
+                { model: User, as: 'director', attributes: ['name'] }
+            ]
+        });
         res.status(200).send(updated);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not update event.' });
