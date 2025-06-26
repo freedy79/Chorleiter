@@ -3,4 +3,5 @@ export interface Composer {
   name: string;
   birthYear?: string;
   deathYear?: string;
+  canDelete?: boolean;
 }

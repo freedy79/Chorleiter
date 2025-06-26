@@ -35,7 +35,34 @@ exports.findAll = async (req, res) => {
         const composers = await Composer.findAll({
             order: [['name', 'ASC']]
         });
-        res.status(200).send(composers);
+        const result = await Promise.all(
+            composers.map(async (composer) => {
+                const pieceCount = await composer.countPieces();
+                const arrangedCount = await composer.countArrangedPieces();
+                return {
+                    ...composer.get({ plain: true }),
+                    canDelete: pieceCount + arrangedCount === 0
+                };
+            })
+        );
+        res.status(200).send(result);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.remove = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const composer = await Composer.findByPk(id);
+        if (!composer) return res.status(404).send({ message: "Composer not found." });
+        const pieceCount = await composer.countPieces();
+        const arrangedCount = await composer.countArrangedPieces();
+        if (pieceCount + arrangedCount > 0) {
+            return res.status(400).send({ message: "Composer has linked pieces." });
+        }
+        await composer.destroy();
+        res.status(204).send();
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

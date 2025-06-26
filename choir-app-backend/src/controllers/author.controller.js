@@ -35,7 +35,32 @@ exports.findAll = async (req, res) => {
         const authors = await Author.findAll({
             order: [['name', 'ASC']]
         });
-        res.status(200).send(authors);
+        const result = await Promise.all(
+            authors.map(async (author) => {
+                const pieceCount = await author.countPieces();
+                return {
+                    ...author.get({ plain: true }),
+                    canDelete: pieceCount === 0
+                };
+            })
+        );
+        res.status(200).send(result);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.remove = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const author = await Author.findByPk(id);
+        if (!author) return res.status(404).send({ message: "Author not found." });
+        const pieceCount = await author.countPieces();
+        if (pieceCount > 0) {
+            return res.status(400).send({ message: "Author has linked pieces." });
+        }
+        await author.destroy();
+        res.status(204).send();
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
