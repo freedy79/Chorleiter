@@ -8,7 +8,8 @@ const { Op } = require("sequelize");
 
 exports.create = async (req, res) => {
     const { date, type, notes, pieceIds } = req.body;
-    const { choirId, userId } = req;
+    const choirId = req.activeChoirId;
+    const userId = req.userId;
 
     if (!date || !type) {
         return res.status(400).send({ message: "Date and Type are required." });
