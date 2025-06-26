@@ -62,18 +62,21 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, collectionId, sortBy, voicing, key } = req.query;
+    const { composerId, categoryId, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key } = req.query;
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 25;
+    const offset = (pageNum - 1) * limitNum;
     try {
         // --- SCHRITT 1: Holen Sie die Basis-Repertoire-Daten des Chors ---
         // Wir holen nur die pieceId und den zugehörigen Status.
         const repertoireLinks = await db.choir_repertoire.findAll({
-            where: { choirId: req.activeChoirId },
+            where: { choirId: req.activeChoirId, ...(status && { status }) },
             raw: true // Gibt uns einfache Objekte statt Sequelize-Instanzen
         });
 
         // Wenn der Chor kein Repertoire hat, können wir sofort eine leere Liste zurückgeben.
         if (repertoireLinks.length === 0) {
-            return res.status(200).send([]);
+            return res.status(200).send({ data: [], total: 0 });
         }
 
         // Erstellen Sie eine Liste aller Stück-IDs im Repertoire und eine Map für den Status.
@@ -115,21 +118,26 @@ exports.findMyRepertoire = async (req, res) => {
             }
         ];
 
-        // Die Sortierlogik bleibt gleich.
-        let order = [['title', 'ASC']];
+        // --- Sortierlogik ---
+        let order;
         if (sortBy === 'reference') {
             order = [
-                // Wir müssen den Join-Alias explizit angeben, damit Sequelize weiß, wo es suchen soll.
-                [literal('"collections.prefix"'), 'ASC'],
-                [literal('CAST("collections->collection_piece"."numberInCollection" AS INTEGER)'), 'ASC']
+                [literal('"collections.prefix"'), sortDir],
+                [literal('CAST("collections->collection_piece"."numberInCollection" AS INTEGER)'), sortDir]
             ];
+        } else {
+            const sortColumn = sortBy || 'title';
+            order = [[sortColumn, sortDir]];
         }
 
         // Führen Sie die finale Abfrage aus.
-        let pieces = await db.piece.findAll({
+        const { rows: pieces, count } = await db.piece.findAndCountAll({
             where: whereCondition,
             include: includeClauses,
-            order: order
+            order: order,
+            limit: limitNum,
+            offset: offset,
+            distinct: true
         });
 
 
@@ -144,7 +152,7 @@ exports.findMyRepertoire = async (req, res) => {
             return plainPiece;
         });
 
-        res.status(200).send(results);
+        res.status(200).send({ data: results, total: count });
 
     } catch (err) {
         // Loggen Sie den Fehler im Backend für einfaches Debugging.

@@ -7,18 +7,35 @@
     </button>
   </div>
 
-  <!-- Filter controls row -->
-  <div class="filter-controls">
-    <mat-form-field appearance="outline">
-      <mat-label>Filter by Collection</mat-label>
-      <mat-select [value]="filterByCollectionId$.value" (selectionChange)="onCollectionFilterChange($event.value)">
-        <mat-option [value]="null">All Pieces in Repertoire</mat-option>
-        <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
-          {{ collection.title }}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-  </div>
+  <!-- Filter controls row inside expansion panel -->
+  <mat-expansion-panel [(expanded)]="filtersExpanded" class="filter-panel">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Filters</mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="filter-controls">
+      <mat-form-field appearance="outline">
+        <mat-label>Collection</mat-label>
+        <mat-select [value]="filterByCollectionId$.value" (selectionChange)="onCollectionFilterChange($event.value)">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
+            {{ collection.title }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select [value]="filterByCategoryId$.value" (selectionChange)="onCategoryFilterChange($event.value)">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option *ngFor="let cat of categories$ | async" [value]="cat.id">{{cat.name}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-checkbox [checked]="onlySingable$.value" (change)="onSingableToggle($event.checked)">
+        Only singable
+      </mat-checkbox>
+      <span class="spacer"></span>
+      <button mat-button (click)="clearFilters()">Clear Filters</button>
+    </div>
+  </mat-expansion-panel>
 
   <div class="table-wrapper mat-elevation-z8">
     <div *ngIf="isLoading" class="loading-shade">

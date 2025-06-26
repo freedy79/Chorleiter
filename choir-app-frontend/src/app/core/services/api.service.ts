@@ -34,15 +34,23 @@ export class ApiService {
     composerId?: number,
     categoryId?: number,
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection'
-  ): Observable<Piece[]> {
+    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
+    page: number = 1,
+    limit: number = 25,
+    status?: string,
+    sortDir: 'ASC' | 'DESC' = 'ASC'
+  ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
     if (composerId) params = params.set('composerId', composerId.toString());
     if (categoryId) params = params.set('categoryId', categoryId.toString());
     if (collectionId) params = params.set('collectionId', collectionId.toString());
     if (sortBy) params = params.set('sortBy', sortBy);
+    params = params.set('page', page);
+    params = params.set('limit', limit);
+    params = params.set('sortDir', sortDir);
+    if (status) params = params.set('status', status);
 
-    return this.http.get<Piece[]>(`${this.apiUrl}/repertoire`, { params });
+    return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
   }
 
   getRepertoireForLookup(): Observable<LookupPiece[]> {
