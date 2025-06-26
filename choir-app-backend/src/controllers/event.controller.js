@@ -4,6 +4,7 @@ const Piece = db.piece;
 const Composer = db.composer;
 const Collection = db.collection;
 const CollectionPiece = db.collection_piece;
+const { Op } = require("sequelize");
 
 exports.create = async (req, res) => {
     const { date, type, notes, pieceIds } = req.body;
