@@ -57,13 +57,19 @@ const ADDRESS = process.env.ADDRESS || "localhost"
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
 // });
-db.sequelize.sync({ alter: true }).then(() => {
-    console.log("Database synchronized.");
+db.sequelize.sync({ alter: true })
+    .then(() => {
+        console.log("Database synchronized.");
 
-    // Rufen Sie die Seed-Funktion auf.
-    initialSeed();
+        // Rufen Sie die Seed-Funktion auf.
+        initialSeed();
 
-    app.listen(PORT, ADDRESS, () => {
-        console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
+        app.listen(PORT, ADDRESS, () => {
+            console.log(
+                `Server is running on port ${PORT}, listening ${ADDRESS}.`
+            );
+        });
+    })
+    .catch((err) => {
+        console.error("Database synchronization failed:", err);
     });
-});

@@ -3,6 +3,7 @@ const User = db.user;
 const Choir = db.choir;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const logger = require("../config/logger");
 
 exports.signup = async (req, res) => {
     try {
@@ -19,7 +20,7 @@ exports.signup = async (req, res) => {
 };
 
 exports.signin = async (req, res) => {
-    console.log("Sign-in request received:", req.body);
+    logger.info("Sign-in request received:", req.body);
     try {
     const user = await User.findOne({
       where: { email: req.body.email },
