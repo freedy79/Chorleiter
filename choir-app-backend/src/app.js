@@ -17,7 +17,6 @@ if (process.env.NODE_ENV != "production") {
     app.use((req, res, next) => {
         // Es ist nützlich zu sehen, ob OPTIONS-Anfragen ankommen.
         logger.info(`Incoming Request: ${req.method} ${req.originalUrl}`);
-        console.log(`Incoming Request: ${req.method} ${req.originalUrl}`);
         next();
     });
 }

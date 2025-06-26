@@ -78,12 +78,15 @@ export class EventDialogComponent implements OnInit {
     });
   }
 
-  private formatReference(piece: Piece): string | undefined {
-    // This function will likely not work anymore since the lookup endpoint doesn't
-    // return collection data. We should adjust the filter and display accordingly.
-    // Let's simplify for now.
-    return undefined;
-  }
+  /*
+   * This helper was used for formatting collection references but the current
+   * lookup endpoint no longer provides that data. Commented out until a new
+   * implementation is required.
+   *
+   * private formatReference(piece: Piece): string | undefined {
+   *   return undefined;
+   * }
+   */
 
   private initializeAutocomplete(): void {
     this.filteredPieces$ = this.pieceCtrl.valueChanges.pipe(

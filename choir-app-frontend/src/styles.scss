@@ -16,7 +16,8 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 // Wenden Sie das helle Theme standardmäßig auf den body an.
 // Dies ist wichtig, damit immer ein Theme vorhanden ist.
-@include mat.all-component-themes(nak.$nak-theme);
+// Das Theme wird bereits weiter oben eingebunden, daher genügt
+// es hier auf weitere Einbindungen zu verzichten.
 
 // Definieren Sie die Styles für das dunkle Theme unter einer spezifischen Klasse.
 // Diese Regeln werden nur aktiv, wenn der body-Tag die Klasse '.dark-theme' hat.

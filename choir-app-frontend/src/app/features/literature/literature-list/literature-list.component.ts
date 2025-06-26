@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
@@ -18,7 +19,7 @@ import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
@@ -28,6 +29,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public filterByCollectionId$ = new BehaviorSubject<number | null>(null);
   public filterByCategoryId$ = new BehaviorSubject<number | null>(null);
   public onlySingable$ = new BehaviorSubject<boolean>(false);
+  public searchControl = new FormControl('');
   public filtersExpanded = false;
   private readonly FILTER_KEY = 'repertoireFilters';
 
@@ -79,6 +81,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
         if (s.categoryId !== undefined) this.filterByCategoryId$.next(s.categoryId);
         if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
+        if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
         if (s.collectionId || s.categoryId || s.onlySingable) this.filtersExpanded = true;
       } catch { }
     }
@@ -90,8 +93,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
     const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
     const page$ = this._paginator.page;
+    const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryId$, this.onlySingable$, sort$, page$)
+    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryId$, this.onlySingable$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -116,7 +120,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             pageIndex + 1,
             this._paginator.pageSize,
             this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-            this._sort.direction.toUpperCase() as 'ASC' | 'DESC'
+            this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+            this.searchControl.value || undefined
           ).pipe(
             catchError(() => {
               this.snackBar.open('Could not load repertoire.', 'Close', { duration: 5000 });
@@ -144,6 +149,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       this.filterByCollectionId$.value,
       this.filterByCategoryId$.value,
       this.onlySingable$.value,
+      this.searchControl.value,
       this._sort.active,
       this._sort.direction
     ].join('|');
@@ -161,7 +167,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       nextIndex + 1,
       this._paginator.pageSize,
       this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-      this._sort.direction.toUpperCase() as 'ASC' | 'DESC'
+      this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+      this.searchControl.value || undefined
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
 
@@ -177,23 +184,23 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     return '-';
   }
 
-  /**
-   * Formats the reference into a sortable value (e.g., pads numbers with zeros).
+  /*
+   * Former helper for building a sortable reference string. Currently unused
+   * but kept for potential future sorting requirements.
+   *
+   * private formatReferenceForSort(piece: Piece): string {
+   *   if (piece.collections && piece.collections.length > 0) {
+   *     const ref = piece.collections[0];
+   *     const num = (ref as any).collection_piece.numberInCollection;
+   *     const numericPart = parseInt(num, 10);
+   *     if (!isNaN(numericPart)) {
+   *       return `${ref.prefix || ''}${numericPart.toString().padStart(5, '0')}`;
+   *     }
+   *     return `${ref.prefix || ''}${num}`;
+   *   }
+   *   return '';
+   * }
    */
-  private formatReferenceForSort(piece: Piece): string {
-    if (piece.collections && piece.collections.length > 0) {
-      const ref = piece.collections[0];
-      const num = (ref as any).collection_piece.numberInCollection;
-      // Try to parse the number part to sort numerically (e.g., 2 before 10)
-      const numericPart = parseInt(num, 10);
-      if (!isNaN(numericPart)) {
-        // Pad with leading zeros to ensure correct string sorting
-        return `${ref.prefix || ''}${numericPart.toString().padStart(5, '0')}`;
-      }
-      return `${ref.prefix || ''}${num}`; // Fallback for non-numeric refs
-    }
-    return ''; // Return empty string for non-collection pieces to sort them together
-  }
 
   /**
    * Handles changes from the collection filter dropdown.
@@ -229,6 +236,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.filterByCollectionId$.next(null);
     this.filterByCategoryId$.next(null);
     this.onlySingable$.next(false);
+    this.searchControl.setValue('', { emitEvent: false });
     this.filtersExpanded = false;
     this.pageCache.clear();
     if (this._paginator) {
@@ -242,7 +250,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const state = {
       collectionId: this.filterByCollectionId$.value,
       categoryId: this.filterByCategoryId$.value,
-      onlySingable: this.onlySingable$.value
+      onlySingable: this.onlySingable$.value,
+      search: this.searchControl.value
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
     this.filtersExpanded = !!(state.collectionId || state.categoryId || state.onlySingable);

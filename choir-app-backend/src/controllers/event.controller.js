@@ -5,6 +5,7 @@ const Composer = db.composer;
 const Collection = db.collection;
 const CollectionPiece = db.collection_piece;
 const User = db.user;
+const logger = require("../config/logger");
 const { Op } = require("sequelize");
 
 exports.create = async (req, res) => {
@@ -36,7 +37,7 @@ exports.create = async (req, res) => {
         let wasUpdated = false;
 
         if (existingEvent) {
-            console.log(`Event ${existingEvent.id} found for this day. Updating...`);
+            logger.info(`Event ${existingEvent.id} found for this day. Updating...`);
             await existingEvent.update({
                 date: date, // Aktualisieren Sie auch das Datum, falls der Benutzer nur die Uhrzeit geändert hat
                 notes: notes,
@@ -46,7 +47,7 @@ exports.create = async (req, res) => {
             wasUpdated = true;
         } else {
             // --- NEUES EVENT ERSTELLEN ---
-            console.log("No existing event found for this day. Creating new one...");
+            logger.info("No existing event found for this day. Creating new one...");
             event = await db.event.create({
                 date: date,
                 type: type,
@@ -57,7 +58,7 @@ exports.create = async (req, res) => {
         }
 
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
-        if (pieceIds && pieceIds.length >= 0) {
+        if (Array.isArray(pieceIds) && pieceIds.length > 0) {
             await event.setPieces(pieceIds);
         }
 
