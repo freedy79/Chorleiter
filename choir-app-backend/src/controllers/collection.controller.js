@@ -59,36 +59,38 @@ exports.update = async (req, res) => {
  */
 exports.findAll = async (req, res) => {
     try {
-        // Step 1: Get all global collections.
-        const allCollections = await Collection.findAll({
-            attributes: {
-                // Use Sequelize's literal to count associated pieces efficiently.
-                include: [[db.sequelize.fn("COUNT", db.sequelize.col("pieces.id")), "pieceCount"]]
-            },
-            include: [{
-                model: db.piece,
-                attributes: [], // Don't include piece data, just use for the count.
-                through: { attributes: [] }
-            }],
-            group: ['collection.id'], // Group by collection to get a correct count.
-            order: [['title', 'ASC']]
-        });
+        // Fetch collections and choir information concurrently
+        const [allCollections, choirCollections] = await Promise.all([
+            Collection.findAll({
+                attributes: {
+                    include: [
+                        [
+                            db.sequelize.literal(`(
+                                SELECT COUNT(*) FROM collection_pieces AS cp
+                                WHERE cp.collectionId = collection.id
+                            )`),
+                            'pieceCount'
+                        ]
+                    ]
+                },
+                order: [['title', 'ASC']],
+                raw: true
+            }),
+            Choir.findByPk(req.activeChoirId).then(choir =>
+                choir.getCollections({ attributes: ['id'], joinTableAttributes: [], raw: true })
+            )
+        ]);
 
-        // Step 2: Get the IDs of collections this choir has adopted.
-        const choir = await Choir.findByPk(req.activeChoirId);
-        const adoptedCollections = await choir.getCollections({ joinTableAttributes: [] });
-        const adoptedCollectionIds = new Set(adoptedCollections.map(c => c.id));
+        const adoptedIds = new Set(choirCollections.map(c => c.id));
 
-        // Step 3: Enrich the results.
-        const results = allCollections.map(collection => {
-            const plainCollection = collection.get({ plain: true });
-            plainCollection.isAdded = adoptedCollectionIds.has(plainCollection.id);
-            return plainCollection;
-        });
+        const results = allCollections.map(c => ({
+            ...c,
+            isAdded: adoptedIds.has(c.id)
+        }));
 
         res.status(200).send(results);
     } catch (err) {
-        res.status(500).send({ message: err.message || "An error occurred while retrieving collections." });
+        res.status(500).send({ message: err.message || 'An error occurred while retrieving collections.' });
     }
 };
 
