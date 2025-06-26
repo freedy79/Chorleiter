@@ -6,6 +6,15 @@
   overflow: hidden;
 }
 
+.drawer-container {
+  height: 80vh;
+}
+
+.filter-drawer {
+  width: 320px;
+  padding: 1rem;
+}
+
 // Header der Seite (Titel und Button)
 .list-page-header {
   display: flex;

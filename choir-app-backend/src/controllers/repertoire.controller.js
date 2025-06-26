@@ -1,6 +1,16 @@
 const db = require("../models");
 const { Op, literal } = require("sequelize");
 
+function parseSearchTokens(search) {
+    const regex = /"([^"]+)"|([^"\s]+)/g;
+    const tokens = [];
+    let match;
+    while ((match = regex.exec(search)) !== null) {
+        tokens.push(match[1] || match[2]);
+    }
+    return tokens;
+}
+
 /**
  * NEW, INTELLIGENT LOOKUP FUNCTION
  * @description Provides a simple, flat list of all pieces in a choir's repertoire,
@@ -62,7 +72,7 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key } = req.query;
+    const { composerId, categoryId, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 25;
     const offset = (pageNum - 1) * limitNum;
@@ -97,6 +107,17 @@ exports.findMyRepertoire = async (req, res) => {
         // Fügen Sie die optionalen Filter hinzu.
         if (composerId) whereCondition.composerId = composerId;
         if (categoryId) whereCondition.categoryId = categoryId;
+
+        if (search) {
+            const tokens = parseSearchTokens(search);
+            whereCondition[Op.and] = tokens.map(t => ({
+                [Op.or]: [
+                    { title: { [Op.iLike]: `%${t}%` } },
+                    { '$composer.name$': { [Op.iLike]: `%${t}%` } },
+                    { '$category.name$': { [Op.iLike]: `%${t}%` } }
+                ]
+            }));
+        }
 
         // Die Include-Anweisungen für alle Metadaten.
         const includeClauses = [
