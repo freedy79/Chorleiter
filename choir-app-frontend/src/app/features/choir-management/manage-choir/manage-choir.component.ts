@@ -12,6 +12,7 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -23,8 +24,6 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 })
 export class ManageChoirComponent implements OnInit {
   choirForm: FormGroup;
-  isLoadingDetails = true;
-  isLoadingMembers = true;
 
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'role', 'actions'];
@@ -34,7 +33,8 @@ export class ManageChoirComponent implements OnInit {
     private fb: FormBuilder,
     private apiService: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private route: ActivatedRoute
   ) {
     this.choirForm = this.fb.group({
       name: ['', Validators.required],
@@ -44,35 +44,21 @@ export class ManageChoirComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadChoirDetails();
-    this.loadMembers();
-  }
-
-  loadChoirDetails(): void {
-    this.isLoadingDetails = true;
-    this.apiService.getMyChoirDetails().subscribe({
-      next: (choir: Choir) => {
-        this.choirForm.patchValue(choir);
-        this.isLoadingDetails = false;
-      },
-      error: (err) => {
-        this.snackBar.open('Could not load choir details.', 'Close');
-        this.isLoadingDetails = false;
+    this.route.data.subscribe(data => {
+      const pageData = data['pageData'];
+      if (pageData) {
+        // Füllen Sie das Formular und die Tabelle
+        this.choirForm.patchValue(pageData.choirDetails);
+        this.dataSource.data = pageData.members;
       }
     });
   }
 
-  loadMembers(): void {
-    this.isLoadingMembers = true;
-    this.apiService.getChoirMembers().subscribe({
-      next: (members: UserInChoir[]) => {
+  private reloadData(): void {
+    // Sie könnten einen API-Aufruf machen oder, noch besser, zur Seite neu navigieren,
+    // um den Resolver erneut auszulösen.
+    this.apiService.getChoirMembers().subscribe(members => {
         this.dataSource.data = members;
-        this.isLoadingMembers = false;
-      },
-      error: (err) => {
-        this.snackBar.open('Could not load choir members.', 'Close');
-        this.isLoadingMembers = false;
-      }
     });
   }
 
@@ -99,7 +85,7 @@ export class ManageChoirComponent implements OnInit {
         this.apiService.inviteUserToChoir(result.email, result.role).subscribe({
           next: (response: { message: string }) => {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
-            this.loadMembers(); // Laden Sie die Mitgliederliste neu
+            this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
           error: (err) => this.snackBar.open(`Error inviting user: ${err.error.message}`, 'Close')
         });
@@ -122,7 +108,7 @@ export class ManageChoirComponent implements OnInit {
         this.apiService.removeUserFromChoir(user.id).subscribe({
           next: () => {
             this.snackBar.open(`${user.name} has been removed from the choir.`, 'OK', { duration: 3000 });
-            this.loadMembers(); // Laden Sie die Mitgliederliste neu
+            this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
           error: (err) => this.snackBar.open('Error removing member.', 'Close')
         });

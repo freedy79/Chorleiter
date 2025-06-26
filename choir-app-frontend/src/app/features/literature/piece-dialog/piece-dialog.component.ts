@@ -59,10 +59,8 @@ export class PieceDialogComponent implements OnInit {
 
         this.pieceForm = this.fb.group({
             title: ['', Validators.required],
-
             voicing: [''],
-
-            lyrics: [''],
+            lycris: [''],
             links: this.fb.array([]),
             opus: [''],
             key: [''],
@@ -201,7 +199,7 @@ export class PieceDialogComponent implements OnInit {
             authorId: piece.author?.id,
             categoryId: piece.category?.id,
             arrangerIds: piece.arrangers?.map((a) => a.id) || [],
-            lyrics: piece.lyrics,
+            lycris: piece.lyrics,
         });
 
         // Populate the links FormArray

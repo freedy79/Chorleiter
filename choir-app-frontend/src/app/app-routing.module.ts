@@ -19,6 +19,7 @@ import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ChoirAdminGuard } from '@core/guards/choir-admin-guard';
+import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -74,6 +75,7 @@ export const routes: Routes = [
                 path: 'manage-choir',
                 component: ManageChoirComponent,
                 canActivate: [AuthGuard, ChoirAdminGuard],
+                resolve: {pageData: ManageChoirResolver }
             },
         ],
     },
