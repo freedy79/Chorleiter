@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 
 import { AppComponent } from './app/app.component';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -21,6 +22,7 @@ bootstrapApplication(AppComponent, {
     provideAnimations(), // Provides BrowserAnimationsModule
     provideHttpClient(withInterceptorsFromDi()), // Provides HttpClient and interceptor logic
     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }, // Provide your interceptor
-    { provide: LOCALE_ID, useValue: 'de-DE' }
+    { provide: LOCALE_ID, useValue: 'de-DE' },
+    { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: { verticalPosition: 'top' } }
   ]
 }).catch(err => console.error(err));
