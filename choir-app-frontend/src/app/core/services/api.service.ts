@@ -85,12 +85,16 @@ export class ApiService {
     return this.http.get<Composer[]>(`${this.apiUrl}/composers`);
   }
 
-  createComposer(name: string): Observable<Composer> {
-    return this.http.post<Composer>(`${this.apiUrl}/composers`, { name });
+  createComposer(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
+    return this.http.post<Composer>(`${this.apiUrl}/composers`, data);
   }
 
   getAuthors(): Observable<Author[]> {
     return this.http.get<Author[]>(`${this.apiUrl}/authors`);
+  }
+
+  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
+    return this.http.post<Author>(`${this.apiUrl}/authors`, data);
   }
 
 

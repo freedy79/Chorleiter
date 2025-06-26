@@ -91,7 +91,7 @@ export class PieceDialogComponent implements OnInit {
 
         this.pieceForm.get('authorId')?.valueChanges.subscribe((value) => {
             if (value === this.addNewAuthorId) {
-                this.openAddComposerDialog();
+                this.openAddAuthorDialog();
             }
         });
 
@@ -115,24 +115,43 @@ export class PieceDialogComponent implements OnInit {
     openAddComposerDialog(): void {
         const composerDialogRef = this.dialog.open(ComposerDialogComponent, {
             width: '500px',
+            data: { role: 'composer' }
         });
 
-        composerDialogRef.afterClosed().subscribe((newComposerName) => {
-            if (newComposerName) {
-                // If a new name was saved, create it via the API
+        composerDialogRef.afterClosed().subscribe((newComposer) => {
+            if (newComposer) {
                 this.apiService
-                    .createComposer(newComposerName)
-                    .subscribe((newComposer) => {
-                        // Trigger the composer list to refresh
+                    .createComposer(newComposer)
+                    .subscribe((created) => {
                         this.refreshComposers$.next();
-                        // Pre-select the newly created composer in the form
                         this.pieceForm
                             .get('composerId')
-                            ?.setValue(newComposer.id);
+                            ?.setValue(created.id);
                     });
             } else {
-                // If the user cancelled, reset the dropdown to its previous state
                 this.pieceForm.get('composerId')?.setValue(null);
+            }
+        });
+    }
+
+    openAddAuthorDialog(): void {
+        const dialogRef = this.dialog.open(ComposerDialogComponent, {
+            width: '500px',
+            data: { role: 'author' }
+        });
+
+        dialogRef.afterClosed().subscribe((newAuthor) => {
+            if (newAuthor) {
+                this.apiService
+                    .createAuthor(newAuthor)
+                    .subscribe((created) => {
+                        this.refreshAuthors$.next();
+                        this.pieceForm
+                            .get('authorId')
+                            ?.setValue(created.id);
+                    });
+            } else {
+                this.pieceForm.get('authorId')?.setValue(null);
             }
         });
     }
