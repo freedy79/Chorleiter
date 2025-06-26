@@ -233,6 +233,14 @@ export class ApiService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, roleInChoir });
   }
 
+  getInvitation(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/invitations/${token}`);
+  }
+
+  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
+  }
+
   removeUserFromChoir(userId: number): Observable<any> {
     // Senden der ID im Body mit der DELETE-Methode
     const options = { body: { userId: userId } };

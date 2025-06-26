@@ -52,6 +52,7 @@ const importRoutes = require("./routes/import.routes");
 const authorRoutes = require("./routes/author.routes");
 const adminRoutes = require("./routes/admin.routes");
 const choirManagementRoutes = require("./routes/choir-management.routes");
+const invitationRoutes = require("./routes/invitation.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -65,6 +66,7 @@ app.use("/api/import", importRoutes);
 app.use("/api/authors", authorRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/choir-management", choirManagementRoutes);
+app.use("/api/invitations", invitationRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(
