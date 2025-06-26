@@ -184,23 +184,23 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     return '-';
   }
 
-  /**
-   * Formats the reference into a sortable value (e.g., pads numbers with zeros).
+  /*
+   * Former helper for building a sortable reference string. Currently unused
+   * but kept for potential future sorting requirements.
+   *
+   * private formatReferenceForSort(piece: Piece): string {
+   *   if (piece.collections && piece.collections.length > 0) {
+   *     const ref = piece.collections[0];
+   *     const num = (ref as any).collection_piece.numberInCollection;
+   *     const numericPart = parseInt(num, 10);
+   *     if (!isNaN(numericPart)) {
+   *       return `${ref.prefix || ''}${numericPart.toString().padStart(5, '0')}`;
+   *     }
+   *     return `${ref.prefix || ''}${num}`;
+   *   }
+   *   return '';
+   * }
    */
-  private formatReferenceForSort(piece: Piece): string {
-    if (piece.collections && piece.collections.length > 0) {
-      const ref = piece.collections[0];
-      const num = (ref as any).collection_piece.numberInCollection;
-      // Try to parse the number part to sort numerically (e.g., 2 before 10)
-      const numericPart = parseInt(num, 10);
-      if (!isNaN(numericPart)) {
-        // Pad with leading zeros to ensure correct string sorting
-        return `${ref.prefix || ''}${numericPart.toString().padStart(5, '0')}`;
-      }
-      return `${ref.prefix || ''}${num}`; // Fallback for non-numeric refs
-    }
-    return ''; // Return empty string for non-collection pieces to sort them together
-  }
 
   /**
    * Handles changes from the collection filter dropdown.
