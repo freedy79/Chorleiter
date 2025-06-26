@@ -12,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING, // Using STRING to allow "23a", "p. 45", etc.
             allowNull: false
         }
+    }, {
+        indexes: [
+            { fields: ['collectionId'] },
+            { fields: ['pieceId'] }
+        ]
     });
     return CollectionPiece;
 };

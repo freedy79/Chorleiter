@@ -10,6 +10,18 @@ module.exports = (sequelize, DataTypes) => {
         roleInChoir: {
             type: DataTypes.ENUM('director', 'choir_admin'),
             defaultValue: 'director'
+        },
+        registrationStatus: {
+            type: DataTypes.ENUM('REGISTERED', 'PENDING'),
+            defaultValue: 'REGISTERED'
+        },
+        inviteToken: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        inviteExpiry: {
+            type: DataTypes.DATE,
+            allowNull: true
         }
     });
     return UserChoir;

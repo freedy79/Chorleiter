@@ -32,6 +32,8 @@ db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 // A Choir has many Users
 db.user.belongsToMany(db.choir, { through: db.user_choir });
 db.choir.belongsToMany(db.user, { through: db.user_choir });
+db.user_choir.belongsTo(db.user);
+db.user_choir.belongsTo(db.choir);
 
 // A Choir has many Pieces
 db.choir.belongsToMany(db.piece, { through: db.choir_repertoire });
