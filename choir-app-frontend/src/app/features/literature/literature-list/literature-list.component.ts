@@ -12,6 +12,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
 import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
+import { Category } from 'src/app/core/models/category';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 
 @Component({
@@ -25,9 +26,14 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   // --- Reactive Subjects for triggering updates ---
   private refresh$ = new BehaviorSubject<void>(undefined);
   public filterByCollectionId$ = new BehaviorSubject<number | null>(null);
+  public filterByCategoryId$ = new BehaviorSubject<number | null>(null);
+  public onlySingable$ = new BehaviorSubject<boolean>(false);
+  public filtersExpanded = false;
+  private readonly FILTER_KEY = 'repertoireFilters';
 
   // --- Observables for filter display ---
   public collections$!: Observable<Collection[]>;
+  public categories$!: Observable<Category[]>;
 
   // --- Table, Paginator, and Sort Logic ---
   public displayedColumns: string[] = ['title', 'composer', 'category', 'reference', 'status', 'actions'];
@@ -35,6 +41,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public totalPieces = 0;
   public pageSizeOptions: number[] = [10, 25, 50];
   public isLoading = true;
+  private pageCache = new Map<number, Piece[]>();
+  private lastCacheKey = '';
 
   // --- Bulletproof @ViewChild Setters ---
   private _sort!: MatSort;
@@ -62,59 +70,99 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     // Pre-fetch data for the filter dropdowns
     this.collections$ = this.apiService.getCollections();
+    this.categories$ = this.apiService.getCategories();
+
+    const saved = localStorage.getItem(this.FILTER_KEY);
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
+        if (s.categoryId !== undefined) this.filterByCategoryId$.next(s.categoryId);
+        if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
+        if (s.collectionId || s.categoryId || s.onlySingable) this.filtersExpanded = true;
+      } catch { }
+    }
   }
 
   ngAfterViewInit(): void {
-    // Set the paginator and sort on the datasource AFTER the view has been initialized.
     this.dataSource.paginator = this._paginator;
     this.dataSource.sort = this._sort;
 
-    // --- Custom Sorting Logic ---
-    this.dataSource.sortingDataAccessor = (item: Piece, property) => {
-      switch (property) {
-        case 'reference': return this.formatReferenceForSort(item);
-        case 'composer': return item.composer?.name || '';
-        case 'category': return item.category?.name || '';
-        default:
-          // Default case for properties like 'title'
-          const value = (item as any)[property];
-          return typeof value === 'string' ? value.toLowerCase() : value;
-      }
-    };
+    const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
+    const page$ = this._paginator.page;
 
-    // --- The Main Reactive Data Stream ---
-    merge(this.refresh$, this.filterByCollectionId$)
+    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryId$, this.onlySingable$, sort$, page$)
       .pipe(
-        startWith({}), // Trigger initial data load
-        tap(() => this.isLoading = true),
+        startWith({}),
+        tap(() => {
+          this.isLoading = true;
+          const key = this.currentCacheKey();
+          if (key !== this.lastCacheKey) {
+            this.pageCache.clear();
+            this.lastCacheKey = key;
+          }
+        }),
         switchMap(() => {
-          // Fetch the entire relevant repertoire from the server.
-          // Sorting and pagination will be handled on the client-side by MatTableDataSource.
+          const pageIndex = this._paginator.pageIndex;
+          const cached = this.pageCache.get(pageIndex);
+          if (cached) {
+            return of({ data: cached, total: this.totalPieces });
+          }
           return this.apiService.getMyRepertoire(
-            undefined, // We could add composer filter here in the future
-            undefined, // We could add category filter here in the future
-            this.filterByCollectionId$.value ?? undefined
+            undefined,
+            this.filterByCategoryId$.value ?? undefined,
+            this.filterByCollectionId$.value ?? undefined,
+            this._sort.active as any,
+            pageIndex + 1,
+            this._paginator.pageSize,
+            this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
+            this._sort.direction.toUpperCase() as 'ASC' | 'DESC'
           ).pipe(
-            // Handle potential API errors gracefully
             catchError(() => {
               this.snackBar.open('Could not load repertoire.', 'Close', { duration: 5000 });
-              return of([]); // Return an empty array on error
+              return of({ data: [], total: 0 });
             })
           );
         }),
-        map(data => {
+        map(res => {
           this.isLoading = false;
-          this.totalPieces = data.length;
-          // Dynamically add the "All" option if it's not already there and there's data
-          if (data.length > 0 && !this.pageSizeOptions.includes(data.length)) {
-             this.pageSizeOptions = [10, 25, 50, data.length];
+          this.totalPieces = res.total;
+          if (res.total > 0 && !this.pageSizeOptions.includes(res.total)) {
+            this.pageSizeOptions = [10, 25, 50, res.total];
           }
-          return data;
+          this.pageCache.set(this._paginator.pageIndex, res.data);
+          this.prefetchNextPage();
+          return res.data;
         })
       ).subscribe(data => {
-        // Assign the new data to our datasource. The table and paginator will update.
         this.dataSource.data = data;
       });
+  }
+
+  private currentCacheKey(): string {
+    return [
+      this.filterByCollectionId$.value,
+      this.filterByCategoryId$.value,
+      this.onlySingable$.value,
+      this._sort.active,
+      this._sort.direction
+    ].join('|');
+  }
+
+  private prefetchNextPage(): void {
+    const nextIndex = this._paginator.pageIndex + 1;
+    if (nextIndex * this._paginator.pageSize >= this.totalPieces) return;
+    if (this.pageCache.has(nextIndex)) return;
+    this.apiService.getMyRepertoire(
+      undefined,
+      this.filterByCategoryId$.value ?? undefined,
+      this.filterByCollectionId$.value ?? undefined,
+      this._sort.active as any,
+      nextIndex + 1,
+      this._paginator.pageSize,
+      this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
+      this._sort.direction.toUpperCase() as 'ASC' | 'DESC'
+    ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
 
   /**
@@ -151,10 +199,53 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
    * Handles changes from the collection filter dropdown.
    */
   onCollectionFilterChange(collectionId: number | null): void {
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
+    if (this._paginator) {
+      this._paginator.firstPage();
     }
     this.filterByCollectionId$.next(collectionId);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
+  onCategoryFilterChange(categoryId: number | null): void {
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.filterByCategoryId$.next(categoryId);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
+  onSingableToggle(checked: boolean): void {
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.onlySingable$.next(checked);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
+  clearFilters(): void {
+    this.filterByCollectionId$.next(null);
+    this.filterByCategoryId$.next(null);
+    this.onlySingable$.next(false);
+    this.filtersExpanded = false;
+    this.pageCache.clear();
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    localStorage.removeItem(this.FILTER_KEY);
+    this.refresh$.next();
+  }
+
+  private saveFilters(): void {
+    const state = {
+      collectionId: this.filterByCollectionId$.value,
+      categoryId: this.filterByCategoryId$.value,
+      onlySingable: this.onlySingable$.value
+    };
+    localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
+    this.filtersExpanded = !!(state.collectionId || state.categoryId || state.onlySingable);
   }
 
   // =======================================================================

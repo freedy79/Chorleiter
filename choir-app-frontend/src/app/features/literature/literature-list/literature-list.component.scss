@@ -17,8 +17,10 @@
 
 // Filter-Controls
 .filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
   padding: 1rem 0;
-  // Dieser Bereich hat ebenfalls eine feste Höhe.
   flex-shrink: 0;
   mat-form-field {
     width: 300px;
@@ -26,6 +28,13 @@
       color: currentColor;
     }
   }
+  .spacer {
+    flex: 1 1 auto;
+  }
+}
+
+.filter-panel {
+  width: 320px;
 }
 
 // Wrapper für Tabelle und Paginator
