@@ -51,6 +51,7 @@ const initialSeed = async () => {
 };
 
 const PORT = process.env.PORT || 8088;
+const ADDRESS = process.env.ADDRESS || "localhost"
 
 // In development, you might want to force-sync the DB
 // db.sequelize.sync({ force: true }).then(() => {
@@ -62,7 +63,7 @@ db.sequelize.sync({ alter: true }).then(() => {
     // Rufen Sie die Seed-Funktion auf.
     initialSeed();
 
-    app.listen(PORT, "0.0.0.0", () => {
-        console.log(`Server is running on port ${PORT}.`);
+    app.listen(PORT, ADDRESS, () => {
+        console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
     });
 });

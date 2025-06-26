@@ -1,61 +1,157 @@
 const db = require("../models");
+const logger = require("../config/logger");
 
 // Details des aktiven Chors abrufen
-exports.getMyChoirDetails = async (req, res) => { /* ... findet den Chor mit req.activeChoirId ... */ };
+exports.getMyChoirDetails = async (req, res, next) => {
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+
+        if (!choir) {
+            // Dieser Fall sollte durch die Guards selten auftreten, ist aber eine gute Absicherung.
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        res.status(200).send(choir);
+    } catch (err) {
+        err.message = `Error fetching details for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err); // Leiten Sie den Fehler an die zentrale Middleware weiter.
+    }
+};
 
 // Details des aktiven Chors aktualisieren
-exports.updateMyChoir = async (req, res) => { /* ... findet den Chor, prüft Berechtigung (implizit durch Route) und aktualisiert ihn ... */ };
+exports.updateMyChoir = async (req, res, next) => {
+    const { name, description, location } = req.body;
+
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+
+        if (!choir) {
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
+        const [numberOfAffectedRows] = await db.choir.update(
+            { name, description, location },
+            { where: { id: req.activeChoirId } }
+        );
+
+        if (numberOfAffectedRows > 0) {
+            res.status(200).send({ message: "Choir details updated successfully." });
+        } else {
+            // Dieser Fall tritt auf, wenn der Chor zwar existiert, aber keine Daten geändert wurden.
+            // Es ist kein Fehler, aber eine Information kann nützlich sein.
+            res.status(200).send({ message: "No changes detected or choir not found." });
+        }
+    } catch (err) {
+        err.message = `Error updating details for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
 
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res) => {
-    const choir = await db.choir.findByPk(req.activeChoirId, {
-        include: [{
-            model: db.user,
-            attributes: ['id', 'name', 'email'],
-            through: {
-                as: 'membership', // Alias für die Zwischentabelle
-                attributes: ['roleInChoir']
-            }
-        }]
-    });
-    res.send(choir.users);
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId, {
+            // Binden Sie die zugehörigen Benutzer an die Chor-Abfrage.
+            include: [{
+                model: db.user,
+                as: 'users', // 'as' muss mit der Definition in models/index.js übereinstimmen
+                attributes: ['id', 'name', 'email'], // Nur die benötigten, nicht-sensitiven Felder
+                // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
+                through: {
+                    model: db.user_choir,
+                    attributes: ['roleInChoir'] // Wir wollen die Rolle des Benutzers IN DIESEM Chor.
+                }
+            }],
+            order: [[db.user, 'name', 'ASC']] // Sortieren Sie die Mitglieder alphabetisch nach Namen.
+        });
+
+        if (!choir) {
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        // Sequelize fügt die 'through'-Daten in ein verschachteltes Objekt ein.
+        // Wir formatieren die Antwort, um sie für das Frontend einfacher zu machen.
+        const members = choir.users.map(user => {
+            return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                membership: {
+                    roleInChoir: user.user_choir.roleInChoir
+                }
+            };
+        });
+
+        res.status(200).send(members);
+    } catch (err) {
+        err.message = `Error fetching members for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
 };
 
 // Einen Benutzer zum aktiven Chor hinzufügen/einladen
-exports.inviteUserToChoir = async (req, res) => {
+exports.inviteUserToChoir = async (req, res, next) => {
     const { email, roleInChoir } = req.body;
     const choirId = req.activeChoirId;
+
+    if (!email || !roleInChoir) {
+        return res.status(400).send({ message: "Email and role are required." });
+    }
 
     try {
         let user = await db.user.findOne({ where: { email: email } });
         const choir = await db.choir.findByPk(choirId);
 
         if (user) {
-            // Benutzer existiert bereits, fügen Sie ihn einfach zum Chor hinzu
-            await choir.addUser(user, { through: { roleInChoir: roleInChoir }});
+            // Benutzer existiert bereits, fügen Sie ihn zum Chor hinzu.
+            // 'addUser' ist ein von Sequelize generierter Helfer.
+            await choir.addUser(user, { through: { roleInChoir: roleInChoir } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
-            // Benutzer existiert nicht -> Einladungslogik
-            // Hier würde die Logik zum Senden einer E-Mail mit einem Registrierungs-Token stehen.
-            // Fürs Erste simulieren wir dies.
-            console.log(`SIMULATING INVITATION EMAIL to ${email} for choir ${choir.name} with role ${roleInChoir}.`);
+            // Benutzer existiert nicht -> Einladungslogik simulieren
+            logger.info(`SIMULATING INVITATION EMAIL to ${email} for choir "${choir.name}" with role ${roleInChoir}.`);
             res.status(200).send({ message: `An invitation has been sent to ${email}.` });
         }
     } catch (err) {
-        res.status(500).send({ message: err.message });
+        // Fangen Sie den Fall ab, dass der Benutzer bereits im Chor ist (Unique-Constraint-Fehler)
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).send({ message: 'This user is already a member of the choir.' });
+        }
+        err.message = `Error inviting user to choirId ${choirId}: ${err.message}`;
+        next(err);
     }
 };
 
 // Einen Benutzer aus dem Chor entfernen
-exports.removeUserFromChoir = async (req, res) => {
+exports.removeUserFromChoir = async (req, res, next) => {
     const { userId } = req.body;
     const choirId = req.activeChoirId;
 
+    if (!userId) {
+        return res.status(400).send({ message: "User ID is required." });
+    }
+
+    // Sicherheitsprüfung: Verhindern, dass sich der letzte Choir Admin selbst entfernt.
+    if (req.userId === userId) {
+        const members = await db.user_choir.findAll({ where: { choirId: choirId, roleInChoir: 'choir_admin' }});
+        if (members.length <= 1) {
+            return res.status(403).send({ message: "You cannot remove the last Choir Admin." });
+        }
+    }
+
     try {
         const choir = await db.choir.findByPk(choirId);
-        await choir.removeUser(userId); // Sequelize-Helfer zum Entfernen der Assoziation
-        res.status(200).send({ message: "User removed from choir." });
+        // 'removeUser' ist ein weiterer Sequelize-Helfer, der die Verknüpfung löscht.
+        const result = await choir.removeUser(userId);
+
+        if (result > 0) {
+            res.status(200).send({ message: "User removed from choir." });
+        } else {
+            res.status(404).send({ message: "User is not a member of this choir." });
+        }
     } catch (err) {
-        res.status(500).send({ message: err.message });
+        err.message = `Error removing user ${userId} from choirId ${choirId}: ${err.message}`;
+        next(err);
     }
 };

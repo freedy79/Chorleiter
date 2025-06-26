@@ -24,7 +24,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
         // Füge den Authorization-Header hinzu, wenn ein Token vorhanden ist.
         if (token && isApiUrl) {
-            console.log('Token found, adding to request:', token);
+            //console.log('Token found, adding to request:', token);
 
             request = request.clone({
                 setHeaders: {
@@ -33,10 +33,7 @@ export class AuthInterceptor implements HttpInterceptor {
             });
         }
 
-        console.log(
-            'Request intercepted and token added if available:',
-            request
-        );
+        //console.log('Request intercepted and token added if available:', request);
 
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {

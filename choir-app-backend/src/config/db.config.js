@@ -1,4 +1,5 @@
 module.exports = {
+    ADDRESS: process.env.ADDRESS,
     HOST: process.env.DB_HOST,
     USER: process.env.DB_USER,
     PASSWORD: process.env.DB_PASSWORD,
@@ -9,5 +10,6 @@ module.exports = {
       min: 0,
       acquire: 30000,
       idle: 10000
-    }
+    },
+    NODE_ENV: 'development', // Set to 'production' in production environment
   };
