@@ -1,18 +1,11 @@
-<div class="page">
-  <div class="header-container">
-    <h1>My Repertoire</h1>
-    <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
-      <mat-icon>add</mat-icon>
-      <span>Add New Piece</span>
-    </button>
-  </div>
-
-  <!-- Filter controls row inside expansion panel -->
-  <mat-expansion-panel [(expanded)]="filtersExpanded" class="filter-panel">
-    <mat-expansion-panel-header>
-      <mat-panel-title>Filters</mat-panel-title>
-    </mat-expansion-panel-header>
+<mat-drawer-container class="drawer-container">
+  <mat-drawer #drawer position="start" mode="over" class="filter-drawer" [(opened)]="filtersExpanded">
     <div class="filter-controls">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput [formControl]="searchControl" placeholder="Search repertoire" />
+        <mat-hint>Use quotes for phrases</mat-hint>
+      </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>Collection</mat-label>
         <mat-select [value]="filterByCollectionId$.value" (selectionChange)="onCollectionFilterChange($event.value)">
@@ -32,12 +25,23 @@
       <mat-checkbox [checked]="onlySingable$.value" (change)="onSingableToggle($event.checked)">
         Only singable
       </mat-checkbox>
-      <span class="spacer"></span>
       <button mat-button (click)="clearFilters()">Clear Filters</button>
     </div>
-  </mat-expansion-panel>
+  </mat-drawer>
+  <mat-drawer-content>
+  <div class="page">
+    <div class="header-container">
+      <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle filters">
+        <mat-icon>filter_list</mat-icon>
+      </button>
+      <h1>My Repertoire</h1>
+      <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
+        <mat-icon>add</mat-icon>
+        <span>Add New Piece</span>
+      </button>
+    </div>
 
-  <div class="table-wrapper mat-elevation-z8">
+    <div class="table-wrapper mat-elevation-z8">
     <div *ngIf="isLoading" class="loading-shade">
       <mat-spinner></mat-spinner>
     </div>
@@ -114,4 +118,6 @@
     <mat-paginator [length]="totalPieces" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons>
     </mat-paginator>
   </div>
-</div>
+  </div>
+  </mat-drawer-content>
+</mat-drawer-container>

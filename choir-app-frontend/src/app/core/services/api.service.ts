@@ -38,7 +38,8 @@ export class ApiService {
     page: number = 1,
     limit: number = 25,
     status?: string,
-    sortDir: 'ASC' | 'DESC' = 'ASC'
+    sortDir: 'ASC' | 'DESC' = 'ASC',
+    search?: string
   ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
     if (composerId) params = params.set('composerId', composerId.toString());
@@ -49,6 +50,7 @@ export class ApiService {
     params = params.set('limit', limit);
     params = params.set('sortDir', sortDir);
     if (status) params = params.set('status', status);
+    if (search) params = params.set('search', search);
 
     return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
   }
