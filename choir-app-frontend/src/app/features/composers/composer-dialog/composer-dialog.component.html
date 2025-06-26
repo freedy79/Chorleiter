@@ -1,14 +1,21 @@
-<h1 mat-dialog-title>Add New Composer</h1>
+<h1 mat-dialog-title>{{ title }}</h1>
 <div mat-dialog-content>
-  <p>Enter the full name of the new composer.</p>
   <form [formGroup]="form" id="composer-form" (ngSubmit)="onSave()">
     <mat-form-field appearance="outline">
-      <mat-label>Composer Name</mat-label>
+      <mat-label>Name</mat-label>
       <input matInput formControlName="name" cdkFocusInitial>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Geburtsjahr</mat-label>
+      <input matInput formControlName="birthYear">
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Todesjahr</mat-label>
+      <input matInput formControlName="deathYear">
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-flat-button color="primary" type="submit" form="composer-form" [disabled]="form.invalid">Save Composer</button>
+  <button mat-flat-button color="primary" type="submit" form="composer-form" [disabled]="form.invalid">Save</button>
 </div>

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ComposerDialog } from './composer-dialog.component';
+import { ComposerDialogComponent } from './composer-dialog.component';
 
-describe('ComposerDialog', () => {
-  let component: ComposerDialog;
-  let fixture: ComponentFixture<ComposerDialog>;
+describe('ComposerDialogComponent', () => {
+  let component: ComposerDialogComponent;
+  let fixture: ComponentFixture<ComposerDialogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ComposerDialog]
+      imports: [ComposerDialogComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ComposerDialog);
+    fixture = TestBed.createComponent(ComposerDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

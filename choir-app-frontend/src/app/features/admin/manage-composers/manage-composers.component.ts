@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiService } from 'src/app/core/services/api.service'; // Sie müssten den ApiService erweitern
+import { ApiService } from 'src/app/core/services/api.service';
 import { Composer } from 'src/app/core/models/composer';
 import { MatTableDataSource } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 // ...
 @Component({
   selector: 'app-admin-manage-composers',
@@ -17,17 +19,31 @@ import { CommonModule } from '@angular/common';
 })
 export class ManageComposersComponent implements OnInit {
   composers: Composer[] = [];
-  displayedColumns = ['id', 'name', 'actions'];
+  displayedColumns = ['name', 'birthYear', 'deathYear', 'actions'];
   dataSource = new MatTableDataSource<Composer>();
 
-  constructor(private adminApiService: ApiService) {} // Erweitern Sie den ApiService oder erstellen Sie einen AdminApiService
+  constructor(private adminApiService: ApiService, private dialog: MatDialog) {}
 
   ngOnInit() {
-    // this.adminApiService.getAdminComposers().subscribe(data => {
-    //   this.composers = data;
-    //   this.dataSource.data = data;
-    // });
+    this.loadComposers();
   }
 
-  // Methoden für addComposer, editComposer, deleteComposer...
+  loadComposers(): void {
+    this.adminApiService.getComposers().subscribe((data) => {
+      this.composers = data;
+      this.dataSource.data = data;
+    });
+  }
+
+  addComposer(): void {
+    const ref = this.dialog.open(ComposerDialogComponent, {
+      width: '500px',
+      data: { role: 'composer' }
+    });
+    ref.afterClosed().subscribe((result) => {
+      if (result) {
+        this.adminApiService.createComposer(result).subscribe(() => this.loadComposers());
+      }
+    });
+  }
 }
