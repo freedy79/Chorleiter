@@ -1,5 +1,25 @@
 const db = require("../models");
 const logger = require("../config/logger");
+const crypto = require('crypto');
+const emailService = require('../services/email.service');
+const { Op } = require('sequelize');
+
+async function cleanupExpiredInvitations() {
+    const expired = await db.user_choir.findAll({
+        where: {
+            registrationStatus: 'PENDING',
+            inviteExpiry: { [Op.lt]: new Date() }
+        }
+    });
+    for (const entry of expired) {
+        const userId = entry.userId;
+        await entry.destroy();
+        const count = await db.user_choir.count({ where: { userId } });
+        if (count === 0) {
+            await db.user.destroy({ where: { id: userId } });
+        }
+    }
+}
 
 // Details des aktiven Chors abrufen
 exports.getMyChoirDetails = async (req, res, next) => {
@@ -51,6 +71,7 @@ exports.updateMyChoir = async (req, res, next) => {
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res) => {
     try {
+        await cleanupExpiredInvitations();
         const choir = await db.choir.findByPk(req.activeChoirId, {
             // Binden Sie die zugehörigen Benutzer an die Chor-Abfrage.
             include: [{
@@ -60,7 +81,7 @@ exports.getChoirMembers = async (req, res) => {
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
-                    attributes: ['roleInChoir'] // Wir wollen die Rolle des Benutzers IN DIESEM Chor.
+                    attributes: ['roleInChoir','registrationStatus']
                 }
             }],
             order: [[db.user, 'name', 'ASC']] // Sortieren Sie die Mitglieder alphabetisch nach Namen.
@@ -78,7 +99,8 @@ exports.getChoirMembers = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 membership: {
-                    roleInChoir: user.user_choir.roleInChoir
+                    roleInChoir: user.user_choir.roleInChoir,
+                    registrationStatus: user.user_choir.registrationStatus
                 }
             };
         });
@@ -104,14 +126,15 @@ exports.inviteUserToChoir = async (req, res, next) => {
         const choir = await db.choir.findByPk(choirId);
 
         if (user) {
-            // Benutzer existiert bereits, fügen Sie ihn zum Chor hinzu.
-            // 'addUser' ist ein von Sequelize generierter Helfer.
-            await choir.addUser(user, { through: { roleInChoir: roleInChoir } });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED' } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
-            // Benutzer existiert nicht -> Einladungslogik simulieren
-            logger.info(`SIMULATING INVITATION EMAIL to ${email} for choir "${choir.name}" with role ${roleInChoir}.`);
-            res.status(200).send({ message: `An invitation has been sent to ${email}.` });
+            const token = crypto.randomBytes(20).toString('hex');
+            const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+            user = await db.user.create({ email });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
+            await emailService.sendInvitationMail(email, token, choir.name, expiry);
+            res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }
     } catch (err) {
         // Fangen Sie den Fall ab, dass der Benutzer bereits im Chor ist (Unique-Constraint-Fehler)

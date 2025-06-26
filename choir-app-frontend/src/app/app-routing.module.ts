@@ -20,6 +20,7 @@ import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ChoirAdminGuard } from '@core/guards/choir-admin-guard';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
+import { InviteRegistrationComponent } from '@features/registration/invite-registration.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -36,6 +37,10 @@ export const routes: Routes = [
                 path: 'login',
                 component: LoginComponent,
                 canActivate: [LoginGuard],
+            },
+            {
+                path: 'register/:token',
+                component: InviteRegistrationComponent
             },
             { path: 'imprint', component: ImprintComponent },
             { path: 'privacy', component: PrivacyComponent },

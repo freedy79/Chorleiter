@@ -1,0 +1,13 @@
+<h2>Invitation for {{choirName}}</h2>
+<p *ngIf="email">Register the account for {{email}}</p>
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Password</mat-label>
+    <input matInput type="password" formControlName="password">
+  </mat-form-field>
+  <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Register</button>
+</form>

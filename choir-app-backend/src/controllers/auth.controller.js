@@ -31,8 +31,14 @@ exports.signin = async (req, res) => {
       return res.status(404).send({ message: "User not found or not assigned to any choir." });
     }
 
+    if (!user.password) {
+      return res.status(403).send({ message: "Registration not completed." });
+    }
+
     const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
-    if (!passwordIsValid) { /* ... */ }
+    if (!passwordIsValid) {
+      return res.status(401).send({ message: "Invalid Password!" });
+    }
 
     // Wählen Sie den ersten Chor in der Liste als Standard-Aktiv-Chor
     const activeChoirId = user.choirs[0].id;

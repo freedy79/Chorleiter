@@ -37,5 +37,6 @@ export interface User {
 export interface UserInChoir extends User {
     membership?: { // Daten aus der Junction-Tabelle
         roleInChoir: 'director' | 'choir_admin';
+        registrationStatus: 'REGISTERED' | 'PENDING';
     }
 }

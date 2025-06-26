@@ -26,7 +26,7 @@ export class ManageChoirComponent implements OnInit {
   choirForm: FormGroup;
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'role', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
