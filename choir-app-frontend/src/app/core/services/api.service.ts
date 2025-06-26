@@ -168,9 +168,27 @@ export class ApiService {
    * Creates a new event (service or rehearsal) for the current choir.
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
-   createEvent(eventData: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<CreateEventResponse> {
     // Passen Sie den Rückgabetyp hier an
     return this.http.post<CreateEventResponse>(`${this.apiUrl}/events`, eventData);
+  }
+
+  getEvents(type?: 'SERVICE' | 'REHEARSAL'): Observable<Event[]> {
+    let params = new HttpParams();
+    if (type) params = params.set('type', type);
+    return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
+  }
+
+  getEventById(id: number): Observable<Event> {
+    return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
+  }
+
+  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<Event> {
+    return this.http.put<Event>(`${this.apiUrl}/events/${id}`, data);
+  }
+
+  deleteEvent(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/events/${id}`);
   }
 
 

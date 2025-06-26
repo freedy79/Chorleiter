@@ -20,6 +20,7 @@ import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ChoirAdminGuard } from '@core/guards/choir-admin-guard';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
+import { EventListComponent } from '@features/events/event-list/event-list.component';
 import { InviteRegistrationComponent } from '@features/registration/invite-registration.component';
 
 export const routes: Routes = [
@@ -70,6 +71,11 @@ export const routes: Routes = [
                 path: 'collections/edit/:id',
                 component: CollectionEditComponent,
                 canActivate: [AuthGuard],
+            },
+            {
+                path: 'events',
+                component: EventListComponent,
+                canActivate: [AuthGuard]
             },
             {
                 path: 'profile',

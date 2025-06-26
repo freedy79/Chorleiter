@@ -8,6 +8,7 @@
         [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
       <a mat-button routerLink="/repertoire" routerLinkActive="active-link">Repertoire</a>
       <a mat-button routerLink="/collections" routerLinkActive="active-link">Sammlungen</a>
+      <a mat-button routerLink="/events" routerLinkActive="active-link">Ereignisse</a>
       <a *ngIf="isLoggedIn$ | async" mat-button routerLink="/manage-choir" routerLinkActive="active-link">
         Chorverwaltung
       </a>
