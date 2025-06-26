@@ -118,17 +118,38 @@ exports.findMyRepertoire = async (req, res) => {
             }
         ];
 
-        // --- Sortierlogik ---
+         // --- KORRIGIERTE SORTIERLOGIK ---
         let order;
-        if (sortBy === 'reference') {
-            order = [
-                [literal('"collections.prefix"'), sortDir],
-                [literal('CAST("collections->collection_piece"."numberInCollection" AS INTEGER)'), sortDir]
-            ];
-        } else {
-            const sortColumn = sortBy || 'title';
-            order = [[sortColumn, sortDir]];
+        const sortDirection = ['ASC', 'DESC'].includes(sortDir.toUpperCase()) ? sortDir.toUpperCase() : 'ASC';
+
+        switch (sortBy) {
+            case 'composer':
+                // Geben Sie explizit das assoziierte Modell und die Spalte an.
+                order = [[{ model: db.composer, as: 'composer' }, 'name', sortDirection]];
+                break;
+            case 'category':
+                order = [[{ model: db.category, as: 'category' }, 'name', sortDirection]];
+                break;
+            case 'reference':
+                order = [
+                    [literal('"collections.prefix"'), sortDirection],
+                    [literal(`CAST("collections->collection_piece"."numberInCollection" AS INTEGER)`), sortDirection]
+                ];
+                break;
+            case 'title':
+            default:
+                // Standard-Sortierung nach einer Spalte der Haupttabelle (piece).
+                order = [['title', sortDirection]];
+                break;
         }
+
+        /*console.log("Repertoire Query:", {
+            where: whereCondition,
+            include: includeClauses,
+            order: order,
+            limit: limitNum,
+            offset: offset
+        });*/
 
         // Führen Sie die finale Abfrage aus.
         const { rows: pieces, count } = await db.piece.findAndCountAll({
@@ -137,9 +158,9 @@ exports.findMyRepertoire = async (req, res) => {
             order: order,
             limit: limitNum,
             offset: offset,
-            distinct: true
+            distinct: true,
+            subQuery: false
         });
-
 
         // --- SCHRITT 3: Fügen Sie den Status zu jedem Stück hinzu ---
         // Konvertieren Sie die Sequelize-Instanzen in einfache Objekte für die Bearbeitung.
