@@ -10,6 +10,7 @@ import { combineLatest, map, Observable } from 'rxjs';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
+import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/loading-indicator.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -22,7 +23,8 @@ import { ErrorDisplayComponent } from '@shared/components/error-display/error-di
     MaterialModule,
     FooterComponent,
     ChoirSwitcherComponent,
-    ErrorDisplayComponent
+    ErrorDisplayComponent,
+    LoadingIndicatorComponent
   ]
 })
 export class MainLayoutComponent {

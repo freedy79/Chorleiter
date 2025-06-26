@@ -64,12 +64,18 @@ db.sequelize.sync({ alter: true })
         // Rufen Sie die Seed-Funktion auf.
         initialSeed();
 
-        app.listen(PORT, ADDRESS, () => {
-            console.log(
-                `Server is running on port ${PORT}, listening ${ADDRESS}.`
-            );
-        });
-    })
-    .catch((err) => {
-        console.error("Database synchronization failed:", err);
+    const server = app.listen(PORT, ADDRESS, () => {
+        console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
     });
+    // Close requests that take longer than 20 seconds
+    server.setTimeout(20 * 1000);
+    server.on('timeout', (socket) => {
+        console.warn('Request timed out.');
+        socket.destroy();
+    });
+});
+
+   /*.catch((err) => {
+        console.error("Database synchronization failed:", err);
+    });*/
+
