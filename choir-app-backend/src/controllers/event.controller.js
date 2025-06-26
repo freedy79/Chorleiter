@@ -130,3 +130,102 @@ exports.findLast = async (req, res) => {
         res.status(500).send({ message: err.message || "An error occurred while finding the last event." });
     }
 };
+
+/**
+ * Get all events for the active choir. Optionally filter by type.
+ */
+exports.findAll = async (req, res) => {
+    const { type } = req.query;
+    const where = { choirId: req.activeChoirId };
+    if (type) {
+        where.type = type.toUpperCase();
+    }
+
+    try {
+        const events = await Event.findAll({
+            where,
+            order: [['date', 'DESC']]
+        });
+        res.status(200).send(events);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Error fetching events.' });
+    }
+};
+
+/**
+ * Find a single event with its pieces by ID
+ */
+exports.findOne = async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const event = await Event.findOne({
+            where: { id: id, choirId: req.activeChoirId },
+            include: [{
+                model: Piece,
+                as: 'pieces',
+                attributes: ['id', 'title'],
+                through: { attributes: [] },
+                include: [
+                    { model: Composer, as: 'composer', attributes: ['name'] },
+                    {
+                        model: Collection,
+                        as: 'collections',
+                        attributes: ['prefix'],
+                        through: {
+                            model: CollectionPiece,
+                            as: 'collection_piece',
+                            attributes: ['numberInCollection']
+                        }
+                    }
+                ]
+            }]
+        });
+
+        if (!event) {
+            return res.status(404).send({ message: 'Event not found.' });
+        }
+
+        res.status(200).send(event);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Error retrieving event.' });
+    }
+};
+
+exports.update = async (req, res) => {
+    const id = req.params.id;
+    const { date, type, notes, pieceIds } = req.body;
+
+    try {
+        const event = await Event.findOne({ where: { id, choirId: req.activeChoirId } });
+        if (!event) {
+            return res.status(404).send({ message: 'Event not found.' });
+        }
+
+        await event.update({ date, type, notes });
+
+        if (Array.isArray(pieceIds)) {
+            await event.setPieces(pieceIds);
+        }
+
+        const updated = await Event.findByPk(id, { include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }] });
+        res.status(200).send(updated);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not update event.' });
+    }
+};
+
+exports.delete = async (req, res) => {
+    const id = req.params.id;
+
+    try {
+        const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
+        if (num === 1) {
+            res.send({ message: 'Event deleted successfully!' });
+        } else {
+            res.status(404).send({ message: 'Event not found.' });
+        }
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not delete event.' });
+    }
+};
