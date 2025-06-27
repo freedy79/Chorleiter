@@ -279,7 +279,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         });
 
         if (collection.coverImage) {
-            this.coverPreview = this.apiService.getCollectionCoverUrl(collection.id);
+            this.apiService.getCollectionCover(collection.id).subscribe(data => this.coverPreview = data);
         }
 
         if (collection.pieces) {

@@ -6,6 +6,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
+import { forkJoin } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { RouterLink } from '@angular/router'; // Import RouterLink for the template
 
 @Component({
@@ -44,8 +46,23 @@ export class CollectionListComponent implements OnInit {
   loadCollections(): void {
     this.isLoading = true;
     this.apiService.getCollections().subscribe(collections => {
-      this.dataSource.data = collections;
-      this.isLoading = false;
+      const coverRequests = collections
+        .filter(c => c.coverImage)
+        .map(c => this.apiService.getCollectionCover(c.id).pipe(map(data => ({ id: c.id, data }))));
+
+      if (coverRequests.length) {
+        forkJoin(coverRequests).subscribe(results => {
+          results.forEach(res => {
+            const col = collections.find(c => c.id === res.id);
+            if (col) col.coverImageData = res.data;
+          });
+          this.dataSource.data = collections;
+          this.isLoading = false;
+        });
+      } else {
+        this.dataSource.data = collections;
+        this.isLoading = false;
+      }
     });
   }
 

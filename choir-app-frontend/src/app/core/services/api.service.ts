@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 // Import all the models your service will interact with
@@ -184,6 +185,12 @@ export class ApiService {
     const formData = new FormData();
     formData.append('cover', file);
     return this.http.post(`${this.apiUrl}/collections/${id}/cover`, formData);
+  }
+
+  getCollectionCover(id: number): Observable<string> {
+    return this.http
+      .get<{ data: string }>(`${this.apiUrl}/collections/${id}/cover`)
+      .pipe(map(res => res.data));
   }
 
   getCollectionCoverUrl(id: number): string {

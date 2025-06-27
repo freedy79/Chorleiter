@@ -41,4 +41,7 @@ export interface Collection {
 
   /** Filename of the uploaded cover image */
   coverImage?: string;
+
+  /** Base64 encoded data for the cover image */
+  coverImageData?: string;
 }
