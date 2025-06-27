@@ -5,6 +5,7 @@ const Piece = db.piece;
 const { Op } = require("sequelize");
 const logger = require("../config/logger"); // Importieren Sie den Logger für eine gute Fehlerbehandlung
 const path = require('path');
+const fs = require('fs').promises;
 
 // Die create- und update-Funktionen bleiben unverändert, aber wir fügen eine Fehlerbehandlung hinzu.
 exports.create = async (req, res, next) => {
@@ -148,6 +149,9 @@ exports.getCover = async (req, res, next) => {
         }
 
         const filePath = path.join(__dirname, '../../uploads/collection-covers', collection.coverImage);
-        res.sendFile(filePath);
+        const fileData = await fs.readFile(filePath);
+        const base64 = fileData.toString('base64');
+        const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
+        res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
     } catch (err) { next(err); }
 };

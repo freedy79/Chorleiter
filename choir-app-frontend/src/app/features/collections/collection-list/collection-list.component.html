@@ -17,7 +17,7 @@
     <ng-container matColumnDef="cover">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let collection" class="cover-cell">
-        <img *ngIf="collection.coverImage" [src]="apiService.getCollectionCoverUrl(collection.id)" alt="Cover" />
+        <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" />
       </td>
     </ng-container>
 
