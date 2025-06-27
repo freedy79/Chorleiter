@@ -359,6 +359,16 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
   }
 
+  downloadBackup(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/backup/export`, { responseType: 'blob' });
+  }
+
+  restoreBackup(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('backup', file);
+    return this.http.post(`${this.apiUrl}/backup/import`, formData);
+  }
+
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }

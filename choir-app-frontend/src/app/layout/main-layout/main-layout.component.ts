@@ -151,6 +151,10 @@ export class MainLayoutComponent implements OnInit{
           {
             displayName: 'Autoren',
             route: '/admin/authors',
+          },
+          {
+            displayName: 'Backup',
+            route: '/admin/backup',
           }
         ]
       }
