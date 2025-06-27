@@ -13,6 +13,7 @@ import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
+import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
 import { StatsSummary } from '../models/stats-summary';
 
@@ -93,6 +94,22 @@ export class ApiService {
 
   updateGlobalPiece(id: number, pieceData: any): Observable<Piece> {
     return this.pieceService.updateGlobalPiece(id, pieceData);
+  }
+
+  proposePieceChange(id: number, pieceData: any): Observable<any> {
+    return this.pieceService.proposePieceChange(id, pieceData);
+  }
+
+  getPieceChangeRequests(): Observable<PieceChange[]> {
+    return this.pieceService.getPieceChangeRequests();
+  }
+
+  approvePieceChange(id: number): Observable<any> {
+    return this.pieceService.approvePieceChange(id);
+  }
+
+  deletePieceChange(id: number): Observable<any> {
+    return this.pieceService.deletePieceChange(id);
   }
 
 

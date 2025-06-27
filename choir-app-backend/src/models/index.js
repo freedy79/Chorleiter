@@ -27,6 +27,7 @@ db.author = require("./author.model.js")(sequelize, Sequelize);
 db.piece_arranger = require("./piece_arranger.model.js")(sequelize, Sequelize);
 db.piece_link = require("./piece_link.model.js")(sequelize, Sequelize);
 db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
+db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -77,6 +78,12 @@ db.composer.belongsToMany(db.piece, { through: db.piece_arranger, as: "arrangedP
 // Piece <> PieceLink -> One-to-Many
 db.piece.hasMany(db.piece_link, { as: "links", onDelete: 'CASCADE' });
 db.piece_link.belongsTo(db.piece, { foreignKey: "pieceId" });
+
+// Proposed changes to a piece
+db.piece.hasMany(db.piece_change, { as: 'changeRequests' });
+db.piece_change.belongsTo(db.piece, { foreignKey: 'pieceId' });
+db.user.hasMany(db.piece_change, { as: 'pieceChangeRequests' });
+db.piece_change.belongsTo(db.user, { foreignKey: 'userId', as: 'proposer' });
 
 
 module.exports = db;

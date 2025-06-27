@@ -22,6 +22,7 @@ import { Category } from '@core/models/category';
 import { CategoryDialogComponent } from '../../categories/category-dialog/category-dialog.component';
 import { Author } from '@core/models/author';
 import { Piece } from '@core/models/piece';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
     selector: 'app-piece-dialog',
@@ -39,6 +40,7 @@ export class PieceDialogComponent implements OnInit {
     public authors$!: Observable<Author[]>;
     public categories$!: Observable<Category[]>;
     isEditMode = false;
+    isAdmin = false;
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
@@ -53,6 +55,7 @@ export class PieceDialogComponent implements OnInit {
         private fb: FormBuilder,
         private apiService: ApiService,
         private pieceService: PieceService,
+        private authService: AuthService,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId: number | null }
@@ -74,6 +77,7 @@ export class PieceDialogComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
         this.composers$ = this.refreshComposers$.pipe(
             switchMap(() => this.apiService.getComposers())
         );
@@ -227,14 +231,15 @@ export class PieceDialogComponent implements OnInit {
         }
 
         if (this.isEditMode && this.data.pieceId) {
-            this.pieceService
-                .updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
-                .subscribe({
-                    next: () => this.dialogRef.close(true),
-                    error: (err) => {
-                        console.error('Failed to update piece', err);
-                    },
-                });
+            const obs = this.isAdmin
+                ? this.pieceService.updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
+                : this.pieceService.proposePieceChange(this.data.pieceId, this.pieceForm.value);
+            obs.subscribe({
+                next: () => this.dialogRef.close(true),
+                error: (err) => {
+                    console.error('Failed to save piece', err);
+                },
+            });
         } else {
             this.pieceService
                 .createGlobalPiece(this.pieceForm.value)

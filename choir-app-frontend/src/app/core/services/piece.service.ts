@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { LookupPiece } from '../models/lookup-piece';
+import { PieceChange } from '../models/piece-change';
 
 @Injectable({
   providedIn: 'root'
@@ -50,6 +51,22 @@ export class PieceService {
 
   updateGlobalPiece(id: number, pieceData: any): Observable<Piece> {
     return this.http.put<Piece>(`${this.apiUrl}/pieces/${id}`, pieceData);
+  }
+
+  proposePieceChange(id: number, pieceData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/piece-changes`, { pieceId: id, data: pieceData });
+  }
+
+  getPieceChangeRequests(): Observable<PieceChange[]> {
+    return this.http.get<PieceChange[]>(`${this.apiUrl}/piece-changes`);
+  }
+
+  approvePieceChange(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/piece-changes/${id}/approve`, {});
+  }
+
+  deletePieceChange(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/piece-changes/${id}`);
   }
 
   getPieceById(id: number): Observable<Piece> {
