@@ -54,7 +54,7 @@
     </mat-form-field>
 
     <!-- Display Selected Pieces in a Table -->
-    <table mat-table [dataSource]="selectedPieces" class="selected-pieces-table">
+    <table mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
       <ng-container matColumnDef="reference">
         <th mat-header-cell *matHeaderCellDef>Ref</th>
         <td mat-cell *matCellDef="let piece">{{ piece.reference }}</td>
