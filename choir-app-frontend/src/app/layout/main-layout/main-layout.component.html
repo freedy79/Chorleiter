@@ -1,5 +1,54 @@
+<mat-toolbar color="primary" class="main-toolbar">
+  <button mat-icon-button (click)="drawer.toggle()" aria-label="Menü umschalten">
+    <mat-icon>{{ drawer.opened ? 'close' : 'menu' }}</mat-icon>
+  </button>
+
+  <span><a href="/" class="page-title-link">NAK Chorleiter</a></span>
+
+  <span class="spacer"></span>
+
+  <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>
+
+  <span class="spacer"></span>
+
+  <ng-container *ngIf="isLoggedIn$ | async">
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
+      <mat-icon>account_circle</mat-icon>
+    </button>
+    <mat-menu #userMenu="matMenu">
+      <a mat-menu-item routerLink="/profile">
+        <mat-icon>person</mat-icon>
+        <span>Profil</span>
+      </a>
+      <button mat-menu-item [matMenuTriggerFor]="themeMenu">
+        <mat-icon>contrast</mat-icon>
+        <span>Theme</span>
+      </button>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Abmelden</span>
+      </button>
+    </mat-menu>
+
+    <mat-menu #themeMenu="matMenu">
+      <button mat-menu-item (click)="setTheme('light')">
+        <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
+        <span>Light</span>
+      </button>
+      <button mat-menu-item (click)="setTheme('dark')">
+        <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
+        <span>Dark</span>
+      </button>
+      <button mat-menu-item (click)="setTheme('system')">
+        <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
+        <span>System</span>
+      </button>
+    </mat-menu>
+  </ng-container>
+</mat-toolbar>
+
 <mat-sidenav-container class="site-container">
-  <mat-sidenav mode="side" opened>
+  <mat-sidenav #drawer mode="over" class="menu-sidenav">
     <mat-nav-list>
       <ng-container *ngIf="isLoggedIn$ | async">
         <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
@@ -16,51 +65,6 @@
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content>
-    <mat-toolbar color="primary" class="main-toolbar">
-      <span><a href="/" class="page-title-link">NAK Chorleiter</a></span>
-
-      <span class="spacer"></span>
-
-      <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>
-
-      <span class="spacer"></span>
-
-      <ng-container *ngIf="isLoggedIn$ | async">
-        <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
-          <mat-icon>account_circle</mat-icon>
-        </button>
-        <mat-menu #userMenu="matMenu">
-          <a mat-menu-item routerLink="/profile">
-            <mat-icon>person</mat-icon>
-            <span>Profil</span>
-          </a>
-          <button mat-menu-item [matMenuTriggerFor]="themeMenu">
-            <mat-icon>contrast</mat-icon>
-            <span>Theme</span>
-          </button>
-          <button mat-menu-item (click)="logout()">
-            <mat-icon>logout</mat-icon>
-            <span>Abmelden</span>
-          </button>
-        </mat-menu>
-
-        <mat-menu #themeMenu="matMenu">
-          <button mat-menu-item (click)="setTheme('light')">
-            <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
-            <span>Light</span>
-          </button>
-          <button mat-menu-item (click)="setTheme('dark')">
-            <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
-            <span>Dark</span>
-          </button>
-          <button mat-menu-item (click)="setTheme('system')">
-            <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
-            <span>System</span>
-          </button>
-        </mat-menu>
-      </ng-container>
-    </mat-toolbar>
-
     <app-error-display></app-error-display>
     <app-loading-indicator></app-loading-indicator>
 
