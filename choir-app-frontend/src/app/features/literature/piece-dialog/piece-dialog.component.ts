@@ -14,7 +14,7 @@ import {
 } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -245,11 +245,13 @@ export class PieceDialogComponent implements OnInit {
                 .createGlobalPiece(this.pieceForm.value)
                 .pipe(
                     switchMap((newlyCreatedPiece) =>
-                        this.pieceService.addPieceToMyRepertoire(newlyCreatedPiece.id)
+                        this.pieceService
+                            .addPieceToMyRepertoire(newlyCreatedPiece.id)
+                            .pipe(map(() => newlyCreatedPiece))
                     )
                 )
                 .subscribe({
-                    next: () => this.dialogRef.close(true),
+                    next: (createdPiece) => this.dialogRef.close(createdPiece),
                     error: (err) => {
                         console.error('Failed to create and add piece', err);
                     },
