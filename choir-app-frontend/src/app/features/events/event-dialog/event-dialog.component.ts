@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { MatTableDataSource } from '@angular/material/table';
 
 import { ApiService } from 'src/app/core/services/api.service';
 import { Piece } from 'src/app/core/models/piece';
@@ -40,6 +41,7 @@ export class EventDialogComponent implements OnInit {
   filteredPieces$!: Observable<LookupPiece[]>;
   allRepertoirePieces: LookupPiece[] = [];
   selectedPieces: LookupPiece[] = [];
+  selectedPiecesDataSource = new MatTableDataSource<LookupPiece>();
   pieceColumns: string[] = ['reference', 'title', 'actions'];
 
   isEditMode = false;
@@ -73,6 +75,9 @@ export class EventDialogComponent implements OnInit {
 
       if (this.isEditMode && this.data?.event) {
         this.populateFromEvent(this.data.event);
+      } else {
+        // ensure table is initialized
+        this.selectedPiecesDataSource.data = this.selectedPieces;
       }
     });
   }
@@ -124,7 +129,8 @@ export class EventDialogComponent implements OnInit {
   selected(event: MatAutocompleteSelectedEvent): void {
     const pieceToAdd = event.option.value as LookupPiece;
     if (pieceToAdd) {
-      this.selectedPieces.push(pieceToAdd);
+      this.selectedPieces = [...this.selectedPieces, pieceToAdd];
+      this.selectedPiecesDataSource.data = this.selectedPieces;
     }
     this.pieceInput.nativeElement.value = '';
     this.pieceCtrl.setValue('');
@@ -134,7 +140,8 @@ export class EventDialogComponent implements OnInit {
   remove(piece: LookupPiece): void {
     const index = this.selectedPieces.indexOf(piece);
     if (index >= 0) {
-      this.selectedPieces.splice(index, 1);
+      this.selectedPieces = this.selectedPieces.filter(p => p !== piece);
+      this.selectedPiecesDataSource.data = this.selectedPieces;
     }
     // Triggern Sie die Neubewertung der Autocomplete-Liste
     this.pieceCtrl.updateValueAndValidity();
@@ -153,6 +160,7 @@ export class EventDialogComponent implements OnInit {
       composerName: p.composer?.name || '',
       reference: p.collections && p.collections.length > 0 ? `${p.collections[0].prefix || ''}${(p as any).collections[0].collection_piece.numberInCollection}` : ''
     }));
+    this.selectedPiecesDataSource.data = this.selectedPieces;
   }
 
   onCancel(): void {
