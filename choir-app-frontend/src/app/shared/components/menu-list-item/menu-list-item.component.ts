@@ -75,7 +75,7 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
 
         this.navService.currentUrl.subscribe((url: string) => {
             if (this.item?.route && url) {
-                console.log(`Checking '/${this.item.route}' against '${url}'`);
+                //console.log(`Checking '${this.item.route}' against '${url}'`);
                 this.expanded = url.indexOf(`/${this.item.route}`) === 0;
                 this.ariaExpanded = this.expanded;
                 console.log(`${this.item.route} is expanded: ${this.expanded}`);

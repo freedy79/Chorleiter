@@ -10,7 +10,7 @@ import { UserDialogComponent } from './user-dialog/user-dialog.component';
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, MaterialModule, UserDialogComponent],
+  imports: [CommonModule, MaterialModule],
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })

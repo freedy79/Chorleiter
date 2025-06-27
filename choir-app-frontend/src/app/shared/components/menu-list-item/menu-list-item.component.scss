@@ -7,7 +7,6 @@
 }
 
 :host {
-  margin-left: 0.5rem;
   margin-right: 1rem;
   display: flex;
   flex-direction: column;
@@ -24,7 +23,8 @@
 
   .mat-list-item.active {
     background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, default) !important;
-    color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-primary, default) !important;
+    color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default) !important;
+    border-radius: 0px;
   }
 
   &:active,
@@ -32,7 +32,7 @@
   &:focus {
     >a:not(.expanded) {
       background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, default) !important;
-      color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-primary, default) !important;
+      color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default) !important;
     }
   }
 
@@ -43,6 +43,7 @@
 // }
 
   .mat-list-item {
+    padding-left: 8px;
     font-size: 16px;
 
   .routeIcon {
