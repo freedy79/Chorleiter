@@ -69,6 +69,7 @@ export class PieceDialogComponent implements OnInit {
             links: this.fb.array([]),
             opus: [''],
             key: [''],
+            timeSignature: [''],
             license: [''],
             composerId: [null, Validators.required],
             authorId: [null, Validators.required],
