@@ -55,3 +55,9 @@ mat-card-actions button mat-icon {
     text-align: center;
     font-weight: 500;
 }
+
+.cover-cell img {
+    height: 48px;
+    width: auto;
+    object-fit: cover;
+}

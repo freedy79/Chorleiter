@@ -63,6 +63,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     filteredPieces$!: Observable<Piece[]>;
     allPieces: Piece[] = [];
     selectedPieceLinks: SelectedPieceWithNumber[] = [];
+    coverPreview: string | null = null;
+    coverFile: File | null = null;
+    isDragOver = false;
     public readonly addNewPieceOption: Piece = {
         id: -1,
         title: 'Neues Stück anlegen...',
@@ -241,7 +244,16 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         }
 
         saveObservable.subscribe({
-            next: () => {
+            next: (response) => {
+                const id = this.isEditMode ? this.collectionId! : response.id;
+                const afterSave = () => this.router.navigate(['/collections']);
+
+                const upload$ = this.coverFile
+                    ? this.apiService.uploadCollectionCover(id, this.coverFile)
+                    : of(null);
+
+                upload$.subscribe({ next: afterSave, error: afterSave });
+
                 const message = this.isEditMode
                     ? 'Collection updated successfully!'
                     : 'Collection created successfully!';
@@ -249,7 +261,6 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                     duration: 3000,
                     verticalPosition: 'top',
                 });
-                this.router.navigate(['/collections']);
             },
             error: (err) => {
                 this.snackBar.open(`Error: ${err.message}`, 'Close', {
@@ -266,6 +277,10 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             publisher: collection.publisher,
             prefix: collection.prefix,
         });
+
+        if (collection.coverImage) {
+            this.coverPreview = this.apiService.getCollectionCoverUrl(collection.id);
+        }
 
         if (collection.pieces) {
             this.selectedPieceLinks = collection.pieces.map((piece) => ({
@@ -367,6 +382,35 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             return !isNaN(currentNum) && currentNum > max ? currentNum : max;
         }, 0);
         this.addPieceForm.patchValue({ number: (maxNumber + 1).toString() });
+    }
+
+    onFileSelected(event: Event): void {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    onDragOver(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = true;
+    }
+
+    onDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+    }
+
+    onDrop(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+        const file = event.dataTransfer?.files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    private handleFile(file: File): void {
+        this.coverFile = file;
+        const reader = new FileReader();
+        reader.onload = () => (this.coverPreview = reader.result as string);
+        reader.readAsDataURL(file);
     }
 
     // Fügen Sie diese Methode hinzu

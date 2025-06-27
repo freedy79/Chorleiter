@@ -180,6 +180,16 @@ export class ApiService {
     return this.http.put(`${this.apiUrl}/collections/${id}`, data);
   }
 
+  uploadCollectionCover(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('cover', file);
+    return this.http.post(`${this.apiUrl}/collections/${id}/cover`, formData);
+  }
+
+  getCollectionCoverUrl(id: number): string {
+    return `${this.apiUrl}/collections/${id}/cover`;
+  }
+
 
   addCollectionToChoir(collectionId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/collections/${collectionId}/addToChoir`, {});
