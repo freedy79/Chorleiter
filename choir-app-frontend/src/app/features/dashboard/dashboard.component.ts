@@ -103,4 +103,42 @@ export class DashboardComponent implements OnInit {
   }
 
 
+  approvePieceChange(change: PieceChange): void {
+    this.apiService.approvePieceChange(change.id).subscribe({
+      next: () => {
+        this.snackBar.open('Stückänderung genehmigt!', 'OK', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        this.refresh$.next();
+      },
+      error: (err) => {
+        console.error('Fehler beim Genehmigen der Stückänderung', err);
+        this.snackBar.open('Fehler: Die Stückänderung konnte nicht genehmigt werden.', 'Schließen', {
+          duration: 5000,
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
+  declinePieceChange(change: PieceChange): void {
+    this.apiService.deletePieceChange(change.id).subscribe({
+      next: () => {
+        this.snackBar.open('Stückänderung abgelehnt!', 'OK', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        this.refresh$.next();
+      },
+      error: (err) => {
+        console.error('Fehler beim Ablehnen der Stückänderung', err);
+        this.snackBar.open('Fehler: Die Stückänderung konnte nicht abgelehnt werden.', 'Schließen', {
+          duration: 5000,
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
 }

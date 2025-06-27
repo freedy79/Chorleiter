@@ -10,7 +10,7 @@ import { ChoirDialogComponent } from './choir-dialog/choir-dialog.component';
 @Component({
   selector: 'app-manage-choirs',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ChoirDialogComponent],
+  imports: [CommonModule, MaterialModule],
   templateUrl: './manage-choirs.component.html',
   styleUrls: ['./manage-choirs.component.scss']
 })

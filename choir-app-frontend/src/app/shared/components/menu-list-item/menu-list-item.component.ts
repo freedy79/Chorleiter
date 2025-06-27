@@ -6,7 +6,7 @@ import {
     OnInit,
     OnDestroy,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import {
     animate,
     state,
@@ -35,7 +35,7 @@ import { CommonModule } from '@angular/common';
             ),
         ]),
     ],
-    imports: [MaterialModule, CommonModule],
+    imports: [MaterialModule, CommonModule, RouterModule],
 })
 export class MenuListItemComponent implements OnInit, OnDestroy {
     expanded: boolean = false;
