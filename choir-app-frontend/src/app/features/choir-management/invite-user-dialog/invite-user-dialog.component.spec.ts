@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { InviteUserDialog } from './invite-user-dialog.component';
+import { InviteUserDialogComponent } from './invite-user-dialog.component';
 
-describe('InviteUserDialog', () => {
-  let component: InviteUserDialog;
-  let fixture: ComponentFixture<InviteUserDialog>;
+describe('InviteUserDialogComponent', () => {
+  let component: InviteUserDialogComponent;
+  let fixture: ComponentFixture<InviteUserDialogComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [InviteUserDialog]
+      imports: [InviteUserDialogComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(InviteUserDialog);
+    fixture = TestBed.createComponent(InviteUserDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
