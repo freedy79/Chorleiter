@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
-import { Event } from '@core/models/event';
+import { CreateEventResponse, Event } from '@core/models/event';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { startWith } from 'rxjs/operators';
@@ -76,6 +76,24 @@ export class EventListComponent implements OnInit {
         this.apiService.deleteEvent(event.id).subscribe({
           next: () => { this.snackBar.open('Event deleted.', 'OK', { duration: 3000 }); this.loadEvents(); },
           error: () => this.snackBar.open('Error deleting event.', 'Close', { duration: 4000 })
+        });
+      }
+    });
+  }
+
+  openAddEventDialog(): void {
+    const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.apiService.createEvent(result).subscribe({
+          next: (response: CreateEventResponse) => {
+            const message = response.wasUpdated ?
+              'Event für diesen Tag wurde aktualisiert!' :
+              'Event erfolgreich angelegt!';
+            this.snackBar.open(message, 'OK', { duration: 3000 });
+            this.loadEvents();
+          },
+          error: () => this.snackBar.open('Fehler: Das Event konnte nicht gespeichert werden.', 'Schließen', { duration: 5000 })
         });
       }
     });
