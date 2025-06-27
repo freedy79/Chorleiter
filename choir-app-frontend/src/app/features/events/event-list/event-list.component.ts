@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -7,7 +7,8 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { Event } from '@core/models/event';
-import { Observable, switchMap } from 'rxjs';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginator } from '@angular/material/paginator';
 import { startWith } from 'rxjs/operators';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -22,10 +23,13 @@ import { EventCardComponent } from '../../dashboard/event-card/event-card.compon
 })
 export class EventListComponent implements OnInit {
   typeControl = new FormControl('ALL');
-  events$!: Observable<Event[]>;
+  displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
+  dataSource = new MatTableDataSource<Event>();
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private apiService: ApiService, private authService: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
 
@@ -38,8 +42,14 @@ export class EventListComponent implements OnInit {
 
   private loadEvents(): void {
     const type = this.typeControl.value;
-    this.events$ = this.apiService.getEvents(type === 'ALL' ? undefined : (type as any));
-    this.selectedEvent = null;
+    this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
+      .subscribe(events => {
+        this.dataSource.data = events;
+        if (this.paginator) {
+          this.dataSource.paginator = this.paginator;
+        }
+        this.selectedEvent = null;
+      });
   }
 
   selectEvent(event: Event): void {
