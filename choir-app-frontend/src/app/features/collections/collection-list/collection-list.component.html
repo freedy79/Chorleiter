@@ -10,8 +10,8 @@
   </button>
 </div>
 
-<div class="table-container mat-elevation-z8" *ngIf="(collections$ | async) as collections; else loading">
-  <table mat-table [dataSource]="collections">
+<div class="table-container mat-elevation-z8" *ngIf="!isLoading; else loading">
+  <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
 
     <!-- Cover Column -->
     <ng-container matColumnDef="cover">
@@ -23,7 +23,7 @@
 
     <!-- Status Column -->
     <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef> Status </th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="status"> Status </th>
       <td mat-cell *matCellDef="let collection">
         <mat-icon
           class="status-icon"
@@ -36,7 +36,7 @@
 
     <!-- Title Column -->
     <ng-container matColumnDef="title">
-      <th mat-header-cell *matHeaderCellDef> Titel </th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </th>
       <td mat-cell *matCellDef="let collection">
         <strong>{{ collection.title }}</strong>
         <div class="prefix-hint" *ngIf="collection.prefix">Prefix: {{ collection.prefix }}</div>
@@ -44,7 +44,7 @@
     </ng-container>
 
     <ng-container matColumnDef="titles">
-      <th mat-header-cell *matHeaderCellDef> Stücke </th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="titles"> Stücke </th>
       <td mat-cell *matCellDef="let collection" class="titles-cell">
         {{ collection.pieceCount || 0 }}
       </td>
@@ -52,7 +52,7 @@
 
     <!-- Publisher Column -->
     <ng-container matColumnDef="publisher">
-      <th mat-header-cell *matHeaderCellDef> Verlag </th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="publisher"> Verlag </th>
       <td mat-cell *matCellDef="let collection"> {{ collection.publisher || '-' }} </td>
     </ng-container>
 
@@ -78,7 +78,7 @@
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
   </table>
 
-  <div *ngIf="collections.length === 0" class="empty-state">
+  <div *ngIf="dataSource.data.length === 0" class="empty-state">
       <p>No collections have been created yet.</p>
   </div>
 </div>
