@@ -15,12 +15,14 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+// Public endpoint to fetch a collection's cover image without authentication
+router.get("/:id/cover", controller.getCover);
+
 router.use(authJwt.verifyToken);
 router.post("/", controller.create);
 router.get("/", controller.findAll);
 router.get("/:id", controller.findOne);
 router.put("/:id", controller.update);
 router.post("/:id/cover", upload.single('cover'), controller.uploadCover);
-router.get("/:id/cover", controller.getCover);
 router.post("/:id/addToChoir", controller.addToChoir); // Crucial endpoint
 module.exports = router;
