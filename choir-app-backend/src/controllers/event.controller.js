@@ -8,6 +8,34 @@ const User = db.user;
 const logger = require("../config/logger");
 const { Op } = require("sequelize");
 
+async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
+    if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
+
+    if (eventType === 'REHEARSAL') {
+        await db.choir_repertoire.update(
+            { status: 'IN_REHEARSAL' },
+            {
+                where: {
+                    choirId,
+                    pieceId: { [Op.in]: pieceIds },
+                    status: 'NOT_READY'
+                }
+            }
+        );
+    } else if (eventType === 'SERVICE') {
+        await db.choir_repertoire.update(
+            { status: 'CAN_BE_SUNG' },
+            {
+                where: {
+                    choirId,
+                    pieceId: { [Op.in]: pieceIds },
+                    status: { [Op.in]: ['NOT_READY', 'IN_REHEARSAL'] }
+                }
+            }
+        );
+    }
+}
+
 exports.create = async (req, res) => {
     const { date, type, notes, pieceIds } = req.body;
     const choirId = req.activeChoirId;
@@ -60,6 +88,7 @@ exports.create = async (req, res) => {
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
         if (Array.isArray(pieceIds) && pieceIds.length > 0) {
             await event.setPieces(pieceIds);
+            await autoUpdatePieceStatuses(type.toUpperCase(), choirId, pieceIds);
         }
 
         // Event inklusive Director neu laden, um den Namen zurückzugeben
@@ -214,6 +243,7 @@ exports.update = async (req, res) => {
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
+            await autoUpdatePieceStatuses(type.toUpperCase(), req.activeChoirId, pieceIds);
         }
 
         const updated = await Event.findByPk(id, {
