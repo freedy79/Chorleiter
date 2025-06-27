@@ -3,7 +3,7 @@
 }
 
 .site-container {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--header-height));
 }
 
 .main-toolbar {
@@ -31,6 +31,10 @@ mat-sidenav a.active-link {
   font-weight: bold;
 }
 
+.menu-sidenav {
+  background-color: #fafafa;
+}
+
 .spacer {
   flex: 1 1 auto;
 }
@@ -49,9 +53,7 @@ mat-sidenav a.active-link {
     display: flex;
     flex-direction: column;
     // Lässt den Container die verfügbare Höhe ausfüllen, abzüglich des Paddings des main-content.
-    height: calc(
-      92vh - 64px - 2rem
-    );
+    height: calc(92vh - 2rem);
     overflow: auto;
     //background-color: aliceblue;
   }
