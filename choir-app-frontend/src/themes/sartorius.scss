@@ -1,0 +1,81 @@
+@import '../node_modules/@angular/material/theming';
+
+@include mat-core();
+
+$sartorius-yellow: (
+  50: #ffed00,
+  100: #ffed00,
+  200: #ffed00,
+  300: #ffed00,
+  400: #ffed00,
+  500: #ffed00,
+  600: #ffed00,
+  700: #ffed00,
+  800: #ffed00,
+  900: #ffed00,
+  A100: #ffed00,
+  A200: #ffed00,
+  A400: #ffed00,
+  A700: #ffed00,
+  contrast: (
+    50: black,
+    100: black,
+    200: black,
+    300: black,
+    400: black,
+    500: black,
+    600: black,
+    700: black,
+    800: black,
+    900: black,
+    A100: black,
+    A200: black,
+    A400: black,
+    A700: black,
+  )
+);
+
+$sartorius-style: (
+  50: #000000,
+  100: #000000,
+  200: #ffed00,
+  300: #ffed00,
+  400: #ffed00,
+  500: #ffed00,
+  600: #ffed00,
+  700: #ffed00,
+  800: #ffed00,
+  900: #ffed00,
+  A100: #ffed00,
+  A200: #ffed00,
+  A400: #ffed00,
+  A700: #ffed00,
+  contrast: (
+    50: black,
+    100: black,
+    200: black,
+    300: black,
+    400: black,
+    500: black,
+    600: black,
+    700: black,
+    800: black,
+    900: black,
+    A100: black,
+    A200: black,
+    A400: black,
+    A700: black,
+  )
+);
+
+
+$custom-theme-primary: mat-palette($sartorius-yellow, 100, 50, 200);
+$custom-theme-primary: mat-palette($sartorius-style, 100, 50, 200);
+// $custom-theme-primary: mat-palette($mat-yellow);
+// $custom-theme-accent: mat-palette($mat-black, A200, A100, A400);
+$custom-theme-accent: mat-palette($mat-grey, 800, 700, 900);
+$custom-theme-warn: mat-palette($mat-red);
+
+$custom-theme: mat-light-theme($custom-theme-primary, $custom-theme-accent, $custom-theme-warn);
+
+@include angular-material-theme($custom-theme);

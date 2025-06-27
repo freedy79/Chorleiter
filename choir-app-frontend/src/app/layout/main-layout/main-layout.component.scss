@@ -4,7 +4,7 @@
 }
 
 .site-container {
-  min-height: 100vh;
+  min-height: 50vh;
 }
 
 .main-toolbar {
@@ -29,21 +29,18 @@
 
 .main-content {
   flex: 1; // Dieser Container wächst und füllt den verbleibenden Platz.
+  position: relative;
+    z-index: 1;
+    overflow: auto;
 
-  // Wir geben dem Hauptinhalt einen festen Abstand, damit er nicht
-  // unter der fixierten Kopfzeile beginnt. Dies ist optional, aber empfohlen.
-  // padding: 1rem; // Alter Stil
-
-  // Besser: Der Inhalt scrollt, aber der Container selbst hat Padding.
-  // Dies verhindert, dass Scrollbalken am Padding kleben bleiben.
   & > .container {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     // Lässt den Container die verfügbare Höhe ausfüllen, abzüglich des Paddings des main-content.
-    height: calc(100vh - var(--header-height) - var(--footer-height) - 2rem);
+    height: calc(100vh - var(--header-height) - var(--footer-height) - 3rem);
     overflow: auto;
-    //background-color: aliceblue;
+    //background-color: aliceblue; // debug only
   }
 }
 

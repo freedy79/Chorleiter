@@ -105,3 +105,44 @@ $nak-dark-theme: mat.m2-define-dark-theme((
     warn: $choir-app-warn,
   )
 ));
+
+
+// Material styles
+
+.drowDown{
+    border-radius: 0px !important;
+    min-width: 100% !important;
+}
+
+.mat-select-panel {
+    //background-color: green;
+}
+
+.mat-form-field-infix {
+    border-top: 0px !important;
+}
+
+.mat-form-field-subscript-wrapper {
+    margin-top: 0px !important;
+    margin-bottom: 10px !important;
+}
+
+.mat-option-text {
+    display: list-item !important;
+    margin-left: 16.8px;
+    overflow: visible !important;
+    list-style: none outside none;
+}
+mat-option.mat-active .mat-option-text {
+    list-style: square outside none;
+}
+
+mat-option.mat-active {
+    background-color: white !important;
+    color: black !important;
+}
+
+mat-option:hover {
+    background-color: #EDEDED !important;
+    color: black !important
+}
