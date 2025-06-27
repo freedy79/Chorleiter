@@ -64,14 +64,16 @@ export class EventListComponent implements OnInit {
   }
 
   editEvent(event: Event): void {
-    const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', data: { event } });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.id) {
-        this.apiService.updateEvent(result.id, result).subscribe({
-          next: () => { this.snackBar.open('Event updated.', 'OK', { duration: 3000 }); this.loadEvents(); },
-          error: () => this.snackBar.open('Error updating event.', 'Close', { duration: 4000 })
-        });
-      }
+    this.apiService.getEventById(event.id).subscribe(fullEvent => {
+      const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', data: { event: fullEvent } });
+      dialogRef.afterClosed().subscribe(result => {
+        if (result && result.id) {
+          this.apiService.updateEvent(result.id, result).subscribe({
+            next: () => { this.snackBar.open('Event updated.', 'OK', { duration: 3000 }); this.loadEvents(); },
+            error: () => this.snackBar.open('Error updating event.', 'Close', { duration: 4000 })
+          });
+        }
+      });
     });
   }
 
