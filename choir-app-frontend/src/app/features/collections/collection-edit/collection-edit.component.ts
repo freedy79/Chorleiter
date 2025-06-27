@@ -293,6 +293,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         const pieceDialogRef = this.dialog.open(PieceDialogComponent, {
             width: '500px',
             disableClose: true,
+            data: { pieceId: null },
         });
         pieceDialogRef
             .afterClosed()
