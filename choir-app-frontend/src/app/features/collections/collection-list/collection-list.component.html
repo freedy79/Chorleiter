@@ -1,8 +1,8 @@
 
 <div class="header-container">
   <div>
-    <h1>Collections</h1>
-    <p class="subtitle">Add global collections to your repertoire or manage them.</p>
+    <h1>Sammlungen</h1>
+    <p class="subtitle">Verwalten von globalen Sammlungen und Hinzufügen zum Chorrepertoire.</p>
   </div>
   <button mat-flat-button color="accent" routerLink="/collections/new">
     <mat-icon>add</mat-icon>
@@ -20,7 +20,7 @@
         <mat-icon
           class="status-icon"
           [color]="collection.isAdded ? 'primary' : 'disabled'"
-          [matTooltip]="collection.isAdded ? 'This collection is in your repertoire' : 'Not in your repertoire'">
+          [matTooltip]="collection.isAdded ? 'Sammlung ist im Chorrepertoire.' : 'Nicht im Repertoire.'">
           {{ collection.isAdded ? 'check_circle' : 'do_not_disturb_on' }}
         </mat-icon>
       </td>

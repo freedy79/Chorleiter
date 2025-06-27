@@ -55,9 +55,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     addPieceForm: FormGroup;
     isEditMode = false;
     private collectionId: number | null = null;
-    pageTitle = 'Create New Collection';
+    pageTitle = 'Neue Sammlung erstellen';
     pageSubtitle =
-        "Define the collection's details, then search for and add pieces.";
+        "Beschreibung der Sammlung, Hinzufügen von Stücken.";
     public pieceLinkColumns: string[] = ['number', 'title', 'actions'];
     pieceCtrl = new FormControl<string | Piece>('');
     filteredPieces$!: Observable<Piece[]>;
@@ -117,7 +117,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                     if (id) {
                         this.isEditMode = true;
                         this.collectionId = +id;
-                        this.pageTitle = 'Edit Collection';
+                        this.pageTitle = 'Sammlung bearbeiten';
                         this.pageSubtitle =
                             "Update the collection's details and manage its pieces.";
                         return this.apiService.getCollectionById(

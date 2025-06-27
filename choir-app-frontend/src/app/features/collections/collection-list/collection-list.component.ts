@@ -46,7 +46,7 @@ export class CollectionListComponent implements OnInit {
   addCollectionToChoir(collection: Collection): void {
     this.apiService.addCollectionToChoir(collection.id).subscribe({
       next: () => {
-        this.snackBar.open(`Collection '${collection.title}' added to your choir.`, 'OK', {
+        this.snackBar.open(`Sammlung '${collection.title}' wurde zum Chorrepertoire hinzugefügt.`, 'OK', {
           duration: 3000,
           verticalPosition: 'top'
         });
@@ -54,7 +54,7 @@ export class CollectionListComponent implements OnInit {
         this.loadCollections();
       },
       error: (err) => {
-        this.snackBar.open(`Error adding collection: ${err.message}`, 'Close', {
+        this.snackBar.open(`Fehler beim Hinzufügen der Sammlung: ${err.message}`, 'Close', {
           duration: 5000,
           verticalPosition: 'top'
         });
