@@ -97,6 +97,11 @@ export class MainLayoutComponent implements OnInit{
           visibleSubject: this.isLoggedIn$,
       },
       {
+        displayName: 'Statistik',
+        route: '/stats',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
         displayName: 'Mein Chor',
         //svgIconName: 's-lens-display',
         route: '/manage-choir',

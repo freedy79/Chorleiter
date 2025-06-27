@@ -14,6 +14,7 @@ import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
 import { PieceService } from './piece.service';
+import { StatsSummary } from '../models/stats-summary';
 
 @Injectable({
   providedIn: 'root'
@@ -317,6 +318,10 @@ export class ApiService {
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
+  }
+
+  getStatistics(): Observable<StatsSummary> {
+    return this.http.get<StatsSummary>(`${this.apiUrl}/stats`);
   }
 
   pingBackend(): Observable<{ message: string }> {
