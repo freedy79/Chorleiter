@@ -38,4 +38,7 @@ export interface Collection {
   isAdded?: boolean;
 
   pieceCount?: number;
+
+  /** Filename of the uploaded cover image */
+  coverImage?: string;
 }

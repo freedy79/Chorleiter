@@ -38,6 +38,23 @@
           <mat-label>Prefix (e.g., GL, EG)</mat-label>
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
+
+        <div class="cover-upload">
+          <div
+            class="dropzone"
+            [class.dragover]="isDragOver"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+            (click)="fileInput.click()"
+          >
+            <ng-container *ngIf="!coverPreview">
+              <p>Cover hierher ziehen oder klicken</p>
+            </ng-container>
+            <img *ngIf="coverPreview" [src]="coverPreview" alt="Cover preview" />
+          </div>
+          <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
+        </div>
       </mat-card-content>
     </mat-card>
 

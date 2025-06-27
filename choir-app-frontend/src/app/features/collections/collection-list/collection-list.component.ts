@@ -25,10 +25,10 @@ export class CollectionListComponent implements OnInit {
   public collections$ = this.collectionsSubject.asObservable();
 
   // Define the columns for the mat-table
-  public displayedColumns: string[] = ['status', 'title', 'titles', 'publisher', 'actions'];
+  public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
 
   constructor(
-    private apiService: ApiService,
+    public apiService: ApiService,
     private snackBar: MatSnackBar
   ) { }
 

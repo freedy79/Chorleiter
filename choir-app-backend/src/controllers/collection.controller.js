@@ -4,6 +4,7 @@ const Choir = db.choir;
 const Piece = db.piece;
 const { Op } = require("sequelize");
 const logger = require("../config/logger"); // Importieren Sie den Logger für eine gute Fehlerbehandlung
+const path = require('path');
 
 // Die create- und update-Funktionen bleiben unverändert, aber wir fügen eine Fehlerbehandlung hinzu.
 exports.create = async (req, res, next) => {
@@ -122,5 +123,31 @@ exports.addToChoir = async (req, res, next) => {
         await choir.addPieces(pieces);
 
         res.status(200).send({ message: `Collection '${collection.title}' and all its pieces added to your repertoire.` });
+    } catch (err) { next(err); }
+};
+
+exports.uploadCover = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+
+        const collection = await Collection.findByPk(id);
+        if (!collection) return res.status(404).send({ message: 'Collection not found.' });
+
+        await collection.update({ coverImage: req.file.filename });
+        res.status(200).send({ filename: req.file.filename });
+    } catch (err) { next(err); }
+};
+
+exports.getCover = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const collection = await Collection.findByPk(id);
+        if (!collection || !collection.coverImage) {
+            return res.status(404).send({ message: 'Cover not found.' });
+        }
+
+        const filePath = path.join(__dirname, '../../uploads/collection-covers', collection.coverImage);
+        res.sendFile(filePath);
     } catch (err) { next(err); }
 };

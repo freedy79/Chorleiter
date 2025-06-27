@@ -3,6 +3,7 @@ const cors = require("cors");
 const app = express();
 const helmet = require("helmet");
 const RateLimit = require("express-rate-limit");
+const path = require('path');
 
 const logger = require("./config/logger");
 
@@ -12,6 +13,7 @@ app.use(cors());
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 if (process.env.NODE_ENV != "production") {
     app.use((req, res, next) => {
