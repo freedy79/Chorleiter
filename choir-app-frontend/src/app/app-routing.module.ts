@@ -21,10 +21,10 @@ import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
-import { InviteRegistrationComponent } from '@features/registration/invite-registration.component';
-import { StatisticsComponent } from '@features/stats/statistics.component';
-import { PasswordResetRequestComponent } from '@features/password-reset/password-reset-request.component';
-import { PasswordResetComponent } from '@features/password-reset/password-reset.component';
+import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
+import { StatisticsComponent } from '@features/dashboard/stats/statistics.component';
+import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
+import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
