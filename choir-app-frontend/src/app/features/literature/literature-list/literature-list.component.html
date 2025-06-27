@@ -23,7 +23,7 @@
         </mat-select>
       </mat-form-field>
       <mat-checkbox [checked]="onlySingable$.value" (change)="onSingableToggle($event.checked)">
-        Only singable
+        Nur aufführbare
       </mat-checkbox>
       <button mat-button (click)="clearFilters()">Clear Filters</button>
     </div>
@@ -82,9 +82,9 @@
               <td mat-cell *matCellDef="let piece">
                 <mat-select [value]="piece.choir_repertoire?.status"
                   (selectionChange)="onStatusChange($event.value, piece.id)" (click)="$event.stopPropagation()">
-                  <mat-option value="CAN_BE_SUNG">Can be Sung</mat-option>
-                  <mat-option value="IN_REHEARSAL">In Rehearsal</mat-option>
-                  <mat-option value="NOT_READY">Not Ready</mat-option>
+                  <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
+                  <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
+                  <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
                 </mat-select>
               </td>
             </ng-container>
