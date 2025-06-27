@@ -21,7 +21,7 @@
       margin-left: 180px;
   }
 
-  .mat-list-item.active {
+  .mat-mdc-list-item.active {
     background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, default) !important;
     color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default) !important;
     border-radius: 0px;
