@@ -1,14 +1,9 @@
 .choir-select {
   margin: 0 16px;
-  // Passen Sie die Größe an, damit es gut in die Toolbar passt
-  ::ng-deep .mat-mdc-form-field-flex {
-    height: 40px;
-    align-items: center;
-  }
+  height: 40px;
+  display: flex;
+  align-items: center;
   ::ng-deep .mat-mdc-select-value {
-    color: white;
-  }
-  ::ng-deep .mat-mdc-floating-label {
-    top: -12px !important;
+    color: currentColor;
   }
 }

@@ -1,11 +1,13 @@
 <ng-container *ngIf="availableChoirs$ | async as choirs">
-  <!-- Zeigen Sie die Box nur an, wenn mehr als ein Chor vorhanden ist -->
-  <mat-form-field *ngIf="choirs.length > 1" appearance="outline" class="choir-select">
-    <mat-label>Chor</mat-label>
-    <mat-select [value]="(activeChoir$ | async)?.id" (selectionChange)="onChoirChange($event.value)">
-      <mat-option *ngFor="let choir of choirs" [value]="choir.id">
-        {{ choir.name }}
-      </mat-option>
-    </mat-select>
-  </mat-form-field>
+  <!-- Anzeige nur bei mehreren verfügbaren Chören -->
+  <mat-select
+    *ngIf="choirs.length > 1"
+    class="choir-select"
+    [value]="(activeChoir$ | async)?.id"
+    (selectionChange)="onChoirChange($event.value)"
+  >
+    <mat-option *ngFor="let choir of choirs" [value]="choir.id">
+      {{ choir.name }}
+    </mat-option>
+  </mat-select>
 </ng-container>
