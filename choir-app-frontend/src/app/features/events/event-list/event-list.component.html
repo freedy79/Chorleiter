@@ -19,7 +19,7 @@
 
     <ng-container matColumnDef="type">
       <th mat-header-cell *matHeaderCellDef>Typ</th>
-      <td mat-cell *matCellDef="let ev">{{ ev.type }}</td>
+      <td mat-cell *matCellDef="let ev">{{ ev.type | eventTypeLabel }}</td>
     </ng-container>
 
     <ng-container matColumnDef="updatedAt">

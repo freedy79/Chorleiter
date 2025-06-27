@@ -12,12 +12,19 @@ import { MatPaginator } from '@angular/material/paginator';
 import { startWith } from 'rxjs/operators';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../dashboard/event-card/event-card.component';
 
 @Component({
   selector: 'app-event-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, EventCardComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MaterialModule,
+    EventCardComponent,
+    EventTypeLabelPipe
+  ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
