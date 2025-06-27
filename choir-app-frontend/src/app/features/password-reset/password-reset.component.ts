@@ -13,15 +13,16 @@ import { ApiService } from '@core/services/api.service';
   styleUrls: ['./password-reset.component.scss']
 })
 export class PasswordResetComponent {
-  form = this.fb.group({
-    password: ['', Validators.required]
-  });
+  form: ReturnType<FormBuilder['group']>;
   isLoading = false;
   message = '';
   token: string;
 
   constructor(private fb: FormBuilder, private route: ActivatedRoute, private api: ApiService) {
     this.token = this.route.snapshot.params['token'];
+    this.form = this.fb.group({
+      password: ['', Validators.required]
+    });
   }
 
   submit(): void {

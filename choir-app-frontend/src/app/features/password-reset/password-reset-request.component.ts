@@ -12,13 +12,15 @@ import { ApiService } from '@core/services/api.service';
   styleUrls: ['./password-reset-request.component.scss']
 })
 export class PasswordResetRequestComponent {
-  form = this.fb.group({
-    email: ['', [Validators.required, Validators.email]]
-  });
+  form;
   isLoading = false;
   message = '';
 
-  constructor(private fb: FormBuilder, private api: ApiService) {}
+  constructor(private fb: FormBuilder, private api: ApiService) {
+    this.form = this.fb.group({
+      email: ['', [Validators.required, Validators.email]]
+    });
+  }
 
   submit(): void {
     if (this.form.invalid) return;

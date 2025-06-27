@@ -4,8 +4,6 @@
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="!(isHandset$ | async)">
 
-    <mat-toolbar color="primary" class="main-toolbar">
-    </mat-toolbar>
     <mat-nav-list>
       <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>
       <app-menu-list-item *ngFor="let item of navItems" [item]="item"></app-menu-list-item>
