@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 // Importieren der Komponenten und des Guards
 import { LoginComponent } from './features/login/login.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
-import { DashboardComponent } from './features/dashboard/dashboard.component';
+import { DashboardComponent } from './features/home/dashboard/dashboard.component';
 import { LiteratureListComponent } from './features/literature/literature-list/literature-list.component';
 import { CollectionListComponent } from './features/collections/collection-list/collection-list.component';
 import { CollectionEditComponent } from './features/collections/collection-edit/collection-edit.component';
@@ -22,7 +22,7 @@ import { ManageChoirComponent } from '@features/choir-management/manage-choir/ma
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
-import { StatisticsComponent } from '@features/dashboard/stats/statistics.component';
+import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';

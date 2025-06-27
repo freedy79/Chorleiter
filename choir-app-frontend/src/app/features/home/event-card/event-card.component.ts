@@ -4,13 +4,15 @@ import { MaterialModule } from '@modules/material.module';
 
 import { Piece } from 'src/app/core/models/piece';
 import { Event } from 'src/app/core/models/event';
+import { RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-event-card',
   standalone: true,
   imports: [
     CommonModule,
-    MaterialModule
+    MaterialModule,
+    RouterModule
   ],
   templateUrl: './event-card.component.html',
   styleUrls: ['./event-card.component.scss']
