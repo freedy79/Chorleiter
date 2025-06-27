@@ -255,8 +255,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 upload$.subscribe({ next: afterSave, error: afterSave });
 
                 const message = this.isEditMode
-                    ? 'Collection updated successfully!'
-                    : 'Collection created successfully!';
+                    ? 'Die Sammlung wurde erfolgreich aktualisiert.'
+                    : 'Die Sammlung wurde erfolgreich erstellt.';
                 this.snackBar.open(message, 'OK', {
                     duration: 3000,
                     verticalPosition: 'top',

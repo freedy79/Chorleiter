@@ -10,7 +10,7 @@
   </button>
 </div>
 
-<div class="table-container mat-elevation-z8" *ngIf="!isLoading; else loading">
+<div class="table-container mat-elevation-z8">
   <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
 
     <!-- Cover Column -->
@@ -82,10 +82,3 @@
       <p>No collections have been created yet.</p>
   </div>
 </div>
-
-<ng-template #loading>
-  <div class="loading-state">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Loading collections...</p>
-  </div>
-</ng-template>

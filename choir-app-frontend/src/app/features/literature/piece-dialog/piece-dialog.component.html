@@ -53,7 +53,7 @@
             <mat-select formControlName="composerId">
               <mat-option [value]="addNewComposerId">
                 <mat-icon>add</mat-icon>
-                <span>Add New Composer</span>
+                <span>Neuen Komponisten erstellen</span>
               </mat-option>
               <mat-divider></mat-divider>
               <!-- The rest of the options -->
@@ -110,8 +110,8 @@
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onCancel()">Abbrechen</button>
   <button mat-flat-button color="primary" type="submit" form="piece-form" [disabled]="pieceForm.invalid">
-    {{ isEditMode && !isAdmin ? 'Änderung vorschlagen' : 'Save' }}
+    {{ isEditMode && !isAdmin ? 'Änderung vorschlagen' : 'Speichern' }}
   </button>
 </div>
