@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { ApiService } from 'src/app/core/services/api.service';
 import { Composer } from 'src/app/core/models/composer';
 import { MatTableDataSource } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
+import { MatPaginator } from '@angular/material/paginator';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 // ...
 @Component({
@@ -17,10 +18,16 @@ import { ComposerDialogComponent } from '@features/composers/composer-dialog/com
     MaterialModule,
   ]
 })
-export class ManageComposersComponent implements OnInit {
+export class ManageComposersComponent implements OnInit, AfterViewInit {
   composers: Composer[] = [];
   displayedColumns = ['name', 'birthYear', 'deathYear', 'actions'];
   dataSource = new MatTableDataSource<Composer>();
+  letters: string[] = ['Alle', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+  selectedLetter = 'Alle';
+  totalComposers = 0;
+  pageSizeOptions: number[] = [10, 25, 50];
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private adminApiService: ApiService, private dialog: MatDialog) {}
 
@@ -28,11 +35,37 @@ export class ManageComposersComponent implements OnInit {
     this.loadComposers();
   }
 
+  ngAfterViewInit(): void {
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+      this.applyFilter();
+    }
+  }
+
   loadComposers(): void {
     this.adminApiService.getComposers().subscribe((data) => {
       this.composers = data;
-      this.dataSource.data = data;
+      this.applyFilter();
     });
+  }
+
+  applyFilter(): void {
+    let filtered = this.composers;
+    if (this.selectedLetter !== 'Alle') {
+      const letter = this.selectedLetter.toUpperCase();
+      filtered = this.composers.filter(c => c.name.toUpperCase().startsWith(letter));
+    }
+    this.dataSource.data = filtered;
+    this.totalComposers = filtered.length;
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+      this.paginator.firstPage();
+    }
+  }
+
+  onLetterSelect(letter: string): void {
+    this.selectedLetter = letter;
+    this.applyFilter();
   }
 
   addComposer(): void {

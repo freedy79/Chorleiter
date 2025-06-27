@@ -2,6 +2,12 @@
   <button mat-flat-button color="primary" (click)="addComposer()">Add Composer</button>
 </div>
 
+<div class="letter-filter">
+  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
+    {{ l }}
+  </button>
+</div>
+
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
     <th mat-header-cell *matHeaderCellDef>Name</th>
@@ -33,3 +39,5 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+
+<mat-paginator [length]="totalComposers" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons></mat-paginator>
