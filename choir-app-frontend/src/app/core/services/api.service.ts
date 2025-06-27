@@ -22,6 +22,10 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
+  pingBackend(): Observable<{ message: string }> {
+    return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
+  }
+
   // --- Repertoire Methods (Choir-Specific) ---
 
   /**
