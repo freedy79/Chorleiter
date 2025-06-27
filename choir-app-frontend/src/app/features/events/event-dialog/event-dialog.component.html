@@ -1,11 +1,11 @@
-<h1 mat-dialog-title>Add New Event</h1>
+<h1 mat-dialog-title>Neues Ereignis erstellen</h1>
 
 <div mat-dialog-content>
   <form [formGroup]="eventForm" id="event-form" (ngSubmit)="onSave()">
     <div class="form-row">
       <!-- Datepicker -->
       <mat-form-field appearance="outline">
-        <mat-label>Event Date</mat-label>
+        <mat-label>Datum</mat-label>
         <input matInput [matDatepicker]="picker" formControlName="date">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
@@ -13,7 +13,7 @@
 
       <!-- Event Type -->
       <mat-form-field appearance="outline">
-        <mat-label>Event Type</mat-label>
+        <mat-label>Ereignisart</mat-label>
         <mat-select formControlName="type">
           <mat-option value="SERVICE">Gottesdienst</mat-option>
           <mat-option value="REHEARSAL">Probe</mat-option>
@@ -23,7 +23,7 @@
 
     <!-- Notes -->
     <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Notes (optional)</mat-label>
+      <mat-label>Notizen</mat-label>
       <textarea matInput formControlName="notes" rows="3"></textarea>
     </mat-form-field>
 
