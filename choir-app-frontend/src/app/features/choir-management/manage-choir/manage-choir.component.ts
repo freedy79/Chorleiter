@@ -25,6 +25,8 @@ import { ActivatedRoute } from '@angular/router';
 export class ManageChoirComponent implements OnInit {
   choirForm: FormGroup;
 
+  isChoirAdmin = false;
+
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
@@ -49,6 +51,10 @@ export class ManageChoirComponent implements OnInit {
       if (pageData) {
         // Füllen Sie das Formular und die Tabelle
         this.choirForm.patchValue(pageData.choirDetails);
+        this.isChoirAdmin = pageData.isChoirAdmin;
+        if (!this.isChoirAdmin) {
+          this.choirForm.disable();
+        }
         this.dataSource.data = pageData.members;
       }
     });
@@ -57,9 +63,11 @@ export class ManageChoirComponent implements OnInit {
   private reloadData(): void {
     // Sie könnten einen API-Aufruf machen oder, noch besser, zur Seite neu navigieren,
     // um den Resolver erneut auszulösen.
-    this.apiService.getChoirMembers().subscribe(members => {
-        this.dataSource.data = members;
-    });
+    if (this.isChoirAdmin) {
+      this.apiService.getChoirMembers().subscribe(members => {
+          this.dataSource.data = members;
+      });
+    }
   }
 
   onSaveChoirDetails(): void {
@@ -76,6 +84,9 @@ export class ManageChoirComponent implements OnInit {
   }
 
   openInviteDialog(): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
     const dialogRef = this.dialog.open(InviteUserDialogComponent, {
       width: '450px'
     });
@@ -94,6 +105,9 @@ export class ManageChoirComponent implements OnInit {
   }
 
   removeMember(user: UserInChoir): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
     const dialogData: ConfirmDialogData = {
       title: 'Remove Member?',
       message: `Are you sure you want to remove ${user.name} (${user.email}) from this choir? This cannot be undone.`

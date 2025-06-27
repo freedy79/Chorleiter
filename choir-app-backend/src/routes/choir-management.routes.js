@@ -2,13 +2,16 @@ const { verifyToken, isChoirAdminOrAdmin } = require("../middleware/auth.middlew
 const controller = require("../controllers/choir-management.controller");
 const router = require("express").Router();
 
-// Alle Routen hier erfordern mindestens "Choir Admin"-Rechte für den aktiven Chor
-router.use(verifyToken, isChoirAdminOrAdmin);
+// Zuerst stellen wir sicher, dass der Benutzer authentifiziert ist
+router.use(verifyToken);
 
+// Chor-Informationen können von allen Mitgliedern gelesen werden
 router.get("/", controller.getMyChoirDetails);
-router.put("/", controller.updateMyChoir);
-router.get("/members", controller.getChoirMembers);
-router.post("/members", controller.inviteUserToChoir);
-router.delete("/members", controller.removeUserFromChoir);
+
+// Alle folgenden Routen erfordern Choir-Admin-Rechte
+router.put("/", isChoirAdminOrAdmin, controller.updateMyChoir);
+router.get("/members", isChoirAdminOrAdmin, controller.getChoirMembers);
+router.post("/members", isChoirAdminOrAdmin, controller.inviteUserToChoir);
+router.delete("/members", isChoirAdminOrAdmin, controller.removeUserFromChoir);
 
 module.exports = router;
