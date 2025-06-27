@@ -13,6 +13,7 @@ import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
+import { PieceService } from './piece.service';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,7 @@ import { Choir } from '@core/models/choir';
 export class ApiService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private pieceService: PieceService) { }
 
   // --- Repertoire Methods (Choir-Specific) ---
 
@@ -41,22 +42,21 @@ export class ApiService {
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
-    let params = new HttpParams();
-    if (composerId) params = params.set('composerId', composerId.toString());
-    if (categoryId) params = params.set('categoryId', categoryId.toString());
-    if (collectionId) params = params.set('collectionId', collectionId.toString());
-    if (sortBy) params = params.set('sortBy', sortBy);
-    params = params.set('page', page);
-    params = params.set('limit', limit);
-    params = params.set('sortDir', sortDir);
-    if (status) params = params.set('status', status);
-    if (search) params = params.set('search', search);
-
-    return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
+    // composerId not yet supported by PieceService, pass as part of search/filter when implemented
+    return this.pieceService.getMyRepertoire(
+      categoryId,
+      collectionId,
+      sortBy,
+      page,
+      limit,
+      status,
+      sortDir,
+      search
+    );
   }
 
   getRepertoireForLookup(): Observable<LookupPiece[]> {
-    return this.http.get<LookupPiece[]>(`${this.apiUrl}/repertoire/lookup`);
+    return this.pieceService.getRepertoireForLookup();
   }
 
 
@@ -66,7 +66,7 @@ export class ApiService {
    * @param status - The new status ('CAN_BE_SUNG', 'IN_REHEARSAL', etc.).
    */
   updatePieceStatus(pieceId: number, status: string): Observable<any> {
-    return this.http.put(`${this.apiUrl}/repertoire/status`, { pieceId, status });
+    return this.pieceService.updatePieceStatus(pieceId, status);
   }
 
 
@@ -77,7 +77,7 @@ export class ApiService {
    * Useful for lookups when creating collections.
    */
   getGlobalPieces(): Observable<Piece[]> {
-    return this.http.get<Piece[]>(`${this.apiUrl}/pieces`);
+    return this.pieceService.getGlobalPieces();
   }
 
   /**
@@ -85,11 +85,11 @@ export class ApiService {
    * @param pieceData - The core data for the new piece.
    */
   createGlobalPiece(pieceData: { title: string, composerId: number, categoryId?: number, voicing?: string }): Observable<Piece> {
-    return this.http.post<Piece>(`${this.apiUrl}/pieces`, pieceData);
+    return this.pieceService.createGlobalPiece(pieceData);
   }
 
   updateGlobalPiece(id: number, pieceData: any): Observable<Piece> {
-    return this.http.put<Piece>(`${this.apiUrl}/pieces/${id}`, pieceData);
+    return this.pieceService.updateGlobalPiece(id, pieceData);
   }
 
 
@@ -220,7 +220,7 @@ export class ApiService {
   }
 
   addPieceToMyRepertoire(pieceId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/repertoire/add-piece`, { pieceId });
+    return this.pieceService.addPieceToMyRepertoire(pieceId);
     }
 
   uploadCollectionCsv(collectionId: number, file: File, mode: 'preview' | 'import'): Observable<any> {
@@ -246,7 +246,7 @@ export class ApiService {
 
 
   getPieceById(id: number): Observable<Piece> {
-    return this.http.get<Piece>(`${this.apiUrl}/pieces/${id}`);
+    return this.pieceService.getPieceById(id);
   }
 
   getMyChoirDetails(): Observable<Choir> {

@@ -2,6 +2,8 @@ const db = require("../models");
 const Piece = db.piece;
 const Composer = db.composer;
 const Category = db.category;
+const CrudService = require("../services/crud.service");
+const pieceService = new CrudService(Piece);
 
 /**
  * @description Create a new global piece.
@@ -64,7 +66,7 @@ exports.create = async (req, res) => {
  */
 exports.findAll = async (req, res) => {
     try {
-        const pieces = await Piece.findAll({
+        const pieces = await pieceService.findAll({
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] }
@@ -85,7 +87,7 @@ exports.findOne = async (req, res) => {
     const id = req.params.id;
 
     try {
-        const piece = await Piece.findByPk(id, {
+        const piece = await pieceService.findById(id, {
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] }
@@ -113,9 +115,7 @@ exports.update = async (req, res) => {
     const id = req.params.id;
 
     try {
-        const num = await Piece.update(req.body, {
-            where: { id: id }
-        });
+        const num = await pieceService.update(id, req.body);
 
         if (num == 1) {
             res.send({
@@ -141,9 +141,7 @@ exports.delete = async (req, res) => {
     const id = req.params.id;
 
     try {
-        const num = await Piece.destroy({
-            where: { id: id }
-        });
+        const num = await pieceService.delete(id);
 
         if (num == 1) {
             res.send({

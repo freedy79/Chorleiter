@@ -16,6 +16,7 @@ import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
 import { BehaviorSubject, Observable, switchMap } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
+import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
 import { Category } from '@core/models/category';
 import { CategoryDialogComponent } from '../../categories/category-dialog/category-dialog.component';
@@ -51,6 +52,7 @@ export class PieceDialogComponent implements OnInit {
     constructor(
         private fb: FormBuilder,
         private apiService: ApiService,
+        private pieceService: PieceService,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId: number | null }
@@ -102,7 +104,7 @@ export class PieceDialogComponent implements OnInit {
         });
 
         if (this.isEditMode && this.data.pieceId) {
-            this.apiService
+            this.pieceService
                 .getPieceById(this.data.pieceId)
                 .subscribe((piece) => {
                     this.populateForm(piece);
@@ -225,7 +227,7 @@ export class PieceDialogComponent implements OnInit {
         }
 
         if (this.isEditMode && this.data.pieceId) {
-            this.apiService
+            this.pieceService
                 .updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
                 .subscribe({
                     next: () => this.dialogRef.close(true),
@@ -234,11 +236,11 @@ export class PieceDialogComponent implements OnInit {
                     },
                 });
         } else {
-            this.apiService
+            this.pieceService
                 .createGlobalPiece(this.pieceForm.value)
                 .pipe(
                     switchMap((newlyCreatedPiece) =>
-                        this.apiService.addPieceToMyRepertoire(newlyCreatedPiece.id)
+                        this.pieceService.addPieceToMyRepertoire(newlyCreatedPiece.id)
                     )
                 )
                 .subscribe({
