@@ -23,18 +23,16 @@
   }
 
   .mat-list-item.active {
-    background-color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, primary) !important;
-    color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, accent) !important;
-    &:hover {
-        color: white;
-    }
+    background-color: mat.get-color-from-palette(nak.$choir-app-primary) !important;
+    color: mat.get-contrast-color-from-palette(nak.$choir-app-primary) !important;
   }
 
   &:active,
   &:hover,
   &:focus {
     >a:not(.expanded) {
-      background-color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, primary) !important;
+      background-color: mat.get-color-from-palette(nak.$choir-app-primary) !important;
+      color: mat.get-contrast-color-from-palette(nak.$choir-app-primary) !important;
     }
   }
 
@@ -44,9 +42,8 @@
 //   color: white;
 // }
 
-.mat-list-item {
-  color: white;
-  font-size: 16px;
+  .mat-list-item {
+    font-size: 16px;
 
   .routeIcon {
     margin-left: 0.1em;
