@@ -1,4 +1,4 @@
-<a *ngIf="isVisible && item" mat-list-item [ngStyle]="{'padding-left': (depth * 48) + 'px'}"
+<a *ngIf="isVisible && item" mat-list-item [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
   (click)="onItemSelected(item)" class="menu-list-item"
   [routerLink]="item.route || null" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
   [ngClass]="{'expanded': expanded}">

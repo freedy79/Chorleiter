@@ -69,3 +69,9 @@
 .submenu.expanded {
   transform: scaleY(1);
 }
+
+.appDrawer {
+  width: 220px; // Feste Breite für den Sidenav
+  z-index: 1000; // Sicherstellen, dass der Sidenav über anderen Inhalten liegt
+  padding: 0.5rem;
+}

@@ -3,7 +3,7 @@
     <div class="filter-controls">
       <mat-form-field appearance="outline">
         <mat-label>Search</mat-label>
-        <input matInput [formControl]="searchControl" placeholder="Search repertoire" />
+        <input matInput [formControl]="searchControl" placeholder="Repertoire durchsuchen" />
         <mat-hint>Use quotes for phrases</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
@@ -25,7 +25,7 @@
       <mat-checkbox [checked]="onlySingable$.value" (change)="onSingableToggle($event.checked)">
         Nur aufführbare
       </mat-checkbox>
-      <button mat-button (click)="clearFilters()">Clear Filters</button>
+      <button mat-button (click)="clearFilters()">Filter löschen</button>
     </div>
   </mat-drawer>
   <mat-drawer-content>
@@ -34,10 +34,10 @@
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle filters">
           <mat-icon>filter_list</mat-icon>
         </button>
-        <h1>My Repertoire</h1>
+        <h1>Chorrepertoire</h1>
         <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
           <mat-icon>add</mat-icon>
-          <span>Add New Piece</span>
+          <span>Stück hinzufügen</span>
         </button>
       </div>
 
@@ -51,13 +51,13 @@
             <!-- Title Column -->
             <ng-container matColumnDef="title">
               <!-- mat-sort-header tells the table this column is sortable. 'title' must match the column name. -->
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Title </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </th>
               <td mat-cell *matCellDef="let piece"> {{piece.title}} </td>
             </ng-container>
 
             <!-- Composer Column -->
             <ng-container matColumnDef="composer">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Composer </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist </th>
               <td mat-cell *matCellDef="let piece">
                 {{piece.composer?.name}}
               </td>
@@ -65,12 +65,12 @@
 
             <!-- Reference Column -->
             <ng-container matColumnDef="reference">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="reference"> Reference </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="reference"> Nr. </th>
               <td mat-cell *matCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </td>
             </ng-container>
 
             <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="category"> Occasion (Rubrik) </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="category"> Rubrik </th>
               <td mat-cell *matCellDef="let piece">
                 {{piece.category?.name}}
               </td>
@@ -93,7 +93,7 @@
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let piece" class="actions-cell">
-                <button mat-icon-button matTooltip="Edit piece details" (click)="openEditPieceDialog(piece.id)">
+                <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
                   <mat-icon>edit</mat-icon>
                 </button>
               </td>
@@ -106,7 +106,7 @@
             <!-- Row shown when there is no matching data. -->
             <tr class="mat-row" *matNoDataRow>
               <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                No pieces found matching the filter.
+                Keine Stücken passend zu den Filtern gefunden.
               </td>
             </tr>
           </table>

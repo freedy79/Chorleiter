@@ -45,7 +45,7 @@
 
 <mat-sidenav-container class="site-container">
   <mat-sidenav #appDrawer mode="over" [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async)">
+    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async)" class="appDrawer">
 
     <mat-nav-list>
       <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>
