@@ -54,6 +54,7 @@ const adminRoutes = require("./routes/admin.routes");
 const choirManagementRoutes = require("./routes/choir-management.routes");
 const invitationRoutes = require("./routes/invitation.routes");
 const statsRoutes = require("./routes/stats.routes");
+const passwordResetRoutes = require("./routes/password-reset.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -70,6 +71,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/choir-management", choirManagementRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/password-reset", passwordResetRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(

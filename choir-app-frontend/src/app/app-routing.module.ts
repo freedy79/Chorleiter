@@ -23,6 +23,8 @@ import { ManageChoirResolver } from '@features/choir-management/manage-choir-res
 import { EventListComponent } from '@features/events/event-list/event-list.component';
 import { InviteRegistrationComponent } from '@features/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/stats/statistics.component';
+import { PasswordResetRequestComponent } from '@features/password-reset/password-reset-request.component';
+import { PasswordResetComponent } from '@features/password-reset/password-reset.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -43,6 +45,14 @@ export const routes: Routes = [
             {
                 path: 'register/:token',
                 component: InviteRegistrationComponent
+            },
+            {
+                path: 'forgot-password',
+                component: PasswordResetRequestComponent
+            },
+            {
+                path: 'reset-password/:token',
+                component: PasswordResetComponent
             },
             { path: 'imprint', component: ImprintComponent },
             { path: 'privacy', component: PrivacyComponent },

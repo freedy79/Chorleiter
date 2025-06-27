@@ -25,8 +25,7 @@ export class UserDialogComponent {
     this.form = this.fb.group({
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
-      role: [data?.role || 'director', Validators.required],
-      password: ['']
+      role: [data?.role || 'director', Validators.required]
     });
   }
 
@@ -36,11 +35,7 @@ export class UserDialogComponent {
 
   onSave(): void {
     if (this.form.valid) {
-      const value = { ...this.form.value };
-      if (!value.password) {
-        delete value.password;
-      }
-      this.dialogRef.close(value);
+      this.dialogRef.close(this.form.value);
     }
   }
 }

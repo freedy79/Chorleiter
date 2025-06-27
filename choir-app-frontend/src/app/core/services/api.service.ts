@@ -289,6 +289,14 @@ export class ApiService {
     return this.http.get(`${this.apiUrl}/invitations/${token}`);
   }
 
+  requestPasswordReset(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/password-reset/request`, { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/password-reset/reset/${token}`, { password });
+  }
+
   completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
   }
@@ -331,6 +339,10 @@ export class ApiService {
 
   deleteUser(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/users/${id}`);
+  }
+
+  sendPasswordReset(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
