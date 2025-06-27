@@ -1,9 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { MaterialModule } from '@modules/material.module';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
 import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
 import { RouterLink } from '@angular/router'; // Import RouterLink for the template
@@ -20,11 +20,16 @@ import { RouterLink } from '@angular/router'; // Import RouterLink for the templ
   styleUrls: ['./collection-list.component.scss']
 })
 export class CollectionListComponent implements OnInit {
-  // Use a BehaviorSubject to hold the data, allowing us to update it.
-  private collectionsSubject = new BehaviorSubject<Collection[]>([]);
-  public collections$ = this.collectionsSubject.asObservable();
+  public dataSource = new MatTableDataSource<Collection>();
+  public isLoading = true;
+  private _sort!: MatSort;
+  @ViewChild(MatSort) set sort(sort: MatSort) {
+    if (sort) {
+      this._sort = sort;
+      this.dataSource.sort = this._sort;
+    }
+  }
 
-  // Define the columns for the mat-table
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
 
   constructor(
@@ -37,8 +42,10 @@ export class CollectionListComponent implements OnInit {
   }
 
   loadCollections(): void {
+    this.isLoading = true;
     this.apiService.getCollections().subscribe(collections => {
-      this.collectionsSubject.next(collections);
+      this.dataSource.data = collections;
+      this.isLoading = false;
     });
   }
 
