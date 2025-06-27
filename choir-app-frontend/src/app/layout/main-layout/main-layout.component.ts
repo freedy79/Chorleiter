@@ -120,13 +120,21 @@ export class MainLayoutComponent implements OnInit{
         visibleSubject: this.isAdmin$,
         route: '',
         children: [
+            {
+            displayName: 'Chöre',
+            route: '/admin/choirs',
+          },
+          {
+            displayName: 'Benutzer',
+            route: '/admin/users',
+          },
           {
             displayName: 'Komponisten',
             route: '/admin/composers'
           },
           {
             displayName: 'Autoren',
-            route: '/profiles',
+            route: '/admin/authors',
           }
         ]
       }
