@@ -100,7 +100,8 @@ export class EventDialogComponent implements OnInit {
 
   // --- DIE ERWEITERTE FILTERFUNKTION ---
   private _filter(search: string): LookupPiece[] {
-    const filterValue = search.toLowerCase().replace(/\s/g, '');
+    const filterValue = search.toLowerCase();
+    const filterValueNoSpace = filterValue.replace(/\s/g, '');
     const selectedIds = new Set(this.selectedPieces.map(p => p.id));
 
     return this.allRepertoirePieces.filter(piece => {
@@ -109,7 +110,7 @@ export class EventDialogComponent implements OnInit {
       // Prüfen, ob der Titel ODER die Referenz passt.
       const titleMatches = piece.title.toLowerCase().includes(filterValue);
       // 'piece.reference' ist jetzt ein einfacher String.
-      const referenceMatches = piece.reference ? piece.reference.toLowerCase().replace(/\s/g, '').includes(filterValue) : false;
+      const referenceMatches = piece.reference ? piece.reference.toLowerCase().replace(/\s/g, '').includes(filterValueNoSpace) : false;
 
       return isNotSelected && (titleMatches || referenceMatches);
     });
