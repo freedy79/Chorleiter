@@ -144,11 +144,22 @@ exports.getCover = async (req, res, next) => {
     try {
         const id = req.params.id;
         const collection = await Collection.findByPk(id);
+
+        // If the collection or the cover image field is missing, simply return
+        // an empty string so the frontend can show a blank image instead of an error.
         if (!collection || !collection.coverImage) {
-            return res.status(404).send({ message: 'Cover not found.' });
+            return res.status(200).json({ data: '' });
         }
 
         const filePath = path.join(__dirname, '../../uploads/collection-covers', collection.coverImage);
+
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            // File does not exist. Return an empty image instead of an error.
+            return res.status(200).json({ data: '' });
+        }
+
         const fileData = await fs.readFile(filePath);
         const base64 = fileData.toString('base64');
         const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
