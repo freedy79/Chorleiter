@@ -1,0 +1,63 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MaterialModule } from '@modules/material.module';
+import { ApiService } from 'src/app/core/services/api.service';
+import { User } from 'src/app/core/models/user';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatDialog } from '@angular/material/dialog';
+import { UserDialogComponent } from './user-dialog/user-dialog.component';
+
+@Component({
+  selector: 'app-manage-users',
+  standalone: true,
+  imports: [CommonModule, MaterialModule, UserDialogComponent],
+  templateUrl: './manage-users.component.html',
+  styleUrls: ['./manage-users.component.scss']
+})
+export class ManageUsersComponent implements OnInit {
+  users: User[] = [];
+  displayedColumns = ['name', 'email', 'role', 'choirs', 'actions'];
+  dataSource = new MatTableDataSource<User>();
+
+  constructor(private api: ApiService, private dialog: MatDialog) {}
+
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  loadUsers(): void {
+    this.api.getUsers().subscribe(data => {
+      this.users = data;
+      this.dataSource.data = data;
+    });
+  }
+
+  addUser(): void {
+    const ref = this.dialog.open(UserDialogComponent, { width: '400px' });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.createUser(result).subscribe(() => this.loadUsers());
+      }
+    });
+  }
+
+  editUser(user: User): void {
+    const ref = this.dialog.open(UserDialogComponent, { width: '400px', data: user });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.updateUser(user.id, result).subscribe(() => this.loadUsers());
+      }
+    });
+  }
+
+  deleteUser(user: User): void {
+    if (confirm('Delete user?')) {
+      this.api.deleteUser(user.id).subscribe(() => this.loadUsers());
+    }
+  }
+
+  choirList(user: any): string {
+    if (!user.choirs) return '';
+    return user.choirs.map((c: any) => c.name).join(', ');
+  }
+}
