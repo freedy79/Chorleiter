@@ -14,6 +14,8 @@ import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
 import { AdminGuard } from '@core/guards/admin-guard';
 import { ManageComposersComponent } from '@features/admin/manage-composers/manage-composers.component';
 import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-authors.component';
+import { ManageChoirsComponent } from '@features/admin/manage-choirs/manage-choirs.component';
+import { ManageUsersComponent } from '@features/admin/manage-users/manage-users.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
@@ -96,7 +98,8 @@ export const routes: Routes = [
             { path: '', redirectTo: 'composers', pathMatch: 'full' },
             { path: 'composers', component: ManageComposersComponent },
             { path: 'authors', component: ManageAuthorsComponent },
-            // ... andere Admin-Seiten
+            { path: 'choirs', component: ManageChoirsComponent },
+            { path: 'users', component: ManageUsersComponent },
         ],
     },
 

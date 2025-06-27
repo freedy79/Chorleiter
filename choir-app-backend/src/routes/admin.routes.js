@@ -16,10 +16,14 @@ router.get("/authors", controller.getAll(db.author));
 
 // Routen für Chöre
 router.get("/choirs", controller.getAll(db.choir));
-// ...
+router.post("/choirs", controller.create(db.choir));
+router.put("/choirs/:id", controller.update(db.choir));
+router.delete("/choirs/:id", controller.remove(db.choir));
 
 // Routen für Benutzer
-router.get("/users", controller.getAll(db.user));
-// ...
+router.get("/users", controller.getAllUsers);
+router.post("/users", controller.createUser);
+router.put("/users/:id", controller.updateUser);
+router.delete("/users/:id", controller.deleteUser);
 
 module.exports = router;

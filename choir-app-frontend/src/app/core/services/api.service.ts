@@ -281,6 +281,40 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/choir-management/members`, options);
   }
 
+  // --- Admin Methods ---
+
+  getAdminChoirs(): Observable<Choir[]> {
+    return this.http.get<Choir[]>(`${this.apiUrl}/admin/choirs`);
+  }
+
+  createChoir(data: { name: string; description?: string; location?: string }): Observable<Choir> {
+    return this.http.post<Choir>(`${this.apiUrl}/admin/choirs`, data);
+  }
+
+  updateChoir(id: number, data: { name: string; description?: string; location?: string }): Observable<Choir> {
+    return this.http.put<Choir>(`${this.apiUrl}/admin/choirs/${id}`, data);
+  }
+
+  deleteChoir(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/choirs/${id}`);
+  }
+
+  getUsers(): Observable<User[]> {
+    return this.http.get<User[]>(`${this.apiUrl}/admin/users`);
+  }
+
+  createUser(data: any): Observable<User> {
+    return this.http.post<User>(`${this.apiUrl}/admin/users`, data);
+  }
+
+  updateUser(id: number, data: any): Observable<User> {
+    return this.http.put<User>(`${this.apiUrl}/admin/users/${id}`, data);
+  }
+
+  deleteUser(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/users/${id}`);
+  }
+
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
