@@ -19,7 +19,8 @@ exports.overview = async (req, res) => {
             }],
             group: ['piece.id'],
             order: [[Sequelize.literal('count'), 'DESC']],
-            limit: 3
+            limit: 3,
+            subQuery: false
         });
 
         // Top pieces rehearsed
@@ -37,7 +38,8 @@ exports.overview = async (req, res) => {
             }],
             group: ['piece.id'],
             order: [[Sequelize.literal('count'), 'DESC']],
-            limit: 3
+            limit: 3,
+            subQuery: false
         });
 
         // Count singable pieces
