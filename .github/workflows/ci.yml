@@ -20,11 +20,11 @@ jobs:
         with:
           node-version: '20' # Passe die Node.js Version an
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install Angular CLI dependencies
+        run: npm install --prefix choir-app-frontend
 
       - name: Run Angular tests
-        run: npm run test -- --watch=false --progress=false --browsers=ChromeHeadlessCI
+        run: npm run test --prefix choir-app-frontend -- --watch=false --progress=false --browsers=ChromeHeadlessCI
 
       - name: Upload test results (optional)
         uses: actions/upload-artifact@v4
