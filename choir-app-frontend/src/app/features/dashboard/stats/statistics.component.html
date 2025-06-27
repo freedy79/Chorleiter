@@ -5,7 +5,7 @@
     <h3>Top 3 Gottesdienst-Stücke</h3>
     <ol>
       <li *ngFor="let item of stats.topServicePieces">
-        {{item.title}} ({{item.count}}x)
+        <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}}x)
       </li>
     </ol>
   </mat-card>
@@ -14,7 +14,7 @@
     <h3>Top-geprobte Stücke</h3>
     <ol>
       <li *ngFor="let item of stats.topRehearsalPieces">
-        {{item.title}} ({{item.count}}x)
+        <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}}x)
       </li>
     </ol>
   </mat-card>
