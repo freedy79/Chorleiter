@@ -15,7 +15,7 @@ exports.create = async (req, res) => {
      const {
         title, composerId, categoryId, voicing,
         key, timeSignature, lyrics, imageIdentifier, license, opus,
-        authorName, // e.g., "Martin Luther"
+        authorName, authorId,
         arrangerIds, // e.g., [12, 15]
         links        // e.g., [{ description: 'YouTube', url: '...' }]
     } = req.body;
@@ -25,15 +25,15 @@ exports.create = async (req, res) => {
     }
 
     try {
-        let authorId = null;
-        if (authorName) {
+        let resolvedAuthorId = authorId || null;
+        if (!resolvedAuthorId && authorName) {
             const [author] = await db.author.findOrCreate({ where: { name: authorName }, defaults: { name: authorName }});
-            authorId = author.id;
+            resolvedAuthorId = author.id;
         }
 
         const newPiece = await db.piece.create({
             title, composerId, categoryId, voicing, key, timeSignature,
-            lyrics, imageIdentifier, license, opus, authorId
+            lyrics, imageIdentifier, license, opus, authorId: resolvedAuthorId
         });
 
         if (arrangerIds && arrangerIds.length > 0) {
