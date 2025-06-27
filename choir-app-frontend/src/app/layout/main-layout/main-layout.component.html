@@ -1,5 +1,6 @@
 <mat-sidenav-container class="site-container">
-  <mat-sidenav #appDrawer mode="over" class="menu-sidenav" fixedInViewport="false"
+  <mat-sidenav #appDrawer mode="over" class="menu-sidenav" [fixedInViewport]="true"
+    [fixedTopGap]="headerHeight" [fixedBottomGap]="footerHeight"
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'"
     [opened]="!(isHandset$ | async)">
 

@@ -14,7 +14,7 @@ import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/
 import { NavItem } from '@shared/components/menu-list-item/nav-item';
 import { MenuListItemComponent } from '@shared/components/menu-list-item/menu-list-item.component';
 import { NavService } from '@shared/components/menu-list-item/nav-service';
-import { BreakpointObserver } from '@angular/cdk/layout';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDrawer } from '@angular/material/sidenav';
 
 @Component({
@@ -44,9 +44,12 @@ export class MainLayoutComponent implements OnInit{
   @ViewChild('appDrawer') appDrawer: MatDrawer | undefined;
    private isHandset: boolean = false;
 
+  headerHeight = 64;
+  footerHeight = 56;
+
   public navItems: NavItem[] = [];
 
-  isHandset$: Observable<boolean> | undefined;
+  isHandset$: Observable<boolean>;
   isTablet$: Observable<boolean> | undefined;
   isMedium$: Observable<boolean> | undefined;
 
@@ -59,6 +62,14 @@ export class MainLayoutComponent implements OnInit{
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.currentTheme = this.themeService.getCurrentTheme();
+
+    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
+      map(result => result.matches)
+    );
+    this.isHandset$.subscribe(match => {
+      this.isHandset = match;
+      this.headerHeight = match ? 56 : 64;
+    });
   }
 
   ngOnInit(): void {
