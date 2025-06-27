@@ -53,18 +53,33 @@
       </mat-autocomplete>
     </mat-form-field>
 
-    <!-- Display Selected Pieces as Chips -->
-    <mat-chip-listbox aria-label="Selected pieces">
-      <mat-chip *ngFor="let piece of selectedPieces" (removed)="remove(piece)">
-        {{ piece.title }}
-        <button matChipRemove>
-          <mat-icon>cancel</mat-icon>
-        </button>
-      </mat-chip>
-    </mat-chip-listbox>
-    <div *ngIf="selectedPieces.length === 0" class="no-pieces-message">
-        No pieces selected for this event yet.
-    </div>
+    <!-- Display Selected Pieces in a Table -->
+    <table mat-table [dataSource]="selectedPieces" class="selected-pieces-table">
+      <ng-container matColumnDef="reference">
+        <th mat-header-cell *matHeaderCellDef>Ref</th>
+        <td mat-cell *matCellDef="let piece">{{ piece.reference }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>Titel</th>
+        <td mat-cell *matCellDef="let piece">{{ piece.title }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let piece">
+          <button mat-icon-button color="warn" (click)="remove(piece)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="pieceColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: pieceColumns;"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="pieceColumns.length">No pieces selected for this event yet.</td>
+      </tr>
+    </table>
 
   </form>
 </div>

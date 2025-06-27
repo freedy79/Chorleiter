@@ -14,7 +14,6 @@ import { MaterialModule } from '@modules/material.module';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatChipsModule } from '@angular/material/chips';
 import { LookupPiece } from '@core/models/lookup-piece';
 
 
@@ -26,8 +25,7 @@ import { LookupPiece } from '@core/models/lookup-piece';
     ReactiveFormsModule,
     MaterialModule,
     MatDatepickerModule,
-    MatAutocompleteModule,
-    MatChipsModule
+    MatAutocompleteModule
   ],
   providers: [
     MatDatepickerModule,
@@ -42,6 +40,7 @@ export class EventDialogComponent implements OnInit {
   filteredPieces$!: Observable<LookupPiece[]>;
   allRepertoirePieces: LookupPiece[] = [];
   selectedPieces: LookupPiece[] = [];
+  pieceColumns: string[] = ['reference', 'title', 'actions'];
 
   isEditMode = false;
   private editEventId: number | null = null;
@@ -131,7 +130,7 @@ export class EventDialogComponent implements OnInit {
     this.pieceCtrl.setValue('');
   }
 
-  // Wird aufgerufen, wenn ein Chip entfernt wird
+  // Wird aufgerufen, wenn ein Stück aus der Liste entfernt wird
   remove(piece: LookupPiece): void {
     const index = this.selectedPieces.indexOf(piece);
     if (index >= 0) {

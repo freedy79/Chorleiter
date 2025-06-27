@@ -28,10 +28,11 @@ h3.mat-subheading-2 {
     color: #888;
 }
 
-// Styling für die Chips
-mat-chip-listbox {
+
+// Styling für die Tabelle der ausgewählten Stücke
+.selected-pieces-table {
+    width: 100%;
     margin-top: 1rem;
-    display: block;
 }
 
 .no-pieces-message {
