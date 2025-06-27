@@ -14,6 +14,11 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     padding: 2rem;
 }
 
+// Add space below all Material card headers
+mat-card-header {
+  margin-bottom: 1rem;
+}
+
 // Wenden Sie das helle Theme standardmäßig auf den body an.
 // Dies ist wichtig, damit immer ein Theme vorhanden ist.
 // Das Theme wird bereits weiter oben eingebunden, daher genügt
