@@ -23,16 +23,16 @@
   }
 
   .mat-list-item.active {
-    background-color: mat.get-color-from-palette(nak.$choir-app-primary) !important;
-    color: mat.get-contrast-color-from-palette(nak.$choir-app-primary) !important;
+    background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, default) !important;
+    color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-primary, default) !important;
   }
 
   &:active,
   &:hover,
   &:focus {
     >a:not(.expanded) {
-      background-color: mat.get-color-from-palette(nak.$choir-app-primary) !important;
-      color: mat.get-contrast-color-from-palette(nak.$choir-app-primary) !important;
+      background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, default) !important;
+      color: mat.m2-get-contrast-color-from-palette(nak.$choir-app-primary, default) !important;
     }
   }
 
