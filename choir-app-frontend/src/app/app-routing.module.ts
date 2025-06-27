@@ -14,7 +14,6 @@ import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
 import { AdminGuard } from '@core/guards/admin-guard';
 import { ManageComposersComponent } from '@features/admin/manage-composers/manage-composers.component';
 import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-authors.component';
-import { AdminLayoutComponent } from '@features/admin/admin-layout/admin-layout.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
@@ -92,7 +91,6 @@ export const routes: Routes = [
     },
     {
         path: 'admin',
-        component: AdminLayoutComponent,
         canActivate: [AuthGuard, AdminGuard], // Muss eingeloggt UND Admin sein
         children: [
             { path: '', redirectTo: 'composers', pathMatch: 'full' },
