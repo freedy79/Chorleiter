@@ -14,6 +14,7 @@ import { Piece } from '@core/models/piece';
 import { EventCardComponent } from './event-card/event-card.component';
 import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
+import { PieceChange } from '@core/models/piece-change';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,11 +30,12 @@ import { Choir } from '@core/models/choir';
 })
 export class DashboardComponent implements OnInit {
   // Ein BehaviorSubject, das als manueller Auslöser für das Neuladen von Daten dient.
-  private refresh$ = new BehaviorSubject<void>(undefined);
+  public refresh$ = new BehaviorSubject<void>(undefined);
 
   lastService$!: Observable<Event | null>;
   lastRehearsal$!: Observable<Event | null>;
   activeChoir$: Observable<Choir | null>;
+  pieceChanges$!: Observable<PieceChange[]>;
 
   constructor(
     private apiService: ApiService,
@@ -52,6 +54,10 @@ export class DashboardComponent implements OnInit {
 
     this.lastRehearsal$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
+    );
+
+    this.pieceChanges$ = this.authService.isAdmin$.pipe(
+      switchMap(isAdmin => isAdmin ? this.apiService.getPieceChangeRequests() : of([]))
     );
   }
 

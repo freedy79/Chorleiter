@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { AuthService } from '@core/services/auth.service';
 
 import { PieceDialogComponent } from './piece-dialog.component';
 
@@ -8,7 +10,8 @@ describe('PieceDialogComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PieceDialogComponent]
+      imports: [PieceDialogComponent],
+      providers: [{ provide: AuthService, useValue: { isAdmin$: of(true) } }]
     })
     .compileComponents();
 

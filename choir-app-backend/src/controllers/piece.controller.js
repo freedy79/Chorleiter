@@ -115,16 +115,17 @@ exports.update = async (req, res) => {
     const id = req.params.id;
 
     try {
+        if (req.userRole !== 'admin') {
+            await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
+            return res.status(202).send({ message: 'Change proposal created.' });
+        }
+
         const num = await pieceService.update(id, req.body);
 
         if (num == 1) {
-            res.send({
-                message: "Piece was updated successfully."
-            });
+            res.send({ message: "Piece was updated successfully." });
         } else {
-            res.send({
-                message: `Cannot update Piece with id=${id}. Maybe Piece was not found or req.body is empty!`
-            });
+            res.send({ message: `Cannot update Piece with id=${id}. Maybe Piece was not found or req.body is empty!` });
         }
     } catch (err) {
         res.status(500).send({ message: "Error updating Piece with id=" + id });
