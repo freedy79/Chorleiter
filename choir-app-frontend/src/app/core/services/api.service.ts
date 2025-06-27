@@ -269,6 +269,10 @@ export class ApiService {
     return this.pieceService.getPieceById(id);
   }
 
+  getRepertoirePiece(id: number): Observable<Piece> {
+    return this.http.get<Piece>(`${this.apiUrl}/repertoire/${id}`);
+  }
+
   getMyChoirDetails(): Observable<Choir> {
     return this.http.get<Choir>(`${this.apiUrl}/choir-management`);
   }

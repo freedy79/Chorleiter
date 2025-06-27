@@ -7,5 +7,6 @@ router.use(authJwt.verifyToken);
 router.get("/", controller.findMyRepertoire);
 router.put("/status", controller.updateStatus);
 router.get("/lookup", controller.lookup);
+router.get("/:id", controller.findOne);
 
 module.exports = router;

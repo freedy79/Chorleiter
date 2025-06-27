@@ -25,6 +25,7 @@ import { InviteRegistrationComponent } from '@features/user/registration/invite-
 import { StatisticsComponent } from '@features/dashboard/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
+import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -91,6 +92,11 @@ export const routes: Routes = [
             {
                 path: 'stats',
                 component: StatisticsComponent,
+                canActivate: [AuthGuard]
+            },
+            {
+                path: 'pieces/:id',
+                component: PieceDetailComponent,
                 canActivate: [AuthGuard]
             },
             {

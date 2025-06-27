@@ -217,6 +217,55 @@ exports.updateStatus = async (req, res) => {
     }
 };
 
+exports.findOne = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const piece = await db.piece.findByPk(id, {
+            include: [
+                { model: db.composer, as: 'composer' },
+                { model: db.category, as: 'category' },
+                { model: db.author, as: 'author' },
+                { model: db.composer, as: 'arrangers' },
+                { model: db.piece_link, as: 'links' },
+                {
+                    model: db.collection,
+                    as: 'collections',
+                    attributes: ['id', 'prefix', 'title'],
+                    through: { model: db.collection_piece, attributes: ['numberInCollection'] }
+                },
+                {
+                    model: db.event,
+                    as: 'events',
+                    attributes: ['id', 'date', 'type', 'notes'],
+                    through: { attributes: [] },
+                    where: { choirId: req.activeChoirId },
+                    required: false,
+                    include: [{ model: db.user, as: 'director', attributes: ['name'] }]
+                }
+            ],
+            order: [[{ model: db.event, as: 'events' }, 'date', 'DESC']]
+        });
+
+        if (!piece) {
+            return res.status(404).send({ message: 'Piece not found.' });
+        }
+
+        const link = await db.choir_repertoire.findOne({
+            where: { choirId: req.activeChoirId, pieceId: id }
+        });
+
+        const result = piece.get({ plain: true });
+        if (link) {
+            result.choir_repertoire = { status: link.status };
+        }
+
+        res.status(200).send(result);
+    } catch (err) {
+        console.error('ERROR finding repertoire piece:', err);
+        res.status(500).send({ message: err.message || 'Error retrieving piece.' });
+    }
+};
+
 exports.addPieceToRepertoire = async (req, res) => {
     const { pieceId } = req.body;
     try {

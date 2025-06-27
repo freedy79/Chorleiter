@@ -8,7 +8,11 @@
       <h3>{{ event.date | date:'fullDate' }}</h3>
       <mat-list>
         <mat-list-item *ngFor="let piece of event.pieces">
-          <div matListItemTitle>{{getPieceReference(piece)}} {{ piece.title }}</div>
+          <div matListItemTitle>
+            <a [routerLink]="['/pieces', piece.id]" class="piece-link">
+              {{getPieceReference(piece)}} {{ piece.title }}
+            </a>
+          </div>
           <div matListItemLine>
               <span>{{ getPieceSubtitle(piece) }}</span>
           </div>
