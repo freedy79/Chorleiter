@@ -22,8 +22,7 @@ export class ApiService {
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient, private pieceService: PieceService) {
-  pingBackend(): Observable<{ message: string }> {
-    return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
+
   }
 
   // --- Repertoire Methods (Choir-Specific) ---
@@ -285,4 +284,8 @@ export class ApiService {
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
+
+  pingBackend(): Observable<{ message: string }> {
+        return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
+    }
 }
