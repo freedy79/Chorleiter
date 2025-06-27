@@ -1,0 +1,26 @@
+<div class="stats-page" *ngIf="stats">
+  <h2>Statistik</h2>
+
+  <mat-card>
+    <h3>Top 3 Gottesdienst-Stücke</h3>
+    <ol>
+      <li *ngFor="let item of stats.topServicePieces">
+        {{item.title}} ({{item.count}}x)
+      </li>
+    </ol>
+  </mat-card>
+
+  <mat-card>
+    <h3>Top-geprobte Stücke</h3>
+    <ol>
+      <li *ngFor="let item of stats.topRehearsalPieces">
+        {{item.title}} ({{item.count}}x)
+      </li>
+    </ol>
+  </mat-card>
+
+  <mat-card>
+    <h3>Singfähige Stücke im Repertoire</h3>
+    <p>{{stats.singableCount}}</p>
+  </mat-card>
+</div>
