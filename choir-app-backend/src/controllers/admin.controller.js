@@ -121,3 +121,22 @@ exports.deleteUser = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+const crypto = require('crypto');
+const emailService = require('../services/email.service');
+
+exports.sendPasswordReset = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await db.user.findByPk(id);
+        if (user) {
+            const token = crypto.randomBytes(32).toString('hex');
+            const expiry = new Date(Date.now() + 60 * 60 * 1000);
+            await user.update({ resetToken: token, resetTokenExpiry: expiry });
+            await emailService.sendPasswordResetMail(user.email, token);
+        }
+        res.status(200).send({ message: 'Reset email sent if user exists.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};

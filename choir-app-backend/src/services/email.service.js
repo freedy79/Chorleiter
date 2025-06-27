@@ -20,3 +20,14 @@ exports.sendInvitationMail = async (to, token, choirName, expiry) => {
     html: `<p>You have been invited to join <b>${choirName}</b>.<br>Click <a href="${link}">here</a> to complete your registration. This link is valid until ${expiry.toLocaleString()}.</p>`
   });
 };
+
+exports.sendPasswordResetMail = async (to, token) => {
+  const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const link = `${linkBase}/reset-password/${token}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM || 'no-reply@example.com',
+    to,
+    subject: 'Password Reset',
+    html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
+  });
+};

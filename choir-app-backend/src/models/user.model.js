@@ -12,6 +12,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+      resetToken: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      resetTokenExpiry: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
       role: {
         type: DataTypes.ENUM('director', 'choir_admin', 'admin'),
         defaultValue: 'director'

@@ -5,6 +5,7 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { User } from 'src/app/core/models/user';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
 
 @Component({
@@ -19,7 +20,7 @@ export class ManageUsersComponent implements OnInit {
   displayedColumns = ['name', 'email', 'role', 'choirs', 'actions'];
   dataSource = new MatTableDataSource<User>();
 
-  constructor(private api: ApiService, private dialog: MatDialog) {}
+  constructor(private api: ApiService, private dialog: MatDialog, private snack: MatSnackBar) {}
 
   ngOnInit(): void {
     this.loadUsers();
@@ -53,6 +54,14 @@ export class ManageUsersComponent implements OnInit {
   deleteUser(user: User): void {
     if (confirm('Delete user?')) {
       this.api.deleteUser(user.id).subscribe(() => this.loadUsers());
+    }
+  }
+
+  sendReset(user: User): void {
+    if (confirm('Send password reset email?')) {
+      this.api.sendPasswordReset(user.id).subscribe(() => {
+        this.snack.open('Email sent if user exists.', 'OK', { duration: 3000 });
+      });
     }
   }
 
