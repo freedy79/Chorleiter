@@ -17,7 +17,6 @@ import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-au
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
-import { ChoirAdminGuard } from '@core/guards/choir-admin-guard';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
 import { InviteRegistrationComponent } from '@features/registration/invite-registration.component';
@@ -84,7 +83,7 @@ export const routes: Routes = [
             {
                 path: 'manage-choir',
                 component: ManageChoirComponent,
-                canActivate: [AuthGuard, ChoirAdminGuard],
+                canActivate: [AuthGuard],
                 resolve: {pageData: ManageChoirResolver }
             },
         ],

@@ -22,7 +22,7 @@
           <textarea matInput formControlName="description" rows="4"></textarea>
         </mat-form-field>
         <div class="actions-footer">
-          <button mat-flat-button color="primary" type="submit" [disabled]="choirForm.invalid || choirForm.pristine">
+          <button mat-flat-button color="primary" type="submit" [disabled]="choirForm.invalid || choirForm.pristine || !isChoirAdmin">
             Speichern
           </button>
         </div>
@@ -31,7 +31,7 @@
   </mat-card>
 
   <!-- Card für die Mitglieder-Verwaltung -->
-  <mat-card class="table-card">
+  <mat-card class="table-card" *ngIf="isChoirAdmin">
     <mat-card-header>
       <mat-card-title>Chorleiter</mat-card-title>
       <button mat-flat-button color="accent" (click)="openInviteDialog()">
