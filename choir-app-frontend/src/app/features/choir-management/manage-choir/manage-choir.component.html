@@ -1,29 +1,29 @@
 <div class="manage-container">
-  <h1>Manage Choir</h1>
+  <h1>Chorinformationen</h1>
 
   <!-- Card für die Chor-Details -->
   <mat-card class="form-card">
     <mat-card-header>
-      <mat-card-title>Choir Details</mat-card-title>
+      <mat-card-title>Chorinformationen</mat-card-title>
     </mat-card-header>
     <mat-card-content>
 
       <form [formGroup]="choirForm" (ngSubmit)="onSaveChoirDetails()">
         <mat-form-field appearance="outline">
-          <mat-label>Choir Name</mat-label>
+          <mat-label>Chorname</mat-label>
           <input matInput formControlName="name">
         </mat-form-field>
         <mat-form-field appearance="outline">
-          <mat-label>Location</mat-label>
+          <mat-label>Ort</mat-label>
           <input matInput formControlName="location">
         </mat-form-field>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Description</mat-label>
+          <mat-label>Beschreibung</mat-label>
           <textarea matInput formControlName="description" rows="4"></textarea>
         </mat-form-field>
         <div class="actions-footer">
           <button mat-flat-button color="primary" type="submit" [disabled]="choirForm.invalid || choirForm.pristine">
-            Save Details
+            Speichern
           </button>
         </div>
       </form>
@@ -33,7 +33,7 @@
   <!-- Card für die Mitglieder-Verwaltung -->
   <mat-card class="table-card">
     <mat-card-header>
-      <mat-card-title>Choir Members</mat-card-title>
+      <mat-card-title>Chorleiter</mat-card-title>
       <button mat-flat-button color="accent" (click)="openInviteDialog()">
         <mat-icon>add</mat-icon>
         <span>Invite New Member</span>
@@ -49,12 +49,12 @@
           </ng-container>
           <!-- Email Column -->
           <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef> Email </th>
+            <th mat-header-cell *matHeaderCellDef> E-Mail </th>
             <td mat-cell *matCellDef="let user"> {{user.email}} </td>
           </ng-container>
           <!-- Role Column -->
           <ng-container matColumnDef="role">
-            <th mat-header-cell *matHeaderCellDef> Role </th>
+            <th mat-header-cell *matHeaderCellDef> Rolle </th>
             <td mat-cell *matCellDef="let user"> {{user.membership?.roleInChoir | titlecase}} </td>
           </ng-container>
           <ng-container matColumnDef="status">

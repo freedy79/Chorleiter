@@ -1,0 +1,71 @@
+@use '@angular/material' as mat;
+@use '../../../../themes/_nak-theme' as nak;
+
+//@include mat.button-color(nak.$nak-blue-palette, 50);
+
+.expanded-area {
+}
+
+:host {
+  margin-left: 0.5rem;
+  margin-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  outline: none;
+  width: 100%;
+  position: relative;
+
+  .expandIcon {
+      position: absolute;
+      top: 0.8em;
+      // left: -0.2em;
+      margin-left: 180px;
+  }
+
+  .mat-list-item.active {
+    background-color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, primary) !important;
+    color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, accent) !important;
+    &:hover {
+        color: white;
+    }
+  }
+
+  &:active,
+  &:hover,
+  &:focus {
+    >a:not(.expanded) {
+      background-color: mat.m2-get-color-from-palette(nak.$nak-blue-palette, primary) !important;
+    }
+  }
+
+}
+
+// .nav-text {
+//   color: white;
+// }
+
+.mat-list-item {
+  color: white;
+  font-size: 16px;
+
+  .routeIcon {
+    margin-left: 0.1em;
+    margin-right: 0.6em;
+    width: 24px;
+    height: 24px;
+    // filter: invert(100%) sepia(15%) saturate(0%) hue-rotate(29deg) brightness(113%) contrast(100%);
+    // .active {
+    //   filter: invert(76%) sepia(98%) saturate(1040%) hue-rotate(360deg) brightness(104%) contrast(104%) !important;
+    // }
+  }
+  .routeIconSVG {
+    margin-left: 0.1em;
+    margin-right: 0.6em;
+    width: 2em;
+    height: 2em;
+    // filter: invert(100%) sepia(15%) saturate(0%) hue-rotate(29deg) brightness(113%) contrast(100%);
+    // .active {
+    //   filter: invert(76%) sepia(98%) saturate(1040%) hue-rotate(360deg) brightness(104%) contrast(104%) !important;
+    // }
+  }
+}

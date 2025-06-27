@@ -7,32 +7,19 @@
 }
 
 .main-toolbar {
-  // --- DIE WICHTIGSTEN ÄNDERUNGEN SIND HIER ---
   position: sticky; // Die Leiste "klebt" beim Scrollen.
   top: 0; // Sie klebt am oberen Rand.
-  z-index: 1000; // Sie bleibt über allen anderen Inhalten.
+  z-index: 100; // Sie bleibt über allen anderen Inhalten.
   height: var(--header-height); // Wir verwenden unsere definierte Höhe.
+
 
   // Diese Stile sind für das Aussehen und die Funktionalität der Links.
   a.mat-mdc-button {
-    border-radius: 4px;
     margin: 0 4px;
     padding: 0 16px;
     line-height: 48px;
     transition: background-color 0.3s;
   }
-
-  a.active-link {
-    background-color: rgba(0, 0, 0, 0.15);
-  }
-}
-
-mat-sidenav a.active-link {
-  font-weight: bold;
-}
-
-.menu-sidenav {
-  background-color: #fafafa;
 }
 
 .spacer {
@@ -72,4 +59,15 @@ mat-sidenav a.active-link {
   text-decoration: none;
   gap: 0.5rem; // Abstand zwischen Icon und Text
   color: var(--primary-color, #ffffff); // Verwenden Sie Ihre primäre Theme-Farbe
+}
+
+.submenu {
+  overflow-y: hidden;
+  transition: transform 300ms ease;
+  transform: scaleY(0);
+  transform-origin: top;
+  padding-left: 30px;
+}
+.submenu.expanded {
+  transform: scaleY(1);
 }

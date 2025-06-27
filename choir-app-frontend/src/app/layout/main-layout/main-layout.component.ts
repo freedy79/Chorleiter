@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router, RouterModule } from '@angular/router'; // RouterModule importieren
 import { AuthService } from 'src/app/core/services/auth.service';
 
@@ -11,6 +11,11 @@ import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
 import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/loading-indicator.component';
+import { NavItem } from '@shared/components/menu-list-item/nav-item';
+import { MenuListItemComponent } from '@shared/components/menu-list-item/menu-list-item.component';
+import { NavService } from '@shared/components/menu-list-item/nav-service';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import { MatDrawer } from '@angular/material/sidenav';
 
 @Component({
   selector: 'app-main-layout',
@@ -24,20 +29,108 @@ import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/
     FooterComponent,
     ChoirSwitcherComponent,
     ErrorDisplayComponent,
-    LoadingIndicatorComponent
-  ]
+    LoadingIndicatorComponent,
+    MenuListItemComponent
+  ],
+  providers: [NavService],
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   currentTheme: Theme;
+  showAdminSubmenu: boolean = true;
+  isExpanded = true;
+  isShowing = false;
+  @ViewChild('appDrawer') appDrawer: MatDrawer | undefined;
+   private isHandset: boolean = false;
+
+  public navItems: NavItem[] = [];
+
+  isHandset$: Observable<boolean> | undefined;
+  isTablet$: Observable<boolean> | undefined;
+  isMedium$: Observable<boolean> | undefined;
+
 
   constructor(private authService: AuthService,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private navService: NavService,
+    private breakpointObserver: BreakpointObserver
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.currentTheme = this.themeService.getCurrentTheme();
+  }
+
+  ngOnInit(): void {
+    //Called before any other lifecycle hook. Use it to inject dependencies, but avoid any serious work here.
+    //Add '${implements OnChanges}' to the class.
+/*
+    <ng-container *ngIf="isLoggedIn$ | async">
+        <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
+        <a mat-list-item routerLink="/repertoire" routerLinkActive="active-link">Repertoire</a>
+        <a mat-list-item routerLink="/collections" routerLinkActive="active-link">Sammlungen</a>
+        <a mat-list-item routerLink="/manage-choir" routerLinkActive="active-link">Chorverwaltung</a>
+        <ng-container *ngIf="isAdmin$ | async">
+          <mat-divider></mat-divider>
+          <mat-list-item (click)="showAdminSubmenu = !showAdminSubmenu" class="parent">
+            <span class="full-width" *ngIf="isExpanded || isShowing">Administration</span>
+            <mat-icon mat-list-icon>home</mat-icon>
+            <mat-icon class="menu-button" [ngClass]="{'rotated' : showAdminSubmenu}" *ngIf="isExpanded || isShowing">expand_more</mat-icon>
+          </mat-list-item>
+          <div class="submenu" [ngClass]="{'expanded' : showAdminSubmenu}" *ngIf="isShowing || isExpanded">
+              <a mat-list-item routerLink="/admin/composers" routerLinkActive="active-link">Komponisten</a>
+              <a mat-list-item routerLink="/admin/authors" routerLinkActive="active-link">Autoren</a>
+          </div>
+        </ng-container>
+      </ng-container>*/
+    this.navItems = [
+      {
+        displayName: 'Home',
+        //svgIconName: 's-house',
+        route: '/dashboard',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
+          displayName: 'Ereignisse',
+          //svgIconName: 's-messages',
+          route: '/events',
+          visibleSubject: this.isLoggedIn$,
+      },
+      {
+        displayName: 'Mein Chor',
+        //svgIconName: 's-lens-display',
+        route: '/manage-choir',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
+        displayName: 'Repertoire',
+        //svgIconName: 's-lens-display',
+        route: '/repertoire',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
+        displayName: 'Sammlungen',
+        //svgIconName: 's-lens-display',
+        route: '/collections',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
+        displayName: 'Administration',
+        //svgIconName: 's-settings',
+        visibleSubject: this.isAdmin$,
+        route: '',
+        children: [
+          {
+            displayName: 'Komponisten',
+            route: '/admin/composers'
+          },
+          {
+            displayName: 'Autoren',
+            route: '/profiles',
+          }
+        ]
+      }
+    ];
   }
 
   logout(): void {
@@ -49,4 +142,9 @@ export class MainLayoutComponent {
     this.currentTheme = theme; // Aktualisieren Sie den lokalen Status für die UI
   }
 
+  public closeSidenav() {
+    if (this.isHandset) {
+      this.appDrawer?.close();
+    }
+  }
 }
