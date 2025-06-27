@@ -20,3 +20,19 @@ npm test --prefix choir-app-backend
 
 These tests load all Sequelize models using an in-memory SQLite database and
 verify required fields and associations.
+
+## Compression
+
+The backend enables gzip compression by including the
+[`compression`](https://www.npmjs.com/package/compression) middleware. Running
+`npm install` inside `choir-app-backend` installs this dependency automatically.
+
+For the Angular frontend you can pre-compress build artifacts using
+`compression-webpack-plugin` together with a custom webpack configuration:
+
+```bash
+npm install --save-dev compression-webpack-plugin @angular-builders/custom-webpack
+```
+
+The generated `.gz` or `.br` files can then be served by a web server that
+supports content negotiation for pre-compressed assets.
