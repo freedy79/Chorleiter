@@ -1,0 +1,8 @@
+<div class="toolbar">
+  <button mat-flat-button color="primary" (click)="download()">Backup herunterladen</button>
+</div>
+
+<div class="restore">
+  <input type="file" (change)="onFileSelected($event)" />
+  <button mat-flat-button color="accent" (click)="restore()" [disabled]="!selectedFile">Backup einspielen</button>
+</div>
