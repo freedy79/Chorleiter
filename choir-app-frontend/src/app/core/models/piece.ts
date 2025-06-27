@@ -2,6 +2,7 @@ import { Composer } from './composer';
 import { Category } from './category';
 import { Author } from './author';
 import { PieceLink } from './piece-link';
+import { Event } from './event';
 
 export interface CollectionReference {
   prefix: string;
@@ -30,4 +31,5 @@ export interface Piece {
   author?: Author;
   arrangers?: Composer[];
   links?: PieceLink[];
+  events?: Event[];
 }
