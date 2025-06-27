@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ManageChoir } from './manage-choir.component';
+import { ManageChoirComponent } from './manage-choir.component';
 
-describe('ManageChoir', () => {
-  let component: ManageChoir;
-  let fixture: ComponentFixture<ManageChoir>;
+describe('ManageChoirComponent', () => {
+  let component: ManageChoirComponent;
+  let fixture: ComponentFixture<ManageChoirComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageChoir]
+      imports: [ManageChoirComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ManageChoir);
+    fixture = TestBed.createComponent(ManageChoirComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

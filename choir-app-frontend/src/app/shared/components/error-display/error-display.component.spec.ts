@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ErrorDisplay } from './error-display.component';
+import { ErrorDisplayComponent } from './error-display.component';
 
-describe('ErrorDisplay', () => {
-  let component: ErrorDisplay;
-  let fixture: ComponentFixture<ErrorDisplay>;
+describe('ErrorDisplayComponent', () => {
+  let component: ErrorDisplayComponent;
+  let fixture: ComponentFixture<ErrorDisplayComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ErrorDisplay]
+      imports: [ErrorDisplayComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(ErrorDisplay);
+    fixture = TestBed.createComponent(ErrorDisplayComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
