@@ -11,6 +11,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
+import { PieceService } from 'src/app/core/services/piece.service';
 import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
 import { Category } from 'src/app/core/models/category';
@@ -65,6 +66,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private apiService: ApiService,
+    private pieceService: PieceService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar // Inject MatSnackBar for feedback
   ) {}
@@ -112,8 +114,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           if (cached) {
             return of({ data: cached, total: this.totalPieces });
           }
-          return this.apiService.getMyRepertoire(
-            undefined,
+          return this.pieceService.getMyRepertoire(
             this.filterByCategoryId$.value ?? undefined,
             this.filterByCollectionId$.value ?? undefined,
             this._sort.active as any,
@@ -159,8 +160,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const nextIndex = this._paginator.pageIndex + 1;
     if (nextIndex * this._paginator.pageSize >= this.totalPieces) return;
     if (this.pageCache.has(nextIndex)) return;
-    this.apiService.getMyRepertoire(
-      undefined,
+    this.pieceService.getMyRepertoire(
       this.filterByCategoryId$.value ?? undefined,
       this.filterByCollectionId$.value ?? undefined,
       this._sort.active as any,
@@ -289,7 +289,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
    * Called when a user changes the status of a piece from the dropdown in the table.
    */
   onStatusChange(newStatus: string, pieceId: number): void {
-    this.apiService.updatePieceStatus(pieceId, newStatus).subscribe({
+    this.pieceService.updatePieceStatus(pieceId, newStatus).subscribe({
       next: () => {
         // Log to console for debugging, a snackbar is optional here as the change is visual.
         console.log(`Status for piece ${pieceId} updated to ${newStatus}`);
