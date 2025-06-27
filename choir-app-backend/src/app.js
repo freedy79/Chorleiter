@@ -34,7 +34,7 @@ app.use(limiter);
 app.get("/", (req, res) => {
     res.json({ message: "Welcome to the Choir App API." });
 });
-app.get("/ping", (req, res) => {
+app.get(["/ping", "/api/ping"], (req, res) => {
     res.json({ message: "PONG" });
 });
 

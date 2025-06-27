@@ -21,7 +21,10 @@ import { PieceService } from './piece.service';
 export class ApiService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private pieceService: PieceService) { }
+  constructor(private http: HttpClient, private pieceService: PieceService) {
+  pingBackend(): Observable<{ message: string }> {
+    return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
+  }
 
   // --- Repertoire Methods (Choir-Specific) ---
 
