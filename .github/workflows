@@ -1,0 +1,33 @@
+name: Angular Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Passe die Node.js Version an
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Angular tests
+        run: npm run test -- --watch=false --progress=false --browsers=ChromeHeadlessCI
+
+      - name: Upload test results (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: coverage # or the path to your test results
