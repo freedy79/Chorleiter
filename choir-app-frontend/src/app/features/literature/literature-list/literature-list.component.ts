@@ -44,7 +44,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public dataSource = new MatTableDataSource<Piece>();
   public totalPieces = 0;
   public pageSizeOptions: number[] = [10, 25, 50];
-  public pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
+  public pageSize = 10;
   public isLoading = true;
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
@@ -74,7 +74,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     public dialog: MatDialog,
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
     private paginatorService: PaginatorService
-  ) {}
+  ) {
+    this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
+  }
 
   ngOnInit(): void {
     // Pre-fetch data for the filter dropdowns

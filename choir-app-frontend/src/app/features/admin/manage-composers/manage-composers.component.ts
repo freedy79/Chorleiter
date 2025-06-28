@@ -27,13 +27,15 @@ export class ManageComposersComponent implements OnInit, AfterViewInit {
   selectedLetter = 'Alle';
   totalComposers = 0;
   pageSizeOptions: number[] = [10, 25, 50];
-  pageSize = this.paginatorService.getPageSize('manage-composers', this.pageSizeOptions[0]);
+  pageSize = 10;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private adminApiService: ApiService,
               private dialog: MatDialog,
-              private paginatorService: PaginatorService) {}
+              private paginatorService: PaginatorService) {
+    this.pageSize = this.paginatorService.getPageSize('manage-composers', this.pageSizeOptions[0]);
+  }
 
   ngOnInit() {
     this.loadComposers();
