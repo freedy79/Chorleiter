@@ -6,6 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorService } from '@core/services/paginator.service';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 // ...
 @Component({
@@ -26,10 +27,13 @@ export class ManageComposersComponent implements OnInit, AfterViewInit {
   selectedLetter = 'Alle';
   totalComposers = 0;
   pageSizeOptions: number[] = [10, 25, 50];
+  pageSize = this.paginatorService.getPageSize('manage-composers', this.pageSizeOptions[0]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private adminApiService: ApiService, private dialog: MatDialog) {}
+  constructor(private adminApiService: ApiService,
+              private dialog: MatDialog,
+              private paginatorService: PaginatorService) {}
 
   ngOnInit() {
     this.loadComposers();
@@ -37,8 +41,10 @@ export class ManageComposersComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (this.paginator) {
+      this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
       this.applyFilter();
+      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('manage-composers', e.pageSize));
     }
   }
 

@@ -146,7 +146,8 @@
 
           <mat-paginator
             *ngIf="selectedPieceLinks.length > 0"
-            [pageSizeOptions]="[10, 20, 50]"
+            [pageSizeOptions]="pageSizeOptions"
+            [pageSize]="pageSize"
             showFirstLastButtons
             aria-label="Select page of pieces">
           </mat-paginator>
