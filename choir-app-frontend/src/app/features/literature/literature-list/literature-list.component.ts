@@ -17,6 +17,9 @@ import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
 import { Category } from 'src/app/core/models/category';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
+import { RepertoireFilter } from '@core/models/repertoire-filter';
+import { FilterPresetService } from '@core/services/filter-preset.service';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-literature-list',
@@ -49,6 +52,12 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
 
+  // --- Filter Presets ---
+  presets: RepertoireFilter[] = [];
+  selectedPresetId: number | null = null;
+  isChoirAdmin = false;
+  isAdmin = false;
+
   // --- Bulletproof @ViewChild Setters ---
   private _sort!: MatSort;
   @ViewChild(MatSort) set sort(sort: MatSort) {
@@ -71,6 +80,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   constructor(
     private apiService: ApiService,
     private pieceService: PieceService,
+    private filterPresetService: FilterPresetService,
+    private authService: AuthService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
     private paginatorService: PaginatorService
@@ -82,6 +93,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     // Pre-fetch data for the filter dropdowns
     this.collections$ = this.apiService.getCollections();
     this.categories$ = this.apiService.getCategories();
+    this.loadPresets();
+    this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
+    this.authService.isAdmin$.subscribe(a => this.isAdmin = a);
 
     const saved = localStorage.getItem(this.FILTER_KEY);
     if (saved) {
@@ -324,5 +338,72 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.refresh$.next(); // Refresh the list to show changes
       }
     });
+  }
+
+  // ------- Filter Preset Helpers -------
+  private loadPresets(): void {
+    this.apiService.getRepertoireFilters().subscribe(p => this.presets = p);
+  }
+
+  onPresetSelect(id: number): void {
+    this.selectedPresetId = id;
+    const preset = this.presets.find(pr => pr.id === id);
+    if (preset) {
+      this.applyPreset(preset);
+    }
+  }
+
+  private applyPreset(preset: RepertoireFilter): void {
+    this.filterByCollectionId$.next(preset.data.collectionId ?? null);
+    this.filterByCategoryId$.next(preset.data.categoryId ?? null);
+    this.onlySingable$.next(!!preset.data.onlySingable);
+    this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
+    this.filtersExpanded = !!(preset.data.collectionId || preset.data.categoryId || preset.data.onlySingable);
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.refresh$.next();
+  }
+
+  saveCurrentPreset(): void {
+    const name = prompt('Filternamen eingeben');
+    if (!name) return;
+    let visibility: 'personal' | 'local' | 'global' = 'personal';
+    if (this.isAdmin || this.isChoirAdmin) {
+      const vis = prompt('Sichtbarkeit (personal/local/global)', 'personal');
+      if (vis === 'local' || vis === 'global' || vis === 'personal') {
+        visibility = vis;
+      }
+    }
+    const data = {
+      collectionId: this.filterByCollectionId$.value,
+      categoryId: this.filterByCategoryId$.value,
+      onlySingable: this.onlySingable$.value,
+      search: this.searchControl.value
+    };
+    if (confirm('Filter speichern? Vorhandene mit gleichem Namen werden überschrieben.')) {
+      this.apiService.saveRepertoireFilter({ name, data, visibility }).subscribe(() => this.loadPresets());
+    }
+  }
+
+  canDeleteSelectedPreset(): boolean {
+    const preset = this.presets.find(p => p.id === this.selectedPresetId);
+    if (!preset) return false;
+    if (preset.visibility === 'personal') return true;
+    if (preset.visibility === 'local') return this.isChoirAdmin || this.isAdmin;
+    if (preset.visibility === 'global') return this.isAdmin;
+    return false;
+  }
+
+  deleteSelectedPreset(): void {
+    const preset = this.presets.find(p => p.id === this.selectedPresetId);
+    if (!preset) return;
+    if (!this.canDeleteSelectedPreset()) return;
+    if (confirm('Diesen Filter löschen?')) {
+      this.apiService.deleteRepertoireFilter(preset.id).subscribe(() => {
+        this.selectedPresetId = null;
+        this.loadPresets();
+      });
+    }
   }
 }

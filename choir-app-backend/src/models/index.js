@@ -28,6 +28,7 @@ db.piece_arranger = require("./piece_arranger.model.js")(sequelize, Sequelize);
 db.piece_link = require("./piece_link.model.js")(sequelize, Sequelize);
 db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
+db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -84,6 +85,12 @@ db.piece.hasMany(db.piece_change, { as: 'changeRequests' });
 db.piece_change.belongsTo(db.piece, { foreignKey: 'pieceId' });
 db.user.hasMany(db.piece_change, { as: 'pieceChangeRequests' });
 db.piece_change.belongsTo(db.user, { foreignKey: 'userId', as: 'proposer' });
+
+// Repertoire Filter Presets
+db.user.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });
+db.repertoire_filter.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.choir.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });
+db.repertoire_filter.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 
 
 module.exports = db;

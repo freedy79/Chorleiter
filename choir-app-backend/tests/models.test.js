@@ -26,6 +26,7 @@ const db = require('../src/models');
     checkFields(db.collection_piece, ['numberInCollection']);
     checkFields(db.user_choir, ['roleInChoir', 'registrationStatus']);
     checkFields(db.piece_change, ['data']);
+    checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');
