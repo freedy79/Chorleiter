@@ -16,6 +16,9 @@ import { MenuListItemComponent } from '@shared/components/menu-list-item/menu-li
 import { NavService } from '@shared/components/menu-list-item/nav-service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDrawer } from '@angular/material/sidenav';
+import { MatDialog } from '@angular/material/dialog';
+import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
+import { HelpService } from '@core/services/help.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -58,7 +61,9 @@ export class MainLayoutComponent implements OnInit{
   constructor(private authService: AuthService,
     private themeService: ThemeService,
     private navService: NavService,
-    private breakpointObserver: BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private dialog: MatDialog,
+    private help: HelpService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -184,5 +189,9 @@ export class MainLayoutComponent implements OnInit{
     if (this.isHandset) {
       this.appDrawer?.close();
     }
+  }
+
+  openHelp(): void {
+    this.dialog.open(HelpWizardComponent, { width: '600px' });
   }
 }

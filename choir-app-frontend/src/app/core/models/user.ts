@@ -21,7 +21,7 @@ export interface User {
   email: string;
 
 
-  role?: 'director' | 'admin';
+  role?: 'director' | 'choir_admin' | 'admin' | 'demo';
 
   /**
    * The JSON Web Token received upon successful login.

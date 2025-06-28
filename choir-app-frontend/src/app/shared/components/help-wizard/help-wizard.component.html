@@ -1,0 +1,38 @@
+<h1 mat-dialog-title>Willkommen</h1>
+<div mat-dialog-content>
+  <mat-vertical-stepper>
+    <mat-step>
+      <ng-template matStepLabel>Willkommen</ng-template>
+      <p>Sch&ouml;n, dass du den Chorleiter nutzt. Dieses kurze Tutorial zeigt dir die wichtigsten Funktionen.</p>
+      <div>
+        <button mat-flat-button color="primary" matStepperNext>Weiter</button>
+      </div>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Rollen</ng-template>
+      <p>Als <strong>Director</strong> verwaltest du Repertoire, Termine und Mitglieder. Die Rolle <strong>Choir Admin</strong> unterst&uuml;tzt dich organisatorisch und besitzt fast alle Rechte au&szlig;erhalb der musikalischen Bereiche.</p>
+      <div>
+        <button mat-button matStepperPrevious>Zur&uuml;ck</button>
+        <button mat-flat-button color="primary" matStepperNext>Weiter</button>
+      </div>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>Navigation</ng-template>
+      <p>Im linken Men&uuml; findest du Dashboard, Ereignisse, Statistik, Mein Chor, Repertoire und Sammlungen.</p>
+      <p>Dort gelangst du zu allen wichtigen Funktionen der Anwendung.</p>
+      <div>
+        <button mat-button matStepperPrevious>Zur&uuml;ck</button>
+        <button mat-flat-button color="primary" matStepperNext>Weiter</button>
+      </div>
+    </mat-step>
+    <mat-step>
+      <ng-template matStepLabel>&Auml;nderungsvorschl&auml;ge</ng-template>
+      <p>Bei Literatur kannst du &Auml;nderungen vorschlagen. Diese erscheinen im Dashboard und k&ouml;nnen dort angenommen oder abgelehnt werden.</p>
+      <p>Diese Hilfe findest du jederzeit &uuml;ber das Benutzermen&uuml;.</p>
+      <div>
+        <button mat-button matStepperPrevious>Zur&uuml;ck</button>
+        <button mat-flat-button color="primary" (click)="close()">Schlie&szlig;en</button>
+      </div>
+    </mat-step>
+  </mat-vertical-stepper>
+</div>
