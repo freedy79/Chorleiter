@@ -31,6 +31,7 @@ import { Collection } from 'src/app/core/models/collection';
 import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorService } from '@core/services/paginator.service';
 import { MatSort } from '@angular/material/sort';
 
 interface SelectedPieceWithNumber {
@@ -74,6 +75,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     public pieceLinkDataSource =
         new MatTableDataSource<SelectedPieceWithNumber>([]);
+    pageSizeOptions: number[] = [10, 20, 50];
+    pageSize = this.paginatorService.getPageSize('collection-edit', this.pageSizeOptions[0]);
 
     private _sort!: MatSort;
     @ViewChild(MatSort) set sort(sort: MatSort) {
@@ -87,7 +90,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
         if (paginator) {
             this._paginator = paginator;
+            this._paginator.pageSize = this.pageSize;
             this.pieceLinkDataSource.paginator = this._paginator;
+            this._paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-edit', e.pageSize));
         }
     }
 
@@ -97,7 +102,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         private snackBar: MatSnackBar,
         private router: Router,
         private route: ActivatedRoute,
-        public dialog: MatDialog
+        public dialog: MatDialog,
+        private paginatorService: PaginatorService
     ) {
         this.collectionForm = this.fb.group({
             title: ['', Validators.required],

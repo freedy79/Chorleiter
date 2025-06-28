@@ -58,7 +58,9 @@
     </tr>
   </table>
 
-  <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+  <mat-paginator [pageSizeOptions]="pageSizeOptions"
+                 [pageSize]="pageSize"
+                 showFirstLastButtons></mat-paginator>
 </div>
 
 <app-event-card *ngIf="selectedEvent" cardTitle="Gesungene Literatur" [event]="selectedEvent"></app-event-card>

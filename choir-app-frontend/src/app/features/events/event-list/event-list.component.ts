@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,6 +9,7 @@ import { AuthService } from '@core/services/auth.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorService } from '@core/services/paginator.service';
 import { startWith } from 'rxjs/operators';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -28,17 +29,31 @@ import { EventCardComponent } from '../../home/event-card/event-card.component';
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
-export class EventListComponent implements OnInit {
+export class EventListComponent implements OnInit, AfterViewInit {
   typeControl = new FormControl('ALL');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource = new MatTableDataSource<Event>();
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+  pageSizeOptions: number[] = [5, 10, 25];
+  pageSize = this.paginatorService.getPageSize('event-list', this.pageSizeOptions[0]);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private apiService: ApiService, private authService: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
+  constructor(private apiService: ApiService,
+              private authService: AuthService,
+              private dialog: MatDialog,
+              private snackBar: MatSnackBar,
+              private paginatorService: PaginatorService) {}
+
+  ngAfterViewInit(): void {
+    if (this.paginator) {
+      this.paginator.pageSize = this.pageSize;
+      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('event-list', e.pageSize));
+      this.dataSource.paginator = this.paginator;
+    }
+  }
 
   ngOnInit(): void {
     this.loadEvents();

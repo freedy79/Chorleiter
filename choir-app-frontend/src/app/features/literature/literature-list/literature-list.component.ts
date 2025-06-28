@@ -4,6 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
+import { PaginatorService } from '@core/services/paginator.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, BehaviorSubject, merge, of } from 'rxjs';
 import { switchMap, map, startWith, catchError, tap } from 'rxjs/operators';
@@ -43,6 +44,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public dataSource = new MatTableDataSource<Piece>();
   public totalPieces = 0;
   public pageSizeOptions: number[] = [10, 25, 50];
+  public pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   public isLoading = true;
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
@@ -60,7 +62,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
     if (paginator) {
       this._paginator = paginator;
+      this._paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this._paginator;
+      this._paginator.page.subscribe(e => this.paginatorService.setPageSize('literature-list', e.pageSize));
     }
   }
 
@@ -68,7 +72,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     private apiService: ApiService,
     private pieceService: PieceService,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar // Inject MatSnackBar for feedback
+    private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
+    private paginatorService: PaginatorService
   ) {}
 
   ngOnInit(): void {
@@ -94,7 +99,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.dataSource.sort = this._sort;
 
     const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
-    const page$ = this._paginator.page;
+    const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
     merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryId$, this.onlySingable$, sort$, page$, search$)

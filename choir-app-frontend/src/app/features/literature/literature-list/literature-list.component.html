@@ -113,7 +113,10 @@
         </div>
 
         <!-- The Paginator -->
-        <mat-paginator [length]="totalPieces" [pageSizeOptions]="pageSizeOptions" showFirstLastButtons>
+        <mat-paginator [length]="totalPieces"
+                       [pageSizeOptions]="pageSizeOptions"
+                       [pageSize]="pageSize"
+                       showFirstLastButtons>
         </mat-paginator>
       </div>
     </div>
