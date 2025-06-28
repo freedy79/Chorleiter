@@ -17,6 +17,8 @@ import { Choir } from '@core/models/choir';
 import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
 import { StatsSummary } from '../models/stats-summary';
+import { RepertoireFilter } from '../models/repertoire-filter';
+import { FilterPresetService } from './filter-preset.service';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +26,9 @@ import { StatsSummary } from '../models/stats-summary';
 export class ApiService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private pieceService: PieceService) {
+  constructor(private http: HttpClient,
+              private pieceService: PieceService,
+              private filterPresetService: FilterPresetService) {
 
   }
 
@@ -391,4 +395,17 @@ export class ApiService {
   registerDonation(): Observable<any> {
         return this.http.post(`${this.apiUrl}/users/me/donate`, {});
     }
+
+  // --- Filter Preset Methods ---
+  getRepertoireFilters(): Observable<RepertoireFilter[]> {
+    return this.filterPresetService.getPresets();
+  }
+
+  saveRepertoireFilter(preset: { name: string; data: any; visibility: 'personal' | 'local' | 'global' }): Observable<RepertoireFilter> {
+    return this.filterPresetService.savePreset(preset);
+  }
+
+  deleteRepertoireFilter(id: number): Observable<any> {
+    return this.filterPresetService.deletePreset(id);
+  }
 }

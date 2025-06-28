@@ -34,6 +34,17 @@
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle filters">
           <mat-icon>filter_list</mat-icon>
         </button>
+        <mat-form-field appearance="outline" class="preset-select">
+          <mat-select placeholder="Filter" [value]="selectedPresetId" (selectionChange)="onPresetSelect($event.value)">
+            <mat-option *ngFor="let p of presets" [value]="p.id">{{p.name}}</mat-option>
+          </mat-select>
+          <button mat-icon-button matSuffix *ngIf="selectedPresetId && canDeleteSelectedPreset()" (click)="deleteSelectedPreset(); $event.stopPropagation()">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-form-field>
+        <button mat-icon-button (click)="saveCurrentPreset()" aria-label="Filter speichern">
+          <mat-icon>save</mat-icon>
+        </button>
         <h1>Chorrepertoire</h1>
         <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
           <mat-icon>add</mat-icon>

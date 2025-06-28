@@ -60,6 +60,7 @@ const choirManagementRoutes = require("./routes/choir-management.routes");
 const invitationRoutes = require("./routes/invitation.routes");
 const statsRoutes = require("./routes/stats.routes");
 const passwordResetRoutes = require("./routes/password-reset.routes");
+const repertoireFilterRoutes = require("./routes/repertoire-filter.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -78,6 +79,7 @@ app.use("/api/choir-management", choirManagementRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
+app.use("/api/repertoire-filters", repertoireFilterRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(
