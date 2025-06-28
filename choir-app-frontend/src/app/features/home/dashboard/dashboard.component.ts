@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, switchMap, tap } from 'rxjs/operators';
+import { map, switchMap, tap, take } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -15,6 +15,8 @@ import { EventCardComponent } from '../event-card/event-card.component';
 import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
+import { HelpService } from '@core/services/help.service';
+import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -41,7 +43,8 @@ export class DashboardComponent implements OnInit {
     private apiService: ApiService,
     private authService: AuthService,
     private dialog: MatDialog, // Zum Öffnen von Dialogen
-    private snackBar: MatSnackBar // Zum Anzeigen von Benachrichtigungen
+    private snackBar: MatSnackBar, // Zum Anzeigen von Benachrichtigungen
+    private help: HelpService
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
   }
@@ -59,6 +62,14 @@ export class DashboardComponent implements OnInit {
     this.pieceChanges$ = this.authService.isAdmin$.pipe(
       switchMap(isAdmin => isAdmin ? this.apiService.getPieceChangeRequests() : of([]))
     );
+
+    // Willkommenstext ggf. anzeigen
+    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+      if (this.help.shouldShowHelp(user)) {
+        const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
+        ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
+      }
+    });
   }
 
   /**

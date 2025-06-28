@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { HelpService } from '@core/services/help.service';
 
 import { MainLayoutComponent } from './main-layout.component';
 
@@ -17,7 +18,8 @@ describe('MainLayoutComponent', () => {
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
-        { provide: MatSnackBar, useValue: { open: () => {} } }
+        { provide: MatSnackBar, useValue: { open: () => {} } },
+        { provide: HelpService, useValue: { } }
       ]
     })
     .compileComponents();
