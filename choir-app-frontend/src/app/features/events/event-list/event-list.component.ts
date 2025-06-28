@@ -96,13 +96,19 @@ export class EventListComponent implements OnInit {
       if (result) {
         this.apiService.createEvent(result).subscribe({
           next: (response: CreateEventResponse) => {
-            const message = response.wasUpdated ?
+            const baseMessage = response.wasUpdated ?
               'Event für diesen Tag wurde aktualisiert!' :
               'Event erfolgreich angelegt!';
+            const message = response.warning ? response.warning : baseMessage;
             this.snackBar.open(message, 'OK', { duration: 3000 });
             this.loadEvents();
           },
-          error: () => this.snackBar.open('Fehler: Das Event konnte nicht gespeichert werden.', 'Schließen', { duration: 5000 })
+          error: (err) => {
+            const msg = err.status === 409 && err.error?.message
+              ? err.error.message
+              : 'Fehler: Das Event konnte nicht gespeichert werden.';
+            this.snackBar.open(msg, 'Schließen', { duration: 5000 });
+          }
         });
       }
     });

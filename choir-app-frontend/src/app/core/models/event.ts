@@ -14,5 +14,6 @@ export interface Event {
 export interface CreateEventResponse {
   message: string;
   wasUpdated: boolean;
+  warning?: string;
   event: Event;
 }
