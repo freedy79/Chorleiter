@@ -387,4 +387,8 @@ export class ApiService {
   pingBackend(): Observable<{ message: string }> {
         return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
     }
+
+  registerDonation(): Observable<any> {
+        return this.http.post(`${this.apiUrl}/users/me/donate`, {});
+    }
 }

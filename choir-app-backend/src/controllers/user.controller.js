@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'name', 'email', 'role'], // Don't send the password hash!
+            attributes: ['id', 'name', 'email', 'role', 'lastDonation'], // Include lastDonation
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
@@ -66,5 +66,19 @@ exports.updateMe = async (req, res) => {
             return res.status(409).send({ message: "This email address is already in use." });
         }
         res.status(500).send({ message: err.message || "An error occurred while updating the profile." });
+    }
+};
+
+exports.registerDonation = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId);
+        if (!user) {
+            return res.status(404).send({ message: "User not found." });
+        }
+        user.lastDonation = new Date();
+        await user.save();
+        res.status(200).send({ message: "Donation recorded." });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
     }
 };
