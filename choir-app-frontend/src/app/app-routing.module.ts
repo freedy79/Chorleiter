@@ -27,6 +27,9 @@ import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';
+import { DonateComponent } from '@features/donations/donate.component';
+import { DonationSuccessComponent } from '@features/donations/donation-success.component';
+import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -58,6 +61,9 @@ export const routes: Routes = [
             },
             { path: 'imprint', component: ImprintComponent },
             { path: 'privacy', component: PrivacyComponent },
+            { path: 'donate', component: DonateComponent },
+            { path: 'donation-success', component: DonationSuccessComponent },
+            { path: 'donation-cancel', component: DonationCancelComponent },
 
             // --- Geschützte Routen (jede einzelne hat jetzt den Guard) ---
             {

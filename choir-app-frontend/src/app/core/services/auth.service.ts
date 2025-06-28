@@ -84,4 +84,9 @@ export class AuthService {
       })
     );
   }
+
+  setCurrentUser(user: User) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
 }

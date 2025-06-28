@@ -37,6 +37,7 @@ import { MatDrawer } from '@angular/material/sidenav';
 export class MainLayoutComponent implements OnInit{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
+  donatedRecently$: Observable<boolean>;
   currentTheme: Theme;
   showAdminSubmenu: boolean = true;
   isExpanded = true;
@@ -61,6 +62,15 @@ export class MainLayoutComponent implements OnInit{
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
+    this.donatedRecently$ = this.authService.currentUser$.pipe(
+      map(u => {
+        if (!u?.lastDonation) return false;
+        const last = new Date(u.lastDonation);
+        const yearAgo = new Date();
+        yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+        return last > yearAgo;
+      })
+    );
     this.currentTheme = this.themeService.getCurrentTheme();
 
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(

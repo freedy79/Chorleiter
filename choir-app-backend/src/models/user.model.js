@@ -23,6 +23,10 @@ module.exports = (sequelize, DataTypes) => {
       role: {
         type: DataTypes.ENUM('director', 'choir_admin', 'admin'),
         defaultValue: 'director'
+      },
+      lastDonation: {
+        type: DataTypes.DATE,
+        allowNull: true
       }
     });
     return User;
