@@ -10,6 +10,9 @@ exports.requestPasswordReset = async (req, res) => {
     return res.status(400).send({ message: 'Email is required.' });
   }
   try {
+    if (email === 'demo@nak-chorleiter.de') {
+      return res.status(403).send({ message: 'Demo user cannot reset password.' });
+    }
     const user = await db.user.findOne({ where: { email } });
     if (user) {
       const token = crypto.randomBytes(32).toString('hex');
@@ -38,6 +41,9 @@ exports.resetPassword = async (req, res) => {
     });
     if (!user) {
       return res.status(400).send({ message: 'Invalid or expired token.' });
+    }
+    if (user.email === 'demo@nak-chorleiter.de') {
+      return res.status(403).send({ message: 'Demo user cannot reset password.' });
     }
     await user.update({
       password: bcrypt.hashSync(password, 8),

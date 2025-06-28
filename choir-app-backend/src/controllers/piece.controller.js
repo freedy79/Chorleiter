@@ -12,6 +12,9 @@ const pieceService = new CrudService(Piece);
  * will link this piece to a choir.
  */
 exports.create = async (req, res) => {
+    if (req.userRole === 'demo') {
+        return res.status(403).send({ message: 'Demo user cannot create pieces.' });
+    }
      const {
         title, composerId, categoryId, voicing,
         key, timeSignature, lyrics, imageIdentifier, license, opus,
@@ -115,6 +118,9 @@ exports.update = async (req, res) => {
     const id = req.params.id;
 
     try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot update pieces.' });
+        }
         if (req.userRole !== 'admin') {
             await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
             return res.status(202).send({ message: 'Change proposal created.' });
@@ -142,6 +148,9 @@ exports.delete = async (req, res) => {
     const id = req.params.id;
 
     try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot delete pieces.' });
+        }
         const num = await pieceService.delete(id);
 
         if (num == 1) {
