@@ -5,6 +5,45 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
 
+async function ensureDemoAccount() {
+    const [choir] = await Choir.findOrCreate({
+        where: { name: "Demo-Chor" },
+        defaults: { name: "Demo-Chor", location: "Demohausen" }
+    });
+    const [demoUser] = await User.findOrCreate({
+        where: { email: "demo@nak-chorleiter.de" },
+        defaults: {
+            name: "Demo User",
+            email: "demo@nak-chorleiter.de",
+            password: bcrypt.hashSync("demo", 8),
+            role: "demo"
+        }
+    });
+    await demoUser.addChoir(choir).catch(() => {});
+
+    const collection = await db.collection.findByPk(1);
+    if (collection) {
+        await choir.addCollection(collection).catch(() => {});
+    }
+
+    return { demoUser, choir };
+}
+
+async function resetDemoEvents(user, choir) {
+    try {
+        await db.event.destroy({ where: { choirId: choir.id } });
+
+        const now = new Date();
+        const rehearsal = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 0, 0);
+        const service = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7, 10, 0, 0);
+
+        await db.event.create({ date: rehearsal, type: 'REHEARSAL', notes: 'Probe', choirId: choir.id, directorId: user.id });
+        await db.event.create({ date: service, type: 'SERVICE', notes: 'Gottesdienst', choirId: choir.id, directorId: user.id });
+    } catch (err) {
+        logger.error('Error resetting demo events', err);
+    }
+}
+
 exports.signup = async (req, res) => {
     try {
     const [choir] = await db.choir.findOrCreate({ where: { name: req.body.choirName }, defaults: { name: req.body.choirName }});
@@ -22,6 +61,9 @@ exports.signup = async (req, res) => {
 exports.signin = async (req, res) => {
     logger.info("Sign-in request received:", req.body);
     try {
+    if (req.body.email === 'demo@nak-chorleiter.de') {
+        await ensureDemoAccount();
+    }
     const user = await User.findOne({
       where: { email: req.body.email },
       // Laden Sie alle Chöre, denen der Benutzer zugeordnet ist
@@ -39,6 +81,11 @@ exports.signin = async (req, res) => {
     const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
     if (!passwordIsValid) {
       return res.status(401).send({ message: "Invalid Password!" });
+    }
+
+    if (user.role === 'demo') {
+      const choir = user.choirs[0];
+      await resetDemoEvents(user, choir);
     }
 
     // Wählen Sie den ersten Chor in der Liste als Standard-Aktiv-Chor

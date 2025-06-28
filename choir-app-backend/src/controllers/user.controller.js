@@ -36,6 +36,10 @@ exports.updateMe = async (req, res) => {
             return res.status(404).send({ message: "User not found." });
         }
 
+        if (user.role === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot change profile.' });
+        }
+
         // Prepare the data to be updated
         const updateData = {};
         if (name) {

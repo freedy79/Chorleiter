@@ -49,6 +49,10 @@ exports.updateMyChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot change choir data.' });
+        }
+
         // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
         const [numberOfAffectedRows] = await db.choir.update(
             { name, description, location },
@@ -117,6 +121,10 @@ exports.inviteUserToChoir = async (req, res, next) => {
     const { email, roleInChoir } = req.body;
     const choirId = req.activeChoirId;
 
+    if (req.userRole === 'demo') {
+        return res.status(403).send({ message: 'Demo user cannot manage members.' });
+    }
+
     if (!email || !roleInChoir) {
         return res.status(400).send({ message: "Email and role are required." });
     }
@@ -150,6 +158,10 @@ exports.inviteUserToChoir = async (req, res, next) => {
 exports.removeUserFromChoir = async (req, res, next) => {
     const { userId } = req.body;
     const choirId = req.activeChoirId;
+
+    if (req.userRole === 'demo') {
+        return res.status(403).send({ message: 'Demo user cannot manage members.' });
+    }
 
     if (!userId) {
         return res.status(400).send({ message: "User ID is required." });

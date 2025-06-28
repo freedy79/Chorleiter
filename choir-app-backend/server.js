@@ -3,6 +3,34 @@ const app = require("./src/app");
 const db = require("./src/models");
 const bcrypt = require("bcryptjs");
 
+const demoSeed = async () => {
+    try {
+        const [choir] = await db.choir.findOrCreate({
+            where: { name: "Demo-Chor" },
+            defaults: { name: "Demo-Chor", location: "Demohausen" }
+        });
+
+        const [demoUser] = await db.user.findOrCreate({
+            where: { email: "demo@nak-chorleiter.de" },
+            defaults: {
+                name: "Demo User",
+                email: "demo@nak-chorleiter.de",
+                password: bcrypt.hashSync("demo", 8),
+                role: "demo"
+            }
+        });
+
+        await demoUser.addChoir(choir).catch(() => {});
+
+        const collection = await db.collection.findByPk(1);
+        if (collection) {
+            await choir.addCollection(collection).catch(() => {});
+        }
+    } catch (err) {
+        console.error("Error during demo seeding:", err);
+    }
+};
+
 const initialSeed = async () => {
     try {
         // 1. Prüfen, ob bereits Benutzer existieren.
@@ -63,6 +91,7 @@ db.sequelize.sync({ alter: true })
 
         // Rufen Sie die Seed-Funktion auf.
         initialSeed();
+        demoSeed();
 
     const server = app.listen(PORT, ADDRESS, () => {
         console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);

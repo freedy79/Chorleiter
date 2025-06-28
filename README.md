@@ -21,6 +21,12 @@ npm test --prefix choir-app-backend
 These tests load all Sequelize models using an in-memory SQLite database and
 verify required fields and associations.
 
+## Demo Account
+
+For demonstration you can log in with `demo@nak-chorleiter.de` using the password `demo`.
+The account is locked to the "Demo-Chor" choir and resets its events on every login.
+Data modifications like user or choir changes, piece or collection management are blocked.
+
 ## Compression
 
 The backend enables gzip compression by including the
