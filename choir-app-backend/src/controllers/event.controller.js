@@ -50,40 +50,40 @@ exports.create = async (req, res) => {
         const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
         const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
 
-        // Suchen Sie nach einem bestehenden Event für diesen Chor, an diesem Kalendertag, von diesem Typ.
-        const existingEvent = await db.event.findOne({
+        // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
+        const eventsSameDay = await db.event.findAll({
             where: {
                 choirId: choirId,
-                type: type,
                 date: {
                     [Op.between]: [startOfDay, endOfDay]
                 }
             }
         });
 
-        let event;
-        let wasUpdated = false;
-
-        if (existingEvent) {
-            logger.info(`Event ${existingEvent.id} found for this day. Updating...`);
-            await existingEvent.update({
-                date: date, // Aktualisieren Sie auch das Datum, falls der Benutzer nur die Uhrzeit geändert hat
-                notes: notes,
-                directorId: userId
-            });
-            event = existingEvent;
-            wasUpdated = true;
-        } else {
-            // --- NEUES EVENT ERSTELLEN ---
-            logger.info("No existing event found for this day. Creating new one...");
-            event = await db.event.create({
-                date: date,
-                type: type,
-                notes: notes,
-                choirId: choirId,
-                directorId: userId
+        // Gibt es bereits ein Event gleicher Art an diesem Tag?
+        const sameTypeEvent = eventsSameDay.find(e => e.type === type);
+        if (sameTypeEvent) {
+            return res.status(409).send({
+                message: `An event of type ${type} already exists on this date.`
             });
         }
+
+        // Falls ein anderes Event existiert, geben wir einen Hinweis zurück
+        const diffTypeEvent = eventsSameDay.find(e => e.type !== type);
+        let warningMessage;
+        if (diffTypeEvent) {
+            warningMessage = `Note: There is already a ${diffTypeEvent.type.toLowerCase()} on this date.`;
+        }
+
+        // --- NEUES EVENT ERSTELLEN ---
+        logger.info("Creating new event ...");
+        const event = await db.event.create({
+            date: date,
+            type: type,
+            notes: notes,
+            choirId: choirId,
+            directorId: userId
+        });
 
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
         if (Array.isArray(pieceIds) && pieceIds.length > 0) {
@@ -97,9 +97,10 @@ exports.create = async (req, res) => {
         });
 
         // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
-        res.status(200).send({
-            message: wasUpdated ? "Event successfully updated." : "Event successfully created.",
-            wasUpdated: wasUpdated,
+        res.status(201).send({
+            message: "Event successfully created.",
+            wasUpdated: false,
+            warning: warningMessage,
             event: fullEvent
         });
 

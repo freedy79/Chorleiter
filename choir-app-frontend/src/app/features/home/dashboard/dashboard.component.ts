@@ -75,24 +75,23 @@ export class DashboardComponent implements OnInit {
       if (result) {
         // Der API-Aufruf bleibt gleich, aber wir erwarten eine andere Antwort.
         this.apiService.createEvent(result).subscribe({
-          // --- DIE NEUE LOGIK IST HIER ---
           next: (response: CreateEventResponse) => {
-            // Wählen Sie die Snackbar-Nachricht basierend auf der Antwort des Servers.
-            const message = response.wasUpdated
+            const baseMessage = response.wasUpdated
               ? 'Event für diesen Tag wurde aktualisiert!'
               : 'Event erfolgreich angelegt!';
-
+            const message = response.warning ? response.warning : baseMessage;
             this.snackBar.open(message, 'OK', {
               duration: 3000,
               verticalPosition: 'top'
             });
-
-            // Das Dashboard wird in beiden Fällen aktualisiert.
             this.refresh$.next();
           },
           error: (err) => {
             console.error('Fehler beim Anlegen/Aktualisieren des Events', err);
-            this.snackBar.open('Fehler: Das Event konnte nicht gespeichert werden.', 'Schließen', {
+            const msg = err.status === 409 && err.error?.message
+              ? err.error.message
+              : 'Fehler: Das Event konnte nicht gespeichert werden.';
+            this.snackBar.open(msg, 'Schließen', {
               duration: 5000,
               verticalPosition: 'top'
             });
