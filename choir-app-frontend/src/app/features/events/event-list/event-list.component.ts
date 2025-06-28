@@ -37,7 +37,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   isChoirAdmin = false;
   isAdmin = false;
   pageSizeOptions: number[] = [5, 10, 25];
-  pageSize = this.paginatorService.getPageSize('event-list', this.pageSizeOptions[0]);
+  pageSize = 5;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -45,7 +45,9 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private authService: AuthService,
               private dialog: MatDialog,
               private snackBar: MatSnackBar,
-              private paginatorService: PaginatorService) {}
+              private paginatorService: PaginatorService) {
+    this.pageSize = this.paginatorService.getPageSize('event-list', this.pageSizeOptions[0]);
+  }
 
   ngAfterViewInit(): void {
     if (this.paginator) {

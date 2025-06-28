@@ -76,7 +76,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     public pieceLinkDataSource =
         new MatTableDataSource<SelectedPieceWithNumber>([]);
     pageSizeOptions: number[] = [10, 20, 50];
-    pageSize = this.paginatorService.getPageSize('collection-edit', this.pageSizeOptions[0]);
+    pageSize = 10;
 
     private _sort!: MatSort;
     @ViewChild(MatSort) set sort(sort: MatSort) {
@@ -115,6 +115,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             piece: [null, Validators.required],
             number: ['', Validators.required],
         });
+
+        this.pageSize = this.paginatorService.getPageSize('collection-edit', this.pageSizeOptions[0]);
     }
 
     ngOnInit(): void {
