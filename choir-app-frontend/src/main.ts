@@ -15,6 +15,7 @@ import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de'; // Importieren Sie das deutsche Sprachpaket
 import localeDeExtra from '@angular/common/locales/extra/de'; // Optionale extra Daten
 import { LOCALE_ID } from '@angular/core';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
@@ -29,6 +30,7 @@ bootstrapApplication(AppComponent, {
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
     { provide: LOCALE_ID, useValue: 'de-DE' },
+    { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
     { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: { verticalPosition: 'top' } }
   ]
 }).catch(err => console.error(err));
