@@ -53,7 +53,7 @@ export class ImportDialogComponent implements OnDestroy {
         this.isLoading = false;
       },
       error: (err) => {
-        this.snackBar.open(`Error getting preview: ${err.error?.message || 'Unknown error'}`, 'Close');
+        this.snackBar.open(`Fehler beim Laden der Vorschau: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen');
         this.isLoading = false;
       }
     });
@@ -63,7 +63,7 @@ export class ImportDialogComponent implements OnDestroy {
     if (!this.selectedFile) return;
     this.isLoading = true;
     this.isImporting = true;
-    this.importLogs = ['Starting import process...'];
+    this.importLogs = ['Importvorgang wird gestartet...'];
     this.importProgress = 0;
 
     this.apiService.startCollectionCsvImport(this.data.collectionId, this.selectedFile).subscribe({
@@ -72,7 +72,7 @@ export class ImportDialogComponent implements OnDestroy {
         this.pollStatus(response.jobId);
       },
       error: (err) => {
-        this.snackBar.open(`Could not start import: ${err.error?.message || 'Unknown error'}`, 'Close');
+        this.snackBar.open(`Import konnte nicht gestartet werden: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen');
         this.isLoading = false;
         this.isImporting = false;
       }
@@ -107,20 +107,20 @@ export class ImportDialogComponent implements OnDestroy {
         // Wenn der Job abgeschlossen ist, behandeln Sie das Endergebnis
         if (job.status === 'completed') {
           // Zeigen Sie die finale Erfolgsmeldung und Fehler an, falls vorhanden
-          let finalMessage = job.result?.message || 'Import completed successfully!';
+          let finalMessage = job.result?.message || 'Import erfolgreich abgeschlossen!';
           if (job.result?.errors?.length > 0) {
-            finalMessage += ` (${job.result.errors.length} errors encountered)`;
+            finalMessage += ` (${job.result.errors.length} Fehler aufgetreten)`;
           }
           this.snackBar.open(finalMessage, 'OK', { duration: 7000 });
           this.dialogRef.close(true); // Schließen und Erfolg signalisieren
         } else if (job.status === 'failed') {
-          this.snackBar.open(`Import failed: ${job.error}`, 'Close');
+          this.snackBar.open(`Import fehlgeschlagen: ${job.error}`, 'Schließen');
           this.isImporting = false;
         }
       },
       error: (err) => {
         // Fehler beim Abfragen des Status selbst
-        this.snackBar.open('Error polling for import status.', 'Close');
+        this.snackBar.open('Fehler beim Abrufen des Importstatus.', 'Schließen');
         this.isImporting = false;
         console.error('Polling error:', err);
       }

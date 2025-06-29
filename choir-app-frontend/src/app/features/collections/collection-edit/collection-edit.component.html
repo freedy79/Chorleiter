@@ -11,7 +11,7 @@
       color="accent"
       (click)="openImportDialog()">
       <mat-icon>upload_file</mat-icon>
-      Import from CSV
+      Import aus CSV
     </button>
   </div>
 
@@ -35,7 +35,7 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
-          <mat-label>Prefix (e.g., GL, EG)</mat-label>
+          <mat-label>Präfix (z.B. GL, EG)</mat-label>
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
 
@@ -155,13 +155,13 @@
 
           <ng-template #noPieces>
             <div class="no-pieces-message">
-              No pieces have been added to this collection yet. Use the form above to add one.
+              Es wurden noch keine Stücke zu dieser Sammlung hinzugefügt. Nutze das Formular oben, um eines hinzuzufügen.
             </div>
           </ng-template>
 
           <!-- Message shown when no pieces have been added yet -->
           <div *ngIf="selectedPieceLinks.length === 0" class="no-pieces-message">
-            No pieces have been added to this collection yet. Use the form above to add one.
+            Es wurden noch keine Stücke zu dieser Sammlung hinzugefügt. Nutze das Formular oben, um eines hinzuzufügen.
           </div>
         </div>
       </mat-card-content>
@@ -169,9 +169,9 @@
 
     <!-- The main actions footer for saving or canceling the entire collection -->
     <div class="actions-footer">
-      <button type="button" mat-stroked-button routerLink="/collections">Cancel</button>
+      <button type="button" mat-stroked-button routerLink="/collections">Abbrechen</button>
       <button type="submit" mat-flat-button color="primary" [disabled]="collectionForm.invalid">
-        {{ isEditMode ? 'Save Changes' : 'Save Collection' }}
+        {{ isEditMode ? 'Änderungen speichern' : 'Sammlung speichern' }}
       </button>
     </div>
   </form>

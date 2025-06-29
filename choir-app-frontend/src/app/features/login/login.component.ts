@@ -57,8 +57,8 @@ export class LoginComponent {
       error: (err) => {
         this.isLoading = false;
         // Zeigen Sie dem Benutzer eine freundliche Fehlermeldung
-        const errorMessage = err.error?.message || 'Login failed. Please check your credentials.';
-        this.snackBar.open(errorMessage, 'Close', {
+        const errorMessage = err.error?.message || 'Anmeldung fehlgeschlagen. Bitte überprüfe deine Zugangsdaten.';
+        this.snackBar.open(errorMessage, 'Schließen', {
           duration: 5000,
           verticalPosition: 'top'
         });

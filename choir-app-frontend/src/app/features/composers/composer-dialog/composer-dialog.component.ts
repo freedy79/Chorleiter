@@ -17,7 +17,7 @@ import { MaterialModule } from '@modules/material.module';
 })
 export class ComposerDialogComponent {
   form: FormGroup;
-  title = 'Add New Composer';
+  title = 'Neuen Komponisten erstellen';
 
   constructor(
     private fb: FormBuilder,
@@ -26,8 +26,8 @@ export class ComposerDialogComponent {
   ) {
     const isEdit = !!data.record;
     this.title = data.role === 'author'
-      ? isEdit ? 'Edit Author' : 'Add New Author'
-      : isEdit ? 'Edit Composer' : 'Add New Composer';
+      ? isEdit ? 'Dichter bearbeiten' : 'Neuen Dichter erstellen'
+      : isEdit ? 'Komponist bearbeiten' : 'Neuen Komponisten erstellen';
     this.form = this.fb.group({
       name: [data.record?.name || '', Validators.required],
       birthYear: [data.record?.birthYear || ''],

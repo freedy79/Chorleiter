@@ -6,16 +6,16 @@
       <input matInput formControlName="name" cdkFocusInitial>
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Description</mat-label>
+      <mat-label>Beschreibung</mat-label>
       <textarea matInput formControlName="description"></textarea>
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Location</mat-label>
+      <mat-label>Ort</mat-label>
       <input matInput formControlName="location">
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-flat-button color="primary" type="submit" form="choir-form" [disabled]="form.invalid">Save</button>
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="submit" form="choir-form" [disabled]="form.invalid">Speichern</button>
 </div>

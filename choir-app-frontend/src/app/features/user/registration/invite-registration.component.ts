@@ -30,7 +30,7 @@ export class InviteRegistrationComponent implements OnInit {
     this.token = this.route.snapshot.params['token'];
     this.api.getInvitation(this.token).subscribe({
       next: data => { this.email = data.email; this.choirName = data.choirName; },
-      error: () => { this.snack.open('Invitation invalid or expired', 'Close'); }
+      error: () => { this.snack.open('Einladung ungültig oder abgelaufen', 'Schließen'); }
     });
   }
 
@@ -38,10 +38,10 @@ export class InviteRegistrationComponent implements OnInit {
     if (this.form.invalid) return;
     this.api.completeRegistration(this.token, this.form.value).subscribe({
       next: () => {
-        this.snack.open('Registration completed. You can now log in.', 'OK');
+        this.snack.open('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.', 'OK');
         this.router.navigate(['/login']);
       },
-      error: err => this.snack.open(err.error?.message || 'Error', 'Close')
+      error: err => this.snack.open(err.error?.message || 'Fehler', 'Schließen')
     });
   }
 }

@@ -1,4 +1,4 @@
-<h1 mat-dialog-title>Import Pieces into "{{ data.collectionTitle }}"</h1>
+<h1 mat-dialog-title>Stücke in "{{ data.collectionTitle }}" importieren</h1>
 <!-- Fortschrittsbalken während des Imports -->
 <mat-progress-bar *ngIf="isImporting" mode="determinate" [value]="importProgress"></mat-progress-bar>
 <!-- Ladeanzeige für Vorschau -->
@@ -8,20 +8,20 @@
   <!-- Verstecken Sie den Upload-Bereich während des Imports -->
   <ng-container *ngIf="!isImporting">
     <div class="format-info">
-      <p>Please provide a CSV file with the following columns (header required):</p>
+      <p>Bitte eine CSV-Datei mit folgenden Spalten bereitstellen (Header erforderlich):</p>
       <code>nummer; titel; komponist; kategorie</code>
-      <p>The delimiter must be a semicolon (;).</p>
+      <p>Das Trennzeichen muss ein Semikolon (;) sein.</p>
     </div>
     <div class="upload-area">
       <button mat-stroked-button (click)="fileInput.click()">
-        <mat-icon>attach_file</mat-icon> Select CSV File
+        <mat-icon>attach_file</mat-icon> CSV-Datei auswählen
       </button>
       <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv">
       <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
     </div>
     <mat-divider *ngIf="previewData.length > 0"></mat-divider>
     <div *ngIf="previewData.length > 0" class="preview-area">
-    <p>Please check if the data is being read correctly.</p>
+    <p>Bitte prüfe, ob die Daten korrekt eingelesen werden.</p>
     <table mat-table [dataSource]="previewData">
       <ng-container matColumnDef="nummer">
         <th mat-header-cell *matHeaderCellDef> Nummer </th>
@@ -47,15 +47,15 @@
 
   <!-- Zeigen Sie das Log-Fenster an, sobald der Import gestartet wurde -->
   <div *ngIf="isImporting" class="log-area">
-    <h3>Import in Progress...</h3>
+    <h3>Import läuft...</h3>
     <textarea readonly class="log-textarea">{{ importLogs.join('\n') }}</textarea>
   </div>
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()" [disabled]="isImporting">Cancel</button>
+  <button mat-button (click)="onCancel()" [disabled]="isImporting">Abbrechen</button>
   <button mat-flat-button color="primary" (click)="onImport()" [disabled]="!selectedFile || isLoading || isImporting">
     <mat-icon>file_upload</mat-icon>
-    Import All Rows
+    Alle Zeilen importieren
   </button>
 </div>
