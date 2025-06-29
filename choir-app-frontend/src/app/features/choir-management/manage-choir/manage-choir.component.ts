@@ -121,10 +121,10 @@ export class ManageChoirComponent implements OnInit {
       if (confirmed) {
         this.apiService.removeUserFromChoir(user.id).subscribe({
           next: () => {
-            this.snackBar.open(`${user.name} has been removed from the choir.`, 'OK', { duration: 3000 });
+            this.snackBar.open(`${user.name} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
-          error: (err) => this.snackBar.open('Error removing member.', 'Close')
+          error: (err) => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
         });
       }
     });

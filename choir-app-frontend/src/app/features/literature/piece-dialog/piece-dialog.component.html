@@ -1,9 +1,9 @@
-<h1 mat-dialog-title>{{ isEditMode ? 'Edit Piece' : 'Create New Piece' }}</h1>
+<h1 mat-dialog-title>{{ isEditMode ? 'Stück bearbeiten' : 'Neues Stück erstellen' }}</h1>
 
 <div mat-dialog-content>
   <form [formGroup]="pieceForm" id="piece-form" (ngSubmit)="onSave()">
     <mat-tab-group>
-      <mat-tab label="Basic Info">
+      <mat-tab label="Grundinformationen">
         <div class="form-section">
           <!-- Title -->
           <mat-form-field appearance="outline">
@@ -13,29 +13,29 @@
 
           <!-- Voicing -->
           <mat-form-field appearance="outline">
-            <mat-label>Voicing (e.g., SATB)</mat-label>
+          <mat-label>Besetzung (z.B. SATB)</mat-label>
             <input matInput formControlName="voicing">
           </mat-form-field>
 
           <!-- Key / Tonart -->
           <mat-form-field appearance="outline">
-            <mat-label>Key (Tonart)</mat-label>
+          <mat-label>Tonart</mat-label>
             <input matInput formControlName="key">
           </mat-form-field>
 
           <!-- Time Signature / Takt -->
           <mat-form-field appearance="outline">
-            <mat-label>Time Signature (Takt)</mat-label>
+          <mat-label>Taktart</mat-label>
             <input matInput formControlName="timeSignature">
           </mat-form-field>
 
           <!-- Occasion -->
           <mat-form-field appearance="outline">
-            <mat-label>Category (Rubrik)</mat-label>
+          <mat-label>Rubrik</mat-label>
             <mat-select formControlName="categoryId">
               <mat-option [value]="addNewId">
                 <mat-icon>add</mat-icon>
-                <span>Add New Category</span>
+                <span>Neue Rubrik erstellen</span>
               </mat-option>
               <mat-divider></mat-divider>
               <!-- The rest of the options -->
@@ -58,7 +58,7 @@
       </mat-tab>
 
 
-      <mat-tab label="Authors & Arrangers">
+      <mat-tab label="Komponisten & Arrangeure">
         <div class="form-section">
           <mat-form-field appearance="outline">
             <mat-label>Komponist</mat-label>
@@ -93,29 +93,29 @@
       </mat-tab>
 
 
-      <mat-tab label="Files & Links">
+      <mat-tab label="Dateien & Links">
         <div class="form-section">
           <h4>Links</h4>
           <div formArrayName="links">
             <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
-              <mat-form-field appearance="outline"><mat-label>Description</mat-label><input matInput
+              <mat-form-field appearance="outline"><mat-label>Beschreibung</mat-label><input matInput
                   formControlName="description"></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>URL or File Path</mat-label><input matInput
+              <mat-form-field appearance="outline"><mat-label>URL oder Dateipfad</mat-label><input matInput
                   formControlName="url"></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Type</mat-label><mat-select
-                  formControlName="type"><mat-option value="EXTERNAL">External Link</mat-option><mat-option
-                    value="FILE_DOWNLOAD">File Download</mat-option></mat-select></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Typ</mat-label><mat-select
+                  formControlName="type"><mat-option value="EXTERNAL">Externer Link</mat-option><mat-option
+                    value="FILE_DOWNLOAD">Dateidownload</mat-option></mat-select></mat-form-field>
               <button mat-icon-button color="warn" (click)="removeLink(i)"
                 type="button"><mat-icon>delete</mat-icon></button>
             </div>
           </div>
-          <button mat-stroked-button (click)="addLink()" type="button">Add Link</button>
+          <button mat-stroked-button (click)="addLink()" type="button">Link hinzufügen</button>
         </div>
         <mat-divider></mat-divider>
         <div class="form-section">
-          <h4>Sheet Music Image</h4>
+          <h4>Notenbild</h4>
           <!-- A real file upload component would go here -->
-          <p>File upload component placeholder.</p>
+          <p>Platzhalter für Dateiupload-Komponente.</p>
         </div>
       </mat-tab>
     </mat-tab-group>
