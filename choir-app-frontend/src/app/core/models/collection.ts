@@ -21,6 +21,12 @@ export interface Collection {
    */
   publisher?: string;
 
+  /** Description text for the collection */
+  description?: string;
+
+  /** Publisher number identifying the edition */
+  publisherNumber?: string;
+
   /**
    * A short prefix or abbreviation for the collection (e.g., "GL", "CFC", "EG").
    * This is optional.
