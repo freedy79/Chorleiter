@@ -39,6 +39,8 @@
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
 
+        <mat-checkbox formControlName="singleEdition">Einzelausgabe (nur ein Stück)</mat-checkbox>
+
         <div class="cover-upload">
           <div
             class="dropzone"
@@ -64,7 +66,7 @@
       </mat-card-header>
       <mat-card-content>
         <!-- This is the sub-form for adding a single piece-number link -->
-        <div class="add-piece-container">
+        <div class="add-piece-container" *ngIf="!collectionForm.value.singleEdition || selectedPieceLinks.length === 0">
           <h3>Stücke hinzufügen</h3>
           <form [formGroup]="addPieceForm" (ngSubmit)="addPieceToCollection()" class="add-piece-form">
             <!-- Autocomplete field to search for and select a piece -->
@@ -105,6 +107,10 @@
               <mat-icon>add</mat-icon> Hinzufügen
             </button>
           </form>
+        </div>
+
+        <div *ngIf="collectionForm.value.singleEdition && selectedPieceLinks.length > 0" class="single-hint">
+          Einzelausgabe: Es kann nur ein Stück hinzugefügt werden.
         </div>
 
         <br>

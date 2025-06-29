@@ -9,12 +9,15 @@ const fs = require('fs').promises;
 
 // Die create- und update-Funktionen bleiben unverändert, aber wir fügen eine Fehlerbehandlung hinzu.
 exports.create = async (req, res, next) => {
-    const { title, publisher, prefix, pieces } = req.body;
+    const { title, publisher, prefix, singleEdition, pieces } = req.body;
     try {
         if (req.userRole === 'demo') {
             return res.status(403).send({ message: 'Demo user cannot modify collections.' });
         }
-        const collection = await Collection.create({ title, publisher, prefix });
+        if (singleEdition && pieces && pieces.length > 1) {
+            return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
+        }
+        const collection = await Collection.create({ title, publisher, prefix, singleEdition });
         if (pieces && pieces.length > 0) {
             for (const pieceInfo of pieces) {
                 await collection.addPiece(pieceInfo.pieceId, {
@@ -28,7 +31,7 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
     const id = req.params.id;
-    const { title, publisher, prefix, pieces } = req.body;
+    const { title, publisher, prefix, singleEdition, pieces } = req.body;
     try {
         if (req.userRole === 'demo') {
             return res.status(403).send({ message: 'Demo user cannot modify collections.' });
@@ -36,7 +39,10 @@ exports.update = async (req, res, next) => {
         const collection = await db.collection.findByPk(id);
         if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
 
-        await collection.update({ title, publisher, prefix });
+        if (singleEdition && pieces && pieces.length > 1) {
+            return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
+        }
+        await collection.update({ title, publisher, prefix, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
             for (const pieceLink of pieces) {

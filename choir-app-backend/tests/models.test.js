@@ -23,6 +23,7 @@ const db = require('../src/models');
     checkFields(db.event, ['date', 'type']);
     checkFields(db.composer, ['name']);
     checkFields(db.category, ['name']);
+    checkFields(db.collection, ['singleEdition']);
     checkFields(db.collection_piece, ['numberInCollection']);
     checkFields(db.user_choir, ['roleInChoir', 'registrationStatus']);
     checkFields(db.piece_change, ['data']);
