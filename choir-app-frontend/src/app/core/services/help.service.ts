@@ -7,12 +7,18 @@ const PREFIX = 'help-shown-';
 export class HelpService {
   shouldShowHelp(user: User | null): boolean {
     if (!user) return false;
-    if (user.role === 'demo') return true;
+    if (user.role === 'demo') {
+      return !sessionStorage.getItem(PREFIX + 'demo');
+    }
     return !localStorage.getItem(PREFIX + user.id);
   }
 
   markHelpShown(user: User | null): void {
-    if (!user || user.role === 'demo') return;
-    localStorage.setItem(PREFIX + user.id, 'true');
+    if (!user) return;
+    if (user.role === 'demo') {
+      sessionStorage.setItem(PREFIX + 'demo', 'true');
+    } else {
+      localStorage.setItem(PREFIX + user.id, 'true');
+    }
   }
 }
