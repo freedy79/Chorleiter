@@ -1,0 +1,24 @@
+<h1 mat-dialog-title>Filter speichern</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form" id="preset-form" (ngSubmit)="onSave()">
+    <mat-form-field appearance="outline">
+      <mat-label>Filternamen</mat-label>
+      <input matInput formControlName="name" cdkFocusInitial>
+    </mat-form-field>
+    <ng-container *ngIf="data.isAdmin || data.isChoirAdmin">
+      <mat-form-field appearance="outline">
+        <mat-label>Sichtbarkeit</mat-label>
+        <mat-select formControlName="visibility">
+          <mat-option value="personal">Persönlich</mat-option>
+          <mat-option value="local">Chorweit</mat-option>
+          <mat-option value="global">Global</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </ng-container>
+    <p>Vorhandene Filter mit gleichem Namen werden überschrieben.</p>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="submit" form="preset-form" [disabled]="form.invalid">Speichern</button>
+</div>
