@@ -63,19 +63,19 @@
             <button
               mat-stroked-button
               color="primary"
-              (click)="addCollectionToChoir(collection)"
+              (click)="addCollectionToChoir(collection); $event.stopPropagation()"
               [disabled]="collection.isAdded">
                 <mat-icon>add_circle_outline</mat-icon>
                 <span>Zum Repertoire hinzufügen</span>
             </button>
-            <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten">
+            <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
             </button>
         </td>
     </ng-container>
 
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)"></tr>
   </table>
 
   <div *ngIf="dataSource.data.length === 0" class="empty-state">

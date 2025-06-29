@@ -8,7 +8,7 @@ import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { RouterLink } from '@angular/router'; // Import RouterLink for the template
+import { RouterLink, Router } from '@angular/router'; // Import RouterLink and Router
 
 @Component({
   selector: 'app-collection-list',
@@ -36,7 +36,8 @@ export class CollectionListComponent implements OnInit {
 
   constructor(
     public apiService: ApiService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -84,5 +85,9 @@ export class CollectionListComponent implements OnInit {
         });
       }
     });
+  }
+
+  openCollection(collection: Collection): void {
+    this.router.navigate(['/collections/edit', collection.id]);
   }
 }
