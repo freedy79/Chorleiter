@@ -17,6 +17,7 @@ import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-au
 import { ManageChoirsComponent } from '@features/admin/manage-choirs/manage-choirs.component';
 import { ManageUsersComponent } from '@features/admin/manage-users/manage-users.component';
 import { BackupComponent } from '@features/admin/backup/backup.component';
+import { LoginAttemptsComponent } from '@features/admin/login-attempts/login-attempts.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
@@ -130,6 +131,7 @@ export const routes: Routes = [
             { path: 'choirs', component: ManageChoirsComponent },
             { path: 'users', component: ManageUsersComponent },
             { path: 'backup', component: BackupComponent },
+            { path: 'login-attempts', component: LoginAttemptsComponent },
         ],
     },
 

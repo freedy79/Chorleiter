@@ -26,5 +26,6 @@ router.post("/users", controller.createUser);
 router.put("/users/:id", controller.updateUser);
 router.delete("/users/:id", controller.deleteUser);
 router.post("/users/:id/send-password-reset", controller.sendPasswordReset);
+router.get("/login-attempts", controller.getLoginAttempts);
 
 module.exports = router;

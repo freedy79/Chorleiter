@@ -189,6 +189,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           {
             displayName: 'Backup',
             route: '/admin/backup',
+          },
+          {
+            displayName: 'Login-Protokoll',
+            route: '/admin/login-attempts',
           }
         ]
       }
