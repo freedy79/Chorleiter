@@ -30,6 +30,9 @@
       <button mat-icon-button color="primary" (click)="editComposer(element)">
         <mat-icon>edit</mat-icon>
       </button>
+      <button mat-icon-button color="accent" (click)="enrichComposer(element)">
+        <mat-icon>cloud_download</mat-icon>
+      </button>
       <button mat-icon-button color="warn" (click)="deleteComposer(element)" [disabled]="!element.canDelete">
         <mat-icon>delete</mat-icon>
       </button>

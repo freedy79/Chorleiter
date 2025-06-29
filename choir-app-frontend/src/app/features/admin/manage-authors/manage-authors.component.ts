@@ -62,4 +62,14 @@ export class ManageAuthorsComponent implements OnInit {
       this.api.deleteAuthor(author.id).subscribe(() => this.loadAuthors());
     }
   }
+
+  enrichAuthor(author: Author): void {
+    this.api.enrichAuthor(author.id).subscribe(updated => {
+      const idx = this.authors.findIndex(a => a.id === author.id);
+      if (idx !== -1) {
+        this.authors[idx] = { ...author, ...updated } as Author;
+        this.dataSource.data = this.authors;
+      }
+    });
+  }
 }

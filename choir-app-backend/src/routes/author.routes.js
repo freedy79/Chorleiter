@@ -8,5 +8,6 @@ router.post("/", controller.create);
 router.get("/", controller.findAll);
 router.put("/:id", controller.update);
 router.delete("/:id", controller.remove);
+router.post("/:id/enrich", controller.enrich);
 
 module.exports = router;
