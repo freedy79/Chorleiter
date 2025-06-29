@@ -20,11 +20,36 @@ if (-not $Password) {
     $Password = Read-Host "SSH password for $Remote"
 }
 
-$sshCmd = "ssh"
-$scpCmd = "scp"
+$sshUseSshpass = $false
 if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshCmd = "sshpass -p `"$Password`" ssh -o StrictHostKeyChecking=no"
-    $scpCmd = "sshpass -p `"$Password`" scp"
+    $sshUseSshpass = $true
+}
+
+function Invoke-Ssh {
+    param(
+        [string]$Command
+    )
+
+    if ($sshUseSshpass) {
+        & sshpass -p "$Password" ssh -o StrictHostKeyChecking=no $Remote $Command
+    }
+    else {
+        & ssh $Remote $Command
+    }
+}
+
+function Invoke-Scp {
+    param(
+        [string]$Source,
+        [string]$Destination
+    )
+
+    if ($sshUseSshpass) {
+        & sshpass -p "$Password" scp $Source $Destination
+    }
+    else {
+        & scp $Source $Destination
+    }
 }
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
@@ -35,15 +60,15 @@ $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 & tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
-Invoke-Expression "$sshCmd $Remote \"mkdir -p '$BackendDest' '$FrontendDest'\""
+Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
 # Upload archives
-Invoke-Expression "$scpCmd $BackendArchive ${Remote}:/tmp/backend.tar.gz"
-Invoke-Expression "$scpCmd $FrontendArchive ${Remote}:/tmp/frontend.tar.gz"
+Invoke-Scp $BackendArchive "${Remote}:/tmp/backend.tar.gz"
+Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
 
 # Extract archives on server and clean up
-Invoke-Expression "$sshCmd ${Remote} \"tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz\""
-Invoke-Expression "$sshCmd ${Remote} \"tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz\""
+Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
+Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"
 
 Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
