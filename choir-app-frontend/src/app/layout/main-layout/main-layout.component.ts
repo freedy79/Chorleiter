@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router'; // RouterModule importieren
 import { AuthService } from 'src/app/core/services/auth.service';
 
@@ -37,7 +37,7 @@ import { HelpService } from '@core/services/help.service';
   ],
   providers: [NavService],
 })
-export class MainLayoutComponent implements OnInit{
+export class MainLayoutComponent implements OnInit, AfterViewInit{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
@@ -47,6 +47,10 @@ export class MainLayoutComponent implements OnInit{
   isShowing = false;
   @ViewChild('appDrawer') appDrawer: MatDrawer | undefined;
    private isHandset: boolean = false;
+
+  drawerOpenByWidth = true;
+  private readonly drawerWidth = 220;
+  private readonly maxDrawerRatio = 0.4;
 
   headerHeight = 64;
   footerHeight = 56;
@@ -84,7 +88,22 @@ export class MainLayoutComponent implements OnInit{
     this.isHandset$.subscribe(match => {
       this.isHandset = match;
       this.headerHeight = match ? 56 : 64;
+      this.evaluateDrawerWidth();
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.evaluateDrawerWidth();
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.evaluateDrawerWidth();
+  }
+
+  private evaluateDrawerWidth() {
+    const width = window.innerWidth;
+    this.drawerOpenByWidth = (this.drawerWidth / width) <= this.maxDrawerRatio;
   }
 
   ngOnInit(): void {
