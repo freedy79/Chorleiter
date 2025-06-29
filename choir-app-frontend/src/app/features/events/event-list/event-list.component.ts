@@ -36,8 +36,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
-  pageSizeOptions: number[] = [5, 10, 25];
-  pageSize = 5;
+  pageSizeOptions: number[] = [10, 25, 50, 100];
+  pageSize = 25;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
