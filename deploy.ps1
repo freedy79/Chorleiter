@@ -15,6 +15,12 @@ Write-Host "Build finished."
 $Password = $null
 if (Test-Path $PasswordFile) {
     $Password = (Get-Content $PasswordFile -Raw).Trim()
+} else {
+    $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
+    if ($create -match '^[Yy]') {
+        $Password = Read-Host "SSH password for $Remote"
+        Set-Content -Path $PasswordFile -Value $Password
+    }
 }
 if (-not $Password) {
     $Password = Read-Host "SSH password for $Remote"
@@ -69,6 +75,9 @@ Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
 # Extract archives on server and clean up
 Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
 Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"
+
+# Restart backend
+Invoke-Ssh "pm2 restart chorleiter-api"
 
 Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
