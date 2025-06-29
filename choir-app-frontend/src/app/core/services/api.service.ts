@@ -176,7 +176,7 @@ export class ApiService {
   }
 
 
-  createCollection(data: { title: string, publisher?: string, prefix?: string, pieceIds: number[] }): Observable<Collection> {
+  createCollection(data: any): Observable<Collection> {
     return this.http.post<Collection>(`${this.apiUrl}/collections`, data);
   }
 

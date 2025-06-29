@@ -28,6 +28,11 @@ export interface Collection {
   prefix?: string;
 
   /**
+   * Indicates that this collection contains only a single piece.
+   */
+  singleEdition?: boolean;
+
+  /**
    * An optional array of Piece objects that are part of this collection.
    * This property may or may not be present depending on the API call.
    * For example, it would be included when fetching a single collection's details,

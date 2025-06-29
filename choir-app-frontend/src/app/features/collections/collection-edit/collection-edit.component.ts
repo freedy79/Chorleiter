@@ -109,6 +109,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             title: ['', Validators.required],
             publisher: [''],
             prefix: [''],
+            singleEdition: [false],
         });
 
         this.addPieceForm = this.fb.group({
@@ -284,6 +285,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             title: collection.title,
             publisher: collection.publisher,
             prefix: collection.prefix,
+            singleEdition: collection.singleEdition,
         });
 
         if (collection.coverImage) {
@@ -331,6 +333,10 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     addPieceToCollection(): void {
         if (this.addPieceForm.invalid) return;
+        if (this.collectionForm.value.singleEdition && this.selectedPieceLinks.length >= 1) {
+            this.snackBar.open('Einzelausgabe: nur ein Stück erlaubt.', 'OK', { duration: 3000 });
+            return;
+        }
 
         const piece = this.addPieceForm.value.piece as Piece;
         const number = this.addPieceForm.value.number;
