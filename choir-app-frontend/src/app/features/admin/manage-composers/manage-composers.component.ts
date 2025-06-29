@@ -106,4 +106,14 @@ export class ManageComposersComponent implements OnInit, AfterViewInit {
       this.adminApiService.deleteComposer(composer.id).subscribe(() => this.loadComposers());
     }
   }
+
+  enrichComposer(composer: Composer): void {
+    this.adminApiService.enrichComposer(composer.id).subscribe(updated => {
+      const idx = this.composers.findIndex(c => c.id === composer.id);
+      if (idx !== -1) {
+        this.composers[idx] = { ...composer, ...updated } as Composer;
+        this.applyFilter();
+      }
+    });
+  }
 }

@@ -24,6 +24,9 @@
       <button mat-icon-button color="primary" (click)="editAuthor(element)">
         <mat-icon>edit</mat-icon>
       </button>
+      <button mat-icon-button color="accent" (click)="enrichAuthor(element)">
+        <mat-icon>cloud_download</mat-icon>
+      </button>
       <button mat-icon-button color="warn" (click)="deleteAuthor(element)" [disabled]="!element.canDelete">
         <mat-icon>delete</mat-icon>
       </button>

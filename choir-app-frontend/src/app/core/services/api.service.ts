@@ -136,6 +136,10 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/composers/${id}`);
   }
 
+  enrichComposer(id: number): Observable<Composer> {
+    return this.http.post<Composer>(`${this.apiUrl}/composers/${id}/enrich`, {});
+  }
+
   getAuthors(): Observable<Author[]> {
     return this.http.get<Author[]>(`${this.apiUrl}/authors`);
   }
@@ -150,6 +154,10 @@ export class ApiService {
 
   deleteAuthor(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/authors/${id}`);
+  }
+
+  enrichAuthor(id: number): Observable<Author> {
+    return this.http.post<Author>(`${this.apiUrl}/authors/${id}/enrich`, {});
   }
 
 
