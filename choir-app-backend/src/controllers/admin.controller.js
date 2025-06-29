@@ -140,3 +140,12 @@ exports.sendPasswordReset = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.getLoginAttempts = async (req, res) => {
+    try {
+        const attempts = await db.login_attempt.findAll({ order: [['createdAt', 'DESC']] });
+        res.status(200).send(attempts);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};

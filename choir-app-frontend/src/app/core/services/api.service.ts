@@ -9,6 +9,7 @@ import { Piece } from '../models/piece';
 import { Composer } from '../models/composer';
 import { Category } from '../models/category';
 import { User, UserInChoir } from '../models/user';
+import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
 import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
@@ -376,6 +377,10 @@ export class ApiService {
 
   sendPasswordReset(id: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
+  }
+
+  getLoginAttempts(): Observable<LoginAttempt[]> {
+    return this.http.get<LoginAttempt[]>(`${this.apiUrl}/admin/login-attempts`);
   }
 
   downloadBackup(): Observable<Blob> {

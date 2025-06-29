@@ -1,6 +1,7 @@
 const db = require("../models");
 const User = db.user;
 const Choir = db.choir;
+const LoginAttempt = db.login_attempt;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
@@ -60,6 +61,8 @@ exports.signup = async (req, res) => {
 
 exports.signin = async (req, res) => {
     logger.info("Sign-in request received:", req.body);
+    const email = req.body.email;
+    const ipAddress = req.ip;
     try {
     if (req.body.email === 'demo@nak-chorleiter.de') {
         await ensureDemoAccount();
@@ -71,15 +74,18 @@ exports.signin = async (req, res) => {
     });
 
     if (!user || !user.choirs || user.choirs.length === 0) {
+      await LoginAttempt.create({ email, success: false, ipAddress });
       return res.status(404).send({ message: "User not found or not assigned to any choir." });
     }
 
     if (!user.password) {
+      await LoginAttempt.create({ email, success: false, ipAddress });
       return res.status(403).send({ message: "Registration not completed." });
     }
 
     const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
     if (!passwordIsValid) {
+      await LoginAttempt.create({ email, success: false, ipAddress });
       return res.status(401).send({ message: "Invalid Password!" });
     }
 
@@ -99,6 +105,7 @@ exports.signin = async (req, res) => {
         { expiresIn: tokenExpiresIn }
     );
 
+    await LoginAttempt.create({ email, success: true, ipAddress });
     res.status(200).send({
       id: user.id,
       name: user.name,
@@ -109,7 +116,10 @@ exports.signin = async (req, res) => {
       activeChoir: user.choirs[0],
       availableChoirs: user.choirs
     });
-  } catch (error) { res.status(500).send({ message: error.message }); }
+  } catch (error) {
+    await LoginAttempt.create({ email, success: false, ipAddress }).catch(() => {});
+    res.status(500).send({ message: error.message });
+  }
 };
 
 exports.switchChoir = async (req, res) => {
