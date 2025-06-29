@@ -149,6 +149,9 @@
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let link" class="actions-cell">
+                <button mat-icon-button (click)="openEditPieceDialog(link.piece.id)" matTooltip="Stück bearbeiten">
+                  <mat-icon>edit</mat-icon>
+                </button>
                 <button mat-icon-button color="warn" (click)="removePieceFromCollection(link.piece)" matTooltip="Remove piece from collection">
                   <mat-icon>delete</mat-icon>
                 </button>
