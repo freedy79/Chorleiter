@@ -20,6 +20,7 @@ import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
+import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
 
 @Component({
   selector: 'app-literature-list',
@@ -366,24 +367,21 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   }
 
   saveCurrentPreset(): void {
-    const name = prompt('Filternamen eingeben');
-    if (!name) return;
-    let visibility: 'personal' | 'local' | 'global' = 'personal';
-    if (this.isAdmin || this.isChoirAdmin) {
-      const vis = prompt('Sichtbarkeit (personal/local/global)', 'personal');
-      if (vis === 'local' || vis === 'global' || vis === 'personal') {
-        visibility = vis;
-      }
-    }
-    const data = {
-      collectionId: this.filterByCollectionId$.value,
-      categoryId: this.filterByCategoryId$.value,
-      onlySingable: this.onlySingable$.value,
-      search: this.searchControl.value
-    };
-    if (confirm('Filter speichern? Vorhandene mit gleichem Namen werden überschrieben.')) {
-      this.apiService.saveRepertoireFilter({ name, data, visibility }).subscribe(() => this.loadPresets());
-    }
+    const dialogRef = this.dialog.open<FilterPresetDialogComponent, FilterPresetDialogData, {name: string; visibility: 'personal' | 'local' | 'global'} | undefined>(FilterPresetDialogComponent, {
+      width: '400px',
+      data: { isAdmin: this.isAdmin, isChoirAdmin: this.isChoirAdmin }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+      const data = {
+        collectionId: this.filterByCollectionId$.value,
+        categoryId: this.filterByCategoryId$.value,
+        onlySingable: this.onlySingable$.value,
+        search: this.searchControl.value
+      };
+      this.apiService.saveRepertoireFilter({ name: result.name, data, visibility: result.visibility }).subscribe(() => this.loadPresets());
+    });
   }
 
   canDeleteSelectedPreset(): boolean {
