@@ -11,6 +11,24 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-  <app-root></app-root>
+  <div id="no-js-message" style="font-family: Roboto, 'Helvetica Neue', sans-serif; padding: 2rem;">
+    <h1>NAK Chorleiter</h1>
+    <p>
+      Ihr Browser erlaubt aktuell keine Ausführung von JavaScript. Bitte aktivieren Sie
+      JavaScript in den Einstellungen oder erlauben Sie die Ausführung von Skripten,
+      damit die Anwendung korrekt geladen werden kann.
+    </p>
+  </div>
+  <app-root style="display: none;"></app-root>
+  <script>
+    const msg = document.getElementById('no-js-message');
+    if (msg) {
+      msg.style.display = 'none';
+    }
+    const appRoot = document.querySelector('app-root');
+    if (appRoot) {
+      appRoot.style.removeProperty('display');
+    }
+  </script>
 </body>
 </html>
