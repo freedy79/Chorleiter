@@ -9,7 +9,7 @@ const fs = require('fs').promises;
 
 // Die create- und update-Funktionen bleiben unverändert, aber wir fügen eine Fehlerbehandlung hinzu.
 exports.create = async (req, res, next) => {
-    const { title, publisher, prefix, singleEdition, pieces } = req.body;
+    const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
         if (req.userRole === 'demo') {
             return res.status(403).send({ message: 'Demo user cannot modify collections.' });
@@ -17,7 +17,7 @@ exports.create = async (req, res, next) => {
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        const collection = await Collection.create({ title, publisher, prefix, singleEdition });
+        const collection = await Collection.create({ title, publisher, prefix, description, publisherNumber, singleEdition });
         if (pieces && pieces.length > 0) {
             for (const pieceInfo of pieces) {
                 await collection.addPiece(pieceInfo.pieceId, {
@@ -31,7 +31,7 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
     const id = req.params.id;
-    const { title, publisher, prefix, singleEdition, pieces } = req.body;
+    const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
         if (req.userRole === 'demo') {
             return res.status(403).send({ message: 'Demo user cannot modify collections.' });
@@ -42,7 +42,7 @@ exports.update = async (req, res, next) => {
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        await collection.update({ title, publisher, prefix, singleEdition });
+        await collection.update({ title, publisher, prefix, description, publisherNumber, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
             for (const pieceLink of pieces) {

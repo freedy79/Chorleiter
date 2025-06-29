@@ -39,6 +39,16 @@
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Verlagsnummer</mat-label>
+          <input matInput formControlName="publisherNumber">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Beschreibung</mat-label>
+          <textarea matInput formControlName="description" rows="3"></textarea>
+        </mat-form-field>
+
         <mat-checkbox formControlName="singleEdition">Einzelausgabe (nur ein Stück)</mat-checkbox>
 
         <div class="cover-upload">

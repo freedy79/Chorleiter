@@ -109,6 +109,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             title: ['', Validators.required],
             publisher: [''],
             prefix: [''],
+            publisherNumber: [''],
+            description: [''],
             singleEdition: [false],
         });
 
@@ -285,6 +287,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             title: collection.title,
             publisher: collection.publisher,
             prefix: collection.prefix,
+            publisherNumber: collection.publisherNumber,
+            description: collection.description,
             singleEdition: collection.singleEdition,
         });
 
