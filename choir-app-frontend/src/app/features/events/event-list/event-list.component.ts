@@ -86,8 +86,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
       dialogRef.afterClosed().subscribe(result => {
         if (result && result.id) {
           this.apiService.updateEvent(result.id, result).subscribe({
-            next: () => { this.snackBar.open('Event updated.', 'OK', { duration: 3000 }); this.loadEvents(); },
-            error: () => this.snackBar.open('Error updating event.', 'Close', { duration: 4000 })
+          next: () => { this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000 }); this.loadEvents(); },
+          error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000 })
           });
         }
       });
@@ -100,8 +100,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
     ref.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.apiService.deleteEvent(event.id).subscribe({
-          next: () => { this.snackBar.open('Event deleted.', 'OK', { duration: 3000 }); this.loadEvents(); },
-          error: () => this.snackBar.open('Error deleting event.', 'Close', { duration: 4000 })
+          next: () => { this.snackBar.open('Event gelöscht.', 'OK', { duration: 3000 }); this.loadEvents(); },
+          error: () => this.snackBar.open('Fehler beim Löschen des Events.', 'Schließen', { duration: 4000 })
         });
       }
     });

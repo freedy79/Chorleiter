@@ -1,23 +1,23 @@
-<h1 mat-dialog-title>Invite New Member</h1>
+<h1 mat-dialog-title>Neues Mitglied einladen</h1>
 <div mat-dialog-content>
-  <p>Enter the email address and assign a role for the new member.</p>
+  <p>E-Mail-Adresse eingeben und Rolle zuweisen.</p>
   <form [formGroup]="inviteForm" id="invite-form" (ngSubmit)="onInvite()">
     <mat-form-field appearance="outline">
-      <mat-label>Email Address</mat-label>
+      <mat-label>E-Mail-Adresse</mat-label>
       <input matInput formControlName="email" type="email" cdkFocusInitial>
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Role in Choir</mat-label>
+      <mat-label>Rolle im Chor</mat-label>
       <mat-select formControlName="role">
-        <mat-option value="director">Director</mat-option>
-        <mat-option value="choir_admin">Choir Admin</mat-option>
+        <mat-option value="director">Dirigent</mat-option>
+        <mat-option value="choir_admin">Chor-Admin</mat-option>
       </mat-select>
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button (click)="onCancel()">Abbrechen</button>
   <button mat-flat-button color="primary" type="submit" form="invite-form" [disabled]="inviteForm.invalid">
-    Send Invitation
+    Einladung senden
   </button>
 </div>

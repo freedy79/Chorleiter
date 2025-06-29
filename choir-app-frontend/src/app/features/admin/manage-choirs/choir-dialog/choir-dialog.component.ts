@@ -14,14 +14,14 @@ import { Choir } from 'src/app/core/models/choir';
 })
 export class ChoirDialogComponent {
   form: FormGroup;
-  title = 'Add Choir';
+  title = 'Chor hinzufügen';
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<ChoirDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: Choir | null
   ) {
-    this.title = data ? 'Edit Choir' : 'Add Choir';
+    this.title = data ? 'Chor bearbeiten' : 'Chor hinzufügen';
     this.form = this.fb.group({
       name: [data?.name || '', Validators.required],
       description: [data?.description || ''],

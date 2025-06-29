@@ -1,9 +1,9 @@
 <div *ngIf="error$ | async as error" class="error-overlay">
   <div class="error-box">
     <mat-icon class="error-icon" color="warn">error</mat-icon>
-    <h2>An Error Occurred</h2>
+    <h2>Ein Fehler ist aufgetreten</h2>
     <p>{{ error.message }}</p>
-    <p *ngIf="error.status">Status Code: {{ error.status }}</p>
-    <button mat-flat-button color="warn" (click)="clear()">Dismiss</button>
+    <p *ngIf="error.status">Statuscode: {{ error.status }}</p>
+    <button mat-flat-button color="warn" (click)="clear()">Schließen</button>
   </div>
 </div>
