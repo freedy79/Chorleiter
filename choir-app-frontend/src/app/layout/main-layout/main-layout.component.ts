@@ -19,6 +19,7 @@ import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { HelpService } from '@core/services/help.service';
+import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -208,6 +209,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     if (this.isHandset) {
       this.appDrawer?.close();
     }
+  }
+
+  openBuildInfo(): void {
+    this.dialog.open(BuildInfoDialogComponent, { width: '400px' });
   }
 
   openHelp(): void {
