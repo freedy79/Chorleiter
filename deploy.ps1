@@ -38,12 +38,12 @@ $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 Invoke-Expression "$sshCmd $Remote \"mkdir -p '$BackendDest' '$FrontendDest'\""
 
 # Upload archives
-Invoke-Expression "$scpCmd $BackendArchive $Remote:/tmp/backend.tar.gz"
-Invoke-Expression "$scpCmd $FrontendArchive $Remote:/tmp/frontend.tar.gz"
+Invoke-Expression "$scpCmd $BackendArchive ${Remote}:/tmp/backend.tar.gz"
+Invoke-Expression "$scpCmd $FrontendArchive ${Remote}:/tmp/frontend.tar.gz"
 
 # Extract archives on server and clean up
-Invoke-Expression "$sshCmd $Remote \"tar -xzf /tmp/backend.tar.gz -C '$BackendDest' && rm /tmp/backend.tar.gz\""
-Invoke-Expression "$sshCmd $Remote \"tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest' && rm /tmp/frontend.tar.gz\""
+Invoke-Expression "$sshCmd ${Remote} \"tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz\""
+Invoke-Expression "$sshCmd ${Remote} \"tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz\""
 
 Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
