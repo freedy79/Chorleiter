@@ -7,7 +7,11 @@
     "startwithtimestamp": "node ./scripts/serve-with-timestamp.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "generate-build-info": "node ./scripts/generate-build-info.js",
+    "prebuild": "npm run generate-build-info",
+    "prestart": "npm run generate-build-info",
+    "prestartwithtimestamp": "npm run generate-build-info"
   },
   "private": true,
   "dependencies": {
