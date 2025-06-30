@@ -1,123 +1,121 @@
 <h1 mat-dialog-title>{{ isEditMode ? 'Stück bearbeiten' : 'Neues Stück erstellen' }}</h1>
 
 <div mat-dialog-content>
-  <form [formGroup]="pieceForm" id="piece-form" (ngSubmit)="onSave()">
-    <mat-vertical-stepper>
-      <mat-step label="Grundinformationen" [hasError]="isGeneralStepInvalid()">
-        <div class="form-section">
-          <!-- Title -->
-          <mat-form-field appearance="outline">
-            <mat-label>Title</mat-label>
-            <input matInput formControlName="title" cdkFocusInitial>
-          </mat-form-field>
+  <mat-sidenav-container class="dialog-container">
+    <mat-sidenav mode="side" opened>
+      <mat-nav-list>
+        <a mat-list-item [class.active]="activeSection==='general'" (click)="activeSection='general'">Grundinformationen</a>
+        <a mat-list-item [class.active]="activeSection==='composer'" (click)="activeSection='composer'">Komponisten &amp; Arrangeure</a>
+        <a mat-list-item [class.active]="activeSection==='files'" (click)="activeSection='files'">Dateien &amp; Links</a>
+      </mat-nav-list>
+    </mat-sidenav>
 
-          <!-- Voicing -->
-          <mat-form-field appearance="outline">
-          <mat-label>Besetzung (z.B. SATB)</mat-label>
-            <input matInput formControlName="voicing">
-          </mat-form-field>
+    <mat-sidenav-content>
+      <form [formGroup]="pieceForm" id="piece-form" (ngSubmit)="onSave()">
+        <ng-container [ngSwitch]="activeSection">
+          <ng-container *ngSwitchCase="'general'">
+            <div class="form-section">
+              <mat-form-field appearance="outline">
+                <mat-label>Title</mat-label>
+                <input matInput formControlName="title" cdkFocusInitial>
+              </mat-form-field>
 
-          <!-- Key / Tonart -->
-          <mat-form-field appearance="outline">
-          <mat-label>Tonart</mat-label>
-            <input matInput formControlName="key">
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Besetzung (z.B. SATB)</mat-label>
+                <input matInput formControlName="voicing">
+              </mat-form-field>
 
-          <!-- Time Signature / Takt -->
-          <mat-form-field appearance="outline">
-          <mat-label>Taktart</mat-label>
-            <input matInput formControlName="timeSignature">
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Tonart</mat-label>
+                <input matInput formControlName="key">
+              </mat-form-field>
 
-          <!-- Occasion -->
-          <mat-form-field appearance="outline">
-          <mat-label>Rubrik</mat-label>
-            <mat-select formControlName="categoryId">
-              <mat-option [value]="addNewId">
-                <mat-icon>add</mat-icon>
-                <span>Neue Rubrik erstellen</span>
-              </mat-option>
-              <mat-divider></mat-divider>
-              <!-- The rest of the options -->
-              <mat-option *ngFor="let category of categories$ | async" [value]="category.id">
-                {{ category.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Taktart</mat-label>
+                <input matInput formControlName="timeSignature">
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Dichter</mat-label>
-            <mat-select formControlName="authorId">
-              <mat-option [value]="addNewAuthorId">
-                <mat-icon>add</mat-icon>
-                <span>Neuen Dichter erstellen</span>
-              </mat-option>
-              <mat-divider></mat-divider>
-              <mat-option *ngFor="let author of authors$ | async" [value]="author.id">
-                {{ author.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Rubrik</mat-label>
+                <mat-select formControlName="categoryId">
+                  <mat-option [value]="addNewId">
+                    <mat-icon>add</mat-icon>
+                    <span>Neue Rubrik erstellen</span>
+                  </mat-option>
+                  <mat-divider></mat-divider>
+                  <mat-option *ngFor="let category of categories$ | async" [value]="category.id">
+                    {{ category.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline" class="lyrics-field">
-            <mat-label>Text</mat-label>
-            <textarea matInput formControlName="lyrics"></textarea>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Dichter</mat-label>
+                <mat-select formControlName="authorId">
+                  <mat-option [value]="addNewAuthorId">
+                    <mat-icon>add</mat-icon>
+                    <span>Neuen Dichter erstellen</span>
+                  </mat-option>
+                  <mat-divider></mat-divider>
+                  <mat-option *ngFor="let author of authors$ | async" [value]="author.id">
+                    {{ author.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Opus</mat-label>
-            <input matInput formControlName="opus" placeholder="">
-          </mat-form-field>
-        </div>
-      </mat-step>
+              <mat-form-field appearance="outline" class="lyrics-field">
+                <mat-label>Text</mat-label>
+                <textarea matInput formControlName="lyrics"></textarea>
+              </mat-form-field>
 
-
-      <mat-step label="Komponisten & Arrangeure" [hasError]="isComposerStepInvalid()">
-        <div class="form-section">
-          <mat-form-field appearance="outline">
-            <mat-label>Komponist</mat-label>
-            <mat-select formControlName="composerId">
-              <mat-option [value]="addNewComposerId">
-                <mat-icon>add</mat-icon>
-                <span>Neuen Komponisten erstellen</span>
-              </mat-option>
-              <mat-divider></mat-divider>
-              <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
-                {{ composer.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-      </mat-step>
-
-
-      <mat-step label="Dateien & Links" [hasError]="isFilesStepInvalid()">
-        <div class="form-section">
-          <h4>Links</h4>
-          <div formArrayName="links">
-            <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
-              <mat-form-field appearance="outline"><mat-label>Beschreibung</mat-label><input matInput
-                  formControlName="description"></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>URL oder Dateipfad</mat-label><input matInput
-                  formControlName="url"></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Typ</mat-label><mat-select
-                  formControlName="type"><mat-option value="EXTERNAL">Externer Link</mat-option><mat-option
-                    value="FILE_DOWNLOAD">Dateidownload</mat-option></mat-select></mat-form-field>
-              <button mat-icon-button color="warn" (click)="removeLink(i)"
-                type="button"><mat-icon>delete</mat-icon></button>
+              <mat-form-field appearance="outline">
+                <mat-label>Opus</mat-label>
+                <input matInput formControlName="opus" placeholder="">
+              </mat-form-field>
             </div>
-          </div>
-          <button mat-stroked-button (click)="addLink()" type="button">Link hinzufügen</button>
-        </div>
-        <mat-divider></mat-divider>
-        <div class="form-section">
-          <h4>Notenbild</h4>
-          <!-- A real file upload component would go here -->
-          <p>Platzhalter für Dateiupload-Komponente.</p>
-        </div>
-      </mat-step>
-    </mat-vertical-stepper>
-  </form>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'composer'">
+            <div class="form-section">
+              <mat-form-field appearance="outline">
+                <mat-label>Komponist</mat-label>
+                <mat-select formControlName="composerId">
+                  <mat-option [value]="addNewComposerId">
+                    <mat-icon>add</mat-icon>
+                    <span>Neuen Komponisten erstellen</span>
+                  </mat-option>
+                  <mat-divider></mat-divider>
+                  <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
+                    {{ composer.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'files'">
+            <div class="form-section">
+              <h4>Links</h4>
+              <div formArrayName="links">
+                <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
+                  <mat-form-field appearance="outline"><mat-label>Beschreibung</mat-label><input matInput formControlName="description"></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>URL oder Dateipfad</mat-label><input matInput formControlName="url"></mat-form-field>
+                  <mat-form-field appearance="outline"><mat-label>Typ</mat-label><mat-select formControlName="type"><mat-option value="EXTERNAL">Externer Link</mat-option><mat-option value="FILE_DOWNLOAD">Dateidownload</mat-option></mat-select></mat-form-field>
+                  <button mat-icon-button color="warn" (click)="removeLink(i)" type="button"><mat-icon>delete</mat-icon></button>
+                </div>
+              </div>
+              <button mat-stroked-button (click)="addLink()" type="button">Link hinzufügen</button>
+            </div>
+            <mat-divider></mat-divider>
+            <div class="form-section">
+              <h4>Notenbild</h4>
+              <p>Platzhalter für Dateiupload-Komponente.</p>
+            </div>
+          </ng-container>
+        </ng-container>
+      </form>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Abbrechen</button>
