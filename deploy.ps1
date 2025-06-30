@@ -12,6 +12,19 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
+# Check for sshpass before proceeding
+$sshUseSshpass = $false
+if (Get-Command sshpass -ErrorAction SilentlyContinue) {
+    $sshUseSshpass = $true
+} else {
+    $install = Read-Host "sshpass is not installed. Install it now? (y/N)"
+    if ($install -match '^[Yy]') {
+        Write-Host "sudo apt-get install sshpass"
+    } else {
+        Write-Host "Hint: install sshpass with: sudo apt-get install sshpass"
+    }
+}
+
 $Password = $null
 if (Test-Path $PasswordFile) {
     $Password = (Get-Content $PasswordFile -Raw).Trim()
@@ -26,10 +39,6 @@ if (-not $Password) {
     $Password = Read-Host "SSH password for $Remote"
 }
 
-$sshUseSshpass = $false
-if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshUseSshpass = $true
-}
 
 $ControlPath = "$env:USERPROFILE\.chorleiter_ssh_control"
 $SshOptions = "-o ControlMaster=auto -o ControlPath=$ControlPath -o ControlPersist=10m -o StrictHostKeyChecking=no"

@@ -11,7 +11,21 @@ FRONTEND_DEST="/usr/local/lsws/ChorStatistik/html"
 # Build Angular frontend
 npm --prefix choir-app-frontend run build
 
-echo "Build finished." 
+echo "Build finished."
+
+# Check for sshpass before proceeding
+USE_SSHPASS=false
+if command -v sshpass >/dev/null; then
+    USE_SSHPASS=true
+else
+    read -r -p "sshpass is not installed. Install it now? (y/N) " install_sshpass
+    if [[ $install_sshpass =~ ^[Yy]$ ]]; then
+        sudo apt-get install sshpass && USE_SSHPASS=true
+    fi
+    if [[ $USE_SSHPASS == false ]]; then
+        echo "Hint: install sshpass with: sudo apt-get install sshpass"
+    fi
+fi
 
 # Get password from file or prompt
 if [[ -f "$PASSWORD_FILE" ]]; then
@@ -35,7 +49,7 @@ CONTROL_PATH="${HOME}/.chorleiter_ssh_control"
 SSH_OPTIONS="-o ControlMaster=auto -o ControlPath=${CONTROL_PATH} -o ControlPersist=10m -o StrictHostKeyChecking=no"
 
 ssh_cmd() {
-    if command -v sshpass >/dev/null; then
+    if [[ $USE_SSHPASS == true ]]; then
         sshpass -p "$PASSWORD" ssh $SSH_OPTIONS "$@"
     else
         ssh $SSH_OPTIONS "$@"
@@ -43,7 +57,7 @@ ssh_cmd() {
 }
 
 scp_cmd() {
-    if command -v sshpass >/dev/null; then
+    if [[ $USE_SSHPASS == true ]]; then
         sshpass -p "$PASSWORD" scp $SSH_OPTIONS "$@"
     else
         scp $SSH_OPTIONS "$@"
@@ -81,7 +95,7 @@ rm -f "$BACKEND_ARCHIVE" "$FRONTEND_ARCHIVE"
 echo "Deployment completed."
 
 # Close the persistent SSH connection
-if command -v sshpass >/dev/null; then
+if [[ $USE_SSHPASS == true ]]; then
     sshpass -p "$PASSWORD" ssh $SSH_OPTIONS -O exit $REMOTE
 else
     ssh $SSH_OPTIONS -O exit $REMOTE
