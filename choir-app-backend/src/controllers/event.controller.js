@@ -153,7 +153,7 @@ exports.findLast = async (req, res) => {
                         }
                     }
                 ]
-            }]
+            }, { model: User, as: 'director', attributes: ['name'] }]
         });
 
         if (!lastEvent) {
