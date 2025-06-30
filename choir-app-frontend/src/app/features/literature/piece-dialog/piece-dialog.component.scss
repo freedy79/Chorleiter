@@ -21,6 +21,11 @@
     margin-bottom: 1rem;
 }
 
-mat-vertical-stepper {
+mat-sidenav-container.dialog-container {
   max-width: 800px;
+  height: 100%;
+}
+
+mat-sidenav {
+  width: 220px;
 }
