@@ -255,6 +255,12 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/events/${id}`);
   }
 
+  deleteEventsInRange(start: string, end: string, type?: 'SERVICE' | 'REHEARSAL'): Observable<any> {
+    let params = new HttpParams().set('start', start).set('end', end);
+    if (type) params = params.set('type', type);
+    return this.http.delete(`${this.apiUrl}/events/range`, { params });
+  }
+
 
   // --- User Methods ---
 

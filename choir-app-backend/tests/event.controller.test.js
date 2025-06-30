@@ -31,7 +31,15 @@ const controller = require('../src/controllers/event.controller');
     assert.strictEqual(res.statusCode, 201);
     assert.ok(res.data.warning);
 
-    console.log('event.controller create test passed');
+    // Delete events in date range
+    const delReq = {
+      activeChoirId: choir.id,
+      query: { start: '2024-01-01', end: '2024-01-02' }
+    };
+    await controller.deleteRange(delReq, res);
+    assert.strictEqual(res.data.message.includes('events deleted'), true);
+
+    console.log('event.controller create and deleteRange tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
