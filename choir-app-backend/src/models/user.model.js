@@ -27,6 +27,11 @@ module.exports = (sequelize, DataTypes) => {
       lastDonation: {
         type: DataTypes.DATE,
         allowNull: true
+      },
+      preferences: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: {}
       }
     });
     return User;
