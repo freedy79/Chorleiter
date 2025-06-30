@@ -86,3 +86,30 @@ exports.registerDonation = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.getPreferences = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId);
+        if (!user) {
+            return res.status(404).send({ message: "User not found." });
+        }
+        res.status(200).send(user.preferences || {});
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updatePreferences = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.userId);
+        if (!user) {
+            return res.status(404).send({ message: "User not found." });
+        }
+        const prefs = Object.assign({}, user.preferences || {}, req.body || {});
+        user.preferences = prefs;
+        await user.save();
+        res.status(200).send(prefs);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
