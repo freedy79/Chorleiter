@@ -383,6 +383,10 @@ export class ApiService {
     return this.http.get<User[]>(`${this.apiUrl}/admin/users`);
   }
 
+  getUserByEmail(email: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/admin/users/email/${encodeURIComponent(email)}`);
+  }
+
   createUser(data: any): Observable<User> {
     return this.http.post<User>(`${this.apiUrl}/admin/users`, data);
   }
