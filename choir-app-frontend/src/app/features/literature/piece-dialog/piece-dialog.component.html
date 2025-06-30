@@ -5,7 +5,7 @@
     <mat-sidenav mode="side" opened>
       <mat-nav-list>
         <a mat-list-item [class.active]="activeSection==='general'" (click)="activeSection='general'">Grundinformationen</a>
-        <a mat-list-item [class.active]="activeSection==='composer'" (click)="activeSection='composer'">Komponisten &amp; Arrangeure</a>
+        <a mat-list-item [class.active]="activeSection==='text'" (click)="activeSection='text'">Text</a>
         <a mat-list-item [class.active]="activeSection==='files'" (click)="activeSection='files'">Dateien &amp; Links</a>
       </mat-nav-list>
     </mat-sidenav>
@@ -50,6 +50,29 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline">
+                <mat-label>Komponist</mat-label>
+                <mat-select formControlName="composerId">
+                  <mat-option [value]="addNewComposerId">
+                    <mat-icon>add</mat-icon>
+                    <span>Neuen Komponisten erstellen</span>
+                  </mat-option>
+                  <mat-divider></mat-divider>
+                  <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
+                    {{ composer.name }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Opus</mat-label>
+                <input matInput formControlName="opus" placeholder="">
+              </mat-form-field>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'text'">
+            <div class="form-section">
+              <mat-form-field appearance="outline">
                 <mat-label>Dichter</mat-label>
                 <mat-select formControlName="authorId">
                   <mat-option [value]="addNewAuthorId">
@@ -66,29 +89,6 @@
               <mat-form-field appearance="outline" class="lyrics-field">
                 <mat-label>Text</mat-label>
                 <textarea matInput formControlName="lyrics"></textarea>
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Opus</mat-label>
-                <input matInput formControlName="opus" placeholder="">
-              </mat-form-field>
-            </div>
-          </ng-container>
-
-          <ng-container *ngSwitchCase="'composer'">
-            <div class="form-section">
-              <mat-form-field appearance="outline">
-                <mat-label>Komponist</mat-label>
-                <mat-select formControlName="composerId">
-                  <mat-option [value]="addNewComposerId">
-                    <mat-icon>add</mat-icon>
-                    <span>Neuen Komponisten erstellen</span>
-                  </mat-option>
-                  <mat-divider></mat-divider>
-                  <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
-                    {{ composer.name }}
-                  </mat-option>
-                </mat-select>
               </mat-form-field>
             </div>
           </ng-container>
