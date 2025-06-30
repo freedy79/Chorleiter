@@ -15,7 +15,8 @@ echo "Build finished."
 
 # Get password from file or prompt
 if [[ -f "$PASSWORD_FILE" ]]; then
-    PASSWORD=$(<"$PASSWORD_FILE")
+    # Remove trailing newlines to avoid authentication issues
+    PASSWORD=$(tr -d '\r\n' < "$PASSWORD_FILE")
 else
     read -r -p "Password file $PASSWORD_FILE not found. Create it? (y/N) " create
     if [[ $create =~ ^[Yy] ]]; then
