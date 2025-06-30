@@ -289,6 +289,20 @@ export class ApiService {
     return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/collection/${collectionId}`, formData);
   }
 
+  uploadEventCsv(file: File, type: 'REHEARSAL' | 'SERVICE', mode: 'preview' | 'import'): Observable<any> {
+    const formData = new FormData();
+    formData.append('csvfile', file, file.name);
+    const params = new HttpParams().set('mode', mode).set('type', type);
+    return this.http.post(`${this.apiUrl}/import/events`, formData, { params });
+  }
+
+  startEventCsvImport(file: File, type: 'REHEARSAL' | 'SERVICE'): Observable<{ jobId: string }> {
+    const formData = new FormData();
+    formData.append('csvfile', file, file.name);
+    const params = new HttpParams().set('type', type);
+    return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/events`, formData, { params });
+  }
+
   // Diese Methode fragt den Status eines Jobs ab
   getImportStatus(jobId: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/import/status/${jobId}`);

@@ -1,0 +1,21 @@
+.format-info {
+  margin-bottom: 1em;
+}
+.upload-area {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 1em;
+}
+.preview-area {
+  max-height: 200px;
+  overflow: auto;
+}
+.log-area {
+  max-height: 200px;
+  overflow: auto;
+}
+.log-textarea {
+  width: 100%;
+  height: 180px;
+}

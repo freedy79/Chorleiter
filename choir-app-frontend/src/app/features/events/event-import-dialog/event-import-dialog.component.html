@@ -1,0 +1,60 @@
+<h1 mat-dialog-title>Ereignisse importieren</h1>
+<mat-progress-bar *ngIf="isImporting" mode="determinate" [value]="importProgress"></mat-progress-bar>
+<mat-progress-bar *ngIf="isLoading && !isImporting" mode="indeterminate"></mat-progress-bar>
+
+<div mat-dialog-content>
+  <ng-container *ngIf="!isImporting">
+    <div class="format-info">
+      <p>CSV mit folgenden Spalten bereitstellen (Header erforderlich):</p>
+      <code>referenz; titel; datum</code>
+      <p>Trennzeichen ist ein Semikolon (;).</p>
+    </div>
+    <mat-form-field appearance="outline">
+      <mat-label>Typ</mat-label>
+      <mat-select [(ngModel)]="eventType" disableRipple>
+        <mat-option value="SERVICE">Gottesdienst</mat-option>
+        <mat-option value="REHEARSAL">Probe</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="upload-area">
+      <button mat-stroked-button (click)="fileInput.click()">
+        <mat-icon>attach_file</mat-icon> CSV-Datei auswählen
+      </button>
+      <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv">
+      <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
+    </div>
+    <mat-divider *ngIf="previewData.length > 0"></mat-divider>
+    <div *ngIf="previewData.length > 0" class="preview-area">
+      <p>Bitte prüfe, ob die Daten korrekt eingelesen werden.</p>
+      <table mat-table [dataSource]="previewData">
+        <ng-container matColumnDef="reference">
+          <th mat-header-cell *matHeaderCellDef>Referenz</th>
+          <td mat-cell *matCellDef="let row">{{ row.referenz || row.reference }}</td>
+        </ng-container>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Titel</th>
+          <td mat-cell *matCellDef="let row">{{ row.titel || row.title }}</td>
+        </ng-container>
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Datum</th>
+          <td mat-cell *matCellDef="let row">{{ row.datum || row.date }}</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="previewColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: previewColumns;"></tr>
+      </table>
+    </div>
+  </ng-container>
+
+  <div *ngIf="isImporting" class="log-area">
+    <h3>Import läuft...</h3>
+    <textarea readonly class="log-textarea">{{ importLogs.join('\n') }}</textarea>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isImporting">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="onImport()" [disabled]="!selectedFile || isLoading || isImporting">
+    <mat-icon>file_upload</mat-icon>
+    Alle Zeilen importieren
+  </button>
+</div>

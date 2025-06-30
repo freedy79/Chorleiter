@@ -12,6 +12,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { startWith } from 'rxjs/operators';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
+import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
@@ -127,6 +128,15 @@ export class EventListComponent implements OnInit, AfterViewInit {
             this.snackBar.open(msg, 'Schließen', { duration: 5000 });
           }
         });
+      }
+    });
+  }
+
+  openImportDialog(): void {
+    const dialogRef = this.dialog.open(EventImportDialogComponent, { width: '800px' });
+    dialogRef.afterClosed().subscribe(wasImported => {
+      if (wasImported) {
+        this.loadEvents();
       }
     });
   }
