@@ -34,6 +34,13 @@ export class AuthService {
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
     this.isAdmin$ = this.currentUser$.pipe(map(user => user?.role === 'admin'));
+    if (this.hasToken()) {
+      this.prefs.load().subscribe(p => {
+        if (p.theme) {
+          this.theme.setTheme(p.theme);
+        }
+      });
+    }
   }
 
   private hasToken(): boolean {

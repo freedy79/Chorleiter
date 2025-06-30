@@ -9,13 +9,21 @@ import { UserPreferences } from '../models/user-preferences';
 export class UserPreferencesService {
   private prefs$ = new BehaviorSubject<UserPreferences>({});
   private apiUrl = `${environment.apiUrl}/users/me/preferences`;
+  private loaded = false;
 
   constructor(private http: HttpClient) {}
 
   load(): Observable<UserPreferences> {
     return this.http.get<UserPreferences>(this.apiUrl).pipe(
-      tap(p => this.prefs$.next(p))
+      tap(p => {
+        this.prefs$.next(p);
+        this.loaded = true;
+      })
     );
+  }
+
+  isLoaded(): boolean {
+    return this.loaded;
   }
 
   getPreference<K extends keyof UserPreferences>(key: K): UserPreferences[K] | undefined {
