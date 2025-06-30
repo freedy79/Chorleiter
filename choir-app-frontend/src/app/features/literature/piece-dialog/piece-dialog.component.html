@@ -2,8 +2,8 @@
 
 <div mat-dialog-content>
   <form [formGroup]="pieceForm" id="piece-form" (ngSubmit)="onSave()">
-    <mat-tab-group>
-      <mat-tab label="Grundinformationen">
+    <mat-vertical-stepper>
+      <mat-step label="Grundinformationen" [hasError]="isGeneralStepInvalid()">
         <div class="form-section">
           <!-- Title -->
           <mat-form-field appearance="outline">
@@ -45,6 +45,20 @@
             </mat-select>
           </mat-form-field>
 
+          <mat-form-field appearance="outline">
+            <mat-label>Dichter</mat-label>
+            <mat-select formControlName="authorId">
+              <mat-option [value]="addNewAuthorId">
+                <mat-icon>add</mat-icon>
+                <span>Neuen Dichter erstellen</span>
+              </mat-option>
+              <mat-divider></mat-divider>
+              <mat-option *ngFor="let author of authors$ | async" [value]="author.id">
+                {{ author.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
           <mat-form-field appearance="outline" class="lyrics-field">
             <mat-label>Text</mat-label>
             <textarea matInput formControlName="lyrics"></textarea>
@@ -55,10 +69,10 @@
             <input matInput formControlName="opus" placeholder="">
           </mat-form-field>
         </div>
-      </mat-tab>
+      </mat-step>
 
 
-      <mat-tab label="Komponisten & Arrangeure">
+      <mat-step label="Komponisten & Arrangeure" [hasError]="isComposerStepInvalid()">
         <div class="form-section">
           <mat-form-field appearance="outline">
             <mat-label>Komponist</mat-label>
@@ -68,32 +82,16 @@
                 <span>Neuen Komponisten erstellen</span>
               </mat-option>
               <mat-divider></mat-divider>
-              <!-- The rest of the options -->
               <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
                 {{ composer.name }}
               </mat-option>
             </mat-select>
           </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Dichter</mat-label>
-            <mat-select formControlName="authorId">
-              <mat-option [value]="addNewAuthorId">
-                <mat-icon>add</mat-icon>
-                <span>Neuen Dichter erstellen</span>
-              </mat-option>
-              <mat-divider></mat-divider>
-              <!-- The rest of the options -->
-              <mat-option *ngFor="let author of authors$ | async" [value]="author.id">
-                {{ author.name }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
         </div>
-      </mat-tab>
+      </mat-step>
 
 
-      <mat-tab label="Dateien & Links">
+      <mat-step label="Dateien & Links" [hasError]="isFilesStepInvalid()">
         <div class="form-section">
           <h4>Links</h4>
           <div formArrayName="links">
@@ -117,8 +115,8 @@
           <!-- A real file upload component would go here -->
           <p>Platzhalter für Dateiupload-Komponente.</p>
         </div>
-      </mat-tab>
-    </mat-tab-group>
+      </mat-step>
+    </mat-vertical-stepper>
   </form>
 </div>
 <div mat-dialog-actions align="end">
