@@ -18,6 +18,7 @@ import { EventImportDialogComponent } from '../event-import-dialog/event-import-
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-event-list',
@@ -49,7 +50,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private authService: AuthService,
               private dialog: MatDialog,
               private snackBar: MatSnackBar,
-              private paginatorService: PaginatorService) {
+              private paginatorService: PaginatorService,
+              private route: ActivatedRoute) {
     this.pageSize = this.paginatorService.getPageSize('event-list', this.pageSizeOptions[0]);
   }
 
@@ -63,6 +65,10 @@ export class EventListComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadEvents();
+    const eventId = Number(this.route.snapshot.queryParamMap.get('eventId'));
+    if (eventId) {
+      this.apiService.getEventById(eventId).subscribe(e => this.selectedEvent = e);
+    }
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
     this.apiService.checkChoirAdminStatus().subscribe(s => {
       this.isChoirAdmin = s.isChoirAdmin;
