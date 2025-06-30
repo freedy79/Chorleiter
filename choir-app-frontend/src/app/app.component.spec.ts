@@ -3,6 +3,8 @@ import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 class ApiServiceStub {
   pingBackend() { return of({ message: 'PONG' }); }
@@ -11,7 +13,12 @@ class ApiServiceStub {
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent, MatSnackBarModule],
+      imports: [
+        AppComponent,
+        MatSnackBarModule,
+        HttpClientTestingModule,
+        RouterTestingModule
+      ],
       providers: [{ provide: ApiService, useClass: ApiServiceStub }]
     }).compileComponents();
   });
