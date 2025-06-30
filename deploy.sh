@@ -11,7 +11,7 @@ FRONTEND_DEST="/usr/local/lsws/ChorStatistik/html"
 # Build Angular frontend
 npm --prefix choir-app-frontend run build
 
-echo "Build finished." 
+echo "Build finished."
 
 # Get password from file or prompt
 if [[ -f "$PASSWORD_FILE" ]]; then
@@ -50,6 +50,7 @@ scp_cmd() {
 }
 
 # Establish master connection so the password is only requested once
+echo "Establishing SSH connection..."
 ssh_cmd "$REMOTE" "true"
 
 # Create temporary archives
@@ -57,10 +58,13 @@ BACKEND_ARCHIVE=$(mktemp --suffix=.tar.gz)
 FRONTEND_ARCHIVE=$(mktemp --suffix=.tar.gz)
 
 # Pack directories
+echo "Packing backend..."
 tar --exclude=".env" -czf "$BACKEND_ARCHIVE" -C "choir-app-backend" .
+echo "Packing frontend..."
 tar -czf "$FRONTEND_ARCHIVE" -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
+echo "Creating remote directories..."
 ssh_cmd "$REMOTE" "mkdir -p \"$BACKEND_DEST\" \"$FRONTEND_DEST\""
 
 # Upload archives
