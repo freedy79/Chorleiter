@@ -122,6 +122,25 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+exports.getUserByEmail = async (req, res) => {
+    const { email } = req.params;
+    try {
+        const user = await db.user.findOne({
+            where: { email },
+            include: [{
+                model: db.choir,
+                as: 'choirs',
+                attributes: ['id', 'name'],
+                through: { attributes: ['roleInChoir', 'registrationStatus'] }
+            }]
+        });
+        if (!user) return res.status(404).send({ message: 'Not found' });
+        res.status(200).send(user);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
 

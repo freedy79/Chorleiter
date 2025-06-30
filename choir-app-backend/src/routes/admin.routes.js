@@ -22,6 +22,7 @@ router.delete("/choirs/:id", controller.remove(db.choir));
 
 // Routen für Benutzer
 router.get("/users", controller.getAllUsers);
+router.get("/users/email/:email", controller.getUserByEmail);
 router.post("/users", controller.createUser);
 router.put("/users/:id", controller.updateUser);
 router.delete("/users/:id", controller.deleteUser);
