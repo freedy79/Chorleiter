@@ -51,7 +51,7 @@ scp_cmd() {
 }
 
 # Establish master connection so the password is only requested once
-echo "Establishing SSH connection..."
+echo "Establishing SSH connection... Password: $PASSWORD"
 ssh_cmd "$REMOTE" "true"
 
 # Create temporary archives
