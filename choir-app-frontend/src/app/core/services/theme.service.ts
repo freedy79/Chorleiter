@@ -9,6 +9,7 @@ export type Theme = 'light' | 'dark' | 'system';
 export class ThemeService {
   private renderer: Renderer2;
   private currentTheme: Theme = 'system';
+  private static readonly STORAGE_KEY = 'theme';
 
   constructor(rendererFactory: RendererFactory2,
               private prefs: UserPreferencesService) {
@@ -21,8 +22,10 @@ export class ThemeService {
    * Lädt die Benutzereinstellung aus dem gespeicherten Profil oder verwendet 'system' als Standard.
    */
   initializeTheme(): void {
+    const localTheme = localStorage.getItem(ThemeService.STORAGE_KEY) as Theme | null;
     const storedTheme = this.prefs.getPreference('theme') as Theme | undefined;
-    this.currentTheme = storedTheme || 'system';
+    this.currentTheme = localTheme ?? storedTheme ?? 'system';
+    localStorage.setItem(ThemeService.STORAGE_KEY, this.currentTheme);
     this.applyTheme(this.currentTheme);
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
@@ -40,6 +43,7 @@ export class ThemeService {
    */
   setTheme(theme: Theme): void {
     this.currentTheme = theme;
+    localStorage.setItem(ThemeService.STORAGE_KEY, theme);
     this.prefs.update({ theme }).subscribe();
     this.applyTheme(theme);
   }

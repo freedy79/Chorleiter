@@ -73,6 +73,7 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem('theme');
     this.prefs.clear();
     this.loggedIn.next(false);
     this.currentUserSubject.next(null);
