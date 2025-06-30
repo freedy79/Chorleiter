@@ -194,6 +194,22 @@ export class PieceDialogComponent implements OnInit {
         this.linksFormArray.removeAt(index);
     }
 
+    isGeneralStepInvalid(): boolean {
+        return (
+            this.pieceForm.get('title')?.invalid ||
+            this.pieceForm.get('authorId')?.invalid ||
+            false
+        );
+    }
+
+    isComposerStepInvalid(): boolean {
+        return this.pieceForm.get('composerId')?.invalid || false;
+    }
+
+    isFilesStepInvalid(): boolean {
+        return this.linksFormArray.invalid;
+    }
+
     populateForm(piece: Piece): void {
         this.pieceForm.patchValue({
             title: piece.title,
