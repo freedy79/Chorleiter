@@ -11,6 +11,8 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { startWith } from 'rxjs/operators';
+import { SelectionModel } from '@angular/cdk/collections';
+import { forkJoin } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -37,6 +39,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+  selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize = 25;
 
@@ -61,8 +64,19 @@ export class EventListComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.loadEvents();
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
-    this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
-    this.authService.isAdmin$.subscribe(isAdmin => this.isAdmin = isAdmin);
+    this.apiService.checkChoirAdminStatus().subscribe(s => {
+      this.isChoirAdmin = s.isChoirAdmin;
+      this.updateDisplayedColumns();
+    });
+    this.authService.isAdmin$.subscribe(isAdmin => {
+      this.isAdmin = isAdmin;
+      this.updateDisplayedColumns();
+    });
+  }
+
+  private updateDisplayedColumns(): void {
+    const base = ['date', 'type', 'updatedAt', 'director', 'actions'];
+    this.displayedColumns = this.isAdmin ? ['select', ...base] : base;
   }
 
   private loadEvents(): void {
@@ -106,6 +120,42 @@ export class EventListComponent implements OnInit, AfterViewInit {
         });
       }
     });
+  }
+
+  deleteSelectedEvents(): void {
+    const dialogData: ConfirmDialogData = { title: 'Events löschen?', message: 'Möchten Sie die ausgewählten Events wirklich löschen?' };
+    const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        const requests = this.selection.selected.map(ev => this.apiService.deleteEvent(ev.id));
+        forkJoin(requests).subscribe({
+          next: () => {
+            this.snackBar.open('Events gelöscht.', 'OK', { duration: 3000 });
+            this.selection.clear();
+            this.loadEvents();
+          },
+          error: () => this.snackBar.open('Fehler beim Löschen der Events.', 'Schließen', { duration: 4000 })
+        });
+      }
+    });
+  }
+
+  toggleEvent(event: Event): void {
+    this.selection.toggle(event);
+  }
+
+  toggleAll(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach(row => this.selection.select(row));
+    }
+  }
+
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows && numRows > 0;
   }
 
   openAddEventDialog(): void {
