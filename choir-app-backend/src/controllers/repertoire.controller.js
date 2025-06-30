@@ -153,8 +153,18 @@ exports.findMyRepertoire = async (req, res) => {
                 break;
             case 'reference':
                 order = [
-                    [literal('"collections.prefix"'), sortDirection],
-                    [literal(`CAST("collections->collection_piece"."numberInCollection" AS INTEGER)`), sortDirection]
+                    // Sort first by the collection prefix (e.g. "CB" or "EG")
+                    [literal('"collections"."prefix"'), sortDirection],
+                    // Extract the numeric portion from the reference and sort
+                    // by it. Non numeric values will sort last because the
+                    // REGEXP_REPLACE will return an empty string which is
+                    // converted to NULL before casting.
+                    [
+                        literal(
+                            'NULLIF(REGEXP_REPLACE("collections->collection_piece"."numberInCollection", \'\\D\', \'\', \'g\'), \'\')::INTEGER'
+                        ),
+                        sortDirection
+                    ]
                 ];
                 break;
             case 'title':
