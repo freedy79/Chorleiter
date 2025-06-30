@@ -32,15 +32,25 @@ fi
 
 CONTROL_PATH="${HOME}/.chorleiter_ssh_control"
 SSH_OPTIONS="-o ControlMaster=auto -o ControlPath=${CONTROL_PATH} -o ControlPersist=10m -o StrictHostKeyChecking=no"
-SSH_CMD="ssh $SSH_OPTIONS"
-SCP_CMD="scp $SSH_OPTIONS"
-if command -v sshpass >/dev/null; then
-    SSH_CMD="sshpass -p \"$PASSWORD\" ssh $SSH_OPTIONS"
-    SCP_CMD="sshpass -p \"$PASSWORD\" scp $SSH_OPTIONS"
-fi
+
+ssh_cmd() {
+    if command -v sshpass >/dev/null; then
+        sshpass -p "$PASSWORD" ssh $SSH_OPTIONS "$@"
+    else
+        ssh $SSH_OPTIONS "$@"
+    fi
+}
+
+scp_cmd() {
+    if command -v sshpass >/dev/null; then
+        sshpass -p "$PASSWORD" scp $SSH_OPTIONS "$@"
+    else
+        scp $SSH_OPTIONS "$@"
+    fi
+}
 
 # Establish master connection so the password is only requested once
-$SSH_CMD $REMOTE "true"
+ssh_cmd "$REMOTE" "true"
 
 # Create temporary archives
 BACKEND_ARCHIVE=$(mktemp --suffix=.tar.gz)
@@ -51,18 +61,18 @@ tar --exclude=".env" -czf "$BACKEND_ARCHIVE" -C "choir-app-backend" .
 tar -czf "$FRONTEND_ARCHIVE" -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
-$SSH_CMD $REMOTE "mkdir -p \"$BACKEND_DEST\" \"$FRONTEND_DEST\""
+ssh_cmd "$REMOTE" "mkdir -p \"$BACKEND_DEST\" \"$FRONTEND_DEST\""
 
 # Upload archives
-$SCP_CMD "$BACKEND_ARCHIVE" ${REMOTE}:/tmp/backend.tar.gz
-$SCP_CMD "$FRONTEND_ARCHIVE" ${REMOTE}:/tmp/frontend.tar.gz
+scp_cmd "$BACKEND_ARCHIVE" ${REMOTE}:/tmp/backend.tar.gz
+scp_cmd "$FRONTEND_ARCHIVE" ${REMOTE}:/tmp/frontend.tar.gz
 
 # Extract archives on server and clean up
-$SSH_CMD $REMOTE "tar -xzf /tmp/backend.tar.gz -C \"$BACKEND_DEST\"; rm /tmp/backend.tar.gz"
-$SSH_CMD $REMOTE "tar -xzf /tmp/frontend.tar.gz -C \"$FRONTEND_DEST\"; rm /tmp/frontend.tar.gz"
+ssh_cmd "$REMOTE" "tar -xzf /tmp/backend.tar.gz -C \"$BACKEND_DEST\"; rm /tmp/backend.tar.gz"
+ssh_cmd "$REMOTE" "tar -xzf /tmp/frontend.tar.gz -C \"$FRONTEND_DEST\"; rm /tmp/frontend.tar.gz"
 
 # Restart backend
-$SSH_CMD $REMOTE "pm2 restart chorleiter-api"
+ssh_cmd "$REMOTE" "pm2 restart chorleiter-api"
 
 # Remove local archives
 rm -f "$BACKEND_ARCHIVE" "$FRONTEND_ARCHIVE"
