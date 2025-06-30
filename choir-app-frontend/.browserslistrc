@@ -1,0 +1,15 @@
+# Browser compatibility target list
+# See https://github.com/browserslist/browserslist#queries
+
+[production]
+>0.2%
+not dead
+not op_mini all
+
+[development]
+last 1 Chrome version
+last 1 Firefox version
+last 2 Edge major versions
+last 2 Safari major versions
+last 2 iOS major versions
+Firefox ESR
