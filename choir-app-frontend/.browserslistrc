@@ -1,12 +1,6 @@
-# Browser compatibility target list
-# See https://github.com/browserslist/browserslist#queries
+# This file is used by the build system to adjust CSS and JS output
+# See https://angular.io/guide/browser-support for the supported list.
 
-[production]
->0.2%
-not dead
-not op_mini all
-
-[development]
 last 1 Chrome version
 last 1 Firefox version
 last 2 Edge major versions
