@@ -273,3 +273,42 @@ exports.delete = async (req, res) => {
         res.status(500).send({ message: err.message || 'Could not delete event.' });
     }
 };
+
+/**
+ * Delete multiple events by date range and optional type.
+ * Query params:
+ *  - start: ISO date string (inclusive)
+ *  - end: ISO date string (inclusive)
+ *  - type: optional event type (REHEARSAL or SERVICE)
+ */
+exports.deleteRange = async (req, res) => {
+    const { start, end, type } = req.query;
+    if (!start || !end) {
+        return res.status(400).send({ message: 'start and end parameters required.' });
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (isNaN(startDate) || isNaN(endDate)) {
+        return res.status(400).send({ message: 'Invalid start or end date.' });
+    }
+
+    const where = {
+        choirId: req.activeChoirId,
+        date: { [Op.between]: [startDate, endDate] }
+    };
+    if (type) {
+        const upper = String(type).toUpperCase();
+        if (!['REHEARSAL', 'SERVICE'].includes(upper)) {
+            return res.status(400).send({ message: 'Invalid event type.' });
+        }
+        where.type = upper;
+    }
+
+    try {
+        const num = await Event.destroy({ where });
+        res.send({ message: `${num} events deleted.` });
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not delete events.' });
+    }
+};

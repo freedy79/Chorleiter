@@ -118,27 +118,30 @@ exports.getImportStatus = (req, res) => {
 
 // ------------------ EVENT CSV IMPORT ------------------
 
-const findPieceByReferenceOrTitle = async (reference, title) => {
-    let piece = null;
-    if (reference) {
-        const match = reference.match(/^(\D+)(\d+)$/);
-        if (match) {
-            const prefix = match[1];
-            const num = match[2];
-            piece = await db.piece.findOne({
-                include: [{
-                    model: db.collection,
-                    as: 'collections',
-                    where: { prefix },
-                    through: { where: { numberInCollection: num } }
-                }]
-            });
-        }
+const findPieceByReference = async (reference) => {
+    if (!reference) return null;
+    const match = reference.match(/^(\D+)(\d+)$/);
+    if (!match) return null;
+
+    const prefix = match[1];
+    const num = match[2];
+    return await db.piece.findOne({
+        include: [{
+            model: db.collection,
+            as: 'collections',
+            where: { prefix },
+            through: { where: { numberInCollection: num } }
+        }]
+    });
+};
+
+const parseGermanDate = (str) => {
+    const match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (match) {
+        const [, d, m, y] = match;
+        return new Date(Number(y), Number(m) - 1, Number(d));
     }
-    if (!piece && title) {
-        piece = await db.piece.findOne({ where: { title } });
-    }
-    return piece;
+    return new Date(str);
 };
 
 const processEventImport = async (job, eventType, records, choirId, userId) => {
@@ -149,19 +152,18 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
     for (const [index, record] of records.entries()) {
         try {
             const reference = record.referenz || record.reference;
-            const title = record.titel || record.title;
             const dateStr = record.datum || record.date;
 
-            if (!title || !dateStr) {
+            if (!reference || !dateStr) {
                 throw new Error(`Missing data in row ${index + 1}`);
             }
 
-            const piece = await findPieceByReferenceOrTitle(reference, title);
+            const piece = await findPieceByReference(reference);
             if (!piece) {
-                throw new Error(`Piece not found for "${title}"`);
+                throw new Error(`Piece not found for reference "${reference}"`);
             }
 
-            const targetDate = new Date(dateStr);
+            const targetDate = parseGermanDate(dateStr);
             const start = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
             const end = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
 
@@ -175,7 +177,7 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
 
             if (!event) {
                 event = await db.event.create({
-                    date: dateStr,
+                    date: targetDate,
                     type: eventType,
                     choirId,
                     directorId: userId
