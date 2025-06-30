@@ -41,7 +41,7 @@ export class PieceDialogComponent implements OnInit {
     public categories$!: Observable<Category[]>;
     isEditMode = false;
     isAdmin = false;
-    activeSection: 'general' | 'composer' | 'files' = 'general';
+    activeSection: 'general' | 'text' | 'files' = 'general';
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
@@ -198,13 +198,9 @@ export class PieceDialogComponent implements OnInit {
     isGeneralStepInvalid(): boolean {
         return (
             this.pieceForm.get('title')?.invalid ||
-            this.pieceForm.get('authorId')?.invalid ||
+            this.pieceForm.get('composerId')?.invalid ||
             false
         );
-    }
-
-    isComposerStepInvalid(): boolean {
-        return this.pieceForm.get('composerId')?.invalid || false;
     }
 
     isFilesStepInvalid(): boolean {
