@@ -41,6 +41,7 @@ export class PieceDialogComponent implements OnInit {
     public categories$!: Observable<Category[]>;
     isEditMode = false;
     isAdmin = false;
+    activeSection: 'general' | 'composer' | 'files' = 'general';
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
