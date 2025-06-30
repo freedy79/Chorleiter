@@ -8,6 +8,7 @@ describe('ThemeService', () => {
   let service: ThemeService;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         { provide: UserPreferencesService, useValue: { getPreference: () => null, update: () => of({}) } }
@@ -18,5 +19,11 @@ describe('ThemeService', () => {
 
   it('should be created', () => {
     expect(service).toBeTruthy();
+  });
+
+  it('should load theme from localStorage on init', () => {
+    localStorage.setItem('theme', 'dark');
+    service.initializeTheme();
+    expect(service.getCurrentTheme()).toBe('dark');
   });
 });
