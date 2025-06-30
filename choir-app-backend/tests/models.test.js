@@ -17,7 +17,7 @@ const db = require('../src/models');
       }
     }
 
-    checkFields(db.user, ['email', 'role', 'lastDonation']);
+    checkFields(db.user, ['email', 'role', 'lastDonation', 'preferences']);
     checkFields(db.choir, ['name']);
     checkFields(db.piece, ['title']);
     checkFields(db.event, ['date', 'type']);

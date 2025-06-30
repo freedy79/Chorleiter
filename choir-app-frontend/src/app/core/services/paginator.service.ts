@@ -1,18 +1,21 @@
 import { Injectable } from '@angular/core';
+import { UserPreferencesService } from './user-preferences.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaginatorService {
-  private readonly KEY_PREFIX = 'paginator-page-size-';
+  constructor(private prefs: UserPreferencesService) {}
 
   getPageSize(key: string, defaultSize: number): number {
-    const stored = localStorage.getItem(this.KEY_PREFIX + key);
-    const val = stored ? parseInt(stored, 10) : NaN;
-    return isNaN(val) ? defaultSize : val;
+    const map = this.prefs.getPreference('pageSizes') || {};
+    const val = map[key];
+    return val ? val : defaultSize;
   }
 
   setPageSize(key: string, size: number): void {
-    localStorage.setItem(this.KEY_PREFIX + key, size.toString());
+    const map = { ...(this.prefs.getPreference('pageSizes') || {}) };
+    map[key] = size;
+    this.prefs.update({ pageSizes: map }).subscribe();
   }
 }
