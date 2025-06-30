@@ -47,10 +47,16 @@ exports.overview = async (req, res) => {
             where: { choirId, status: 'CAN_BE_SUNG' }
         });
 
+        // Count pieces currently in rehearsal
+        const rehearsalCount = await db.choir_repertoire.count({
+            where: { choirId, status: 'IN_REHEARSAL' }
+        });
+
         res.status(200).send({
             topServicePieces,
             topRehearsalPieces,
-            singableCount
+            singableCount,
+            rehearsalCount
         });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Error generating statistics.' });
