@@ -6,7 +6,7 @@ const Collection = db.collection;
 const CollectionPiece = db.collection_piece;
 const User = db.user;
 const logger = require("../config/logger");
-const { Op } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -47,16 +47,13 @@ exports.create = async (req, res) => {
 
     try {
         const targetDate = new Date(date);
-        const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
-        const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+        const dateOnly = targetDate.toISOString().split('T')[0];
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
         const eventsSameDay = await db.event.findAll({
             where: {
                 choirId: choirId,
-                date: {
-                    [Op.between]: [startOfDay, endOfDay]
-                }
+                [Op.and]: [where(fn('date', col('date')), dateOnly)]
             }
         });
 

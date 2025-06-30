@@ -147,7 +147,7 @@ const parseGermanDate = (str) => {
 const processEventImport = async (job, eventType, records, choirId, userId) => {
     jobs.updateJobProgress(job.id, 0, records.length);
     let processed = 0;
-    const { Op } = require('sequelize');
+    const { Op, fn, col, where } = require('sequelize');
 
     for (const [index, record] of records.entries()) {
         try {
@@ -164,14 +164,13 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
             }
 
             const targetDate = parseGermanDate(dateStr);
-            const start = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
-            const end = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+            const dateOnly = targetDate.toISOString().split('T')[0];
 
             let event = await db.event.findOne({
                 where: {
                     choirId,
                     type: eventType,
-                    date: { [Op.between]: [start, end] }
+                    [Op.and]: [where(fn('date', col('date')), dateOnly)]
                 }
             });
 
@@ -235,4 +234,9 @@ exports.startImportEvents = async (req, res) => {
     });
 
     res.status(202).send({ jobId });
+};
+
+// Expose internal helpers for testing
+exports._test = {
+    processEventImport
 };
