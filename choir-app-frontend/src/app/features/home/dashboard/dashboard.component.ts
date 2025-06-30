@@ -18,6 +18,7 @@ import { PieceChange } from '@core/models/piece-change';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-dashboard',
@@ -68,7 +69,9 @@ export class DashboardComponent implements OnInit {
     // Willkommenstext ggf. anzeigen
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
       if (!user) return;
-      const load$ = this.prefs.isLoaded() ? of(null) : this.prefs.load();
+      const load$: Observable<UserPreferences | null> = this.prefs.isLoaded()
+        ? of(null)
+        : this.prefs.load();
       load$.pipe(take(1)).subscribe(() => {
         if (this.help.shouldShowHelp(user)) {
           const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
