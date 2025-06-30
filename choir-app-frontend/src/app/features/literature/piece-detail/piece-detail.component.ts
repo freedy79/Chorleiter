@@ -1,14 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
+import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
+import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ApiService } from '@core/services/api.service';
 import { Piece } from '@core/models/piece';
 
 @Component({
   selector: 'app-piece-detail',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [
+    CommonModule,
+    MaterialModule,
+    RouterModule,
+    EventTypeLabelPipe,
+    PieceStatusLabelPipe
+  ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']
 })
