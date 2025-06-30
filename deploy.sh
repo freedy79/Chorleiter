@@ -30,12 +30,17 @@ if [[ -z "$PASSWORD" ]]; then
     echo
 fi
 
-SSH_CMD="ssh"
-SCP_CMD="scp"
+CONTROL_PATH="${HOME}/.chorleiter_ssh_control"
+SSH_OPTIONS="-o ControlMaster=auto -o ControlPath=${CONTROL_PATH} -o ControlPersist=10m -o StrictHostKeyChecking=no"
+SSH_CMD="ssh $SSH_OPTIONS"
+SCP_CMD="scp $SSH_OPTIONS"
 if command -v sshpass >/dev/null; then
-    SSH_CMD="sshpass -p \"$PASSWORD\" ssh -o StrictHostKeyChecking=no"
-    SCP_CMD="sshpass -p \"$PASSWORD\" scp"
+    SSH_CMD="sshpass -p \"$PASSWORD\" ssh $SSH_OPTIONS"
+    SCP_CMD="sshpass -p \"$PASSWORD\" scp $SSH_OPTIONS"
 fi
+
+# Establish master connection so the password is only requested once
+$SSH_CMD $REMOTE "true"
 
 # Create temporary archives
 BACKEND_ARCHIVE=$(mktemp --suffix=.tar.gz)
@@ -63,3 +68,10 @@ $SSH_CMD $REMOTE "pm2 restart chorleiter-api"
 rm -f "$BACKEND_ARCHIVE" "$FRONTEND_ARCHIVE"
 
 echo "Deployment completed."
+
+# Close the persistent SSH connection
+if command -v sshpass >/dev/null; then
+    sshpass -p "$PASSWORD" ssh $SSH_OPTIONS -O exit $REMOTE
+else
+    ssh $SSH_OPTIONS -O exit $REMOTE
+fi

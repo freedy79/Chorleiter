@@ -31,16 +31,19 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     $sshUseSshpass = $true
 }
 
+$ControlPath = "$env:USERPROFILE\.chorleiter_ssh_control"
+$SshOptions = "-o ControlMaster=auto -o ControlPath=$ControlPath -o ControlPersist=10m -o StrictHostKeyChecking=no"
+
 function Invoke-Ssh {
     param(
         [string]$Command
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh -o StrictHostKeyChecking=no $Remote $Command
+        & sshpass -p "$Password" ssh $SshOptions $Remote $Command
     }
     else {
-        & ssh $Remote $Command
+        & ssh $SshOptions $Remote $Command
     }
 }
 
@@ -51,12 +54,15 @@ function Invoke-Scp {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp $Source $Destination
+        & sshpass -p "$Password" scp $SshOptions $Source $Destination
     }
     else {
-        & scp $Source $Destination
+        & scp $SshOptions $Source $Destination
     }
 }
+
+# Establish master connection so the password is requested only once
+Invoke-Ssh "true"
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
@@ -83,3 +89,11 @@ Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
 
 Write-Host "Deployment completed."
+
+# Close the persistent SSH connection
+if ($sshUseSshpass) {
+    & sshpass -p "$Password" ssh $SshOptions -O exit $Remote
+}
+else {
+    & ssh $SshOptions -O exit $Remote
+}

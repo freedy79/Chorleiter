@@ -42,3 +42,11 @@ npm install --save-dev compression-webpack-plugin @angular-builders/custom-webpa
 
 The generated `.gz` or `.br` files can then be served by a web server that
 supports content negotiation for pre-compressed assets.
+
+## Deployment
+
+Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
+and frontend via SSH. Both scripts establish a persistent SSH connection so the
+password is only requested once if `sshpass` is not installed. Optionally create
+a file named `.chorleiter_deploy_pw` in your home directory containing the SSH
+password to avoid interactive prompts altogether.
