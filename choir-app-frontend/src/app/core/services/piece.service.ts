@@ -15,7 +15,7 @@ export class PieceService {
   constructor(private http: HttpClient) {}
 
   getMyRepertoire(
-    categoryId?: number,
+    categoryIds?: number[],
     collectionId?: number,
     sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
     page = 1,
@@ -25,7 +25,9 @@ export class PieceService {
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
-    if (categoryId) params = params.set('categoryId', categoryId.toString());
+    if (categoryIds && categoryIds.length > 0) {
+      params = params.set('categoryIds', categoryIds.join(','));
+    }
     if (collectionId) params = params.set('collectionId', collectionId.toString());
     if (sortBy) params = params.set('sortBy', sortBy);
     params = params.set('page', page.toString());
