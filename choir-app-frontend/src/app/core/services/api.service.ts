@@ -39,11 +39,11 @@ export class ApiService {
    * Gets the list of pieces for the currently logged-in choir, including their specific status.
    * Can be filtered by composer or category.
    * @param composerId - Optional ID of the composer to filter by.
-   * @param categoryId - Optional ID of the category (Rubrik) to filter by.
+   * @param categoryIds - Optional list of category IDs to filter by.
    */
   getMyRepertoire(
     composerId?: number,
-    categoryId?: number,
+    categoryIds?: number[],
     collectionId?: number,
     sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
     page: number = 1,
@@ -54,7 +54,7 @@ export class ApiService {
   ): Observable<{ data: Piece[]; total: number }> {
     // composerId not yet supported by PieceService, pass as part of search/filter when implemented
     return this.pieceService.getMyRepertoire(
-      categoryId,
+      categoryIds,
       collectionId,
       sortBy,
       page,

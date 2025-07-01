@@ -73,7 +73,14 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    const { composerId, categoryId, categoryIds, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    let parsedCategoryIds = [];
+    if (categoryIds) {
+        parsedCategoryIds = Array.isArray(categoryIds) ? categoryIds : String(categoryIds).split(',');
+    } else if (categoryId) {
+        parsedCategoryIds = [categoryId];
+    }
+    parsedCategoryIds = parsedCategoryIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 25;
     const offset = (pageNum - 1) * limitNum;
@@ -100,14 +107,11 @@ exports.findMyRepertoire = async (req, res) => {
         // Beginnen Sie mit der Bedingung, nur Stücke aus dem Repertoire zu holen.
         const whereCondition = {
             id: { [Op.in]: pieceIdsInRepertoire },
-            ...(composerId && { composerId: composerId }),
-            ...(categoryId && { categoryId: categoryId }),
+            ...(composerId && { composerId }),
+            ...(parsedCategoryIds.length && { categoryId: { [Op.in]: parsedCategoryIds } }),
             ...(voicing && { voicing: { [Op.iLike]: `%${voicing}%` } }), // Case-insensitive search
-            ...(key && { key: key }),
+            ...(key && { key }),
         };
-        // Fügen Sie die optionalen Filter hinzu.
-        if (composerId) whereCondition.composerId = composerId;
-        if (categoryId) whereCondition.categoryId = categoryId;
 
         if (search) {
             const tokens = parseSearchTokens(search);

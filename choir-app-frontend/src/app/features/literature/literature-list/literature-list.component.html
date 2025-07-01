@@ -17,8 +17,7 @@
       </mat-form-field>
       <mat-form-field appearance="outline">
         <mat-label>Category</mat-label>
-        <mat-select [value]="filterByCategoryId$.value" (selectionChange)="onCategoryFilterChange($event.value)">
-          <mat-option [value]="null">All</mat-option>
+        <mat-select multiple [value]="filterByCategoryIds$.value" (selectionChange)="onCategoryFilterChange($event.value)">
           <mat-option *ngFor="let cat of categories$ | async" [value]="cat.id">{{cat.name}}</mat-option>
         </mat-select>
       </mat-form-field>
