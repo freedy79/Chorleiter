@@ -8,7 +8,7 @@ import { MaterialModule } from '@modules/material.module';
 import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { ApiService } from 'src/app/core/services/api.service';
-import { InviteUserDialogComponent } from '../../choir-management/invite-user-dialog/invite-user-dialog.component';
+import { InviteUserDialogComponent } from '../../../choir-management/invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
