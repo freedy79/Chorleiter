@@ -1,5 +1,6 @@
 const db = require("../models");
 const { Op, literal } = require("sequelize");
+const logger = require("../config/logger");
 
 function parseSearchTokens(search) {
     const regex = /"([^"]+)"|([^"\s]+)/g;
@@ -233,9 +234,13 @@ exports.findMyRepertoire = async (req, res) => {
         res.status(200).send({ data: results, total: count });
 
     } catch (err) {
-        // Loggen Sie den Fehler im Backend für einfaches Debugging.
-        console.error("ERROR finding repertoire:", err);
-        res.status(500).send({ message: "An error occurred while retrieving the repertoire." });
+        // Verbessertes Logging für die Fehlersuche
+        logger.error(`ERROR finding repertoire for choir ${req.activeChoirId}: ${err.message}`);
+        logger.error(err.stack);
+        res.status(500).send({
+            message: "An error occurred while retrieving the repertoire.",
+            details: err.message
+        });
     }
 };
 
