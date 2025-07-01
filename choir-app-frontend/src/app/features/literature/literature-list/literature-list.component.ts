@@ -21,6 +21,7 @@ import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
 import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
+import { ErrorService } from '@core/services/error.service';
 
 @Component({
   selector: 'app-literature-list',
@@ -85,7 +86,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
-    private paginatorService: PaginatorService
+    private paginatorService: PaginatorService,
+    private errorService: ErrorService
   ) {
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   }
@@ -146,7 +148,10 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
             this.searchControl.value || undefined
           ).pipe(
-            catchError(() => {
+            catchError((err) => {
+              const msg = err.error?.message || 'Could not load repertoire.';
+              console.error('Failed to load repertoire list', err);
+              this.errorService.setError({ message: msg, status: err.status });
               this.snackBar.open('Could not load repertoire.', 'Close', { duration: 5000 });
               return of({ data: [], total: 0 });
             })
@@ -322,6 +327,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       },
       error: (err) => {
         console.error('Failed to update status', err);
+        const msg = err.error?.message || 'Could not update status.';
+        this.errorService.setError({ message: msg, status: err.status });
         this.snackBar.open('Error: Could not update status.', 'Close', { duration: 5000 });
         // Optional: you might want to refresh the list here to revert the visual change
         this.refresh$.next();
