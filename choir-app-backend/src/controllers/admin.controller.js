@@ -196,3 +196,32 @@ exports.getLoginAttempts = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+// Recalculate repertoire statuses for all choirs based on past events
+exports.recalculatePieceStatuses = async (req, res) => {
+    try {
+        await db.sequelize.query(`
+            UPDATE "choir_repertoires" cr
+            SET status = CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'SERVICE'
+                ) THEN 'CAN_BE_SUNG'
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'REHEARSAL'
+                ) THEN 'IN_REHEARSAL'
+                ELSE 'NOT_READY'
+            END
+        `);
+        res.status(200).send({ message: 'Piece statuses recalculated.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};

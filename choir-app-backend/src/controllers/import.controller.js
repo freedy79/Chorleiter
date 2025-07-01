@@ -193,6 +193,31 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
                 jobs.updateJobLog(job.id, `Piece "${piece.title}" already in event ${dateStr}.`);
             }
 
+            // Update repertoire status according to event type
+            if (eventType === 'REHEARSAL') {
+                await db.choir_repertoire.update(
+                    { status: 'IN_REHEARSAL' },
+                    {
+                        where: {
+                            choirId,
+                            pieceId: piece.id,
+                            status: 'NOT_READY'
+                        }
+                    }
+                );
+            } else if (eventType === 'SERVICE') {
+                await db.choir_repertoire.update(
+                    { status: 'CAN_BE_SUNG' },
+                    {
+                        where: {
+                            choirId,
+                            pieceId: piece.id,
+                            status: { [Op.in]: ['NOT_READY', 'IN_REHEARSAL'] }
+                        }
+                    }
+                );
+            }
+
             processed++;
         } catch (err) {
             jobs.updateJobLog(job.id, `Error on row ${index + 1}: ${err.message}`);
