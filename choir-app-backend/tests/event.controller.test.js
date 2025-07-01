@@ -39,7 +39,25 @@ const controller = require('../src/controllers/event.controller');
     await controller.deleteRange(delReq, res);
     assert.strictEqual(res.data.message.includes('events deleted'), true);
 
-    console.log('event.controller create and deleteRange tests passed');
+    // --- Update tests ---
+    // create new event
+    await controller.create({ ...baseReq, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'A', pieceIds: [] } }, res);
+    const updateId = res.data.event.id;
+    const initialUpdatedAt = new Date(res.data.event.updatedAt);
+
+    // call update with identical data
+    await controller.update({ ...baseReq, params: { id: updateId }, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'A', pieceIds: [] } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const afterNoChange = await db.event.findByPk(updateId);
+    assert.strictEqual(afterNoChange.updatedAt.getTime(), initialUpdatedAt.getTime());
+
+    // update with changed notes
+    await controller.update({ ...baseReq, params: { id: updateId }, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'B', pieceIds: [] } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const afterChange = await db.event.findByPk(updateId);
+    assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
+
+    console.log('event.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

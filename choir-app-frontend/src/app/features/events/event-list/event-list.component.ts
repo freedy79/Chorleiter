@@ -106,9 +106,22 @@ export class EventListComponent implements OnInit, AfterViewInit {
       const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', data: { event: fullEvent } });
       dialogRef.afterClosed().subscribe(result => {
         if (result && result.id) {
+          const originalPieces = fullEvent.pieces.map(p => p.id).sort();
+          const newPieces = [...result.pieceIds].sort();
+          const changed =
+            new Date(result.date).getTime() !== new Date(fullEvent.date).getTime() ||
+            result.type !== fullEvent.type ||
+            (result.notes || '') !== (fullEvent.notes || '') ||
+            JSON.stringify(originalPieces) !== JSON.stringify(newPieces);
+
+          if (!changed) {
+            this.snackBar.open('Keine Änderungen vorgenommen.', 'OK', { duration: 3000 });
+            return;
+          }
+
           this.apiService.updateEvent(result.id, result).subscribe({
-          next: () => { this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000 }); this.loadEvents(); },
-          error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000 })
+            next: () => { this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000 }); this.loadEvents(); },
+            error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000 })
           });
         }
       });
