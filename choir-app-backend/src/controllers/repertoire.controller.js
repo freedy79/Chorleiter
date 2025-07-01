@@ -115,11 +115,20 @@ exports.findMyRepertoire = async (req, res) => {
 
         if (search) {
             const tokens = parseSearchTokens(search);
+            const refSub = `(
+                        SELECT c.prefix || cp."numberInCollection"
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
+                        LIMIT 1
+                    )`;
             whereCondition[Op.and] = tokens.map(t => ({
                 [Op.or]: [
                     { title: { [Op.iLike]: `%${t}%` } },
                     { '$composer.name$': { [Op.iLike]: `%${t}%` } },
-                    { '$category.name$': { [Op.iLike]: `%${t}%` } }
+                    { '$category.name$': { [Op.iLike]: `%${t}%` } },
+                    literal(`${refSub} ILIKE '%${t}%'`)
                 ]
             }));
         }
