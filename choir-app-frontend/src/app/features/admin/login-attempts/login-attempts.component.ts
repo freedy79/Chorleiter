@@ -17,7 +17,7 @@ import { UserDialogComponent } from '../manage-users/user-dialog/user-dialog.com
 })
 export class LoginAttemptsComponent implements OnInit {
   attempts: LoginAttempt[] = [];
-  displayedColumns = ['email', 'success', 'ipAddress', 'createdAt'];
+  displayedColumns = ['email', 'success', 'ipAddress', 'userAgent', 'createdAt'];
   dataSource = new MatTableDataSource<LoginAttempt>();
 
   constructor(private api: ApiService, private dialog: MatDialog, private snack: MatSnackBar) {}
