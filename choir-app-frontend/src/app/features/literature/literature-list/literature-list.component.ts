@@ -133,7 +133,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       } catch { }
     }
 
-    const load$ = this.prefs.isLoaded() ? of(null) : this.prefs.load();
+    const load$: Observable<UserPreferences | null> =
+      this.prefs.isLoaded() ? of(null) : this.prefs.load();
     load$.pipe(take(1)).subscribe(() => {
       const cols = this.prefs.getPreference('repertoireColumns') || {};
       this.showLastSung = !!cols.lastSung;
