@@ -8,7 +8,7 @@ import { MaterialModule } from '@modules/material.module';
 import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { ApiService } from 'src/app/core/services/api.service';
-import { InviteUserDialogComponent } from '../../../choir-management/invite-user-dialog/invite-user-dialog.component';
+import { AddMemberDialogComponent } from '../add-member-dialog/add-member-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
@@ -53,7 +53,7 @@ export class ChoirDialogComponent implements OnInit {
 
   openInviteDialog(): void {
     if (!this.data?.id) return;
-    const ref = this.dialog.open(InviteUserDialogComponent, { width: '450px' });
+    const ref = this.dialog.open(AddMemberDialogComponent, { width: '450px' });
     ref.afterClosed().subscribe(result => {
       if (result && result.email && result.role) {
         this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.role).subscribe({
