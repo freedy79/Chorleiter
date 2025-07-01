@@ -15,7 +15,7 @@ router.get("/authors", controller.getAll(db.author));
 // ...
 
 // Routen für Chöre
-router.get("/choirs", controller.getAll(db.choir));
+router.get("/choirs", controller.getAllChoirs);
 router.post("/choirs", controller.create(db.choir));
 router.put("/choirs/:id", controller.update(db.choir));
 router.delete("/choirs/:id", controller.remove(db.choir));
