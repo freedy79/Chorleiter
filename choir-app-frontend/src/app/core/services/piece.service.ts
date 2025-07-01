@@ -28,9 +28,10 @@ export class PieceService {
     if (categoryId) params = params.set('categoryId', categoryId.toString());
     if (collectionId) params = params.set('collectionId', collectionId.toString());
     if (sortBy) params = params.set('sortBy', sortBy);
-    params = params.set('page', page);
-    params = params.set('limit', limit);
-    params = params.set('sortDir', sortDir);
+    params = params.set('page', page.toString());
+    params = params.set('limit', limit.toString());
+    // Avoid sending empty sortDir which causes an empty query parameter
+    params = params.set('sortDir', sortDir || 'ASC');
     if (status) params = params.set('status', status);
     if (search) params = params.set('search', search);
 
