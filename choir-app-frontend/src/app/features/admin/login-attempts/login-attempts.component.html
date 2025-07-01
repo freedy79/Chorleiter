@@ -16,6 +16,11 @@
     <td mat-cell *matCellDef="let element">{{ element.ipAddress }}</td>
   </ng-container>
 
+  <ng-container matColumnDef="userAgent">
+    <th mat-header-cell *matHeaderCellDef>Browser</th>
+    <td mat-cell *matCellDef="let element">{{ element.userAgent }}</td>
+  </ng-container>
+
   <ng-container matColumnDef="createdAt">
     <th mat-header-cell *matHeaderCellDef>Datum</th>
     <td mat-cell *matCellDef="let element">{{ element.createdAt | date:'short' }}</td>

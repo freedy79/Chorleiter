@@ -63,6 +63,7 @@ exports.signin = async (req, res) => {
     logger.info("Sign-in request received:", req.body);
     const email = req.body.email;
     const ipAddress = req.ip;
+    const userAgent = req.get('User-Agent');
     try {
     if (req.body.email === 'demo@nak-chorleiter.de') {
         await ensureDemoAccount();
@@ -74,18 +75,18 @@ exports.signin = async (req, res) => {
     });
 
     if (!user || !user.choirs || user.choirs.length === 0) {
-      await LoginAttempt.create({ email, success: false, ipAddress });
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
       return res.status(404).send({ message: "User not found or not assigned to any choir." });
     }
 
     if (!user.password) {
-      await LoginAttempt.create({ email, success: false, ipAddress });
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
       return res.status(403).send({ message: "Registration not completed." });
     }
 
     const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
     if (!passwordIsValid) {
-      await LoginAttempt.create({ email, success: false, ipAddress });
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
       return res.status(401).send({ message: "Invalid Password!" });
     }
 
@@ -105,7 +106,7 @@ exports.signin = async (req, res) => {
         { expiresIn: tokenExpiresIn }
     );
 
-    await LoginAttempt.create({ email, success: true, ipAddress });
+    await LoginAttempt.create({ email, success: true, ipAddress, userAgent });
     res.status(200).send({
       id: user.id,
       name: user.name,
@@ -117,7 +118,7 @@ exports.signin = async (req, res) => {
       availableChoirs: user.choirs
     });
   } catch (error) {
-    await LoginAttempt.create({ email, success: false, ipAddress }).catch(() => {});
+    await LoginAttempt.create({ email, success: false, ipAddress, userAgent }).catch(() => {});
     res.status(500).send({ message: error.message });
   }
 };
