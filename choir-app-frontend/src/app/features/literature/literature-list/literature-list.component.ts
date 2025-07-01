@@ -106,12 +106,23 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       try {
         const s = JSON.parse(saved);
         if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
-        if (s.categoryIds !== undefined) this.filterByCategoryIds$.next(s.categoryIds);
-        else if (s.categoryId !== undefined && s.categoryId !== null) this.filterByCategoryIds$.next([s.categoryId]);
+        if (s.categoryIds !== undefined) {
+          this.filterByCategoryIds$.next(s.categoryIds);
+        } else if ((s as any).categoryId !== undefined && (s as any).categoryId !== null) {
+          this.filterByCategoryIds$.next([(s as any).categoryId]);
+        }
         if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
         if (s.status !== undefined) this.status$.next(s.status);
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
-        if (s.collectionId || (s.categoryIds && s.categoryIds.length) || s.categoryId || s.onlySingable || s.status) this.filtersExpanded = true;
+        if (
+          s.collectionId ||
+          (s.categoryIds && s.categoryIds.length) ||
+          (s as any).categoryId ||
+          s.onlySingable ||
+          s.status
+        ) {
+          this.filtersExpanded = true;
+        }
       } catch { }
     }
   }
@@ -388,14 +399,27 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   private applyPreset(preset: RepertoireFilter): void {
     this.filterByCollectionId$.next(preset.data.collectionId ?? null);
-    if (preset.data.categoryIds !== undefined) this.filterByCategoryIds$.next(preset.data.categoryIds);
-    else if (preset.data.categoryId !== undefined && preset.data.categoryId !== null) this.filterByCategoryIds$.next([preset.data.categoryId]);
+    if (preset.data.categoryIds !== undefined) {
+      this.filterByCategoryIds$.next(preset.data.categoryIds);
+    } else {
+      const singleId = (preset.data as any).categoryId;
+      if (singleId !== undefined && singleId !== null) {
+        this.filterByCategoryIds$.next([singleId]);
+      }
+    }
     this.onlySingable$.next(!!preset.data.onlySingable);
     if (preset.data.status !== undefined) {
       this.status$.next(preset.data.status);
     }
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
-    this.filtersExpanded = !!(preset.data.collectionId || (preset.data.categoryIds && preset.data.categoryIds.length) || preset.data.categoryId || preset.data.onlySingable || preset.data.status);
+    const singleId = (preset.data as any).categoryId;
+    this.filtersExpanded = !!(
+      preset.data.collectionId ||
+      (preset.data.categoryIds && preset.data.categoryIds.length) ||
+      singleId ||
+      preset.data.onlySingable ||
+      preset.data.status
+    );
     if (this._paginator) {
       this._paginator.firstPage();
     }
