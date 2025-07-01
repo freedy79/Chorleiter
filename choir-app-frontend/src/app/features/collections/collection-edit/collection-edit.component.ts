@@ -274,7 +274,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 });
             },
             error: (err) => {
-                this.snackBar.open(`Error: ${err.message}`, 'Close', {
+                this.snackBar.open(`Fehler: ${err.message}`, 'Schließen', {
                     duration: 5000,
                     verticalPosition: 'top',
                 });

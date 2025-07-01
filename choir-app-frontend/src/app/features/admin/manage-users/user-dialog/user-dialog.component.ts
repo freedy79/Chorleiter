@@ -14,14 +14,14 @@ import { User } from 'src/app/core/models/user';
 })
 export class UserDialogComponent {
   form: FormGroup;
-  title = 'Add User';
+  title = 'Benutzer hinzufügen';
 
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<UserDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: User | null
   ) {
-    this.title = data ? 'Edit User' : 'Add User';
+    this.title = data ? 'Benutzer bearbeiten' : 'Benutzer hinzufügen';
     this.form = this.fb.group({
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
