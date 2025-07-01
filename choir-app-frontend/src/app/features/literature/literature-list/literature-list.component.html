@@ -5,21 +5,21 @@
     </button>
     <div class="filter-controls">
       <mat-form-field appearance="outline">
-        <mat-label>Search</mat-label>
+        <mat-label>Suche</mat-label>
         <input matInput [formControl]="searchControl" placeholder="Repertoire durchsuchen" />
-        <mat-hint>Use quotes for phrases</mat-hint>
+        <mat-hint>Anführungszeichen für Wortgruppen verwenden</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Collection</mat-label>
+        <mat-label>Sammlung</mat-label>
         <mat-select [value]="filterByCollectionId$.value" (selectionChange)="onCollectionFilterChange($event.value)">
-          <mat-option [value]="null">All</mat-option>
+          <mat-option [value]="null">Alle</mat-option>
           <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
             {{ collection.title }}
           </mat-option>
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Category</mat-label>
+        <mat-label>Rubrik</mat-label>
         <mat-select multiple [value]="filterByCategoryIds$.value" (selectionChange)="onCategoryFilterChange($event.value)">
           <mat-option *ngFor="let cat of categories$ | async" [value]="cat.id">{{cat.name}}</mat-option>
         </mat-select>
@@ -42,7 +42,7 @@
   <mat-drawer-content>
     <div class="page">
       <div class="header-container">
-        <button mat-icon-button (click)="drawer.toggle()" aria-label="Toggle filters">
+        <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
           <mat-icon>filter_list</mat-icon>
         </button>
         <mat-form-field appearance="outline" class="preset-select">

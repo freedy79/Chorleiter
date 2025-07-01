@@ -79,7 +79,7 @@ export class CollectionListComponent implements OnInit {
         this.loadCollections();
       },
       error: (err) => {
-        this.snackBar.open(`Fehler beim Hinzufügen der Sammlung: ${err.message}`, 'Close', {
+        this.snackBar.open(`Fehler beim Hinzufügen der Sammlung: ${err.message}`, 'Schließen', {
           duration: 5000,
           verticalPosition: 'top'
         });

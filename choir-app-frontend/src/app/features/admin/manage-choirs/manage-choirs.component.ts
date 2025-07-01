@@ -53,7 +53,7 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   deleteChoir(choir: Choir): void {
-    if (confirm('Delete choir?')) {
+    if (confirm('Chor löschen?')) {
       this.api.deleteChoir(choir.id).subscribe(() => this.loadChoirs());
     }
   }

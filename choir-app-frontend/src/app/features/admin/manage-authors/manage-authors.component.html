@@ -1,5 +1,5 @@
 <div class="toolbar">
-  <button mat-flat-button color="primary" (click)="addAuthor()">Add Author</button>
+  <button mat-flat-button color="primary" (click)="addAuthor()">Dichter hinzufügen</button>
 </div>
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
@@ -9,12 +9,12 @@
   </ng-container>
 
   <ng-container matColumnDef="birthYear">
-    <th mat-header-cell *matHeaderCellDef>Birth</th>
+    <th mat-header-cell *matHeaderCellDef>Geburt</th>
     <td mat-cell *matCellDef="let element">{{ element.birthYear }}</td>
   </ng-container>
 
   <ng-container matColumnDef="deathYear">
-    <th mat-header-cell *matHeaderCellDef>Death</th>
+    <th mat-header-cell *matHeaderCellDef>Tod</th>
     <td mat-cell *matCellDef="let element">{{ element.deathYear }}</td>
   </ng-container>
 

@@ -102,7 +102,7 @@ export class ManageComposersComponent implements OnInit, AfterViewInit {
 
   deleteComposer(composer: Composer): void {
     if (!composer.canDelete) return;
-    if (confirm('Delete composer?')) {
+    if (confirm('Komponist löschen?')) {
       this.adminApiService.deleteComposer(composer.id).subscribe(() => this.loadComposers());
     }
   }

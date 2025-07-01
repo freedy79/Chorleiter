@@ -79,7 +79,7 @@ export class ManageChoirComponent implements OnInit {
         this.snackBar.open('Choir details updated successfully!', 'OK', { duration: 3000 });
         this.choirForm.markAsPristine(); // Markiert das Formular als "unverändert"
       },
-      error: (err) => this.snackBar.open('Error updating choir details.', 'Close')
+      error: (err) => this.snackBar.open('Fehler beim Aktualisieren der Chordaten.', 'Schließen')
     });
   }
 
@@ -98,7 +98,7 @@ export class ManageChoirComponent implements OnInit {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
-          error: (err) => this.snackBar.open(`Error inviting user: ${err.error.message}`, 'Close')
+          error: (err) => this.snackBar.open(`Fehler beim Einladen: ${err.error.message}`, 'Schließen')
         });
       }
     });
@@ -109,8 +109,8 @@ export class ManageChoirComponent implements OnInit {
       return;
     }
     const dialogData: ConfirmDialogData = {
-      title: 'Remove Member?',
-      message: `Are you sure you want to remove ${user.name} (${user.email}) from this choir? This cannot be undone.`
+      title: 'Mitglied entfernen?',
+      message: `Soll ${user.name} (${user.email}) aus diesem Chor entfernt werden? Dies kann nicht rückgängig gemacht werden.`
     };
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
