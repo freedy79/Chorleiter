@@ -2,6 +2,14 @@
 
 Management of choirs for directors
 
+## Setup
+
+Before starting the backend, install its dependencies:
+
+```bash
+npm install --prefix choir-app-backend
+```
+
 ## Tests
 
 Run frontend unit tests with:

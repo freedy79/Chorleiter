@@ -171,8 +171,6 @@ exports.getUserByEmail = async (req, res) => {
     }
 };
 
-const crypto = require('crypto');
-const emailService = require('../services/email.service');
 
 exports.sendPasswordReset = async (req, res) => {
     const { id } = req.params;
