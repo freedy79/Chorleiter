@@ -138,6 +138,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           if (cached) {
             return of({ data: cached, total: this.totalPieces });
           }
+          const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
           return this.pieceService.getMyRepertoire(
             this.filterByCategoryId$.value ?? undefined,
             this.filterByCollectionId$.value ?? undefined,
@@ -145,7 +146,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             pageIndex + 1,
             this._paginator.pageSize,
             this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-            this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+            dir,
             this.searchControl.value || undefined
           ).pipe(
             catchError((err) => {
@@ -187,6 +188,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const nextIndex = this._paginator.pageIndex + 1;
     if (nextIndex * this._paginator.pageSize >= this.totalPieces) return;
     if (this.pageCache.has(nextIndex)) return;
+    const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
     this.pieceService.getMyRepertoire(
       this.filterByCategoryId$.value ?? undefined,
       this.filterByCollectionId$.value ?? undefined,
@@ -194,7 +196,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       nextIndex + 1,
       this._paginator.pageSize,
       this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-      this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+      dir,
       this.searchControl.value || undefined
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
