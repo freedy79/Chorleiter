@@ -4,6 +4,7 @@
     <h2>Ein Fehler ist aufgetreten</h2>
     <p>{{ error.message }}</p>
     <p *ngIf="error.status">Statuscode: {{ error.status }}</p>
+    <pre *ngIf="error.details" class="error-details">{{ error.details }}</pre>
     <button mat-flat-button color="warn" (click)="clear()">Schließen</button>
   </div>
 </div>

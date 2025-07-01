@@ -152,8 +152,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             catchError((err) => {
               const msg = err.error?.message || 'Could not load repertoire.';
               console.error('Failed to load repertoire list', err);
-              this.errorService.setError({ message: msg, status: err.status });
-              this.snackBar.open('Could not load repertoire.', 'Close', { duration: 5000 });
+              this.errorService.setError({
+                message: msg,
+                status: err.status,
+                details: err.error?.details
+              });
               return of({ data: [], total: 0 });
             })
           );

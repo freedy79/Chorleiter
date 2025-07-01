@@ -17,7 +17,11 @@ export class ErrorInterceptor implements HttpInterceptor {
           ? 'Die Anfrage hat zu lange gedauert.'
           : (error instanceof HttpErrorResponse ? (error.error?.message || error.message) : 'Unbekannter Fehler');
 
-        this.errorService.setError({ message, status: error.status });
+        this.errorService.setError({
+          message,
+          status: error.status,
+          details: error.error?.details
+        });
         console.error('HTTP Error:', error);
 
         const data: ConfirmDialogData = {
