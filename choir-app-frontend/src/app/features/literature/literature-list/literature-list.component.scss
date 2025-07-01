@@ -13,6 +13,9 @@
 .filter-drawer {
   width: 360px;
   padding: 1rem;
+  .close-button {
+    margin-left: auto;
+  }
 }
 
 // Header der Seite (Titel und Button)

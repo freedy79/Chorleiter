@@ -1,5 +1,8 @@
 <mat-drawer-container class="drawer-container">
-  <mat-drawer #drawer position="start" mode="over" class="filter-drawer" [(opened)]="filtersExpanded">
+  <mat-drawer #drawer position="start" mode="side" class="filter-drawer" [(opened)]="filtersExpanded">
+    <button mat-icon-button class="close-button" (click)="drawer.toggle()" aria-label="Filter ausblenden">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
     <div class="filter-controls">
       <mat-form-field appearance="outline">
         <mat-label>Search</mat-label>
