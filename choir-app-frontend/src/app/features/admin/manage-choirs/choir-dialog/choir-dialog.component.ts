@@ -61,7 +61,7 @@ export class ChoirDialogComponent implements OnInit {
             this.snackBar.open(resp.message, 'OK', { duration: 4000 });
             this.loadMembers();
           },
-          error: err => this.snackBar.open(err.error?.message || 'Error', 'Close')
+          error: err => this.snackBar.open(err.error?.message || 'Fehler', 'Schließen')
         });
       }
     });
@@ -70,18 +70,18 @@ export class ChoirDialogComponent implements OnInit {
   removeMember(user: UserInChoir): void {
     if (!this.data?.id) return;
     const data: ConfirmDialogData = {
-      title: 'Remove Member?',
-      message: `Are you sure you want to remove ${user.name} (${user.email}) from this choir?`
+      title: 'Mitglied entfernen?',
+      message: `Soll ${user.name} (${user.email}) aus diesem Chor entfernt werden?`
     };
     const ref = this.dialog.open(ConfirmDialogComponent, { data });
     ref.afterClosed().subscribe(conf => {
       if (conf) {
         this.api.removeUserFromChoirAdmin(this.data!.id, user.id).subscribe({
           next: () => {
-            this.snackBar.open('Member removed', 'OK', { duration: 3000 });
+            this.snackBar.open('Mitglied entfernt', 'OK', { duration: 3000 });
             this.loadMembers();
           },
-          error: err => this.snackBar.open('Error removing member', 'Close')
+          error: err => this.snackBar.open('Fehler beim Entfernen des Mitglieds', 'Schließen')
         });
       }
     });

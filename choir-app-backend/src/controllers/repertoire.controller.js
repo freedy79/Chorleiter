@@ -258,22 +258,32 @@ exports.findMyRepertoire = async (req, res) => {
                     ]
                 ];
                 break;
-            case 'lastSung':
-                order = [[literal(`(
+            case 'lastSung': {
+                const base = `(
                         SELECT MAX(e.date)
                         FROM event_pieces ep
                         JOIN events e ON ep."eventId" = e.id
                         WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
-                    )`), sortDirection]];
+                    )`;
+                const expr = sortDirection === 'DESC'
+                    ? `COALESCE(${base}, TO_TIMESTAMP(0))`
+                    : base;
+                order = [[literal(expr), sortDirection]];
                 break;
-            case 'lastRehearsed':
-                order = [[literal(`(
+            }
+            case 'lastRehearsed': {
+                const base = `(
                         SELECT MAX(e.date)
                         FROM event_pieces ep
                         JOIN events e ON ep."eventId" = e.id
                         WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
-                    )`), sortDirection]];
+                    )`;
+                const expr = sortDirection === 'DESC'
+                    ? `COALESCE(${base}, TO_TIMESTAMP(0))`
+                    : base;
+                order = [[literal(expr), sortDirection]];
                 break;
+            }
             case 'timesSung':
                 order = [[literal(`(
                         SELECT COUNT(*)

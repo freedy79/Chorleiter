@@ -10,6 +10,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         ipAddress: {
             type: DataTypes.STRING
+        },
+        userAgent: {
+            type: DataTypes.STRING
         }
     });
     return LoginAttempt;

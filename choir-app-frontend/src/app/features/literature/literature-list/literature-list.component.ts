@@ -381,7 +381,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         console.error('Failed to update status', err);
         const msg = err.error?.message || 'Could not update status.';
         this.errorService.setError({ message: msg, status: err.status });
-        this.snackBar.open('Error: Could not update status.', 'Close', { duration: 5000 });
+        this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
         // Optional: you might want to refresh the list here to revert the visual change
         this.refresh$.next();
       }
