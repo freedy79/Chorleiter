@@ -1,4 +1,9 @@
-require("dotenv").config();
+try {
+    require("dotenv").config();
+} catch (err) {
+    console.error("Missing dependencies. Did you run 'npm install' in choir-app-backend?", err.message);
+    process.exit(1);
+}
 const app = require("./src/app");
 const db = require("./src/models");
 const bcrypt = require("bcryptjs");
