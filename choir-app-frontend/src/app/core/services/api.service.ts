@@ -379,6 +379,19 @@ export class ApiService {
     return this.http.delete(`${this.apiUrl}/admin/choirs/${id}`);
   }
 
+  getChoirMembersAdmin(id: number): Observable<UserInChoir[]> {
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
+  }
+
+  inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir });
+  }
+
+  removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
+    const options = { body: { userId } };
+    return this.http.delete(`${this.apiUrl}/admin/choirs/${id}/members`, options);
+  }
+
   getUsers(): Observable<User[]> {
     return this.http.get<User[]>(`${this.apiUrl}/admin/users`);
   }

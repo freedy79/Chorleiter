@@ -1,4 +1,6 @@
 const db = require("../models");
+const crypto = require('crypto');
+const emailService = require('../services/email.service');
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
 exports.getAll = (model) => async (req, res) => {
@@ -221,6 +223,98 @@ exports.recalculatePieceStatuses = async (req, res) => {
             END
         `);
         res.status(200).send({ message: 'Piece statuses recalculated.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+// --- Choir Membership Management for Admins ---
+exports.getChoirMembers = async (req, res) => {
+    const choirId = req.params.id;
+    try {
+        const choir = await db.choir.findByPk(choirId, {
+            include: [{
+                model: db.user,
+                as: 'users',
+                attributes: ['id', 'name', 'email'],
+                through: { model: db.user_choir, attributes: ['roleInChoir', 'registrationStatus'] }
+            }],
+            order: [[db.user, 'name', 'ASC']]
+        });
+
+        if (!choir) return res.status(404).send({ message: 'Choir not found' });
+
+        const members = choir.users.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            membership: {
+                roleInChoir: u.user_choir.roleInChoir,
+                registrationStatus: u.user_choir.registrationStatus
+            }
+        }));
+        res.status(200).send(members);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.addUserToChoir = async (req, res) => {
+    const choirId = req.params.id;
+    const { email, roleInChoir } = req.body;
+
+    if (!email || !roleInChoir) {
+        return res.status(400).send({ message: 'Email and role are required.' });
+    }
+
+    try {
+        let user = await db.user.findOne({ where: { email } });
+        const choir = await db.choir.findByPk(choirId);
+        if (!choir) return res.status(404).send({ message: 'Choir not found' });
+
+        if (user) {
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED' } });
+            res.status(200).send({ message: `User ${email} has been added to the choir.` });
+        } else {
+            const token = crypto.randomBytes(20).toString('hex');
+            const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+            user = await db.user.create({ email });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
+            await emailService.sendInvitationMail(email, token, choir.name, expiry);
+            res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
+        }
+    } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).send({ message: 'This user is already a member of the choir.' });
+        }
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.removeUserFromChoir = async (req, res) => {
+    const choirId = req.params.id;
+    const { userId } = req.body;
+
+    if (!userId) return res.status(400).send({ message: 'User ID is required.' });
+
+    try {
+        const choir = await db.choir.findByPk(choirId);
+        if (!choir) return res.status(404).send({ message: 'Choir not found' });
+
+        const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
+        if (admins.length <= 1) {
+            const lastAdmin = admins[0];
+            if (lastAdmin && lastAdmin.userId === userId) {
+                return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
+            }
+        }
+
+        const result = await choir.removeUser(userId);
+        if (result > 0) {
+            res.status(200).send({ message: 'User removed from choir.' });
+        } else {
+            res.status(404).send({ message: 'User is not a member of this choir.' });
+        }
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

@@ -42,10 +42,12 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   editChoir(choir: Choir): void {
-    const ref = this.dialog.open(ChoirDialogComponent, { width: '400px', data: choir });
+    const ref = this.dialog.open(ChoirDialogComponent, { width: '600px', data: choir });
     ref.afterClosed().subscribe(result => {
       if (result) {
         this.api.updateChoir(choir.id, result).subscribe(() => this.loadChoirs());
+      } else {
+        this.loadChoirs();
       }
     });
   }
