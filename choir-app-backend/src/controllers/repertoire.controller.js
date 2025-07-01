@@ -149,20 +149,20 @@ exports.findMyRepertoire = async (req, res) => {
                     literal(`(
                         SELECT c.prefix
                         FROM collection_pieces cp
-                        JOIN collections c ON cp.collectionId = c.id
-                        WHERE cp.pieceId = "piece"."id"
-                        ORDER BY cp.numberInCollection
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
                         LIMIT 1
                     )`),
                     'collectionPrefix'
                 ],
                 [
                     literal(`(
-                        SELECT cp.numberInCollection
+                        SELECT cp."numberInCollection"
                         FROM collection_pieces cp
-                        JOIN collections c ON cp.collectionId = c.id
-                        WHERE cp.pieceId = "piece"."id"
-                        ORDER BY cp.numberInCollection
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
                         LIMIT 1
                     )`),
                     'collectionNumber'
