@@ -232,9 +232,31 @@ exports.update = async (req, res) => {
     const { date, type, notes, pieceIds } = req.body;
 
     try {
-        const event = await Event.findOne({ where: { id, choirId: req.activeChoirId } });
+        const event = await Event.findOne({
+            where: { id, choirId: req.activeChoirId },
+            include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }]
+        });
         if (!event) {
             return res.status(404).send({ message: 'Event not found.' });
+        }
+
+        // Determine if anything has changed
+        const dateChanged = new Date(date).getTime() !== new Date(event.date).getTime();
+        const typeChanged = type !== event.type;
+        const notesChanged = (notes || '') !== (event.notes || '');
+
+        const incomingPieces = Array.isArray(pieceIds) ? [...pieceIds].sort() : [];
+        const existingPieces = event.pieces.map(p => p.id).sort();
+        const piecesChanged = JSON.stringify(incomingPieces) !== JSON.stringify(existingPieces);
+
+        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged) {
+            const full = await Event.findByPk(id, {
+                include: [
+                    { model: Piece, as: 'pieces', through: { attributes: [] } },
+                    { model: User, as: 'director', attributes: ['name'] }
+                ]
+            });
+            return res.status(200).send(full);
         }
 
         await event.update({ date, type, notes, directorId: req.userId });
