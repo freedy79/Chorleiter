@@ -45,7 +45,8 @@ export class ApiService {
     composerId?: number,
     categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
+    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
+            'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
     page: number = 1,
     limit: number = 25,
     status?: string,

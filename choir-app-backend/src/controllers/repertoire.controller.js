@@ -170,6 +170,42 @@ exports.findMyRepertoire = async (req, res) => {
                         LIMIT 1
                     )`),
                     'collectionNumber'
+                ],
+                [
+                    literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`),
+                    'lastSung'
+                ],
+                [
+                    literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`),
+                    'lastRehearsed'
+                ],
+                [
+                    literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`),
+                    'timesSung'
+                ],
+                [
+                    literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`),
+                    'timesRehearsed'
                 ]
             ]
         };
@@ -212,6 +248,38 @@ exports.findMyRepertoire = async (req, res) => {
                         sortDirection
                     ]
                 ];
+                break;
+            case 'lastSung':
+                order = [[literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`), sortDirection]];
+                break;
+            case 'lastRehearsed':
+                order = [[literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`), sortDirection]];
+                break;
+            case 'timesSung':
+                order = [[literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`), sortDirection]];
+                break;
+            case 'timesRehearsed':
+                order = [[literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`), sortDirection]];
                 break;
             case 'title':
             default:
