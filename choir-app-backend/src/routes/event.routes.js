@@ -11,6 +11,7 @@ router.post("/", controller.create);
 router.put("/:id", controller.update);
 router.delete("/range", authJwt.isChoirAdminOrAdmin, controller.deleteRange);
 router.delete("/:id", authJwt.isChoirAdminOrAdmin, controller.delete);
+router.post("/recalculate-piece-statuses", authJwt.isAdmin, controller.recalculatePieceStatuses);
 // Later you will add POST for creation: router.post("/", controller.create);
 
 module.exports = router;
