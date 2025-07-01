@@ -19,6 +19,9 @@ router.get("/choirs", controller.getAllChoirs);
 router.post("/choirs", controller.create(db.choir));
 router.put("/choirs/:id", controller.update(db.choir));
 router.delete("/choirs/:id", controller.remove(db.choir));
+router.get("/choirs/:id/members", controller.getChoirMembers);
+router.post("/choirs/:id/members", controller.addUserToChoir);
+router.delete("/choirs/:id/members", controller.removeUserFromChoir);
 
 // Routen für Benutzer
 router.get("/users", controller.getAllUsers);
