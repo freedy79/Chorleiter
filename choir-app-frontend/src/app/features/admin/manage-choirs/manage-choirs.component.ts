@@ -16,7 +16,7 @@ import { ChoirDialogComponent } from './choir-dialog/choir-dialog.component';
 })
 export class ManageChoirsComponent implements OnInit {
   choirs: Choir[] = [];
-  displayedColumns = ['name', 'location', 'actions'];
+  displayedColumns = ['name', 'location', 'memberCount', 'eventCount', 'pieceCount', 'actions'];
   dataSource = new MatTableDataSource<Choir>();
 
   constructor(private api: ApiService, private dialog: MatDialog) {}

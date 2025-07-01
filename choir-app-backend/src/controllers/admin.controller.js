@@ -10,6 +10,34 @@ exports.getAll = (model) => async (req, res) => {
     }
 };
 
+// Spezielle Abfrage für Chöre mit zusätzlichen Statistiken
+exports.getAllChoirs = async (req, res) => {
+    try {
+        const choirs = await db.choir.findAll({
+            attributes: {
+                include: [
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "user_choirs" AS uc WHERE uc."choirId" = "choir"."id")`), 'memberCount'],
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "events" AS e WHERE e."choirId" = "choir"."id")`), 'eventCount'],
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "choir_repertoires" AS cr WHERE cr."choirId" = "choir"."id")`), 'pieceCount']
+                ]
+            },
+            order: [['name', 'ASC']],
+            raw: true
+        });
+
+        const result = choirs.map(c => ({
+            ...c,
+            memberCount: parseInt(c.memberCount, 10) || 0,
+            eventCount: parseInt(c.eventCount, 10) || 0,
+            pieceCount: parseInt(c.pieceCount, 10) || 0
+        }));
+
+        res.status(200).send(result);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 // Erstellt ein neues Element eines gegebenen Modells
 exports.create = (model) => async (req, res) => {
     try {
