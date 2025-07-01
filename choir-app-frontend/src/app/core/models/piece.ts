@@ -34,4 +34,8 @@ export interface Piece {
   arrangers?: Composer[];
   links?: PieceLink[];
   events?: Event[];
+  lastSung?: string | null;
+  lastRehearsed?: string | null;
+  timesSung?: number;
+  timesRehearsed?: number;
 }
