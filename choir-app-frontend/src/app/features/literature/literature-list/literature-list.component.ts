@@ -23,6 +23,7 @@ import { AuthService } from '@core/services/auth.service';
 import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
 import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-literature-list',
