@@ -119,14 +119,15 @@ exports.findMyRepertoire = async (req, res) => {
             }));
         }
 
-        // Die Include-Anweisungen für alle Metadaten.
+        // Die Include-Anweisungen für alle Metadaten. Die Sammlung wird nur
+        // eingebunden, wenn explizit nach einer Collection gefiltert wird.
         const includeClauses = [
             { model: db.composer, as: 'composer' },
             { model: db.category, as: 'category' },
             { model: db.author, as: 'author' },
-            { model: db.composer, as: 'arrangers' },
-            { model: db.piece_link, as: 'links' },
-            {
+            // Zusätzliche Daten wie Arranger oder Links werden in dieser Liste
+            // nicht benötigt und können ausgelassen werden.
+            ...(collectionId ? [{
                 model: db.collection,
                 as: 'collections',
                 attributes: ['id', 'prefix', 'title'],
@@ -134,10 +135,39 @@ exports.findMyRepertoire = async (req, res) => {
                     model: db.collection_piece,
                     attributes: ['numberInCollection']
                 },
-                // Wenn nach einer Sammlung gefiltert wird, wird dies zur Bedingung.
-                ...(collectionId && { where: { id: collectionId }, required: true })
-            }
+                where: { id: collectionId },
+                required: true
+            }] : [])
         ];
+
+        // Attribute zum Ermitteln der ersten Referenz eines Stücks ohne Join,
+        // damit keine Duplikate entstehen.
+        const pieceAttributes = {
+            include: [
+                [
+                    literal(`(
+                        SELECT c.prefix
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp.collectionId = c.id
+                        WHERE cp.pieceId = "piece"."id"
+                        ORDER BY cp.numberInCollection
+                        LIMIT 1
+                    )`),
+                    'collectionPrefix'
+                ],
+                [
+                    literal(`(
+                        SELECT cp.numberInCollection
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp.collectionId = c.id
+                        WHERE cp.pieceId = "piece"."id"
+                        ORDER BY cp.numberInCollection
+                        LIMIT 1
+                    )`),
+                    'collectionNumber'
+                ]
+            ]
+        };
 
          // --- KORRIGIERTE SORTIERLOGIK ---
         let order;
@@ -153,15 +183,10 @@ exports.findMyRepertoire = async (req, res) => {
                 break;
             case 'reference':
                 order = [
-                    // Sort first by the collection prefix (e.g. "CB" or "EG")
-                    [literal('"collections"."prefix"'), sortDirection],
-                    // Extract the numeric portion from the reference and sort
-                    // by it. Non numeric values will sort last because the
-                    // REGEXP_REPLACE will return an empty string which is
-                    // converted to NULL before casting.
+                    [literal('"collectionPrefix"'), sortDirection],
                     [
                         literal(
-                            'NULLIF(REGEXP_REPLACE("collections->collection_piece"."numberInCollection", \'\\D\', \'\', \'g\'), \'\')::INTEGER'
+                            'NULLIF(REGEXP_REPLACE("collectionNumber", \'\\D\', \'\', \'g\'), \'\')::INTEGER'
                         ),
                         sortDirection
                     ]
@@ -186,6 +211,7 @@ exports.findMyRepertoire = async (req, res) => {
         const { rows: pieces, count } = await db.piece.findAndCountAll({
             where: whereCondition,
             include: includeClauses,
+            attributes: pieceAttributes,
             order: order,
             limit: limitNum,
             offset: offset,

@@ -198,6 +198,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
    * Formats the collection reference for display in the template.
    */
   formatReferenceForDisplay(piece: Piece): string {
+    if (piece.collectionPrefix && piece.collectionNumber) {
+      return `${piece.collectionPrefix}${piece.collectionNumber}`;
+    }
     if (piece.collections && piece.collections.length > 0) {
       const ref = piece.collections[0];
       const num = (ref as any).collection_piece.numberInCollection;

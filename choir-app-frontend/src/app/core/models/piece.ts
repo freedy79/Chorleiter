@@ -21,6 +21,8 @@ export interface Piece {
     status: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY';
   };
   collections?: CollectionReference[];
+  collectionPrefix?: string | null;
+  collectionNumber?: string | null;
 
   key?: string;
   timeSignature?: string;
