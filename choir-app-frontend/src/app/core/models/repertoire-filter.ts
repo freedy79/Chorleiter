@@ -6,6 +6,7 @@ export interface RepertoireFilter {
     collectionId?: number | null;
     categoryId?: number | null;
     onlySingable?: boolean;
+    status?: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY' | null;
     search?: string;
   };
 }
