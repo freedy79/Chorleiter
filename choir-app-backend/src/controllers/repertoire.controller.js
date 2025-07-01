@@ -183,11 +183,27 @@ exports.findMyRepertoire = async (req, res) => {
                 order = [[{ model: db.category, as: 'category' }, 'name', sortDirection]];
                 break;
             case 'reference':
+                const collectionPrefixSubquery = `(
+                        SELECT c.prefix
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
+                        LIMIT 1
+                    )`;
+                const collectionNumberSubquery = `(
+                        SELECT cp."numberInCollection"
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
+                        LIMIT 1
+                    )`;
                 order = [
-                    [literal('"collectionPrefix"'), sortDirection],
+                    [literal(collectionPrefixSubquery), sortDirection],
                     [
                         literal(
-                            'NULLIF(REGEXP_REPLACE("collectionNumber", \'\\D\', \'\', \'g\'), \'\')::INTEGER'
+                            `NULLIF(REGEXP_REPLACE(${collectionNumberSubquery}, '\\D', '', 'g'), '')::INTEGER`
                         ),
                         sortDirection
                     ]
