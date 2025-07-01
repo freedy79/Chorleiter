@@ -14,6 +14,7 @@ const controller = require('../src/controllers/import.controller');
     const user = await db.user.create({ email: 't@example.com', role: 'USER' });
     const composer = await db.composer.create({ name: 'Composer' });
     const piece = await db.piece.create({ title: 'Piece', composerId: composer.id });
+    await choir.addPiece(piece); // create choir_repertoire link
     const collection = await db.collection.create({ title: 'Coll', prefix: 'X' });
     await piece.addCollection(collection, { through: { numberInCollection: '1' } });
 
@@ -28,6 +29,9 @@ const controller = require('../src/controllers/import.controller');
     assert.strictEqual(events.length, 1, 'should only create one event');
     const links = await db.event_pieces.count();
     assert.strictEqual(links, 1, 'should only link piece once');
+
+    const rep = await db.choir_repertoire.findOne({ where: { choirId: choir.id, pieceId: piece.id } });
+    assert.strictEqual(rep.status, 'CAN_BE_SUNG', 'status should be updated');
 
     console.log('import.controller duplicate handling test passed');
     await db.sequelize.close();
