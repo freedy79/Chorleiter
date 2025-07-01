@@ -2,6 +2,7 @@ const db = require("../models");
 const Piece = db.piece;
 const Composer = db.composer;
 const Category = db.category;
+const Author = db.author;
 const CrudService = require("../services/crud.service");
 const pieceService = new CrudService(Piece);
 
@@ -93,7 +94,8 @@ exports.findOne = async (req, res) => {
         const piece = await pieceService.findById(id, {
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
-                { model: Category, as: 'category', attributes: ['id', 'name'] }
+                { model: Category, as: 'category', attributes: ['id', 'name'] },
+                { model: Author, as: 'author', attributes: ['id', 'name'] }
             ]
         });
 
