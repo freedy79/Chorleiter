@@ -17,7 +17,8 @@ export class PieceService {
   getMyRepertoire(
     categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
+    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
+             'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
     page = 1,
     limit = 25,
     status?: string,

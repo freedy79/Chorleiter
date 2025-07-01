@@ -7,7 +7,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, BehaviorSubject, merge, of } from 'rxjs';
-import { switchMap, map, startWith, catchError, tap } from 'rxjs/operators';
+import { switchMap, map, startWith, catchError, tap, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
@@ -22,6 +22,7 @@ import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
 import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
 import { ErrorService } from '@core/services/error.service';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
 
 @Component({
   selector: 'app-literature-list',
@@ -46,7 +47,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public categories$!: Observable<Category[]>;
 
   // --- Table, Paginator, and Sort Logic ---
-  public displayedColumns: string[] = ['title', 'composer', 'category', 'reference', 'status', 'actions'];
+  public displayedColumns: string[] = [];
+  public showLastSung = false;
+  public showLastRehearsed = false;
+  public showTimesSung = false;
+  public showTimesRehearsed = false;
   public dataSource = new MatTableDataSource<Piece>();
   public totalPieces = 0;
   public pageSizeOptions: number[] = [10, 25, 50];
@@ -88,12 +93,14 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     public dialog: MatDialog,
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
     private paginatorService: PaginatorService,
-    private errorService: ErrorService
+    private errorService: ErrorService,
+    private prefs: UserPreferencesService
   ) {
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   }
 
   ngOnInit(): void {
+    this.updateDisplayedColumns();
     // Pre-fetch data for the filter dropdowns
     this.collections$ = this.apiService.getCollections();
     this.categories$ = this.apiService.getCategories();
@@ -106,14 +113,35 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       try {
         const s = JSON.parse(saved);
         if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
-        if (s.categoryIds !== undefined) this.filterByCategoryIds$.next(s.categoryIds);
-        else if (s.categoryId !== undefined && s.categoryId !== null) this.filterByCategoryIds$.next([s.categoryId]);
+        if (s.categoryIds !== undefined) {
+          this.filterByCategoryIds$.next(s.categoryIds);
+        } else if ((s as any).categoryId !== undefined && (s as any).categoryId !== null) {
+          this.filterByCategoryIds$.next([(s as any).categoryId]);
+        }
         if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
         if (s.status !== undefined) this.status$.next(s.status);
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
-        if (s.collectionId || (s.categoryIds && s.categoryIds.length) || s.categoryId || s.onlySingable || s.status) this.filtersExpanded = true;
+        if (
+          s.collectionId ||
+          (s.categoryIds && s.categoryIds.length) ||
+          (s as any).categoryId ||
+          s.onlySingable ||
+          s.status
+        ) {
+          this.filtersExpanded = true;
+        }
       } catch { }
     }
+
+    const load$ = this.prefs.isLoaded() ? of(null) : this.prefs.load();
+    load$.pipe(take(1)).subscribe(() => {
+      const cols = this.prefs.getPreference('repertoireColumns') || {};
+      this.showLastSung = !!cols.lastSung;
+      this.showLastRehearsed = !!cols.lastRehearsed;
+      this.showTimesSung = !!cols.timesSung;
+      this.showTimesRehearsed = !!cols.timesRehearsed;
+      this.updateDisplayedColumns();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -388,14 +416,27 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   private applyPreset(preset: RepertoireFilter): void {
     this.filterByCollectionId$.next(preset.data.collectionId ?? null);
-    if (preset.data.categoryIds !== undefined) this.filterByCategoryIds$.next(preset.data.categoryIds);
-    else if (preset.data.categoryId !== undefined && preset.data.categoryId !== null) this.filterByCategoryIds$.next([preset.data.categoryId]);
+    if (preset.data.categoryIds !== undefined) {
+      this.filterByCategoryIds$.next(preset.data.categoryIds);
+    } else {
+      const singleId = (preset.data as any).categoryId;
+      if (singleId !== undefined && singleId !== null) {
+        this.filterByCategoryIds$.next([singleId]);
+      }
+    }
     this.onlySingable$.next(!!preset.data.onlySingable);
     if (preset.data.status !== undefined) {
       this.status$.next(preset.data.status);
     }
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
-    this.filtersExpanded = !!(preset.data.collectionId || (preset.data.categoryIds && preset.data.categoryIds.length) || preset.data.categoryId || preset.data.onlySingable || preset.data.status);
+    const singleId = (preset.data as any).categoryId;
+    this.filtersExpanded = !!(
+      preset.data.collectionId ||
+      (preset.data.categoryIds && preset.data.categoryIds.length) ||
+      singleId ||
+      preset.data.onlySingable ||
+      preset.data.status
+    );
     if (this._paginator) {
       this._paginator.firstPage();
     }
@@ -440,5 +481,43 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.loadPresets();
       });
     }
+  }
+
+  private updateDisplayedColumns(): void {
+    this.displayedColumns = ['title', 'composer', 'category', 'reference'];
+    if (this.showLastSung) this.displayedColumns.push('lastSung');
+    if (this.showLastRehearsed) this.displayedColumns.push('lastRehearsed');
+    if (this.showTimesSung) this.displayedColumns.push('timesSung');
+    if (this.showTimesRehearsed) this.displayedColumns.push('timesRehearsed');
+    this.displayedColumns.push('status', 'actions');
+  }
+
+  toggleColumn(col: 'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed'): void {
+    switch (col) {
+      case 'lastSung':
+        this.showLastSung = !this.showLastSung;
+        break;
+      case 'lastRehearsed':
+        this.showLastRehearsed = !this.showLastRehearsed;
+        break;
+      case 'timesSung':
+        this.showTimesSung = !this.showTimesSung;
+        break;
+      case 'timesRehearsed':
+        this.showTimesRehearsed = !this.showTimesRehearsed;
+        break;
+    }
+    this.saveColumnPrefs();
+    this.updateDisplayedColumns();
+  }
+
+  private saveColumnPrefs(): void {
+    const prefs = {
+      lastSung: this.showLastSung,
+      lastRehearsed: this.showLastRehearsed,
+      timesSung: this.showTimesSung,
+      timesRehearsed: this.showTimesRehearsed
+    };
+    this.prefs.update({ repertoireColumns: prefs }).subscribe();
   }
 }
