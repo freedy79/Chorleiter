@@ -67,6 +67,13 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   isChoirAdmin = false;
   isAdmin = false;
 
+  // --- Hover Image Preview ---
+  hoverImage: string | null = null;
+  hoverX = 0;
+  hoverY = 0;
+  private hoverTimeout: any;
+  private imageCache = new Map<number, string>();
+
   // --- Bulletproof @ViewChild Setters ---
   private _sort!: MatSort;
   @ViewChild(MatSort) set sort(sort: MatSort) {
@@ -481,6 +488,36 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.loadPresets();
       });
     }
+  }
+
+  // ------- Hover Image Helpers -------
+  onRowMouseEnter(event: MouseEvent, piece: Piece): void {
+    if (!piece.imageIdentifier) {
+      return;
+    }
+    this.hoverX = event.clientX;
+    this.hoverY = event.clientY;
+    this.hoverTimeout = setTimeout(() => {
+      const cached = this.imageCache.get(piece.id);
+      if (cached !== undefined) {
+        this.hoverImage = cached;
+        return;
+      }
+      this.apiService.getPieceImage(piece.id).subscribe(img => {
+        this.imageCache.set(piece.id, img);
+        this.hoverImage = img;
+      });
+    }, 2000);
+  }
+
+  onRowMouseMove(event: MouseEvent): void {
+    this.hoverX = event.clientX;
+    this.hoverY = event.clientY;
+  }
+
+  onRowMouseLeave(): void {
+    clearTimeout(this.hoverTimeout);
+    this.hoverImage = null;
   }
 
   private updateDisplayedColumns(): void {
