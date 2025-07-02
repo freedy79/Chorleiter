@@ -19,6 +19,7 @@ import { ManageUsersComponent } from '@features/admin/manage-users/manage-users.
 import { BackupComponent } from '@features/admin/backup/backup.component';
 import { LoginAttemptsComponent } from '@features/admin/login-attempts/login-attempts.component';
 import { LogViewerComponent } from '@features/admin/log-viewer/log-viewer.component';
+import { MailSettingsComponent } from '@features/admin/mail-settings/mail-settings.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
@@ -140,6 +141,7 @@ export const routes: Routes = [
             { path: 'backup', component: BackupComponent },
             { path: 'login-attempts', component: LoginAttemptsComponent },
             { path: 'logs', component: LogViewerComponent },
+            { path: 'mail-settings', component: MailSettingsComponent },
         ],
     },
 

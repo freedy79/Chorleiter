@@ -29,6 +29,7 @@ const db = require('../src/models');
     checkFields(db.user_choir, ['roleInChoir', 'registrationStatus', 'isOrganist']);
     checkFields(db.piece_change, ['data']);
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
+    checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'fromAddress']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');
