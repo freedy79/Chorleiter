@@ -16,7 +16,7 @@ exports.findByMonth = async (req, res) => {
                 ]
             }]
         });
-        if (!plan) return res.status(404).send({ message: 'Plan not found.' });
+        if (!plan) return res.status(204).send();
         res.status(200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not fetch plan.' });

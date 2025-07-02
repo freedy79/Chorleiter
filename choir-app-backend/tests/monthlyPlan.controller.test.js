@@ -20,6 +20,9 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 7 } }, res);
     assert.strictEqual(res.statusCode, 200);
 
+    await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 8 } }, res);
+    assert.strictEqual(res.statusCode, 204);
+
     await controller.finalize({ ...baseReq, params: { id: planId } }, res);
     assert.strictEqual(res.data.finalized, true);
     const versionAfter = res.data.version;

@@ -285,8 +285,8 @@ export class ApiService {
   }
 
   // --- Monthly Plan Methods ---
-  getMonthlyPlan(year: number, month: number): Observable<MonthlyPlan> {
-    return this.http.get<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${year}/${month}`);
+  getMonthlyPlan(year: number, month: number): Observable<MonthlyPlan | null> {
+    return this.http.get<MonthlyPlan | null>(`${this.apiUrl}/monthly-plans/${year}/${month}`);
   }
 
   createMonthlyPlan(year: number, month: number): Observable<MonthlyPlan> {

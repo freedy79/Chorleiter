@@ -31,7 +31,7 @@ export class MonthlyPlanComponent implements OnInit {
 
   loadPlan(year: number, month: number): void {
     this.api.getMonthlyPlan(year, month).subscribe({
-      next: plan => { this.plan = plan; this.events = plan.events || []; },
+      next: plan => { this.plan = plan; this.events = plan?.events || []; },
       error: () => { this.plan = null; this.events = []; }
     });
   }
