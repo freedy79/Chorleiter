@@ -341,3 +341,25 @@ exports.getLog = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.getMailSettings = async (req, res) => {
+    try {
+        const settings = await db.mail_setting.findByPk(1);
+        res.status(200).send(settings);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateMailSettings = async (req, res) => {
+    try {
+        const [settings] = await db.mail_setting.findOrCreate({
+            where: { id: 1 },
+            defaults: req.body
+        });
+        await settings.update(req.body);
+        res.status(200).send(settings);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};

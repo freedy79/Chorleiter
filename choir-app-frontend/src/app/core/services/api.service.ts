@@ -30,6 +30,7 @@ import { AdminService } from './admin.service';
 import { SystemService } from './system.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
+import { MailSettings } from '../models/mail-settings';
 import { FilterPresetService } from './filter-preset.service';
 
 @Injectable({
@@ -457,6 +458,14 @@ export class ApiService {
 
   restoreBackup(file: File): Observable<any> {
     return this.adminService.restoreBackup(file);
+  }
+
+  getMailSettings(): Observable<MailSettings> {
+    return this.adminService.getMailSettings();
+  }
+
+  updateMailSettings(data: MailSettings): Observable<MailSettings> {
+    return this.adminService.updateMailSettings(data);
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
