@@ -443,6 +443,14 @@ export class ApiService {
     return this.adminService.getLoginAttempts();
   }
 
+  listLogs(): Observable<string[]> {
+    return this.adminService.listLogs();
+  }
+
+  getLog(filename: string): Observable<any[]> {
+    return this.adminService.getLog(filename);
+  }
+
   downloadBackup(): Observable<Blob> {
     return this.adminService.downloadBackup();
   }
