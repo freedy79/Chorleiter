@@ -18,7 +18,7 @@ const db = require('../src/models');
     }
 
     checkFields(db.user, ['email', 'role', 'lastDonation', 'preferences']);
-    checkFields(db.choir, ['name']);
+    checkFields(db.choir, ['name', 'modules']);
     checkFields(db.piece, ['title']);
     checkFields(db.event, ['date', 'type', 'organistId', 'finalized', 'version', 'monthlyPlanId']);
     checkFields(db.monthly_plan, ['year', 'month', 'finalized', 'version']);
@@ -29,12 +29,14 @@ const db = require('../src/models');
     checkFields(db.user_choir, ['roleInChoir', 'registrationStatus', 'isOrganist']);
     checkFields(db.piece_change, ['data']);
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
+    checkFields(db.plan_rule, ['type', 'dayOfWeek', 'weeks', 'notes']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');
     assert(db.piece.associations.composer, 'Piece should have composer association');
     assert(db.choir.associations.events, 'Choir should have events association');
     assert(db.choir.associations.monthlyPlans, 'Choir should have monthlyPlans association');
+    assert(db.choir.associations.planRules, 'Choir should have planRules association');
 
     console.log('All model tests passed');
     await db.sequelize.close();
