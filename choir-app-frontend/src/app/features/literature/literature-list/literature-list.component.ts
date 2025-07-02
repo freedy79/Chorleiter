@@ -81,7 +81,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (paginator) {
       this._paginator = paginator;
       this._paginator.pageSize = this.pageSize;
-      this.dataSource.paginator = this._paginator;
       this._paginator.page.subscribe(e => this.paginatorService.setPageSize('literature-list', e.pageSize));
     }
   }
@@ -147,7 +146,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this._paginator;
     this.dataSource.sort = this._sort;
 
     const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
