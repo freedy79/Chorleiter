@@ -18,6 +18,16 @@ import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
+import { ComposerService } from './composer.service';
+import { AuthorService } from './author.service';
+import { CategoryService } from './category.service';
+import { CollectionService } from './collection.service';
+import { EventService } from './event.service';
+import { ChoirService } from './choir.service';
+import { UserService } from './user.service';
+import { ImportService } from './import.service';
+import { AdminService } from './admin.service';
+import { SystemService } from './system.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { FilterPresetService } from './filter-preset.service';
@@ -30,6 +40,16 @@ export class ApiService {
 
   constructor(private http: HttpClient,
               private pieceService: PieceService,
+              private composerService: ComposerService,
+              private authorService: AuthorService,
+              private categoryService: CategoryService,
+              private collectionService: CollectionService,
+              private eventService: EventService,
+              private choirService: ChoirService,
+              private userService: UserService,
+              private importService: ImportService,
+              private adminService: AdminService,
+              private systemService: SystemService,
               private filterPresetService: FilterPresetService) {
 
   }
@@ -136,97 +156,93 @@ export class ApiService {
   // --- Composer Methods ---
 
   getComposers(): Observable<Composer[]> {
-    return this.http.get<Composer[]>(`${this.apiUrl}/composers`);
+    return this.composerService.getComposers();
   }
 
   createComposer(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.http.post<Composer>(`${this.apiUrl}/composers`, data);
+    return this.composerService.createComposer(data);
   }
 
   updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.http.put<Composer>(`${this.apiUrl}/composers/${id}`, data);
+    return this.composerService.updateComposer(id, data);
   }
 
   deleteComposer(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/composers/${id}`);
+    return this.composerService.deleteComposer(id);
   }
 
   enrichComposer(id: number): Observable<Composer> {
-    return this.http.post<Composer>(`${this.apiUrl}/composers/${id}/enrich`, {});
+    return this.composerService.enrichComposer(id);
   }
 
   getAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(`${this.apiUrl}/authors`);
+    return this.authorService.getAuthors();
   }
 
   createAuthor(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.http.post<Author>(`${this.apiUrl}/authors`, data);
+    return this.authorService.createAuthor(data);
   }
 
   updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.http.put<Author>(`${this.apiUrl}/authors/${id}`, data);
+    return this.authorService.updateAuthor(id, data);
   }
 
   deleteAuthor(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/authors/${id}`);
+    return this.authorService.deleteAuthor(id);
   }
 
   enrichAuthor(id: number): Observable<Author> {
-    return this.http.post<Author>(`${this.apiUrl}/authors/${id}/enrich`, {});
+    return this.authorService.enrichAuthor(id);
   }
 
 
   // --- Category (Rubrik) Methods ---
 
   getCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.apiUrl}/categories`);
+    return this.categoryService.getCategories();
   }
 
   createCategory(name: string): Observable<Category> {
-    return this.http.post<Category>(`${this.apiUrl}/categories`, { name });
+    return this.categoryService.createCategory(name);
   }
 
 
   // --- Collection Methods ---
 
-   getCollections(): Observable<Collection[]> {
-    return this.http.get<Collection[]>(`${this.apiUrl}/collections`);
+  getCollections(): Observable<Collection[]> {
+    return this.collectionService.getCollections();
   }
 
 
   getCollectionById(id: number): Observable<Collection> {
-    return this.http.get<Collection>(`${this.apiUrl}/collections/${id}`);
+    return this.collectionService.getCollectionById(id);
   }
 
 
   createCollection(data: any): Observable<Collection> {
-    return this.http.post<Collection>(`${this.apiUrl}/collections`, data);
+    return this.collectionService.createCollection(data);
   }
 
   // Update an existing collection
   updateCollection(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/collections/${id}`, data);
+    return this.collectionService.updateCollection(id, data);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('cover', file);
-    return this.http.post(`${this.apiUrl}/collections/${id}/cover`, formData);
+    return this.collectionService.uploadCollectionCover(id, file);
   }
 
   getCollectionCover(id: number): Observable<string> {
-    return this.http
-      .get<{ data: string }>(`${this.apiUrl}/collections/${id}/cover`)
-      .pipe(map(res => res.data));
+    return this.collectionService.getCollectionCover(id);
   }
 
   getCollectionCoverUrl(id: number): string {
-    return `${this.apiUrl}/collections/${id}/cover`;
+    return this.collectionService.getCollectionCoverUrl(id);
   }
 
 
   addCollectionToChoir(collectionId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/collections/${collectionId}/addToChoir`, {});
+    return this.collectionService.addCollectionToChoir(collectionId);
   }
 
 
@@ -237,9 +253,7 @@ export class ApiService {
    * @param type - The type of event to find.
    */
   getLastEvent(type: 'SERVICE' | 'REHEARSAL'): Observable<Event | null> {
-    return this.http.get<Event | null>(`${this.apiUrl}/events/last`, {
-      params: { type }
-    });
+    return this.eventService.getLastEvent(type);
   }
 
   /**
@@ -247,32 +261,27 @@ export class ApiService {
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
   createEvent(eventData: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<CreateEventResponse> {
-    // Passen Sie den Rückgabetyp hier an
-    return this.http.post<CreateEventResponse>(`${this.apiUrl}/events`, eventData);
+    return this.eventService.createEvent(eventData);
   }
 
   getEvents(type?: 'SERVICE' | 'REHEARSAL'): Observable<Event[]> {
-    let params = new HttpParams();
-    if (type) params = params.set('type', type);
-    return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
+    return this.eventService.getEvents(type);
   }
 
   getEventById(id: number): Observable<Event> {
-    return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
+    return this.eventService.getEventById(id);
   }
 
   updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/events/${id}`, data);
+    return this.eventService.updateEvent(id, data);
   }
 
   deleteEvent(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/events/${id}`);
+    return this.eventService.deleteEvent(id);
   }
 
   deleteEventsInRange(start: string, end: string, type?: 'SERVICE' | 'REHEARSAL'): Observable<any> {
-    let params = new HttpParams().set('start', start).set('end', end);
-    if (type) params = params.set('type', type);
-    return this.http.delete(`${this.apiUrl}/events/range`, { params });
+    return this.eventService.deleteEventsInRange(start, end, type);
   }
 
   // --- Monthly Plan Methods ---
@@ -299,11 +308,11 @@ export class ApiService {
    * Gets the profile of the currently logged-in user, including their choir details.
    */
   getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/users/me`);
+    return this.userService.getCurrentUser();
   }
 
   updateCurrentUser(profileData: { name?: string, email?: string, password?: string }): Observable<any> {
-    return this.http.put(`${this.apiUrl}/users/me`, profileData);
+    return this.userService.updateCurrentUser(profileData);
   }
 
   addPieceToMyRepertoire(pieceId: number): Observable<any> {
@@ -311,38 +320,24 @@ export class ApiService {
     }
 
   uploadCollectionCsv(collectionId: number, file: File, mode: 'preview' | 'import'): Observable<any> {
-    const formData = new FormData();
-    formData.append('csvfile', file, file.name);
-
-    // Füge den Modus als Query-Parameter hinzu
-    const params = new HttpParams().set('mode', mode);
-
-    return this.http.post(`${this.apiUrl}/import/collection/${collectionId}`, formData, { params });
+    return this.importService.uploadCollectionCsv(collectionId, file, mode);
   }
 
   startCollectionCsvImport(collectionId: number, file: File): Observable<{ jobId: string }> {
-    const formData = new FormData();
-    formData.append('csvfile', file, file.name);
-    return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/collection/${collectionId}`, formData);
+    return this.importService.startCollectionCsvImport(collectionId, file);
   }
 
   uploadEventCsv(file: File, type: 'REHEARSAL' | 'SERVICE', mode: 'preview' | 'import'): Observable<any> {
-    const formData = new FormData();
-    formData.append('csvfile', file, file.name);
-    const params = new HttpParams().set('mode', mode).set('type', type);
-    return this.http.post(`${this.apiUrl}/import/events`, formData, { params });
+    return this.importService.uploadEventCsv(file, type, mode);
   }
 
   startEventCsvImport(file: File, type: 'REHEARSAL' | 'SERVICE'): Observable<{ jobId: string }> {
-    const formData = new FormData();
-    formData.append('csvfile', file, file.name);
-    const params = new HttpParams().set('type', type);
-    return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/events`, formData, { params });
+    return this.importService.startEventCsvImport(file, type);
   }
 
   // Diese Methode fragt den Status eines Jobs ab
   getImportStatus(jobId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/import/status/${jobId}`);
+    return this.importService.getImportStatus(jobId);
   }
 
 
@@ -351,130 +346,125 @@ export class ApiService {
   }
 
   getRepertoirePiece(id: number): Observable<Piece> {
-    return this.http.get<Piece>(`${this.apiUrl}/repertoire/${id}`);
+    return this.pieceService.getPieceById(id); // using pieceService for single piece
   }
 
   getMyChoirDetails(): Observable<Choir> {
-    return this.http.get<Choir>(`${this.apiUrl}/choir-management`);
+    return this.choirService.getMyChoirDetails();
   }
 
   updateMyChoir(choirData: { name: string, description: string, location: string }): Observable<any> {
-    return this.http.put(`${this.apiUrl}/choir-management`, choirData);
+    return this.choirService.updateMyChoir(choirData);
   }
 
   getChoirMembers(): Observable<UserInChoir[]> {
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`);
+    return this.choirService.getChoirMembers();
   }
 
   inviteUserToChoir(email: string, roleInChoir: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, roleInChoir });
+    return this.choirService.inviteUserToChoir(email, roleInChoir);
   }
 
   getInvitation(token: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/invitations/${token}`);
+    return this.userService.getInvitation(token);
   }
 
   requestPasswordReset(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/password-reset/request`, { email });
+    return this.userService.requestPasswordReset(email);
   }
 
   resetPassword(token: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/password-reset/reset/${token}`, { password });
+    return this.userService.resetPassword(token, password);
   }
 
   completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
+    return this.userService.completeRegistration(token, data);
   }
 
   removeUserFromChoir(userId: number): Observable<any> {
-    // Senden der ID im Body mit der DELETE-Methode
-    const options = { body: { userId: userId } };
-    return this.http.delete(`${this.apiUrl}/choir-management/members`, options);
+    return this.choirService.removeUserFromChoir(userId);
   }
 
   // --- Admin Methods ---
 
   getAdminChoirs(): Observable<Choir[]> {
-    return this.http.get<Choir[]>(`${this.apiUrl}/admin/choirs`);
+    return this.adminService.getAdminChoirs();
   }
 
   createChoir(data: { name: string; description?: string; location?: string }): Observable<Choir> {
-    return this.http.post<Choir>(`${this.apiUrl}/admin/choirs`, data);
+    return this.adminService.createChoir(data);
   }
 
   updateChoir(id: number, data: { name: string; description?: string; location?: string }): Observable<Choir> {
-    return this.http.put<Choir>(`${this.apiUrl}/admin/choirs/${id}`, data);
+    return this.adminService.updateChoir(id, data);
   }
 
   deleteChoir(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/choirs/${id}`);
+    return this.adminService.deleteChoir(id);
   }
 
   getChoirMembersAdmin(id: number): Observable<UserInChoir[]> {
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
+    return this.adminService.getChoirMembersAdmin(id);
   }
 
   inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir });
+    return this.adminService.inviteUserToChoirAdmin(id, email, roleInChoir);
   }
 
   removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
-    const options = { body: { userId } };
-    return this.http.delete(`${this.apiUrl}/admin/choirs/${id}/members`, options);
+    return this.adminService.removeUserFromChoirAdmin(id, userId);
   }
 
   getUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/admin/users`);
+    return this.adminService.getUsers();
   }
 
   getUserByEmail(email: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/admin/users/email/${encodeURIComponent(email)}`);
+    return this.adminService.getUserByEmail(email);
   }
 
   createUser(data: any): Observable<User> {
-    return this.http.post<User>(`${this.apiUrl}/admin/users`, data);
+    return this.adminService.createUser(data);
   }
 
   updateUser(id: number, data: any): Observable<User> {
-    return this.http.put<User>(`${this.apiUrl}/admin/users/${id}`, data);
+    return this.adminService.updateUser(id, data);
   }
 
   deleteUser(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/admin/users/${id}`);
+    return this.adminService.deleteUser(id);
   }
 
   sendPasswordReset(id: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
+    return this.adminService.sendPasswordReset(id);
   }
 
   getLoginAttempts(): Observable<LoginAttempt[]> {
-    return this.http.get<LoginAttempt[]>(`${this.apiUrl}/admin/login-attempts`);
+    return this.adminService.getLoginAttempts();
   }
 
   downloadBackup(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/backup/export`, { responseType: 'blob' });
+    return this.adminService.downloadBackup();
   }
 
   restoreBackup(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('backup', file);
-    return this.http.post(`${this.apiUrl}/backup/import`, formData);
+    return this.adminService.restoreBackup(file);
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
-    return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
+    return this.adminService.checkChoirAdminStatus();
   }
 
   getStatistics(): Observable<StatsSummary> {
-    return this.http.get<StatsSummary>(`${this.apiUrl}/stats`);
+    return this.adminService.getStatistics();
   }
 
   pingBackend(): Observable<{ message: string }> {
-        return this.http.get<{ message: string }>(`${this.apiUrl}/ping`);
+        return this.systemService.pingBackend();
     }
 
   registerDonation(): Observable<any> {
-        return this.http.post(`${this.apiUrl}/users/me/donate`, {});
+        return this.userService.registerDonation();
     }
 
   // --- Filter Preset Methods ---
