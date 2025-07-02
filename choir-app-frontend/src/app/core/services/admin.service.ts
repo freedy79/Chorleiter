@@ -70,6 +70,14 @@ export class AdminService {
     return this.http.get<LoginAttempt[]>(`${this.apiUrl}/admin/login-attempts`);
   }
 
+  listLogs(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/admin/logs`);
+  }
+
+  getLog(filename: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/logs/${encodeURIComponent(filename)}`);
+  }
+
   downloadBackup(): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/backup/export`, { responseType: 'blob' });
   }

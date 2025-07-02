@@ -317,3 +317,27 @@ exports.removeUserFromChoir = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+const logService = require('../services/log.service');
+
+exports.listLogs = async (req, res) => {
+    try {
+        const files = await logService.listLogFiles();
+        res.status(200).send(files);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.getLog = async (req, res) => {
+    const { filename } = req.params;
+    try {
+        const data = await logService.readLogFile(filename);
+        if (data === null) {
+            return res.status(404).send({ message: 'Log file not found' });
+        }
+        res.status(200).send(data);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
