@@ -1,6 +1,37 @@
 const db = require('../models');
 const MonthlyPlan = db.monthly_plan;
 
+function datesForRule(year, month, rule) {
+    const dates = [];
+    const d = new Date(Date.UTC(year, month - 1, 1));
+    while (d.getUTCMonth() === month - 1) {
+        if (d.getUTCDay() === rule.dayOfWeek) {
+            const week = Math.floor((d.getUTCDate() - 1) / 7) + 1;
+            if (!Array.isArray(rule.weeks) || rule.weeks.length === 0 || rule.weeks.includes(week)) {
+                dates.push(new Date(d));
+            }
+        }
+        d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return dates;
+}
+
+async function createEventsFromRules(plan) {
+    const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
+    for (const rule of rules) {
+        const dates = datesForRule(plan.year, plan.month, rule);
+        for (const date of dates) {
+            await db.event.create({
+                choirId: plan.choirId,
+                date,
+                type: rule.type,
+                notes: rule.notes || null,
+                monthlyPlanId: plan.id
+            });
+        }
+    }
+}
+
 exports.findByMonth = async (req, res) => {
     const { year, month } = req.params;
     try {
@@ -29,10 +60,18 @@ exports.create = async (req, res) => {
         return res.status(400).send({ message: 'year and month required' });
     }
     try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        if (!choir.modules || !choir.modules.dienstplan) {
+            return res.status(403).send({ message: 'Dienstplan module not enabled.' });
+        }
+
         const [plan, created] = await MonthlyPlan.findOrCreate({
             where: { choirId: req.activeChoirId, year, month },
             defaults: { choirId: req.activeChoirId, year, month }
         });
+        if (created) {
+            await createEventsFromRules(plan);
+        }
         res.status(created ? 201 : 200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not create plan.' });

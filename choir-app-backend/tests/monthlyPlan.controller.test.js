@@ -9,13 +9,17 @@ const controller = require('../src/controllers/monthlyPlan.controller');
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
-    const choir = await db.choir.create({ name: 'Test Choir' });
+    const choir = await db.choir.create({ name: 'Test Choir', modules: { dienstplan: true } });
+    await db.plan_rule.create({ choirId: choir.id, type: 'SERVICE', dayOfWeek: 0 });
     const baseReq = { activeChoirId: choir.id };
     const res = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
 
     await controller.create({ ...baseReq, body: { year: 2025, month: 7 } }, res);
     assert.strictEqual(res.statusCode, 201);
     const planId = res.data.id;
+
+    const events = await db.event.findAll({ where: { monthlyPlanId: planId } });
+    assert.ok(events.length > 0);
 
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 7 } }, res);
     assert.strictEqual(res.statusCode, 200);
