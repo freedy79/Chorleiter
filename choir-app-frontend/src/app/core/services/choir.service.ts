@@ -16,7 +16,7 @@ export class ChoirService {
     return this.http.get<Choir>(`${this.apiUrl}/choir-management`);
   }
 
-  updateMyChoir(choirData: { name: string; description: string; location: string }): Observable<any> {
+  updateMyChoir(choirData: Partial<Choir>): Observable<any> {
     return this.http.put(`${this.apiUrl}/choir-management`, choirData);
   }
 

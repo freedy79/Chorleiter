@@ -33,6 +33,18 @@
     </mat-card-content>
   </mat-card>
 
+  <!-- Einstellungen Card -->
+  <mat-card class="form-card" *ngIf="isChoirAdmin">
+    <mat-card-header>
+      <mat-card-title>Einstellungen</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-checkbox [(ngModel)]="dienstplanEnabled" (change)="onToggleDienstplan()">
+        Dienstplan anzeigen
+      </mat-checkbox>
+    </mat-card-content>
+  </mat-card>
+
   <!-- Card für die Mitglieder-Verwaltung -->
   <mat-card class="table-card" *ngIf="isChoirAdmin">
     <mat-card-header class="collapsible-header" (click)="toggleMembers()">

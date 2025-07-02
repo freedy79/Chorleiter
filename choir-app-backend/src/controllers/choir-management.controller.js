@@ -40,7 +40,7 @@ exports.getMyChoirDetails = async (req, res, next) => {
 
 // Details des aktiven Chors aktualisieren
 exports.updateMyChoir = async (req, res, next) => {
-    const { name, description, location } = req.body;
+    const { name, description, location, modules } = req.body;
 
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);
@@ -54,8 +54,14 @@ exports.updateMyChoir = async (req, res, next) => {
         }
 
         // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (location !== undefined) updateData.location = location;
+        if (modules !== undefined) updateData.modules = modules;
+
         const [numberOfAffectedRows] = await db.choir.update(
-            { name, description, location },
+            updateData,
             { where: { id: req.activeChoirId } }
         );
 

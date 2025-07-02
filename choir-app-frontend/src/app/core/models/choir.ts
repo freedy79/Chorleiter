@@ -6,4 +6,7 @@ export interface Choir {
     memberCount?: number;
     eventCount?: number;
     pieceCount?: number;
+    modules?: {
+        dienstplan?: boolean;
+    };
 }
