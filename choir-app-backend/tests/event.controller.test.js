@@ -11,6 +11,8 @@ const controller = require('../src/controllers/event.controller');
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
     const user = await db.user.create({ email: 't@example.com', role: 'USER' });
+    const organist = await db.user.create({ email: 'o@example.com', role: 'USER' });
+    const plan = await db.monthly_plan.create({ choirId: choir.id, year: 2024, month: 1 });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
     const res = {
@@ -19,8 +21,9 @@ const controller = require('../src/controllers/event.controller');
     };
 
     // First event should succeed
-    await controller.create({ ...baseReq, body: { date: '2024-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
+    await controller.create({ ...baseReq, body: { date: '2024-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [], organistId: organist.id, monthlyPlanId: plan.id } }, res);
     assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.data.event.organistId, organist.id);
 
     // Same type on same day should be rejected
     await controller.create({ ...baseReq, body: { date: '2024-01-01T12:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);

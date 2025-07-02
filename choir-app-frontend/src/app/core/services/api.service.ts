@@ -11,6 +11,7 @@ import { Category } from '../models/category';
 import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
+import { MonthlyPlan } from '../models/monthly-plan';
 import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
@@ -272,6 +273,23 @@ export class ApiService {
     let params = new HttpParams().set('start', start).set('end', end);
     if (type) params = params.set('type', type);
     return this.http.delete(`${this.apiUrl}/events/range`, { params });
+  }
+
+  // --- Monthly Plan Methods ---
+  getMonthlyPlan(year: number, month: number): Observable<MonthlyPlan> {
+    return this.http.get<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${year}/${month}`);
+  }
+
+  createMonthlyPlan(year: number, month: number): Observable<MonthlyPlan> {
+    return this.http.post<MonthlyPlan>(`${this.apiUrl}/monthly-plans`, { year, month });
+  }
+
+  finalizeMonthlyPlan(id: number): Observable<MonthlyPlan> {
+    return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/finalize`, {});
+  }
+
+  reopenMonthlyPlan(id: number): Observable<MonthlyPlan> {
+    return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/reopen`, {});
   }
 
 

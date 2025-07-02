@@ -23,6 +23,7 @@ import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
+import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
@@ -95,6 +96,11 @@ export const routes: Routes = [
             {
                 path: 'events',
                 component: EventListComponent,
+                canActivate: [AuthGuard]
+            },
+            {
+                path: 'dienstplan',
+                component: MonthlyPlanComponent,
                 canActivate: [AuthGuard]
             },
             {
