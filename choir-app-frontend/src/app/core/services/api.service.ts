@@ -353,7 +353,7 @@ export class ApiService {
     return this.choirService.getMyChoirDetails();
   }
 
-  updateMyChoir(choirData: { name: string, description: string, location: string }): Observable<any> {
+  updateMyChoir(choirData: Partial<Choir>): Observable<any> {
     return this.choirService.updateMyChoir(choirData);
   }
 
