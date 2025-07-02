@@ -91,10 +91,10 @@ export class ManageChoirComponent implements OnInit {
     // um den Resolver erneut auszulösen.
     if (this.isChoirAdmin) {
       this.apiService.getChoirMembers().subscribe(members => {
-          this.dataSource.data = members;
+        this.dataSource.data = members;
       });
       this.apiService.getChoirCollections().subscribe(cols => {
-          this.collectionDataSource.data = cols;
+        this.collectionDataSource.data = cols;
       });
     }
   }
@@ -172,6 +172,7 @@ export class ManageChoirComponent implements OnInit {
     if (!this.isChoirAdmin) {
       return;
     }
+
     const modules = { dienstplan: this.dienstplanEnabled };
     this.apiService.updateMyChoir({ modules }).subscribe({
       next: () => {
@@ -189,9 +190,9 @@ export class ManageChoirComponent implements OnInit {
         }
       },
       error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
-    }
+    });
   }
-                                                         
+
   removeCollection(collection: Collection): void {
     if (!this.isChoirAdmin) {
       return;
