@@ -7,8 +7,8 @@ export interface Event {
   notes?: string;
   createdAt: string;
   updatedAt: string;
-  director?: { name: string };
-  organist?: { name: string } | null;
+  director?: { id: number; name: string };
+  organist?: { id: number; name: string } | null;
   finalized?: boolean;
   version?: number;
   monthlyPlan?: { year: number; month: number; finalized: boolean; version: number } | null;

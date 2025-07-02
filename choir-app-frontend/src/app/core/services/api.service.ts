@@ -272,7 +272,7 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
-  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<Event> {
+  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
 
