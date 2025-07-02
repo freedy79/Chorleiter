@@ -5,6 +5,13 @@
   gap: 1rem;
 }
 
+.form-section-column {
+  padding-top: 1rem;
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
 .full-width {
   grid-column: 1 / -1;
 }
@@ -33,4 +40,25 @@ div[mat-dialog-content] {
 
 mat-sidenav {
   width: 220px;
+}
+
+.image-upload {
+  margin-top: 1rem;
+
+  .dropzone {
+    border: 2px dashed #ccc;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+
+    &.dragover {
+      background-color: #f5f5f5;
+    }
+
+    img {
+      max-height: 150px;
+      width: auto;
+      object-fit: cover;
+    }
+  }
 }

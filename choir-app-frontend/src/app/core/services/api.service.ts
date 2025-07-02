@@ -40,13 +40,14 @@ export class ApiService {
    * Gets the list of pieces for the currently logged-in choir, including their specific status.
    * Can be filtered by composer or category.
    * @param composerId - Optional ID of the composer to filter by.
-   * @param categoryId - Optional ID of the category (Rubrik) to filter by.
+   * @param categoryIds - Optional list of category IDs to filter by.
    */
   getMyRepertoire(
     composerId?: number,
-    categoryId?: number,
+    categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
+    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
+            'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
     page: number = 1,
     limit: number = 25,
     status?: string,
@@ -55,7 +56,7 @@ export class ApiService {
   ): Observable<{ data: Piece[]; total: number }> {
     // composerId not yet supported by PieceService, pass as part of search/filter when implemented
     return this.pieceService.getMyRepertoire(
-      categoryId,
+      categoryIds,
       collectionId,
       sortBy,
       page,
@@ -101,6 +102,18 @@ export class ApiService {
 
   updateGlobalPiece(id: number, pieceData: any): Observable<Piece> {
     return this.pieceService.updateGlobalPiece(id, pieceData);
+  }
+
+  uploadPieceImage(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData);
+  }
+
+  getPieceImage(id: number): Observable<string> {
+    return this.http
+      .get<{ data: string }>(`${this.apiUrl}/pieces/${id}/image`)
+      .pipe(map(res => res.data));
   }
 
   proposePieceChange(id: number, pieceData: any): Observable<any> {
@@ -395,6 +408,19 @@ export class ApiService {
 
   deleteChoir(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/choirs/${id}`);
+  }
+
+  getChoirMembersAdmin(id: number): Observable<UserInChoir[]> {
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
+  }
+
+  inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir });
+  }
+
+  removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
+    const options = { body: { userId } };
+    return this.http.delete(`${this.apiUrl}/admin/choirs/${id}/members`, options);
   }
 
   getUsers(): Observable<User[]> {

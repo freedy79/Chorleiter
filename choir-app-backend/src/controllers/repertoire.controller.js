@@ -73,7 +73,14 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    const { composerId, categoryId, categoryIds, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    let parsedCategoryIds = [];
+    if (categoryIds) {
+        parsedCategoryIds = Array.isArray(categoryIds) ? categoryIds : String(categoryIds).split(',');
+    } else if (categoryId) {
+        parsedCategoryIds = [categoryId];
+    }
+    parsedCategoryIds = parsedCategoryIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 25;
     const offset = (pageNum - 1) * limitNum;
@@ -100,22 +107,28 @@ exports.findMyRepertoire = async (req, res) => {
         // Beginnen Sie mit der Bedingung, nur Stücke aus dem Repertoire zu holen.
         const whereCondition = {
             id: { [Op.in]: pieceIdsInRepertoire },
-            ...(composerId && { composerId: composerId }),
-            ...(categoryId && { categoryId: categoryId }),
+            ...(composerId && { composerId }),
+            ...(parsedCategoryIds.length && { categoryId: { [Op.in]: parsedCategoryIds } }),
             ...(voicing && { voicing: { [Op.iLike]: `%${voicing}%` } }), // Case-insensitive search
-            ...(key && { key: key }),
+            ...(key && { key }),
         };
-        // Fügen Sie die optionalen Filter hinzu.
-        if (composerId) whereCondition.composerId = composerId;
-        if (categoryId) whereCondition.categoryId = categoryId;
 
         if (search) {
             const tokens = parseSearchTokens(search);
+            const refSub = `(
+                        SELECT c.prefix || cp."numberInCollection"
+                        FROM collection_pieces cp
+                        JOIN collections c ON cp."collectionId" = c.id
+                        WHERE cp."pieceId" = "piece"."id"
+                        ORDER BY cp."numberInCollection"
+                        LIMIT 1
+                    )`;
             whereCondition[Op.and] = tokens.map(t => ({
                 [Op.or]: [
                     { title: { [Op.iLike]: `%${t}%` } },
                     { '$composer.name$': { [Op.iLike]: `%${t}%` } },
-                    { '$category.name$': { [Op.iLike]: `%${t}%` } }
+                    { '$category.name$': { [Op.iLike]: `%${t}%` } },
+                    literal(`${refSub} ILIKE '%${t}%'`)
                 ]
             }));
         }
@@ -166,6 +179,42 @@ exports.findMyRepertoire = async (req, res) => {
                         LIMIT 1
                     )`),
                     'collectionNumber'
+                ],
+                [
+                    literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`),
+                    'lastSung'
+                ],
+                [
+                    literal(`(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`),
+                    'lastRehearsed'
+                ],
+                [
+                    literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`),
+                    'timesSung'
+                ],
+                [
+                    literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`),
+                    'timesRehearsed'
                 ]
             ]
         };
@@ -208,6 +257,48 @@ exports.findMyRepertoire = async (req, res) => {
                         sortDirection
                     ]
                 ];
+                break;
+            case 'lastSung': {
+                const base = `(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`;
+                const expr = sortDirection === 'DESC'
+                    ? `COALESCE(${base}, TO_TIMESTAMP(0))`
+                    : base;
+                order = [[literal(expr), sortDirection]];
+                break;
+            }
+            case 'lastRehearsed': {
+                const base = `(
+                        SELECT MAX(e.date)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`;
+                const expr = sortDirection === 'DESC'
+                    ? `COALESCE(${base}, TO_TIMESTAMP(0))`
+                    : base;
+                order = [[literal(expr), sortDirection]];
+                break;
+            }
+            case 'timesSung':
+                order = [[literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
+                    )`), sortDirection]];
+                break;
+            case 'timesRehearsed':
+                order = [[literal(`(
+                        SELECT COUNT(*)
+                        FROM event_pieces ep
+                        JOIN events e ON ep."eventId" = e.id
+                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
+                    )`), sortDirection]];
                 break;
             case 'title':
             default:

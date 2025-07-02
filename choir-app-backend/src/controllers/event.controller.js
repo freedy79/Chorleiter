@@ -244,9 +244,32 @@ exports.update = async (req, res) => {
     const { date, type, notes, pieceIds, organistId, finalized, version, monthlyPlanId } = req.body;
 
     try {
-        const event = await Event.findOne({ where: { id, choirId: req.activeChoirId } });
+        const event = await Event.findOne({
+            where: { id, choirId: req.activeChoirId },
+            include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }]
+        });
         if (!event) {
             return res.status(404).send({ message: 'Event not found.' });
+        }
+
+
+        // Determine if anything has changed
+        const dateChanged = new Date(date).getTime() !== new Date(event.date).getTime();
+        const typeChanged = type !== event.type;
+        const notesChanged = (notes || '') !== (event.notes || '');
+
+        const incomingPieces = Array.isArray(pieceIds) ? [...pieceIds].sort() : [];
+        const existingPieces = event.pieces.map(p => p.id).sort();
+        const piecesChanged = JSON.stringify(incomingPieces) !== JSON.stringify(existingPieces);
+
+        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged) {
+            const full = await Event.findByPk(id, {
+                include: [
+                    { model: Piece, as: 'pieces', through: { attributes: [] } },
+                    { model: User, as: 'director', attributes: ['name'] }
+                ]
+            });
+            return res.status(200).send(full);
         }
 
         await event.update({ date, type, notes, directorId: req.userId, organistId, finalized, version, monthlyPlanId });
@@ -321,5 +344,34 @@ exports.deleteRange = async (req, res) => {
         res.send({ message: `${num} events deleted.` });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not delete events.' });
+    }
+};
+
+// Recalculate repertoire statuses for all choirs based on past events
+exports.recalculatePieceStatuses = async (req, res) => {
+    try {
+        await db.sequelize.query(`
+            UPDATE "choir_repertoires" cr
+            SET status = CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'SERVICE'
+                ) THEN 'CAN_BE_SUNG'
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'REHEARSAL'
+                ) THEN 'IN_REHEARSAL'
+                ELSE 'NOT_READY'
+            END
+        `);
+        res.status(200).send({ message: 'Piece statuses recalculated.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
     }
 };

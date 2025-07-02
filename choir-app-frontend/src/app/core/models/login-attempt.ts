@@ -3,6 +3,7 @@ export interface LoginAttempt {
   email: string;
   success: boolean;
   ipAddress?: string;
+  userAgent?: string;
   createdAt: string;
   updatedAt: string;
 }

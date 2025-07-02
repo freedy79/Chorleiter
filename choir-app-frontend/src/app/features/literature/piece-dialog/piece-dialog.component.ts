@@ -14,7 +14,7 @@ import {
 } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap, map } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -42,6 +42,9 @@ export class PieceDialogComponent implements OnInit {
     isEditMode = false;
     isAdmin = false;
     activeSection: 'general' | 'text' | 'files' = 'general';
+    imagePreview: string | null = null;
+    imageFile: File | null = null;
+    isDragOver = false;
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
@@ -195,6 +198,35 @@ export class PieceDialogComponent implements OnInit {
         this.linksFormArray.removeAt(index);
     }
 
+    onFileSelected(event: Event): void {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    onDragOver(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = true;
+    }
+
+    onDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+    }
+
+    onDrop(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+        const file = event.dataTransfer?.files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    private handleFile(file: File): void {
+        this.imageFile = file;
+        const reader = new FileReader();
+        reader.onload = () => (this.imagePreview = reader.result as string);
+        reader.readAsDataURL(file);
+    }
+
     isGeneralStepInvalid(): boolean {
         return (
             this.pieceForm.get('title')?.invalid ||
@@ -222,6 +254,10 @@ export class PieceDialogComponent implements OnInit {
             lyrics: piece.lyrics,
         });
 
+        if (piece.imageIdentifier) {
+            this.apiService.getPieceImage(piece.id).subscribe(data => this.imagePreview = data);
+        }
+
         // Populate the links FormArray
         piece.links?.forEach((link) => {
             this.linksFormArray.push(
@@ -248,12 +284,20 @@ export class PieceDialogComponent implements OnInit {
             const obs = this.isAdmin
                 ? this.pieceService.updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
                 : this.pieceService.proposePieceChange(this.data.pieceId, this.pieceForm.value);
-            obs.subscribe({
-                next: () => this.dialogRef.close(true),
-                error: (err) => {
-                    console.error('Failed to save piece', err);
-                },
-            });
+            obs
+                .pipe(
+                    switchMap(() =>
+                        this.imageFile && this.isAdmin
+                            ? this.apiService.uploadPieceImage(this.data.pieceId!, this.imageFile)
+                            : of(null)
+                    )
+                )
+                .subscribe({
+                    next: () => this.dialogRef.close(true),
+                    error: (err) => {
+                        console.error('Failed to save piece', err);
+                    },
+                });
         } else {
             this.pieceService
                 .createGlobalPiece(this.pieceForm.value)
@@ -262,6 +306,11 @@ export class PieceDialogComponent implements OnInit {
                         this.pieceService
                             .addPieceToMyRepertoire(newlyCreatedPiece.id)
                             .pipe(map(() => newlyCreatedPiece))
+                    ),
+                    switchMap((createdPiece) =>
+                        this.imageFile
+                            ? this.apiService.uploadPieceImage(createdPiece.id, this.imageFile).pipe(map(() => createdPiece))
+                            : of(createdPiece)
                     )
                 )
                 .subscribe({

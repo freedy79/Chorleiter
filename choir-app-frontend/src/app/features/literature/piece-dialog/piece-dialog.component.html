@@ -16,7 +16,7 @@
           <ng-container *ngSwitchCase="'general'">
             <div class="form-section">
               <mat-form-field appearance="outline">
-                <mat-label>Title</mat-label>
+                <mat-label>Titel</mat-label>
                 <input matInput formControlName="title" cdkFocusInitial>
               </mat-form-field>
 
@@ -71,7 +71,7 @@
           </ng-container>
 
           <ng-container *ngSwitchCase="'text'">
-            <div class="form-section">
+            <div class="form-section-column">
               <mat-form-field appearance="outline">
                 <mat-label>Dichter</mat-label>
                 <mat-select formControlName="authorId">
@@ -109,7 +109,22 @@
             <mat-divider></mat-divider>
             <div class="form-section">
               <h4>Notenbild</h4>
-              <p>Platzhalter für Dateiupload-Komponente.</p>
+              <div class="image-upload">
+                <div
+                  class="dropzone"
+                  [class.dragover]="isDragOver"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                  (click)="fileInput.click()"
+                >
+                  <ng-container *ngIf="!imagePreview">
+                    <p>Bild hierher ziehen oder klicken</p>
+                  </ng-container>
+                  <img *ngIf="imagePreview" [src]="imagePreview" alt="Notenbild Vorschau" />
+                </div>
+                <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
+              </div>
             </div>
           </ng-container>
         </ng-container>
