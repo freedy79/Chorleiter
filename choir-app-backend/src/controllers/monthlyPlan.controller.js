@@ -11,8 +11,8 @@ exports.findByMonth = async (req, res) => {
                 as: 'events',
                 order: [['date', 'ASC']],
                 include: [
-                    { model: db.user, as: 'director', attributes: ['name'] },
-                    { model: db.user, as: 'organist', attributes: ['name'], required: false }
+                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
                 ]
             }]
         });

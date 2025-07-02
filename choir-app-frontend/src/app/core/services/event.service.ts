@@ -30,7 +30,7 @@ export class EventService {
     return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
   }
 
-  updateEvent(id: number, data: { date: string; type: string; notes?: string; pieceIds: number[] }): Observable<Event> {
+  updateEvent(id: number, data: { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number }): Observable<Event> {
     return this.http.put<Event>(`${this.apiUrl}/events/${id}`, data);
   }
 

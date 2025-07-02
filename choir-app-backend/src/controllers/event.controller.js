@@ -37,9 +37,9 @@ async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
 }
 
 exports.create = async (req, res) => {
-    const { date, type, notes, pieceIds, organistId, finalized, version, monthlyPlanId } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
     const choirId = req.activeChoirId;
-    const userId = req.userId;
+    const creatorId = req.userId;
 
     if (!date || !type) {
         return res.status(400).send({ message: "Date and Type are required." });
@@ -79,7 +79,7 @@ exports.create = async (req, res) => {
             type: type,
             notes: notes,
             choirId: choirId,
-            directorId: userId,
+            directorId: directorId || creatorId,
             organistId: organistId || null,
             finalized: finalized || false,
             version: version || 1,
@@ -95,8 +95,8 @@ exports.create = async (req, res) => {
         // Event inklusive Director neu laden, um den Namen zurückzugeben
         const fullEvent = await Event.findByPk(event.id, {
             include: [
-                { model: User, as: 'director', attributes: ['name'] },
-                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
@@ -158,7 +158,7 @@ exports.findLast = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['name'] }, { model: User, as: 'organist', attributes: ['name'], required: false }]
+            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: User, as: 'organist', attributes: ['id', 'name'], required: false }]
         });
 
         if (!lastEvent) {
@@ -188,8 +188,8 @@ exports.findAll = async (req, res) => {
             where,
             order: [['date', 'DESC']],
             include: [
-                { model: User, as: 'director', attributes: ['name'] },
-                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
@@ -226,7 +226,7 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
+            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
         });
 
         if (!event) {
@@ -241,7 +241,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const id = req.params.id;
-    const { date, type, notes, pieceIds, organistId, finalized, version, monthlyPlanId } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
 
     try {
         const event = await Event.findOne({
@@ -266,13 +266,13 @@ exports.update = async (req, res) => {
             const full = await Event.findByPk(id, {
                 include: [
                     { model: Piece, as: 'pieces', through: { attributes: [] } },
-                    { model: User, as: 'director', attributes: ['name'] }
+                    { model: User, as: 'director', attributes: ['id', 'name'] }
                 ]
             });
             return res.status(200).send(full);
         }
 
-        await event.update({ date, type, notes, directorId: req.userId, organistId, finalized, version, monthlyPlanId });
+        await event.update({ date, type, notes, directorId: directorId || req.userId, organistId, finalized, version, monthlyPlanId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -282,8 +282,8 @@ exports.update = async (req, res) => {
         const updated = await Event.findByPk(id, {
             include: [
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
-                { model: User, as: 'director', attributes: ['name'] },
-                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
