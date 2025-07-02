@@ -28,8 +28,13 @@ export class ManageChoirComponent implements OnInit {
 
   isChoirAdmin = false;
 
+
+  choirInfoExpanded = true;
+  membersExpanded = true;
+
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
+
 
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
@@ -76,6 +81,14 @@ export class ManageChoirComponent implements OnInit {
           this.collectionDataSource.data = cols;
       });
     }
+  }
+
+  toggleChoirInfo(): void {
+    this.choirInfoExpanded = !this.choirInfoExpanded;
+  }
+
+  toggleMembers(): void {
+    this.membersExpanded = !this.membersExpanded;
   }
 
   onSaveChoirDetails(): void {

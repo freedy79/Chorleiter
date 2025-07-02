@@ -17,6 +17,16 @@ mat-card-header {
   width: 100%;
 }
 
+.collapsible-header {
+  cursor: pointer;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 mat-card-content form {
   display: grid;
   grid-template-columns: 1fr 1fr;
