@@ -3,6 +3,8 @@ const Piece = db.piece;
 const Composer = db.composer;
 const Category = db.category;
 const Author = db.author;
+const path = require('path');
+const fs = require('fs/promises');
 const CrudService = require("../services/crud.service");
 const pieceService = new CrudService(Piece);
 
@@ -167,4 +169,44 @@ exports.delete = async (req, res) => {
     } catch (err) {
         res.status(500).send({ message: "Could not delete Piece with id=" + id });
     }
+};
+
+exports.uploadImage = async (req, res, next) => {
+    try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot modify pieces.' });
+        }
+        const id = req.params.id;
+        if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+
+        const piece = await Piece.findByPk(id);
+        if (!piece) return res.status(404).send({ message: 'Piece not found.' });
+
+        await piece.update({ imageIdentifier: req.file.filename });
+        res.status(200).send({ filename: req.file.filename });
+    } catch (err) { next(err); }
+};
+
+exports.getImage = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const piece = await Piece.findByPk(id);
+
+        if (!piece || !piece.imageIdentifier) {
+            return res.status(200).json({ data: '' });
+        }
+
+        const filePath = path.join(__dirname, '../../uploads/piece-images', piece.imageIdentifier);
+
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            return res.status(200).json({ data: '' });
+        }
+
+        const fileData = await fs.readFile(filePath);
+        const base64 = fileData.toString('base64');
+        const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
+        res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
+    } catch (err) { next(err); }
 };
