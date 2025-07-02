@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -14,16 +14,18 @@ import { MailSettings } from '@core/models/mail-settings';
   styleUrls: ['./mail-settings.component.scss']
 })
 export class MailSettingsComponent implements OnInit {
-  form = this.fb.group({
-    host: ['', Validators.required],
-    port: [587, Validators.required],
-    user: [''],
-    pass: [''],
-    secure: [false],
-    fromAddress: ['']
-  });
+  form!: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {}
+  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
+    this.form = this.fb.group({
+      host: ['', Validators.required],
+      port: [587, Validators.required],
+      user: [''],
+      pass: [''],
+      secure: [false],
+      fromAddress: ['']
+    });
+  }
 
   ngOnInit(): void {
     this.load();
