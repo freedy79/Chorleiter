@@ -32,6 +32,7 @@ db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
 db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequelize);
 db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
+db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users

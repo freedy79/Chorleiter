@@ -24,10 +24,12 @@ export class ManageChoirResolver implements Resolve<any> {
     return this.authService.isAdmin$.pipe(
       switchMap(isAdmin => {
         const choirDetails$ = this.apiService.getMyChoirDetails();
+        const collections$ = this.apiService.getChoirCollections();
         if (isAdmin) {
           return forkJoin({
             choirDetails: choirDetails$,
             members: this.apiService.getChoirMembers(),
+            collections: collections$,
             isChoirAdmin: of(true)
           });
         }
@@ -37,12 +39,14 @@ export class ManageChoirResolver implements Resolve<any> {
               return forkJoin({
                 choirDetails: choirDetails$,
                 members: this.apiService.getChoirMembers(),
+                collections: collections$,
                 isChoirAdmin: of(true)
               });
             } else {
               return forkJoin({
                 choirDetails: choirDetails$,
                 members: of([]),
+                collections: collections$,
                 isChoirAdmin: of(false)
               });
             }

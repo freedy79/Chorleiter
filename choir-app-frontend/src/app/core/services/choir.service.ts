@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Choir } from '../models/choir';
 import { UserInChoir } from '../models/user';
+import { Collection } from '../models/collection';
 
 @Injectable({ providedIn: 'root' })
 export class ChoirService {
@@ -30,5 +31,13 @@ export class ChoirService {
   removeUserFromChoir(userId: number): Observable<any> {
     const options = { body: { userId } };
     return this.http.delete(`${this.apiUrl}/choir-management/members`, options);
+  }
+
+  getChoirCollections(): Observable<Collection[]> {
+    return this.http.get<Collection[]>(`${this.apiUrl}/choir-management/collections`);
+  }
+
+  removeCollectionFromChoir(collectionId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/choir-management/collections/${collectionId}`);
   }
 }
