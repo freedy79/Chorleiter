@@ -190,3 +190,60 @@ exports.removeUserFromChoir = async (req, res, next) => {
         next(err);
     }
 };
+
+exports.getChoirCollections = async (req, res, next) => {
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        if (!choir) {
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        const collections = await choir.getCollections({
+            attributes: {
+                include: [
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "collection_pieces" AS cp WHERE cp."collectionId" = "collection"."id")`), 'pieceCount']
+                ]
+            },
+            order: [['title', 'ASC']]
+        });
+
+        const result = collections.map(c => {
+            const plain = c.get ? c.get() : c;
+            return {
+                ...plain,
+                pieceCount: parseInt(plain.pieceCount, 10) || 0
+            };
+        });
+
+        res.status(200).send(result);
+    } catch (err) {
+        err.message = `Error fetching collections for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+exports.removeCollectionFromChoir = async (req, res, next) => {
+    try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
+        }
+
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        const collection = await db.collection.findByPk(req.params.id);
+
+        if (!choir || !collection) {
+            return res.status(404).send({ message: 'Choir or Collection not found.' });
+        }
+
+        await choir.removeCollection(collection);
+        const pieces = await collection.getPieces();
+        if (pieces && pieces.length > 0) {
+            await choir.removePieces(pieces);
+        }
+
+        res.status(200).send({ message: `Collection '${collection.title}' removed from choir.` });
+    } catch (err) {
+        err.message = `Error removing collection from choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};

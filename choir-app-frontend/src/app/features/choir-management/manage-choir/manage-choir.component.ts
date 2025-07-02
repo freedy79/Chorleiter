@@ -10,6 +10,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
 import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
+import { Collection } from 'src/app/core/models/collection';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute } from '@angular/router';
@@ -26,6 +27,9 @@ export class ManageChoirComponent implements OnInit {
   choirForm: FormGroup;
 
   isChoirAdmin = false;
+
+  displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
+  collectionDataSource = new MatTableDataSource<Collection>();
 
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
@@ -56,6 +60,7 @@ export class ManageChoirComponent implements OnInit {
           this.choirForm.disable();
         }
         this.dataSource.data = pageData.members;
+        this.collectionDataSource.data = pageData.collections;
       }
     });
   }
@@ -66,6 +71,9 @@ export class ManageChoirComponent implements OnInit {
     if (this.isChoirAdmin) {
       this.apiService.getChoirMembers().subscribe(members => {
           this.dataSource.data = members;
+      });
+      this.apiService.getChoirCollections().subscribe(cols => {
+          this.collectionDataSource.data = cols;
       });
     }
   }
@@ -125,6 +133,30 @@ export class ManageChoirComponent implements OnInit {
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
           error: (err) => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
+        });
+      }
+    });
+  }
+
+  removeCollection(collection: Collection): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
+    const dialogData: ConfirmDialogData = {
+      title: 'Sammlung entfernen?',
+      message: `Soll die Sammlung '${collection.title}' aus dem Chor entfernt werden?`
+    };
+
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.apiService.removeCollectionFromChoir(collection.id).subscribe({
+          next: () => {
+            this.snackBar.open(`'${collection.title}' entfernt.`, 'OK', { duration: 3000 });
+            this.reloadData();
+          },
+          error: () => this.snackBar.open('Fehler beim Entfernen der Sammlung.', 'Schließen')
         });
       }
     });
