@@ -61,6 +61,7 @@ const invitationRoutes = require("./routes/invitation.routes");
 const statsRoutes = require("./routes/stats.routes");
 const passwordResetRoutes = require("./routes/password-reset.routes");
 const repertoireFilterRoutes = require("./routes/repertoire-filter.routes");
+const monthlyPlanRoutes = require("./routes/monthlyPlan.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -80,6 +81,7 @@ app.use("/api/invitations", invitationRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 app.use("/api/repertoire-filters", repertoireFilterRoutes);
+app.use("/api/monthly-plans", monthlyPlanRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(

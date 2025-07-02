@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('director', 'choir_admin'),
             defaultValue: 'director'
         },
+        isOrganist: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
         registrationStatus: {
             type: DataTypes.ENUM('REGISTERED', 'PENDING'),
             defaultValue: 'REGISTERED'

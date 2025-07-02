@@ -8,6 +8,10 @@ export interface Event {
   createdAt: string;
   updatedAt: string;
   director?: { name: string };
+  organist?: { name: string } | null;
+  finalized?: boolean;
+  version?: number;
+  monthlyPlan?: { year: number; month: number; finalized: boolean; version: number } | null;
   pieces: Piece[];
 }
 

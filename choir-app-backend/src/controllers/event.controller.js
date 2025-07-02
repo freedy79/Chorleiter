@@ -37,7 +37,7 @@ async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
 }
 
 exports.create = async (req, res) => {
-    const { date, type, notes, pieceIds } = req.body;
+    const { date, type, notes, pieceIds, organistId, finalized, version, monthlyPlanId } = req.body;
     const choirId = req.activeChoirId;
     const userId = req.userId;
 
@@ -79,7 +79,11 @@ exports.create = async (req, res) => {
             type: type,
             notes: notes,
             choirId: choirId,
-            directorId: userId
+            directorId: userId,
+            organistId: organistId || null,
+            finalized: finalized || false,
+            version: version || 1,
+            monthlyPlanId: monthlyPlanId || null
         });
 
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
@@ -90,7 +94,11 @@ exports.create = async (req, res) => {
 
         // Event inklusive Director neu laden, um den Namen zurückzugeben
         const fullEvent = await Event.findByPk(event.id, {
-            include: [{ model: User, as: 'director', attributes: ['name'] }]
+            include: [
+                { model: User, as: 'director', attributes: ['name'] },
+                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            ]
         });
 
         // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
@@ -150,7 +158,7 @@ exports.findLast = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['name'] }]
+            }, { model: User, as: 'director', attributes: ['name'] }, { model: User, as: 'organist', attributes: ['name'], required: false }]
         });
 
         if (!lastEvent) {
@@ -179,7 +187,11 @@ exports.findAll = async (req, res) => {
         const events = await Event.findAll({
             where,
             order: [['date', 'DESC']],
-            include: [{ model: User, as: 'director', attributes: ['name'] }]
+            include: [
+                { model: User, as: 'director', attributes: ['name'] },
+                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            ]
         });
         res.status(200).send(events);
     } catch (err) {
@@ -214,7 +226,7 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['name'] }]
+            }, { model: User, as: 'director', attributes: ['name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
         });
 
         if (!event) {
@@ -229,7 +241,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const id = req.params.id;
-    const { date, type, notes, pieceIds } = req.body;
+    const { date, type, notes, pieceIds, organistId, finalized, version, monthlyPlanId } = req.body;
 
     try {
         const event = await Event.findOne({ where: { id, choirId: req.activeChoirId } });
@@ -237,7 +249,7 @@ exports.update = async (req, res) => {
             return res.status(404).send({ message: 'Event not found.' });
         }
 
-        await event.update({ date, type, notes, directorId: req.userId });
+        await event.update({ date, type, notes, directorId: req.userId, organistId, finalized, version, monthlyPlanId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -247,7 +259,9 @@ exports.update = async (req, res) => {
         const updated = await Event.findByPk(id, {
             include: [
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
-                { model: User, as: 'director', attributes: ['name'] }
+                { model: User, as: 'director', attributes: ['name'] },
+                { model: User, as: 'organist', attributes: ['name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
         res.status(200).send(updated);

@@ -143,6 +143,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           visibleSubject: this.isLoggedIn$,
       },
       {
+        displayName: 'Dienstplan',
+        route: '/dienstplan',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
         displayName: 'Statistik',
         route: '/stats',
         visibleSubject: this.isLoggedIn$,
