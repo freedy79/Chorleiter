@@ -27,6 +27,9 @@ export class ManageChoirComponent implements OnInit {
 
   isChoirAdmin = false;
 
+  choirInfoExpanded = true;
+  membersExpanded = true;
+
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
@@ -68,6 +71,14 @@ export class ManageChoirComponent implements OnInit {
           this.dataSource.data = members;
       });
     }
+  }
+
+  toggleChoirInfo(): void {
+    this.choirInfoExpanded = !this.choirInfoExpanded;
+  }
+
+  toggleMembers(): void {
+    this.membersExpanded = !this.membersExpanded;
   }
 
   onSaveChoirDetails(): void {
