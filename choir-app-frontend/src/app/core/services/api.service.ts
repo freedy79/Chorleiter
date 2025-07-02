@@ -385,6 +385,14 @@ export class ApiService {
     return this.choirService.removeUserFromChoir(userId);
   }
 
+  getChoirCollections(): Observable<Collection[]> {
+    return this.choirService.getChoirCollections();
+  }
+
+  removeCollectionFromChoir(collectionId: number): Observable<any> {
+    return this.choirService.removeCollectionFromChoir(collectionId);
+  }
+
   // --- Admin Methods ---
 
   getAdminChoirs(): Observable<Choir[]> {
