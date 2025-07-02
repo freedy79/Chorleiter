@@ -103,6 +103,18 @@ export class ApiService {
     return this.pieceService.updateGlobalPiece(id, pieceData);
   }
 
+  uploadPieceImage(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData);
+  }
+
+  getPieceImage(id: number): Observable<string> {
+    return this.http
+      .get<{ data: string }>(`${this.apiUrl}/pieces/${id}/image`)
+      .pipe(map(res => res.data));
+  }
+
   proposePieceChange(id: number, pieceData: any): Observable<any> {
     return this.pieceService.proposePieceChange(id, pieceData);
   }

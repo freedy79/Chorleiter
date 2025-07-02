@@ -109,7 +109,22 @@
             <mat-divider></mat-divider>
             <div class="form-section">
               <h4>Notenbild</h4>
-              <p>Platzhalter für Dateiupload-Komponente.</p>
+              <div class="image-upload">
+                <div
+                  class="dropzone"
+                  [class.dragover]="isDragOver"
+                  (dragover)="onDragOver($event)"
+                  (dragleave)="onDragLeave($event)"
+                  (drop)="onDrop($event)"
+                  (click)="fileInput.click()"
+                >
+                  <ng-container *ngIf="!imagePreview">
+                    <p>Bild hierher ziehen oder klicken</p>
+                  </ng-container>
+                  <img *ngIf="imagePreview" [src]="imagePreview" alt="Notenbild Vorschau" />
+                </div>
+                <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
+              </div>
             </div>
           </ng-container>
         </ng-container>
