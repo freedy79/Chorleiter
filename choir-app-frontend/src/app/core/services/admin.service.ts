@@ -6,6 +6,7 @@ import { Choir } from '../models/choir';
 import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { StatsSummary } from '../models/stats-summary';
+import { MailSettings } from '../models/mail-settings';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -94,5 +95,13 @@ export class AdminService {
 
   getStatistics(): Observable<StatsSummary> {
     return this.http.get<StatsSummary>(`${this.apiUrl}/stats`);
+  }
+
+  getMailSettings(): Observable<MailSettings> {
+    return this.http.get<MailSettings>(`${this.apiUrl}/admin/mail-settings`);
+  }
+
+  updateMailSettings(data: MailSettings): Observable<MailSettings> {
+    return this.http.put<MailSettings>(`${this.apiUrl}/admin/mail-settings`, data);
   }
 }

@@ -77,6 +77,18 @@ const initialSeed = async () => {
             console.log(`-> Admin user assigned to "${choir.name}".`);
         }
 
+        await db.mail_setting.findOrCreate({
+            where: { id: 1 },
+            defaults: {
+                host: process.env.SMTP_HOST || 'localhost',
+                port: process.env.SMTP_PORT || 587,
+                user: process.env.SMTP_USER || '',
+                pass: process.env.SMTP_PASS || '',
+                secure: false,
+                fromAddress: process.env.EMAIL_FROM || 'no-reply@example.com'
+            }
+        });
+
         console.log("Initial seeding completed successfully.");
     } catch (error) {
         console.error("Error during initial seeding:", error);

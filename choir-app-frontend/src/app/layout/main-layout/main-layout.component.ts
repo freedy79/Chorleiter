@@ -203,6 +203,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           {
             displayName: 'Logs',
             route: '/admin/logs',
+          },
+          {
+            displayName: 'Mail-Server',
+            route: '/admin/mail-settings',
           }
         ]
       }
