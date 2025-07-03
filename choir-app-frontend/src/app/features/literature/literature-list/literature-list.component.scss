@@ -19,11 +19,21 @@
 }
 
 // Header der Seite (Titel und Button)
-.list-page-header {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  // Dieser Bereich hat eine feste Höhe und wächst nicht.
+  margin-bottom: 0.5rem;
+  flex-shrink: 0;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  margin-bottom: 0.5rem;
   flex-shrink: 0;
 }
 
@@ -48,6 +58,8 @@
 .preset-select {
   width: 200px;
   margin: 0 1rem;
+  background-color: rgba(0, 0, 0, 0.04);
+  height: 100%;
 }
 
 .filter-panel {
