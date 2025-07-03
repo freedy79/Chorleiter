@@ -16,7 +16,7 @@ export class EventService {
     });
   }
 
-  createEvent(eventData: { date: string; type: string; notes?: string; pieceIds: number[] }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number }): Observable<CreateEventResponse> {
     return this.http.post<CreateEventResponse>(`${this.apiUrl}/events`, eventData);
   }
 

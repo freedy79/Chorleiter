@@ -2,16 +2,20 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { Event } from '@core/models/event';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
+import { EventDialogComponent } from '../events/event-dialog/event-dialog.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, EventDialogComponent, ConfirmDialogComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
@@ -26,14 +30,22 @@ export class MonthlyPlanComponent implements OnInit {
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  private updateDisplayedColumns(): void {
+    const base = ['date', 'type', 'director', 'organist', 'notes'];
+    this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
+  }
+
+  constructor(private api: ApiService,
+              private auth: AuthService,
+              private dialog: MatDialog,
+              private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
     const now = new Date();
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
     this.loadPlan(this.selectedYear, this.selectedMonth);
-    this.api.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
+    this.api.checkChoirAdminStatus().subscribe(r => { this.isChoirAdmin = r.isChoirAdmin; this.updateDisplayedColumns(); });
     this.api.getChoirMembers().subscribe(m => {
       this.members = m;
       this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
@@ -43,8 +55,8 @@ export class MonthlyPlanComponent implements OnInit {
 
   loadPlan(year: number, month: number): void {
     this.api.getMonthlyPlan(year, month).subscribe({
-      next: plan => { this.plan = plan; this.events = plan?.events || []; },
-      error: () => { this.plan = null; this.events = []; }
+      next: plan => { this.plan = plan; this.events = plan?.events || []; this.updateDisplayedColumns(); },
+      error: () => { this.plan = null; this.events = []; this.updateDisplayedColumns(); }
     });
   }
 
@@ -66,8 +78,33 @@ export class MonthlyPlanComponent implements OnInit {
 
   finalizePlan(): void {
     if (this.plan) {
-      this.api.finalizeMonthlyPlan(this.plan.id).subscribe(p => this.plan = p);
+      this.api.finalizeMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
+  }
+
+  openAddEventDialog(): void {
+    const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', disableClose: true });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && this.plan) {
+        this.api.createEvent({ ...result, monthlyPlanId: this.plan.id }).subscribe({
+          next: resp => { this.events.push(resp.event); this.snackBar.open('Event angelegt.', 'OK', { duration: 3000 }); },
+          error: () => this.snackBar.open('Fehler beim Anlegen des Events.', 'Schließen', { duration: 4000 })
+        });
+      }
+    });
+  }
+
+  deleteEvent(ev: Event): void {
+    const data: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
+    const ref = this.dialog.open(ConfirmDialogComponent, { data });
+    ref.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        this.api.deleteEvent(ev.id).subscribe({
+          next: () => { this.events = this.events.filter(e => e.id !== ev.id); this.snackBar.open('Event gelöscht.', 'OK', { duration: 3000 }); },
+          error: () => this.snackBar.open('Fehler beim Löschen des Events.', 'Schließen', { duration: 4000 })
+        });
+      }
+    });
   }
 
   createPlan(): void {

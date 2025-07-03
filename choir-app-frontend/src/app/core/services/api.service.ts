@@ -261,7 +261,7 @@ export class ApiService {
    * Creates a new event (service or rehearsal) for the current choir.
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
-  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds: number[] }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number }): Observable<CreateEventResponse> {
     return this.eventService.createEvent(eventData);
   }
 
