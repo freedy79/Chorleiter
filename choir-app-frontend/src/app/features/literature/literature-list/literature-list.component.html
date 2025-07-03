@@ -41,7 +41,14 @@
   </mat-drawer>
   <mat-drawer-content>
     <div class="page">
-      <div class="header-container">
+      <div class="page-header">
+        <h1>Chorrepertoire</h1>
+        <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
+          <mat-icon>add</mat-icon>
+          <span>Stück hinzufügen</span>
+        </button>
+      </div>
+      <div class="filter-bar">
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
           <mat-icon>filter_list</mat-icon>
         </button>
@@ -77,11 +84,6 @@
             <span>Anzahl geprobt</span>
           </button>
         </mat-menu>
-        <h1>Chorrepertoire</h1>
-        <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
-          <mat-icon>add</mat-icon>
-          <span>Stück hinzufügen</span>
-        </button>
       </div>
 
       <div class="table-wrapper mat-elevation-z8">
