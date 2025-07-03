@@ -23,6 +23,7 @@ import { CategoryDialogComponent } from '../../categories/category-dialog/catego
 import { Author } from '@core/models/author';
 import { Piece } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
     selector: 'app-piece-dialog',
@@ -60,6 +61,7 @@ export class PieceDialogComponent implements OnInit {
         private apiService: ApiService,
         private pieceService: PieceService,
         private authService: AuthService,
+        private snackBar: MatSnackBar,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId: number | null }
@@ -222,6 +224,11 @@ export class PieceDialogComponent implements OnInit {
 
     private handleFile(file: File): void {
         this.imageFile = file;
+        this.snackBar.open(
+            'Es ist urheberrechtlich untersagt, ganze Notenseiten oder vollständige Stücke abzulegen, wenn das Notenbild nicht rechtefrei ist.',
+            'Verstanden',
+            { duration: 10000 }
+        );
         const reader = new FileReader();
         reader.onload = () => (this.imagePreview = reader.result as string);
         reader.readAsDataURL(file);
