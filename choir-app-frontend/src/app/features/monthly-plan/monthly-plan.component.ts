@@ -7,6 +7,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
+import { Event } from '@core/models/event';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
