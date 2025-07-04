@@ -12,6 +12,7 @@ import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
 import { MonthlyPlan } from '../models/monthly-plan';
+import { PlanEntry } from '../models/plan-entry';
 import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
@@ -23,6 +24,7 @@ import { AuthorService } from './author.service';
 import { CategoryService } from './category.service';
 import { CollectionService } from './collection.service';
 import { EventService } from './event.service';
+import { PlanEntryService } from './plan-entry.service';
 import { ChoirService } from './choir.service';
 import { UserService } from './user.service';
 import { ImportService } from './import.service';
@@ -46,6 +48,7 @@ export class ApiService {
               private categoryService: CategoryService,
               private collectionService: CollectionService,
               private eventService: EventService,
+              private planEntryService: PlanEntryService,
               private choirService: ChoirService,
               private userService: UserService,
               private importService: ImportService,
@@ -283,6 +286,19 @@ export class ApiService {
 
   deleteEventsInRange(start: string, end: string, type?: 'SERVICE' | 'REHEARSAL'): Observable<any> {
     return this.eventService.deleteEventsInRange(start, end, type);
+  }
+
+  // --- Plan Entry Methods ---
+  createPlanEntry(data: { monthlyPlanId: number; date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+    return this.planEntryService.createPlanEntry(data);
+  }
+
+  updatePlanEntry(id: number, data: { date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+    return this.planEntryService.updatePlanEntry(id, data);
+  }
+
+  deletePlanEntry(id: number): Observable<any> {
+    return this.planEntryService.deletePlanEntry(id);
   }
 
   // --- Monthly Plan Methods ---

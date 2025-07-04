@@ -16,17 +16,16 @@ function datesForRule(year, month, rule) {
     return dates;
 }
 
-async function createEventsFromRules(plan) {
+async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
     for (const rule of rules) {
         const dates = datesForRule(plan.year, plan.month, rule);
         for (const date of dates) {
-            await db.event.create({
-                choirId: plan.choirId,
+            await db.plan_entry.create({
+                monthlyPlanId: plan.id,
                 date,
                 type: rule.type,
-                notes: rule.notes || null,
-                monthlyPlanId: plan.id
+                notes: rule.notes || null
             });
         }
     }
@@ -38,8 +37,8 @@ exports.findByMonth = async (req, res) => {
         const plan = await MonthlyPlan.findOne({
             where: { choirId: req.activeChoirId, year, month },
             include: [{
-                model: db.event,
-                as: 'events',
+                model: db.plan_entry,
+                as: 'entries',
                 order: [['date', 'ASC']],
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'name'] },
@@ -70,7 +69,7 @@ exports.create = async (req, res) => {
             defaults: { choirId: req.activeChoirId, year, month }
         });
         if (created) {
-            await createEventsFromRules(plan);
+            await createEntriesFromRules(plan);
         }
         res.status(created ? 201 : 200).send(plan);
     } catch (err) {

@@ -1,0 +1,11 @@
+.form-row {
+  display: flex;
+  gap: 1rem;
+  > * {
+    flex: 1;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
