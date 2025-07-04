@@ -79,7 +79,7 @@ exports.create = async (req, res) => {
             type: type,
             notes: notes,
             choirId: choirId,
-            directorId: directorId || creatorId,
+            directorId: directorId !== undefined ? directorId : creatorId,
             organistId: organistId || null,
             finalized: finalized || false,
             version: version || 1,
@@ -272,7 +272,7 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date, type, notes, directorId: directorId || req.userId, organistId, finalized, version, monthlyPlanId });
+        await event.update({ date, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);

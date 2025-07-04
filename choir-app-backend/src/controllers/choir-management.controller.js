@@ -91,7 +91,7 @@ exports.getChoirMembers = async (req, res) => {
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
-                    attributes: ['roleInChoir','registrationStatus']
+                    attributes: ['roleInChoir','registrationStatus','isOrganist']
                 }
             }],
             order: [[db.user, 'name', 'ASC']] // Sortieren Sie die Mitglieder alphabetisch nach Namen.
@@ -110,7 +110,8 @@ exports.getChoirMembers = async (req, res) => {
                 email: user.email,
                 membership: {
                     roleInChoir: user.user_choir.roleInChoir,
-                    registrationStatus: user.user_choir.registrationStatus
+                    registrationStatus: user.user_choir.registrationStatus,
+                    isOrganist: user.user_choir.isOrganist
                 }
             };
         });
@@ -124,7 +125,7 @@ exports.getChoirMembers = async (req, res) => {
 
 // Einen Benutzer zum aktiven Chor hinzufügen/einladen
 exports.inviteUserToChoir = async (req, res, next) => {
-    const { email, roleInChoir } = req.body;
+    const { email, roleInChoir, isOrganist } = req.body;
     const choirId = req.activeChoirId;
 
     if (req.userRole === 'demo') {
@@ -140,13 +141,13 @@ exports.inviteUserToChoir = async (req, res, next) => {
         const choir = await db.choir.findByPk(choirId);
 
         if (user) {
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED' } });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
             const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
             user = await db.user.create({ email });
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
             await emailService.sendInvitationMail(email, token, choir.name, expiry);
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }

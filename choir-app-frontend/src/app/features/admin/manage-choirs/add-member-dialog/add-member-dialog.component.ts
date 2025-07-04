@@ -26,7 +26,8 @@ export class AddMemberDialogComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       user: ['', Validators.required],
-      role: ['director', Validators.required]
+      role: ['director', Validators.required],
+      isOrganist: [false]
     });
   }
 
@@ -61,7 +62,8 @@ export class AddMemberDialogComponent implements OnInit {
     if (this.form.valid) {
       const user: User = this.form.value.user;
       const role = this.form.value.role;
-      this.dialogRef.close({ email: user.email, role });
+      const isOrganist = this.form.value.isOrganist;
+      this.dialogRef.close({ email: user.email, role, isOrganist });
     }
   }
 }

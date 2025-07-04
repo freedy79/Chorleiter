@@ -69,14 +69,14 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
-  updateDirector(ev: PlanEntry, userId: number): void {
-    this.api.updatePlanEntry(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId, organistId: ev.organist?.id || undefined }).subscribe(updated => {
+  updateDirector(ev: Event, userId: number | null): void {
+    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId ?? undefined, organistId: ev.organist?.id, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
       ev.director = updated.director;
     });
   }
 
-  updateOrganist(ev: PlanEntry, userId: number | null): void {
-    this.api.updatePlanEntry(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId || undefined }).subscribe(updated => {
+  updateOrganist(ev: Event, userId: number | null): void {
+    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId ?? undefined, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
       ev.organist = updated.organist;
     });
   }

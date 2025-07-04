@@ -24,7 +24,8 @@
       <th mat-header-cell *matHeaderCellDef>Chorleiter</th>
       <td mat-cell *matCellDef="let ev">
         <ng-container *ngIf="isChoirAdmin && !plan?.finalized; else directorText">
-          <mat-select [value]="ev.director?.id" (selectionChange)="updateDirector(ev, $event.value)">
+          <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
+            <mat-option [value]="null">--</mat-option>
             <mat-option *ngFor="let m of directors" [value]="m.id">{{ m.name }}</mat-option>
           </mat-select>
         </ng-container>
