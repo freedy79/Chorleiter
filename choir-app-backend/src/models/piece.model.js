@@ -31,6 +31,10 @@ module.exports = (sequelize, DataTypes) => {
         opus: { // Opus- / Verzeichniszahl
             type: DataTypes.STRING,
             allowNull: true
+        },
+        lyricsSource: { // Sonstige Quelle für den Text
+            type: DataTypes.STRING,
+            allowNull: true
         }
     });
     return Piece;

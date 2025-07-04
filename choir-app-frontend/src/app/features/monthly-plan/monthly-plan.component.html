@@ -61,6 +61,7 @@
   <div class="actions">
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()">Eintrag hinzufügen</button>
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
+    <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
   </div>
 </div>
 <ng-template #noPlan>

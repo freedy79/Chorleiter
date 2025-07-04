@@ -20,7 +20,7 @@ exports.create = async (req, res) => {
     }
      const {
         title, composerId, categoryId, voicing,
-        key, timeSignature, lyrics, imageIdentifier, license, opus,
+        key, timeSignature, lyrics, imageIdentifier, license, opus, lyricsSource,
         authorName, authorId,
         arrangerIds, // e.g., [12, 15]
         links        // e.g., [{ description: 'YouTube', url: '...' }]
@@ -39,7 +39,9 @@ exports.create = async (req, res) => {
 
         const newPiece = await db.piece.create({
             title, composerId, categoryId, voicing, key, timeSignature,
-            lyrics, imageIdentifier, license, opus, authorId: resolvedAuthorId
+            lyrics, imageIdentifier, license, opus,
+            lyricsSource,
+            authorId: resolvedAuthorId
         });
 
         if (arrangerIds && arrangerIds.length > 0) {
