@@ -6,6 +6,9 @@ import {
     FormGroup,
     Validators,
     FormArray,
+    ValidatorFn,
+    AbstractControl,
+    ValidationErrors
 } from '@angular/forms';
 import {
     MAT_DIALOG_DATA,
@@ -24,6 +27,14 @@ import { Author } from '@core/models/author';
 import { Piece } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+
+export function authorOrSourceValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const authorId = control.get('authorId')?.value;
+        const source = control.get('lyricsSource')?.value;
+        return !authorId && !source ? { authorOrSourceRequired: true } : null;
+    };
+}
 
 @Component({
     selector: 'app-piece-dialog',
@@ -72,15 +83,16 @@ export class PieceDialogComponent implements OnInit {
             title: ['', Validators.required],
             voicing: [''],
             lyrics: [''],
+            lyricsSource: [''],
             links: this.fb.array([]),
             opus: [''],
             key: [''],
             timeSignature: [''],
             license: [''],
             composerId: [null, Validators.required],
-            authorId: [null, Validators.required],
+            authorId: [null],
             categoryId: [null],
-        });
+        }, { validators: authorOrSourceValidator() });
     }
 
     ngOnInit(): void {
@@ -259,6 +271,7 @@ export class PieceDialogComponent implements OnInit {
             categoryId: piece.category?.id,
             arrangerIds: piece.arrangers?.map((a) => a.id) || [],
             lyrics: piece.lyrics,
+            lyricsSource: piece.lyricsSource,
         });
 
         if (piece.imageIdentifier) {

@@ -32,7 +32,9 @@ export class EventCardComponent {
     if (!piece) {
       return '';
     }
-    return piece.composer?.name || '';
+    const composer = piece.composer?.name || '';
+    const author = piece.author?.name || piece.lyricsSource || '';
+    return author ? `${composer} - ${author}` : composer;
   }
 
   getPieceReference(piece: Piece): string {

@@ -30,6 +30,7 @@ export interface Piece {
   imageIdentifier?: string;
   license?: string;
   opus?: string;
+  lyricsSource?: string;
   author?: Author;
   arrangers?: Composer[];
   links?: PieceLink[];
