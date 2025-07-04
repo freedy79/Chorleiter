@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -9,6 +9,8 @@ import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
+import { Subscription } from 'rxjs';
+import { EventDialogComponent } from '../events/event-dialog/event-dialog.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -19,7 +21,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
-export class MonthlyPlanComponent implements OnInit {
+export class MonthlyPlanComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
   displayedColumns = ['date', 'type', 'director', 'organist', 'notes'];
@@ -29,6 +31,8 @@ export class MonthlyPlanComponent implements OnInit {
   members: UserInChoir[] = [];
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
+  currentUserId: number | null = null;
+  private userSub?: Subscription;
 
   private updateDisplayedColumns(): void {
     const base = ['date', 'type', 'director', 'organist', 'notes'];
@@ -45,6 +49,7 @@ export class MonthlyPlanComponent implements OnInit {
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
     this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
     this.api.checkChoirAdminStatus().subscribe(r => { this.isChoirAdmin = r.isChoirAdmin; this.updateDisplayedColumns(); });
     this.api.getChoirMembers().subscribe(m => {
       this.members = m;
@@ -122,5 +127,9 @@ export class MonthlyPlanComponent implements OnInit {
       this.plan = plan;
       this.loadPlan(plan.year, plan.month);
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSub) this.userSub.unsubscribe();
   }
 }
