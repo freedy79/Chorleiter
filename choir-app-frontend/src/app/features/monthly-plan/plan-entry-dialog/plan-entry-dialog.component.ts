@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 
@@ -12,14 +12,16 @@ import { MaterialModule } from '@modules/material.module';
   styleUrls: ['./plan-entry-dialog.component.scss']
 })
 export class PlanEntryDialogComponent {
-  form = this.fb.group({
-    date: [new Date(), Validators.required],
-    type: ['SERVICE', Validators.required],
-    notes: ['']
-  });
+  form: FormGroup;
 
   constructor(private fb: FormBuilder,
-              public dialogRef: MatDialogRef<PlanEntryDialogComponent>) {}
+              public dialogRef: MatDialogRef<PlanEntryDialogComponent>) {
+    this.form = this.fb.group({
+      date: [new Date(), Validators.required],
+      type: ['SERVICE', Validators.required],
+      notes: ['']
+    });
+  }
 
   onCancel(): void {
     this.dialogRef.close();
