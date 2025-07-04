@@ -82,6 +82,12 @@ export class MonthlyPlanComponent implements OnInit {
     }
   }
 
+  reopenPlan(): void {
+    if (this.plan) {
+      this.api.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+    }
+  }
+
   openAddEventDialog(): void {
     const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', disableClose: true });
     dialogRef.afterClosed().subscribe(result => {
