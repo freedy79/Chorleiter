@@ -378,7 +378,7 @@ export class ApiService {
     return this.userService.resetPassword(token, password);
   }
 
-  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
+  completeRegistration(token: string, data: { name: string; password: string; isOrganist?: boolean }): Observable<any> {
     return this.userService.completeRegistration(token, data);
   }
 
