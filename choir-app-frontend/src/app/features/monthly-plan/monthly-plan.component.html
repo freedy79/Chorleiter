@@ -56,7 +56,8 @@
       </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+        [class.assigned]="plan?.finalized && (row.director?.id === currentUserId || row.organist?.id === currentUserId)"></tr>
   </table>
   <div class="actions">
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEventDialog()">Event hinzufügen</button>
