@@ -18,8 +18,8 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     assert.strictEqual(res.statusCode, 201);
     const planId = res.data.id;
 
-    const events = await db.event.findAll({ where: { monthlyPlanId: planId } });
-    assert.ok(events.length > 0);
+    const entries = await db.plan_entry.findAll({ where: { monthlyPlanId: planId } });
+    assert.ok(entries.length > 0);
 
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 7 } }, res);
     assert.strictEqual(res.statusCode, 200);
