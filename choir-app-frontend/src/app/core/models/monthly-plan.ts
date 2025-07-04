@@ -1,4 +1,4 @@
-import { Event } from './event';
+import { PlanEntry } from './plan-entry';
 
 export interface MonthlyPlan {
   id: number;
@@ -6,5 +6,5 @@ export interface MonthlyPlan {
   month: number;
   finalized: boolean;
   version: number;
-  events?: Event[];
+  entries?: PlanEntry[];
 }
