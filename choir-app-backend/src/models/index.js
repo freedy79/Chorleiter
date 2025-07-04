@@ -19,6 +19,7 @@ db.piece = require("./piece.model.js")(sequelize, Sequelize);
 db.event = require("./event.model.js")(sequelize, Sequelize);
 db.monthly_plan = require("./monthly_plan.model.js")(sequelize, Sequelize);
 db.plan_rule = require("./plan_rule.model.js")(sequelize, Sequelize);
+db.plan_entry = require("./plan_entry.model.js")(sequelize, Sequelize);
 db.event_pieces = require("./event_pieces.model.js")(sequelize, Sequelize);
 db.composer = require("./composer.model.js")(sequelize, Sequelize);
 db.category = require("./category.model.js")(sequelize, Sequelize);
@@ -54,10 +55,16 @@ db.user.hasMany(db.event, { as: "createdEvents"});
 db.event.belongsTo(db.user, { foreignKey: "directorId", as: "director"})
 db.user.hasMany(db.event, { as: "organistEvents", foreignKey: "organistId" });
 db.event.belongsTo(db.user, { foreignKey: "organistId", as: "organist" });
+db.user.hasMany(db.plan_entry, { as: "directedPlanEntries", foreignKey: "directorId" });
+db.plan_entry.belongsTo(db.user, { foreignKey: "directorId", as: "director" });
+db.user.hasMany(db.plan_entry, { as: "organistPlanEntries", foreignKey: "organistId" });
+db.plan_entry.belongsTo(db.user, { foreignKey: "organistId", as: "organist" });
 db.choir.hasMany(db.monthly_plan, { as: "monthlyPlans" });
 db.monthly_plan.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 db.monthly_plan.hasMany(db.event, { as: "events" });
 db.event.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
+db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
+db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 

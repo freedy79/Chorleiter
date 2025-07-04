@@ -1,0 +1,28 @@
+<h1 mat-dialog-title>Plan-Eintrag</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form" id="entry-form" (ngSubmit)="onSave()">
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Datum</mat-label>
+        <input matInput [matDatepicker]="picker" formControlName="date">
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Typ</mat-label>
+        <mat-select formControlName="type">
+          <mat-option value="SERVICE">Gottesdienst</mat-option>
+          <mat-option value="REHEARSAL">Probe</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Notizen</mat-label>
+      <textarea matInput formControlName="notes" rows="3"></textarea>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="submit" form="entry-form" [disabled]="form.invalid">Speichern</button>
+</div>

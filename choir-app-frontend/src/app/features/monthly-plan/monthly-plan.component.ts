@@ -6,22 +6,22 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
-import { Event } from '@core/models/event';
+import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
-import { EventDialogComponent } from '../events/event-dialog/event-dialog.component';
+import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EventDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, PlanEntryDialogComponent, ConfirmDialogComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
 export class MonthlyPlanComponent implements OnInit {
   plan: MonthlyPlan | null = null;
-  events: Event[] = [];
+  entries: PlanEntry[] = [];
   displayedColumns = ['date', 'type', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
@@ -55,8 +55,8 @@ export class MonthlyPlanComponent implements OnInit {
 
   loadPlan(year: number, month: number): void {
     this.api.getMonthlyPlan(year, month).subscribe({
-      next: plan => { this.plan = plan; this.events = plan?.events || []; this.updateDisplayedColumns(); },
-      error: () => { this.plan = null; this.events = []; this.updateDisplayedColumns(); }
+      next: plan => { this.plan = plan; this.entries = plan?.entries || []; this.updateDisplayedColumns(); },
+      error: () => { this.plan = null; this.entries = []; this.updateDisplayedColumns(); }
     });
   }
 
@@ -64,14 +64,14 @@ export class MonthlyPlanComponent implements OnInit {
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
-  updateDirector(ev: Event, userId: number): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId, organistId: ev.organist?.id || undefined, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateDirector(ev: PlanEntry, userId: number): void {
+    this.api.updatePlanEntry(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId, organistId: ev.organist?.id || undefined }).subscribe(updated => {
       ev.director = updated.director;
     });
   }
 
-  updateOrganist(ev: Event, userId: number | null): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId || undefined, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateOrganist(ev: PlanEntry, userId: number | null): void {
+    this.api.updatePlanEntry(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId || undefined }).subscribe(updated => {
       ev.organist = updated.organist;
     });
   }
@@ -82,32 +82,35 @@ export class MonthlyPlanComponent implements OnInit {
     }
   }
 
+
+
   reopenPlan(): void {
     if (this.plan) {
       this.api.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
   }
 
-  openAddEventDialog(): void {
-    const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', disableClose: true });
+  openAddEntryDialog(): void {
+    const dialogRef = this.dialog.open(PlanEntryDialogComponent, { width: '600px', disableClose: true });
+
     dialogRef.afterClosed().subscribe(result => {
       if (result && this.plan) {
-        this.api.createEvent({ ...result, monthlyPlanId: this.plan.id }).subscribe({
-          next: resp => { this.events.push(resp.event); this.snackBar.open('Event angelegt.', 'OK', { duration: 3000 }); },
-          error: () => this.snackBar.open('Fehler beim Anlegen des Events.', 'Schließen', { duration: 4000 })
+        this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).subscribe({
+          next: entry => { this.entries.push(entry); this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 }); },
+          error: () => this.snackBar.open('Fehler beim Anlegen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }
     });
   }
 
-  deleteEvent(ev: Event): void {
+  deleteEntry(ev: PlanEntry): void {
     const data: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
     const ref = this.dialog.open(ConfirmDialogComponent, { data });
     ref.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.api.deleteEvent(ev.id).subscribe({
-          next: () => { this.events = this.events.filter(e => e.id !== ev.id); this.snackBar.open('Event gelöscht.', 'OK', { duration: 3000 }); },
-          error: () => this.snackBar.open('Fehler beim Löschen des Events.', 'Schließen', { duration: 4000 })
+        this.api.deletePlanEntry(ev.id).subscribe({
+          next: () => { this.entries = this.entries.filter(e => e.id !== ev.id); this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 }); },
+          error: () => this.snackBar.open('Fehler beim Löschen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }
     });
