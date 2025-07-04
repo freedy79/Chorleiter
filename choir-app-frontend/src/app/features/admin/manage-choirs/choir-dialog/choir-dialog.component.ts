@@ -56,7 +56,7 @@ export class ChoirDialogComponent implements OnInit {
     const ref = this.dialog.open(AddMemberDialogComponent, { width: '450px' });
     ref.afterClosed().subscribe(result => {
       if (result && result.email && result.role) {
-        this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.role).subscribe({
+        this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.role, result.isOrganist).subscribe({
           next: (resp) => {
             this.snackBar.open(resp.message, 'OK', { duration: 4000 });
             this.loadMembers();

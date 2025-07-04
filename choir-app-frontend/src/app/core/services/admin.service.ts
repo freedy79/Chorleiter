@@ -34,8 +34,8 @@ export class AdminService {
     return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
   }
 
-  inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir });
+  inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string, isOrganist?: boolean): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir, isOrganist });
   }
 
   removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
