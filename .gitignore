@@ -136,3 +136,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 choir-app-frontend/src/environments/build-info.ts
+src/environment/build-info.ts
