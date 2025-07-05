@@ -51,6 +51,17 @@ mat-card-content form {
   text-align: right;
 }
 
+.service-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.weekday-row {
+  display: flex;
+  gap: 1rem;
+}
+
 .loading-overlay {
   position: absolute;
   top: 0;
