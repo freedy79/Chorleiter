@@ -12,6 +12,47 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
+# Determine authentication method
+$sshUseAgent = $false
+$sshUsePlink = $false
+
+if (Get-Command ssh-add -ErrorAction SilentlyContinue) {
+    try {
+        $keys = ssh-add -L 2>$null
+        if ($LASTEXITCODE -eq 0 -and $keys) {
+            $sshUseAgent = $true
+            Write-Host "Using ssh-agent for authentication."
+        }
+    } catch {
+        # ignore errors from ssh-add
+    }
+}
+
+if (-not $sshUseAgent) {
+    if (Get-Command plink -ErrorAction SilentlyContinue) {
+        $sshUsePlink = $true
+        Write-Host "Using plink/pscp for authentication."
+    }
+}
+
+if ($sshUseAgent) {
+    Write-Host "Verifying ssh-agent access..."
+    & ssh -o BatchMode=yes -o StrictHostKeyChecking=no $Remote exit 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ssh-agent authentication failed, falling back to password." -ForegroundColor Yellow
+        $sshUseAgent = $false
+        if (Get-Command plink -ErrorAction SilentlyContinue) {
+            $sshUsePlink = $true
+            Write-Host "Using plink/pscp for authentication."
+        }
+    }
+}
+
+if (-not $sshUseAgent -and -not $sshUsePlink) {
+    Write-Host "plink not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
+}
+
+
 $Password = $null
 if (-not $sshUseAgent) {
     if (Test-Path $PasswordFile) {
@@ -41,8 +82,8 @@ function Invoke-Ssh {
         [string]$Command
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh -o StrictHostKeyChecking=no $Remote $Command
+    if ($sshUsePlink) {
+        & plink -batch -pw "$Password" $Remote $Command
     }
     else {
         & ssh $Remote $Command
@@ -55,8 +96,8 @@ function Invoke-Scp {
         [string]$Destination
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp $Source $Destination
+    if ($sshUsePlink) {
+        & pscp -batch -pw "$Password" $Source $Destination
     }
     else {
         & scp $Source $Destination
@@ -88,3 +129,8 @@ Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
 
 Write-Host "Deployment completed."
+
+# Close the persistent SSH connection
+if (-not $sshUsePlink) {
+    & ssh @SshOptions -O exit $Remote
+}

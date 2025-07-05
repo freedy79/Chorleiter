@@ -17,6 +17,7 @@ import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
+import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
@@ -30,6 +31,7 @@ import { UserService } from './user.service';
 import { ImportService } from './import.service';
 import { AdminService } from './admin.service';
 import { SystemService } from './system.service';
+import { PlanRuleService } from './plan-rule.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
@@ -54,7 +56,8 @@ export class ApiService {
               private importService: ImportService,
               private adminService: AdminService,
               private systemService: SystemService,
-              private filterPresetService: FilterPresetService) {
+              private filterPresetService: FilterPresetService,
+              private planRuleService: PlanRuleService) {
 
   }
 
@@ -316,6 +319,23 @@ export class ApiService {
 
   reopenMonthlyPlan(id: number): Observable<MonthlyPlan> {
     return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/reopen`, {});
+  }
+
+  // --- Plan Rule Methods ---
+  getPlanRules(): Observable<PlanRule[]> {
+    return this.planRuleService.getPlanRules();
+  }
+
+  createPlanRule(data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+    return this.planRuleService.createPlanRule(data);
+  }
+
+  updatePlanRule(id: number, data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+    return this.planRuleService.updatePlanRule(id, data);
+  }
+
+  deletePlanRule(id: number): Observable<any> {
+    return this.planRuleService.deletePlanRule(id);
   }
 
 

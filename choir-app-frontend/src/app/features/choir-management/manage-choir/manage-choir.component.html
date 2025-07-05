@@ -42,6 +42,40 @@
       <mat-checkbox [(ngModel)]="dienstplanEnabled" (change)="onToggleDienstplan()">
         Dienstplan anzeigen
       </mat-checkbox>
+
+      <div class="service-settings">
+        <h3>Gottesdienste</h3>
+        <mat-form-field appearance="outline">
+          <mat-label>Sonntags</mat-label>
+          <mat-select multiple [(ngModel)]="sundayWeeks">
+            <mat-option [value]="0">jeden</mat-option>
+            <mat-option *ngFor="let w of [1,2,3,4,5]" [value]="w">{{w}}.</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="weekday-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Wochentag</mat-label>
+            <mat-select [(ngModel)]="weekdayDay">
+              <mat-option [value]="null">-</mat-option>
+              <mat-option [value]="3">Mittwoch</mat-option>
+              <mat-option [value]="4">Donnerstag</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline" *ngIf="weekdayDay !== null">
+            <mat-label>Wochen</mat-label>
+            <mat-select multiple [(ngModel)]="weekdayWeeks">
+              <mat-option [value]="0">jeden</mat-option>
+              <mat-option *ngFor="let w of [1,2,3,4,5]" [value]="w">{{w}}.</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="actions-footer">
+          <button mat-flat-button color="primary" (click)="saveServiceRules()">Speichern</button>
+        </div>
+      </div>
+
     </mat-card-content>
   </mat-card>
 
