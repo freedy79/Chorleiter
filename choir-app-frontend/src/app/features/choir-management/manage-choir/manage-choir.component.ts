@@ -40,7 +40,7 @@ export class ManageChoirComponent implements OnInit {
 
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
@@ -164,6 +164,14 @@ export class ManageChoirComponent implements OnInit {
           error: (err) => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
         });
       }
+    });
+  }
+
+  toggleOrganist(user: UserInChoir, checked: boolean): void {
+    if (!this.isChoirAdmin) return;
+    this.apiService.updateChoirMember(user.id, { isOrganist: checked }).subscribe({
+      next: () => user.membership!.isOrganist = checked,
+      error: () => this.snackBar.open('Fehler beim Aktualisieren.', 'Schließen')
     });
   }
 

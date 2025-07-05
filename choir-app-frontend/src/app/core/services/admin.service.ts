@@ -38,6 +38,10 @@ export class AdminService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir, isOrganist });
   }
 
+  updateChoirMemberAdmin(id: number, userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/admin/choirs/${id}/members/${userId}`, data);
+  }
+
   removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
     const options = { body: { userId } };
     return this.http.delete(`${this.apiUrl}/admin/choirs/${id}/members`, options);
