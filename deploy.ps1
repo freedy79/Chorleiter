@@ -12,35 +12,28 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
-# Check for sshpass before proceeding
+# Determine authentication method
 $sshUseSshpass = $false
+$sshUseAgent = $false
+
 if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     $sshUseSshpass = $true
-} else {
-    $install = Read-Host "sshpass is not installed. Install it now? (y/N)"
-    if ($install -match '^[Yy]') {
-        try {
-            if (Get-Command apt-get -ErrorAction SilentlyContinue) {
-                & sudo apt-get install sshpass
-            } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
-                & choco install -y sshpass
-            } else {
-                Write-Host "No supported package manager found. Install sshpass manually." -ForegroundColor Yellow
-            }
-        } catch {
-            Write-Host "Failed to install sshpass." -ForegroundColor Red
+} elseif (Get-Command ssh-add -ErrorAction SilentlyContinue) {
+    try {
+        $keys = ssh-add -L 2>$null
+        if ($LASTEXITCODE -eq 0 -and $keys) {
+            $sshUseAgent = $true
+            Write-Host "Using ssh-agent for authentication."
         }
-        # Re-check after attempted installation
-        if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-            $sshUseSshpass = $true
-        } else {
-            Write-Host "sshpass installation failed or command not found." -ForegroundColor Red
-        }
-    }
-    if (-not $sshUseSshpass) {
-        Write-Host "Hint: install sshpass manually (e.g. 'choco install sshpass')"
+    } catch {
+        # ignore errors from ssh-add
     }
 }
+
+if (-not $sshUseSshpass -and -not $sshUseAgent) {
+    Write-Host "sshpass not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
+}
+
 
 $Password = $null
 if (Test-Path $PasswordFile) {
