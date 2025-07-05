@@ -1,0 +1,9 @@
+# This file is used by the build system to adjust CSS and JS output
+# See https://angular.io/guide/browser-support for the supported list.
+
+last 1 Chrome version
+last 1 Firefox version
+last 2 Edge major versions
+last 2 Safari major versions
+last 2 iOS major versions
+Firefox ESR

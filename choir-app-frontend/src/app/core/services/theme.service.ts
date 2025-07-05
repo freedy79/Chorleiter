@@ -1,7 +1,7 @@
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { UserPreferencesService } from './user-preferences.service';
 
 export type Theme = 'light' | 'dark' | 'system';
-const THEME_KEY = 'choir-app-theme';
 
 @Injectable({
   providedIn: 'root'
@@ -9,19 +9,23 @@ const THEME_KEY = 'choir-app-theme';
 export class ThemeService {
   private renderer: Renderer2;
   private currentTheme: Theme = 'system';
+  private static readonly STORAGE_KEY = 'theme';
 
-  constructor(rendererFactory: RendererFactory2) {
+  constructor(rendererFactory: RendererFactory2,
+              private prefs: UserPreferencesService) {
     // Wir benötigen den Renderer, um Klassen sicher zum <body>-Tag hinzuzufügen.
     this.renderer = rendererFactory.createRenderer(null, null);
   }
 
   /**
    * Initialisiert das Theme beim Start der Anwendung.
-   * Lädt die Benutzereinstellung aus dem localStorage oder verwendet 'system' als Standard.
+   * Lädt die Benutzereinstellung aus dem gespeicherten Profil oder verwendet 'system' als Standard.
    */
   initializeTheme(): void {
-    const storedTheme = localStorage.getItem(THEME_KEY) as Theme | null;
-    this.currentTheme = storedTheme || 'system';
+    const localTheme = localStorage.getItem(ThemeService.STORAGE_KEY) as Theme | null;
+    const storedTheme = this.prefs.getPreference('theme') as Theme | undefined;
+    this.currentTheme = localTheme ?? storedTheme ?? 'system';
+    localStorage.setItem(ThemeService.STORAGE_KEY, this.currentTheme);
     this.applyTheme(this.currentTheme);
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
@@ -39,7 +43,8 @@ export class ThemeService {
    */
   setTheme(theme: Theme): void {
     this.currentTheme = theme;
-    localStorage.setItem(THEME_KEY, theme);
+    localStorage.setItem(ThemeService.STORAGE_KEY, theme);
+    this.prefs.update({ theme }).subscribe();
     this.applyTheme(theme);
   }
 

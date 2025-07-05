@@ -4,6 +4,7 @@ import { BehaviorSubject } from 'rxjs';
 export interface AppError {
   message: string;
   status?: number;
+  details?: string;
 }
 
 @Injectable({

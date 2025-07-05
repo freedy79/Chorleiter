@@ -20,7 +20,8 @@ export class InviteUserDialogComponent {
   ) {
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      role: ['director', Validators.required] // Standardrolle ist 'director'
+      role: ['director', Validators.required], // Standardrolle ist 'director'
+      isOrganist: [false]
     });
   }
 

@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { ApiService } from '../services/api.service';
+import { ErrorService } from '../services/error.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,8 @@ export class ChoirAdminGuard implements CanActivate {
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private errorService: ErrorService
   ) {}
 
   canActivate(): Observable<boolean | UrlTree> {
@@ -33,8 +35,10 @@ export class ChoirAdminGuard implements CanActivate {
               return this.router.createUrlTree(['/dashboard']);
             }
           }),
-          catchError(() => {
+          catchError((err) => {
             // Bei einem Fehler bei der API-Anfrage den Zugriff verweigern und umleiten.
+            console.error('ChoirAdminGuard API check failed', err);
+            this.errorService.setError({ message: 'Zugriff verweigert.', status: err.status });
             return of(this.router.createUrlTree(['/dashboard']));
           })
         );

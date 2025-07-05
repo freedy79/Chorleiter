@@ -274,7 +274,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 });
             },
             error: (err) => {
-                this.snackBar.open(`Error: ${err.message}`, 'Close', {
+                this.snackBar.open(`Fehler: ${err.message}`, 'Schließen', {
                     duration: 5000,
                     verticalPosition: 'top',
                 });
@@ -320,7 +320,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     openAddPieceDialog(): void {
         this.pieceCtrl.setValue('');
         const pieceDialogRef = this.dialog.open(PieceDialogComponent, {
-            width: '500px',
+            width: '90vw',
+            maxWidth: '800px',
             disableClose: true,
             data: { pieceId: null },
         });
@@ -337,7 +338,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     openEditPieceDialog(pieceId: number): void {
         const dialogRef = this.dialog.open(PieceDialogComponent, {
-            width: '500px',
+            width: '90vw',
+            maxWidth: '800px',
             disableClose: true,
             data: { pieceId }
         });

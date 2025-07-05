@@ -15,9 +15,10 @@ export class PieceService {
   constructor(private http: HttpClient) {}
 
   getMyRepertoire(
-    categoryId?: number,
+    categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection',
+    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
+             'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
     page = 1,
     limit = 25,
     status?: string,
@@ -25,12 +26,15 @@ export class PieceService {
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
-    if (categoryId) params = params.set('categoryId', categoryId.toString());
+    if (categoryIds && categoryIds.length > 0) {
+      params = params.set('categoryIds', categoryIds.join(','));
+    }
     if (collectionId) params = params.set('collectionId', collectionId.toString());
     if (sortBy) params = params.set('sortBy', sortBy);
-    params = params.set('page', page);
-    params = params.set('limit', limit);
-    params = params.set('sortDir', sortDir);
+    params = params.set('page', page.toString());
+    params = params.set('limit', limit.toString());
+    // Avoid sending empty sortDir which causes an empty query parameter
+    params = params.set('sortDir', sortDir || 'ASC');
     if (status) params = params.set('status', status);
     if (search) params = params.set('search', search);
 

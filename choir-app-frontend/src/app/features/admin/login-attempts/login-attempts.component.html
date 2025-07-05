@@ -1,7 +1,9 @@
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="email">
-    <th mat-header-cell *matHeaderCellDef>Email</th>
-    <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+    <th mat-header-cell *matHeaderCellDef>E-Mail</th>
+    <td mat-cell *matCellDef="let element">
+      <a href="#" (click)="openUser(element.email); $event.preventDefault()">{{ element.email }}</a>
+    </td>
   </ng-container>
 
   <ng-container matColumnDef="success">
@@ -12,6 +14,11 @@
   <ng-container matColumnDef="ipAddress">
     <th mat-header-cell *matHeaderCellDef>IP</th>
     <td mat-cell *matCellDef="let element">{{ element.ipAddress }}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="userAgent">
+    <th mat-header-cell *matHeaderCellDef>Browser</th>
+    <td mat-cell *matCellDef="let element">{{ element.userAgent }}</td>
   </ng-container>
 
   <ng-container matColumnDef="createdAt">

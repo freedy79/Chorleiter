@@ -7,7 +7,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, BehaviorSubject, merge, of } from 'rxjs';
-import { switchMap, map, startWith, catchError, tap } from 'rxjs/operators';
+import { switchMap, map, startWith, catchError, tap, take } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
@@ -21,6 +21,9 @@ import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
 import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
+import { ErrorService } from '@core/services/error.service';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-literature-list',
@@ -33,8 +36,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   // --- Reactive Subjects for triggering updates ---
   private refresh$ = new BehaviorSubject<void>(undefined);
   public filterByCollectionId$ = new BehaviorSubject<number | null>(null);
-  public filterByCategoryId$ = new BehaviorSubject<number | null>(null);
+  public filterByCategoryIds$ = new BehaviorSubject<number[]>([]);
   public onlySingable$ = new BehaviorSubject<boolean>(false);
+  public status$ = new BehaviorSubject<'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY' | null>(null);
   public searchControl = new FormControl('');
   public filtersExpanded = false;
   private readonly FILTER_KEY = 'repertoireFilters';
@@ -44,7 +48,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   public categories$!: Observable<Category[]>;
 
   // --- Table, Paginator, and Sort Logic ---
-  public displayedColumns: string[] = ['title', 'composer', 'category', 'reference', 'status', 'actions'];
+  public displayedColumns: string[] = [];
+  public showLastSung = false;
+  public showLastRehearsed = false;
+  public showTimesSung = false;
+  public showTimesRehearsed = false;
   public dataSource = new MatTableDataSource<Piece>();
   public totalPieces = 0;
   public pageSizeOptions: number[] = [10, 25, 50];
@@ -58,6 +66,13 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   selectedPresetId: number | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+
+  // --- Hover Image Preview ---
+  hoverImage: string | null = null;
+  hoverX = 0;
+  hoverY = 0;
+  private hoverTimeout: any;
+  private imageCache = new Map<number, string>();
 
   // --- Bulletproof @ViewChild Setters ---
   private _sort!: MatSort;
@@ -73,7 +88,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (paginator) {
       this._paginator = paginator;
       this._paginator.pageSize = this.pageSize;
-      this.dataSource.paginator = this._paginator;
       this._paginator.page.subscribe(e => this.paginatorService.setPageSize('literature-list', e.pageSize));
     }
   }
@@ -85,12 +99,15 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
-    private paginatorService: PaginatorService
+    private paginatorService: PaginatorService,
+    private errorService: ErrorService,
+    private prefs: UserPreferencesService
   ) {
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   }
 
   ngOnInit(): void {
+    this.updateDisplayedColumns();
     // Pre-fetch data for the filter dropdowns
     this.collections$ = this.apiService.getCollections();
     this.categories$ = this.apiService.getCategories();
@@ -103,23 +120,46 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       try {
         const s = JSON.parse(saved);
         if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
-        if (s.categoryId !== undefined) this.filterByCategoryId$.next(s.categoryId);
+        if (s.categoryIds !== undefined) {
+          this.filterByCategoryIds$.next(s.categoryIds);
+        } else if ((s as any).categoryId !== undefined && (s as any).categoryId !== null) {
+          this.filterByCategoryIds$.next([(s as any).categoryId]);
+        }
         if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
+        if (s.status !== undefined) this.status$.next(s.status);
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
-        if (s.collectionId || s.categoryId || s.onlySingable) this.filtersExpanded = true;
+        if (
+          s.collectionId ||
+          (s.categoryIds && s.categoryIds.length) ||
+          (s as any).categoryId ||
+          s.onlySingable ||
+          s.status
+        ) {
+          this.filtersExpanded = true;
+        }
       } catch { }
     }
+
+    const load$: Observable<UserPreferences | null> =
+      this.prefs.isLoaded() ? of(null) : this.prefs.load();
+    load$.pipe(take(1)).subscribe(() => {
+      const cols = this.prefs.getPreference('repertoireColumns') || {};
+      this.showLastSung = !!cols.lastSung;
+      this.showLastRehearsed = !!cols.lastRehearsed;
+      this.showTimesSung = !!cols.timesSung;
+      this.showTimesRehearsed = !!cols.timesRehearsed;
+      this.updateDisplayedColumns();
+    });
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this._paginator;
     this.dataSource.sort = this._sort;
 
     const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryId$, this.onlySingable$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryIds$, this.onlySingable$, this.status$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -136,18 +176,26 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           if (cached) {
             return of({ data: cached, total: this.totalPieces });
           }
+          const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
+          const status = this.status$.value ?? (this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined);
           return this.pieceService.getMyRepertoire(
-            this.filterByCategoryId$.value ?? undefined,
+            this.filterByCategoryIds$.value,
             this.filterByCollectionId$.value ?? undefined,
             this._sort.active as any,
             pageIndex + 1,
             this._paginator.pageSize,
-            this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-            this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+            status,
+            dir,
             this.searchControl.value || undefined
           ).pipe(
-            catchError(() => {
-              this.snackBar.open('Could not load repertoire.', 'Close', { duration: 5000 });
+            catchError((err) => {
+              const msg = err.error?.message || 'Could not load repertoire.';
+              console.error('Failed to load repertoire list', err);
+              this.errorService.setError({
+                message: msg,
+                status: err.status,
+                details: err.error?.details
+              });
               return of({ data: [], total: 0 });
             })
           );
@@ -170,8 +218,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   private currentCacheKey(): string {
     return [
       this.filterByCollectionId$.value,
-      this.filterByCategoryId$.value,
+      this.filterByCategoryIds$.value.join(','),
       this.onlySingable$.value,
+      this.status$.value,
       this.searchControl.value,
       this._sort.active,
       this._sort.direction
@@ -182,14 +231,16 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const nextIndex = this._paginator.pageIndex + 1;
     if (nextIndex * this._paginator.pageSize >= this.totalPieces) return;
     if (this.pageCache.has(nextIndex)) return;
+    const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
+    const status = this.status$.value ?? (this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined);
     this.pieceService.getMyRepertoire(
-      this.filterByCategoryId$.value ?? undefined,
+      this.filterByCategoryIds$.value,
       this.filterByCollectionId$.value ?? undefined,
       this._sort.active as any,
       nextIndex + 1,
       this._paginator.pageSize,
-      this.onlySingable$.value ? 'CAN_BE_SUNG' : undefined,
-      this._sort.direction.toUpperCase() as 'ASC' | 'DESC',
+      status,
+      dir,
       this.searchControl.value || undefined
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
@@ -198,6 +249,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
    * Formats the collection reference for display in the template.
    */
   formatReferenceForDisplay(piece: Piece): string {
+    if (piece.collectionPrefix && piece.collectionNumber) {
+      return `${piece.collectionPrefix}${piece.collectionNumber}`;
+    }
     if (piece.collections && piece.collections.length > 0) {
       const ref = piece.collections[0];
       const num = (ref as any).collection_piece.numberInCollection;
@@ -236,11 +290,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.refresh$.next();
   }
 
-  onCategoryFilterChange(categoryId: number | null): void {
+  onCategoryFilterChange(categoryIds: number[]): void {
     if (this._paginator) {
       this._paginator.firstPage();
     }
-    this.filterByCategoryId$.next(categoryId);
+    this.filterByCategoryIds$.next(categoryIds);
     this.saveFilters();
     this.refresh$.next();
   }
@@ -254,10 +308,20 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.refresh$.next();
   }
 
+  onStatusFilterChange(status: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY' | null): void {
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.status$.next(status);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
   clearFilters(): void {
     this.filterByCollectionId$.next(null);
-    this.filterByCategoryId$.next(null);
+    this.filterByCategoryIds$.next([]);
     this.onlySingable$.next(false);
+    this.status$.next(null);
     this.searchControl.setValue('', { emitEvent: false });
     this.filtersExpanded = false;
     this.pageCache.clear();
@@ -271,12 +335,13 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   private saveFilters(): void {
     const state = {
       collectionId: this.filterByCollectionId$.value,
-      categoryId: this.filterByCategoryId$.value,
+      categoryIds: this.filterByCategoryIds$.value,
       onlySingable: this.onlySingable$.value,
+      status: this.status$.value,
       search: this.searchControl.value
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
-    this.filtersExpanded = !!(state.collectionId || state.categoryId || state.onlySingable);
+    this.filtersExpanded = !!(state.collectionId || (state.categoryIds && state.categoryIds.length) || state.onlySingable || state.status);
   }
 
   // =======================================================================
@@ -319,7 +384,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       },
       error: (err) => {
         console.error('Failed to update status', err);
-        this.snackBar.open('Error: Could not update status.', 'Close', { duration: 5000 });
+        const msg = err.error?.message || 'Could not update status.';
+        this.errorService.setError({ message: msg, status: err.status });
+        this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
         // Optional: you might want to refresh the list here to revert the visual change
         this.refresh$.next();
       }
@@ -356,10 +423,27 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   private applyPreset(preset: RepertoireFilter): void {
     this.filterByCollectionId$.next(preset.data.collectionId ?? null);
-    this.filterByCategoryId$.next(preset.data.categoryId ?? null);
+    if (preset.data.categoryIds !== undefined) {
+      this.filterByCategoryIds$.next(preset.data.categoryIds);
+    } else {
+      const singleId = (preset.data as any).categoryId;
+      if (singleId !== undefined && singleId !== null) {
+        this.filterByCategoryIds$.next([singleId]);
+      }
+    }
     this.onlySingable$.next(!!preset.data.onlySingable);
+    if (preset.data.status !== undefined) {
+      this.status$.next(preset.data.status);
+    }
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
-    this.filtersExpanded = !!(preset.data.collectionId || preset.data.categoryId || preset.data.onlySingable);
+    const singleId = (preset.data as any).categoryId;
+    this.filtersExpanded = !!(
+      preset.data.collectionId ||
+      (preset.data.categoryIds && preset.data.categoryIds.length) ||
+      singleId ||
+      preset.data.onlySingable ||
+      preset.data.status
+    );
     if (this._paginator) {
       this._paginator.firstPage();
     }
@@ -376,8 +460,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       if (!result) return;
       const data = {
         collectionId: this.filterByCollectionId$.value,
-        categoryId: this.filterByCategoryId$.value,
+        categoryIds: this.filterByCategoryIds$.value,
         onlySingable: this.onlySingable$.value,
+        status: this.status$.value,
         search: this.searchControl.value
       };
       this.apiService.saveRepertoireFilter({ name: result.name, data, visibility: result.visibility }).subscribe(() => this.loadPresets());
@@ -403,5 +488,73 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.loadPresets();
       });
     }
+  }
+
+  // ------- Hover Image Helpers -------
+  onRowMouseEnter(event: MouseEvent, piece: Piece): void {
+    if (!piece.imageIdentifier) {
+      return;
+    }
+    this.hoverX = event.clientX;
+    this.hoverY = event.clientY;
+    this.hoverTimeout = setTimeout(() => {
+      const cached = this.imageCache.get(piece.id);
+      if (cached !== undefined) {
+        this.hoverImage = cached;
+        return;
+      }
+      this.apiService.getPieceImage(piece.id).subscribe(img => {
+        this.imageCache.set(piece.id, img);
+        this.hoverImage = img;
+      });
+    }, 2000);
+  }
+
+  onRowMouseMove(event: MouseEvent): void {
+    this.hoverX = event.clientX;
+    this.hoverY = event.clientY;
+  }
+
+  onRowMouseLeave(): void {
+    clearTimeout(this.hoverTimeout);
+    this.hoverImage = null;
+  }
+
+  private updateDisplayedColumns(): void {
+    this.displayedColumns = ['title', 'composer', 'category', 'reference'];
+    if (this.showLastSung) this.displayedColumns.push('lastSung');
+    if (this.showLastRehearsed) this.displayedColumns.push('lastRehearsed');
+    if (this.showTimesSung) this.displayedColumns.push('timesSung');
+    if (this.showTimesRehearsed) this.displayedColumns.push('timesRehearsed');
+    this.displayedColumns.push('status', 'actions');
+  }
+
+  toggleColumn(col: 'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed'): void {
+    switch (col) {
+      case 'lastSung':
+        this.showLastSung = !this.showLastSung;
+        break;
+      case 'lastRehearsed':
+        this.showLastRehearsed = !this.showLastRehearsed;
+        break;
+      case 'timesSung':
+        this.showTimesSung = !this.showTimesSung;
+        break;
+      case 'timesRehearsed':
+        this.showTimesRehearsed = !this.showTimesRehearsed;
+        break;
+    }
+    this.saveColumnPrefs();
+    this.updateDisplayedColumns();
+  }
+
+  private saveColumnPrefs(): void {
+    const prefs = {
+      lastSung: this.showLastSung,
+      lastRehearsed: this.showLastRehearsed,
+      timesSung: this.showTimesSung,
+      timesRehearsed: this.showTimesRehearsed
+    };
+    this.prefs.update({ repertoireColumns: prefs }).subscribe();
   }
 }

@@ -1,4 +1,9 @@
-require("dotenv").config();
+try {
+    require("dotenv").config();
+} catch (err) {
+    console.error("Missing dependencies. Did you run 'npm install' in choir-app-backend?", err.message);
+    process.exit(1);
+}
 const app = require("./src/app");
 const db = require("./src/models");
 const bcrypt = require("bcryptjs");
@@ -20,11 +25,11 @@ const demoSeed = async () => {
             }
         });
 
-        await demoUser.addChoir(choir).catch(() => {});
+        await demoUser.addChoir(choir).catch(() => { });
 
         const collection = await db.collection.findByPk(1);
         if (collection) {
-            await choir.addCollection(collection).catch(() => {});
+            await choir.addCollection(collection).catch(() => { });
         }
     } catch (err) {
         console.error("Error during demo seeding:", err);
@@ -72,6 +77,18 @@ const initialSeed = async () => {
             console.log(`-> Admin user assigned to "${choir.name}".`);
         }
 
+        await db.mail_setting.findOrCreate({
+            where: { id: 1 },
+            defaults: {
+                host: process.env.SMTP_HOST || 'localhost',
+                port: process.env.SMTP_PORT || 587,
+                user: process.env.SMTP_USER || '',
+                pass: process.env.SMTP_PASS || '',
+                secure: false,
+                fromAddress: process.env.EMAIL_FROM || 'no-reply@example.com'
+            }
+        });
+
         console.log("Initial seeding completed successfully.");
     } catch (error) {
         console.error("Error during initial seeding:", error);
@@ -81,30 +98,32 @@ const initialSeed = async () => {
 const PORT = process.env.PORT || 8088;
 const ADDRESS = process.env.ADDRESS || "localhost"
 
+console.log("Database synchronized.");
+
 // In development, you might want to force-sync the DB
 // db.sequelize.sync({ force: true }).then(() => {
 //   console.log("Drop and re-sync db.");
 // });
 db.sequelize.sync({ alter: true })
     .then(() => {
-        console.log("Database synchronized.");
 
-        // Rufen Sie die Seed-Funktion auf.
-        initialSeed();
-        demoSeed();
+        try {
+            console.log("Database synchronized.");
 
-    const server = app.listen(PORT, ADDRESS, () => {
-        console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
-    });
-    // Close requests that take longer than 20 seconds
-    server.setTimeout(20 * 1000);
-    server.on('timeout', (socket) => {
-        console.warn('Request timed out.');
-        socket.destroy();
-    });
+            // Rufen Sie die Seed-Funktion auf.
+            initialSeed();
+            demoSeed();
+
+            const server = app.listen(PORT, ADDRESS, () => {
+                console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
+            });
+            // Close requests that take longer than 20 seconds
+            server.setTimeout(20 * 1000);
+            server.on('timeout', (socket) => {
+                console.warn('Request timed out.');
+                socket.destroy();
+            });
+        } catch (err) {
+            console.error("Database startup failed:", err);
+        }
 });
-
-   /*.catch((err) => {
-        console.error("Database synchronization failed:", err);
-    });*/
-

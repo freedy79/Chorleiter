@@ -2,6 +2,14 @@
 
 Management of choirs for directors
 
+## Setup
+
+Before starting the backend, install its dependencies:
+
+```bash
+npm install --prefix choir-app-backend
+```
+
 ## Tests
 
 Run frontend unit tests with:
@@ -42,3 +50,12 @@ npm install --save-dev compression-webpack-plugin @angular-builders/custom-webpa
 
 The generated `.gz` or `.br` files can then be served by a web server that
 supports content negotiation for pre-compressed assets.
+
+## Deployment
+
+Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
+and frontend via SSH. Both scripts establish a persistent SSH connection.
+When [`sshpass`](https://www.gnu.org/software/sshpass/) is available, the
+password can be read from a file named `.chorleiter_deploy_pw` in your home
+directory to perform a fully non‑interactive deployment. Without `sshpass`, the
+password still needs to be entered once when the connection is initiated.

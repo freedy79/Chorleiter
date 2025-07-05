@@ -115,3 +115,153 @@ exports.getImportStatus = (req, res) => {
     }
     res.status(200).send(job);
 };
+
+// ------------------ EVENT CSV IMPORT ------------------
+
+const findPieceByReference = async (reference) => {
+    if (!reference) return null;
+    const match = reference.match(/^(\D+)(\d+)$/);
+    if (!match) return null;
+
+    const prefix = match[1];
+    const num = match[2];
+    return await db.piece.findOne({
+        include: [{
+            model: db.collection,
+            as: 'collections',
+            where: { prefix },
+            through: { where: { numberInCollection: num } }
+        }]
+    });
+};
+
+const parseGermanDate = (str) => {
+    const match = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (match) {
+        const [, d, m, y] = match;
+        return new Date(Number(y), Number(m) - 1, Number(d));
+    }
+    return new Date(str);
+};
+
+const processEventImport = async (job, eventType, records, choirId, userId) => {
+    jobs.updateJobProgress(job.id, 0, records.length);
+    let processed = 0;
+    const { Op, fn, col, where } = require('sequelize');
+
+    for (const [index, record] of records.entries()) {
+        try {
+            const reference = record.referenz || record.reference;
+            const dateStr = record.datum || record.date;
+
+            if (!reference || !dateStr) {
+                throw new Error(`Missing data in row ${index + 1}`);
+            }
+
+            const piece = await findPieceByReference(reference);
+            if (!piece) {
+                throw new Error(`Piece not found for reference "${reference}"`);
+            }
+
+            const targetDate = parseGermanDate(dateStr);
+            const dateOnly = targetDate.toISOString().split('T')[0];
+
+            let event = await db.event.findOne({
+                where: {
+                    choirId,
+                    type: eventType,
+                    [Op.and]: [where(fn('date', col('date')), dateOnly)]
+                }
+            });
+
+            if (!event) {
+                event = await db.event.create({
+                    date: targetDate,
+                    type: eventType,
+                    choirId,
+                    directorId: userId
+                });
+                jobs.updateJobLog(job.id, `Event on ${dateStr} created.`);
+            }
+
+            const [link, created] = await db.event_pieces.findOrCreate({
+                where: { eventId: event.id, pieceId: piece.id }
+            });
+            if (created) {
+                jobs.updateJobLog(job.id, `Piece "${piece.title}" added to event ${dateStr}.`);
+            } else {
+                jobs.updateJobLog(job.id, `Piece "${piece.title}" already in event ${dateStr}.`);
+            }
+
+            // Update repertoire status according to event type
+            if (eventType === 'REHEARSAL') {
+                await db.choir_repertoire.update(
+                    { status: 'IN_REHEARSAL' },
+                    {
+                        where: {
+                            choirId,
+                            pieceId: piece.id,
+                            status: 'NOT_READY'
+                        }
+                    }
+                );
+            } else if (eventType === 'SERVICE') {
+                await db.choir_repertoire.update(
+                    { status: 'CAN_BE_SUNG' },
+                    {
+                        where: {
+                            choirId,
+                            pieceId: piece.id,
+                            status: { [Op.in]: ['NOT_READY', 'IN_REHEARSAL'] }
+                        }
+                    }
+                );
+            }
+
+            processed++;
+        } catch (err) {
+            jobs.updateJobLog(job.id, `Error on row ${index + 1}: ${err.message}`);
+        }
+        jobs.updateJobProgress(job.id, index + 1, records.length);
+    }
+
+    const result = { message: `Import complete. ${processed} rows processed.` };
+    jobs.completeJob(job.id, result);
+};
+
+exports.startImportEvents = async (req, res) => {
+    const eventType = (req.query.type || '').toUpperCase();
+    if (!['REHEARSAL', 'SERVICE'].includes(eventType)) {
+        return res.status(400).send({ message: 'Invalid event type.' });
+    }
+    if (!req.file) return res.status(400).send({ message: 'No CSV file uploaded.' });
+
+    const fileContent = req.file.buffer.toString('utf-8');
+    const parser = parse(fileContent, { delimiter: ';', columns: header => header.map(h => h.trim().toLowerCase()), skip_empty_lines: true, trim: true });
+
+    const records = [];
+    try {
+        for await (const record of parser) { records.push(record); }
+    } catch (e) {
+        return res.status(400).send({ message: 'Could not parse CSV file.' });
+    }
+
+    if (req.query.mode === 'preview') {
+        return res.status(200).send(records.slice(0, 2));
+    }
+
+    const jobId = crypto.randomUUID();
+    const job = jobs.createJob(jobId);
+    job.status = 'running';
+
+    processEventImport(job, eventType, records, req.activeChoirId, req.userId).catch(err => {
+        jobs.failJob(jobId, err.message);
+    });
+
+    res.status(202).send({ jobId });
+};
+
+// Expose internal helpers for testing
+exports._test = {
+    processEventImport
+};

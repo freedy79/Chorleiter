@@ -17,6 +17,9 @@ db.choir = require("./choir.model.js")(sequelize, Sequelize);
 db.user = require("./user.model.js")(sequelize, Sequelize);
 db.piece = require("./piece.model.js")(sequelize, Sequelize);
 db.event = require("./event.model.js")(sequelize, Sequelize);
+db.monthly_plan = require("./monthly_plan.model.js")(sequelize, Sequelize);
+db.plan_rule = require("./plan_rule.model.js")(sequelize, Sequelize);
+db.plan_entry = require("./plan_entry.model.js")(sequelize, Sequelize);
 db.event_pieces = require("./event_pieces.model.js")(sequelize, Sequelize);
 db.composer = require("./composer.model.js")(sequelize, Sequelize);
 db.category = require("./category.model.js")(sequelize, Sequelize);
@@ -30,6 +33,7 @@ db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
 db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequelize);
 db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
+db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -49,6 +53,20 @@ db.event.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 // A User (director) created an Event
 db.user.hasMany(db.event, { as: "createdEvents"});
 db.event.belongsTo(db.user, { foreignKey: "directorId", as: "director"})
+db.user.hasMany(db.event, { as: "organistEvents", foreignKey: "organistId" });
+db.event.belongsTo(db.user, { foreignKey: "organistId", as: "organist" });
+db.user.hasMany(db.plan_entry, { as: "directedPlanEntries", foreignKey: "directorId" });
+db.plan_entry.belongsTo(db.user, { foreignKey: "directorId", as: "director" });
+db.user.hasMany(db.plan_entry, { as: "organistPlanEntries", foreignKey: "organistId" });
+db.plan_entry.belongsTo(db.user, { foreignKey: "organistId", as: "organist" });
+db.choir.hasMany(db.monthly_plan, { as: "monthlyPlans" });
+db.monthly_plan.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
+db.monthly_plan.hasMany(db.event, { as: "events" });
+db.event.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
+db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
+db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
+db.choir.hasMany(db.plan_rule, { as: "planRules" });
+db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 
 // A User (director) created a Piece
 db.user.hasMany(db.piece, { as: "createdPieces"});

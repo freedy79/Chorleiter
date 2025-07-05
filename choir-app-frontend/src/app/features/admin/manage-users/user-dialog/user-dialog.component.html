@@ -6,24 +6,24 @@
       <input matInput formControlName="name" cdkFocusInitial>
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Email</mat-label>
+      <mat-label>E-Mail</mat-label>
       <input matInput formControlName="email">
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Password</mat-label>
+      <mat-label>Passwort</mat-label>
       <input matInput type="password" formControlName="password">
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Role</mat-label>
+      <mat-label>Rolle</mat-label>
       <mat-select formControlName="role">
-        <mat-option value="director">director</mat-option>
-        <mat-option value="choir_admin">choir_admin</mat-option>
-        <mat-option value="admin">admin</mat-option>
+        <mat-option value="director">Dirigent</mat-option>
+        <mat-option value="choir_admin">Chor-Admin</mat-option>
+        <mat-option value="admin">Admin</mat-option>
       </mat-select>
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Cancel</button>
-  <button mat-flat-button color="primary" type="submit" form="user-form" [disabled]="form.invalid">Save</button>
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="submit" form="user-form" [disabled]="form.invalid">Speichern</button>
 </div>

@@ -16,7 +16,7 @@ import { ChoirDialogComponent } from './choir-dialog/choir-dialog.component';
 })
 export class ManageChoirsComponent implements OnInit {
   choirs: Choir[] = [];
-  displayedColumns = ['name', 'location', 'actions'];
+  displayedColumns = ['name', 'location', 'memberCount', 'eventCount', 'pieceCount', 'actions'];
   dataSource = new MatTableDataSource<Choir>();
 
   constructor(private api: ApiService, private dialog: MatDialog) {}
@@ -42,16 +42,18 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   editChoir(choir: Choir): void {
-    const ref = this.dialog.open(ChoirDialogComponent, { width: '400px', data: choir });
+    const ref = this.dialog.open(ChoirDialogComponent, { width: '600px', data: choir });
     ref.afterClosed().subscribe(result => {
       if (result) {
         this.api.updateChoir(choir.id, result).subscribe(() => this.loadChoirs());
+      } else {
+        this.loadChoirs();
       }
     });
   }
 
   deleteChoir(choir: Choir): void {
-    if (confirm('Delete choir?')) {
+    if (confirm('Chor löschen?')) {
       this.api.deleteChoir(choir.id).subscribe(() => this.loadChoirs());
     }
   }

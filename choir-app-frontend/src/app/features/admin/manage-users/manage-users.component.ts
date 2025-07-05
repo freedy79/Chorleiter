@@ -52,15 +52,15 @@ export class ManageUsersComponent implements OnInit {
   }
 
   deleteUser(user: User): void {
-    if (confirm('Delete user?')) {
+    if (confirm('Benutzer löschen?')) {
       this.api.deleteUser(user.id).subscribe(() => this.loadUsers());
     }
   }
 
   sendReset(user: User): void {
-    if (confirm('Send password reset email?')) {
+    if (confirm('Passwort-Reset-E-Mail senden?')) {
       this.api.sendPasswordReset(user.id).subscribe(() => {
-        this.snack.open('Email sent if user exists.', 'OK', { duration: 3000 });
+        this.snack.open('E-Mail gesendet, falls der Benutzer existiert.', 'OK', { duration: 3000 });
       });
     }
   }

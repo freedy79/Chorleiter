@@ -7,6 +7,8 @@ import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
 import { Choir } from '../models/choir';
 import { SwitchChoirResponse } from '../models/auth';
+import { ThemeService } from './theme.service';
+import { UserPreferencesService } from './user-preferences.service';
 
 const TOKEN_KEY = 'auth-token';
 const USER_KEY = 'user';
@@ -27,8 +29,18 @@ export class AuthService {
   // --- Wir leiten die Berechtigungen direkt vom currentUser$ ab ---
   public isAdmin$: Observable<boolean>;
 
-  constructor(private http: HttpClient, private router: Router) {
+  constructor(private http: HttpClient,
+              private router: Router,
+              private theme: ThemeService,
+              private prefs: UserPreferencesService) {
     this.isAdmin$ = this.currentUser$.pipe(map(user => user?.role === 'admin'));
+    if (this.hasToken()) {
+      this.prefs.load().subscribe(p => {
+        if (p.theme) {
+          this.theme.setTheme(p.theme);
+        }
+      });
+    }
   }
 
   private hasToken(): boolean {
@@ -54,6 +66,12 @@ export class AuthService {
           this.currentUserSubject.next(user);
           this.activeChoir$.next(user.activeChoir || null);
           this.availableChoirs$.next(user.availableChoirs || []);
+
+          this.prefs.load().subscribe(p => {
+            if (p.theme) {
+              this.theme.setTheme(p.theme);
+            }
+          });
         }
       })
     );
@@ -62,6 +80,8 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem('theme');
+    this.prefs.clear();
     this.loggedIn.next(false);
     this.currentUserSubject.next(null);
     this.activeChoir$.next(null);

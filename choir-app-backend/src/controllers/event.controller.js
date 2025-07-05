@@ -6,7 +6,7 @@ const Collection = db.collection;
 const CollectionPiece = db.collection_piece;
 const User = db.user;
 const logger = require("../config/logger");
-const { Op } = require("sequelize");
+const { Op, fn, col, where } = require("sequelize");
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -37,9 +37,9 @@ async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
 }
 
 exports.create = async (req, res) => {
-    const { date, type, notes, pieceIds } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
     const choirId = req.activeChoirId;
-    const userId = req.userId;
+    const creatorId = req.userId;
 
     if (!date || !type) {
         return res.status(400).send({ message: "Date and Type are required." });
@@ -47,16 +47,13 @@ exports.create = async (req, res) => {
 
     try {
         const targetDate = new Date(date);
-        const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 0, 0, 0, 0);
-        const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59, 999);
+        const dateOnly = targetDate.toISOString().split('T')[0];
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
         const eventsSameDay = await db.event.findAll({
             where: {
                 choirId: choirId,
-                date: {
-                    [Op.between]: [startOfDay, endOfDay]
-                }
+                [Op.and]: [where(fn('date', col('date')), dateOnly)]
             }
         });
 
@@ -82,7 +79,11 @@ exports.create = async (req, res) => {
             type: type,
             notes: notes,
             choirId: choirId,
-            directorId: userId
+            directorId: directorId !== undefined ? directorId : creatorId,
+            organistId: organistId || null,
+            finalized: finalized || false,
+            version: version || 1,
+            monthlyPlanId: monthlyPlanId || null
         });
 
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
@@ -93,7 +94,11 @@ exports.create = async (req, res) => {
 
         // Event inklusive Director neu laden, um den Namen zurückzugeben
         const fullEvent = await Event.findByPk(event.id, {
-            include: [{ model: User, as: 'director', attributes: ['name'] }]
+            include: [
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            ]
         });
 
         // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
@@ -153,7 +158,7 @@ exports.findLast = async (req, res) => {
                         }
                     }
                 ]
-            }]
+            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: User, as: 'organist', attributes: ['id', 'name'], required: false }]
         });
 
         if (!lastEvent) {
@@ -182,7 +187,11 @@ exports.findAll = async (req, res) => {
         const events = await Event.findAll({
             where,
             order: [['date', 'DESC']],
-            include: [{ model: User, as: 'director', attributes: ['name'] }]
+            include: [
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            ]
         });
         res.status(200).send(events);
     } catch (err) {
@@ -217,7 +226,7 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['name'] }]
+            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
         });
 
         if (!event) {
@@ -232,15 +241,38 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const id = req.params.id;
-    const { date, type, notes, pieceIds } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
 
     try {
-        const event = await Event.findOne({ where: { id, choirId: req.activeChoirId } });
+        const event = await Event.findOne({
+            where: { id, choirId: req.activeChoirId },
+            include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }]
+        });
         if (!event) {
             return res.status(404).send({ message: 'Event not found.' });
         }
 
-        await event.update({ date, type, notes, directorId: req.userId });
+
+        // Determine if anything has changed
+        const dateChanged = new Date(date).getTime() !== new Date(event.date).getTime();
+        const typeChanged = type !== event.type;
+        const notesChanged = (notes || '') !== (event.notes || '');
+
+        const incomingPieces = Array.isArray(pieceIds) ? [...pieceIds].sort() : [];
+        const existingPieces = event.pieces.map(p => p.id).sort();
+        const piecesChanged = JSON.stringify(incomingPieces) !== JSON.stringify(existingPieces);
+
+        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged) {
+            const full = await Event.findByPk(id, {
+                include: [
+                    { model: Piece, as: 'pieces', through: { attributes: [] } },
+                    { model: User, as: 'director', attributes: ['id', 'name'] }
+                ]
+            });
+            return res.status(200).send(full);
+        }
+
+        await event.update({ date, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -250,7 +282,9 @@ exports.update = async (req, res) => {
         const updated = await Event.findByPk(id, {
             include: [
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
-                { model: User, as: 'director', attributes: ['name'] }
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
         res.status(200).send(updated);
@@ -271,5 +305,73 @@ exports.delete = async (req, res) => {
         }
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not delete event.' });
+    }
+};
+
+/**
+ * Delete multiple events by date range and optional type.
+ * Query params:
+ *  - start: ISO date string (inclusive)
+ *  - end: ISO date string (inclusive)
+ *  - type: optional event type (REHEARSAL or SERVICE)
+ */
+exports.deleteRange = async (req, res) => {
+    const { start, end, type } = req.query;
+    if (!start || !end) {
+        return res.status(400).send({ message: 'start and end parameters required.' });
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    if (isNaN(startDate) || isNaN(endDate)) {
+        return res.status(400).send({ message: 'Invalid start or end date.' });
+    }
+
+    const where = {
+        choirId: req.activeChoirId,
+        date: { [Op.between]: [startDate, endDate] }
+    };
+    if (type) {
+        const upper = String(type).toUpperCase();
+        if (!['REHEARSAL', 'SERVICE'].includes(upper)) {
+            return res.status(400).send({ message: 'Invalid event type.' });
+        }
+        where.type = upper;
+    }
+
+    try {
+        const num = await Event.destroy({ where });
+        res.send({ message: `${num} events deleted.` });
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not delete events.' });
+    }
+};
+
+// Recalculate repertoire statuses for all choirs based on past events
+exports.recalculatePieceStatuses = async (req, res) => {
+    try {
+        await db.sequelize.query(`
+            UPDATE "choir_repertoires" cr
+            SET status = CASE
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'SERVICE'
+                ) THEN 'CAN_BE_SUNG'
+                WHEN EXISTS (
+                    SELECT 1 FROM "event_pieces" ep
+                    JOIN "events" e ON ep."eventId" = e.id
+                    WHERE ep."pieceId" = cr."pieceId"
+                      AND e."choirId" = cr."choirId"
+                      AND e.type = 'REHEARSAL'
+                ) THEN 'IN_REHEARSAL'
+                ELSE 'NOT_READY'
+            END
+        `);
+        res.status(200).send({ message: 'Piece statuses recalculated.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
     }
 };

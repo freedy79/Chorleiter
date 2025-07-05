@@ -17,12 +17,14 @@ import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-au
 import { ManageChoirsComponent } from '@features/admin/manage-choirs/manage-choirs.component';
 import { ManageUsersComponent } from '@features/admin/manage-users/manage-users.component';
 import { BackupComponent } from '@features/admin/backup/backup.component';
-import { LoginAttemptsComponent } from '@features/admin/login-attempts/login-attempts.component';
+import { ProtocolsComponent } from '@features/admin/protocols/protocols.component';
+import { MailSettingsComponent } from '@features/admin/mail-settings/mail-settings.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
+import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
@@ -98,6 +100,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'dienstplan',
+                component: MonthlyPlanComponent,
+                canActivate: [AuthGuard]
+            },
+            {
                 path: 'stats',
                 component: StatisticsComponent,
                 canActivate: [AuthGuard]
@@ -131,7 +138,8 @@ export const routes: Routes = [
             { path: 'choirs', component: ManageChoirsComponent },
             { path: 'users', component: ManageUsersComponent },
             { path: 'backup', component: BackupComponent },
-            { path: 'login-attempts', component: LoginAttemptsComponent },
+            { path: 'protocols', component: ProtocolsComponent },
+            { path: 'mail-settings', component: MailSettingsComponent },
         ],
     },
 

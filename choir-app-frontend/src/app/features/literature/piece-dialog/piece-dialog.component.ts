@@ -6,6 +6,9 @@ import {
     FormGroup,
     Validators,
     FormArray,
+    ValidatorFn,
+    AbstractControl,
+    ValidationErrors
 } from '@angular/forms';
 import {
     MAT_DIALOG_DATA,
@@ -14,7 +17,7 @@ import {
 } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap, map } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -23,6 +26,15 @@ import { CategoryDialogComponent } from '../../categories/category-dialog/catego
 import { Author } from '@core/models/author';
 import { Piece } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+export function authorOrSourceValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const authorId = control.get('authorId')?.value;
+        const source = control.get('lyricsSource')?.value;
+        return !authorId && !source ? { authorOrSourceRequired: true } : null;
+    };
+}
 
 @Component({
     selector: 'app-piece-dialog',
@@ -41,6 +53,10 @@ export class PieceDialogComponent implements OnInit {
     public categories$!: Observable<Category[]>;
     isEditMode = false;
     isAdmin = false;
+    activeSection: 'general' | 'text' | 'files' = 'general';
+    imagePreview: string | null = null;
+    imageFile: File | null = null;
+    isDragOver = false;
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
@@ -56,6 +72,7 @@ export class PieceDialogComponent implements OnInit {
         private apiService: ApiService,
         private pieceService: PieceService,
         private authService: AuthService,
+        private snackBar: MatSnackBar,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId: number | null }
@@ -66,15 +83,16 @@ export class PieceDialogComponent implements OnInit {
             title: ['', Validators.required],
             voicing: [''],
             lyrics: [''],
+            lyricsSource: [''],
             links: this.fb.array([]),
             opus: [''],
             key: [''],
             timeSignature: [''],
             license: [''],
             composerId: [null, Validators.required],
-            authorId: [null, Validators.required],
+            authorId: [null],
             categoryId: [null],
-        });
+        }, { validators: authorOrSourceValidator() });
     }
 
     ngOnInit(): void {
@@ -194,6 +212,52 @@ export class PieceDialogComponent implements OnInit {
         this.linksFormArray.removeAt(index);
     }
 
+    onFileSelected(event: Event): void {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    onDragOver(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = true;
+    }
+
+    onDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+    }
+
+    onDrop(event: DragEvent): void {
+        event.preventDefault();
+        this.isDragOver = false;
+        const file = event.dataTransfer?.files?.[0];
+        if (file) this.handleFile(file);
+    }
+
+    private handleFile(file: File): void {
+        this.imageFile = file;
+        this.snackBar.open(
+            'Es ist urheberrechtlich untersagt, ganze Notenseiten oder vollständige Stücke abzulegen, wenn das Notenbild nicht rechtefrei ist.',
+            'Verstanden',
+            { duration: 10000 }
+        );
+        const reader = new FileReader();
+        reader.onload = () => (this.imagePreview = reader.result as string);
+        reader.readAsDataURL(file);
+    }
+
+    isGeneralStepInvalid(): boolean {
+        return (
+            this.pieceForm.get('title')?.invalid ||
+            this.pieceForm.get('composerId')?.invalid ||
+            false
+        );
+    }
+
+    isFilesStepInvalid(): boolean {
+        return this.linksFormArray.invalid;
+    }
+
     populateForm(piece: Piece): void {
         this.pieceForm.patchValue({
             title: piece.title,
@@ -207,7 +271,12 @@ export class PieceDialogComponent implements OnInit {
             categoryId: piece.category?.id,
             arrangerIds: piece.arrangers?.map((a) => a.id) || [],
             lyrics: piece.lyrics,
+            lyricsSource: piece.lyricsSource,
         });
+
+        if (piece.imageIdentifier) {
+            this.apiService.getPieceImage(piece.id).subscribe(data => this.imagePreview = data);
+        }
 
         // Populate the links FormArray
         piece.links?.forEach((link) => {
@@ -235,12 +304,20 @@ export class PieceDialogComponent implements OnInit {
             const obs = this.isAdmin
                 ? this.pieceService.updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
                 : this.pieceService.proposePieceChange(this.data.pieceId, this.pieceForm.value);
-            obs.subscribe({
-                next: () => this.dialogRef.close(true),
-                error: (err) => {
-                    console.error('Failed to save piece', err);
-                },
-            });
+            obs
+                .pipe(
+                    switchMap(() =>
+                        this.imageFile && this.isAdmin
+                            ? this.apiService.uploadPieceImage(this.data.pieceId!, this.imageFile)
+                            : of(null)
+                    )
+                )
+                .subscribe({
+                    next: () => this.dialogRef.close(true),
+                    error: (err) => {
+                        console.error('Failed to save piece', err);
+                    },
+                });
         } else {
             this.pieceService
                 .createGlobalPiece(this.pieceForm.value)
@@ -249,6 +326,11 @@ export class PieceDialogComponent implements OnInit {
                         this.pieceService
                             .addPieceToMyRepertoire(newlyCreatedPiece.id)
                             .pipe(map(() => newlyCreatedPiece))
+                    ),
+                    switchMap((createdPiece) =>
+                        this.imageFile
+                            ? this.apiService.uploadPieceImage(createdPiece.id, this.imageFile).pipe(map(() => createdPiece))
+                            : of(createdPiece)
                     )
                 )
                 .subscribe({

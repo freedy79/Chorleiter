@@ -97,8 +97,8 @@ export class ProfileComponent implements OnInit {
         this.profileForm.get('passwords')?.reset();
       },
       error: (err) => {
-        const errorMessage = err.error?.message || 'Failed to update profile.';
-        this.snackBar.open(errorMessage, 'Close', { duration: 5000,  verticalPosition: 'top'  });
+        const errorMessage = err.error?.message || 'Profilaktualisierung fehlgeschlagen.';
+        this.snackBar.open(errorMessage, 'Schließen', { duration: 5000,  verticalPosition: 'top'  });
       }
     });
   }

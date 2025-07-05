@@ -11,6 +11,8 @@ const controller = require('../src/controllers/event.controller');
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
     const user = await db.user.create({ email: 't@example.com', role: 'USER' });
+    const organist = await db.user.create({ email: 'o@example.com', role: 'USER' });
+    const plan = await db.monthly_plan.create({ choirId: choir.id, year: 2024, month: 1 });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
     const res = {
@@ -19,8 +21,9 @@ const controller = require('../src/controllers/event.controller');
     };
 
     // First event should succeed
-    await controller.create({ ...baseReq, body: { date: '2024-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
+    await controller.create({ ...baseReq, body: { date: '2024-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [], organistId: organist.id, monthlyPlanId: plan.id } }, res);
     assert.strictEqual(res.statusCode, 201);
+    assert.strictEqual(res.data.event.organistId, organist.id);
 
     // Same type on same day should be rejected
     await controller.create({ ...baseReq, body: { date: '2024-01-01T12:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
@@ -31,7 +34,33 @@ const controller = require('../src/controllers/event.controller');
     assert.strictEqual(res.statusCode, 201);
     assert.ok(res.data.warning);
 
-    console.log('event.controller create test passed');
+    // Delete events in date range
+    const delReq = {
+      activeChoirId: choir.id,
+      query: { start: '2024-01-01', end: '2024-01-02' }
+    };
+    await controller.deleteRange(delReq, res);
+    assert.strictEqual(res.data.message.includes('events deleted'), true);
+
+    // --- Update tests ---
+    // create new event
+    await controller.create({ ...baseReq, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'A', pieceIds: [] } }, res);
+    const updateId = res.data.event.id;
+    const initialUpdatedAt = new Date(res.data.event.updatedAt);
+
+    // call update with identical data
+    await controller.update({ ...baseReq, params: { id: updateId }, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'A', pieceIds: [] } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const afterNoChange = await db.event.findByPk(updateId);
+    assert.strictEqual(afterNoChange.updatedAt.getTime(), initialUpdatedAt.getTime());
+
+    // update with changed notes
+    await controller.update({ ...baseReq, params: { id: updateId }, body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'B', pieceIds: [] } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const afterChange = await db.event.findByPk(updateId);
+    assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
+
+    console.log('event.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

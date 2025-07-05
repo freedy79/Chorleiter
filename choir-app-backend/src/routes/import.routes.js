@@ -10,6 +10,7 @@ const upload = multer({ storage: storage });
 router.use(authJwt.verifyToken);
 
 router.post("/collection/:id", upload.single('csvfile'), controller.startImportCsvToCollection);
+router.post("/events", upload.single('csvfile'), controller.startImportEvents);
 router.get("/status/:jobId", controller.getImportStatus);
 
 module.exports = router;

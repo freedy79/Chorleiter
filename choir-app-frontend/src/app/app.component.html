@@ -1,1 +1,2 @@
-<router-outlet></router-outlet>
+<app-service-unavailable *ngIf="!backendAvailable"></app-service-unavailable>
+<router-outlet *ngIf="backendAvailable"></router-outlet>

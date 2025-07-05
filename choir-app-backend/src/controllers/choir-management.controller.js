@@ -40,7 +40,7 @@ exports.getMyChoirDetails = async (req, res, next) => {
 
 // Details des aktiven Chors aktualisieren
 exports.updateMyChoir = async (req, res, next) => {
-    const { name, description, location } = req.body;
+    const { name, description, location, modules } = req.body;
 
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);
@@ -54,8 +54,14 @@ exports.updateMyChoir = async (req, res, next) => {
         }
 
         // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
+        const updateData = {};
+        if (name !== undefined) updateData.name = name;
+        if (description !== undefined) updateData.description = description;
+        if (location !== undefined) updateData.location = location;
+        if (modules !== undefined) updateData.modules = modules;
+
         const [numberOfAffectedRows] = await db.choir.update(
-            { name, description, location },
+            updateData,
             { where: { id: req.activeChoirId } }
         );
 
@@ -85,7 +91,7 @@ exports.getChoirMembers = async (req, res) => {
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
-                    attributes: ['roleInChoir','registrationStatus']
+                    attributes: ['roleInChoir','registrationStatus','isOrganist']
                 }
             }],
             order: [[db.user, 'name', 'ASC']] // Sortieren Sie die Mitglieder alphabetisch nach Namen.
@@ -104,7 +110,8 @@ exports.getChoirMembers = async (req, res) => {
                 email: user.email,
                 membership: {
                     roleInChoir: user.user_choir.roleInChoir,
-                    registrationStatus: user.user_choir.registrationStatus
+                    registrationStatus: user.user_choir.registrationStatus,
+                    isOrganist: user.user_choir.isOrganist
                 }
             };
         });
@@ -118,7 +125,7 @@ exports.getChoirMembers = async (req, res) => {
 
 // Einen Benutzer zum aktiven Chor hinzufügen/einladen
 exports.inviteUserToChoir = async (req, res, next) => {
-    const { email, roleInChoir } = req.body;
+    const { email, roleInChoir, isOrganist } = req.body;
     const choirId = req.activeChoirId;
 
     if (req.userRole === 'demo') {
@@ -134,13 +141,13 @@ exports.inviteUserToChoir = async (req, res, next) => {
         const choir = await db.choir.findByPk(choirId);
 
         if (user) {
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED' } });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
             const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
             user = await db.user.create({ email });
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
+            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
             await emailService.sendInvitationMail(email, token, choir.name, expiry);
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }
@@ -187,6 +194,96 @@ exports.removeUserFromChoir = async (req, res, next) => {
         }
     } catch (err) {
         err.message = `Error removing user ${userId} from choirId ${choirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+// Mitgliedsdaten aktualisieren (z.B. Organistenstatus)
+exports.updateMember = async (req, res, next) => {
+    const { userId } = req.params;
+    const { isOrganist, roleInChoir } = req.body;
+    const choirId = req.activeChoirId;
+
+    if (req.userRole === 'demo') {
+        return res.status(403).send({ message: 'Demo user cannot manage members.' });
+    }
+
+    try {
+        const association = await db.user_choir.findOne({ where: { userId, choirId } });
+        if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
+
+        if (roleInChoir && association.roleInChoir === 'choir_admin' && roleInChoir !== 'choir_admin') {
+            const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
+            if (admins.length <= 1) {
+                return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
+            }
+        }
+
+        await association.update({
+            ...(roleInChoir ? { roleInChoir } : {}),
+            ...(isOrganist !== undefined ? { isOrganist: !!isOrganist } : {})
+        });
+
+        res.status(200).send({ message: 'Membership updated.' });
+    } catch (err) {
+        err.message = `Error updating member ${userId} for choirId ${choirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+exports.getChoirCollections = async (req, res, next) => {
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        if (!choir) {
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        const collections = await choir.getCollections({
+            attributes: {
+                include: [
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "collection_pieces" AS cp WHERE cp."collectionId" = "collection"."id")`), 'pieceCount']
+                ]
+            },
+            order: [['title', 'ASC']]
+        });
+
+        const result = collections.map(c => {
+            const plain = c.get ? c.get() : c;
+            return {
+                ...plain,
+                pieceCount: parseInt(plain.pieceCount, 10) || 0
+            };
+        });
+
+        res.status(200).send(result);
+    } catch (err) {
+        err.message = `Error fetching collections for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+exports.removeCollectionFromChoir = async (req, res, next) => {
+    try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
+        }
+
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        const collection = await db.collection.findByPk(req.params.id);
+
+        if (!choir || !collection) {
+            return res.status(404).send({ message: 'Choir or Collection not found.' });
+        }
+
+        await choir.removeCollection(collection);
+        const pieces = await collection.getPieces();
+        if (pieces && pieces.length > 0) {
+            await choir.removePieces(pieces);
+        }
+
+        res.status(200).send({ message: `Collection '${collection.title}' removed from choir.` });
+    } catch (err) {
+        err.message = `Error removing collection from choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
     }
 };

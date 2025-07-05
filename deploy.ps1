@@ -12,6 +12,25 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
+# Check for sshpass before proceeding
+$sshUseSshpass = $false
+if (Get-Command sshpass -ErrorAction SilentlyContinue) {
+    $sshUseSshpass = $true
+} else {
+    $install = Read-Host "sshpass is not installed. Install it now? (y/N)"
+    if ($install -match '^[Yy]') {
+        try {
+            & sudo apt-get install sshpass
+            $sshUseSshpass = $true
+        } catch {
+            Write-Host "Failed to install sshpass." -ForegroundColor Red
+        }
+    }
+    if (-not $sshUseSshpass) {
+        Write-Host "Hint: install sshpass with: sudo apt-get install sshpass"
+    }
+}
+
 $Password = $null
 if (Test-Path $PasswordFile) {
     $Password = (Get-Content $PasswordFile -Raw).Trim()
@@ -26,10 +45,14 @@ if (-not $Password) {
     $Password = Read-Host "SSH password for $Remote"
 }
 
-$sshUseSshpass = $false
-if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshUseSshpass = $true
-}
+
+$ControlPath = Join-Path $env:USERPROFILE ".chorleiter_ssh_control"
+$SshOptions = @(
+    "-o", "ControlMaster=auto",
+    "-o", "ControlPath=$ControlPath",
+    "-o", "ControlPersist=10m",
+    "-o", "StrictHostKeyChecking=no"
+)
 
 function Invoke-Ssh {
     param(
@@ -37,10 +60,10 @@ function Invoke-Ssh {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh -o StrictHostKeyChecking=no $Remote $Command
+        & sshpass -p "$Password" ssh @SshOptions $Remote $Command
     }
     else {
-        & ssh $Remote $Command
+        & ssh @SshOptions $Remote $Command
     }
 }
 
@@ -51,21 +74,28 @@ function Invoke-Scp {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp $Source $Destination
+        & sshpass -p "$Password" scp @SshOptions $Source $Destination
     }
     else {
-        & scp $Source $Destination
+        & scp @SshOptions $Source $Destination
     }
 }
+
+# Establish master connection so the password is requested only once
+Write-Host "Establishing SSH connection..."
+Invoke-Ssh "true"
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 
 # Pack directories
+Write-Host "Packing backend..."
 & tar --exclude=".env" -czf $BackendArchive -C "choir-app-backend" .
+Write-Host "Packing frontend..."
 & tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
+Write-Host "Creating remote directories..."
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
 # Upload archives
@@ -83,3 +113,11 @@ Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
 
 Write-Host "Deployment completed."
+
+# Close the persistent SSH connection
+if ($sshUseSshpass) {
+    & sshpass -p "$Password" ssh @SshOptions -O exit $Remote
+}
+else {
+    & ssh @SshOptions -O exit $Remote
+}

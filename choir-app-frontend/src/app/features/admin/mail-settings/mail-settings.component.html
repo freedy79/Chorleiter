@@ -1,0 +1,24 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="mail-form">
+  <mat-form-field appearance="fill">
+    <mat-label>Host</mat-label>
+    <input matInput formControlName="host">
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Port</mat-label>
+    <input matInput type="number" formControlName="port">
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Benutzer</mat-label>
+    <input matInput formControlName="user">
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Passwort</mat-label>
+    <input matInput type="password" formControlName="pass">
+  </mat-form-field>
+  <mat-checkbox formControlName="secure">TLS/SSL</mat-checkbox>
+  <mat-form-field appearance="fill">
+    <mat-label>Absenderadresse</mat-label>
+    <input matInput formControlName="fromAddress">
+  </mat-form-field>
+  <button mat-raised-button color="primary" type="submit">Speichern</button>
+</form>

@@ -22,7 +22,8 @@ export class InviteRegistrationComponent implements OnInit {
   constructor(private route: ActivatedRoute, private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar, private router: Router) {
     this.form = this.fb.group({
       name: ['', Validators.required],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
+      isOrganist: [false]
     });
   }
 
@@ -36,7 +37,8 @@ export class InviteRegistrationComponent implements OnInit {
 
   submit(): void {
     if (this.form.invalid) return;
-    this.api.completeRegistration(this.token, this.form.value).subscribe({
+    const payload = this.form.value;
+    this.api.completeRegistration(this.token, payload).subscribe({
       next: () => {
         this.snack.open('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.', 'OK');
         this.router.navigate(['/login']);

@@ -17,6 +17,8 @@ import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-dashboard',
@@ -44,7 +46,8 @@ export class DashboardComponent implements OnInit {
     private authService: AuthService,
     private dialog: MatDialog, // Zum Öffnen von Dialogen
     private snackBar: MatSnackBar, // Zum Anzeigen von Benachrichtigungen
-    private help: HelpService
+    private help: HelpService,
+    private prefs: UserPreferencesService
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
   }
@@ -65,10 +68,16 @@ export class DashboardComponent implements OnInit {
 
     // Willkommenstext ggf. anzeigen
     this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-      if (this.help.shouldShowHelp(user)) {
-        const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
-        ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
-      }
+      if (!user) return;
+      const load$: Observable<UserPreferences | null> = this.prefs.isLoaded()
+        ? of(null)
+        : this.prefs.load();
+      load$.pipe(take(1)).subscribe(() => {
+        if (this.help.shouldShowHelp(user)) {
+          const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
+          ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
+        }
+      });
     });
   }
 

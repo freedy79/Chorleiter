@@ -1,13 +1,19 @@
 <div class="piece-detail" *ngIf="piece">
   <h2>{{ piece.title }}</h2>
   <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
+  <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
-  <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status }}</p>
+  <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
 
   <h3>Geprobt bei</h3>
   <mat-list *ngIf="piece.events?.length; else noEvents">
     <mat-list-item *ngFor="let ev of piece.events">
-      <div matLine>{{ ev.date | date:'mediumDate' }} - {{ ev.type }}</div>
+      <div matLine>
+        <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }">
+          {{ ev.date | date:'mediumDate' }}
+        </a>
+        - {{ ev.type | eventTypeLabel }}
+      </div>
       <div matLine>{{ ev.notes }}</div>
     </mat-list-item>
   </mat-list>

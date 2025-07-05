@@ -58,7 +58,7 @@ export class ManageAuthorsComponent implements OnInit {
 
   deleteAuthor(author: Author): void {
     if (!author.canDelete) return;
-    if (confirm('Delete author?')) {
+    if (confirm('Dichter löschen?')) {
       this.api.deleteAuthor(author.id).subscribe(() => this.loadAuthors());
     }
   }

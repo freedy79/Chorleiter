@@ -1,12 +1,14 @@
 import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router'; // RouterModule importieren
 import { AuthService } from 'src/app/core/services/auth.service';
+import { ApiService } from 'src/app/core/services/api.service';
 
 // Angular Material Imports
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { combineLatest, map, Observable } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, Observable, of } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
@@ -57,6 +59,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   footerHeight = 56;
 
   public navItems: NavItem[] = [];
+  private dienstplanEnabled$ = new BehaviorSubject<boolean>(false);
 
   isHandset$: Observable<boolean>;
   isTablet$: Observable<boolean> | undefined;
@@ -68,7 +71,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     private navService: NavService,
     private breakpointObserver: BreakpointObserver,
     private dialog: MatDialog,
-    private help: HelpService
+    private help: HelpService,
+    private api: ApiService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -86,6 +90,18 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
       map(result => result.matches)
     );
+
+    this.authService.activeChoir$.subscribe(c => {
+      this.dienstplanEnabled$.next(!!c?.modules?.dienstplan);
+    });
+
+    this.isLoggedIn$.pipe(
+      switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null))
+    ).subscribe(choir => {
+      if (choir) {
+        this.dienstplanEnabled$.next(!!choir.modules?.dienstplan);
+      }
+    });
     this.isHandset$.subscribe(match => {
       this.isHandset = match;
       this.headerHeight = match ? 56 : 64;
@@ -129,6 +145,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           </div>
         </ng-container>
       </ng-container>*/
+    const dienstplanVisible$ = combineLatest([this.isLoggedIn$, this.dienstplanEnabled$]).pipe(
+      map(([loggedIn, enabled]) => loggedIn && enabled)
+    );
+
     this.navItems = [
       {
         displayName: 'Home',
@@ -141,6 +161,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           //svgIconName: 's-messages',
           route: '/events',
           visibleSubject: this.isLoggedIn$,
+      },
+      {
+        displayName: 'Dienstplan',
+        route: '/dienstplan',
+        visibleSubject: dienstplanVisible$,
       },
       {
         displayName: 'Statistik',
@@ -192,8 +217,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
             route: '/admin/backup',
           },
           {
-            displayName: 'Login-Protokoll',
-            route: '/admin/login-attempts',
+            displayName: 'Protokolle',
+            route: '/admin/protocols',
+          },
+          {
+            displayName: 'Mail-Server',
+            route: '/admin/mail-settings',
           }
         ]
       }

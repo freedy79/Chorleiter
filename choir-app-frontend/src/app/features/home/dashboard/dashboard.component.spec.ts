@@ -4,6 +4,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HelpService } from '@core/services/help.service';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { of } from 'rxjs';
 
 import { DashboardComponent } from './dashboard.component';
 
@@ -19,7 +21,8 @@ describe('DashboardComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } },
-        { provide: HelpService, useValue: { shouldShowHelp: () => false, markHelpShown: () => {} } }
+        { provide: HelpService, useValue: { shouldShowHelp: () => false, markHelpShown: () => {} } },
+        { provide: UserPreferencesService, useValue: { isLoaded: () => true, load: () => of({}) } }
       ]
     })
     .compileComponents();

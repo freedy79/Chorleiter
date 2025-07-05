@@ -11,7 +11,7 @@
   </mat-card>
 
   <mat-card>
-    <h3>Top-geprobte Stücke</h3>
+    <h3>Meist geprobte Stücke</h3>
     <ol>
       <li *ngFor="let item of stats.topRehearsalPieces">
         <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}}x)
@@ -20,7 +20,8 @@
   </mat-card>
 
   <mat-card>
-    <h3>Singfähige Stücke im Repertoire</h3>
-    <p>{{stats.singableCount}}</p>
+    <h3>Stücke im Repertoire</h3>
+    <p>Singfähig: {{stats.singableCount}}</p>
+    <p>Probe: {{stats.rehearsalCount}}</p>
   </mat-card>
 </div>

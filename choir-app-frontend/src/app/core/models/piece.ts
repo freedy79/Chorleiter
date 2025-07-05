@@ -21,6 +21,8 @@ export interface Piece {
     status: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY';
   };
   collections?: CollectionReference[];
+  collectionPrefix?: string | null;
+  collectionNumber?: string | null;
 
   key?: string;
   timeSignature?: string;
@@ -28,8 +30,13 @@ export interface Piece {
   imageIdentifier?: string;
   license?: string;
   opus?: string;
+  lyricsSource?: string;
   author?: Author;
   arrangers?: Composer[];
   links?: PieceLink[];
   events?: Event[];
+  lastSung?: string | null;
+  lastRehearsed?: string | null;
+  timesSung?: number;
+  timesRehearsed?: number;
 }
