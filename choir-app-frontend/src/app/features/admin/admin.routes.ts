@@ -6,9 +6,8 @@ export const adminRoutes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      { path: '', redirectTo: 'composers', pathMatch: 'full' },
-      { path: 'composers', loadComponent: () => import('./manage-composers/manage-composers.component').then(m => m.ManageComposersComponent) },
-      { path: 'authors', loadComponent: () => import('./manage-authors/manage-authors.component').then(m => m.ManageAuthorsComponent) },
+      { path: '', redirectTo: 'creators', pathMatch: 'full' },
+      { path: 'creators', loadComponent: () => import('./manage-creators/manage-creators.component').then(m => m.ManageCreatorsComponent) },
       { path: 'choirs', loadComponent: () => import('./manage-choirs/manage-choirs.component').then(m => m.ManageChoirsComponent) },
       { path: 'users', loadComponent: () => import('./manage-users/manage-users.component').then(m => m.ManageUsersComponent) },
       { path: 'backup', loadComponent: () => import('./backup/backup.component').then(m => m.BackupComponent) },
