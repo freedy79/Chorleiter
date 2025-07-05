@@ -46,8 +46,13 @@ if (-not $Password) {
 }
 
 
-$ControlPath = "$env:USERPROFILE\.chorleiter_ssh_control"
-$SshOptions = "-o ControlMaster=auto -o ControlPath=$ControlPath -o ControlPersist=10m -o StrictHostKeyChecking=no"
+$ControlPath = Join-Path $env:USERPROFILE ".chorleiter_ssh_control"
+$SshOptions = @(
+    "-o", "ControlMaster=auto",
+    "-o", "ControlPath=$ControlPath",
+    "-o", "ControlPersist=10m",
+    "-o", "StrictHostKeyChecking=no"
+)
 
 function Invoke-Ssh {
     param(
@@ -55,10 +60,10 @@ function Invoke-Ssh {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh $SshOptions $Remote $Command
+        & sshpass -p "$Password" ssh @SshOptions $Remote $Command
     }
     else {
-        & ssh $SshOptions $Remote $Command
+        & ssh @SshOptions $Remote $Command
     }
 }
 
@@ -69,10 +74,10 @@ function Invoke-Scp {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp $SshOptions $Source $Destination
+        & sshpass -p "$Password" scp @SshOptions $Source $Destination
     }
     else {
-        & scp $SshOptions $Source $Destination
+        & scp @SshOptions $Source $Destination
     }
 }
 
@@ -111,8 +116,8 @@ Write-Host "Deployment completed."
 
 # Close the persistent SSH connection
 if ($sshUseSshpass) {
-    & sshpass -p "$Password" ssh $SshOptions -O exit $Remote
+    & sshpass -p "$Password" ssh @SshOptions -O exit $Remote
 }
 else {
-    & ssh $SshOptions -O exit $Remote
+    & ssh @SshOptions -O exit $Remote
 }
