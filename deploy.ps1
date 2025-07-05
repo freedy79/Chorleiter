@@ -22,15 +22,19 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
         try {
             if (Get-Command apt-get -ErrorAction SilentlyContinue) {
                 & sudo apt-get install sshpass
-                $sshUseSshpass = $true
             } elseif (Get-Command choco -ErrorAction SilentlyContinue) {
                 & choco install -y sshpass
-                $sshUseSshpass = $true
             } else {
                 Write-Host "No supported package manager found. Install sshpass manually." -ForegroundColor Yellow
             }
         } catch {
             Write-Host "Failed to install sshpass." -ForegroundColor Red
+        }
+        # Re-check after attempted installation
+        if (Get-Command sshpass -ErrorAction SilentlyContinue) {
+            $sshUseSshpass = $true
+        } else {
+            Write-Host "sshpass installation failed or command not found." -ForegroundColor Red
         }
     }
     if (-not $sshUseSshpass) {
