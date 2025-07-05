@@ -37,6 +37,16 @@ export class LogViewerComponent implements OnInit {
     });
   }
 
+  deleteLog(): void {
+    if (!this.selected) return;
+    this.api.deleteLog(this.selected).subscribe(() => {
+      this.selected = '';
+      this.entries = [];
+      this.groups = [];
+      this.loadFiles();
+    });
+  }
+
   toggleSort(): void {
     this.descending = !this.descending;
     this.groupEntries();

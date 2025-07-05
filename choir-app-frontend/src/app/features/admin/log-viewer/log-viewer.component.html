@@ -6,6 +6,7 @@
     </mat-select>
   </mat-form-field>
   <button mat-button (click)="toggleSort()">Sortierung {{ descending ? '↓' : '↑' }}</button>
+  <button mat-flat-button color="warn" (click)="deleteLog()" [disabled]="!selected">Löschen</button>
 </div>
 
 <div *ngFor="let group of groups">
