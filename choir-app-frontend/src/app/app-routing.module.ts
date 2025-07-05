@@ -12,13 +12,6 @@ import { AuthGuard } from './core/guards/auth-guard'; // Stellen Sie sicher, das
 import { ImprintComponent } from '@features/legal/imprint/imprint.component';
 import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
 import { AdminGuard } from '@core/guards/admin-guard';
-import { ManageComposersComponent } from '@features/admin/manage-composers/manage-composers.component';
-import { ManageAuthorsComponent } from '@features/admin/manage-authors/manage-authors.component';
-import { ManageChoirsComponent } from '@features/admin/manage-choirs/manage-choirs.component';
-import { ManageUsersComponent } from '@features/admin/manage-users/manage-users.component';
-import { BackupComponent } from '@features/admin/backup/backup.component';
-import { ProtocolsComponent } from '@features/admin/protocols/protocols.component';
-import { MailSettingsComponent } from '@features/admin/mail-settings/mail-settings.component';
 import { LoginGuard } from '@core/guards/login.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
@@ -129,18 +122,8 @@ export const routes: Routes = [
     },
     {
         path: 'admin',
-        component: MainLayoutComponent,
         canActivate: [AuthGuard, AdminGuard], // Muss eingeloggt UND Admin sein
-        children: [
-            { path: '', redirectTo: 'composers', pathMatch: 'full' },
-            { path: 'composers', component: ManageComposersComponent },
-            { path: 'authors', component: ManageAuthorsComponent },
-            { path: 'choirs', component: ManageChoirsComponent },
-            { path: 'users', component: ManageUsersComponent },
-            { path: 'backup', component: BackupComponent },
-            { path: 'protocols', component: ProtocolsComponent },
-            { path: 'mail-settings', component: MailSettingsComponent },
-        ],
+        loadChildren: () => import('./features/admin/admin.routes').then(m => m.adminRoutes),
     },
 
     // Fallback für unbekannte Routen
