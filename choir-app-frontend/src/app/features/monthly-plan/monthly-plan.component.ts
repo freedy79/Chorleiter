@@ -102,7 +102,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result && this.plan) {
         this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).subscribe({
-          next: entry => { this.entries.push(entry); this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 }); },
+          next: () => {
+            this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 });
+            this.loadPlan(this.selectedYear, this.selectedMonth);
+          },
           error: () => this.snackBar.open('Fehler beim Anlegen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }
