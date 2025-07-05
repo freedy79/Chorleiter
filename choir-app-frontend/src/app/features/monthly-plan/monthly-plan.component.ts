@@ -7,11 +7,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
-import { Event } from '@core/models/event';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
-import { EventDialogComponent } from '../events/event-dialog/event-dialog.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -79,14 +77,26 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
-  updateDirector(ev: Event, userId: number | null): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId ?? undefined, organistId: ev.organist?.id, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateDirector(ev: PlanEntry, userId: number | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      type: ev.type,
+      notes: ev.notes || '',
+      directorId: userId ?? undefined,
+      organistId: ev.organist?.id || undefined
+    }).subscribe(updated => {
       ev.director = updated.director;
     });
   }
 
-  updateOrganist(ev: Event, userId: number | null): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId ?? undefined, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateOrganist(ev: PlanEntry, userId: number | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      type: ev.type,
+      notes: ev.notes || '',
+      directorId: ev.director?.id,
+      organistId: userId ?? undefined
+    }).subscribe(updated => {
       ev.organist = updated.organist;
     });
   }
