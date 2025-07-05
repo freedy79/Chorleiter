@@ -59,3 +59,4 @@ When [`sshpass`](https://www.gnu.org/software/sshpass/) is available, the
 password can be read from a file named `.chorleiter_deploy_pw` in your home
 directory to perform a fully non‑interactive deployment. Without `sshpass`, the
 password still needs to be entered once when the connection is initiated.
+On Windows you can install `sshpass` with Chocolatey (`choco install sshpass`) or another package manager so that the deployment script can use it automatically.
