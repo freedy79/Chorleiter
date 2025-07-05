@@ -39,12 +39,12 @@ exports.findByMonth = async (req, res) => {
             include: [{
                 model: db.plan_entry,
                 as: 'entries',
-                order: [['date', 'ASC']],
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
                 ]
-            }]
+            }],
+            order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(204).send();
         res.status(200).send(plan);

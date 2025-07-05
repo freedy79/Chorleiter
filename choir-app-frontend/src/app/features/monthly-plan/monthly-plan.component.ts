@@ -40,6 +40,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
   }
 
+  private sortEntries(): void {
+    this.entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
   constructor(private api: ApiService,
               private auth: AuthService,
               private dialog: MatDialog,
@@ -61,7 +65,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   loadPlan(year: number, month: number): void {
     this.api.getMonthlyPlan(year, month).subscribe({
-      next: plan => { this.plan = plan; this.entries = plan?.entries || []; this.updateDisplayedColumns(); },
+      next: plan => {
+        this.plan = plan;
+        this.entries = plan?.entries || [];
+        this.sortEntries();
+        this.updateDisplayedColumns();
+      },
       error: () => { this.plan = null; this.entries = []; this.updateDisplayedColumns(); }
     });
   }
@@ -118,7 +127,11 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     ref.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.api.deletePlanEntry(ev.id).subscribe({
-          next: () => { this.entries = this.entries.filter(e => e.id !== ev.id); this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 }); },
+          next: () => {
+            this.entries = this.entries.filter(e => e.id !== ev.id);
+            this.sortEntries();
+            this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 });
+          },
           error: () => this.snackBar.open('Fehler beim Löschen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }
