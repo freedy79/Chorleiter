@@ -36,17 +36,22 @@ if (-not $sshUseSshpass -and -not $sshUseAgent) {
 
 
 $Password = $null
-if (Test-Path $PasswordFile) {
-    $Password = (Get-Content $PasswordFile -Raw).Trim()
-} else {
-    $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
-    if ($create -match '^[Yy]') {
-        $Password = Read-Host "SSH password for $Remote"
-        Set-Content -Path $PasswordFile -Value $Password
+if (-not $sshUseAgent) {
+    if (Test-Path $PasswordFile) {
+        $Password = (Get-Content $PasswordFile -Raw).Trim()
+        if ($Password) {
+            Write-Host "Using password from $PasswordFile."
+        }
+    } else {
+        $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
+        if ($create -match '^[Yy]') {
+            $Password = Read-Host "SSH password for $Remote"
+            Set-Content -Path $PasswordFile -Value $Password
+        }
     }
-}
-if (-not $Password) {
-    $Password = Read-Host "SSH password for $Remote"
+    if (-not $Password) {
+        $Password = Read-Host "SSH password for $Remote"
+    }
 }
 
 
