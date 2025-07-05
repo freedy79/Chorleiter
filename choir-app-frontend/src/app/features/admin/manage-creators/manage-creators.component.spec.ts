@@ -3,24 +3,26 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { ManageAuthorsComponent } from './manage-authors.component';
 
-describe('ManageAuthorsComponent', () => {
-  let component: ManageAuthorsComponent;
-  let fixture: ComponentFixture<ManageAuthorsComponent>;
+import { ManageCreatorsComponent } from './manage-creators.component';
+
+describe('ManageCreatorsComponent', () => {
+  let component: ManageCreatorsComponent;
+  let fixture: ComponentFixture<ManageCreatorsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ManageAuthorsComponent, HttpClientTestingModule, RouterTestingModule],
+      imports: [ManageCreatorsComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } }
       ]
-    }).compileComponents();
+    })
+    .compileComponents();
 
-    fixture = TestBed.createComponent(ManageAuthorsComponent);
+    fixture = TestBed.createComponent(ManageCreatorsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

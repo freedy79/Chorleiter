@@ -140,8 +140,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
             <mat-icon class="menu-button" [ngClass]="{'rotated' : showAdminSubmenu}" *ngIf="isExpanded || isShowing">expand_more</mat-icon>
           </mat-list-item>
           <div class="submenu" [ngClass]="{'expanded' : showAdminSubmenu}" *ngIf="isShowing || isExpanded">
-              <a mat-list-item routerLink="/admin/composers" routerLinkActive="active-link">Komponisten</a>
-              <a mat-list-item routerLink="/admin/authors" routerLinkActive="active-link">Autoren</a>
+              <a mat-list-item routerLink="/admin/creators" routerLinkActive="active-link">Komponisten/Autoren</a>
           </div>
         </ng-container>
       </ng-container>*/
@@ -205,12 +204,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
             route: '/admin/users',
           },
           {
-            displayName: 'Komponisten',
-            route: '/admin/composers'
-          },
-          {
-            displayName: 'Autoren',
-            route: '/admin/authors',
+            displayName: 'Komponisten/Autoren',
+            route: '/admin/creators'
           },
           {
             displayName: 'Backup',
