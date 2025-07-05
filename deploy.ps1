@@ -19,8 +19,14 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
 } else {
     $install = Read-Host "sshpass is not installed. Install it now? (y/N)"
     if ($install -match '^[Yy]') {
-        Write-Host "sudo apt-get install sshpass"
-    } else {
+        try {
+            & sudo apt-get install sshpass
+            $sshUseSshpass = $true
+        } catch {
+            Write-Host "Failed to install sshpass." -ForegroundColor Red
+        }
+    }
+    if (-not $sshUseSshpass) {
         Write-Host "Hint: install sshpass with: sudo apt-get install sshpass"
     }
 }
@@ -71,16 +77,20 @@ function Invoke-Scp {
 }
 
 # Establish master connection so the password is requested only once
+Write-Host "Establishing SSH connection..."
 Invoke-Ssh "true"
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 
 # Pack directories
+Write-Host "Packing backend..."
 & tar --exclude=".env" -czf $BackendArchive -C "choir-app-backend" .
+Write-Host "Packing frontend..."
 & tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
+Write-Host "Creating remote directories..."
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
 # Upload archives
