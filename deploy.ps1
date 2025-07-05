@@ -30,6 +30,15 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     }
 }
 
+if ($sshUseAgent) {
+    Write-Host "Verifying ssh-agent access..."
+    & ssh -o BatchMode=yes -o StrictHostKeyChecking=no $Remote exit 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ssh-agent authentication failed, falling back to password." -ForegroundColor Yellow
+        $sshUseAgent = $false
+    }
+}
+
 if (-not $sshUseSshpass -and -not $sshUseAgent) {
     Write-Host "sshpass not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
 }
