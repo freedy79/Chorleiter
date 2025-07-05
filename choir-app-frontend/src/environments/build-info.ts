@@ -1,5 +1,5 @@
 export const buildInfo = {
-  version: '0.0.0',
-  commit: 'a64f142',
-  date: '2025-07-05T11:58:39.596Z'
+  version: '0.2.0',
+  commit: '91f759a',
+  date: '2025-07-05T17:46:40.040Z'
 };

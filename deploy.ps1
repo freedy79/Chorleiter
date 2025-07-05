@@ -12,29 +12,6 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
-# Determine authentication method
-$sshUseSshpass = $false
-$sshUseAgent = $false
-
-if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshUseSshpass = $true
-} elseif (Get-Command ssh-add -ErrorAction SilentlyContinue) {
-    try {
-        $keys = ssh-add -L 2>$null
-        if ($LASTEXITCODE -eq 0 -and $keys) {
-            $sshUseAgent = $true
-            Write-Host "Using ssh-agent for authentication."
-        }
-    } catch {
-        # ignore errors from ssh-add
-    }
-}
-
-if (-not $sshUseSshpass -and -not $sshUseAgent) {
-    Write-Host "sshpass not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
-}
-
-
 $Password = $null
 if (Test-Path $PasswordFile) {
     $Password = (Get-Content $PasswordFile -Raw).Trim()
@@ -49,14 +26,10 @@ if (-not $Password) {
     $Password = Read-Host "SSH password for $Remote"
 }
 
-
-$ControlPath = Join-Path $env:USERPROFILE ".chorleiter_ssh_control"
-$SshOptions = @(
-    "-o", "ControlMaster=auto",
-    "-o", "ControlPath=$ControlPath",
-    "-o", "ControlPersist=10m",
-    "-o", "StrictHostKeyChecking=no"
-)
+$sshUseSshpass = $false
+if (Get-Command sshpass -ErrorAction SilentlyContinue) {
+    $sshUseSshpass = $true
+}
 
 function Invoke-Ssh {
     param(
@@ -64,10 +37,10 @@ function Invoke-Ssh {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh @SshOptions $Remote $Command
+        & sshpass -p "$Password" ssh -o StrictHostKeyChecking=no $Remote $Command
     }
     else {
-        & ssh @SshOptions $Remote $Command
+        & ssh $Remote $Command
     }
 }
 
@@ -78,28 +51,21 @@ function Invoke-Scp {
     )
 
     if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp @SshOptions $Source $Destination
+        & sshpass -p "$Password" scp $Source $Destination
     }
     else {
-        & scp @SshOptions $Source $Destination
+        & scp $Source $Destination
     }
 }
-
-# Establish master connection so the password is requested only once
-Write-Host "Establishing SSH connection..."
-Invoke-Ssh "true"
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 
 # Pack directories
-Write-Host "Packing backend..."
 & tar --exclude=".env" -czf $BackendArchive -C "choir-app-backend" .
-Write-Host "Packing frontend..."
 & tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
-Write-Host "Creating remote directories..."
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
 # Upload archives
@@ -117,11 +83,3 @@ Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
 
 Write-Host "Deployment completed."
-
-# Close the persistent SSH connection
-if ($sshUseSshpass) {
-    & sshpass -p "$Password" ssh @SshOptions -O exit $Remote
-}
-else {
-    & ssh @SshOptions -O exit $Remote
-}
