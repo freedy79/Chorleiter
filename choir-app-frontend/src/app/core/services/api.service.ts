@@ -476,6 +476,10 @@ export class ApiService {
     return this.adminService.getLog(filename);
   }
 
+  deleteLog(filename: string): Observable<any> {
+    return this.adminService.deleteLog(filename);
+  }
+
   downloadBackup(): Observable<Blob> {
     return this.adminService.downloadBackup();
   }

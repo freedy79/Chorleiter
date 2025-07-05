@@ -343,6 +343,17 @@ exports.getLog = async (req, res) => {
     }
 };
 
+exports.deleteLog = async (req, res) => {
+    const { filename } = req.params;
+    try {
+        const deleted = await logService.deleteLogFile(filename);
+        if (!deleted) return res.status(404).send({ message: 'Log file not found' });
+        res.status(200).send({ message: 'Deleted' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 exports.getMailSettings = async (req, res) => {
     try {
         const settings = await db.mail_setting.findByPk(1);
