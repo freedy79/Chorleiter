@@ -13,12 +13,10 @@ npm --prefix choir-app-frontend run build
 Write-Host "Build finished."
 
 # Determine authentication method
-$sshUseSshpass = $false
 $sshUseAgent = $false
+$sshUsePlink = $false
 
-if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshUseSshpass = $true
-} elseif (Get-Command ssh-add -ErrorAction SilentlyContinue) {
+if (Get-Command ssh-add -ErrorAction SilentlyContinue) {
     try {
         $keys = ssh-add -L 2>$null
         if ($LASTEXITCODE -eq 0 -and $keys) {
@@ -30,8 +28,28 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     }
 }
 
-if (-not $sshUseSshpass -and -not $sshUseAgent) {
-    Write-Host "sshpass not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
+if (-not $sshUseAgent) {
+    if (Get-Command plink -ErrorAction SilentlyContinue) {
+        $sshUsePlink = $true
+        Write-Host "Using plink/pscp for authentication."
+    }
+}
+
+if ($sshUseAgent) {
+    Write-Host "Verifying ssh-agent access..."
+    & ssh -o BatchMode=yes -o StrictHostKeyChecking=no $Remote exit 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ssh-agent authentication failed, falling back to password." -ForegroundColor Yellow
+        $sshUseAgent = $false
+        if (Get-Command plink -ErrorAction SilentlyContinue) {
+            $sshUsePlink = $true
+            Write-Host "Using plink/pscp for authentication."
+        }
+    }
+}
+
+if (-not $sshUseAgent -and -not $sshUsePlink) {
+    Write-Host "plink not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
 }
 
 
@@ -68,8 +86,8 @@ function Invoke-Ssh {
         [string]$Command
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh @SshOptions $Remote $Command
+    if ($sshUsePlink) {
+        & plink -batch -pw "$Password" $Remote $Command
     }
     else {
         & ssh @SshOptions $Remote $Command
@@ -82,8 +100,8 @@ function Invoke-Scp {
         [string]$Destination
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp @SshOptions $Source $Destination
+    if ($sshUsePlink) {
+        & pscp -batch -pw "$Password" $Source $Destination
     }
     else {
         & scp @SshOptions $Source $Destination
@@ -124,9 +142,6 @@ Remove-Item $FrontendArchive
 Write-Host "Deployment completed."
 
 # Close the persistent SSH connection
-if ($sshUseSshpass) {
-    & sshpass -p "$Password" ssh @SshOptions -O exit $Remote
-}
-else {
+if (-not $sshUsePlink) {
     & ssh @SshOptions -O exit $Remote
 }
