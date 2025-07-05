@@ -54,10 +54,16 @@ supports content negotiation for pre-compressed assets.
 ## Deployment
 
 Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
-and frontend via SSH. Both scripts establish a persistent SSH connection.
-When [`sshpass`](https://www.gnu.org/software/sshpass/) is available, the
-password can be read from a file named `.chorleiter_deploy_pw` in your home
-directory to perform a fully non‑interactive deployment. Without `sshpass`, the
-password still needs to be entered once when the connection is initiated.
-On Windows you can install `sshpass` with Chocolatey (`choco install sshpass`) or another package manager so that the deployment script can use it automatically. Alternatively, set up key-based authentication and load your private key into an SSH agent (for example with `Start-Service ssh-agent` followed by `ssh-add`). When `ssh` can authenticate using the agent, the deployment runs non‑interactively even without `sshpass`.
-The PowerShell script automatically uses an available ssh-agent when `sshpass` is not installed.
+and frontend via SSH. Both scripts establish a persistent SSH connection when
+using OpenSSH. When [`sshpass`](https://www.gnu.org/software/sshpass/) is
+available (typically on Unix) the password can be read from a file named
+`.chorleiter_deploy_pw` in your home directory to perform a fully
+non‑interactive deployment. Without `sshpass`, the password still needs to be
+entered once when the connection is initiated.
+On Windows the script falls back to PuTTY's `plink`/`pscp` utilities when
+`sshpass` is not installed. Alternatively, set up key-based authentication and
+load your private key into an SSH agent (for example with `Start-Service
+ssh-agent` followed by `ssh-add`). When `ssh` can authenticate using the agent,
+the deployment runs non‑interactively even without `sshpass` or `plink`.
+The PowerShell script automatically detects an available ssh-agent or `plink` to
+avoid repeated password prompts.

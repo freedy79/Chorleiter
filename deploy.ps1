@@ -15,6 +15,7 @@ Write-Host "Build finished."
 # Determine authentication method
 $sshUseSshpass = $false
 $sshUseAgent = $false
+$sshUsePlink = $false
 
 if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     $sshUseSshpass = $true
@@ -30,17 +31,28 @@ if (Get-Command sshpass -ErrorAction SilentlyContinue) {
     }
 }
 
+if (-not $sshUseSshpass -and -not $sshUseAgent) {
+    if (Get-Command plink -ErrorAction SilentlyContinue) {
+        $sshUsePlink = $true
+        Write-Host "Using plink/pscp for authentication."
+    }
+}
+
 if ($sshUseAgent) {
     Write-Host "Verifying ssh-agent access..."
     & ssh -o BatchMode=yes -o StrictHostKeyChecking=no $Remote exit 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ssh-agent authentication failed, falling back to password." -ForegroundColor Yellow
         $sshUseAgent = $false
+        if (-not $sshUseSshpass -and (Get-Command plink -ErrorAction SilentlyContinue)) {
+            $sshUsePlink = $true
+            Write-Host "Using plink/pscp for authentication."
+        }
     }
 }
 
-if (-not $sshUseSshpass -and -not $sshUseAgent) {
-    Write-Host "sshpass not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
+if (-not $sshUseSshpass -and -not $sshUseAgent -and -not $sshUsePlink) {
+    Write-Host "sshpass or plink not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
 }
 
 
@@ -79,6 +91,8 @@ function Invoke-Ssh {
 
     if ($sshUseSshpass) {
         & sshpass -p "$Password" ssh @SshOptions $Remote $Command
+    } elseif ($sshUsePlink) {
+        & plink -batch -pw "$Password" $Remote $Command
     }
     else {
         & ssh @SshOptions $Remote $Command
@@ -93,6 +107,8 @@ function Invoke-Scp {
 
     if ($sshUseSshpass) {
         & sshpass -p "$Password" scp @SshOptions $Source $Destination
+    } elseif ($sshUsePlink) {
+        & pscp -batch -pw "$Password" $Source $Destination
     }
     else {
         & scp @SshOptions $Source $Destination
@@ -136,6 +152,6 @@ Write-Host "Deployment completed."
 if ($sshUseSshpass) {
     & sshpass -p "$Password" ssh @SshOptions -O exit $Remote
 }
-else {
+elseif (-not $sshUsePlink) {
     & ssh @SshOptions -O exit $Remote
 }
