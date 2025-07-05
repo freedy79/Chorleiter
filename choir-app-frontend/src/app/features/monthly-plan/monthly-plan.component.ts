@@ -16,7 +16,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, PlanEntryDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
