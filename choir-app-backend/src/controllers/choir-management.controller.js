@@ -198,6 +198,39 @@ exports.removeUserFromChoir = async (req, res, next) => {
     }
 };
 
+// Mitgliedsdaten aktualisieren (z.B. Organistenstatus)
+exports.updateMember = async (req, res, next) => {
+    const { userId } = req.params;
+    const { isOrganist, roleInChoir } = req.body;
+    const choirId = req.activeChoirId;
+
+    if (req.userRole === 'demo') {
+        return res.status(403).send({ message: 'Demo user cannot manage members.' });
+    }
+
+    try {
+        const association = await db.user_choir.findOne({ where: { userId, choirId } });
+        if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
+
+        if (roleInChoir && association.roleInChoir === 'choir_admin' && roleInChoir !== 'choir_admin') {
+            const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
+            if (admins.length <= 1) {
+                return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
+            }
+        }
+
+        await association.update({
+            ...(roleInChoir ? { roleInChoir } : {}),
+            ...(isOrganist !== undefined ? { isOrganist: !!isOrganist } : {})
+        });
+
+        res.status(200).send({ message: 'Membership updated.' });
+    } catch (err) {
+        err.message = `Error updating member ${userId} for choirId ${choirId}: ${err.message}`;
+        next(err);
+    }
+};
+
 exports.getChoirCollections = async (req, res, next) => {
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);

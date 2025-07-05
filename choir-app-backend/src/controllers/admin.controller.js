@@ -319,6 +319,33 @@ exports.removeUserFromChoir = async (req, res) => {
     }
 };
 
+exports.updateChoirMember = async (req, res) => {
+    const choirId = req.params.id;
+    const { userId } = req.params;
+    const { roleInChoir, isOrganist } = req.body;
+
+    try {
+        const association = await db.user_choir.findOne({ where: { userId, choirId } });
+        if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
+
+        if (roleInChoir && association.roleInChoir === 'choir_admin' && roleInChoir !== 'choir_admin') {
+            const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
+            if (admins.length <= 1) {
+                return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
+            }
+        }
+
+        await association.update({
+            ...(roleInChoir ? { roleInChoir } : {}),
+            ...(isOrganist !== undefined ? { isOrganist: !!isOrganist } : {})
+        });
+
+        res.status(200).send({ message: 'Membership updated.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 const logService = require('../services/log.service');
 
 exports.listLogs = async (req, res) => {

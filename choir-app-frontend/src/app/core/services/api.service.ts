@@ -382,6 +382,10 @@ export class ApiService {
     return this.choirService.inviteUserToChoir(email, roleInChoir, isOrganist);
   }
 
+  updateChoirMember(userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+    return this.choirService.updateMember(userId, data);
+  }
+
   getInvitation(token: string): Observable<any> {
     return this.userService.getInvitation(token);
   }
@@ -434,6 +438,10 @@ export class ApiService {
 
   inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string, isOrganist?: boolean): Observable<{ message: string }> {
     return this.adminService.inviteUserToChoirAdmin(id, email, roleInChoir, isOrganist);
+  }
+
+  updateChoirMemberAdmin(id: number, userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+    return this.adminService.updateChoirMemberAdmin(id, userId, data);
   }
 
   removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
