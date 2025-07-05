@@ -23,7 +23,7 @@
     <ng-container matColumnDef="director">
       <th mat-header-cell *matHeaderCellDef>Chorleiter</th>
       <td mat-cell *matCellDef="let ev">
-        <ng-container *ngIf="isChoirAdmin && !plan?.finalized; else directorText">
+        <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorText">
           <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
             <mat-option *ngFor="let m of directors" [value]="m.id">{{ m.name }}</mat-option>
@@ -35,7 +35,7 @@
     <ng-container matColumnDef="organist">
       <th mat-header-cell *matHeaderCellDef>Organist</th>
       <td mat-cell *matCellDef="let ev">
-        <ng-container *ngIf="isChoirAdmin && !plan?.finalized; else organistText">
+        <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistText">
           <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
             <mat-option *ngFor="let m of organists" [value]="m.id">{{ m.name }}</mat-option>
@@ -51,14 +51,14 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let ev">
-        <button mat-icon-button color="warn" *ngIf="isChoirAdmin && !plan?.finalized" (click)="deleteEntry(ev)">
+        <button mat-icon-button color="warn" *ngIf="isChoirAdmin && !plan.finalized" (click)="deleteEntry(ev)">
           <mat-icon>delete</mat-icon>
         </button>
       </td>
     </ng-container>
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        [class.assigned]="plan?.finalized && (row.director?.id === currentUserId || row.organist?.id === currentUserId)"></tr>
+        [class.assigned]="plan.finalized && (row.director?.id === currentUserId || row.organist?.id === currentUserId)"></tr>
   </table>
   <div class="actions">
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()">Eintrag hinzufügen</button>
