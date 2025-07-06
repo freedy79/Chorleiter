@@ -64,6 +64,7 @@ const repertoireFilterRoutes = require("./routes/repertoire-filter.routes");
 const monthlyPlanRoutes = require("./routes/monthlyPlan.routes");
 const planRuleRoutes = require("./routes/planRule.routes");
 const planEntryRoutes = require("./routes/planEntry.routes");
+const availabilityRoutes = require("./routes/availability.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -86,6 +87,7 @@ app.use("/api/repertoire-filters", repertoireFilterRoutes);
 app.use("/api/monthly-plans", monthlyPlanRoutes);
 app.use("/api/plan-rules", planRuleRoutes);
 app.use("/api/plan-entries", planEntryRoutes);
+app.use("/api/availabilities", availabilityRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(
