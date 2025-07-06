@@ -83,7 +83,7 @@ function Invoke-Ssh {
     )
 
     if ($sshUsePlink) {
-        & plink -batch -pw "$Password" $Remote $Command
+        & plink -v -batch -l $RemoteUser -pw "$Password" $RemoteHost $Command
     }
     else {
         & ssh $Remote $Command
@@ -97,7 +97,7 @@ function Invoke-Scp {
     )
 
     if ($sshUsePlink) {
-        & pscp -batch -pw "$Password" $Source $Destination
+        & pscp -v -batch -l $RemoteUser -pw "$Password" $Source $Destination
     }
     else {
         & scp $Source $Destination
