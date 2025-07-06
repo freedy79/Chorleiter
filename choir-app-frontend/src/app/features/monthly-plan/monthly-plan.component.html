@@ -65,6 +65,7 @@
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
     <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
   </div>
+
   <div class="counter-plan" *ngIf="counterPlanDates.length > 0">
     <h3>Gegenplan</h3>
     <table class="counter-plan-table">
@@ -82,6 +83,12 @@
       </tbody>
     </table>
   </div>
+
+  <div>
+    <h3>Meine Verfügbarkeiten</h3>
+  <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
+  </div>
+  
 </div>
 <ng-template #noPlan>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>

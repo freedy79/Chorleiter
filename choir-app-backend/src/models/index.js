@@ -20,6 +20,7 @@ db.event = require("./event.model.js")(sequelize, Sequelize);
 db.monthly_plan = require("./monthly_plan.model.js")(sequelize, Sequelize);
 db.plan_rule = require("./plan_rule.model.js")(sequelize, Sequelize);
 db.plan_entry = require("./plan_entry.model.js")(sequelize, Sequelize);
+db.user_availability = require("./user_availability.model.js")(sequelize, Sequelize);
 db.event_pieces = require("./event_pieces.model.js")(sequelize, Sequelize);
 db.composer = require("./composer.model.js")(sequelize, Sequelize);
 db.category = require("./category.model.js")(sequelize, Sequelize);
@@ -67,6 +68,11 @@ db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
 db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
+
+db.user.hasMany(db.user_availability, { as: 'availabilities' });
+db.user_availability.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.choir.hasMany(db.user_availability, { as: 'availabilities' });
+db.user_availability.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 
 // A User (director) created a Piece
 db.user.hasMany(db.piece, { as: "createdPieces"});
