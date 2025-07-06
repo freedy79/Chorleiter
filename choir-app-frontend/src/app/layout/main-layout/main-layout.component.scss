@@ -75,3 +75,9 @@
   z-index: 1000; // Sicherstellen, dass der Sidenav über anderen Inhalten liegt
   padding: 0.5rem;
 }
+
+@media (max-width: 599px) {
+  .appDrawer {
+    width: 70vw;
+  }
+}

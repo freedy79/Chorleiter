@@ -12,11 +12,12 @@ import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })

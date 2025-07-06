@@ -14,6 +14,12 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     padding: 2rem;
 }
 
+@media (max-width: 600px) {
+  .container {
+    padding: 1rem;
+  }
+}
+
 // Add space below all Material card headers
 mat-card-header {
   margin-bottom: 1rem;

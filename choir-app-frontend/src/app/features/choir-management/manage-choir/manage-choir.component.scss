@@ -33,6 +33,16 @@ mat-card-content form {
   gap: 1rem;
 }
 
+@media (max-width: 599px) {
+  mat-card-content form {
+    grid-template-columns: 1fr;
+  }
+
+  .weekday-row {
+    flex-direction: column;
+  }
+}
+
 .full-width {
   grid-column: 1 / -1;
 }
