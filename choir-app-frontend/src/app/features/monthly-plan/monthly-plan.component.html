@@ -65,6 +65,23 @@
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
     <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
   </div>
+  <div class="counter-plan" *ngIf="counterPlanDates.length > 0">
+    <h3>Gegenplan</h3>
+    <table class="counter-plan-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th *ngFor="let d of counterPlanDates">{{ d | date:'dd.MM.' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of counterPlanRows">
+          <td>{{ row.user.name }}</td>
+          <td *ngFor="let key of counterPlanDateKeys">{{ row.assignments[key] }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>
 <ng-template #noPlan>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>

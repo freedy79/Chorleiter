@@ -31,6 +31,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
   currentUserId: number | null = null;
+  counterPlanDates: Date[] = [];
+  counterPlanDateKeys: string[] = [];
+  counterPlanRows: { user: UserInChoir; assignments: Record<string, string>; }[] = [];
   private userSub?: Subscription;
 
   private updateDisplayedColumns(): void {
@@ -40,6 +43,34 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private sortEntries(): void {
     this.entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
+  private updateCounterPlan(): void {
+    const dateKeys = Array.from(new Set(this.entries.map(e => new Date(e.date).toISOString().substring(0, 10)))).sort();
+    this.counterPlanDateKeys = dateKeys;
+    this.counterPlanDates = dateKeys.map(d => new Date(d));
+
+    const persons: UserInChoir[] = [];
+    [...this.directors, ...this.organists].forEach(u => {
+      if (!persons.find(p => p.id === u.id)) persons.push(u);
+    });
+
+    this.counterPlanRows = persons.map(u => ({ user: u, assignments: {} }));
+    for (const row of this.counterPlanRows) {
+      for (const d of dateKeys) row.assignments[d] = '';
+    }
+
+    for (const entry of this.entries) {
+      const key = new Date(entry.date).toISOString().substring(0, 10);
+      if (entry.director) {
+        const row = this.counterPlanRows.find(r => r.user.id === entry.director!.id);
+        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Chorleitung' : 'Chorleitung';
+      }
+      if (entry.organist) {
+        const row = this.counterPlanRows.find(r => r.user.id === entry.organist!.id);
+        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Orgel' : 'Orgel';
+      }
+    }
   }
 
   constructor(private api: ApiService,
@@ -58,6 +89,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       this.members = m;
       this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
       this.organists = m.filter(u => u.membership?.isOrganist);
+      this.updateCounterPlan();
     });
   }
 
@@ -68,8 +100,15 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.entries = plan?.entries || [];
         this.sortEntries();
         this.updateDisplayedColumns();
+        this.updateCounterPlan();
       },
-      error: () => { this.plan = null; this.entries = []; this.updateDisplayedColumns(); }
+      error: () => {
+        this.plan = null;
+        this.entries = [];
+        this.updateDisplayedColumns();
+        this.counterPlanDates = [];
+        this.counterPlanRows = [];
+      }
     });
   }
 
@@ -86,6 +125,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       organistId: ev.organist?.id || undefined
     }).subscribe(updated => {
       ev.director = updated.director;
+      this.updateCounterPlan();
     });
   }
 
@@ -98,6 +138,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       organistId: userId ?? undefined
     }).subscribe(updated => {
       ev.organist = updated.organist;
+      this.updateCounterPlan();
     });
   }
 
@@ -140,6 +181,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
           next: () => {
             this.entries = this.entries.filter(e => e.id !== ev.id);
             this.sortEntries();
+            this.updateCounterPlan();
             this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 });
           },
           error: () => this.snackBar.open('Fehler beim Löschen des Eintrags.', 'Schließen', { duration: 4000 })
