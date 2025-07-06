@@ -65,6 +65,8 @@
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
     <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
   </div>
+  <h3>Meine Verfügbarkeiten</h3>
+  <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
 </div>
 <ng-template #noPlan>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>

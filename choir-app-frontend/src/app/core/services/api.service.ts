@@ -36,6 +36,8 @@ import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { FilterPresetService } from './filter-preset.service';
+import { UserAvailability } from '../models/user-availability';
+import { AvailabilityService } from './availability.service';
 
 @Injectable({
   providedIn: 'root'
@@ -57,7 +59,8 @@ export class ApiService {
               private adminService: AdminService,
               private systemService: SystemService,
               private filterPresetService: FilterPresetService,
-              private planRuleService: PlanRuleService) {
+              private planRuleService: PlanRuleService,
+              private availabilityService: AvailabilityService) {
 
   }
 
@@ -336,6 +339,15 @@ export class ApiService {
 
   deletePlanRule(id: number): Observable<any> {
     return this.planRuleService.deletePlanRule(id);
+  }
+
+  // --- Availability Methods ---
+  getAvailabilities(year: number, month: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getAvailabilities(year, month);
+  }
+
+  setAvailability(date: string, status: string): Observable<UserAvailability> {
+    return this.availabilityService.setAvailability(date, status);
   }
 
 
