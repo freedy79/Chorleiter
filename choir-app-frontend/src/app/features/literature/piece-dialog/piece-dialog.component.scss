@@ -42,6 +42,20 @@ mat-sidenav {
   width: 220px;
 }
 
+@media (max-width: 599px) {
+  .form-section {
+    grid-template-columns: 1fr;
+  }
+
+  .link-row {
+    grid-template-columns: 1fr;
+  }
+
+  mat-sidenav {
+    width: 70vw;
+  }
+}
+
 .image-upload {
   margin-top: 1rem;
 
