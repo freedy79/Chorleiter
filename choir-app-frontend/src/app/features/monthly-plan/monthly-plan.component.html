@@ -26,7 +26,7 @@
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorText">
           <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
-            <mat-option *ngFor="let m of directors" [value]="m.id">{{ m.name }}</mat-option>
+            <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
           </mat-select>
         </ng-container>
         <ng-template #directorText>{{ ev.director?.name }}</ng-template>
@@ -38,7 +38,7 @@
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistText">
           <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
-            <mat-option *ngFor="let m of organists" [value]="m.id">{{ m.name }}</mat-option>
+            <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
           </mat-select>
         </ng-container>
         <ng-template #organistText>{{ ev.organist?.name }}</ng-template>

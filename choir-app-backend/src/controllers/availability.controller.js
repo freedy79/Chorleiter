@@ -56,3 +56,19 @@ exports.setAvailability = async (req, res) => {
         res.status(500).send({ message: err.message || 'Could not save availability.' });
     }
 };
+
+exports.findAllByMonth = async (req, res) => {
+    const { year, month } = req.params;
+    try {
+        const avail = await db.user_availability.findAll({
+            where: {
+                choirId: req.activeChoirId,
+                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-31` ] }
+            },
+            attributes: ['userId', 'date', 'status']
+        });
+        res.status(200).send(avail);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not fetch availability.' });
+    }
+};
