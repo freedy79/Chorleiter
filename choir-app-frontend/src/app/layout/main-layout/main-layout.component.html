@@ -5,6 +5,8 @@
 
   <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
+  <app-search-box *ngIf="isLoggedIn$ | async"></app-search-box>
+
   <span class="spacer"></span>
   <ng-container *ngIf="(isLoggedIn$ | async) && !(donatedRecently$ | async)">
     <button mat-button color="accent" routerLink="/donate">Spenden</button>
