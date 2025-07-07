@@ -1,5 +1,6 @@
 const db = require('../models');
 const { Op } = db.Sequelize;
+const { isPublicHoliday } = require('../services/holiday.service');
 
 function datesForRule(year, month, rule) {
     const dates = [];
@@ -23,6 +24,7 @@ exports.findByMonth = async (req, res) => {
         const dateSet = new Set();
         for (const rule of rules) {
             for (const d of datesForRule(year, month, rule)) {
+                if (isPublicHoliday(d) && d.getUTCDay() !== 0) continue;
                 dateSet.add(d.toISOString().split('T')[0]);
             }
         }
