@@ -85,6 +85,12 @@ mat-card-content form {
   align-items: center;
 }
 
+.title-link {
+  cursor: pointer;
+  color: #3f51b5;
+  text-decoration: underline;
+}
+
 @media (prefers-color-scheme: dark) {
   .loading-overlay {
     background: rgba(0, 0, 0, 0.5);
