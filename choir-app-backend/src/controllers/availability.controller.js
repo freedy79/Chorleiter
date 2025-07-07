@@ -27,11 +27,12 @@ exports.findByMonth = async (req, res) => {
             }
         }
         const dates = Array.from(dateSet).sort();
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
         const avail = await db.user_availability.findAll({
             where: {
                 userId: req.userId,
                 choirId: req.activeChoirId,
-                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-31` ] }
+                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
             }
         });
         const map = Object.fromEntries(avail.map(a => [a.date, a]));
@@ -60,10 +61,11 @@ exports.setAvailability = async (req, res) => {
 exports.findAllByMonth = async (req, res) => {
     const { year, month } = req.params;
     try {
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
         const avail = await db.user_availability.findAll({
             where: {
                 choirId: req.activeChoirId,
-                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-31` ] }
+                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
             },
             attributes: ['userId', 'date', 'status']
         });
