@@ -264,6 +264,11 @@ export class ApiService {
     return this.collectionService.addCollectionToChoir(collectionId);
   }
 
+  searchAll(term: string): Observable<{ pieces: Piece[]; events: Event[]; collections: Collection[] }> {
+    const params = new HttpParams().set('q', term);
+    return this.http.get<{ pieces: Piece[]; events: Event[]; collections: Collection[] }>(`${this.apiUrl}/search`, { params });
+  }
+
 
   // --- Event Methods ---
 

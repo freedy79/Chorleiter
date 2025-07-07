@@ -1,1 +1,21 @@
-<input type="text" [(ngModel)]="query" (input)="onInput()" />
+
+<mat-form-field class="search-box" appearance="outline">
+  <input matInput [formControl]="searchCtrl" [matAutocomplete]="auto" placeholder="Search" />
+</mat-form-field>
+<mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption>
+  <ng-container *ngIf="results.pieces.length">
+    <mat-optgroup label="Pieces">
+      <mat-option *ngFor="let p of results.pieces" [value]="p.title">{{p.title}}</mat-option>
+    </mat-optgroup>
+  </ng-container>
+  <ng-container *ngIf="results.events.length">
+    <mat-optgroup label="Events">
+      <mat-option *ngFor="let e of results.events" [value]="e.date">{{e.type}} {{e.date | date}}</mat-option>
+    </mat-optgroup>
+  </ng-container>
+  <ng-container *ngIf="results.collections.length">
+    <mat-optgroup label="Collections">
+      <mat-option *ngFor="let c of results.collections" [value]="c.title">{{c.title}}</mat-option>
+    </mat-optgroup>
+  </ng-container>
+</mat-autocomplete>
