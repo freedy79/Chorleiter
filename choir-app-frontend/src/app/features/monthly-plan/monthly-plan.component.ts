@@ -52,6 +52,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
 
   private loadAvailabilities(year: number, month: number): void {
+    if (!this.isChoirAdmin) {
+      this.availabilityMap = {};
+      return;
+    }
     this.api.getMemberAvailabilities(year, month).subscribe(av => {
       this.availabilityMap = {};
       for (const a of av) {
@@ -108,9 +112,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
     this.loadPlan(this.selectedYear, this.selectedMonth);
-    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
-    this.api.checkChoirAdminStatus().subscribe(r => { this.isChoirAdmin = r.isChoirAdmin; this.updateDisplayedColumns(); });
+    this.api.checkChoirAdminStatus().subscribe(r => {
+      this.isChoirAdmin = r.isChoirAdmin;
+      this.updateDisplayedColumns();
+      this.loadAvailabilities(this.selectedYear, this.selectedMonth);
+    });
     this.api.getChoirMembers().subscribe(m => {
       this.members = m;
       this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
