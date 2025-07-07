@@ -85,6 +85,13 @@ export class PieceService {
     return this.http.get<Piece>(`${this.apiUrl}/pieces/${id}`);
   }
 
+  /**
+   * Load a piece from the choir's repertoire including event history.
+   */
+  getRepertoirePiece(id: number): Observable<Piece> {
+    return this.http.get<Piece>(`${this.apiUrl}/repertoire/${id}`);
+  }
+
   addPieceToMyRepertoire(pieceId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/repertoire/add-piece`, { pieceId });
   }
