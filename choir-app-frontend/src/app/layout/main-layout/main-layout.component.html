@@ -5,7 +5,7 @@
 
   <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
-  <app-search-box *ngIf="isLoggedIn$ | async"></app-search-box>
+  <!--<app-search-box *ngIf="isLoggedIn$ | async"></app-search-box>-->
 
   <span class="spacer"></span>
   <ng-container *ngIf="(isLoggedIn$ | async) && !(donatedRecently$ | async)">
@@ -63,7 +63,7 @@
 
 <mat-sidenav-container class="site-container">
   <mat-sidenav #appDrawer mode="over" [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async) && drawerOpenByWidth" class="appDrawer">
+    [mode]="(isHandset$ | async) ? 'over' : 'side'" [opened]="!(isHandset$ | async) && drawerOpenByWidth" class="appDrawer" [ngClass]="{'appdrawer-invisible' : !(isLoggedIn$ | async)}">
 
     <mat-nav-list>
       <app-choir-switcher *ngIf="isLoggedIn$ | async"></app-choir-switcher>

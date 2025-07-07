@@ -145,3 +145,7 @@ mat-option:hover {
     background-color: #EDEDED !important;
     color: black !important
 }
+
+.mdc-text-field--outlined .mat-mdc-form-field-infix, .mdc-text-field--no-label .mat-mdc-form-field-infix {
+  padding-left: 0.3rem;
+}
