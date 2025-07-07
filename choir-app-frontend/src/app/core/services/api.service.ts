@@ -124,6 +124,22 @@ export class ApiService {
     return this.pieceService.updatePieceNotes(pieceId, notes);
   }
 
+  getPieceNotes(pieceId: number) {
+    return this.pieceService.getPieceNotes(pieceId);
+  }
+
+  addPieceNote(pieceId: number, text: string) {
+    return this.pieceService.addPieceNote(pieceId, text);
+  }
+
+  updatePieceNote(noteId: number, text: string) {
+    return this.pieceService.updatePieceNote(noteId, text);
+  }
+
+  deletePieceNote(noteId: number) {
+    return this.pieceService.deletePieceNote(noteId);
+  }
+
 
   // --- Global Piece Methods ---
 

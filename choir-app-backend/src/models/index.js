@@ -32,6 +32,7 @@ db.piece_arranger = require("./piece_arranger.model.js")(sequelize, Sequelize);
 db.piece_link = require("./piece_link.model.js")(sequelize, Sequelize);
 db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
+db.piece_note = require("./piece_note.model.js")(sequelize, Sequelize);
 db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequelize);
 db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
 db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
@@ -110,6 +111,14 @@ db.piece.hasMany(db.piece_change, { as: 'changeRequests' });
 db.piece_change.belongsTo(db.piece, { foreignKey: 'pieceId' });
 db.user.hasMany(db.piece_change, { as: 'pieceChangeRequests' });
 db.piece_change.belongsTo(db.user, { foreignKey: 'userId', as: 'proposer' });
+
+// Notes attached to a piece
+db.piece.hasMany(db.piece_note, { as: 'notes' });
+db.piece_note.belongsTo(db.piece, { foreignKey: 'pieceId' });
+db.choir.hasMany(db.piece_note, { as: 'pieceNotes' });
+db.piece_note.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.user.hasMany(db.piece_note, { as: 'pieceNotes' });
+db.piece_note.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 
 // Repertoire Filter Presets
 db.user.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });

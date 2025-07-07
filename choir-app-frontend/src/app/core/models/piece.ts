@@ -4,6 +4,14 @@ import { Author } from './author';
 import { PieceLink } from './piece-link';
 import { Event } from './event';
 
+export interface PieceNote {
+  id: number;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+  author: { id: number; name: string };
+}
+
 export interface CollectionReference {
   prefix: string;
   collection_piece: { // The name of the through model in Sequelize
@@ -36,6 +44,7 @@ export interface Piece {
   arrangers?: Composer[];
   links?: PieceLink[];
   events?: Event[];
+  notes?: PieceNote[];
   lastSung?: string | null;
   lastRehearsed?: string | null;
   timesSung?: number;

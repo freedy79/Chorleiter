@@ -57,6 +57,22 @@ export class PieceService {
     return this.http.put(`${this.apiUrl}/repertoire/notes`, { pieceId, notes });
   }
 
+  getPieceNotes(pieceId: number) {
+    return this.http.get(`${this.apiUrl}/repertoire/${pieceId}/notes`);
+  }
+
+  addPieceNote(pieceId: number, text: string) {
+    return this.http.post(`${this.apiUrl}/repertoire/${pieceId}/notes`, { text });
+  }
+
+  updatePieceNote(noteId: number, text: string) {
+    return this.http.put(`${this.apiUrl}/repertoire/notes/${noteId}`, { text });
+  }
+
+  deletePieceNote(noteId: number) {
+    return this.http.delete(`${this.apiUrl}/repertoire/notes/${noteId}`);
+  }
+
   getGlobalPieces(): Observable<Piece[]> {
     return this.http.get<Piece[]>(`${this.apiUrl}/pieces`);
   }
