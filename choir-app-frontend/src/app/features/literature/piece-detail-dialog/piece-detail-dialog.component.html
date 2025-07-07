@@ -4,6 +4,7 @@
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
   <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
+  <p><strong>Notizen:</strong> {{ piece.choir_repertoire?.notes || '-' }}</p>
 
   <h3>Geprobt bei</h3>
   <mat-list *ngIf="piece.events?.length; else noEvents">

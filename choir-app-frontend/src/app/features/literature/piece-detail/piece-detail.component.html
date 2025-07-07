@@ -5,6 +5,19 @@
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
   <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
 
+  <h3>Meine Notizen</h3>
+  <div *ngIf="!isEditing; else editBlock">
+    <p>{{ piece.choir_repertoire?.notes || 'Keine Notizen' }}</p>
+    <button mat-button (click)="startEdit()">Notizen bearbeiten</button>
+  </div>
+  <ng-template #editBlock>
+    <mat-form-field appearance="outline" class="full-width">
+      <textarea matInput [(ngModel)]="editNotes" rows="3"></textarea>
+    </mat-form-field>
+    <button mat-button (click)="cancelEdit()">Abbrechen</button>
+    <button mat-flat-button color="primary" (click)="saveNotes()">Speichern</button>
+  </ng-template>
+
   <h3>Geprobt bei</h3>
   <mat-list *ngIf="piece.events?.length; else noEvents">
     <mat-list-item *ngFor="let ev of piece.events">

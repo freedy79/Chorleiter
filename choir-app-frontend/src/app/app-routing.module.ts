@@ -27,6 +27,7 @@ import { PieceDetailComponent } from '@features/literature/piece-detail/piece-de
 import { DonateComponent } from '@features/donations/donate.component';
 import { DonationSuccessComponent } from '@features/donations/donation-success.component';
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
+import { SearchResultsComponent } from './features/search-results/search-results.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -115,6 +116,11 @@ export const routes: Routes = [
             {
                 path: 'pieces/:id',
                 component: PieceDetailComponent,
+                canActivate: [AuthGuard]
+            },
+            {
+                path: 'search',
+                component: SearchResultsComponent,
                 canActivate: [AuthGuard]
             },
             {
