@@ -21,27 +21,33 @@
     margin-left: 180px;
   }
 
-  .mat-mdc-list-item.active {
-    background-color: mat.m2-get-color-from-palette(
-      nak.$choir-app-primary,
-      default
-    ) !important;
-    color: #ffffff !important;; //mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default) !important;
-    border-radius: 0px;
-  }
+    .mat-mdc-list-item.active {
+      background-color: mat.m2-get-color-from-palette(
+        nak.$choir-app-primary,
+        default
+      ) !important;
+      color: mat.m2-get-contrast-color-from-palette(
+        nak.$choir-app-primary,
+        default
+      ) !important;
+      border-radius: 0px;
+    }
 
   &:active,
   &:hover,
   &:focus {
     > a:not(.expanded) {
-      background-color: mat.m2-get-color-from-palette(
-        nak.$choir-app-primary,
-        600
-      ) !important;
-      color: #ffffff !important; // mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default) !important;
-      border: none;
+        background-color: mat.m2-get-color-from-palette(
+          nak.$choir-app-primary,
+          600
+        ) !important;
+        color: mat.m2-get-contrast-color-from-palette(
+          nak.$choir-app-primary,
+          600
+        ) !important;
+        border: none;
+      }
     }
-  }
 
 }
 
