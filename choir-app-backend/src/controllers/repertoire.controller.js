@@ -74,6 +74,10 @@ exports.lookup = async (req, res) => {
 
 exports.findMyRepertoire = async (req, res) => {
     const { composerId, categoryId, categoryIds, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    let parsedStatuses = [];
+    if (status) {
+        parsedStatuses = Array.isArray(status) ? status : String(status).split(',');
+    }
     let parsedCategoryIds = [];
     if (categoryIds) {
         parsedCategoryIds = Array.isArray(categoryIds) ? categoryIds : String(categoryIds).split(',');
@@ -88,7 +92,10 @@ exports.findMyRepertoire = async (req, res) => {
         // --- SCHRITT 1: Holen Sie die Basis-Repertoire-Daten des Chors ---
         // Wir holen nur die pieceId und den zugehörigen Status.
         const repertoireLinks = await db.choir_repertoire.findAll({
-            where: { choirId: req.activeChoirId, ...(status && { status }) },
+            where: {
+                choirId: req.activeChoirId,
+                ...(parsedStatuses.length && { status: { [Op.in]: parsedStatuses } })
+            },
             raw: true // Gibt uns einfache Objekte statt Sequelize-Instanzen
         });
 

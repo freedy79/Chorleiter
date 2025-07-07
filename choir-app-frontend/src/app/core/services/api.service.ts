@@ -77,11 +77,19 @@ export class ApiService {
     composerId?: number,
     categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
-            'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
+    sortBy?:
+      | 'title'
+      | 'reference'
+      | 'composer'
+      | 'category'
+      | 'collection'
+      | 'lastSung'
+      | 'lastRehearsed'
+      | 'timesSung'
+      | 'timesRehearsed',
     page: number = 1,
     limit: number = 25,
-    status?: string,
+    statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
@@ -92,7 +100,7 @@ export class ApiService {
       sortBy,
       page,
       limit,
-      status,
+      statuses,
       sortDir,
       search
     );

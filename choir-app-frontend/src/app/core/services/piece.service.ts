@@ -17,11 +17,19 @@ export class PieceService {
   getMyRepertoire(
     categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
-             'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
+    sortBy?:
+      | 'title'
+      | 'reference'
+      | 'composer'
+      | 'category'
+      | 'collection'
+      | 'lastSung'
+      | 'lastRehearsed'
+      | 'timesSung'
+      | 'timesRehearsed',
     page = 1,
     limit = 25,
-    status?: string,
+    statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
@@ -35,7 +43,7 @@ export class PieceService {
     params = params.set('limit', limit.toString());
     // Avoid sending empty sortDir which causes an empty query parameter
     params = params.set('sortDir', sortDir || 'ASC');
-    if (status) params = params.set('status', status);
+    if (statuses && statuses.length) params = params.set('status', statuses.join(','));
     if (search) params = params.set('search', search);
 
     return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
