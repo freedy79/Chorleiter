@@ -13,6 +13,7 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
+import { Piece } from 'src/app/core/models/piece';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute } from '@angular/router';
@@ -43,6 +44,9 @@ export class ManageChoirComponent implements OnInit {
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
+
+  displayedRehearsalColumns: string[] = ['title', 'composer'];
+  rehearsalDataSource = new MatTableDataSource<Piece>();
 
 
   // Für die Mitglieder-Tabelle
@@ -100,6 +104,7 @@ export class ManageChoirComponent implements OnInit {
         }
         this.dataSource.data = pageData.members;
         this.collectionDataSource.data = pageData.collections;
+        this.loadRehearsalPieces();
       }
     });
   }
@@ -272,5 +277,11 @@ export class ManageChoirComponent implements OnInit {
         });
       }
     });
+  }
+
+  private loadRehearsalPieces(): void {
+    this.apiService
+      .getMyRepertoire(undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
+      .subscribe(res => (this.rehearsalDataSource.data = res.data));
   }
 }
