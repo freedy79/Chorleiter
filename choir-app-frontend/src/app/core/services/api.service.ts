@@ -413,7 +413,7 @@ export class ApiService {
   }
 
   getRepertoirePiece(id: number): Observable<Piece> {
-    return this.pieceService.getPieceById(id); // using pieceService for single piece
+    return this.pieceService.getRepertoirePiece(id);
   }
 
   getMyChoirDetails(): Observable<Choir> {
