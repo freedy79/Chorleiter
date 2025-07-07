@@ -7,6 +7,7 @@ try {
 const app = require("./src/app");
 const db = require("./src/models");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const demoSeed = async () => {
     try {
@@ -14,6 +15,10 @@ const demoSeed = async () => {
             where: { name: "Demo-Chor" },
             defaults: { name: "Demo-Chor", location: "Demohausen" }
         });
+        if (!choir.joinHash) {
+            choir.joinHash = crypto.randomBytes(12).toString('hex');
+            await choir.save();
+        }
 
         const [demoUser] = await db.user.findOrCreate({
             where: { email: "demo@nak-chorleiter.de" },
@@ -57,6 +62,10 @@ const initialSeed = async () => {
         });
         if (createdChoir) {
             console.log(`-> Choir "${choir.name}" created.`);
+        }
+        if (!choir.joinHash) {
+            choir.joinHash = crypto.randomBytes(12).toString('hex');
+            await choir.save();
         }
 
         // 3. Erstellen Sie den Admin-Benutzer.
@@ -109,6 +118,11 @@ db.sequelize.sync({ alter: true })
 
         try {
             console.log("Database synchronized.");
+
+            // Ensure all choirs have a join hash
+            db.choir.findAll({ where: { joinHash: null } }).then(choirs => {
+                choirs.forEach(async c => { c.joinHash = crypto.randomBytes(12).toString('hex'); await c.save(); });
+            });
 
             // Rufen Sie die Seed-Funktion auf.
             initialSeed();

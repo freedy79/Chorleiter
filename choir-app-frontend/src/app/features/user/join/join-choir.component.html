@@ -1,0 +1,16 @@
+<h2>Dem Chor "{{choirName}}" beitreten</h2>
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>E-Mail</mat-label>
+    <input matInput formControlName="email">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Passwort</mat-label>
+    <input matInput type="password" formControlName="password">
+  </mat-form-field>
+  <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Registrieren</button>
+</form>

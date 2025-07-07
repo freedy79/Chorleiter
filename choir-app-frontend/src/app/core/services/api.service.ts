@@ -447,6 +447,14 @@ export class ApiService {
     return this.userService.completeRegistration(token, data);
   }
 
+  getJoinInfo(token: string): Observable<any> {
+    return this.userService.getJoinInfo(token);
+  }
+
+  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+    return this.userService.joinChoir(token, data);
+  }
+
   removeUserFromChoir(userId: number): Observable<any> {
     return this.choirService.removeUserFromChoir(userId);
   }

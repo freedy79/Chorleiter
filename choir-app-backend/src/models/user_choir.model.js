@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         // Diese Rolle ist spezifisch für die Beziehung zwischen User und Choir
         roleInChoir: {
-            type: DataTypes.ENUM('director', 'choir_admin', 'organist'),
+            type: DataTypes.ENUM('director', 'choir_admin', 'organist', 'singer'),
             defaultValue: 'director'
         },
         isOrganist: {

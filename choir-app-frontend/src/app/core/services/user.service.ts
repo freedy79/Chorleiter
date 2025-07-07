@@ -34,6 +34,14 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
   }
 
+  getJoinInfo(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/join/${token}`);
+  }
+
+  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/join/${token}`, data);
+  }
+
   registerDonation(): Observable<any> {
     return this.http.post(`${this.apiUrl}/users/me/donate`, {});
   }
