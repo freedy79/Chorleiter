@@ -228,13 +228,13 @@ export class ManageChoirComponent implements OnInit {
     const ops = [] as Observable<any>[];
 
     if (this.sundayRuleId) {
-      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { type: 'SERVICE', dayOfWeek: 0, weeks: sundayWeeks }));
+      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }));
     } else {
-      ops.push(this.apiService.createPlanRule({ type: 'SERVICE', dayOfWeek: 0, weeks: sundayWeeks }));
+      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }));
     }
 
     if (this.weekdayDay !== null) {
-      const data = { type: 'SERVICE', dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
+      const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
       if (this.weekdayRuleId) {
         ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data));
       } else {

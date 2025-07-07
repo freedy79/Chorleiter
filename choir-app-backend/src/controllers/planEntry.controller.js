@@ -3,12 +3,12 @@ const PlanEntry = db.plan_entry;
 const User = db.user;
 
 exports.create = async (req, res) => {
-    const { monthlyPlanId, date, type, notes, directorId, organistId } = req.body;
-    if (!monthlyPlanId || !date || !type) {
-        return res.status(400).send({ message: 'monthlyPlanId, date and type are required.' });
+    const { monthlyPlanId, date, notes, directorId, organistId } = req.body;
+    if (!monthlyPlanId || !date) {
+        return res.status(400).send({ message: 'monthlyPlanId and date are required.' });
     }
     try {
-        const entry = await PlanEntry.create({ monthlyPlanId, date, type, notes, directorId, organistId });
+        const entry = await PlanEntry.create({ monthlyPlanId, date, notes, directorId, organistId });
         const full = await PlanEntry.findByPk(entry.id, {
             include: [
                 { model: User, as: 'director', attributes: ['id', 'name'] },

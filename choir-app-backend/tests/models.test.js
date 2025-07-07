@@ -30,7 +30,7 @@ const db = require('../src/models');
     checkFields(db.piece_change, ['data']);
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'fromAddress']);
-    checkFields(db.plan_rule, ['type', 'dayOfWeek', 'weeks', 'notes']);
+    checkFields(db.plan_rule, ['dayOfWeek', 'weeks', 'notes']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');
