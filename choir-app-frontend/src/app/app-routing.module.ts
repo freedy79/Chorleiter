@@ -48,6 +48,10 @@ export const routes: Routes = [
                 component: InviteRegistrationComponent
             },
             {
+                path: 'join/:token',
+                loadComponent: () => import('./features/user/join/join-choir.component').then(m => m.JoinChoirComponent)
+            },
+            {
                 path: 'forgot-password',
                 component: PasswordResetRequestComponent
             },

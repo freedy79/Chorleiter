@@ -18,7 +18,7 @@ const db = require('../src/models');
     }
 
     checkFields(db.user, ['email', 'role', 'lastDonation', 'preferences']);
-    checkFields(db.choir, ['name', 'modules']);
+    checkFields(db.choir, ['name', 'modules', 'joinHash']);
     checkFields(db.piece, ['title']);
     checkFields(db.event, ['date', 'type', 'organistId', 'finalized', 'version', 'monthlyPlanId']);
     checkFields(db.monthly_plan, ['year', 'month', 'finalized', 'version']);

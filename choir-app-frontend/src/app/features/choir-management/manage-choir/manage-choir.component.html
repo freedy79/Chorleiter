@@ -30,6 +30,7 @@
           </button>
         </div>
       </form>
+      <p *ngIf="isChoirAdmin && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
     </mat-card-content>
   </mat-card>
 
