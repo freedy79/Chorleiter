@@ -224,8 +224,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   createPlan(): void {
-    const now = new Date();
-    this.api.createMonthlyPlan(now.getFullYear(), now.getMonth() + 1).subscribe(plan => {
+    this.api.createMonthlyPlan(this.selectedYear, this.selectedMonth).subscribe(plan => {
       this.plan = plan;
       this.loadPlan(plan.year, plan.month);
     });
