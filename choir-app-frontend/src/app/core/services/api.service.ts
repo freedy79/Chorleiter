@@ -577,4 +577,9 @@ export class ApiService {
   deleteRepertoireFilter(id: number): Observable<any> {
     return this.filterPresetService.deletePreset(id);
   }
+
+  searchAll(term: string): Observable<any[]> {
+    const params = new HttpParams().set('q', term);
+    return this.http.get<any[]>(`${this.apiUrl}/search`, { params });
+  }
 }
