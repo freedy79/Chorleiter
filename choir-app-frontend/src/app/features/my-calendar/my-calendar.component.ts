@@ -39,8 +39,10 @@ export class MyCalendarComponent implements OnInit {
     return this.eventMap[key] ? 'has-event' : '';
   };
 
-  onSelectedChange(date: Date): void {
-    this.selectedDate = date;
+  onSelectedChange(date: Date | null): void {
+    if (date) {
+      this.selectedDate = date;
+    }
   }
 
   get eventsForSelectedDate(): Event[] {
