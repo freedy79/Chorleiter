@@ -6,6 +6,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
+import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 
 import { FormsModule } from '@angular/forms';
@@ -15,7 +16,7 @@ import { FormsModule } from '@angular/forms';
 @Component({
   selector: 'app-search-box',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatAutocompleteModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MatAutocompleteModule, MaterialModule, RouterModule],
   templateUrl: './search-box.component.html',
   styleUrls: ['./search-box.component.scss']
 })
@@ -23,7 +24,7 @@ export class SearchBoxComponent implements OnInit {
   searchCtrl = new FormControl('');
   results: { pieces: any[]; events: any[]; collections: any[] } = { pieces: [], events: [], collections: [] };
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private router: Router) {}
 
   ngOnInit(): void {
     this.searchCtrl.valueChanges.pipe(
@@ -32,5 +33,12 @@ export class SearchBoxComponent implements OnInit {
       switchMap(val => val ? this.api.searchAll(val) : of({ pieces: [], events: [], collections: [] }))
     ).subscribe(res => this.results = res);
 
+  }
+
+  goToResults(): void {
+    const term = this.searchCtrl.value;
+    if (term) {
+      this.router.navigate(['/search'], { queryParams: { q: term } });
+    }
   }
 }

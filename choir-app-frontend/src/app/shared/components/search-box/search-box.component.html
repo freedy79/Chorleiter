@@ -1,6 +1,6 @@
 
 <mat-form-field class="search-box" appearance="outline">
-  <input matInput [formControl]="searchCtrl" [matAutocomplete]="auto" placeholder="Search" />
+  <input matInput [formControl]="searchCtrl" [matAutocomplete]="auto" placeholder="Search" (keyup.enter)="goToResults()" />
 </mat-form-field>
 <mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption>
   <ng-container *ngIf="results.pieces.length">
