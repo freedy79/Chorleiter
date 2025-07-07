@@ -9,4 +9,5 @@ export interface Choir {
     modules?: {
         dienstplan?: boolean;
     };
+    joinHash?: string;
 }

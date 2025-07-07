@@ -20,7 +20,11 @@ module.exports = (sequelize, DataTypes) => {
        modules: {
         type: DataTypes.JSON,
         allowNull: true,
-        defaultValue: {}
+       defaultValue: {}
+       },
+       joinHash: {
+        type: DataTypes.STRING,
+        allowNull: true
        }
       });
     return Choir;

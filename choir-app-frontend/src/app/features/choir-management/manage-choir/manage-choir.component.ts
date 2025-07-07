@@ -42,6 +42,7 @@ export class ManageChoirComponent implements OnInit {
 
   choirInfoExpanded = true;
   membersExpanded = true;
+  joinLink = '';
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
@@ -99,6 +100,9 @@ export class ManageChoirComponent implements OnInit {
               this.authService.setCurrentUser(updatedUser);
             }
           });
+        }
+        if (pageData.choirDetails.joinHash) {
+          this.joinLink = `${window.location.origin}/join/${pageData.choirDetails.joinHash}`;
         }
         if (!this.isChoirAdmin) {
           this.choirForm.disable();
