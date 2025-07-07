@@ -2,3 +2,20 @@
   width: 200px;
   margin: 0 1rem;
 }
+
+:host {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+:host-context(.light-theme) .search-box {
+  --mdc-outlined-text-field-outline-color: #ffffff;
+  --mdc-outlined-text-field-focus-outline-color: #ffffff;
+  --mdc-outlined-text-field-hover-outline-color: #ffffff;
+  color: #ffffff;
+}
+
+:host-context(.light-theme) input {
+  color: #ffffff;
+}
