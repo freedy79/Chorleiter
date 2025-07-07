@@ -9,7 +9,9 @@
   </mat-form-field>
 </div>
 
-<div class="plan" *ngIf="plan; else noPlan">
+<mat-tab-group>
+  <mat-tab label="Dienstplan">
+    <div class="plan" *ngIf="plan; else noPlan">
   <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
   <table mat-table [dataSource]="entries" class="mat-elevation-z2">
     <ng-container matColumnDef="date">
@@ -80,13 +82,16 @@
     </table>
   </div>
 
-</div>
+    </div>
+  </mat-tab>
+  <mat-tab label="Verfügbarkeiten">
+    <div>
+      <h3>Meine Verfügbarkeiten</h3>
+      <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
+    </div>
+  </mat-tab>
+</mat-tab-group>
 <ng-template #noPlan>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>
   <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">Plan erstellen</button>
 </ng-template>
-
-<div>
-  <h3>Meine Verfügbarkeiten</h3>
-  <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
-</div>

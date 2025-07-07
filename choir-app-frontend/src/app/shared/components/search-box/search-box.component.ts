@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -6,6 +7,10 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { MaterialModule } from '@modules/material.module';
+
+import { FormsModule } from '@angular/forms';
+
+
 
 @Component({
   selector: 'app-search-box',
@@ -26,5 +31,6 @@ export class SearchBoxComponent implements OnInit {
       distinctUntilChanged(),
       switchMap(val => val ? this.api.searchAll(val) : of({ pieces: [], events: [], collections: [] }))
     ).subscribe(res => this.results = res);
+
   }
 }

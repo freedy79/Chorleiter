@@ -4,9 +4,11 @@ import { of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { SearchBoxComponent } from './search-box.component';
 
+
 describe('SearchBoxComponent', () => {
   let component: SearchBoxComponent;
   let fixture: ComponentFixture<SearchBoxComponent>;
+
   let apiSpy: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
@@ -19,6 +21,7 @@ describe('SearchBoxComponent', () => {
     apiSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
+
     fixture.detectChanges();
   });
 
@@ -27,7 +30,9 @@ describe('SearchBoxComponent', () => {
   });
 
   it('should query api on input', () => {
+
     component.searchCtrl.setValue('abc');
     expect(apiSpy.searchAll).toHaveBeenCalled();
+
   });
 });

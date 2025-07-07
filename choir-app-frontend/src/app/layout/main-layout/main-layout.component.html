@@ -20,6 +20,7 @@
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
       <mat-icon style="color:white"><img src="./../../assets/icons/user-filled.svg"></mat-icon>
     </button>
+    <span class="user-name">{{ userName$ | async }}</span>
     <mat-menu #userMenu="matMenu">
       <a mat-menu-item routerLink="/profile">
         <mat-icon><img src="./../../assets/icons/user-filled.svg"></mat-icon>

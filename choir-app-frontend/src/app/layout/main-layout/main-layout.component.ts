@@ -46,6 +46,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
+  userName$: Observable<string | undefined>;
   currentTheme: Theme;
   showAdminSubmenu: boolean = true;
   isExpanded = true;
@@ -78,6 +79,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
+    this.userName$ = this.authService.currentUser$.pipe(map(u => u?.name));
     this.donatedRecently$ = this.authService.currentUser$.pipe(
       map(u => {
         if (!u?.lastDonation) return false;
