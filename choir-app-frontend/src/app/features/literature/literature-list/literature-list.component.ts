@@ -542,6 +542,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     }
   }
 
+  reloadList(): void {
+    this.pageCache.clear();
+    this.refresh$.next();
+  }
+
   // ------- Hover Image Helpers -------
   onRowMouseEnter(event: MouseEvent, piece: Piece): void {
     if (!piece.imageIdentifier) {
