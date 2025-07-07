@@ -58,7 +58,18 @@ exports.updateMyChoir = async (req, res, next) => {
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (location !== undefined) updateData.location = location;
-        if (modules !== undefined) updateData.modules = modules;
+        if (modules !== undefined) {
+            // Ensure only choir_admin or global admin can change module settings
+            if (req.userRole !== 'admin') {
+                const assoc = await db.user_choir.findOne({
+                    where: { userId: req.userId, choirId: req.activeChoirId }
+                });
+                if (!assoc || assoc.roleInChoir !== 'choir_admin') {
+                    return res.status(403).send({ message: 'Require Choir Admin or Admin Role!' });
+                }
+            }
+            updateData.modules = modules;
+        }
 
         const [numberOfAffectedRows] = await db.choir.update(
             updateData,
