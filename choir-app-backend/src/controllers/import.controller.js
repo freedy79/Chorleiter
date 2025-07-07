@@ -2,6 +2,7 @@ const { parse } = require('csv-parse');
 const db = require("../models");
 const crypto = require('crypto');
 const jobs = require('../services/import-jobs.service');
+const { isoDateString } = require('../utils/date.utils');
 
 const findOrCreate = async (model, where, defaults, jobId, entityName) => {
     const [instance, created] = await model.findOrCreate({ where, defaults });
@@ -164,7 +165,7 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
             }
 
             const targetDate = parseGermanDate(dateStr);
-            const dateOnly = targetDate.toISOString().split('T')[0];
+            const dateOnly = isoDateString(targetDate);
 
             let event = await db.event.findOne({
                 where: {
