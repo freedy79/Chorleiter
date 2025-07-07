@@ -3,7 +3,14 @@
   <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
-  <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
+  <p>
+    <strong>Status im Chor:</strong>
+    <mat-select [value]="piece.choir_repertoire?.status" (selectionChange)="onStatusChange($event.value)">
+      <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
+      <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
+      <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
+    </mat-select>
+  </p>
 
   <h3>Notizen</h3>
   <div class="note" *ngFor="let n of piece.notes">
