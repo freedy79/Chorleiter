@@ -18,7 +18,6 @@ export class PlanEntryDialogComponent {
               public dialogRef: MatDialogRef<PlanEntryDialogComponent>) {
     this.form = this.fb.group({
       date: [new Date(), Validators.required],
-      type: ['SERVICE', Validators.required],
       notes: ['']
     });
   }

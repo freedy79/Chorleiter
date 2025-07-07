@@ -1,9 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
     const PlanRule = sequelize.define('plan_rule', {
-        type: {
-            type: DataTypes.ENUM('REHEARSAL', 'SERVICE'),
-            allowNull: false
-        },
         dayOfWeek: {
             type: DataTypes.INTEGER,
             allowNull: false

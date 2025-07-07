@@ -25,7 +25,7 @@ import { AvailabilityTableComponent } from './availability-table/availability-ta
 export class MonthlyPlanComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'type', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
@@ -42,7 +42,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private userSub?: Subscription;
 
   private updateDisplayedColumns(): void {
-    const base = ['date', 'type', 'director', 'organist', 'notes'];
+    const base = ['date', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
   }
 
@@ -147,7 +147,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   updateDirector(ev: PlanEntry, userId: number | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
-      type: ev.type,
       notes: ev.notes || '',
       directorId: userId ?? undefined,
       organistId: ev.organist?.id || undefined
@@ -160,7 +159,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   updateOrganist(ev: PlanEntry, userId: number | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
-      type: ev.type,
       notes: ev.notes || '',
       directorId: ev.director?.id,
       organistId: userId ?? undefined

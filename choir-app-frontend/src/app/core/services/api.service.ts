@@ -296,11 +296,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -330,11 +330,11 @@ export class ApiService {
     return this.planRuleService.getPlanRules();
   }
 
-  createPlanRule(data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.planRuleService.createPlanRule(data);
   }
 
-  updatePlanRule(id: number, data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  updatePlanRule(id: number, data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.planRuleService.updatePlanRule(id, data);
   }
 
