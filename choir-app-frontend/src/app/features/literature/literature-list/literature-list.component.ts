@@ -386,7 +386,30 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   onStatusChange(newStatus: string, pieceId: number): void {
     this.pieceService.updatePieceStatus(pieceId, newStatus).subscribe({
       next: () => {
-        // Log to console for debugging, a snackbar is optional here as the change is visual.
+        // Update the currently displayed data so the change is visible without reload
+        const data = [...this.dataSource.data];
+        const idx = data.findIndex(p => p.id === pieceId);
+        if (idx !== -1) {
+          const piece = { ...data[idx] };
+          piece.choir_repertoire = piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
+          piece.choir_repertoire.status = newStatus as any;
+          data[idx] = piece;
+          this.dataSource.data = data;
+        }
+
+        // Keep cached pages in sync
+        this.pageCache.forEach((arr, key) => {
+          const i = arr.findIndex(p => p.id === pieceId);
+          if (i !== -1) {
+            const pc = [...arr];
+            const p = { ...pc[i] };
+            p.choir_repertoire = p.choir_repertoire || { status: 'CAN_BE_SUNG' };
+            p.choir_repertoire.status = newStatus as any;
+            pc[i] = p;
+            this.pageCache.set(key, pc);
+          }
+        });
+
         console.log(`Status for piece ${pieceId} updated to ${newStatus}`);
         this.snackBar.open('Status updated.', 'OK', { duration: 2000 });
       },
@@ -395,7 +418,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         const msg = err.error?.message || 'Could not update status.';
         this.errorService.setError({ message: msg, status: err.status });
         this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
-        // Optional: you might want to refresh the list here to revert the visual change
+        // Revert changes by triggering a refresh
         this.refresh$.next();
       }
     });
