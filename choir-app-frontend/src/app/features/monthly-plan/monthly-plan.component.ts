@@ -175,6 +175,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     });
   }
 
+  updateNotes(ev: PlanEntry, notes: string): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      notes,
+      directorId: ev.director?.id,
+      organistId: ev.organist?.id || undefined
+    }).subscribe(updated => {
+      ev.notes = updated.notes;
+    });
+  }
+
   finalizePlan(): void {
     if (this.plan) {
       this.api.finalizeMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
