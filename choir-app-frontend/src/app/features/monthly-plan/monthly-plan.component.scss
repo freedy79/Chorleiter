@@ -8,3 +8,14 @@
 .assigned td {
   font-weight: 600;
 }
+
+.counter-plan-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 4px;
+    text-align: center;
+  }
+}
