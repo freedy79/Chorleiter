@@ -1,3 +1,6 @@
+@use "@angular/material" as mat;
+@use "../../../../themes/_nak-theme" as nak;
+
 .search-box {
   width: 200px;
   margin: 0 1rem;
@@ -10,12 +13,13 @@
 }
 
 :host-context(.light-theme) .search-box {
-  --mdc-outlined-text-field-outline-color: #ffffff;
-  --mdc-outlined-text-field-focus-outline-color: #ffffff;
-  --mdc-outlined-text-field-hover-outline-color: #ffffff;
-  color: #ffffff;
+  $white: mat.m2-get-color-from-palette(nak.$choir-app-primary, A100);
+  --mdc-outlined-text-field-outline-color: #{$white};
+  --mdc-outlined-text-field-focus-outline-color: #{$white};
+  --mdc-outlined-text-field-hover-outline-color: #{$white};
+  color: $white;
 }
 
 :host-context(.light-theme) input {
-  color: #ffffff;
+  color: mat.m2-get-color-from-palette(nak.$choir-app-primary, A100);
 }
