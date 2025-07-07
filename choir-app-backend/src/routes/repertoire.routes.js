@@ -6,6 +6,7 @@ router.use(authJwt.verifyToken);
 
 router.get("/", controller.findMyRepertoire);
 router.put("/status", controller.updateStatus);
+router.put("/notes", controller.updateNotes);
 router.post("/add-piece", controller.addPieceToRepertoire);
 router.get("/lookup", controller.lookup);
 router.get("/:id", controller.findOne);

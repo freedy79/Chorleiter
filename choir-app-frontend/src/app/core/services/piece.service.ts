@@ -53,6 +53,10 @@ export class PieceService {
     return this.http.put(`${this.apiUrl}/repertoire/status`, { pieceId, status });
   }
 
+  updatePieceNotes(pieceId: number, notes: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/repertoire/notes`, { pieceId, notes });
+  }
+
   getGlobalPieces(): Observable<Piece[]> {
     return this.http.get<Piece[]>(`${this.apiUrl}/pieces`);
   }

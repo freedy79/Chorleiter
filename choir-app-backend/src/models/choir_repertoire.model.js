@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
         status: {
             type: DataTypes.ENUM('CAN_BE_SUNG', 'IN_REHEARSAL', 'NOT_READY'),
             defaultValue: 'NOT_READY'
+        },
+        notes: {
+            type: DataTypes.TEXT,
+            allowNull: true
         }
     });
     return ChoirRepertoire;

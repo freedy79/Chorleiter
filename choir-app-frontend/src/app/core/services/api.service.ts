@@ -120,6 +120,10 @@ export class ApiService {
     return this.pieceService.updatePieceStatus(pieceId, status);
   }
 
+  updatePieceNotes(pieceId: number, notes: string): Observable<any> {
+    return this.pieceService.updatePieceNotes(pieceId, notes);
+  }
+
 
   // --- Global Piece Methods ---
 
