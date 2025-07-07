@@ -29,8 +29,7 @@
       </mat-checkbox>
       <mat-form-field appearance="outline">
         <mat-label>Status</mat-label>
-        <mat-select [value]="status$.value" (selectionChange)="onStatusFilterChange($event.value)">
-          <mat-option [value]="null">Alle</mat-option>
+        <mat-select multiple [value]="status$.value" (selectionChange)="onStatusFilterChange($event.value)">
           <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
           <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
           <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
