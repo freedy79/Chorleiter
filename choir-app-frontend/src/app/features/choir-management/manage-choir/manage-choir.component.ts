@@ -73,12 +73,12 @@ export class ManageChoirComponent implements OnInit {
         this.isChoirAdmin = pageData.isChoirAdmin;
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
         const rules = pageData.planRules as any[] || [];
-        const sundayRule = rules.find(r => r.type === 'SERVICE' && r.dayOfWeek === 0);
+        const sundayRule = rules.find(r => r.dayOfWeek === 0);
         if (sundayRule) {
           this.sundayRuleId = sundayRule.id;
           this.sundayWeeks = sundayRule.weeks && sundayRule.weeks.length ? sundayRule.weeks : [0];
         }
-        const weekdayRule = rules.find(r => r.type === 'SERVICE' && (r.dayOfWeek === 3 || r.dayOfWeek === 4));
+        const weekdayRule = rules.find(r => r.dayOfWeek === 3 || r.dayOfWeek === 4);
         if (weekdayRule) {
           this.weekdayRuleId = weekdayRule.id;
           this.weekdayDay = weekdayRule.dayOfWeek;
