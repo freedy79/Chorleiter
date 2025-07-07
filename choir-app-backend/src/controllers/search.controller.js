@@ -1,5 +1,5 @@
 const db = require('../models');
-const { Op } = require('sequelize');
+const { Op, where, cast, col } = require('sequelize');
 
 exports.search = async (req, res) => {
   const q = req.query.q || req.query.query || '';
@@ -16,7 +16,7 @@ exports.search = async (req, res) => {
         choirId: req.activeChoirId,
         [Op.or]: [
           { notes: like },
-          { type: like }
+          where(cast(col('type'), 'TEXT'), { [Op.iLike]: `%${q}%` })
         ]
       },
       order: [['date', 'DESC']],
