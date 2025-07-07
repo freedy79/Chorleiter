@@ -14,11 +14,11 @@ export class PlanRuleService {
     return this.http.get<PlanRule[]>(`${this.apiUrl}/plan-rules`);
   }
 
-  createPlanRule(data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.http.post<PlanRule>(`${this.apiUrl}/plan-rules`, data);
   }
 
-  updatePlanRule(id: number, data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  updatePlanRule(id: number, data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.http.put<PlanRule>(`${this.apiUrl}/plan-rules/${id}`, data);
   }
 

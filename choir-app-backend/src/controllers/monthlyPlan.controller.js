@@ -24,7 +24,6 @@ async function createEntriesFromRules(plan) {
             await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
-                type: rule.type,
                 notes: rule.notes || null
             });
         }
