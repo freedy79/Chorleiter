@@ -46,6 +46,15 @@ export class PieceDetailComponent implements OnInit {
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
   }
 
+  onStatusChange(newStatus: string): void {
+    if (!this.piece) return;
+    this.apiService.updatePieceStatus(this.piece.id, newStatus).subscribe(() => {
+      if (!this.piece) return;
+      this.piece.choir_repertoire = this.piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
+      this.piece.choir_repertoire.status = newStatus as any;
+    });
+  }
+
   canEdit(note: PieceNote): boolean {
     return note.author.id === this.userId || this.isAdmin;
   }
