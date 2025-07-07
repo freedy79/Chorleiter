@@ -22,6 +22,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { HelpService } from '@core/services/help.service';
 import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
+import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -36,7 +37,8 @@ import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/buil
     ChoirSwitcherComponent,
     ErrorDisplayComponent,
     LoadingIndicatorComponent,
-    MenuListItemComponent
+    MenuListItemComponent,
+    SearchBoxComponent
   ],
   providers: [NavService],
 })

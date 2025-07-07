@@ -1,23 +1,27 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of } from 'rxjs';
-
-import { SearchBoxComponent } from './search-box.component';
 import { ApiService } from '@core/services/api.service';
+import { SearchBoxComponent } from './search-box.component';
+
 
 describe('SearchBoxComponent', () => {
   let component: SearchBoxComponent;
   let fixture: ComponentFixture<SearchBoxComponent>;
-  let api: ApiService;
+
+  let apiSpy: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
+    apiSpy = jasmine.createSpyObj('ApiService', ['searchAll']);
     await TestBed.configureTestingModule({
-      imports: [SearchBoxComponent, HttpClientTestingModule]
+      imports: [SearchBoxComponent, HttpClientTestingModule],
+      providers: [{ provide: ApiService, useValue: apiSpy }]
     }).compileComponents();
 
+    apiSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
-    api = TestBed.inject(ApiService);
+
     fixture.detectChanges();
   });
 
@@ -26,10 +30,9 @@ describe('SearchBoxComponent', () => {
   });
 
   it('should query api on input', () => {
-    spyOn(api, 'searchAll').and.returnValue(of([]));
-    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
-    input.value = 'hello';
-    input.dispatchEvent(new Event('input'));
-    expect(api.searchAll).toHaveBeenCalledWith('hello');
+
+    component.searchCtrl.setValue('abc');
+    expect(apiSpy.searchAll).toHaveBeenCalled();
+
   });
 });

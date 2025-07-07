@@ -1,27 +1,36 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
+import { MaterialModule } from '@modules/material.module';
+
+import { FormsModule } from '@angular/forms';
+
+
 
 @Component({
   selector: 'app-search-box',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, MatAutocompleteModule, MaterialModule],
   templateUrl: './search-box.component.html',
   styleUrls: ['./search-box.component.scss']
 })
-export class SearchBoxComponent {
-  query = '';
-  @Output() results = new EventEmitter<any[]>();
+export class SearchBoxComponent implements OnInit {
+  searchCtrl = new FormControl('');
+  results: { pieces: any[]; events: any[]; collections: any[] } = { pieces: [], events: [], collections: [] };
 
-  constructor(private apiService: ApiService) {}
+  constructor(private api: ApiService) {}
 
-  onInput(): void {
-    const term = this.query.trim();
-    if (!term) {
-      this.results.emit([]);
-      return;
-    }
-    this.apiService.searchAll(term).subscribe(res => this.results.emit(res));
+  ngOnInit(): void {
+    this.searchCtrl.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap(val => val ? this.api.searchAll(val) : of({ pieces: [], events: [], collections: [] }))
+    ).subscribe(res => this.results = res);
+
   }
 }
