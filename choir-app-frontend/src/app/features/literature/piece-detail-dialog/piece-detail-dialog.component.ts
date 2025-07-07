@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -10,7 +11,7 @@ import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 @Component({
   selector: 'app-piece-detail-dialog',
   standalone: true,
-  imports: [CommonModule, MaterialModule, EventTypeLabelPipe, PieceStatusLabelPipe],
+  imports: [CommonModule, RouterModule, MaterialModule, EventTypeLabelPipe, PieceStatusLabelPipe],
   templateUrl: './piece-detail-dialog.component.html',
   styleUrls: ['./piece-detail-dialog.component.scss']
 })
