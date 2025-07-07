@@ -28,9 +28,11 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
       .subscribe(a => this.availabilities = a);
   }
 
-  setStatus(date: string, status: string): void {
+  setStatus(date: string, status: UserAvailability['status']): void {
+    const i = this.availabilities.findIndex(v => v.date === date);
+    if (i >= 0) this.availabilities[i].status = status;
+
     this.api.setAvailability(date, status).subscribe(updated => {
-      const i = this.availabilities.findIndex(v => v.date === updated.date);
       if (i >= 0) this.availabilities[i] = updated;
     });
   }
