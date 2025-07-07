@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
@@ -29,10 +29,11 @@ describe('SearchBoxComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should query api on input', () => {
+  it('should query api on input', fakeAsync(() => {
 
     component.searchCtrl.setValue('abc');
-    expect(apiSpy.searchAll).toHaveBeenCalled();
+    tick(300); // advance time for debounceTime
+    expect(apiSpy.searchAll).toHaveBeenCalledWith('abc');
 
-  });
+  }));
 });
