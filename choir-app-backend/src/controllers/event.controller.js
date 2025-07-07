@@ -7,6 +7,7 @@ const CollectionPiece = db.collection_piece;
 const User = db.user;
 const logger = require("../config/logger");
 const { Op, fn, col, where } = require("sequelize");
+const { isoDateString } = require('../utils/date.utils');
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -47,7 +48,7 @@ exports.create = async (req, res) => {
 
     try {
         const targetDate = new Date(date);
-        const dateOnly = targetDate.toISOString().split('T')[0];
+        const dateOnly = isoDateString(targetDate);
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
         const eventsSameDay = await db.event.findAll({

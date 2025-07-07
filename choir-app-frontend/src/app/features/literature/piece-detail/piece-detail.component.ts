@@ -6,7 +6,8 @@ import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ApiService } from '@core/services/api.service';
-import { Piece } from '@core/models/piece';
+import { Piece, PieceNote } from '@core/models/piece';
+import { AuthService } from '@core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -25,37 +26,73 @@ import { FormsModule } from '@angular/forms';
 })
 export class PieceDetailComponent implements OnInit {
   piece?: Piece;
-  editNotes = '';
-  isEditing = false;
+  newNoteText = '';
+  editState: { [id: number]: string } = {};
+  userId: number | null = null;
+  isAdmin = false;
 
-  constructor(private route: ActivatedRoute, private apiService: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private apiService: ApiService,
+    private auth: AuthService
+  ) {}
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       this.piece = p;
-      this.editNotes = p.choir_repertoire?.notes || '';
+    });
+    this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
+    this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+  }
+
+  onStatusChange(newStatus: string): void {
+    if (!this.piece) return;
+    this.apiService.updatePieceStatus(this.piece.id, newStatus).subscribe(() => {
+      if (!this.piece) return;
+      this.piece.choir_repertoire = this.piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
+      this.piece.choir_repertoire.status = newStatus as any;
     });
   }
 
-  startEdit(): void {
-    this.isEditing = true;
-    this.editNotes = this.piece?.choir_repertoire?.notes || '';
+  canEdit(note: PieceNote): boolean {
+    return note.author.id === this.userId || this.isAdmin;
   }
 
-  cancelEdit(): void {
-    this.isEditing = false;
+  startEdit(note: PieceNote): void {
+    this.editState[note.id] = note.text;
   }
 
-  saveNotes(): void {
-    if (!this.piece) { return; }
-    this.apiService.updatePieceNotes(this.piece.id, this.editNotes).subscribe(() => {
-      if (!this.piece!.choir_repertoire) {
-        this.piece!.choir_repertoire = { status: 'NOT_READY', notes: this.editNotes };
-      } else {
-        this.piece!.choir_repertoire.notes = this.editNotes;
+  cancelEdit(id: number): void {
+    delete this.editState[id];
+  }
+
+  saveEdit(note: PieceNote): void {
+    const text = this.editState[note.id];
+    this.apiService.updatePieceNote(note.id, text).subscribe(updated => {
+      if (this.piece) {
+        const idx = this.piece.notes?.findIndex(n => n.id === note.id);
+        if (idx != null && idx >= 0 && this.piece.notes) this.piece.notes[idx] = updated as any;
       }
-      this.isEditing = false;
+      delete this.editState[note.id];
+    });
+  }
+
+  deleteNote(note: PieceNote): void {
+    if (!this.piece) return;
+    this.apiService.deletePieceNote(note.id).subscribe(() => {
+      if (this.piece) {
+        this.piece.notes = this.piece.notes?.filter(n => n.id !== note.id);
+      }
+    });
+  }
+
+  addNote(): void {
+    if (!this.piece || !this.newNoteText) return;
+    this.apiService.addPieceNote(this.piece.id, this.newNoteText).subscribe(n => {
+      if (!this.piece!.notes) this.piece!.notes = [];
+      this.piece!.notes.unshift(n as any);
+      this.newNoteText = '';
     });
   }
 }
