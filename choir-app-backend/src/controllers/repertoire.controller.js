@@ -420,10 +420,17 @@ exports.findOne = async (req, res) => {
             where: { choirId: req.activeChoirId, pieceId: id }
         });
 
+        const notes = await db.piece_note.findAll({
+            where: { choirId: req.activeChoirId, pieceId: id },
+            include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+            order: [['createdAt', 'DESC']]
+        });
+
         const result = piece.get({ plain: true });
         if (link) {
             result.choir_repertoire = { status: link.status, notes: link.notes };
         }
+        result.notes = notes.map(n => n.get({ plain: true }));
 
         res.status(200).send(result);
     } catch (err) {
