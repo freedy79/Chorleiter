@@ -106,7 +106,7 @@ exports.findMyRepertoire = async (req, res) => {
 
         // Erstellen Sie eine Liste aller Stück-IDs im Repertoire und eine Map für den Status.
         const pieceIdsInRepertoire = repertoireLinks.map(link => link.pieceId);
-        const statusMap = new Map(repertoireLinks.map(link => [link.pieceId, link.status]));
+        const linkMap = new Map(repertoireLinks.map(link => [link.pieceId, { status: link.status, notes: link.notes }]));
 
 
         // --- SCHRITT 2: Bauen Sie die finale Abfrage auf der Piece-Tabelle ---
@@ -338,10 +338,8 @@ exports.findMyRepertoire = async (req, res) => {
         // Konvertieren Sie die Sequelize-Instanzen in einfache Objekte für die Bearbeitung.
         const results = pieces.map(piece => {
             const plainPiece = piece.get({ plain: true });
-            // Fügen Sie die Status-Information aus unserer Map hinzu.
-            plainPiece.choir_repertoire = {
-                status: statusMap.get(plainPiece.id) || 'NOT_READY'
-            };
+            const info = linkMap.get(plainPiece.id) || { status: 'NOT_READY', notes: null };
+            plainPiece.choir_repertoire = info;
             return plainPiece;
         });
 
@@ -367,6 +365,19 @@ exports.updateStatus = async (req, res) => {
             { where: { choirId: req.activeChoirId, pieceId: pieceId } }
         );
         res.status(200).send({ message: "Status updated successfully." });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateNotes = async (req, res) => {
+    const { pieceId, notes } = req.body;
+    try {
+        await db.choir_repertoire.update(
+            { notes: notes },
+            { where: { choirId: req.activeChoirId, pieceId: pieceId } }
+        );
+        res.status(200).send({ message: "Notes updated successfully." });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
@@ -411,7 +422,7 @@ exports.findOne = async (req, res) => {
 
         const result = piece.get({ plain: true });
         if (link) {
-            result.choir_repertoire = { status: link.status };
+            result.choir_repertoire = { status: link.status, notes: link.notes };
         }
 
         res.status(200).send(result);

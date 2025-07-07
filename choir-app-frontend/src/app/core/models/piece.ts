@@ -19,6 +19,7 @@ export interface Piece {
   category?: Category;
   choir_repertoire?: {
     status: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY';
+    notes?: string | null;
   };
   collections?: CollectionReference[];
   collectionPrefix?: string | null;
