@@ -84,13 +84,13 @@
     </table>
   </div>
 
-  <div>
-    <h3>Meine Verfügbarkeiten</h3>
-  <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
-  </div>
-  
 </div>
 <ng-template #noPlan>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>
   <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">Plan erstellen</button>
 </ng-template>
+
+<div>
+  <h3>Meine Verfügbarkeiten</h3>
+  <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
+</div>
