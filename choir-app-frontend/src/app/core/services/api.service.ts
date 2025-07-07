@@ -37,6 +37,7 @@ import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
+import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
 
 @Injectable({
@@ -348,6 +349,10 @@ export class ApiService {
 
   setAvailability(date: string, status: string): Observable<UserAvailability> {
     return this.availabilityService.setAvailability(date, status);
+  }
+
+  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
+    return this.availabilityService.getMemberAvailabilities(year, month);
   }
 
 

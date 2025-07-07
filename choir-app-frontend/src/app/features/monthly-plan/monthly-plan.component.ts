@@ -8,6 +8,7 @@ import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
+import { MemberAvailability } from '@core/models/member-availability';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
@@ -32,9 +33,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
   currentUserId: number | null = null;
+  availabilityMap: { [userId: number]: { [date: string]: string } } = {};
+
   counterPlanDates: Date[] = [];
   counterPlanDateKeys: string[] = [];
   counterPlanRows: { user: UserInChoir; assignments: Record<string, string>; }[] = [];
+
   private userSub?: Subscription;
 
   private updateDisplayedColumns(): void {
@@ -44,6 +48,26 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private sortEntries(): void {
     this.entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
+
+  private loadAvailabilities(year: number, month: number): void {
+    this.api.getMemberAvailabilities(year, month).subscribe(av => {
+      this.availabilityMap = {};
+      for (const a of av) {
+        if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
+        this.availabilityMap[a.userId][a.date] = a.status;
+      }
+    });
+  }
+
+  isAvailable(userId: number, date: string): boolean {
+    const status = this.availabilityMap[userId]?.[date];
+    return !status || status === 'AVAILABLE' || status === 'MAYBE';
+  }
+
+  availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
+    return list.filter(u => this.isAvailable(u.id, date));
   }
 
   private updateCounterPlan(): void {
@@ -84,6 +108,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
     this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
     this.api.checkChoirAdminStatus().subscribe(r => { this.isChoirAdmin = r.isChoirAdmin; this.updateDisplayedColumns(); });
     this.api.getChoirMembers().subscribe(m => {
@@ -111,10 +136,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.counterPlanRows = [];
       }
     });
+    this.loadAvailabilities(year, month);
   }
 
   monthChanged(): void {
     this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
   }
 
   updateDirector(ev: PlanEntry, userId: number | null): void {
