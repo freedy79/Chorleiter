@@ -195,7 +195,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
         visibleSubject: this.isAdmin$,
         route: '',
         children: [
-            {
+          {
+            displayName: 'Allgemein',
+            route: '/admin/general',
+          },
+          {
             displayName: 'Chöre',
             route: '/admin/choirs',
           },
@@ -208,16 +212,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
             route: '/admin/creators'
           },
           {
-            displayName: 'Backup',
-            route: '/admin/backup',
-          },
-          {
             displayName: 'Protokolle',
             route: '/admin/protocols',
-          },
-          {
-            displayName: 'Mail-Server',
-            route: '/admin/mail-settings',
           }
         ]
       }
