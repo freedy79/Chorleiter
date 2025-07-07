@@ -1,8 +1,7 @@
 // Import the theming functions from Angular Material
 @use '@angular/material' as mat;
 
-// This is a required part of every custom theme.
-@include mat.core();
+// The core mixin is included in the global styles to avoid duplication.
 
 // ----------------------------------------------------------------------------------
 // Custom NAK Color Palettes
