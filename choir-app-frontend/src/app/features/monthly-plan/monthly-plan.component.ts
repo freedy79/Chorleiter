@@ -7,25 +7,25 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
-import { Event } from '@core/models/event';
 import { UserInChoir } from '@core/models/user';
+import { MemberAvailability } from '@core/models/member-availability';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
-import { EventDialogComponent } from '../events/event-dialog/event-dialog.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, PlanEntryDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
 export class MonthlyPlanComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'type', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
@@ -33,11 +33,69 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
   currentUserId: number | null = null;
+  availabilityMap: { [userId: number]: { [date: string]: string } } = {};
+
+  counterPlanDates: Date[] = [];
+  counterPlanDateKeys: string[] = [];
+  counterPlanRows: { user: UserInChoir; assignments: Record<string, string>; }[] = [];
+
   private userSub?: Subscription;
 
   private updateDisplayedColumns(): void {
-    const base = ['date', 'type', 'director', 'organist', 'notes'];
+    const base = ['date', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
+  }
+
+  private sortEntries(): void {
+    this.entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }
+
+
+  private loadAvailabilities(year: number, month: number): void {
+    this.api.getMemberAvailabilities(year, month).subscribe(av => {
+      this.availabilityMap = {};
+      for (const a of av) {
+        if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
+        this.availabilityMap[a.userId][a.date] = a.status;
+      }
+    });
+  }
+
+  isAvailable(userId: number, date: string): boolean {
+    const status = this.availabilityMap[userId]?.[date];
+    return !status || status === 'AVAILABLE' || status === 'MAYBE';
+  }
+
+  availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
+    return list.filter(u => this.isAvailable(u.id, date));
+  }
+
+  private updateCounterPlan(): void {
+    const dateKeys = Array.from(new Set(this.entries.map(e => new Date(e.date).toISOString().substring(0, 10)))).sort();
+    this.counterPlanDateKeys = dateKeys;
+    this.counterPlanDates = dateKeys.map(d => new Date(d));
+
+    const persons: UserInChoir[] = [];
+    [...this.directors, ...this.organists].forEach(u => {
+      if (!persons.find(p => p.id === u.id)) persons.push(u);
+    });
+
+    this.counterPlanRows = persons.map(u => ({ user: u, assignments: {} }));
+    for (const row of this.counterPlanRows) {
+      for (const d of dateKeys) row.assignments[d] = '';
+    }
+
+    for (const entry of this.entries) {
+      const key = new Date(entry.date).toISOString().substring(0, 10);
+      if (entry.director) {
+        const row = this.counterPlanRows.find(r => r.user.id === entry.director!.id);
+        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Chorleitung' : 'Chorleitung';
+      }
+      if (entry.organist) {
+        const row = this.counterPlanRows.find(r => r.user.id === entry.organist!.id);
+        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Orgel' : 'Orgel';
+      }
+    }
   }
 
   constructor(private api: ApiService,
@@ -50,35 +108,63 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
     this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
     this.api.checkChoirAdminStatus().subscribe(r => { this.isChoirAdmin = r.isChoirAdmin; this.updateDisplayedColumns(); });
     this.api.getChoirMembers().subscribe(m => {
       this.members = m;
       this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
       this.organists = m.filter(u => u.membership?.isOrganist);
+      this.updateCounterPlan();
     });
   }
 
   loadPlan(year: number, month: number): void {
     this.api.getMonthlyPlan(year, month).subscribe({
-      next: plan => { this.plan = plan; this.entries = plan?.entries || []; this.updateDisplayedColumns(); },
-      error: () => { this.plan = null; this.entries = []; this.updateDisplayedColumns(); }
+      next: plan => {
+        this.plan = plan;
+        this.entries = plan?.entries || [];
+        this.sortEntries();
+        this.updateDisplayedColumns();
+        this.updateCounterPlan();
+      },
+      error: () => {
+        this.plan = null;
+        this.entries = [];
+        this.updateDisplayedColumns();
+        this.counterPlanDates = [];
+        this.counterPlanRows = [];
+      }
     });
+    this.loadAvailabilities(year, month);
   }
 
   monthChanged(): void {
     this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
   }
 
-  updateDirector(ev: Event, userId: number | null): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: userId ?? undefined, organistId: ev.organist?.id, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateDirector(ev: PlanEntry, userId: number | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      notes: ev.notes || '',
+      directorId: userId ?? undefined,
+      organistId: ev.organist?.id || undefined
+    }).subscribe(updated => {
       ev.director = updated.director;
+      this.updateCounterPlan();
     });
   }
 
-  updateOrganist(ev: Event, userId: number | null): void {
-    this.api.updateEvent(ev.id, { date: ev.date, type: ev.type, notes: ev.notes || '', directorId: ev.director?.id, organistId: userId ?? undefined, finalized: ev.finalized, version: ev.version, monthlyPlanId: this.plan?.id }).subscribe(updated => {
+  updateOrganist(ev: PlanEntry, userId: number | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      notes: ev.notes || '',
+      directorId: ev.director?.id,
+      organistId: userId ?? undefined
+    }).subscribe(updated => {
       ev.organist = updated.organist;
+      this.updateCounterPlan();
     });
   }
 
@@ -102,7 +188,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe(result => {
       if (result && this.plan) {
         this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).subscribe({
-          next: entry => { this.entries.push(entry); this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 }); },
+          next: () => {
+            this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 });
+            this.loadPlan(this.selectedYear, this.selectedMonth);
+          },
           error: () => this.snackBar.open('Fehler beim Anlegen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }
@@ -115,7 +204,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     ref.afterClosed().subscribe(confirmed => {
       if (confirmed) {
         this.api.deletePlanEntry(ev.id).subscribe({
-          next: () => { this.entries = this.entries.filter(e => e.id !== ev.id); this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 }); },
+          next: () => {
+            this.entries = this.entries.filter(e => e.id !== ev.id);
+            this.sortEntries();
+            this.updateCounterPlan();
+            this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 });
+          },
           error: () => this.snackBar.open('Fehler beim Löschen des Eintrags.', 'Schließen', { duration: 4000 })
         });
       }

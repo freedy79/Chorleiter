@@ -57,4 +57,16 @@ async function readLogFile(filename) {
     }
 }
 
-module.exports = { listLogFiles, readLogFile };
+async function deleteLogFile(filename) {
+    const safe = path.basename(filename);
+    const filePath = path.join(LOG_DIR, safe);
+    try {
+        await fs.promises.unlink(filePath);
+        return true;
+    } catch (err) {
+        if (err.code === 'ENOENT') return false;
+        throw err;
+    }
+}
+
+module.exports = { listLogFiles, readLogFile, deleteLogFile };

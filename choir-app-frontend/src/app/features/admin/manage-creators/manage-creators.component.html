@@ -1,5 +1,17 @@
 <div class="toolbar">
-  <button mat-flat-button color="primary" (click)="addAuthor()">Dichter hinzufügen</button>
+  <mat-button-toggle-group [(ngModel)]="mode" (change)="loadData()" exclusive>
+    <mat-button-toggle value="composer">Komponisten</mat-button-toggle>
+    <mat-button-toggle value="author">Autoren</mat-button-toggle>
+  </mat-button-toggle-group>
+  <button mat-flat-button color="primary" (click)="addPerson()" class="add-btn">
+    {{ mode === 'composer' ? 'Komponist hinzufügen' : 'Dichter hinzufügen' }}
+  </button>
+</div>
+
+<div class="letter-filter">
+  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
+    {{ l }}
+  </button>
 </div>
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
@@ -21,13 +33,13 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef></th>
     <td mat-cell *matCellDef="let element">
-      <button mat-icon-button color="primary" (click)="editAuthor(element)">
+      <button mat-icon-button color="primary" (click)="editPerson(element)">
         <mat-icon>edit</mat-icon>
       </button>
-      <button mat-icon-button color="accent" (click)="enrichAuthor(element)">
+      <button mat-icon-button color="accent" (click)="enrichPerson(element)">
         <mat-icon>cloud_download</mat-icon>
       </button>
-      <button mat-icon-button color="warn" (click)="deleteAuthor(element)" [disabled]="!element.canDelete">
+      <button mat-icon-button color="warn" (click)="deletePerson(element)" [disabled]="!element.canDelete">
         <mat-icon>delete</mat-icon>
       </button>
     </td>
@@ -36,3 +48,8 @@
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+
+<mat-paginator [length]="totalPeople"
+               [pageSizeOptions]="pageSizeOptions"
+               [pageSize]="pageSize"
+               showFirstLastButtons></mat-paginator>

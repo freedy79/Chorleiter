@@ -12,47 +12,85 @@ npm --prefix choir-app-frontend run build
 
 Write-Host "Build finished."
 
-# Check for sshpass before proceeding
-$sshUseSshpass = $false
-if (Get-Command sshpass -ErrorAction SilentlyContinue) {
-    $sshUseSshpass = $true
-} else {
-    $install = Read-Host "sshpass is not installed. Install it now? (y/N)"
-    if ($install -match '^[Yy]') {
-        Write-Host "sudo apt-get install sshpass"
-    } else {
-        Write-Host "Hint: install sshpass with: sudo apt-get install sshpass"
+# Determine authentication method
+$sshUseAgent = $false
+$sshUsePlink = $false
+
+if (Get-Command ssh-add -ErrorAction SilentlyContinue) {
+    try {
+        $keys = ssh-add -L 2>$null
+        if ($LASTEXITCODE -eq 0 -and $keys) {
+            $sshUseAgent = $true
+            Write-Host "Using ssh-agent for authentication."
+        }
+    } catch {
+        # ignore errors from ssh-add
     }
 }
+
+if (-not $sshUseAgent) {
+    if (Get-Command plink -ErrorAction SilentlyContinue) {
+        $sshUsePlink = $true
+        Write-Host "Using plink/pscp for authentication."
+    }
+}
+
+if ($sshUseAgent) {
+    Write-Host "Verifying ssh-agent access..."
+    & ssh -o BatchMode=yes -o StrictHostKeyChecking=no $Remote exit 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ssh-agent authentication failed, falling back to password." -ForegroundColor Yellow
+        $sshUseAgent = $false
+        if (Get-Command plink -ErrorAction SilentlyContinue) {
+            $sshUsePlink = $true
+            Write-Host "Using plink/pscp for authentication."
+        }
+    }
+}
+
+if (-not $sshUseAgent -and -not $sshUsePlink) {
+    Write-Host "plink not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
+}
+
 
 $Password = $null
-if (Test-Path $PasswordFile) {
-    $Password = (Get-Content $PasswordFile -Raw).Trim()
-} else {
-    $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
-    if ($create -match '^[Yy]') {
+if (-not $sshUseAgent) {
+    if (Test-Path $PasswordFile) {
+        $Password = (Get-Content $PasswordFile -Raw).Trim()
+        if ($Password) {
+            Write-Host "Using password from $PasswordFile."
+        }
+    } else {
+        $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
+        if ($create -match '^[Yy]') {
+            $Password = Read-Host "SSH password for $Remote"
+            Set-Content -Path $PasswordFile -Value $Password
+        }
+    }
+    if (-not $Password) {
         $Password = Read-Host "SSH password for $Remote"
-        Set-Content -Path $PasswordFile -Value $Password
     }
 }
-if (-not $Password) {
-    $Password = Read-Host "SSH password for $Remote"
-}
 
 
-$ControlPath = "$env:USERPROFILE\.chorleiter_ssh_control"
-$SshOptions = "-o ControlMaster=auto -o ControlPath=$ControlPath -o ControlPersist=10m -o StrictHostKeyChecking=no"
+$ControlPath = Join-Path $env:USERPROFILE ".chorleiter_ssh_control"
+$SshOptions = @(
+    "-o", "ControlMaster=auto",
+    "-o", "ControlPath=$ControlPath",
+    "-o", "ControlPersist=10m",
+    "-o", "StrictHostKeyChecking=no"
+)
 
 function Invoke-Ssh {
     param(
         [string]$Command
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" ssh $SshOptions $Remote $Command
+    if ($sshUsePlink) {
+        & plink -v -batch -l $RemoteUser -pw "$Password" $RemoteHost $Command
     }
     else {
-        & ssh $SshOptions $Remote $Command
+        & ssh @SshOptions $Remote $Command
     }
 }
 
@@ -62,25 +100,29 @@ function Invoke-Scp {
         [string]$Destination
     )
 
-    if ($sshUseSshpass) {
-        & sshpass -p "$Password" scp $SshOptions $Source $Destination
+    if ($sshUsePlink) {
+        & pscp -v -batch -l $RemoteUser -pw "$Password" $Source $Destination
     }
     else {
-        & scp $SshOptions $Source $Destination
+        & scp @SshOptions $Source $Destination
     }
 }
 
 # Establish master connection so the password is requested only once
+Write-Host "Establishing SSH connection..."
 Invoke-Ssh "true"
 
 $BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 
 # Pack directories
+Write-Host "Packing backend..."
 & tar --exclude=".env" -czf $BackendArchive -C "choir-app-backend" .
+Write-Host "Packing frontend..."
 & tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
 
 # Create remote directories
+Write-Host "Creating remote directories..."
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
 # Upload archives
@@ -100,9 +142,6 @@ Remove-Item $FrontendArchive
 Write-Host "Deployment completed."
 
 # Close the persistent SSH connection
-if ($sshUseSshpass) {
-    & sshpass -p "$Password" ssh $SshOptions -O exit $Remote
-}
-else {
-    & ssh $SshOptions -O exit $Remote
+if (-not $sshUsePlink) {
+    & ssh @SshOptions -O exit $Remote
 }

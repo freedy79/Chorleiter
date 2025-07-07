@@ -21,7 +21,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 export class ChoirDialogComponent implements OnInit {
   form: FormGroup;
   title = 'Chor hinzufügen';
-  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
@@ -84,6 +84,14 @@ export class ChoirDialogComponent implements OnInit {
           error: err => this.snackBar.open('Fehler beim Entfernen des Mitglieds', 'Schließen')
         });
       }
+    });
+  }
+
+  toggleOrganist(user: UserInChoir, checked: boolean): void {
+    if (!this.data?.id) return;
+    this.api.updateChoirMemberAdmin(this.data.id, user.id, { isOrganist: checked }).subscribe({
+      next: () => user.membership!.isOrganist = checked,
+      error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen')
     });
   }
 

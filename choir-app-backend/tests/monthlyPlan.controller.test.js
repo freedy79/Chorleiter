@@ -10,7 +10,7 @@ const controller = require('../src/controllers/monthlyPlan.controller');
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir', modules: { dienstplan: true } });
-    await db.plan_rule.create({ choirId: choir.id, type: 'SERVICE', dayOfWeek: 0 });
+    await db.plan_rule.create({ choirId: choir.id, dayOfWeek: 0 });
     const baseReq = { activeChoirId: choir.id };
     const res = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
 

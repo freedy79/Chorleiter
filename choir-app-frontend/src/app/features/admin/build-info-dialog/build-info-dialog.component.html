@@ -1,12 +1,8 @@
-<h2 mat-dialog-title>Build &amp; Installationsinfo</h2>
+<h2 mat-dialog-title>Buildinformationen</h2>
 <div mat-dialog-content>
-  <ng-container *ngIf="info; else loading">
-    <p><strong>Build von:</strong> {{ info.buildUser }}</p>
-    <p><strong>Build-Datum:</strong> {{ info.buildDate | date:'short' }}</p>
-    <p><strong>Installiert von:</strong> {{ info.installUser }}</p>
-    <p><strong>Installations-Datum:</strong> {{ info.installDate | date:'short' }}</p>
-  </ng-container>
-  <ng-template #loading>Informationen werden geladen...</ng-template>
+  <p><strong>Version:</strong> {{ info.version }}</p>
+  <p><strong>Commit:</strong> {{ info.commit }}</p>
+  <p><strong>Build-Datum:</strong> {{ info.date | date:'short' }}</p>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="close()">Schließen</button>

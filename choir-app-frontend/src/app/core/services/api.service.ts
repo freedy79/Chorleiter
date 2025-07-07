@@ -17,6 +17,7 @@ import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Choir } from '@core/models/choir';
+import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
@@ -30,10 +31,14 @@ import { UserService } from './user.service';
 import { ImportService } from './import.service';
 import { AdminService } from './admin.service';
 import { SystemService } from './system.service';
+import { PlanRuleService } from './plan-rule.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { FilterPresetService } from './filter-preset.service';
+import { UserAvailability } from '../models/user-availability';
+import { MemberAvailability } from '../models/member-availability';
+import { AvailabilityService } from './availability.service';
 
 @Injectable({
   providedIn: 'root'
@@ -54,7 +59,9 @@ export class ApiService {
               private importService: ImportService,
               private adminService: AdminService,
               private systemService: SystemService,
-              private filterPresetService: FilterPresetService) {
+              private filterPresetService: FilterPresetService,
+              private planRuleService: PlanRuleService,
+              private availabilityService: AvailabilityService) {
 
   }
 
@@ -289,11 +296,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -316,6 +323,36 @@ export class ApiService {
 
   reopenMonthlyPlan(id: number): Observable<MonthlyPlan> {
     return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/reopen`, {});
+  }
+
+  // --- Plan Rule Methods ---
+  getPlanRules(): Observable<PlanRule[]> {
+    return this.planRuleService.getPlanRules();
+  }
+
+  createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+    return this.planRuleService.createPlanRule(data);
+  }
+
+  updatePlanRule(id: number, data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+    return this.planRuleService.updatePlanRule(id, data);
+  }
+
+  deletePlanRule(id: number): Observable<any> {
+    return this.planRuleService.deletePlanRule(id);
+  }
+
+  // --- Availability Methods ---
+  getAvailabilities(year: number, month: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getAvailabilities(year, month);
+  }
+
+  setAvailability(date: string, status: string): Observable<UserAvailability> {
+    return this.availabilityService.setAvailability(date, status);
+  }
+
+  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
+    return this.availabilityService.getMemberAvailabilities(year, month);
   }
 
 
@@ -382,6 +419,10 @@ export class ApiService {
     return this.choirService.inviteUserToChoir(email, roleInChoir, isOrganist);
   }
 
+  updateChoirMember(userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+    return this.choirService.updateMember(userId, data);
+  }
+
   getInvitation(token: string): Observable<any> {
     return this.userService.getInvitation(token);
   }
@@ -436,6 +477,10 @@ export class ApiService {
     return this.adminService.inviteUserToChoirAdmin(id, email, roleInChoir, isOrganist);
   }
 
+  updateChoirMemberAdmin(id: number, userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+    return this.adminService.updateChoirMemberAdmin(id, userId, data);
+  }
+
   removeUserFromChoirAdmin(id: number, userId: number): Observable<any> {
     return this.adminService.removeUserFromChoirAdmin(id, userId);
   }
@@ -474,6 +519,10 @@ export class ApiService {
 
   getLog(filename: string): Observable<any[]> {
     return this.adminService.getLog(filename);
+  }
+
+  deleteLog(filename: string): Observable<any> {
+    return this.adminService.deleteLog(filename);
   }
 
   downloadBackup(): Observable<Blob> {

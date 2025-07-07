@@ -10,11 +10,11 @@ export class PlanEntryService {
 
   constructor(private http: HttpClient) {}
 
-  createPlanEntry(data: { monthlyPlanId: number; date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.http.post<PlanEntry>(`${this.apiUrl}/plan-entries`, data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.http.put<PlanEntry>(`${this.apiUrl}/plan-entries/${id}`, data);
   }
 

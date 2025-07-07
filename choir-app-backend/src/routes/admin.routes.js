@@ -21,6 +21,7 @@ router.put("/choirs/:id", controller.update(db.choir));
 router.delete("/choirs/:id", controller.remove(db.choir));
 router.get("/choirs/:id/members", controller.getChoirMembers);
 router.post("/choirs/:id/members", controller.addUserToChoir);
+router.put("/choirs/:id/members/:userId", controller.updateChoirMember);
 router.delete("/choirs/:id/members", controller.removeUserFromChoir);
 
 // Routen für Benutzer
@@ -34,6 +35,7 @@ router.get("/login-attempts", controller.getLoginAttempts);
 
 router.get('/logs', controller.listLogs);
 router.get('/logs/:filename', controller.getLog);
+router.delete('/logs/:filename', controller.deleteLog);
 router.get('/mail-settings', controller.getMailSettings);
 router.put('/mail-settings', controller.updateMailSettings);
 

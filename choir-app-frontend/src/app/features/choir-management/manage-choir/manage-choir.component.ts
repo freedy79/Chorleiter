@@ -4,7 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } 
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
 
 import { MaterialModule } from '@modules/material.module';
@@ -31,6 +31,12 @@ export class ManageChoirComponent implements OnInit {
   isChoirAdmin = false;
   dienstplanEnabled = false;
 
+  sundayWeeks: number[] = [];
+  weekdayDay: number | null = null;
+  weekdayWeeks: number[] = [];
+  private sundayRuleId: number | null = null;
+  private weekdayRuleId: number | null = null;
+
 
   choirInfoExpanded = true;
   membersExpanded = true;
@@ -40,7 +46,7 @@ export class ManageChoirComponent implements OnInit {
 
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'role', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
@@ -66,6 +72,18 @@ export class ManageChoirComponent implements OnInit {
         this.choirForm.patchValue(pageData.choirDetails);
         this.isChoirAdmin = pageData.isChoirAdmin;
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
+        const rules = pageData.planRules as any[] || [];
+        const sundayRule = rules.find(r => r.type === 'SERVICE' && r.dayOfWeek === 0);
+        if (sundayRule) {
+          this.sundayRuleId = sundayRule.id;
+          this.sundayWeeks = sundayRule.weeks && sundayRule.weeks.length ? sundayRule.weeks : [0];
+        }
+        const weekdayRule = rules.find(r => r.type === 'SERVICE' && (r.dayOfWeek === 3 || r.dayOfWeek === 4));
+        if (weekdayRule) {
+          this.weekdayRuleId = weekdayRule.id;
+          this.weekdayDay = weekdayRule.dayOfWeek;
+          this.weekdayWeeks = weekdayRule.weeks && weekdayRule.weeks.length ? weekdayRule.weeks : [0];
+        }
         const choir = this.authService.activeChoir$.value;
         if (choir) {
           const updated = { ...choir, modules: pageData.choirDetails.modules } as Choir;
@@ -167,6 +185,14 @@ export class ManageChoirComponent implements OnInit {
     });
   }
 
+  toggleOrganist(user: UserInChoir, checked: boolean): void {
+    if (!this.isChoirAdmin) return;
+    this.apiService.updateChoirMember(user.id, { isOrganist: checked }).subscribe({
+      next: () => user.membership!.isOrganist = checked,
+      error: () => this.snackBar.open('Fehler beim Aktualisieren.', 'Schließen')
+    });
+  }
+
 
   onToggleDienstplan(): void {
     if (!this.isChoirAdmin) {
@@ -189,6 +215,37 @@ export class ManageChoirComponent implements OnInit {
           });
         }
       },
+      error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
+    });
+  }
+
+  saveServiceRules(): void {
+    if (!this.isChoirAdmin) return;
+
+    const sundayWeeks = (this.sundayWeeks.includes(0) || this.sundayWeeks.length === 0) ? null : this.sundayWeeks;
+    const weekdayWeeks = (this.weekdayWeeks.includes(0) || this.weekdayWeeks.length === 0) ? null : this.weekdayWeeks;
+
+    const ops = [] as Observable<any>[];
+
+    if (this.sundayRuleId) {
+      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }));
+    } else {
+      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }));
+    }
+
+    if (this.weekdayDay !== null) {
+      const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
+      if (this.weekdayRuleId) {
+        ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data));
+      } else {
+        ops.push(this.apiService.createPlanRule(data));
+      }
+    } else if (this.weekdayRuleId) {
+      ops.push(this.apiService.deletePlanRule(this.weekdayRuleId));
+    }
+
+    forkJoin(ops).subscribe({
+      next: () => this.snackBar.open('Einstellungen aktualisiert.', 'OK', { duration: 3000 }),
       error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
     });
   }

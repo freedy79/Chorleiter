@@ -12,6 +12,7 @@ router.get("/", controller.getMyChoirDetails);
 router.put("/", isChoirAdminOrAdmin, controller.updateMyChoir);
 router.get("/members", isChoirAdminOrAdmin, controller.getChoirMembers);
 router.post("/members", isChoirAdminOrAdmin, controller.inviteUserToChoir);
+router.put("/members/:userId", isChoirAdminOrAdmin, controller.updateMember);
 router.delete("/members", isChoirAdminOrAdmin, controller.removeUserFromChoir);
 router.get("/collections", isChoirAdminOrAdmin, controller.getChoirCollections);
 router.delete("/collections/:id", isChoirAdminOrAdmin, controller.removeCollectionFromChoir);
