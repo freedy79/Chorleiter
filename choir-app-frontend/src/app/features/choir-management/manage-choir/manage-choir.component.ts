@@ -281,7 +281,7 @@ export class ManageChoirComponent implements OnInit {
 
   private loadRehearsalPieces(): void {
     this.apiService
-      .getMyRepertoire(undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
+      .getMyRepertoire(undefined, undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
       .subscribe(res => (this.rehearsalDataSource.data = res.data));
   }
 }
