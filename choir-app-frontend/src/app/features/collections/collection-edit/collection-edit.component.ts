@@ -22,6 +22,7 @@ import {
 } from '@angular/material/autocomplete';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { AuthService } from '@core/services/auth.service';
 import { ImportDialogComponent } from '../import-dialog/import-dialog.component';
 
 import { MaterialModule } from '@modules/material.module';
@@ -67,6 +68,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     coverPreview: string | null = null;
     coverFile: File | null = null;
     isDragOver = false;
+    isAdmin = false;
     public readonly addNewPieceOption: Piece = {
         id: -1,
         title: 'Neues Stück anlegen...',
@@ -103,7 +105,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         private router: Router,
         private route: ActivatedRoute,
         public dialog: MatDialog,
-        private paginatorService: PaginatorService
+        private paginatorService: PaginatorService,
+        private authService: AuthService
     ) {
         this.collectionForm = this.fb.group({
             title: ['', Validators.required],
@@ -123,6 +126,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
+        this.authService.isAdmin$.subscribe(v => (this.isAdmin = v));
         // --- Determine Edit/Create Mode (No Change Here) ---
         this.route.paramMap
             .pipe(
