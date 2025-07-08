@@ -4,6 +4,12 @@ export interface Event {
   id: number;
   date: string;
   type: 'REHEARSAL' | 'SERVICE';
+  /**
+   * Optional name for display purposes. Regular events usually do not have
+   * a name but holiday entries in the calendar do. The property is optional so
+   * that existing API responses without a name remain valid.
+   */
+  name?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
