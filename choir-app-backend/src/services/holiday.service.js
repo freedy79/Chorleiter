@@ -11,6 +11,14 @@ function easterSunday(year) {
   return new Date(Date.UTC(year, month - 1, day));
 }
 
+function firstSundayOfMonth(year, month) {
+  const d = new Date(Date.UTC(year, month, 1));
+  while (d.getUTCDay() !== 0) {
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return d;
+}
+
 function publicHolidays(year) {
   const easter = easterSunday(year);
   const goodFriday = new Date(easter);
@@ -20,8 +28,11 @@ function publicHolidays(year) {
 
   const christmas1 = new Date(Date.UTC(year, 11, 25));
   const christmas2 = new Date(Date.UTC(year, 11, 26));
+  const entMarch = firstSundayOfMonth(year, 2);
+  const entJuly = firstSundayOfMonth(year, 6);
+  const entNov = firstSundayOfMonth(year, 10);
 
-  return [goodFriday, ascensionDay, christmas1, christmas2];
+  return [goodFriday, ascensionDay, christmas1, christmas2, entMarch, entJuly, entNov];
 }
 
 function isPublicHoliday(date) {
