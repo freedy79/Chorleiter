@@ -25,6 +25,10 @@ export class UserDialogComponent {
     this.form = this.fb.group({
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
+      street: [data?.street || ''],
+      postalCode: [data?.postalCode || ''],
+      city: [data?.city || ''],
+      shareWithChoir: [data?.shareWithChoir || false],
       role: [data?.role || 'director', Validators.required],
       password: ['', data ? [] : [Validators.required]]
     });

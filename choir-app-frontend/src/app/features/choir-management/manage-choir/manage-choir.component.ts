@@ -52,7 +52,7 @@ export class ManageChoirComponent implements OnInit {
 
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'address', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(

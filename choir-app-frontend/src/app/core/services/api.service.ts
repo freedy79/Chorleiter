@@ -398,7 +398,7 @@ export class ApiService {
     return this.userService.getCurrentUser();
   }
 
-  updateCurrentUser(profileData: { name?: string, email?: string, password?: string }): Observable<any> {
+  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string }): Observable<any> {
     return this.userService.updateCurrentUser(profileData);
   }
 

@@ -45,12 +45,15 @@ export class ProfileComponent implements OnInit {
     this.profileForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      // Password is optional, so no required validator
+      street: [''],
+      postalCode: [''],
+      city: [''],
+      shareWithChoir: [false],
       passwords: this.fb.group({
         oldPassword: [''],
         newPassword: [''],
         confirmPassword: ['']
-      }, { validators: passwordsMatchValidator() }) // Wenden Sie den benutzerdefinierten Validator an
+      }, { validators: passwordsMatchValidator() })
     });
   }
 
@@ -61,7 +64,11 @@ export class ProfileComponent implements OnInit {
         // Populate the form with the user's current data
         this.profileForm.patchValue({
           name: user.name,
-          email: user.email
+          email: user.email,
+          street: user.street || '',
+          postalCode: user.postalCode || '',
+          city: user.city || '',
+          shareWithChoir: !!user.shareWithChoir
         });
         this.isLoading = false;
       },
@@ -78,9 +85,13 @@ export class ProfileComponent implements OnInit {
     }
 
     const formValue = this.profileForm.value;
-    const updatePayload: { name?: string, email?: string, oldPassword?: string, newPassword?: string } = {
+    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string } = {
       name: formValue.name,
-      email: formValue.email
+      email: formValue.email,
+      street: formValue.street,
+      postalCode: formValue.postalCode,
+      city: formValue.city,
+      shareWithChoir: formValue.shareWithChoir
     };
 
     const passwordGroup = formValue.passwords;
