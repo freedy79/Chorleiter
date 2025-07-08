@@ -37,7 +37,7 @@
     <button mat-flat-button color="primary" (click)="addNote()" [disabled]="!newNoteText">Hinzufügen</button>
   </div>
 
-  <h3>Geprobt bei</h3>
+  <h3>Gesungen / geprobt</h3>
   <mat-list *ngIf="piece.events?.length; else noEvents">
     <mat-list-item *ngFor="let ev of piece.events">
       <div matLine>
