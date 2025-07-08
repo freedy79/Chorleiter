@@ -20,6 +20,8 @@ npm test
 
 This command uses the Angular CLI to execute Karma tests from the `choir-app-frontend` project.
 
+The build information file `choir-app-frontend/src/environments/build-info.ts` is generated automatically when running the build, start or test scripts. This keeps the ever-changing commit hash and timestamp out of version control while still allowing the application and tests to access the data.
+
 Run backend model tests with:
 
 ```bash
