@@ -118,12 +118,14 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       this.isChoirAdmin = r.isChoirAdmin;
       this.updateDisplayedColumns();
       this.loadAvailabilities(this.selectedYear, this.selectedMonth);
-    });
-    this.api.getChoirMembers().subscribe(m => {
-      this.members = m;
-      this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
-      this.organists = m.filter(u => u.membership?.isOrganist);
-      this.updateCounterPlan();
+      if (this.isChoirAdmin) {
+        this.api.getChoirMembers().subscribe(m => {
+          this.members = m;
+          this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
+          this.organists = m.filter(u => u.membership?.isOrganist);
+          this.updateCounterPlan();
+        });
+      }
     });
   }
 
