@@ -8,6 +8,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
+    "pretest": "npm run generate-build-info",
     "generate-build-info": "node ./scripts/generate-build-info.js",
     "prebuild": "npm run generate-build-info",
     "prestart": "npm run generate-build-info",
