@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { UserAvailability } from '@core/models/user-availability';
+import { getHolidayName } from '@shared/util/holiday';
 
 @Component({
   selector: 'app-availability-table',
@@ -25,7 +26,10 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
   load(): void {
     if (!this.year || !this.month) return;
     this.api.getAvailabilities(this.year, this.month)
-      .subscribe(a => this.availabilities = a);
+      .subscribe(a => this.availabilities = a.map(v => ({
+        ...v,
+        holidayHint: getHolidayName(new Date(v.date)) || undefined
+      })));
   }
 
   setStatus(date: string, status: UserAvailability['status']): void {
@@ -33,7 +37,10 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
     if (i >= 0) this.availabilities[i].status = status;
 
     this.api.setAvailability(date, status).subscribe(updated => {
-      if (i >= 0) this.availabilities[i] = updated;
+      if (i >= 0) this.availabilities[i] = {
+        ...updated,
+        holidayHint: getHolidayName(new Date(updated.date)) || undefined
+      };
     });
   }
 

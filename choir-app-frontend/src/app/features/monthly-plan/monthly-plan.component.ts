@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
+import { getHolidayName } from '@shared/util/holiday';
 
 @Component({
   selector: 'app-monthly-plan',
@@ -130,7 +131,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.api.getMonthlyPlan(year, month).subscribe({
       next: plan => {
         this.plan = plan;
-        this.entries = plan?.entries || [];
+        this.entries = (plan?.entries || []).map(e => ({
+          ...e,
+          holidayHint: getHolidayName(new Date(e.date)) || undefined
+        }));
         this.sortEntries();
         this.updateDisplayedColumns();
         this.updateCounterPlan();
