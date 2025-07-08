@@ -1,4 +1,5 @@
-const { verifyToken, isChoirAdminOrAdmin } = require("../middleware/auth.middleware");
+const { verifyToken } = require("../middleware/auth.middleware");
+const role = require("../middleware/role.middleware");
 const controller = require("../controllers/choir-management.controller");
 const router = require("express").Router();
 
@@ -9,13 +10,13 @@ router.use(verifyToken);
 router.get("/", controller.getMyChoirDetails);
 
 // Ab hier: Member-Management und Einstellungen nur für Choir-Admins
-router.put("/", isChoirAdminOrAdmin, controller.updateMyChoir);
-router.get("/members", isChoirAdminOrAdmin, controller.getChoirMembers);
-router.post("/members", isChoirAdminOrAdmin, controller.inviteUserToChoir);
-router.put("/members/:userId", isChoirAdminOrAdmin, controller.updateMember);
-router.delete("/members", isChoirAdminOrAdmin, controller.removeUserFromChoir);
+router.put("/", role.requireChoirAdmin, role.requireNonDemo, controller.updateMyChoir);
+router.get("/members", role.requireChoirAdmin, controller.getChoirMembers);
+router.post("/members", role.requireChoirAdmin, role.requireNonDemo, controller.inviteUserToChoir);
+router.put("/members/:userId", role.requireChoirAdmin, role.requireNonDemo, controller.updateMember);
+router.delete("/members", role.requireChoirAdmin, role.requireNonDemo, controller.removeUserFromChoir);
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", controller.getChoirCollections);
-router.delete("/collections/:id", isChoirAdminOrAdmin, controller.removeCollectionFromChoir);
+router.delete("/collections/:id", role.requireChoirAdmin, role.requireNonDemo, controller.removeCollectionFromChoir);
 
 module.exports = router;
