@@ -1,5 +1,6 @@
 <h2>Meine Termine</h2>
-<mat-calendar [selected]="selectedDate"
+<mat-calendar class="compact"
+              [selected]="selectedDate"
               (selectedChange)="onSelectedChange($event)"
               [dateClass]="dateClass"></mat-calendar>
 
@@ -7,7 +8,9 @@
   <h3>{{ selectedDate | date:'longDate' }}</h3>
   <mat-list>
     <mat-list-item *ngFor="let ev of eventsForSelectedDate">
-      <div matLine>{{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}</div>
+      <div matLine>
+        {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
+      </div>
       <div matLine class="notes" *ngIf="ev.notes">{{ ev.notes }}</div>
     </mat-list-item>
   </mat-list>
