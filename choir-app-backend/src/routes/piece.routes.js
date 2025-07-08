@@ -1,19 +1,8 @@
 const authJwt = require("../middleware/auth.middleware");
 const controller = require("../controllers/piece.controller");
 const router = require("express").Router();
-const multer = require('multer');
-const path = require('path');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/piece-images'));
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
+const { diskUpload } = require('../utils/upload');
+const upload = diskUpload('piece-images');
 
 // Public endpoint to fetch a piece image without authentication
 router.get("/:id/image", controller.getImage);

@@ -1,8 +1,8 @@
 const { verifyToken, isAdmin } = require("../middleware/auth.middleware");
 const controller = require("../controllers/backup.controller");
 const router = require("express").Router();
-const multer = require('multer');
-const upload = multer({ storage: multer.memoryStorage() });
+const { memoryUpload } = require('../utils/upload');
+const upload = memoryUpload();
 
 router.use(verifyToken, isAdmin);
 
