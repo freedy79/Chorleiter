@@ -8,6 +8,8 @@ interface HolidayEvent {
   type: 'HOLIDAY';
   name: string;
   date: string;
+  /** Optional notes for display consistency with normal events */
+  notes?: string;
 }
 
 type CalendarEntry = Event | HolidayEvent;
