@@ -25,10 +25,22 @@ const controller = require('../src/controllers/availability.controller');
     const mayDates = res.data.map(a => a.date);
     assert.ok(!mayDates.includes('2025-05-29'));
 
-    await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 12 } }, res);
-    const decDates = res.data.map(a => a.date);
-    assert.ok(!decDates.includes('2025-12-25'));
-    assert.ok(!decDates.includes('2025-12-26'));
+  await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 12 } }, res);
+  const decDates = res.data.map(a => a.date);
+  assert.ok(!decDates.includes('2025-12-25'));
+  assert.ok(!decDates.includes('2025-12-26'));
+
+  // Christmas scheduling rules
+  const choir2 = await db.choir.create({ name: 'Xmas Choir' });
+  const user2 = await db.user.create({ email: 'x@example.com' });
+  await db.plan_rule.create({ choirId: choir2.id, dayOfWeek: 0 }); // Sundays
+
+  const baseReq2 = { activeChoirId: choir2.id, userId: user2.id };
+
+  await controller.findByMonth({ ...baseReq2, params: { year: 2021, month: 12 } }, res);
+  const xmasDates = res.data.map(a => a.date);
+  assert.ok(xmasDates.includes('2021-12-25'));
+  assert.ok(!xmasDates.includes('2021-12-26'));
 
     console.log('availability.controller tests passed');
     await db.sequelize.close();

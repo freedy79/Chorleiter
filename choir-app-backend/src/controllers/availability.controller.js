@@ -12,9 +12,22 @@ exports.findByMonth = async (req, res) => {
         const dateSet = new Set();
         for (const rule of rules) {
             for (const d of datesForRule(year, month, rule)) {
-
                 if (isPublicHoliday(d) && d.getUTCDay() !== 0) continue;
                 dateSet.add(isoDateString(d));
+            }
+        }
+
+        if (Number(month) === 12) {
+            const dec25 = new Date(Date.UTC(year, 11, 25));
+            const dec26 = new Date(Date.UTC(year, 11, 26));
+            const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
+
+            if (!hasRuleForDec25) {
+                dateSet.add(isoDateString(dec25));
+            }
+
+            if (dec26.getUTCDay() === 0) {
+                dateSet.delete(isoDateString(dec26));
             }
         }
         const dates = Array.from(dateSet).sort();
