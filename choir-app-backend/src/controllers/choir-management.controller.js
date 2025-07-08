@@ -49,25 +49,12 @@ exports.updateMyChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot change choir data.' });
-        }
-
         // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
         const updateData = {};
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (location !== undefined) updateData.location = location;
         if (modules !== undefined) {
-            // Ensure only choir_admin or global admin can change module settings
-            if (req.userRole !== 'admin') {
-                const assoc = await db.user_choir.findOne({
-                    where: { userId: req.userId, choirId: req.activeChoirId }
-                });
-                if (!assoc || assoc.roleInChoir !== 'choir_admin') {
-                    return res.status(403).send({ message: 'Require Choir Admin or Admin Role!' });
-                }
-            }
             updateData.modules = modules;
         }
 
@@ -147,10 +134,6 @@ exports.inviteUserToChoir = async (req, res, next) => {
     const { email, roleInChoir, isOrganist } = req.body;
     const choirId = req.activeChoirId;
 
-    if (req.userRole === 'demo') {
-        return res.status(403).send({ message: 'Demo user cannot manage members.' });
-    }
-
     if (!email || !roleInChoir) {
         return res.status(400).send({ message: "Email and role are required." });
     }
@@ -185,10 +168,6 @@ exports.removeUserFromChoir = async (req, res, next) => {
     const { userId } = req.body;
     const choirId = req.activeChoirId;
 
-    if (req.userRole === 'demo') {
-        return res.status(403).send({ message: 'Demo user cannot manage members.' });
-    }
-
     if (!userId) {
         return res.status(400).send({ message: "User ID is required." });
     }
@@ -222,10 +201,6 @@ exports.updateMember = async (req, res, next) => {
     const { userId } = req.params;
     const { isOrganist, roleInChoir } = req.body;
     const choirId = req.activeChoirId;
-
-    if (req.userRole === 'demo') {
-        return res.status(403).send({ message: 'Demo user cannot manage members.' });
-    }
 
     try {
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
@@ -283,9 +258,6 @@ exports.getChoirCollections = async (req, res, next) => {
 
 exports.removeCollectionFromChoir = async (req, res, next) => {
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
 
         const choir = await db.choir.findByPk(req.activeChoirId);
         const collection = await db.collection.findByPk(req.params.id);

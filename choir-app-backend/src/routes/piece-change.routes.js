@@ -1,13 +1,14 @@
 const router = require('express').Router();
 const authJwt = require('../middleware/auth.middleware');
+const role = require('../middleware/role.middleware');
 const controller = require('../controllers/piece-change.controller');
 
 router.use(authJwt.verifyToken);
 
 router.post('/', controller.create);
-router.get('/', authJwt.isAdmin, controller.findAll);
-router.get('/:id', authJwt.isAdmin, controller.findOne);
-router.post('/:id/approve', authJwt.isAdmin, controller.approve);
-router.delete('/:id', authJwt.isAdmin, controller.remove);
+router.get('/', role.requireAdmin, controller.findAll);
+router.get('/:id', role.requireAdmin, controller.findOne);
+router.post('/:id/approve', role.requireAdmin, controller.approve);
+router.delete('/:id', role.requireAdmin, controller.remove);
 
 module.exports = router;

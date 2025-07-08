@@ -11,9 +11,6 @@ const fs = require('fs').promises;
 exports.create = async (req, res, next) => {
     const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
@@ -33,9 +30,6 @@ exports.update = async (req, res, next) => {
     const id = req.params.id;
     const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
         const collection = await db.collection.findByPk(id);
         if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
 
@@ -123,9 +117,6 @@ exports.findOne = async (req, res, next) => {
 
 exports.addToChoir = async (req, res, next) => {
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
         const collectionId = req.params.id;
         const choir = await db.choir.findByPk(req.activeChoirId);
         const collection = await db.collection.findByPk(collectionId);
@@ -144,9 +135,6 @@ exports.addToChoir = async (req, res, next) => {
 
 exports.uploadCover = async (req, res, next) => {
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
         const id = req.params.id;
         if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
 
