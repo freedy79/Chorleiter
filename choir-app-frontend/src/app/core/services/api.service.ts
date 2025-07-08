@@ -262,7 +262,7 @@ export class ApiService {
     return this.collectionService.createCollection(data);
   }
 
-  // Update an existing collection
+  // Updates an existing collection
   updateCollection(id: number, data: any): Observable<any> {
     return this.collectionService.updateCollection(id, data);
   }
