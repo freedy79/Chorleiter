@@ -20,6 +20,11 @@ export interface User {
    */
   email: string;
 
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  shareWithChoir?: boolean;
+
 
   role?: 'director' | 'choir_admin' | 'admin' | 'demo' | 'singer';
 

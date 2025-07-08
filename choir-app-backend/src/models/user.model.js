@@ -28,6 +28,23 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true
       },
+      street: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      postalCode: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      city: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      shareWithChoir: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false
+      },
       preferences: {
         type: DataTypes.JSON,
         allowNull: true,
