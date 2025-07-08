@@ -1,19 +1,8 @@
 const authJwt = require("../middleware/auth.middleware");
 const controller = require("../controllers/collection.controller");
 const router = require("express").Router();
-const multer = require('multer');
-const path = require('path');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/collection-covers'));
-  },
-  filename: (req, file, cb) => {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  }
-});
-const upload = multer({ storage });
+const { diskUpload } = require('../utils/upload');
+const upload = diskUpload('collection-covers');
 
 // Public endpoint to fetch a collection's cover image without authentication
 router.get("/:id/cover", controller.getCover);
