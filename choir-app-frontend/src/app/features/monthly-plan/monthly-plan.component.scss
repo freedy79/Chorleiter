@@ -19,3 +19,17 @@
     text-align: center;
   }
 }
+
+:host {
+  display: block;
+  padding: 16px;
+}
+
+mat-tab-group {
+  width: 100%;
+}
+
+.holiday {
+  font-style: italic;
+  color: #555;
+}

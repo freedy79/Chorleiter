@@ -22,6 +22,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { HelpService } from '@core/services/help.service';
 import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
+import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -36,7 +37,8 @@ import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/buil
     ChoirSwitcherComponent,
     ErrorDisplayComponent,
     LoadingIndicatorComponent,
-    MenuListItemComponent
+    MenuListItemComponent,
+    SearchBoxComponent
   ],
   providers: [NavService],
 })
@@ -44,6 +46,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
+  userName$: Observable<string | undefined>;
   currentTheme: Theme;
   showAdminSubmenu: boolean = true;
   isExpanded = true;
@@ -76,6 +79,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
+    this.userName$ = this.authService.currentUser$.pipe(map(u => u?.name));
     this.donatedRecently$ = this.authService.currentUser$.pipe(
       map(u => {
         if (!u?.lastDonation) return false;
@@ -167,6 +171,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
         visibleSubject: dienstplanVisible$,
       },
       {
+        displayName: 'Meine Termine',
+        route: '/termine',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
         displayName: 'Statistik',
         route: '/stats',
         visibleSubject: this.isLoggedIn$,
@@ -195,7 +204,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
         visibleSubject: this.isAdmin$,
         route: '',
         children: [
-            {
+          {
+            displayName: 'Allgemein',
+            route: '/admin/general',
+          },
+          {
             displayName: 'Chöre',
             route: '/admin/choirs',
           },
@@ -208,16 +221,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
             route: '/admin/creators'
           },
           {
-            displayName: 'Backup',
-            route: '/admin/backup',
-          },
-          {
             displayName: 'Protokolle',
             route: '/admin/protocols',
-          },
-          {
-            displayName: 'Mail-Server',
-            route: '/admin/mail-settings',
           }
         ]
       }

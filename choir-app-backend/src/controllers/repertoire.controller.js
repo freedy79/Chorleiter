@@ -74,6 +74,10 @@ exports.lookup = async (req, res) => {
 
 exports.findMyRepertoire = async (req, res) => {
     const { composerId, categoryId, categoryIds, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    let parsedStatuses = [];
+    if (status) {
+        parsedStatuses = Array.isArray(status) ? status : String(status).split(',');
+    }
     let parsedCategoryIds = [];
     if (categoryIds) {
         parsedCategoryIds = Array.isArray(categoryIds) ? categoryIds : String(categoryIds).split(',');
@@ -88,7 +92,10 @@ exports.findMyRepertoire = async (req, res) => {
         // --- SCHRITT 1: Holen Sie die Basis-Repertoire-Daten des Chors ---
         // Wir holen nur die pieceId und den zugehörigen Status.
         const repertoireLinks = await db.choir_repertoire.findAll({
-            where: { choirId: req.activeChoirId, ...(status && { status }) },
+            where: {
+                choirId: req.activeChoirId,
+                ...(parsedStatuses.length && { status: { [Op.in]: parsedStatuses } })
+            },
             raw: true // Gibt uns einfache Objekte statt Sequelize-Instanzen
         });
 
@@ -99,7 +106,7 @@ exports.findMyRepertoire = async (req, res) => {
 
         // Erstellen Sie eine Liste aller Stück-IDs im Repertoire und eine Map für den Status.
         const pieceIdsInRepertoire = repertoireLinks.map(link => link.pieceId);
-        const statusMap = new Map(repertoireLinks.map(link => [link.pieceId, link.status]));
+        const linkMap = new Map(repertoireLinks.map(link => [link.pieceId, { status: link.status, notes: link.notes }]));
 
 
         // --- SCHRITT 2: Bauen Sie die finale Abfrage auf der Piece-Tabelle ---
@@ -331,10 +338,8 @@ exports.findMyRepertoire = async (req, res) => {
         // Konvertieren Sie die Sequelize-Instanzen in einfache Objekte für die Bearbeitung.
         const results = pieces.map(piece => {
             const plainPiece = piece.get({ plain: true });
-            // Fügen Sie die Status-Information aus unserer Map hinzu.
-            plainPiece.choir_repertoire = {
-                status: statusMap.get(plainPiece.id) || 'NOT_READY'
-            };
+            const info = linkMap.get(plainPiece.id) || { status: 'NOT_READY', notes: null };
+            plainPiece.choir_repertoire = info;
             return plainPiece;
         });
 
@@ -360,6 +365,19 @@ exports.updateStatus = async (req, res) => {
             { where: { choirId: req.activeChoirId, pieceId: pieceId } }
         );
         res.status(200).send({ message: "Status updated successfully." });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateNotes = async (req, res) => {
+    const { pieceId, notes } = req.body;
+    try {
+        await db.choir_repertoire.update(
+            { notes: notes },
+            { where: { choirId: req.activeChoirId, pieceId: pieceId } }
+        );
+        res.status(200).send({ message: "Notes updated successfully." });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
@@ -402,10 +420,17 @@ exports.findOne = async (req, res) => {
             where: { choirId: req.activeChoirId, pieceId: id }
         });
 
+        const notes = await db.piece_note.findAll({
+            where: { choirId: req.activeChoirId, pieceId: id },
+            include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+            order: [['createdAt', 'DESC']]
+        });
+
         const result = piece.get({ plain: true });
         if (link) {
-            result.choir_repertoire = { status: link.status };
+            result.choir_repertoire = { status: link.status, notes: link.notes };
         }
+        result.notes = notes.map(n => n.get({ plain: true }));
 
         res.status(200).send(result);
     } catch (err) {

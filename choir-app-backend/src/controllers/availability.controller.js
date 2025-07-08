@@ -1,20 +1,9 @@
 const db = require('../models');
 const { Op } = db.Sequelize;
+const { datesForRule, isoDateString } = require('../utils/date.utils');
 
-function datesForRule(year, month, rule) {
-    const dates = [];
-    const d = new Date(Date.UTC(year, month - 1, 1));
-    while (d.getUTCMonth() === month - 1) {
-        if (d.getUTCDay() === rule.dayOfWeek) {
-            const week = Math.floor((d.getUTCDate() - 1) / 7) + 1;
-            if (!Array.isArray(rule.weeks) || rule.weeks.length === 0 || rule.weeks.includes(week)) {
-                dates.push(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())));
-            }
-        }
-        d.setUTCDate(d.getUTCDate() + 1);
-    }
-    return dates;
-}
+const { isPublicHoliday } = require('../services/holiday.service');
+
 
 exports.findByMonth = async (req, res) => {
     const { year, month } = req.params;
@@ -23,15 +12,18 @@ exports.findByMonth = async (req, res) => {
         const dateSet = new Set();
         for (const rule of rules) {
             for (const d of datesForRule(year, month, rule)) {
-                dateSet.add(d.toISOString().split('T')[0]);
+
+                if (isPublicHoliday(d) && d.getUTCDay() !== 0) continue;
+                dateSet.add(isoDateString(d));
             }
         }
         const dates = Array.from(dateSet).sort();
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
         const avail = await db.user_availability.findAll({
             where: {
                 userId: req.userId,
                 choirId: req.activeChoirId,
-                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-31` ] }
+                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
             }
         });
         const map = Object.fromEntries(avail.map(a => [a.date, a]));
@@ -54,5 +46,22 @@ exports.setAvailability = async (req, res) => {
         res.status(200).send(avail);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not save availability.' });
+    }
+};
+
+exports.findAllByMonth = async (req, res) => {
+    const { year, month } = req.params;
+    try {
+        const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+        const avail = await db.user_availability.findAll({
+            where: {
+                choirId: req.activeChoirId,
+                date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
+            },
+            attributes: ['userId', 'date', 'status']
+        });
+        res.status(200).send(avail);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not fetch availability.' });
     }
 };

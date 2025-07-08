@@ -1,9 +1,16 @@
 @use '@angular/material' as mat;
 @use 'themes/_nak-theme' as nak;
 
-// Apply the light theme by default.
-// This will render all Angular Material components with the NAK colors.
-@include mat.all-component-themes(nak.$nak-theme);
+// Include Angular Material core styles once.
+@include mat.core();
+
+// Set up typography and density for the application. These are only included
+// once to avoid duplicated styles.
+@include mat.all-component-typographies(nak.$nak-theme);
+@include mat.all-component-densities(nak.$nak-theme);
+
+// Apply the light theme colors by default.
+@include mat.all-component-colors(nak.$nak-theme);
 
 
 /* You can keep your other global styles here */
@@ -33,7 +40,9 @@ mat-card-header {
 // Definieren Sie die Styles für das dunkle Theme unter einer spezifischen Klasse.
 // Diese Regeln werden nur aktiv, wenn der body-Tag die Klasse '.dark-theme' hat.
 .dark-theme {
-  @include mat.all-component-themes(nak.$nak-dark-theme);
+  // Only include the color styles for the dark theme to avoid duplicating
+  // typography and density rules.
+  @include mat.all-component-colors(nak.$nak-dark-theme);
 
   // Fügen Sie hier alle Ihre anderen Dark-Mode-Anpassungen hinzu
   body {

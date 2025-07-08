@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'name', 'email', 'role', 'lastDonation'], // Include lastDonation
+            attributes: ['id', 'name', 'email', 'role', 'lastDonation', 'street', 'postalCode', 'city', 'shareWithChoir'],
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
@@ -28,7 +28,7 @@ exports.getMe = async (req, res) => {
  * @description Update the profile of the currently logged-in user.
  */
 exports.updateMe = async (req, res) => {
-     const { name, email, oldPassword, newPassword } = req.body;
+     const { name, email, street, postalCode, city, shareWithChoir, oldPassword, newPassword } = req.body;
 
     try {
         const user = await User.findByPk(req.userId);
@@ -47,6 +47,18 @@ exports.updateMe = async (req, res) => {
         }
         if (email) {
             updateData.email = email;
+        }
+        if (street !== undefined) {
+            updateData.street = street;
+        }
+        if (postalCode !== undefined) {
+            updateData.postalCode = postalCode;
+        }
+        if (city !== undefined) {
+            updateData.city = city;
+        }
+        if (shareWithChoir !== undefined) {
+            updateData.shareWithChoir = !!shareWithChoir;
         }
 
         if (newPassword) {

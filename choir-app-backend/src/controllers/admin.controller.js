@@ -86,6 +86,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await db.user.findAll({
             order: [['name', 'ASC']],
+            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -102,13 +103,17 @@ exports.getAllUsers = async (req, res) => {
 const bcrypt = require('bcryptjs');
 
 exports.createUser = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, street, postalCode, city, shareWithChoir } = req.body;
     try {
         const user = await db.user.create({
             name,
             email,
             role: role || 'director',
-            password: password ? bcrypt.hashSync(password, 8) : null
+            password: password ? bcrypt.hashSync(password, 8) : null,
+            street,
+            postalCode,
+            city,
+            shareWithChoir: !!shareWithChoir
         });
         res.status(201).send(user);
     } catch (err) {
@@ -122,7 +127,7 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, street, postalCode, city, shareWithChoir } = req.body;
     try {
         const user = await db.user.findByPk(id);
         if (!user) return res.status(404).send({ message: 'Not found' });
@@ -130,6 +135,10 @@ exports.updateUser = async (req, res) => {
             name: name ?? user.name,
             email: email ?? user.email,
             role: role ?? user.role,
+            street: street ?? user.street,
+            postalCode: postalCode ?? user.postalCode,
+            city: city ?? user.city,
+            shareWithChoir: shareWithChoir !== undefined ? !!shareWithChoir : user.shareWithChoir,
             ...(password ? { password: bcrypt.hashSync(password, 8) } : {})
         });
         res.status(200).send(user);
@@ -157,6 +166,7 @@ exports.getUserByEmail = async (req, res) => {
     try {
         const user = await db.user.findOne({
             where: { email },
+            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -234,7 +244,7 @@ exports.getChoirMembers = async (req, res) => {
             include: [{
                 model: db.user,
                 as: 'users',
-                attributes: ['id', 'name', 'email'],
+                attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'shareWithChoir'],
                 through: { model: db.user_choir, attributes: ['roleInChoir', 'registrationStatus', 'isOrganist'] }
             }],
             order: [[db.user, 'name', 'ASC']]
@@ -246,6 +256,10 @@ exports.getChoirMembers = async (req, res) => {
             id: u.id,
             name: u.name,
             email: u.email,
+            street: u.street,
+            postalCode: u.postalCode,
+            city: u.city,
+            shareWithChoir: u.shareWithChoir,
             membership: {
                 roleInChoir: u.user_choir.roleInChoir,
                 registrationStatus: u.user_choir.registrationStatus,

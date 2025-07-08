@@ -1,20 +1,6 @@
 const db = require('../models');
 const MonthlyPlan = db.monthly_plan;
-
-function datesForRule(year, month, rule) {
-    const dates = [];
-    const d = new Date(Date.UTC(year, month - 1, 1));
-    while (d.getUTCMonth() === month - 1) {
-        if (d.getUTCDay() === rule.dayOfWeek) {
-            const week = Math.floor((d.getUTCDate() - 1) / 7) + 1;
-            if (!Array.isArray(rule.weeks) || rule.weeks.length === 0 || rule.weeks.includes(week)) {
-                dates.push(new Date(d));
-            }
-        }
-        d.setUTCDate(d.getUTCDate() + 1);
-    }
-    return dates;
-}
+const { datesForRule } = require('../utils/date.utils');
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
@@ -24,7 +10,6 @@ async function createEntriesFromRules(plan) {
             await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
-                type: rule.type,
                 notes: rule.notes || null
             });
         }

@@ -6,7 +6,7 @@
     </div>
     <!-- Fügen Sie den Button nur im Edit-Modus hinzu -->
     <button
-      *ngIf="isEditMode"
+      *ngIf="isEditMode && isAdmin"
       mat-stroked-button
       color="accent"
       (click)="openImportDialog()">

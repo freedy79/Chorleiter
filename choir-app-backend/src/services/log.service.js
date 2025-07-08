@@ -65,6 +65,11 @@ async function deleteLogFile(filename) {
         return true;
     } catch (err) {
         if (err.code === 'ENOENT') return false;
+        if (err.code === 'EPERM') {
+            // On Windows the file might still be locked by the logger
+            await fs.promises.truncate(filePath, 0);
+            return true;
+        }
         throw err;
     }
 }

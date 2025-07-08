@@ -6,7 +6,16 @@ export interface RepertoireFilter {
     collectionId?: number | null;
     categoryIds?: number[];
     onlySingable?: boolean;
+    /**
+     * Legacy single-status field. Kept for backwards compatibility when
+     * loading older presets or local storage state.
+     */
     status?: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY' | null;
+    /**
+     * New multi status selection. When set, this takes precedence over the
+     * legacy `status` property.
+     */
+    statuses?: ('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[];
     search?: string;
   };
 }

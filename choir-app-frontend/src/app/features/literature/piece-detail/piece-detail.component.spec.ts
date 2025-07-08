@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 
 import { PieceDetailComponent } from './piece-detail.component';
 import { ApiService } from '@core/services/api.service';
+import { AuthService } from '@core/services/auth.service';
 
 describe('PieceDetailComponent', () => {
   let component: PieceDetailComponent;
@@ -14,7 +15,11 @@ describe('PieceDetailComponent', () => {
       imports: [PieceDetailComponent],
       providers: [
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } },
-        { provide: ApiService, useValue: { getRepertoirePiece: () => of(null) } }
+        { provide: ApiService, useValue: { getRepertoirePiece: () => of(null) } },
+        {
+          provide: AuthService,
+          useValue: { currentUser$: of(null), isAdmin$: of(false) }
+        }
       ]
     })
     .compileComponents();

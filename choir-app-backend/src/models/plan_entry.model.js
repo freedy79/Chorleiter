@@ -4,10 +4,6 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             allowNull: false
         },
-        type: {
-            type: DataTypes.ENUM('REHEARSAL', 'SERVICE'),
-            allowNull: false
-        },
         notes: {
             type: DataTypes.TEXT,
             allowNull: true

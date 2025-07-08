@@ -20,12 +20,15 @@ import { EventListComponent } from '@features/events/event-list/event-list.compo
 import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/home/stats/statistics.component';
+import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';
 import { DonateComponent } from '@features/donations/donate.component';
 import { DonationSuccessComponent } from '@features/donations/donation-success.component';
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
+import { SearchResultsComponent } from './features/search-results/search-results.component';
+import { ChoirMembersComponent } from '@features/choir-members/choir-members.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -46,6 +49,10 @@ export const routes: Routes = [
             {
                 path: 'register/:token',
                 component: InviteRegistrationComponent
+            },
+            {
+                path: 'join/:token',
+                loadComponent: () => import('./features/user/join/join-choir.component').then(m => m.JoinChoirComponent)
             },
             {
                 path: 'forgot-password',
@@ -98,6 +105,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'termine',
+                component: MyCalendarComponent,
+                canActivate: [AuthGuard]
+            },
+            {
                 path: 'stats',
                 component: StatisticsComponent,
                 canActivate: [AuthGuard]
@@ -108,9 +120,19 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'search',
+                component: SearchResultsComponent,
+                canActivate: [AuthGuard]
+            },
+            {
                 path: 'profile',
                 component: ProfileComponent,
                 canActivate: [AuthGuard],
+            },
+            {
+                path: 'members',
+                component: ChoirMembersComponent,
+                canActivate: [AuthGuard]
             },
             {
                 path: 'manage-choir',

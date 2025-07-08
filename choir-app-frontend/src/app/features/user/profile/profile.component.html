@@ -25,6 +25,23 @@
             <mat-error *ngIf="profileForm.get('email')?.hasError('required')">E-Mail ist erforderlich.</mat-error>
             <mat-error *ngIf="profileForm.get('email')?.hasError('email')">Bitte eine gültige E-Mail-Adresse eingeben.</mat-error>
           </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Straße</mat-label>
+            <input matInput formControlName="street">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Postleitzahl</mat-label>
+            <input matInput formControlName="postalCode">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Ort</mat-label>
+            <input matInput formControlName="city">
+          </mat-form-field>
+
+          <mat-checkbox formControlName="shareWithChoir">Erlaube Nutzung meiner Daten für Chorleiter</mat-checkbox>
         </mat-card-content>
       </mat-card>
 

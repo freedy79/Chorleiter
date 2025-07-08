@@ -13,9 +13,11 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
+import { Piece } from 'src/app/core/models/piece';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute } from '@angular/router';
+import { PieceDetailDialogComponent } from '@features/literature/piece-detail-dialog/piece-detail-dialog.component';
 
 
 @Component({
@@ -40,13 +42,17 @@ export class ManageChoirComponent implements OnInit {
 
   choirInfoExpanded = true;
   membersExpanded = true;
+  joinLink = '';
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
 
+  displayedRehearsalColumns: string[] = ['title', 'composer'];
+  rehearsalDataSource = new MatTableDataSource<Piece>();
+
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'address', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
@@ -73,12 +79,12 @@ export class ManageChoirComponent implements OnInit {
         this.isChoirAdmin = pageData.isChoirAdmin;
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
         const rules = pageData.planRules as any[] || [];
-        const sundayRule = rules.find(r => r.type === 'SERVICE' && r.dayOfWeek === 0);
+        const sundayRule = rules.find(r => r.dayOfWeek === 0);
         if (sundayRule) {
           this.sundayRuleId = sundayRule.id;
           this.sundayWeeks = sundayRule.weeks && sundayRule.weeks.length ? sundayRule.weeks : [0];
         }
-        const weekdayRule = rules.find(r => r.type === 'SERVICE' && (r.dayOfWeek === 3 || r.dayOfWeek === 4));
+        const weekdayRule = rules.find(r => r.dayOfWeek === 3 || r.dayOfWeek === 4);
         if (weekdayRule) {
           this.weekdayRuleId = weekdayRule.id;
           this.weekdayDay = weekdayRule.dayOfWeek;
@@ -95,11 +101,15 @@ export class ManageChoirComponent implements OnInit {
             }
           });
         }
+        if (pageData.choirDetails.joinHash) {
+          this.joinLink = `${window.location.origin}/join/${pageData.choirDetails.joinHash}`;
+        }
         if (!this.isChoirAdmin) {
           this.choirForm.disable();
         }
         this.dataSource.data = pageData.members;
         this.collectionDataSource.data = pageData.collections;
+        this.loadRehearsalPieces();
       }
     });
   }
@@ -228,13 +238,13 @@ export class ManageChoirComponent implements OnInit {
     const ops = [] as Observable<any>[];
 
     if (this.sundayRuleId) {
-      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { type: 'SERVICE', dayOfWeek: 0, weeks: sundayWeeks }));
+      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }));
     } else {
-      ops.push(this.apiService.createPlanRule({ type: 'SERVICE', dayOfWeek: 0, weeks: sundayWeeks }));
+      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }));
     }
 
     if (this.weekdayDay !== null) {
-      const data = { type: 'SERVICE', dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
+      const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
       if (this.weekdayRuleId) {
         ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data));
       } else {
@@ -272,5 +282,18 @@ export class ManageChoirComponent implements OnInit {
         });
       }
     });
+  }
+
+  openPieceDetailDialog(pieceId: number): void {
+    this.dialog.open(PieceDetailDialogComponent, {
+      width: '600px',
+      data: { pieceId }
+    });
+  }
+
+  private loadRehearsalPieces(): void {
+    this.apiService
+      .getMyRepertoire(undefined, undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
+      .subscribe(res => (this.rehearsalDataSource.data = res.data));
   }
 }

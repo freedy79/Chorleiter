@@ -3,9 +3,41 @@
   <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
-  <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
+  <p>
+    <strong>Status im Chor:</strong>
+    <mat-select [value]="piece.choir_repertoire?.status" (selectionChange)="onStatusChange($event.value)">
+      <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
+      <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
+      <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
+    </mat-select>
+  </p>
 
-  <h3>Geprobt bei</h3>
+  <h3>Notizen</h3>
+  <div class="note" *ngFor="let n of piece.notes">
+    <mat-card>
+      <mat-card-subtitle>{{ n.author.name }} - {{ n.createdAt | date:'short' }}</mat-card-subtitle>
+      <div *ngIf="!editState[n.id]; else editBlock">
+        <p>{{ n.text }}</p>
+        <button mat-button *ngIf="canEdit(n)" (click)="startEdit(n)">Bearbeiten</button>
+        <button mat-button color="warn" *ngIf="canEdit(n)" (click)="deleteNote(n)">Löschen</button>
+      </div>
+      <ng-template #editBlock>
+        <mat-form-field appearance="outline" class="full-width">
+          <textarea matInput [(ngModel)]="editState[n.id]" rows="3"></textarea>
+        </mat-form-field>
+        <button mat-button (click)="cancelEdit(n.id)">Abbrechen</button>
+        <button mat-flat-button color="primary" (click)="saveEdit(n)">Speichern</button>
+      </ng-template>
+    </mat-card>
+  </div>
+  <div class="add-note">
+    <mat-form-field appearance="outline" class="full-width">
+      <textarea matInput [(ngModel)]="newNoteText" rows="3" placeholder="Neue Notiz"></textarea>
+    </mat-form-field>
+    <button mat-flat-button color="primary" (click)="addNote()" [disabled]="!newNoteText">Hinzufügen</button>
+  </div>
+
+  <h3>Gesungen / geprobt</h3>
   <mat-list *ngIf="piece.events?.length; else noEvents">
     <mat-list-item *ngFor="let ev of piece.events">
       <div matLine>

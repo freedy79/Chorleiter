@@ -14,7 +14,7 @@ export class UserService {
     return this.http.get<User>(`${this.apiUrl}/users/me`);
   }
 
-  updateCurrentUser(profileData: { name?: string; email?: string; password?: string }): Observable<any> {
+  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string }): Observable<any> {
     return this.http.put(`${this.apiUrl}/users/me`, profileData);
   }
 
@@ -32,6 +32,14 @@ export class UserService {
 
   completeRegistration(token: string, data: { name: string; password: string; isOrganist?: boolean }): Observable<any> {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
+  }
+
+  getJoinInfo(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/join/${token}`);
+  }
+
+  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+    return this.http.post(`${this.apiUrl}/join/${token}`, data);
   }
 
   registerDonation(): Observable<any> {

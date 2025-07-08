@@ -37,6 +37,7 @@ import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
+import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
 
 @Injectable({
@@ -76,11 +77,19 @@ export class ApiService {
     composerId?: number,
     categoryIds?: number[],
     collectionId?: number,
-    sortBy?: 'title' | 'reference' | 'composer' | 'category' | 'collection' |
-            'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed',
+    sortBy?:
+      | 'title'
+      | 'reference'
+      | 'composer'
+      | 'category'
+      | 'collection'
+      | 'lastSung'
+      | 'lastRehearsed'
+      | 'timesSung'
+      | 'timesRehearsed',
     page: number = 1,
     limit: number = 25,
-    status?: string,
+    statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string
   ): Observable<{ data: Piece[]; total: number }> {
@@ -91,7 +100,7 @@ export class ApiService {
       sortBy,
       page,
       limit,
-      status,
+      statuses,
       sortDir,
       search
     );
@@ -109,6 +118,26 @@ export class ApiService {
    */
   updatePieceStatus(pieceId: number, status: string): Observable<any> {
     return this.pieceService.updatePieceStatus(pieceId, status);
+  }
+
+  updatePieceNotes(pieceId: number, notes: string): Observable<any> {
+    return this.pieceService.updatePieceNotes(pieceId, notes);
+  }
+
+  getPieceNotes(pieceId: number) {
+    return this.pieceService.getPieceNotes(pieceId);
+  }
+
+  addPieceNote(pieceId: number, text: string) {
+    return this.pieceService.addPieceNote(pieceId, text);
+  }
+
+  updatePieceNote(noteId: number, text: string) {
+    return this.pieceService.updatePieceNote(noteId, text);
+  }
+
+  deletePieceNote(noteId: number) {
+    return this.pieceService.deletePieceNote(noteId);
   }
 
 
@@ -233,7 +262,7 @@ export class ApiService {
     return this.collectionService.createCollection(data);
   }
 
-  // Update an existing collection
+  // Updates an existing collection
   updateCollection(id: number, data: any): Observable<any> {
     return this.collectionService.updateCollection(id, data);
   }
@@ -253,6 +282,11 @@ export class ApiService {
 
   addCollectionToChoir(collectionId: number): Observable<any> {
     return this.collectionService.addCollectionToChoir(collectionId);
+  }
+
+  searchAll(term: string): Observable<{ pieces: Piece[]; events: Event[]; collections: Collection[] }> {
+    const params = new HttpParams().set('q', term);
+    return this.http.get<{ pieces: Piece[]; events: Event[]; collections: Collection[] }>(`${this.apiUrl}/search`, { params });
   }
 
 
@@ -295,11 +329,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; type: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -329,11 +363,11 @@ export class ApiService {
     return this.planRuleService.getPlanRules();
   }
 
-  createPlanRule(data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.planRuleService.createPlanRule(data);
   }
 
-  updatePlanRule(id: number, data: { type: string; dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
+  updatePlanRule(id: number, data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
     return this.planRuleService.updatePlanRule(id, data);
   }
 
@@ -350,6 +384,10 @@ export class ApiService {
     return this.availabilityService.setAvailability(date, status);
   }
 
+  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
+    return this.availabilityService.getMemberAvailabilities(year, month);
+  }
+
 
   // --- User Methods ---
 
@@ -360,7 +398,7 @@ export class ApiService {
     return this.userService.getCurrentUser();
   }
 
-  updateCurrentUser(profileData: { name?: string, email?: string, password?: string }): Observable<any> {
+  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string }): Observable<any> {
     return this.userService.updateCurrentUser(profileData);
   }
 
@@ -395,7 +433,7 @@ export class ApiService {
   }
 
   getRepertoirePiece(id: number): Observable<Piece> {
-    return this.pieceService.getPieceById(id); // using pieceService for single piece
+    return this.pieceService.getRepertoirePiece(id);
   }
 
   getMyChoirDetails(): Observable<Choir> {
@@ -432,6 +470,14 @@ export class ApiService {
 
   completeRegistration(token: string, data: { name: string; password: string; isOrganist?: boolean }): Observable<any> {
     return this.userService.completeRegistration(token, data);
+  }
+
+  getJoinInfo(token: string): Observable<any> {
+    return this.userService.getJoinInfo(token);
+  }
+
+  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+    return this.userService.joinChoir(token, data);
   }
 
   removeUserFromChoir(userId: number): Observable<any> {

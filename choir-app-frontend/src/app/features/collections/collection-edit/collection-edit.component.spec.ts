@@ -3,6 +3,8 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { of } from 'rxjs';
+import { AuthService } from '@core/services/auth.service';
 
 import { CollectionEditComponent } from './collection-edit.component';
 
@@ -14,6 +16,7 @@ describe('CollectionEditComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CollectionEditComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
+        { provide: AuthService, useValue: { isAdmin$: of(true) } },
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },

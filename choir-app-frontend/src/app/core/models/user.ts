@@ -20,8 +20,13 @@ export interface User {
    */
   email: string;
 
+  street?: string;
+  postalCode?: string;
+  city?: string;
+  shareWithChoir?: boolean;
 
-  role?: 'director' | 'choir_admin' | 'admin' | 'demo';
+
+  role?: 'director' | 'choir_admin' | 'admin' | 'demo' | 'singer';
 
   /**
    * The JSON Web Token received upon successful login.
@@ -37,7 +42,7 @@ export interface User {
 
 export interface UserInChoir extends User {
     membership?: { // Daten aus der Junction-Tabelle
-        roleInChoir: 'director' | 'choir_admin' | 'organist';
+        roleInChoir: 'director' | 'choir_admin' | 'organist' | 'singer';
         registrationStatus: 'REGISTERED' | 'PENDING';
         isOrganist: boolean;
     }

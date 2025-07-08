@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
 import { User } from 'src/app/core/models/user';
@@ -22,7 +22,8 @@ export class AddMemberDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<AddMemberDialogComponent>,
-    private api: ApiService
+    private api: ApiService,
+    @Inject(MAT_DIALOG_DATA) public existingMemberIds: number[] = []
   ) {
     this.form = this.fb.group({
       user: ['', Validators.required],
@@ -33,7 +34,7 @@ export class AddMemberDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getUsers().subscribe(users => {
-      this.users = users;
+      this.users = users.filter(u => !this.existingMemberIds.includes(u.id));
       this.filteredUsers = this.form.controls['user'].valueChanges.pipe(
         startWith(''),
         map(value => typeof value === 'string' ? value : value?.email),

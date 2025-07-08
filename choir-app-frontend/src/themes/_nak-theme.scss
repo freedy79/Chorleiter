@@ -1,8 +1,7 @@
 // Import the theming functions from Angular Material
 @use '@angular/material' as mat;
 
-// This is a required part of every custom theme.
-@include mat.core();
+// The core mixin is included in the global styles to avoid duplication.
 
 // ----------------------------------------------------------------------------------
 // Custom NAK Color Palettes
@@ -145,4 +144,8 @@ mat-option.mat-active {
 mat-option:hover {
     background-color: #EDEDED !important;
     color: black !important
+}
+
+.mdc-text-field--outlined .mat-mdc-form-field-infix, .mdc-text-field--no-label .mat-mdc-form-field-infix {
+  padding-left: 0.3rem;
 }

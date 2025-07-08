@@ -58,7 +58,18 @@ exports.updateMyChoir = async (req, res, next) => {
         if (name !== undefined) updateData.name = name;
         if (description !== undefined) updateData.description = description;
         if (location !== undefined) updateData.location = location;
-        if (modules !== undefined) updateData.modules = modules;
+        if (modules !== undefined) {
+            // Ensure only choir_admin or global admin can change module settings
+            if (req.userRole !== 'admin') {
+                const assoc = await db.user_choir.findOne({
+                    where: { userId: req.userId, choirId: req.activeChoirId }
+                });
+                if (!assoc || assoc.roleInChoir !== 'choir_admin') {
+                    return res.status(403).send({ message: 'Require Choir Admin or Admin Role!' });
+                }
+            }
+            updateData.modules = modules;
+        }
 
         const [numberOfAffectedRows] = await db.choir.update(
             updateData,
@@ -86,8 +97,8 @@ exports.getChoirMembers = async (req, res) => {
             // Binden Sie die zugehörigen Benutzer an die Chor-Abfrage.
             include: [{
                 model: db.user,
-                as: 'users', // 'as' muss mit der Definition in models/index.js übereinstimmen
-                attributes: ['id', 'name', 'email'], // Nur die benötigten, nicht-sensitiven Felder
+                as: 'users',
+                attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'shareWithChoir'],
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
@@ -104,7 +115,7 @@ exports.getChoirMembers = async (req, res) => {
         // Sequelize fügt die 'through'-Daten in ein verschachteltes Objekt ein.
         // Wir formatieren die Antwort, um sie für das Frontend einfacher zu machen.
         const members = choir.users.map(user => {
-            return {
+            const base = {
                 id: user.id,
                 name: user.name,
                 email: user.email,
@@ -114,6 +125,14 @@ exports.getChoirMembers = async (req, res) => {
                     isOrganist: user.user_choir.isOrganist
                 }
             };
+            if (req.userRole === 'admin' || user.shareWithChoir) {
+                return Object.assign(base, {
+                    street: user.street,
+                    postalCode: user.postalCode,
+                    city: user.city
+                });
+            }
+            return base;
         });
 
         res.status(200).send(members);

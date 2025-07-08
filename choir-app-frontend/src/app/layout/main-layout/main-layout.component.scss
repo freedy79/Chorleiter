@@ -76,6 +76,17 @@
   padding: 0.5rem;
 }
 
+.user-name {
+  margin-left: 0.5rem;
+  color: white;
+  font-weight: 200;
+  font-size: small;
+}
+
+.appdrawer-invisible {
+  display: none;
+}
+
 @media (max-width: 599px) {
   .appDrawer {
     width: 70vw;
