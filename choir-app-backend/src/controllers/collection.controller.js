@@ -2,19 +2,19 @@ const db = require("../models");
 const Collection = db.collection;
 const Choir = db.choir;
 const Piece = db.piece;
-const { Op } = require("sequelize");
-const logger = require("../config/logger"); // Importieren Sie den Logger für eine gute Fehlerbehandlung
+const logger = require("../config/logger");
 const path = require('path');
 const fs = require('fs').promises;
+const BaseCrudController = require('./baseCrud.controller');
+const base = new BaseCrudController(Collection);
 
-// Die create- und update-Funktionen bleiben unverändert, aber wir fügen eine Fehlerbehandlung hinzu.
 exports.create = async (req, res, next) => {
     const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        const collection = await Collection.create({ title, publisher, prefix, description, publisherNumber, singleEdition });
+        const collection = await base.service.create({ title, publisher, prefix, description, publisherNumber, singleEdition });
         if (pieces && pieces.length > 0) {
             for (const pieceInfo of pieces) {
                 await collection.addPiece(pieceInfo.pieceId, {
@@ -30,13 +30,17 @@ exports.update = async (req, res, next) => {
     const id = req.params.id;
     const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
+        if (req.userRole === 'demo') {
+            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
+        }
         const collection = await db.collection.findByPk(id);
+
         if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
 
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        await collection.update({ title, publisher, prefix, description, publisherNumber, singleEdition });
+        await base.service.update(id, { title, publisher, prefix, description, publisherNumber, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
             for (const pieceLink of pieces) {
@@ -56,25 +60,20 @@ exports.update = async (req, res, next) => {
 exports.findAll = async (req, res, next) => {
     try {
         logger.info("Fetching all collections...");
-        // Schritt 1: Holen Sie alle globalen Sammlungen mit der Stückzahl.
-        // Die Subquery mit sequelize.literal ist der effizienteste Weg, dies in einer Abfrage zu tun.
-        const allCollections = await Collection.findAll({
+        const allCollections = await base.service.findAll({
             attributes: {
                 include: [
                     [db.sequelize.literal(`(SELECT COUNT(*) FROM "collection_pieces" AS "cp" WHERE "cp"."collectionId" = "collection"."id")`), 'pieceCount']
                 ]
             },
             order: [['title', 'ASC']],
-            raw: true // Wichtig für die manuelle Bearbeitung der Objekte
+            raw: true
         });
         logger.info(`Found ${allCollections.length} global collections.`);
 
-        // Schritt 2: Holen Sie die IDs der vom Chor adoptierten Sammlungen.
         const choir = await Choir.findByPk(req.activeChoirId);
         if (!choir) {
-            // Dies ist ein möglicher Fehlerpunkt, den wir jetzt sicher abfangen.
             logger.warn(`Choir with id ${req.activeChoirId} not found for user ${req.userId}.`);
-            // Wir können fortfahren und annehmen, dass keine Sammlungen adoptiert wurden.
             const adoptedCollectionIds = new Set();
             const results = allCollections.map(c => ({ ...c, isAdded: false }));
             return res.status(200).send(results);
@@ -84,10 +83,8 @@ exports.findAll = async (req, res, next) => {
         const adoptedCollectionIds = new Set(adoptedCollections.map(c => c.id));
         logger.info(`Choir has adopted ${adoptedCollectionIds.size} collections.`);
 
-        // Schritt 3: Kombinieren Sie die Informationen.
         const results = allCollections.map(collection => ({
             ...collection,
-            // Konvertieren Sie den pieceCount, der als String zurückkommen kann.
             pieceCount: parseInt(collection.pieceCount, 10) || 0,
             isAdded: adoptedCollectionIds.has(collection.id)
         }));
@@ -96,7 +93,6 @@ exports.findAll = async (req, res, next) => {
         res.status(200).send(results);
 
     } catch (err) {
-        // Leiten Sie jeden unerwarteten Fehler an die zentrale Fehler-Middleware weiter.
         err.message = `Error in findAll collections: ${err.message}`;
         next(err);
     }
@@ -104,7 +100,7 @@ exports.findAll = async (req, res, next) => {
 
 exports.findOne = async (req, res, next) => {
     try {
-        const collection = await Collection.findByPk(req.params.id, {
+        const collection = await base.service.findById(req.params.id, {
             include: [{
                 model: Piece,
                 through: { attributes: ['numberInCollection'] }
@@ -151,8 +147,6 @@ exports.getCover = async (req, res, next) => {
         const id = req.params.id;
         const collection = await Collection.findByPk(id);
 
-        // If the collection or the cover image field is missing, simply return
-        // an empty string so the frontend can show a blank image instead of an error.
         if (!collection || !collection.coverImage) {
             return res.status(200).json({ data: '' });
         }
@@ -162,7 +156,6 @@ exports.getCover = async (req, res, next) => {
         try {
             await fs.access(filePath);
         } catch (err) {
-            // File does not exist. Return an empty image instead of an error.
             return res.status(200).json({ data: '' });
         }
 
@@ -172,3 +165,6 @@ exports.getCover = async (req, res, next) => {
         res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
     } catch (err) { next(err); }
 };
+
+// expose delete handler in case it's needed
+exports.delete = base.delete;
