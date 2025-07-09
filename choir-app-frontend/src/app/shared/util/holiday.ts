@@ -30,10 +30,24 @@ function previousSunday(date: Date): Date {
   return d;
 }
 
+function firstSundayOfMonth(year: number, month: number): Date {
+  const d = new Date(Date.UTC(year, month, 1));
+  while (d.getUTCDay() !== 0) {
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return d;
+}
+
 export function getHolidayName(date: Date): string | null {
   const year = date.getUTCFullYear();
   const month = date.getUTCMonth();
   const day = date.getUTCDate();
+
+  if ([2, 6, 10].includes(month)) {
+    if (sameDate(date, firstSundayOfMonth(year, month))) {
+      return 'Entschlafenengottesdienst';
+    }
+  }
 
   if (month === 0 && day === 1) return 'Neujahr';
   if (month === 11 && day === 24) return 'Heiligabend';

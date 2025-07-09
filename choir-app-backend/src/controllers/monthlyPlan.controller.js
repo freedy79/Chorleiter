@@ -7,11 +7,22 @@ async function createEntriesFromRules(plan) {
     for (const rule of rules) {
         const dates = datesForRule(plan.year, plan.month, rule);
         for (const date of dates) {
+            if (date.getUTCMonth() === 11 && date.getUTCDate() === 26 && date.getUTCDay() === 0) {
+                continue;
+            }
             await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
                 notes: rule.notes || null
             });
+        }
+    }
+
+    if (plan.month === 12) {
+        const dec25 = new Date(Date.UTC(plan.year, 11, 25));
+        const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
+        if (!hasRuleForDec25) {
+            await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, notes: null });
         }
     }
 }

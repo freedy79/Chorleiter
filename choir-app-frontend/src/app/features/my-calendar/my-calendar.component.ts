@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { Event } from '@core/models/event';
 
@@ -17,7 +18,7 @@ type CalendarEntry = Event | HolidayEvent;
 @Component({
   selector: 'app-my-calendar',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, RouterModule],
   templateUrl: './my-calendar.component.html',
   styleUrls: ['./my-calendar.component.scss']
 })

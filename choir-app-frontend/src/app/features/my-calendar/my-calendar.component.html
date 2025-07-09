@@ -8,9 +8,14 @@
   <h3>{{ selectedDate | date:'longDate' }}</h3>
   <mat-list>
     <mat-list-item *ngFor="let ev of eventsForSelectedDate">
-      <div matLine>
-        {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
+      <div matLine *ngIf="ev.type !== 'HOLIDAY'; else holidayLabel">
+        <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }" class="event-link">
+          {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
+        </a>
       </div>
+      <ng-template #holidayLabel>
+        <div matLine>{{ ev.name }}</div>
+      </ng-template>
       <div matLine class="notes" *ngIf="ev.notes">{{ ev.notes }}</div>
     </mat-list-item>
   </mat-list>

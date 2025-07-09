@@ -35,6 +35,16 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     assert.strictEqual(res.data.finalized, false);
     assert.strictEqual(res.data.version, versionAfter); // version should not change on reopen
 
+    // Christmas rules
+    const choir2 = await db.choir.create({ name: 'Xmas Choir', modules: { dienstplan: true } });
+    await db.plan_rule.create({ choirId: choir2.id, dayOfWeek: 0 });
+    const baseReq2 = { activeChoirId: choir2.id };
+    await controller.create({ ...baseReq2, body: { year: 2021, month: 12 } }, res);
+    const entries2021 = await db.plan_entry.findAll({ where: { monthlyPlanId: res.data.id } });
+    const dates = entries2021.map(e => e.date.toISOString().split('T')[0]);
+    assert.ok(dates.includes('2021-12-25'));
+    assert.ok(!dates.includes('2021-12-26'));
+
     console.log('monthlyPlan controller tests passed');
     await db.sequelize.close();
   } catch (err) {
