@@ -1,13 +1,14 @@
-<h2>Meine Termine</h2>
-<mat-calendar class="compact"
-              [selected]="selectedDate"
-              (selectedChange)="onSelectedChange($event)"
-              [dateClass]="dateClass"></mat-calendar>
+<div class="calendar-wrapper">
+  <h2>Meine Termine</h2>
+  <mat-calendar class="compact"
+                [selected]="selectedDate"
+                (selectedChange)="onSelectedChange($event)"
+                [dateClass]="dateClass"></mat-calendar>
 
-<div class="event-list" *ngIf="eventsForSelectedDate.length > 0">
-  <h3>{{ selectedDate | date:'longDate' }}</h3>
-  <mat-list>
-    <mat-list-item *ngFor="let ev of eventsForSelectedDate">
+  <div #eventList class="event-list" *ngIf="eventsForSelectedDate.length > 0">
+    <h3>{{ selectedDate | date:'longDate' }}</h3>
+    <mat-list>
+      <mat-list-item *ngFor="let ev of eventsForSelectedDate">
       <div matLine *ngIf="ev.type !== 'HOLIDAY'; else holidayLabel">
         <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }" class="event-link">
           {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
@@ -19,7 +20,8 @@
       <div matLine class="notes" *ngIf="ev.notes">{{ ev.notes }}</div>
     </mat-list-item>
   </mat-list>
-</div>
-<div *ngIf="eventsForSelectedDate.length === 0">
-  <p>Keine Termine an diesem Tag.</p>
+  </div>
+  <div *ngIf="eventsForSelectedDate.length === 0">
+    <p>Keine Termine an diesem Tag.</p>
+  </div>
 </div>
