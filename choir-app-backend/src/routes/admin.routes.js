@@ -1,10 +1,11 @@
-const { verifyToken, isAdmin } = require("../middleware/auth.middleware");
+const { verifyToken } = require("../middleware/auth.middleware");
+const role = require("../middleware/role.middleware");
 const controller = require("../controllers/admin.controller");
 const db = require("../models");
 const router = require("express").Router();
 
 // Alle Admin-Routen erfordern Login UND Admin-Rolle
-router.use(verifyToken, isAdmin);
+router.use(verifyToken, role.requireAdmin);
 
 // Routen für Komponisten
 router.get("/composers", controller.getAll(db.composer));

@@ -14,7 +14,7 @@ import { ComposerDialogComponent } from '@features/composers/composer-dialog/com
 @Component({
   selector: 'app-manage-creators',
   templateUrl: './manage-creators.component.html',
-  styleUrl: './manage-creators.component.scss',
+  styleUrls: ['./manage-creators.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
