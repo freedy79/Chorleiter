@@ -4,6 +4,8 @@ import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 import { Event } from '@core/models/event';
+import { PlanEntry } from '@core/models/plan-entry';
+import { AuthService } from '@core/services/auth.service';
 
 interface HolidayEvent {
   type: 'HOLIDAY';
@@ -13,7 +15,9 @@ interface HolidayEvent {
   notes?: string;
 }
 
-type CalendarEntry = Event | HolidayEvent;
+interface PlanCalendarEntry extends PlanEntry { entryType: 'PLAN'; }
+
+type CalendarEntry = Event | HolidayEvent | PlanCalendarEntry;
 
 @Component({
   selector: 'app-my-calendar',
@@ -25,18 +29,27 @@ type CalendarEntry = Event | HolidayEvent;
 export class MyCalendarComponent implements OnInit {
   events: Event[] = [];
   eventMap: { [date: string]: Event[] } = {};
+  planEntryMap: { [date: string]: PlanEntry[] } = {};
   holidayMap: { [date: string]: string } = {};
   selectedDate: Date = new Date();
+  currentUserId: number | null = null;
+  private loadedPlanMonths = new Set<string>();
 
   @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.loadEvents();
     const year = this.selectedDate.getFullYear();
     [year - 1, year, year + 1].forEach(y => {
       Object.assign(this.holidayMap, this.calculateGermanHolidays(y));
+    });
+    this.auth.currentUser$.subscribe(u => {
+      this.currentUserId = u?.id || null;
+      if (this.currentUserId) {
+        this.loadPlanEntriesForMonth(this.selectedDate.getFullYear(), this.selectedDate.getMonth() + 1);
+      }
     });
   }
 
@@ -48,6 +61,23 @@ export class MyCalendarComponent implements OnInit {
         const key = new Date(ev.date).toISOString().substring(0, 10);
         if (!this.eventMap[key]) this.eventMap[key] = [];
         this.eventMap[key].push(ev);
+      }
+    });
+  }
+
+  private loadPlanEntriesForMonth(year: number, month: number): void {
+    const key = `${year}-${month}`;
+    if (this.loadedPlanMonths.has(key) || this.currentUserId === null) return;
+    this.loadedPlanMonths.add(key);
+    this.api.getMonthlyPlan(year, month).subscribe(plan => {
+      if (!plan) return;
+      for (const entry of plan.entries || []) {
+        if (entry.director?.id !== this.currentUserId && entry.organist?.id !== this.currentUserId) {
+          continue;
+        }
+        const dKey = new Date(entry.date).toISOString().substring(0, 10);
+        if (!this.planEntryMap[dKey]) this.planEntryMap[dKey] = [];
+        this.planEntryMap[dKey].push(entry);
       }
     });
   }
@@ -84,7 +114,7 @@ export class MyCalendarComponent implements OnInit {
   dateClass = (d: Date): string => {
     const key = d.toISOString().substring(0, 10);
     const classes: string[] = [];
-    if (this.eventMap[key]) classes.push('has-event');
+    if (this.eventMap[key] || this.planEntryMap[key]) classes.push('has-event');
     if (this.holidayMap[key]) classes.push('holiday');
     if (d.getDay() === 0 || d.getDay() === 6) classes.push('weekend');
     return classes.join(' ');
@@ -93,6 +123,7 @@ export class MyCalendarComponent implements OnInit {
   onSelectedChange(date: Date | null): void {
     if (date) {
       this.selectedDate = date;
+      this.loadPlanEntriesForMonth(date.getFullYear(), date.getMonth() + 1);
       setTimeout(() => {
         this.eventList?.nativeElement.scrollIntoView({ behavior: 'smooth' });
       });
@@ -102,6 +133,9 @@ export class MyCalendarComponent implements OnInit {
   get eventsForSelectedDate(): CalendarEntry[] {
     const key = this.selectedDate.toISOString().substring(0, 10);
     const entries: CalendarEntry[] = [...(this.eventMap[key] || [])];
+    for (const e of this.planEntryMap[key] || []) {
+      entries.push({ ...e, entryType: 'PLAN' });
+    }
     const holiday = this.holidayMap[key];
     if (holiday) {
       entries.push({ type: 'HOLIDAY', name: holiday, date: key });
