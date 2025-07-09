@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
@@ -27,6 +27,8 @@ export class MyCalendarComponent implements OnInit {
   eventMap: { [date: string]: Event[] } = {};
   holidayMap: { [date: string]: string } = {};
   selectedDate: Date = new Date();
+
+  @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
 
   constructor(private api: ApiService) {}
 
@@ -91,6 +93,9 @@ export class MyCalendarComponent implements OnInit {
   onSelectedChange(date: Date | null): void {
     if (date) {
       this.selectedDate = date;
+      setTimeout(() => {
+        this.eventList?.nativeElement.scrollIntoView({ behavior: 'smooth' });
+      });
     }
   }
 
