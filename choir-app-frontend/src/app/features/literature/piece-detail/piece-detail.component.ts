@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
-import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ApiService } from '@core/services/api.service';
 import { Piece, PieceNote } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
@@ -18,8 +17,7 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     MaterialModule,
     RouterModule,
-    EventTypeLabelPipe,
-    PieceStatusLabelPipe
+    EventTypeLabelPipe
   ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']

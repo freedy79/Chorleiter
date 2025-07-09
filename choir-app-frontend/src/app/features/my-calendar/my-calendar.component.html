@@ -9,7 +9,7 @@
   <mat-list>
     <mat-list-item *ngFor="let ev of eventsForSelectedDate">
       <div matLine *ngIf="ev.type !== 'HOLIDAY'; else holidayLabel">
-        <a [routerLink]="['/events']" [queryParams]="{ eventId: (ev as Event).id }" class="event-link">
+        <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }" class="event-link">
           {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
         </a>
       </div>
