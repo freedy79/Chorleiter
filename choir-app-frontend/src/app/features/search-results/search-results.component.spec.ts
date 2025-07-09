@@ -1,25 +1,25 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { SearchService } from '@core/services/search.service';
 import { SearchResultsComponent } from './search-results.component';
 
 describe('SearchResultsComponent', () => {
   let component: SearchResultsComponent;
   let fixture: ComponentFixture<SearchResultsComponent>;
-  let apiSpy: jasmine.SpyObj<ApiService>;
+  let searchSpy: jasmine.SpyObj<SearchService>;
 
   beforeEach(async () => {
-    apiSpy = jasmine.createSpyObj('ApiService', ['searchAll']);
+    searchSpy = jasmine.createSpyObj('SearchService', ['searchAll']);
     await TestBed.configureTestingModule({
       imports: [SearchResultsComponent],
       providers: [
         { provide: ActivatedRoute, useValue: { queryParamMap: of({ get: () => 'x' }) } },
-        { provide: ApiService, useValue: apiSpy }
+        { provide: SearchService, useValue: searchSpy }
       ]
     }).compileComponents();
 
-    apiSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
     fixture = TestBed.createComponent(SearchResultsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();

@@ -5,7 +5,7 @@ import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { SearchService } from '@core/services/search.service';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 
@@ -24,13 +24,13 @@ export class SearchBoxComponent implements OnInit {
   searchCtrl = new FormControl('');
   results: { pieces: any[]; events: any[]; collections: any[] } = { pieces: [], events: [], collections: [] };
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private search: SearchService, private router: Router) {}
 
   ngOnInit(): void {
     this.searchCtrl.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap(val => val ? this.api.searchAll(val) : of({ pieces: [], events: [], collections: [] }))
+      switchMap(val => val ? this.search.searchAll(val) : of({ pieces: [], events: [], collections: [] }))
     ).subscribe(res => this.results = res);
 
   }

@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
 import { of } from 'rxjs';
-import { ApiService } from '@core/services/api.service';
+import { SearchService } from '@core/services/search.service';
 import { SearchBoxComponent } from './search-box.component';
 
 
@@ -10,21 +10,21 @@ describe('SearchBoxComponent', () => {
   let component: SearchBoxComponent;
   let fixture: ComponentFixture<SearchBoxComponent>;
 
-  let apiSpy: jasmine.SpyObj<ApiService>;
+  let searchSpy: jasmine.SpyObj<SearchService>;
   let routerSpy: jasmine.SpyObj<Router>;
 
   beforeEach(async () => {
-    apiSpy = jasmine.createSpyObj('ApiService', ['searchAll']);
+    searchSpy = jasmine.createSpyObj('SearchService', ['searchAll']);
     routerSpy = jasmine.createSpyObj('Router', ['navigate']);
     await TestBed.configureTestingModule({
       imports: [SearchBoxComponent, HttpClientTestingModule],
       providers: [
-        { provide: ApiService, useValue: apiSpy },
+        { provide: SearchService, useValue: searchSpy },
         { provide: Router, useValue: routerSpy }
       ]
     }).compileComponents();
 
-    apiSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
     fixture = TestBed.createComponent(SearchBoxComponent);
     component = fixture.componentInstance;
 
@@ -39,7 +39,7 @@ describe('SearchBoxComponent', () => {
 
     component.searchCtrl.setValue('abc');
     tick(300); // advance time for debounceTime
-    expect(apiSpy.searchAll).toHaveBeenCalledWith('abc');
+    expect(searchSpy.searchAll).toHaveBeenCalledWith('abc');
 
   }));
 
