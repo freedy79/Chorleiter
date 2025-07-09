@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
-import { ApiService } from 'src/app/core/services/api.service';
+import { ComposerService } from 'src/app/core/services/composer.service';
+import { AuthorService } from 'src/app/core/services/author.service';
 import { Composer } from 'src/app/core/models/composer';
 import { Author } from 'src/app/core/models/author';
 import { MatTableDataSource } from '@angular/material/table';
@@ -35,7 +36,8 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private adminApiService: ApiService,
+  constructor(private composerService: ComposerService,
+              private authorService: AuthorService,
               private dialog: MatDialog,
               private paginatorService: PaginatorService) {
     this.pageSize = this.paginatorService.getPageSize('manage-creators', this.pageSizeOptions[0]);
@@ -56,8 +58,8 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
 
   loadData(): void {
     const obs = this.mode === 'composer'
-      ? this.adminApiService.getComposers()
-      : this.adminApiService.getAuthors();
+      ? this.composerService.getComposers()
+      : this.authorService.getAuthors();
 
     obs.subscribe((data) => {
       this.people = data;
@@ -92,8 +94,8 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     ref.afterClosed().subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
-          ? this.adminApiService.createComposer(result)
-          : this.adminApiService.createAuthor(result);
+          ? this.composerService.createComposer(result)
+          : this.authorService.createAuthor(result);
         req.subscribe(() => this.loadData());
       }
     });
@@ -107,8 +109,8 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     ref.afterClosed().subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
-          ? this.adminApiService.updateComposer(person.id, result)
-          : this.adminApiService.updateAuthor(person.id, result);
+          ? this.composerService.updateComposer(person.id, result)
+          : this.authorService.updateAuthor(person.id, result);
         req.subscribe(() => this.loadData());
       }
     });
@@ -119,16 +121,16 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     const question = this.mode === 'composer' ? 'Komponist löschen?' : 'Dichter löschen?';
     if (confirm(question)) {
       const req = this.mode === 'composer'
-        ? this.adminApiService.deleteComposer(person.id)
-        : this.adminApiService.deleteAuthor(person.id);
+        ? this.composerService.deleteComposer(person.id)
+        : this.authorService.deleteAuthor(person.id);
       req.subscribe(() => this.loadData());
     }
   }
 
   enrichPerson(person: Composer | Author): void {
     const req = this.mode === 'composer'
-      ? this.adminApiService.enrichComposer(person.id)
-      : this.adminApiService.enrichAuthor(person.id);
+      ? this.composerService.enrichComposer(person.id)
+      : this.authorService.enrichAuthor(person.id);
     req.subscribe(updated => {
       const idx = this.people.findIndex(p => p.id === person.id);
       if (idx !== -1) {
