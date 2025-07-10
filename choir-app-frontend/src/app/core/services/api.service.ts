@@ -312,6 +312,10 @@ export class ApiService {
     return this.eventService.getEvents(type);
   }
 
+  getNextEvents(limit?: number, mine?: boolean): Observable<Event[]> {
+    return this.eventService.getNextEvents(limit, !!mine);
+  }
+
   getEventById(id: number): Observable<Event> {
     return this.eventService.getEventById(id);
   }

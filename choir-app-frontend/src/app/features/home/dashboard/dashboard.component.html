@@ -25,6 +25,21 @@
   </app-event-card>
 </div>
 
+<div class="upcoming-section">
+  <h2>Nächste Termine</h2>
+  <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
+    Nur meine Termine
+  </mat-slide-toggle>
+  <mat-list>
+    <mat-list-item *ngFor="let ev of nextEvents$ | async">
+      <a [routerLink]="['/events', ev.id]">
+        {{ ev.date | date:'shortDate' }} -
+        {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
+      </a>
+    </mat-list-item>
+  </mat-list>
+</div>
+
 <div *ngIf="pieceChanges$ | async as changes">
   <h2>Änderungsvorschläge</h2>
   <mat-list *ngIf="changes.length > 0; else noChanges">

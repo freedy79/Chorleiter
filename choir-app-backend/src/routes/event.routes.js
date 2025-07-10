@@ -8,6 +8,7 @@ const router = require("express").Router();
 router.use(authJwt.verifyToken);
 
 router.get("/last", controller.findLast);
+router.get("/next", controller.findNext);
 router.get("/", controller.findAll);
 router.get("/:id", controller.findOne);
 router.post("/", createEventValidation, validate, controller.create);

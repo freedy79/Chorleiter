@@ -60,6 +60,22 @@ const controller = require('../src/controllers/event.controller');
     const afterChange = await db.event.findByPk(updateId);
     assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
 
+    // --- Next events tests ---
+    const otherUser = await db.user.create({ email: 'other@example.com', role: 'USER' });
+    await controller.create({ ...baseReq, body: { date: '2099-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
+    const futureId = res.data.event.id;
+    await controller.create({ ...baseReq, body: { date: '2099-01-02T10:00:00Z', type: 'REHEARSAL', pieceIds: [], directorId: otherUser.id } }, res);
+
+    await controller.findNext({ ...baseReq, query: { limit: '1' } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.length, 1);
+    assert.strictEqual(res.data[0].id, futureId);
+
+    await controller.findNext({ ...baseReq, query: { mine: 'true' } }, res);
+    const ids = res.data.map(e => e.id);
+    assert.ok(ids.includes(futureId));
+    assert.ok(!ids.includes(res.data.find(e => e.id !== futureId)?.id || false));
+
     console.log('event.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
