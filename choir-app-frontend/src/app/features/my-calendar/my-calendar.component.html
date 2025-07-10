@@ -9,25 +9,25 @@
     <h3>{{ selectedDate | date:'longDate' }}</h3>
     <mat-list>
       <mat-list-item *ngFor="let ev of eventsForSelectedDate">
-        <ng-container [ngSwitch]="ev.entryType">
+        <ng-container [ngSwitch]="$any(ev).entryType">
           <ng-container *ngSwitchCase="'PLAN'">
             <div matLine>
               Dienst:
-              <span *ngIf="ev.director?.id === currentUserId">Chorleitung</span>
-              <span *ngIf="ev.organist?.id === currentUserId">{{ ev.director?.id === currentUserId && ev.organist?.id === currentUserId ? ', ' : '' }}Orgel</span>
+              <span *ngIf="$any(ev).director?.id === currentUserId">Chorleitung</span>
+              <span *ngIf="$any(ev).organist?.id === currentUserId">{{ $any(ev).director?.id === currentUserId && $any(ev).organist?.id === currentUserId ? ', ' : '' }}Orgel</span>
             </div>
-            <div matLine class="notes" *ngIf="ev.notes">{{ ev.notes }}</div>
+              <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
           </ng-container>
           <ng-container *ngSwitchDefault>
-            <div matLine *ngIf="ev.type !== 'HOLIDAY'; else holidayLabel">
-              <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }" class="event-link">
-                {{ ev.type === 'SERVICE' ? 'Gottesdienst' : (ev.type === 'REHEARSAL' ? 'Probe' : ev.name) }}
+            <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel">
+              <a [routerLink]="['/events']" [queryParams]="{ eventId: $any(ev).id }" class="event-link">
+                {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' : $any(ev).name) }}
               </a>
             </div>
             <ng-template #holidayLabel>
-              <div matLine>{{ ev.name }}</div>
+              <div matLine>{{ $any(ev).name }}</div>
             </ng-template>
-            <div matLine class="notes" *ngIf="ev.notes">{{ ev.notes }}</div>
+            <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
           </ng-container>
         </ng-container>
       </mat-list-item>
