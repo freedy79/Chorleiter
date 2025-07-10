@@ -182,7 +182,23 @@ exports.findAll = async (req, res) => {
     const where = { choirId: req.activeChoirId };
     if (type) {
         where.type = type.toUpperCase();
-}
+    }
+
+    try {
+        const events = await Event.findAll({
+            where,
+            order: [['date', 'DESC']],
+            include: [
+                { model: User, as: 'director', attributes: ['id', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            ]
+        });
+        res.status(200).send(events);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Error fetching events.' });
+    }
+};
 
 exports.findNext = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 3;
@@ -202,22 +218,6 @@ exports.findNext = async (req, res) => {
             where,
             order: [['date', 'ASC']],
             limit,
-            include: [
-                { model: User, as: 'director', attributes: ['id', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
-                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
-            ]
-        });
-        res.status(200).send(events);
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Error fetching events.' });
-    }
-};
-
-    try {
-        const events = await Event.findAll({
-            where,
-            order: [['date', 'DESC']],
             include: [
                 { model: User, as: 'director', attributes: ['id', 'name'] },
                 { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
