@@ -2,6 +2,7 @@
   "name": "chorleiter-root",
   "private": true,
   "scripts": {
-    "test": "npm test --prefix choir-app-frontend"
+    "test": "npm test --prefix choir-app-frontend",
+    "check-backend": "npm run check --prefix choir-app-backend"
   }
 }

@@ -71,6 +71,10 @@ npm install --save-dev compression-webpack-plugin @angular-builders/custom-webpa
 The generated `.gz` or `.br` files can then be served by a web server that
 supports content negotiation for pre-compressed assets.
 
+Before packaging the files for upload, the deployment scripts run a syntax check
+on `choir-app-backend/server.js` using `node --check`. This catches backend
+syntax errors locally so you don't discover them only after uploading.
+
 ## Deployment
 
 Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
@@ -83,3 +87,4 @@ private key into an SSH agent (for example with `Start-Service ssh-agent`
 followed by `ssh-add`). When `ssh` or `plink` can authenticate using the agent,
 the deployment runs non‑interactively. The PowerShell script automatically
 detects an available ssh-agent or `plink` to avoid repeated password prompts.
+The scripts will exit early if the backend syntax check fails.
