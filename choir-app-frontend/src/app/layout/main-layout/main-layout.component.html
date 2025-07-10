@@ -6,7 +6,7 @@
   <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
   <span class="spacer"></span>
-  <app-search-box *ngIf="isLoggedIn$ | async"></app-search-box>
+  <app-search-box *ngIf="(isLoggedIn$ | async) && !(isHandset$ | async)"></app-search-box>
   <ng-container *ngIf="(isLoggedIn$ | async) && !(donatedRecently$ | async)">
     <button mat-button color="accent" routerLink="/donate">Spenden</button>
   </ng-container>
@@ -19,7 +19,7 @@
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
       <mat-icon style="color:white"><img src="./../../assets/icons/user-filled.svg"></mat-icon>
     </button>
-    <span class="user-name">{{ userName$ | async }}</span>
+    <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}">{{ userName$ | async }}</span>
     <mat-menu #userMenu="matMenu">
       <a mat-menu-item routerLink="/profile">
         <mat-icon><img src="./../../assets/icons/user-filled.svg"></mat-icon>
