@@ -122,6 +122,9 @@ Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
 Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
 Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"
 
+# Ensure backend dependencies are installed
+Invoke-Ssh "cd '$BackendDest' && npm install"
+
 # Restart backend
 Invoke-Ssh "pm2 restart chorleiter-api"
 
