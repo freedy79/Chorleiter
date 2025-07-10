@@ -34,12 +34,15 @@ export class MyCalendarComponent implements OnInit {
   selectedDate: Date = new Date();
   currentUserId: number | null = null;
   private loadedPlanMonths = new Set<string>();
+  allPlanEntries: PlanEntry[] = [];
+  isAdmin = false;
 
   @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
 
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.auth.isAdmin$.subscribe(v => (this.isAdmin = v));
     this.loadEvents();
     const year = this.selectedDate.getFullYear();
     [year - 1, year, year + 1].forEach(y => {
@@ -78,6 +81,7 @@ export class MyCalendarComponent implements OnInit {
         const dKey = new Date(entry.date).toISOString().substring(0, 10);
         if (!this.planEntryMap[dKey]) this.planEntryMap[dKey] = [];
         this.planEntryMap[dKey].push(entry);
+        this.allPlanEntries.push(entry);
       }
     });
   }

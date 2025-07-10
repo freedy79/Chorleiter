@@ -36,4 +36,15 @@
   <div *ngIf="eventsForSelectedDate.length === 0">
     <p>Keine Termine an diesem Tag.</p>
   </div>
+  <div *ngIf="isAdmin" class="debug-info">
+    <h3>Debug Info</h3>
+    <p>Events geladen: {{ events.length }}</p>
+    <ul>
+      <li *ngFor="let ev of events">{{ ev.date }} - {{ ev.type }}</li>
+    </ul>
+    <p>PlanEntries geladen: {{ allPlanEntries.length }}</p>
+    <ul>
+      <li *ngFor="let pe of allPlanEntries">{{ pe.date }} - {{ pe.notes }}</li>
+    </ul>
+  </div>
 </div>
