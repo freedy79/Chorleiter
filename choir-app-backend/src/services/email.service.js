@@ -40,3 +40,14 @@ exports.sendPasswordResetMail = async (to, token) => {
     html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
   });
 };
+
+exports.sendTestMail = async (to) => {
+  const settings = await db.mail_setting.findByPk(1);
+  const transporter = await createTransporter(settings);
+  await transporter.sendMail({
+    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@example.com',
+    to,
+    subject: 'Testmail',
+    html: '<p>Dies ist eine Testmail.</p>'
+  });
+};

@@ -112,4 +112,8 @@ export class AdminService {
   updateMailSettings(data: MailSettings): Observable<MailSettings> {
     return this.http.put<MailSettings>(`${this.apiUrl}/admin/mail-settings`, data);
   }
+
+  sendTestMail(): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/mail-settings/test`, {});
+  }
 }
