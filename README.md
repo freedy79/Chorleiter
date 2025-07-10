@@ -10,6 +10,24 @@ Before starting the backend, install its dependencies:
 npm install --prefix choir-app-backend
 ```
 
+### Mail Configuration
+
+Configure the SMTP server used for password resets and invitations by adding the
+following variables to `choir-app-backend/.env` (or set them as environment
+variables):
+
+```ini
+SMTP_HOST=localhost
+SMTP_PORT=25
+SMTP_USER=no-reply
+SMTP_PASS=
+EMAIL_FROM=no-reply@nak-chorleiter.de
+```
+
+When the application is started for the first time these settings are written to
+the database and can later be changed through the admin endpoint
+`/admin/mail-settings`.
+
 ## Tests
 
 Run frontend unit tests with:
