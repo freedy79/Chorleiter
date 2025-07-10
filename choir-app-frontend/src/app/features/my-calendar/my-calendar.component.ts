@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { MatCalendar } from '@angular/material/datepicker';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
@@ -38,6 +39,7 @@ export class MyCalendarComponent implements OnInit {
   isAdmin = false;
 
   @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
+  @ViewChild(MatCalendar) calendar?: MatCalendar<Date>;
 
   constructor(private api: ApiService, private auth: AuthService) {}
 
@@ -65,6 +67,7 @@ export class MyCalendarComponent implements OnInit {
         if (!this.eventMap[key]) this.eventMap[key] = [];
         this.eventMap[key].push(ev);
       }
+      this.calendar?.updateTodaysDate();
     });
   }
 
@@ -83,6 +86,7 @@ export class MyCalendarComponent implements OnInit {
         this.planEntryMap[dKey].push(entry);
         this.allPlanEntries.push(entry);
       }
+      this.calendar?.updateTodaysDate();
     });
   }
 
