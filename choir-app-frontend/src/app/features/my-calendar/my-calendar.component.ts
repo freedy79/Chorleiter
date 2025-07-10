@@ -70,14 +70,11 @@ export class MyCalendarComponent implements OnInit {
 
   private loadPlanEntriesForMonth(year: number, month: number): void {
     const key = `${year}-${month}`;
-    if (this.loadedPlanMonths.has(key) || this.currentUserId === null) return;
+    if (this.loadedPlanMonths.has(key)) return;
     this.loadedPlanMonths.add(key);
     this.api.getMonthlyPlan(year, month).subscribe(plan => {
       if (!plan) return;
       for (const entry of plan.entries || []) {
-        if (entry.director?.id !== this.currentUserId && entry.organist?.id !== this.currentUserId) {
-          continue;
-        }
         const dKey = new Date(entry.date).toISOString().substring(0, 10);
         if (!this.planEntryMap[dKey]) this.planEntryMap[dKey] = [];
         this.planEntryMap[dKey].push(entry);

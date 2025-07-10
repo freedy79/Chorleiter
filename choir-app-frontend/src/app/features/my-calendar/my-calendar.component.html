@@ -13,10 +13,14 @@
           <ng-container *ngSwitchCase="'PLAN'">
             <div matLine>
               Dienst:
-              <span *ngIf="$any(ev).director?.id === currentUserId">Chorleitung</span>
-              <span *ngIf="$any(ev).organist?.id === currentUserId">{{ $any(ev).director?.id === currentUserId && $any(ev).organist?.id === currentUserId ? ', ' : '' }}Orgel</span>
+              <span *ngIf="$any(ev).director">
+                <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung {{ $any(ev).director.name }}</span>
+              </span>
+              <span *ngIf="$any(ev).organist">
+                {{ $any(ev).director ? ', ' : '' }}<span [class.me]="$any(ev).organist?.id === currentUserId">Orgel {{ $any(ev).organist.name }}</span>
+              </span>
             </div>
-              <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
+            <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
           </ng-container>
           <ng-container *ngSwitchDefault>
             <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel">
