@@ -43,4 +43,10 @@ export class MailSettingsComponent implements OnInit {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
     });
   }
+
+  sendTest(): void {
+    this.api.sendTestMail().subscribe(() => {
+      this.snack.open('Testmail verschickt', 'OK', { duration: 2000 });
+    });
+  }
 }

@@ -38,7 +38,7 @@ async function seedDatabase(options = {}) {
                     user: process.env.SMTP_USER || '',
                     pass: process.env.SMTP_PASS || '',
                     secure: false,
-                    fromAddress: process.env.EMAIL_FROM || 'no-reply@example.com'
+                    fromAddress: process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de'
                 }
             });
             console.log("Initial seeding completed successfully.");

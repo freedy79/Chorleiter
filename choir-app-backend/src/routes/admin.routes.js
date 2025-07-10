@@ -39,6 +39,7 @@ router.get('/logs/:filename', controller.getLog);
 router.delete('/logs/:filename', controller.deleteLog);
 router.get('/mail-settings', controller.getMailSettings);
 router.put('/mail-settings', controller.updateMailSettings);
+router.post('/mail-settings/test', controller.sendTestMail);
 
 module.exports = router;
 

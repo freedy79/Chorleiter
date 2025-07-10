@@ -21,7 +21,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry) => {
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
   await transporter.sendMail({
-    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@example.com',
+    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
     to,
     subject: `Invitation to join ${choirName}`,
     html: `<p>You have been invited to join <b>${choirName}</b>.<br>Click <a href="${link}">here</a> to complete your registration. This link is valid until ${expiry.toLocaleString()}.</p>`
@@ -34,9 +34,20 @@ exports.sendPasswordResetMail = async (to, token) => {
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
   await transporter.sendMail({
-    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@example.com',
+    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
     to,
     subject: 'Password Reset',
     html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
+  });
+};
+
+exports.sendTestMail = async (to) => {
+  const settings = await db.mail_setting.findByPk(1);
+  const transporter = await createTransporter(settings);
+  await transporter.sendMail({
+    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+    to,
+    subject: 'Testmail',
+    html: '<p>Dies ist eine Testmail.</p>'
   });
 };

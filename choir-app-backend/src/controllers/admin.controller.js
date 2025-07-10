@@ -416,3 +416,15 @@ exports.updateMailSettings = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.sendTestMail = async (req, res) => {
+    try {
+        const user = await db.user.findByPk(req.userId);
+        if (user) {
+            await emailService.sendTestMail(user.email);
+        }
+        res.status(200).send({ message: 'Test mail sent if user exists.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
