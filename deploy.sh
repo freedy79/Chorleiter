@@ -90,6 +90,9 @@ scp_cmd "$FRONTEND_ARCHIVE" ${REMOTE}:/tmp/frontend.tar.gz
 ssh_cmd "$REMOTE" "tar -xzf /tmp/backend.tar.gz -C \"$BACKEND_DEST\"; rm /tmp/backend.tar.gz"
 ssh_cmd "$REMOTE" "tar -xzf /tmp/frontend.tar.gz -C \"$FRONTEND_DEST\"; rm /tmp/frontend.tar.gz"
 
+# Ensure backend dependencies are installed
+ssh_cmd "$REMOTE" "cd \"$BACKEND_DEST\" && npm install"
+
 # Restart backend
 ssh_cmd "$REMOTE" "pm2 restart chorleiter-api"
 
