@@ -26,6 +26,12 @@ export class EventService {
     return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
   }
 
+  getNextEvents(limit: number = 3, mine: boolean = false): Observable<Event[]> {
+    let params = new HttpParams().set('limit', limit);
+    if (mine) params = params.set('mine', 'true');
+    return this.http.get<Event[]>(`${this.apiUrl}/events/next`, { params });
+  }
+
   getEventById(id: number): Observable<Event> {
     return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
   }

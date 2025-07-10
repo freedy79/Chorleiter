@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { EventDialogComponent } from '../../events/event-dialog/event-dialog.component';
@@ -27,6 +28,7 @@ import { UserPreferences } from '@core/models/user-preferences';
     CommonModule,
     RouterModule,
     MaterialModule,
+    FormsModule,
     EventCardComponent
   ],
   templateUrl: './dashboard.component.html',
@@ -40,6 +42,8 @@ export class DashboardComponent implements OnInit {
   lastRehearsal$!: Observable<Event | null>;
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
+  nextEvents$!: Observable<Event[]>;
+  showOnlyMine = false;
 
   constructor(
     private apiService: ApiService,
@@ -60,6 +64,10 @@ export class DashboardComponent implements OnInit {
 
     this.lastRehearsal$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
+    );
+
+    this.nextEvents$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getNextEvents(3, this.showOnlyMine))
     );
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(
@@ -158,6 +166,10 @@ export class DashboardComponent implements OnInit {
         });
       }
     });
+  }
+
+  onToggleMine(): void {
+    this.refresh$.next();
   }
 
 }
