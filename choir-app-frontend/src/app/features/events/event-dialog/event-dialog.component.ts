@@ -1,7 +1,7 @@
 import { Component, ElementRef, OnInit, ViewChild, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
@@ -16,6 +16,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LookupPiece } from '@core/models/lookup-piece';
+import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
 
 
 @Component({
@@ -52,6 +53,7 @@ export class EventDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
+    private dialog: MatDialog,
     public dialogRef: MatDialogRef<EventDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { event?: Event } | null
   ) {
@@ -145,6 +147,32 @@ export class EventDialogComponent implements OnInit {
     }
     // Triggern Sie die Neubewertung der Autocomplete-Liste
     this.pieceCtrl.updateValueAndValidity();
+  }
+
+  openAddPieceDialog(): void {
+    const dialogRef = this.dialog.open(PieceDialogComponent, {
+      width: '90vw',
+      maxWidth: '800px',
+      data: { pieceId: null }
+    });
+
+    dialogRef.afterClosed().subscribe((newPiece: Piece | boolean | undefined) => {
+      if (newPiece && typeof newPiece !== 'boolean') {
+        const lookup: LookupPiece = {
+          id: newPiece.id,
+          title: newPiece.title,
+          composerName: newPiece.composer?.name || '',
+          reference:
+            newPiece.collections && newPiece.collections.length > 0
+              ? `${newPiece.collections[0].prefix || ''}${newPiece.collections[0].collection_piece.numberInCollection}`
+              : null
+        };
+        this.allRepertoirePieces.push(lookup);
+        this.selectedPieces = [...this.selectedPieces, lookup];
+        this.selectedPiecesDataSource.data = this.selectedPieces;
+        this.pieceCtrl.setValue('');
+      }
+    });
   }
 
   private populateFromEvent(event: Event): void {

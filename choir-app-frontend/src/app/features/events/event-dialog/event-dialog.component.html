@@ -29,29 +29,38 @@
 
     <!-- Piece Lookup -->
     <h3 class="mat-subheading-2">Stücke</h3>
-    <mat-form-field appearance="outline" class="full-width">
-      <mat-label>Nach Titel oder Referenz suchen (z.B. CB45)</mat-label>
-      <input
-        type="text"
-        matInput
-        [formControl]="pieceCtrl"
-        [matAutocomplete]="auto"
-        #pieceInput
-      >
-      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="selected($event)">
-        <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
-          <div class="option-layout">
-            <!-- Zeigt den Titel und den Komponisten an -->
-            <div class="option-main">
-              <span class="option-title">{{ piece.title }}</span>
-              <small class="composer-hint"> - {{ piece.composerName }}</small>
-            </div>
-            <!-- Zeigt die Referenz an, wenn eine vorhanden ist -->
-            <span *ngIf="piece.reference" class="option-reference">{{ piece.reference }}</span>
-          </div>
-        </mat-option>
-      </mat-autocomplete>
-    </mat-form-field>
+    <div class="autocomplete-container">
+      <div class="search-box">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nach Titel oder Referenz suchen (z.B. CB45)</mat-label>
+          <input
+            type="text"
+            matInput
+            autocomplete="off"
+            placeholder="im Literaturverzeichnis …"
+            [formControl]="pieceCtrl"
+            [matAutocomplete]="auto"
+            #pieceInput
+          >
+          <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="selected($event)">
+            <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
+              <div class="option-layout">
+                <!-- Zeigt den Titel und den Komponisten an -->
+                <div class="option-main">
+                  <span class="option-title">{{ piece.title }}</span>
+                  <small class="composer-hint"> - {{ piece.composerName }}</small>
+                </div>
+                <!-- Zeigt die Referenz an, wenn eine vorhanden ist -->
+                <span *ngIf="piece.reference" class="option-reference">{{ piece.reference }}</span>
+              </div>
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+      </div>
+      <div class="add-custom">
+        oder <a (click)="openAddPieceDialog()">Eigene Literatur hinzufügen</a>
+      </div>
+    </div>
 
     <!-- Display Selected Pieces in a Table -->
     <table mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">

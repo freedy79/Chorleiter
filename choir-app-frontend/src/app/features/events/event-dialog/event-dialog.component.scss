@@ -40,3 +40,18 @@ h3.mat-subheading-2 {
     color: #888;
     margin-top: 1rem;
 }
+
+// Neuer Container für die Stück-Suche
+.autocomplete-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .add-custom {
+        font-size: 0.875rem;
+        a {
+            cursor: pointer;
+        }
+    }
+}
