@@ -1,6 +1,7 @@
 <div class="login-container">
-  <mat-card>
-    <mat-card-title class="card-title">Anmelden</mat-card-title>
+<mat-card>
+  <p *ngIf="sessionExpired" class="session-expired">Letzte Sitzung abgelaufen.</p>
+  <mat-card-title class="card-title">Anmelden</mat-card-title>
     <mat-card-content>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
         <p>

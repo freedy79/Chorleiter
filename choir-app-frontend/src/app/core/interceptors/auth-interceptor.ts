@@ -46,7 +46,7 @@ export class AuthInterceptor implements HttpInterceptor {
                     console.warn(
                         'Unauthorized or Forbidden error detected. Logging out user.'
                     );
-                    this.authService.logout();
+                    this.authService.logout('sessionExpired');
                 }
                 // Leiten Sie den Fehler an den aufrufenden Service weiter, damit er auch behandelt werden kann.
                 return throwError(() => error);

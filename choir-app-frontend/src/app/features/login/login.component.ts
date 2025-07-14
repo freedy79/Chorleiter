@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AuthService } from 'src/app/core/services/auth.service';
@@ -19,20 +19,28 @@ import { MaterialModule } from '@modules/material.module';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
+  sessionExpired = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router, // Injizieren Sie den Angular Router
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       rememberMe: [false]
+    });
+  }
+
+  ngOnInit(): void {
+    this.route.queryParamMap.subscribe(params => {
+      this.sessionExpired = params.has('sessionExpired');
     });
   }
 
