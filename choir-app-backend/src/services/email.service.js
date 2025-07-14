@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 
 const db = require('../models');
+const logger = require('../config/logger');
 
 async function createTransporter(existingSettings) {
   const settings = existingSettings || await db.mail_setting.findByPk(1);
@@ -21,12 +22,18 @@ exports.sendInvitationMail = async (to, token, choirName, expiry) => {
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
-  await transporter.sendMail({
-    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
-    to,
-    subject: `Invitation to join ${choirName}`,
-    html: `<p>You have been invited to join <b>${choirName}</b>.<br>Click <a href="${link}">here</a> to complete your registration. This link is valid until ${expiry.toLocaleString()}.</p>`
-  });
+  try {
+    await transporter.sendMail({
+      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      to,
+      subject: `Invitation to join ${choirName}`,
+      html: `<p>You have been invited to join <b>${choirName}</b>.<br>Click <a href="${link}">here</a> to complete your registration. This link is valid until ${expiry.toLocaleString()}.</p>`
+    });
+  } catch (err) {
+    logger.error(`Error sending invitation mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
 };
 
 exports.sendPasswordResetMail = async (to, token) => {
@@ -34,21 +41,33 @@ exports.sendPasswordResetMail = async (to, token) => {
   const link = `${linkBase}/reset-password/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
-  await transporter.sendMail({
-    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
-    to,
-    subject: 'Password Reset',
-    html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
-  });
+  try {
+    await transporter.sendMail({
+      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      to,
+      subject: 'Password Reset',
+      html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
+    });
+  } catch (err) {
+    logger.error(`Error sending password reset mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
 };
 
 exports.sendTestMail = async (to, override) => {
   const settings = override || await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
-  await transporter.sendMail({
-    from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
-    to,
-    subject: 'Testmail',
-    html: '<p>Dies ist eine Testmail.</p>'
-  });
+  try {
+    await transporter.sendMail({
+      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      to,
+      subject: 'Testmail',
+      html: '<p>Dies ist eine Testmail.</p>'
+    });
+  } catch (err) {
+    logger.error(`Error sending test mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
 };

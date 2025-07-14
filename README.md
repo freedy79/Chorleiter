@@ -30,6 +30,7 @@ When the application is started for the first time these settings are written to
 the database and can later be changed through the admin endpoint
 `/admin/mail-settings`.
 After saving new settings you can send yourself a test email from that page to verify the configuration.
+Any errors during mail delivery are written to `logs/error.log` for troubleshooting.
 
 ## Tests
 
