@@ -17,16 +17,27 @@ async function createTransporter(existingSettings) {
   });
 }
 
-exports.sendInvitationMail = async (to, token, choirName, expiry) => {
+exports.sendInvitationMail = async (to, token, choirName, expiry, invitorName) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'invite' } });
   const transporter = await createTransporter(settings);
   try {
-    const subject = template?.subject.replace('{{choir}}', choirName) || `Invitation to join ${choirName}`;
-    let body = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
-    body = body.replace('{{choir}}', choirName).replace('{{link}}', link).replace('{{expiry}}', expiry.toLocaleString());
+    const subjectTemplate = template?.subject || `Invitation to join ${choirName}`;
+    const bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
+
+    const subject = subjectTemplate
+      .replace(/{{choir}}/g, choirName)
+      .replace(/{{choirname}}/g, choirName)
+      .replace(/{{invitor}}/g, invitorName || '');
+
+    let body = bodyTemplate
+      .replace(/{{choir}}/g, choirName)
+      .replace(/{{choirname}}/g, choirName)
+      .replace(/{{invitor}}/g, invitorName || '')
+      .replace(/{{link}}/g, link)
+      .replace(/{{expiry}}/g, expiry.toLocaleString());
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
