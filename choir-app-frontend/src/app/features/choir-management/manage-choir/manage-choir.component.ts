@@ -18,6 +18,7 @@ import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dia
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute } from '@angular/router';
 import { PieceDetailDialogComponent } from '@features/literature/piece-detail-dialog/piece-detail-dialog.component';
+import { environment } from 'src/environments/environment';
 
 
 @Component({
@@ -102,7 +103,7 @@ export class ManageChoirComponent implements OnInit {
           });
         }
         if (pageData.choirDetails.joinHash) {
-          this.joinLink = `${window.location.origin}/join/${pageData.choirDetails.joinHash}`;
+          this.joinLink = `${environment.baseUrl}/join/${pageData.choirDetails.joinHash}`;
         }
         if (!this.isChoirAdmin) {
           this.choirForm.disable();
