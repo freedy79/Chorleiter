@@ -7,6 +7,7 @@ export interface AppError {
   message: string;
   status?: number;
   details?: string;
+  url?: string;
 }
 
 @Injectable({
@@ -42,7 +43,7 @@ export class ErrorService {
       message: error.message,
       status: error.status,
       details: error.details,
-      url: window.location.href
+      url: error.url ?? window.location.href
     });
   }
 }

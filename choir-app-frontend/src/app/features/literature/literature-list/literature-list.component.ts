@@ -25,6 +25,7 @@ import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-p
 import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-literature-list',
@@ -102,7 +103,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
     private paginatorService: PaginatorService,
     private errorService: ErrorService,
-    private prefs: UserPreferencesService
+    private prefs: UserPreferencesService,
+    private router: Router
   ) {
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   }
@@ -204,7 +206,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
               this.errorService.setError({
                 message: msg,
                 status: err.status,
-                details: err.error?.details
+                details: err.error?.details,
+                url: this.router.url
               });
               return of({ data: [], total: 0 });
             })
@@ -431,10 +434,14 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         console.log(`Status for piece ${pieceId} updated to ${newStatus}`);
         this.snackBar.open('Status updated.', 'OK', { duration: 2000 });
       },
-      error: (err) => {
-        console.error('Failed to update status', err);
-        const msg = err.error?.message || 'Could not update status.';
-        this.errorService.setError({ message: msg, status: err.status });
+        error: (err) => {
+          console.error('Failed to update status', err);
+          const msg = err.error?.message || 'Could not update status.';
+          this.errorService.setError({
+            message: msg,
+            status: err.status,
+            url: this.router.url
+          });
         this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
         // Revert changes by triggering a refresh
         this.refresh$.next();
