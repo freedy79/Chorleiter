@@ -85,6 +85,10 @@ tar -czf "$FRONTEND_ARCHIVE" -C "choir-app-frontend/dist/choir-app-frontend/brow
 echo "Creating remote directories..."
 ssh_cmd "$REMOTE" "mkdir -p \"$BACKEND_DEST\" \"$FRONTEND_DEST\""
 
+# Remove existing frontend files before uploading new ones
+echo "Removing old frontend files..."
+ssh_cmd "$REMOTE" "rm -rf \"$FRONTEND_DEST\"/*"
+
 # Upload archives
 scp_cmd "$BACKEND_ARCHIVE" ${REMOTE}:/tmp/backend.tar.gz
 scp_cmd "$FRONTEND_ARCHIVE" ${REMOTE}:/tmp/frontend.tar.gz
