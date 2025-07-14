@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpBackend } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -16,8 +16,11 @@ export class ErrorService {
   private errorSubject = new BehaviorSubject<AppError | null>(null);
   public error$ = this.errorSubject.asObservable();
   private apiUrl = environment.apiUrl;
+  private httpNoInterceptor: HttpClient;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, httpBackend: HttpBackend) {
+    this.httpNoInterceptor = new HttpClient(httpBackend);
+  }
 
   // Setzt einen neuen Fehler
   setError(error: AppError | null): void {
@@ -35,10 +38,11 @@ export class ErrorService {
   }
 
   private reportError(error: AppError) {
-    return this.http.post(`${this.apiUrl}/client-errors`, {
+    return this.httpNoInterceptor.post(`${this.apiUrl}/client-errors`, {
       message: error.message,
       status: error.status,
       details: error.details,
+      url: window.location.href
     });
   }
 }
