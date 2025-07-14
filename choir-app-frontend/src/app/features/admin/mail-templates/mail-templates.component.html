@@ -5,8 +5,21 @@
     <input matInput formControlName="inviteSubject" />
   </mat-form-field>
   <div class="editor-group">
-    <label class="editor-label">Text (HTML erlaubt)</label>
-    <div #inviteEditor class="quill-editor"></div>
+    <div class="editor-header">
+      <label class="editor-label">Text (HTML erlaubt)</label>
+      <mat-slide-toggle
+        class="html-toggle"
+        [checked]="inviteHtmlMode"
+        (change)="toggleInviteHtml()"
+        >HTML bearbeiten</mat-slide-toggle
+      >
+    </div>
+    <div *ngIf="!inviteHtmlMode" #inviteEditor class="quill-editor"></div>
+    <textarea
+      *ngIf="inviteHtmlMode"
+      class="html-editor"
+      formControlName="inviteBody"
+    ></textarea>
     <p class="hint">
       Folgende Platzhalter werden ersetzt:
       {{'{{link}}'}}, {{'{{choir}}'}}, {{'{{invitor}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
@@ -21,8 +34,21 @@
     <input matInput formControlName="resetSubject" />
   </mat-form-field>
   <div class="editor-group">
-    <label class="editor-label">Text (HTML erlaubt)</label>
-    <div #resetEditor class="quill-editor"></div>
+    <div class="editor-header">
+      <label class="editor-label">Text (HTML erlaubt)</label>
+      <mat-slide-toggle
+        class="html-toggle"
+        [checked]="resetHtmlMode"
+        (change)="toggleResetHtml()"
+        >HTML bearbeiten</mat-slide-toggle
+      >
+    </div>
+    <div *ngIf="!resetHtmlMode" #resetEditor class="quill-editor"></div>
+    <textarea
+      *ngIf="resetHtmlMode"
+      class="html-editor"
+      formControlName="resetBody"
+    ></textarea>
     <p class="hint">
       Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
     </p>
