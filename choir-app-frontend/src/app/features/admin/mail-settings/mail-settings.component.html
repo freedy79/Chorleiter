@@ -1,28 +1,39 @@
 <form [formGroup]="form" (ngSubmit)="save()" class="mail-form">
   <mat-form-field appearance="fill">
-    <mat-label>Host</mat-label>
+    <mat-label>Mail-Domain</mat-label>
+    <input matInput formControlName="fromAddress" />
+    <mat-hint>Tragen Sie als erstes die Domain ein, über die Sie versenden möchten.</mat-hint>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>SMTP-Server</mat-label>
     <input matInput formControlName="host" />
   </mat-form-field>
   <mat-form-field appearance="fill">
-    <mat-label>Port</mat-label>
-    <input matInput type="number" formControlName="port" />
-  </mat-form-field>
-  <mat-form-field appearance="fill">
-    <mat-label>Benutzer</mat-label>
+    <mat-label>Benutzername (kurzname)</mat-label>
     <input matInput formControlName="user" />
+    <mat-hint>Der SMTP-Benutzername ist in der Regel gleichzeitig Ihre E-Mail-Adresse.</mat-hint>
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Passwort</mat-label>
     <input matInput type="password" formControlName="pass" />
+    <mat-hint>Tragen Sie außerdem das passende Passwort zu Ihrem E-Mail-Postfach ein.</mat-hint>
   </mat-form-field>
-  <mat-checkbox formControlName="secure">TLS/SSL</mat-checkbox>
-  <mat-checkbox formControlName="starttls">STARTTLS</mat-checkbox>
   <mat-form-field appearance="fill">
-    <mat-label>Absenderadresse</mat-label>
-    <input matInput formControlName="fromAddress" />
+    <mat-label>Verschlüsselung</mat-label>
+    <mat-select formControlName="encryption">
+      <mat-option value="none">Keine</mat-option>
+      <mat-option value="tls">TLS</mat-option>
+      <mat-option value="starttls">STARTTLS</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Port</mat-label>
+    <input matInput type="number" formControlName="port" />
+    <mat-hint>Als letzte Angabe müssen Sie nun einen Port mit passender Verschlüsselung eintragen. Bitte wählen Sie eine Verschlüsselung aus! Wir empfehlen Port 587.</mat-hint>
   </mat-form-field>
   <div class="actions">
+    <button mat-raised-button color="accent" type="button" (click)="sendTest()">Testen</button>
     <button mat-raised-button color="primary" type="submit">Speichern</button>
-    <button mat-raised-button color="accent" type="button" (click)="sendTest()">Testmail senden</button>
   </div>
+  <p class="hint">Abschließend speichern Sie bitte diesen Bereich der Einstellungen ab.</p>
 </form>
