@@ -14,9 +14,10 @@ import { ErrorInterceptor } from '@core/interceptors/error-interceptor';
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de'; // Importieren Sie das deutsche Sprachpaket
 import localeDeExtra from '@angular/common/locales/extra/de'; // Optionale extra Daten
-import { LOCALE_ID } from '@angular/core';
+import { LOCALE_ID, ErrorHandler } from '@angular/core';
 import { MAT_DATE_LOCALE, DateAdapter } from '@angular/material/core';
-import { MondayFirstDateAdapter } from './app/core/adapters/monday-first-date-adapter';
+import { MondayFirstDateAdapter } from '@core/adapters/monday-first-date-adapter';
+import { GlobalErrorHandler } from '@core/handlers/global-error.handler';
 
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
@@ -30,6 +31,7 @@ bootstrapApplication(AppComponent, {
     { provide: HTTP_INTERCEPTORS, useClass: TimeoutInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: LoadingInterceptor, multi: true },
     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     { provide: LOCALE_ID, useValue: 'de-DE' },
     { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
     { provide: DateAdapter, useClass: MondayFirstDateAdapter },
