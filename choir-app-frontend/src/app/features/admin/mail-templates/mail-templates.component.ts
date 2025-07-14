@@ -22,6 +22,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   @ViewChild('resetEditor') resetEditor!: ElementRef<HTMLDivElement>;
   private inviteQuill: any;
   private resetQuill: any;
+  inviteHtmlMode = false;
+  resetHtmlMode = false;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
@@ -69,15 +71,25 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   }
 
   private initEditors(): void {
+    const options = {
+      theme: 'snow',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }, { background: [] }],
+          ['link', 'clean']
+        ]
+      }
+    };
     if ((window as any).Quill && this.inviteEditor && !this.inviteQuill) {
-      this.inviteQuill = new (window as any).Quill(this.inviteEditor.nativeElement, { theme: 'snow' });
+      this.inviteQuill = new (window as any).Quill(this.inviteEditor.nativeElement, options);
       this.inviteQuill.on('text-change', () => {
         this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML });
         this.form.get('inviteBody')?.markAsDirty();
       });
     }
     if ((window as any).Quill && this.resetEditor && !this.resetQuill) {
-      this.resetQuill = new (window as any).Quill(this.resetEditor.nativeElement, { theme: 'snow' });
+      this.resetQuill = new (window as any).Quill(this.resetEditor.nativeElement, options);
       this.resetQuill.on('text-change', () => {
         this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML });
         this.form.get('resetBody')?.markAsDirty();
@@ -90,6 +102,26 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       this.inviteQuill.root.innerHTML = this.form.value.inviteBody || '';
     }
     if (this.resetQuill) {
+      this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
+    }
+  }
+
+  toggleInviteHtml(): void {
+    this.inviteHtmlMode = !this.inviteHtmlMode;
+    if (this.inviteHtmlMode && this.inviteQuill) {
+      this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML });
+    }
+    if (!this.inviteHtmlMode && this.inviteQuill) {
+      this.inviteQuill.root.innerHTML = this.form.value.inviteBody || '';
+    }
+  }
+
+  toggleResetHtml(): void {
+    this.resetHtmlMode = !this.resetHtmlMode;
+    if (this.resetHtmlMode && this.resetQuill) {
+      this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML });
+    }
+    if (!this.resetHtmlMode && this.resetQuill) {
       this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
     }
   }

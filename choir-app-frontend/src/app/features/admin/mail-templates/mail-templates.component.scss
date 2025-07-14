@@ -15,9 +15,22 @@
   margin-bottom: 1rem;
 }
 
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
 .quill-editor {
   height: 200px;
   background-color: #fff;
+}
+
+.html-editor {
+  height: 200px;
+  width: 100%;
+  font-family: monospace;
 }
 
 .hint {
