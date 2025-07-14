@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
+import { RouterModule } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
 
 @Component({
   selector: 'app-password-reset-request',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule],
   templateUrl: './password-reset-request.component.html',
   styleUrls: ['./password-reset-request.component.scss']
 })
