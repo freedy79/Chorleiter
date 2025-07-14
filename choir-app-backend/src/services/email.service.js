@@ -17,6 +17,8 @@ async function createTransporter(existingSettings) {
   });
 }
 
+
+
 function replacePlaceholders(text, replacements) {
   let result = text;
   for (const [key, value] of Object.entries(replacements)) {
@@ -25,17 +27,23 @@ function replacePlaceholders(text, replacements) {
   return result;
 }
 
-exports.sendInvitationMail = async (to, token, choirName, expiry, name) => {
+exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'invite' } });
   const transporter = await createTransporter(settings);
   try {
+
+    const subjectTemplate = template?.subject || `Invitation to join ${choirName}`;
+    const bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
+
     const userName = name || to.split('@')[0];
     const placeholders = {
       choir: choirName,
-      link,
+      choirname: choirName,
+      invitor: invitorName
+      link: link,
       expiry: expiry.toLocaleString(),
       surname: userName,
       date: new Date().toLocaleString()
@@ -44,6 +52,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name) => {
     const subject = replacePlaceholders(subjectTemplate, placeholders);
     let bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
     const body = replacePlaceholders(bodyTemplate, placeholders);
+
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
