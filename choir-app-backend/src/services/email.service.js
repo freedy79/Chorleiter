@@ -38,23 +38,20 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
   const transporter = await createTransporter(settings);
   try {
 
-    const subjectTemplate = template?.subject || `Invitation to join ${choirName}`;
-    const bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
-
     const userName = name || to.split('@')[0];
-    const placeholders = {
-      choir: choirName,
-      choirname: choirName,
-      invitor: invitorName
-      link: link,
-      expiry: expiry.toLocaleString(),
-      surname: userName,
-      date: new Date().toLocaleString()
-    };
-    const subjectTemplate = template?.subject || 'Invitation to join {{choir}}';
-    const subject = replacePlaceholders(subjectTemplate, placeholders);
-    let bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
-    const body = replacePlaceholders(bodyTemplate, placeholders);
+  const placeholders = {
+    choir: choirName,
+    choirname: choirName,
+    invitor: invitorName,
+    link: link,
+    expiry: expiry.toLocaleString(),
+    surname: userName,
+    date: new Date().toLocaleString()
+  };
+  const subjectTemplate = template?.subject || 'Invitation to join {{choir}}';
+  const subject = replacePlaceholders(subjectTemplate, placeholders);
+  let bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
+  const body = replacePlaceholders(bodyTemplate, placeholders);
 
     await transporter.sendMail({
       from: getFromAddress(settings),
