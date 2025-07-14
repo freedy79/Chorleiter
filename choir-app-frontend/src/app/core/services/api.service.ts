@@ -363,6 +363,14 @@ export class ApiService {
     return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/reopen`, {});
   }
 
+  downloadMonthlyPlanPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/monthly-plans/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  emailMonthlyPlan(id: number, recipients: number[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients });
+  }
+
   // --- Plan Rule Methods ---
   getPlanRules(): Observable<PlanRule[]> {
     return this.planRuleService.getPlanRules();

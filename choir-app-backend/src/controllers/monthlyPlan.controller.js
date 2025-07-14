@@ -1,6 +1,8 @@
 const db = require('../models');
 const MonthlyPlan = db.monthly_plan;
 const { datesForRule } = require('../utils/date.utils');
+const { monthlyPlanPdf } = require('../services/pdf.service');
+const emailService = require('../services/email.service');
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
@@ -94,5 +96,64 @@ exports.reopen = async (req, res) => {
         res.status(200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not reopen plan.' });
+    }
+};
+
+exports.downloadPdf = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const plan = await MonthlyPlan.findOne({
+            where: { id, choirId: req.activeChoirId },
+            include: [{
+                model: db.plan_entry,
+                as: 'entries',
+                include: [
+                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
+                ]
+            }],
+            order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
+        });
+        if (!plan) return res.status(404).send({ message: 'Plan not found.' });
+        const buffer = monthlyPlanPdf(plan.toJSON());
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="dienstplan-${plan.year}-${plan.month}.pdf"`);
+        res.send(buffer);
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not generate PDF.' });
+    }
+};
+
+exports.emailPdf = async (req, res) => {
+    const id = req.params.id;
+    const recipients = req.body.recipients;
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).send({ message: 'recipients required' });
+    }
+    try {
+        const plan = await MonthlyPlan.findOne({
+            where: { id, choirId: req.activeChoirId },
+            include: [{
+                model: db.plan_entry,
+                as: 'entries',
+                include: [
+                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
+                ]
+            }],
+            order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
+        });
+        if (!plan) return res.status(404).send({ message: 'Plan not found.' });
+
+        const users = await db.user.findAll({
+            where: { id: recipients },
+            include: [{ model: db.choir, where: { id: req.activeChoirId } }]
+        });
+        const emails = users.map(u => u.email);
+        const buffer = monthlyPlanPdf(plan.toJSON());
+        await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month);
+        res.status(200).send({ message: 'Mail sent.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not send mail.' });
     }
 };

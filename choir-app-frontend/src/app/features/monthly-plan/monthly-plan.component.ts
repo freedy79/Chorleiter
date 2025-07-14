@@ -12,6 +12,7 @@ import { MemberAvailability } from '@core/models/member-availability';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
+import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
@@ -19,7 +20,7 @@ import { getHolidayName } from '@shared/util/holiday';
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, SendPlanDialogComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
@@ -209,6 +210,31 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (this.plan) {
       this.api.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
+  }
+
+  downloadPdf(): void {
+    if (!this.plan) return;
+    this.api.downloadMonthlyPlanPdf(this.plan.id).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dienstplan-${this.plan!.year}-${this.plan!.month}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
+  openEmailDialog(): void {
+    if (!this.plan) return;
+    const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
+    ref.afterClosed().subscribe((ids: number[]) => {
+      if (ids && ids.length > 0) {
+        this.api.emailMonthlyPlan(this.plan!.id, ids).subscribe({
+          next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
+          error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
+        });
+      }
+    });
   }
 
   openAddEntryDialog(): void {
