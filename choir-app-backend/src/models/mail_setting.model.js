@@ -6,6 +6,7 @@ module.exports = (sequelize, DataTypes) => {
     user: { type: DataTypes.STRING, allowNull: true },
     pass: { type: DataTypes.STRING, allowNull: true },
     secure: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    starttls: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     fromAddress: { type: DataTypes.STRING, allowNull: true }
   });
   return MailSetting;

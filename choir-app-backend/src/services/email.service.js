@@ -8,6 +8,7 @@ async function createTransporter(existingSettings) {
     host: settings?.host || process.env.SMTP_HOST,
     port: settings?.port || process.env.SMTP_PORT || 587,
     secure: settings?.secure || false,
+    requireTLS: settings?.starttls || process.env.SMTP_STARTTLS === 'true' || false,
     auth: {
       user: settings?.user || process.env.SMTP_USER,
       pass: settings?.pass || process.env.SMTP_PASS

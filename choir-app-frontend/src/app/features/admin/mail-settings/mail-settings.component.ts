@@ -23,6 +23,7 @@ export class MailSettingsComponent implements OnInit {
       user: [''],
       pass: [''],
       secure: [false],
+      starttls: [false],
       fromAddress: ['']
     });
   }

@@ -4,5 +4,6 @@ export interface MailSettings {
   user?: string;
   pass?: string;
   secure: boolean;
+  starttls: boolean;
   fromAddress?: string;
 }
