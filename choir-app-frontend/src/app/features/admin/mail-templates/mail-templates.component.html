@@ -4,14 +4,14 @@
     <mat-label>Betreff</mat-label>
     <input matInput formControlName="inviteSubject" />
   </mat-form-field>
-  <mat-form-field appearance="fill">
-    <mat-label>Text (HTML erlaubt)</mat-label>
-    <textarea matInput formControlName="inviteBody" rows="5"></textarea>
-    <mat-hint>
+  <div class="editor-group">
+    <label class="editor-label">Text (HTML erlaubt)</label>
+    <div #inviteEditor class="quill-editor"></div>
+    <p class="hint">
       Folgende Platzhalter werden ersetzt:
       {{'{{link}}'}}, {{'{{choir}}'}}, {{'{{invitor}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
-    </mat-hint>
-  </mat-form-field>
+    </p>
+  </div>
   <div class="actions">
     <button mat-raised-button color="accent" type="button" (click)="sendTest('invite')">Testmail</button>
   </div>
@@ -20,13 +20,13 @@
     <mat-label>Betreff</mat-label>
     <input matInput formControlName="resetSubject" />
   </mat-form-field>
-  <mat-form-field appearance="fill">
-    <mat-label>Text (HTML erlaubt)</mat-label>
-    <textarea matInput formControlName="resetBody" rows="5"></textarea>
-    <mat-hint>
+  <div class="editor-group">
+    <label class="editor-label">Text (HTML erlaubt)</label>
+    <div #resetEditor class="quill-editor"></div>
+    <p class="hint">
       Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
-    </mat-hint>
-  </mat-form-field>
+    </p>
+  </div>
   <div class="actions">
     <button mat-raised-button color="accent" type="button" (click)="sendTest('reset')">Testmail</button>
   </div>

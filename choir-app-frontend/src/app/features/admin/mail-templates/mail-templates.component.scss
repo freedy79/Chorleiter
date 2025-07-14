@@ -8,3 +8,20 @@
   display: flex;
   gap: 1rem;
 }
+
+.editor-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.quill-editor {
+  height: 200px;
+  background-color: #fff;
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 0.25rem;
+}
