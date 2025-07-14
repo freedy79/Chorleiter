@@ -17,6 +17,11 @@ async function createTransporter(existingSettings) {
   });
 }
 
+function getFromAddress(settings) {
+  const address = settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de';
+  return { name: address, address };
+}
+
 exports.sendInvitationMail = async (to, token, choirName, expiry) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/register/${token}`;
@@ -28,7 +33,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry) => {
     let body = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
     body = body.replace('{{choir}}', choirName).replace('{{link}}', link).replace('{{expiry}}', expiry.toLocaleString());
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject,
       html: body
@@ -51,7 +56,7 @@ exports.sendPasswordResetMail = async (to, token) => {
     let body = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
     body = body.replace('{{link}}', link);
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject,
       html: body
@@ -68,7 +73,7 @@ exports.sendTestMail = async (to, override) => {
   const transporter = await createTransporter(settings);
   try {
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject: 'Testmail',
       html: '<p>Dies ist eine Testmail.</p>'
