@@ -24,6 +24,8 @@ SMTP_PASS=
 EMAIL_FROM=no-reply@nak-chorleiter.de
 SMTP_STARTTLS=false
 ```
+The sender name is automatically set to the `EMAIL_FROM` address so that
+`no-reply@nak-chorleiter.de` appears as the sender in mail clients.
 Set `SMTP_STARTTLS` to `true` to enforce a STARTTLS handshake when connecting to the mail server.
 
 When the application is started for the first time these settings are written to
