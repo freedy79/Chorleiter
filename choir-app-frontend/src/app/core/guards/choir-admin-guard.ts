@@ -38,7 +38,12 @@ export class ChoirAdminGuard implements CanActivate {
           catchError((err) => {
             // Bei einem Fehler bei der API-Anfrage den Zugriff verweigern und umleiten.
             console.error('ChoirAdminGuard API check failed', err);
-            this.errorService.setError({ message: 'Zugriff verweigert.', status: err.status });
+            this.errorService.setError({
+              message: 'Zugriff verweigert.',
+              status: err.status,
+              stack: err.stack,
+              url: this.router.url
+            });
             return of(this.router.createUrlTree(['/dashboard']));
           })
         );

@@ -7,7 +7,24 @@ export class GlobalErrorHandler implements ErrorHandler {
 
   handleError(error: any): void {
     const message = error?.message || error.toString();
-    this.errorService.setError({ message });
+    const stack = error instanceof Error ? error.stack : undefined;
+    let file: string | undefined;
+    let line: number | undefined;
+    if (stack) {
+      const first = stack.split('\n')[1];
+      const match = first && first.match(/\((.*):(\d+):(\d+)\)/);
+      if (match) {
+        file = match[1];
+        line = parseInt(match[2], 10);
+      }
+    }
+    this.errorService.setError({
+      message,
+      stack,
+      url: window.location.href,
+      file,
+      line
+    });
     console.error(error);
   }
 }

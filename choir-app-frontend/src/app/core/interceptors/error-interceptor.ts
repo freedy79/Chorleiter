@@ -18,7 +18,11 @@ export class ErrorInterceptor implements HttpInterceptor {
         this.errorService.setError({
           message,
           status: error.status,
-          details: error.error?.details
+          details: error.error?.details,
+          stack: error.stack,
+          url: req.url,
+          file: undefined,
+          line: undefined
         });
         console.error('HTTP Error:', error);
 
