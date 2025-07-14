@@ -149,3 +149,11 @@ mat-option:hover {
 .mdc-text-field--outlined .mat-mdc-form-field-infix, .mdc-text-field--no-label .mat-mdc-form-field-infix {
   padding-left: 0.3rem;
 }
+
+// Remove the default minimum height from Material form fields so inputs align
+// with the surrounding text line.
+.mat-mdc-form-field-infix {
+  min-height: unset !important;
+  display: flex;
+  align-items: center;
+}
