@@ -17,5 +17,4 @@ router.put("/:id", wrap(controller.update));
 router.delete("/range", role.requireChoirAdmin, wrap(controller.deleteRange));
 router.delete("/:id", role.requireChoirAdmin, wrap(controller.delete));
 router.post("/recalculate-piece-statuses", role.requireAdmin, wrap(controller.recalculatePieceStatuses));
-// Later you will add POST for creation: router.post("/", controller.create);
 module.exports = router;
