@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpBackend } from '@angular/common/http';
+import { HttpBackend, HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -22,7 +22,7 @@ export class ErrorService {
   private apiUrl = environment.apiUrl;
   private httpNoInterceptor: HttpClient;
 
-  constructor(private http: HttpClient, httpBackend: HttpBackend) {
+  constructor(httpBackend: HttpBackend) {
     this.httpNoInterceptor = new HttpClient(httpBackend);
   }
 
