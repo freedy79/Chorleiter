@@ -150,3 +150,21 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
     throw err;
   }
 };
+
+exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month) => {
+  const settings = await db.mail_setting.findByPk(1);
+  const transporter = await createTransporter(settings);
+  try {
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to: recipients,
+      subject: `Dienstplan ${month}/${year}`,
+      text: 'Im Anhang befindet sich der aktuelle Dienstplan.',
+      attachments: [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }]
+    });
+  } catch (err) {
+    logger.error(`Error sending monthly plan mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

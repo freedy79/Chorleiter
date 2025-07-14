@@ -9,5 +9,7 @@ router.get("/:year/:month", controller.findByMonth);
 router.post("/", role.requireChoirAdmin, controller.create);
 router.put("/:id/finalize", role.requireChoirAdmin, controller.finalize);
 router.put("/:id/reopen", role.requireChoirAdmin, controller.reopen);
+router.get("/:id/pdf", controller.downloadPdf);
+router.post("/:id/email", role.requireChoirAdmin, controller.emailPdf);
 
 module.exports = router;
