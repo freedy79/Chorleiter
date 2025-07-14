@@ -30,9 +30,6 @@ exports.update = async (req, res, next) => {
     const id = req.params.id;
     const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
-        if (req.userRole === 'demo') {
-            return res.status(403).send({ message: 'Demo user cannot modify collections.' });
-        }
         const collection = await db.collection.findByPk(id);
 
         if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
