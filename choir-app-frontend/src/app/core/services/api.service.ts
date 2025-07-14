@@ -35,6 +35,7 @@ import { PlanRuleService } from './plan-rule.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
+import { MailTemplate } from '../models/mail-template';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -588,6 +589,14 @@ export class ApiService {
 
   sendTestMail(data?: MailSettings): Observable<{ message: string }> {
     return this.adminService.sendTestMail(data);
+  }
+
+  getMailTemplates(): Observable<MailTemplate[]> {
+    return this.adminService.getMailTemplates();
+  }
+
+  updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
+    return this.adminService.updateMailTemplates(data);
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {

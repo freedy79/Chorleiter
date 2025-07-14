@@ -7,7 +7,7 @@ router.use(authJwt.verifyToken);
 router.post("/", controller.create);
 router.get("/", controller.findAll);
 router.put("/:id", controller.update);
-router.delete("/:id", controller.remove);
+router.delete("/:id", controller.delete);
 router.post("/:id/enrich", controller.enrich);
 
 module.exports = router;

@@ -1,38 +1,46 @@
 const db = require("../models");
 const Author = db.author;
+const BaseCrudController = require("./baseCrud.controller");
+const base = new BaseCrudController(Author);
 
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
     try {
-        const author = await Author.create({
+        const author = await base.service.create({
             name: req.body.name,
             birthYear: req.body.birthYear,
             deathYear: req.body.deathYear
         });
         res.status(201).send(author);
     } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).send({ message: "An author with this name already exists." });
+        }
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };
 
-exports.update = async (req, res) => {
-    const { id } = req.params;
+exports.update = async (req, res, next) => {
     try {
-        const author = await Author.findByPk(id);
-        if (!author) return res.status(404).send({ message: "Author not found." });
-
-        author.name = req.body.name || author.name;
-        author.birthYear = req.body.birthYear || author.birthYear;
-        author.deathYear = req.body.deathYear || author.deathYear;
-        await author.save();
-        res.status(200).send(author);
+        const id = req.params.id;
+        const num = await base.service.update(id, req.body);
+        if (num === 1) {
+            const updated = await base.service.findById(id);
+            return res.status(200).send(updated);
+        }
+        res.status(404).send({ message: "Author not found." });
     } catch (err) {
+        if (err.name === 'SequelizeUniqueConstraintError') {
+            return res.status(409).send({ message: "An author with this name already exists." });
+        }
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 }
 
-exports.findAll = async (req, res) => {
+exports.findAll = async (req, res, next) => {
     try {
-        const authors = await Author.findAll({
+        const authors = await base.service.findAll({
             order: [['name', 'ASC']]
         });
         const result = await Promise.all(
@@ -46,11 +54,12 @@ exports.findAll = async (req, res) => {
         );
         res.status(200).send(result);
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };
 
-exports.remove = async (req, res) => {
+exports.delete = async (req, res, next) => {
     const { id } = req.params;
     try {
         const author = await Author.findByPk(id);
@@ -59,9 +68,9 @@ exports.remove = async (req, res) => {
         if (pieceCount > 0) {
             return res.status(400).send({ message: "Author has linked pieces." });
         }
-        await author.destroy();
-        res.status(204).send();
+        return base.delete(req, res, next);
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };

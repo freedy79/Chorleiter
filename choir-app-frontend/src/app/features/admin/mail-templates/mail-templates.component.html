@@ -1,0 +1,25 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="mail-form">
+  <h3>Einladung</h3>
+  <mat-form-field appearance="fill">
+    <mat-label>Betreff</mat-label>
+    <input matInput formControlName="inviteSubject" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Text (HTML erlaubt)</mat-label>
+    <textarea matInput formControlName="inviteBody" rows="5"></textarea>
+    <mat-hint>{{'{{link}}'}} wird durch den Registrierungslink ersetzt.</mat-hint>
+  </mat-form-field>
+  <h3>Passwort vergessen</h3>
+  <mat-form-field appearance="fill">
+    <mat-label>Betreff</mat-label>
+    <input matInput formControlName="resetSubject" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Text (HTML erlaubt)</mat-label>
+    <textarea matInput formControlName="resetBody" rows="5"></textarea>
+    <mat-hint>{{'{{link}}'}} wird durch den Link zum Zurücksetzen ersetzt.</mat-hint>
+  </mat-form-field>
+  <div class="actions">
+    <button mat-raised-button color="primary" type="submit">Speichern</button>
+  </div>
+</form>
