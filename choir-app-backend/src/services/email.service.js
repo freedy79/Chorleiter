@@ -123,3 +123,33 @@ exports.sendTestMail = async (to, override, name) => {
     throw err;
   }
 };
+
+exports.sendTemplatePreviewMail = async (to, type, name) => {
+  const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type } });
+  const transporter = await createTransporter(settings);
+  try {
+    const userName = name || to.split('@')[0];
+    const placeholders = {
+      choir: 'Beispielchor',
+      choirname: 'Beispielchor',
+      invitor: 'Max Mustermann',
+      link: 'https://example.com',
+      expiry: new Date(Date.now() + 86400000).toLocaleString(),
+      surname: userName,
+      date: new Date().toLocaleString()
+    };
+    const subject = replacePlaceholders(template?.subject || '', placeholders);
+    const body = replacePlaceholders(template?.body || '', placeholders);
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to,
+      subject,
+      html: body
+    });
+  } catch (err) {
+    logger.error(`Error sending template preview mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

@@ -591,6 +591,10 @@ export class ApiService {
     return this.adminService.sendTestMail(data);
   }
 
+  sendTemplateTest(type: string): Observable<{ message: string }> {
+    return this.adminService.sendTemplateTest(type);
+  }
+
   getMailTemplates(): Observable<MailTemplate[]> {
     return this.adminService.getMailTemplates();
   }

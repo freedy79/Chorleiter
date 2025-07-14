@@ -7,8 +7,14 @@
   <mat-form-field appearance="fill">
     <mat-label>Text (HTML erlaubt)</mat-label>
     <textarea matInput formControlName="inviteBody" rows="5"></textarea>
-    <mat-hint>{{'{{link}}'}} wird durch den Registrierungslink ersetzt.</mat-hint>
+    <mat-hint>
+      Folgende Platzhalter werden ersetzt:
+      {{'{{link}}'}}, {{'{{choir}}'}}, {{'{{invitor}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+    </mat-hint>
   </mat-form-field>
+  <div class="actions">
+    <button mat-raised-button color="accent" type="button" (click)="sendTest('invite')">Testmail</button>
+  </div>
   <h3>Passwort vergessen</h3>
   <mat-form-field appearance="fill">
     <mat-label>Betreff</mat-label>
@@ -17,8 +23,13 @@
   <mat-form-field appearance="fill">
     <mat-label>Text (HTML erlaubt)</mat-label>
     <textarea matInput formControlName="resetBody" rows="5"></textarea>
-    <mat-hint>{{'{{link}}'}} wird durch den Link zum Zurücksetzen ersetzt.</mat-hint>
+    <mat-hint>
+      Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+    </mat-hint>
   </mat-form-field>
+  <div class="actions">
+    <button mat-raised-button color="accent" type="button" (click)="sendTest('reset')">Testmail</button>
+  </div>
   <div class="actions">
     <button mat-raised-button color="primary" type="submit">Speichern</button>
   </div>
