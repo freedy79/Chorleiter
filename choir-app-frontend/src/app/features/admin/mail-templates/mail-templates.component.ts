@@ -56,6 +56,12 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     });
   }
 
+  sendTest(type: string): void {
+    this.api.sendTemplateTest(type).subscribe(() => {
+      this.snack.open('Testmail verschickt', 'OK', { duration: 2000 });
+    });
+  }
+
   hasPendingChanges(): boolean {
     return this.form.dirty;
   }
