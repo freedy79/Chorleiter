@@ -44,9 +44,9 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
     choirname: choirName,
     invitor: invitorName,
     link: link,
-    expiry: expiry.toLocaleString(),
+    expiry: expiry.toLocaleString('de-DE'),
     surname: userName,
-    date: new Date().toLocaleString()
+    date: new Date().toLocaleString('de-DE')
   };
   const subjectTemplate = template?.subject || 'Invitation to join {{choir}}';
   const subject = replacePlaceholders(subjectTemplate, placeholders);
@@ -78,7 +78,7 @@ exports.sendPasswordResetMail = async (to, token, name) => {
     const placeholders = {
       link,
       surname: userName,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString('de-DE')
     };
     const subjectTemplate = template?.subject || 'Password Reset';
     const subject = replacePlaceholders(subjectTemplate, placeholders);
@@ -105,7 +105,7 @@ exports.sendTestMail = async (to, override, name) => {
     const userName = name || to.split('@')[0];
     const placeholders = {
       surname: userName,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString('de-DE')
     };
     const body = replacePlaceholders('<p>Dies ist eine Testmail.</p>', placeholders);
     await transporter.sendMail({
@@ -132,9 +132,9 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
       choirname: 'Beispielchor',
       invitor: 'Max Mustermann',
       link: 'https://example.com',
-      expiry: new Date(Date.now() + 86400000).toLocaleString(),
+      expiry: new Date(Date.now() + 86400000).toLocaleString('de-DE'),
       surname: userName,
-      date: new Date().toLocaleString()
+      date: new Date().toLocaleString('de-DE')
     };
     const subject = replacePlaceholders(template?.subject || '', placeholders);
     const body = replacePlaceholders(template?.body || '', placeholders);
