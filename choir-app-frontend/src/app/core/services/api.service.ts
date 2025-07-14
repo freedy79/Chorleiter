@@ -586,8 +586,8 @@ export class ApiService {
     return this.adminService.updateMailSettings(data);
   }
 
-  sendTestMail(): Observable<{ message: string }> {
-    return this.adminService.sendTestMail();
+  sendTestMail(data?: MailSettings): Observable<{ message: string }> {
+    return this.adminService.sendTestMail(data);
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
