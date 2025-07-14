@@ -7,6 +7,7 @@ import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { StatsSummary } from '../models/stats-summary';
 import { MailSettings } from '../models/mail-settings';
+import { MailTemplate } from '../models/mail-template';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -115,5 +116,13 @@ export class AdminService {
 
   sendTestMail(data?: MailSettings): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.apiUrl}/admin/mail-settings/test`, data || {});
+  }
+
+  getMailTemplates(): Observable<MailTemplate[]> {
+    return this.http.get<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`);
+  }
+
+  updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
+    return this.http.put<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`, data);
   }
 }

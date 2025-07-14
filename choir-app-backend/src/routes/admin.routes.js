@@ -40,6 +40,8 @@ router.delete('/logs/:filename', controller.deleteLog);
 router.get('/mail-settings', controller.getMailSettings);
 router.put('/mail-settings', controller.updateMailSettings);
 router.post('/mail-settings/test', controller.sendTestMail);
+router.get('/mail-templates', controller.getMailTemplates);
+router.put('/mail-templates', controller.updateMailTemplates);
 
 module.exports = router;
 

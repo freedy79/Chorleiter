@@ -21,13 +21,17 @@ exports.sendInvitationMail = async (to, token, choirName, expiry) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'invite' } });
   const transporter = await createTransporter(settings);
   try {
+    const subject = template?.subject.replace('{{choir}}', choirName) || `Invitation to join ${choirName}`;
+    let body = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
+    body = body.replace('{{choir}}', choirName).replace('{{link}}', link).replace('{{expiry}}', expiry.toLocaleString());
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
-      subject: `Invitation to join ${choirName}`,
-      html: `<p>You have been invited to join <b>${choirName}</b>.<br>Click <a href="${link}">here</a> to complete your registration. This link is valid until ${expiry.toLocaleString()}.</p>`
+      subject,
+      html: body
     });
   } catch (err) {
     logger.error(`Error sending invitation mail to ${to}: ${err.message}`);
@@ -40,13 +44,17 @@ exports.sendPasswordResetMail = async (to, token) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/reset-password/${token}`;
   const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'reset' } });
   const transporter = await createTransporter(settings);
   try {
+    const subject = template?.subject || 'Password Reset';
+    let body = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
+    body = body.replace('{{link}}', link);
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
-      subject: 'Password Reset',
-      html: `<p>Click <a href="${link}">here</a> to set a new password.</p>`
+      subject,
+      html: body
     });
   } catch (err) {
     logger.error(`Error sending password reset mail to ${to}: ${err.message}`);

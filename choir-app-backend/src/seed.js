@@ -42,6 +42,22 @@ async function seedDatabase(options = {}) {
                     fromAddress: process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de'
                 }
             });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'invite' },
+                defaults: {
+                    subject: 'Invitation to join {{choir}}',
+                    body: '<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'reset' },
+                defaults: {
+                    subject: 'Password Reset',
+                    body: '<p>Click <a href="{{link}}">here</a> to set a new password.</p>'
+                }
+            });
             console.log("Initial seeding completed successfully.");
         } else {
             console.log("Database already seeded. Skipping initial setup.");
