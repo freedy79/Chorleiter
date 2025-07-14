@@ -17,7 +17,10 @@ async function createTransporter(existingSettings) {
   });
 }
 
-
+function getFromAddress(settings) {
+  const address = settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de';
+  return { name: address, address };
+}
 
 function replacePlaceholders(text, replacements) {
   let result = text;
@@ -54,7 +57,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
     const body = replacePlaceholders(bodyTemplate, placeholders);
 
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject,
       html: body
@@ -84,7 +87,7 @@ exports.sendPasswordResetMail = async (to, token, name) => {
     let bodyTemplate = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
     const body = replacePlaceholders(bodyTemplate, placeholders);
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject,
       html: body
@@ -107,7 +110,7 @@ exports.sendTestMail = async (to, override, name) => {
     };
     const body = replacePlaceholders('<p>Dies ist eine Testmail.</p>', placeholders);
     await transporter.sendMail({
-      from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
+      from: getFromAddress(settings),
       to,
       subject: 'Testmail',
       html: body
