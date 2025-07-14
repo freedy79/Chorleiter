@@ -3,21 +3,46 @@ function escape(text) {
 }
 
 function monthlyPlanPdf(plan) {
+  const left = 50;
+  const right = 545;
+  const col2 = left + 100;
+  const col3 = left + 250;
+  const col4 = left + 400;
   const lines = [];
   let y = 800;
-  lines.push(`BT /F1 18 Tf 50 ${y} Td (${escape('Dienstplan ' + plan.month + '/' + plan.year)}) Tj ET`);
+
+  // Title
+  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Dienstplan ' + plan.month + '/' + plan.year)}) Tj ET`);
   y -= 30;
-  lines.push(`BT /F1 12 Tf 50 ${y} Td (${escape('Datum - Chorleiter - Organist - Notizen')}) Tj ET`);
+
+  // Table header
+  const topLine = y + 8;
+  lines.push('0.5 w 0 0 0 RG');
+  lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
+  lines.push(`BT /F1 12 Tf ${left + 5} ${y} Td (${escape('Datum')}) Tj ET`);
+  lines.push(`BT /F1 12 Tf ${col2 + 5} ${y} Td (${escape('Chorleiter')}) Tj ET`);
+  lines.push(`BT /F1 12 Tf ${col3 + 5} ${y} Td (${escape('Organist')}) Tj ET`);
+  lines.push(`BT /F1 12 Tf ${col4 + 5} ${y} Td (${escape('Notizen')}) Tj ET`);
+  y -= 20;
+  lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
+
+  // Table rows
   for (const e of plan.entries) {
+    lines.push(`BT /F1 12 Tf ${left + 5} ${y} Td (${escape(new Date(e.date).toISOString().substring(0,10))}) Tj ET`);
+    lines.push(`BT /F1 12 Tf ${col2 + 5} ${y} Td (${escape(e.director?.name || '')}) Tj ET`);
+    lines.push(`BT /F1 12 Tf ${col3 + 5} ${y} Td (${escape(e.organist?.name || '')}) Tj ET`);
+    lines.push(`BT /F1 12 Tf ${col4 + 5} ${y} Td (${escape(e.notes || '')}) Tj ET`);
     y -= 20;
-    const parts = [
-      new Date(e.date).toISOString().substring(0,10),
-      e.director?.name || '',
-      e.organist?.name || '',
-      e.notes || ''
-    ];
-    lines.push(`BT /F1 12 Tf 50 ${y} Td (${escape(parts.join(' - '))}) Tj ET`);
+    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
   }
+
+  const bottomLine = y + 8;
+  // Vertical lines
+  lines.push(`${left} ${topLine} m ${left} ${bottomLine} l S`);
+  lines.push(`${col2} ${topLine} m ${col2} ${bottomLine} l S`);
+  lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
+  lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
+  lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
   const content = lines.join('\n');
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
