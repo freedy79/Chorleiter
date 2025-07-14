@@ -20,7 +20,7 @@ import { getHolidayName } from '@shared/util/holiday';
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, SendPlanDialogComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
