@@ -1,8 +1,8 @@
 <h1 mat-dialog-title>Dienstplan versenden</h1>
 <div mat-dialog-content>
   <p>Empfänger auswählen:</p>
-  <mat-selection-list>
-    <mat-list-option *ngFor="let m of data.members" [value]="m.id" (selectionChange)="toggle(m.id, $event.source.selected)">
+  <mat-selection-list (selectionChange)="toggle($event.option.value, $event.option.selected)">
+    <mat-list-option *ngFor="let m of data.members" [value]="m.id">
       {{ m.name }} ({{ m.email }})
     </mat-list-option>
   </mat-selection-list>
