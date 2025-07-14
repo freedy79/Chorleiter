@@ -52,7 +52,7 @@ export class ManageChoirComponent implements OnInit {
 
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'address', 'role', 'organist', 'status', 'actions'];
+  displayedColumns: string[] = ['name', 'email', 'address', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
@@ -158,7 +158,7 @@ export class ManageChoirComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.email && result.roles) {
-        this.apiService.inviteUserToChoir(result.email, result.roles, result.isOrganist).subscribe({
+        this.apiService.inviteUserToChoir(result.email, result.roles).subscribe({
           next: (response: { message: string }) => {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
@@ -195,13 +195,6 @@ export class ManageChoirComponent implements OnInit {
     });
   }
 
-  toggleOrganist(user: UserInChoir, checked: boolean): void {
-    if (!this.isChoirAdmin) return;
-    this.apiService.updateChoirMember(user.id, { isOrganist: checked }).subscribe({
-      next: () => user.membership!.isOrganist = checked,
-      error: () => this.snackBar.open('Fehler beim Aktualisieren.', 'Schließen')
-    });
-  }
 
   onRolesChange(user: UserInChoir, roles: ('director' | 'choir_admin' | 'organist' | 'singer')[]): void {
     if (!this.isChoirAdmin) return;
