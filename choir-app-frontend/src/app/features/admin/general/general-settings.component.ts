@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { MailSettingsComponent } from '../mail-settings/mail-settings.component';
 import { BackupComponent } from '../backup/backup.component';
+import { PendingChanges } from '@core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-general-settings',
@@ -11,4 +12,10 @@ import { BackupComponent } from '../backup/backup.component';
   templateUrl: './general-settings.component.html',
   styleUrls: ['./general-settings.component.scss']
 })
-export class GeneralSettingsComponent { }
+export class GeneralSettingsComponent implements PendingChanges {
+  @ViewChild(MailSettingsComponent) mailSettings?: MailSettingsComponent;
+
+  hasPendingChanges(): boolean {
+    return this.mailSettings?.hasPendingChanges() ?? false;
+  }
+}

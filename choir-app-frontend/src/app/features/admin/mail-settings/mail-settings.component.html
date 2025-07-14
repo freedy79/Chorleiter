@@ -1,25 +1,27 @@
 <form [formGroup]="form" (ngSubmit)="save()" class="mail-form">
   <mat-form-field appearance="fill">
     <mat-label>Host</mat-label>
-    <input matInput formControlName="host">
+    <input matInput formControlName="host" />
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Port</mat-label>
-    <input matInput type="number" formControlName="port">
+    <input matInput type="number" formControlName="port" />
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Benutzer</mat-label>
-    <input matInput formControlName="user">
+    <input matInput formControlName="user" />
   </mat-form-field>
   <mat-form-field appearance="fill">
     <mat-label>Passwort</mat-label>
-    <input matInput type="password" formControlName="pass">
+    <input matInput type="password" formControlName="pass" />
   </mat-form-field>
   <mat-checkbox formControlName="secure">TLS/SSL</mat-checkbox>
   <mat-form-field appearance="fill">
     <mat-label>Absenderadresse</mat-label>
-    <input matInput formControlName="fromAddress">
+    <input matInput formControlName="fromAddress" />
   </mat-form-field>
-  <button mat-raised-button color="primary" type="submit">Speichern</button>
-  <button mat-raised-button color="accent" type="button" (click)="sendTest()">Testmail senden</button>
+  <div class="actions">
+    <button mat-raised-button color="primary" type="submit">Speichern</button>
+    <button mat-raised-button color="accent" type="button" (click)="sendTest()">Testmail senden</button>
+  </div>
 </form>
