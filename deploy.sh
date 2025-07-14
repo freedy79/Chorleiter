@@ -9,7 +9,11 @@ BACKEND_DEST="/usr/local/lsws/ChorStatistik/backend"
 FRONTEND_DEST="/usr/local/lsws/ChorStatistik/html"
 
 # Build Angular frontend
-npm --prefix choir-app-frontend run build
+echo "Building Angular frontend..."
+if ! npm --prefix choir-app-frontend run build; then
+    echo "Build failed. Aborting deployment." >&2
+    exit 1
+fi
 
 echo "Build finished."
 

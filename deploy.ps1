@@ -8,7 +8,12 @@ $BackendDest = "/usr/local/lsws/ChorStatistik/backend"
 $FrontendDest = "/usr/local/lsws/ChorStatistik/html"
 
 # Build Angular frontend
+Write-Host "Building Angular frontend..."
 npm --prefix choir-app-frontend run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Build failed. Aborting deployment."
+    exit 1
+}
 
 Write-Host "Build finished."
 
