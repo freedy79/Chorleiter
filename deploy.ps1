@@ -117,6 +117,10 @@ $FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
 # Create remote directories
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
 
+# Remove existing frontend files before uploading new ones
+Write-Host "Removing old frontend files..."
+Invoke-Ssh "rm -rf '$FrontendDest'/*"
+
 # Upload archives
 Invoke-Scp $BackendArchive "${Remote}:/tmp/backend.tar.gz"
 Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
