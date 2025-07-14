@@ -421,7 +421,7 @@ exports.sendTestMail = async (req, res) => {
     try {
         const user = await db.user.findByPk(req.userId);
         if (user) {
-            await emailService.sendTestMail(user.email);
+            await emailService.sendTestMail(user.email, req.body);
         }
         res.status(200).send({ message: 'Test mail sent if user exists.' });
     } catch (err) {

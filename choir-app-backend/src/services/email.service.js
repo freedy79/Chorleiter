@@ -41,8 +41,8 @@ exports.sendPasswordResetMail = async (to, token) => {
   });
 };
 
-exports.sendTestMail = async (to) => {
-  const settings = await db.mail_setting.findByPk(1);
+exports.sendTestMail = async (to, override) => {
+  const settings = override || await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
   await transporter.sendMail({
     from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
