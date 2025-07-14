@@ -7,6 +7,10 @@ export interface AppError {
   message: string;
   status?: number;
   details?: string;
+  stack?: string;
+  url?: string;
+  file?: string;
+  line?: number;
 }
 
 @Injectable({
@@ -42,6 +46,10 @@ export class ErrorService {
       message: error.message,
       status: error.status,
       details: error.details,
+      stack: error.stack,
+      url: error.url,
+      file: error.file,
+      line: error.line,
       url: window.location.href
     });
   }

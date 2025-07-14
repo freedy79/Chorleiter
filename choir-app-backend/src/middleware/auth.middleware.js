@@ -1,7 +1,21 @@
 const jwt = require("jsonwebtoken");
 const db = require("../models");
 
-verifyToken = (req, res, next) => {
+const optionalAuth = (req, res, next) => {
+  let token = req.headers["authorization"];
+  if (!token) return next();
+  token = token.split(' ')[1];
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (!err) {
+      req.userId = decoded.id;
+      req.activeChoirId = decoded.activeChoirId;
+      req.userRole = decoded.role;
+    }
+    next();
+  });
+};
+
+const verifyToken = (req, res, next) => {
   let token = req.headers["authorization"];
 
   if (!token) {
@@ -23,7 +37,7 @@ verifyToken = (req, res, next) => {
   });
 };
 
-isChoirAdminOrAdmin = async (req, res, next) => {
+const isChoirAdminOrAdmin = async (req, res, next) => {
     // Der globale Admin darf alles
     if (req.userRole === 'admin') {
         return next();
@@ -49,7 +63,7 @@ isChoirAdminOrAdmin = async (req, res, next) => {
     }
 };
 
-isAdmin = (req, res, next) => {
+const isAdmin = (req, res, next) => {
     if (req.userRole === 'admin') {
         next();
         return;
@@ -60,6 +74,7 @@ isAdmin = (req, res, next) => {
 const authJwt = {
   verifyToken,
   isAdmin,
-  isChoirAdminOrAdmin
+  isChoirAdminOrAdmin,
+  optionalAuth
 };
 module.exports = authJwt;
