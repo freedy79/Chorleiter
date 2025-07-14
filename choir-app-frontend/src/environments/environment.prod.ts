@@ -8,5 +8,5 @@
 
 export const environment = {
   production: true,
-  apiUrl: 'http://88.222.220.28/api' // Your backend API URL
+  apiUrl: 'https://nak-chorleiter.de/api' // Your backend API URL
 };

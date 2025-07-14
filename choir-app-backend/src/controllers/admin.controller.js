@@ -91,7 +91,7 @@ exports.getAllUsers = async (req, res) => {
                 model: db.choir,
                 as: 'choirs',
                 attributes: ['id', 'name'],
-                through: { attributes: ['roleInChoir', 'registrationStatus'] }
+                through: { attributes: ['rolesInChoir', 'registrationStatus'] }
             }]
         });
         res.status(200).send(users);
@@ -171,7 +171,7 @@ exports.getUserByEmail = async (req, res) => {
                 model: db.choir,
                 as: 'choirs',
                 attributes: ['id', 'name'],
-                through: { attributes: ['roleInChoir', 'registrationStatus'] }
+                through: { attributes: ['rolesInChoir', 'registrationStatus'] }
             }]
         });
         if (!user) return res.status(404).send({ message: 'Not found' });
@@ -190,7 +190,7 @@ exports.sendPasswordReset = async (req, res) => {
             const token = crypto.randomBytes(32).toString('hex');
             const expiry = new Date(Date.now() + 60 * 60 * 1000);
             await user.update({ resetToken: token, resetTokenExpiry: expiry });
-            await emailService.sendPasswordResetMail(user.email, token);
+            await emailService.sendPasswordResetMail(user.email, token, user.name);
         }
         res.status(200).send({ message: 'Reset email sent if user exists.' });
     } catch (err) {
@@ -245,7 +245,7 @@ exports.getChoirMembers = async (req, res) => {
                 model: db.user,
                 as: 'users',
                 attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'shareWithChoir'],
-                through: { model: db.user_choir, attributes: ['roleInChoir', 'registrationStatus', 'isOrganist'] }
+                through: { model: db.user_choir, attributes: ['rolesInChoir', 'registrationStatus', 'isOrganist'] }
             }],
             order: [[db.user, 'name', 'ASC']]
         });
@@ -261,7 +261,7 @@ exports.getChoirMembers = async (req, res) => {
             city: u.city,
             shareWithChoir: u.shareWithChoir,
             membership: {
-                roleInChoir: u.user_choir.roleInChoir,
+                rolesInChoir: u.user_choir.rolesInChoir,
                 registrationStatus: u.user_choir.registrationStatus,
                 isOrganist: u.user_choir.isOrganist
             }
@@ -274,9 +274,9 @@ exports.getChoirMembers = async (req, res) => {
 
 exports.addUserToChoir = async (req, res) => {
     const choirId = req.params.id;
-    const { email, roleInChoir, isOrganist } = req.body;
+    const { email, rolesInChoir, isOrganist } = req.body;
 
-    if (!email || !roleInChoir) {
+    if (!email || !rolesInChoir) {
         return res.status(400).send({ message: 'Email and role are required.' });
     }
 
@@ -286,14 +286,18 @@ exports.addUserToChoir = async (req, res) => {
         if (!choir) return res.status(404).send({ message: 'Choir not found' });
 
         if (user) {
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
+            await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
             const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
             user = await db.user.create({ email });
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
-            await emailService.sendInvitationMail(email, token, choir.name, expiry);
+
+            await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
+
+             const invitor = await db.user.findByPk(req.userId);
+            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name);
+
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }
     } catch (err) {
@@ -314,9 +318,10 @@ exports.removeUserFromChoir = async (req, res) => {
         const choir = await db.choir.findByPk(choirId);
         if (!choir) return res.status(404).send({ message: 'Choir not found' });
 
-        const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
-        if (admins.length <= 1) {
-            const lastAdmin = admins[0];
+        const admins = await db.user_choir.findAll({ where: { choirId } });
+        const adminCount = admins.filter(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin')).length;
+        if (adminCount <= 1) {
+            const lastAdmin = admins.find(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin'));
             if (lastAdmin && lastAdmin.userId === userId) {
                 return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
             }
@@ -336,21 +341,22 @@ exports.removeUserFromChoir = async (req, res) => {
 exports.updateChoirMember = async (req, res) => {
     const choirId = req.params.id;
     const { userId } = req.params;
-    const { roleInChoir, isOrganist } = req.body;
+    const { rolesInChoir, isOrganist } = req.body;
 
     try {
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
         if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
 
-        if (roleInChoir && association.roleInChoir === 'choir_admin' && roleInChoir !== 'choir_admin') {
-            const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
-            if (admins.length <= 1) {
+        if (rolesInChoir && association.rolesInChoir.includes('choir_admin') && !rolesInChoir.includes('choir_admin')) {
+            const admins = await db.user_choir.findAll({ where: { choirId } });
+            const adminCount = admins.filter(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin')).length;
+            if (adminCount <= 1) {
                 return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
             }
         }
 
         await association.update({
-            ...(roleInChoir ? { roleInChoir } : {}),
+            ...(rolesInChoir ? { rolesInChoir } : {}),
             ...(isOrganist !== undefined ? { isOrganist: !!isOrganist } : {})
         });
 
@@ -421,7 +427,7 @@ exports.sendTestMail = async (req, res) => {
     try {
         const user = await db.user.findByPk(req.userId);
         if (user) {
-            await emailService.sendTestMail(user.email, req.body);
+            await emailService.sendTestMail(user.email, req.body, user.name);
         }
         res.status(200).send({ message: 'Test mail sent if user exists.' });
     } catch (err) {

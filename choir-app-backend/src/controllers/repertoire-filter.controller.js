@@ -31,7 +31,7 @@ exports.save = async (req, res) => {
         }
         if (visibility === 'local' && req.userRole !== 'admin') {
             const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: req.activeChoirId } });
-            if (!assoc || assoc.roleInChoir !== 'choir_admin') {
+            if (!assoc || !Array.isArray(assoc.rolesInChoir) || !assoc.rolesInChoir.includes('choir_admin')) {
                 return res.status(403).send({ message: 'Require Choir Admin Role!' });
             }
         }
@@ -68,7 +68,7 @@ exports.delete = async (req, res) => {
         } else if (preset.visibility === 'local') {
             if (req.userRole !== 'admin') {
                 const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: preset.choirId } });
-                if (!assoc || assoc.roleInChoir !== 'choir_admin') return res.status(403).send({ message: 'Require Choir Admin Role!' });
+                if (!assoc || !Array.isArray(assoc.rolesInChoir) || !assoc.rolesInChoir.includes('choir_admin')) return res.status(403).send({ message: 'Require Choir Admin Role!' });
             }
         } else {
             if (preset.userId !== req.userId) return res.status(403).send({ message: 'Not allowed.' });

@@ -20,4 +20,5 @@ router.post("/", role.requireNonDemo, createPieceValidation, validate, wrap(cont
 router.put("/:id", role.requireNonDemo, updatePieceValidation, validate, wrap(controller.update));
 router.delete("/:id", role.requireNonDemo, wrap(controller.delete));
 router.post("/:id/image", role.requireNonDemo, upload.single('image'), wrap(controller.uploadImage));
+
 module.exports = router;

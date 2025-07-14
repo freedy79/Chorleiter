@@ -32,7 +32,7 @@ async function sendRequest(middleware, context) {
     const admin = await db.user.create({ email: 'a@example.com', role: 'admin' });
     const choirAdmin = await db.user.create({ email: 'c@example.com', role: 'singer' });
     const normal = await db.user.create({ email: 'n@example.com', role: 'singer' });
-    await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, roleInChoir: 'choir_admin' });
+    await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
 
     // requireNonDemo success
     let res = await sendRequest(requireNonDemo, { userRole: 'admin' });

@@ -121,7 +121,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       if (this.isChoirAdmin) {
         this.api.getChoirMembers().subscribe(m => {
           this.members = m;
-          this.directors = m.filter(u => u.membership?.roleInChoir === 'director' || u.membership?.roleInChoir === 'choir_admin');
+          this.directors = m.filter(u => u.membership?.rolesInChoir?.includes('director') || u.membership?.rolesInChoir?.includes('choir_admin'));
           this.organists = m.filter(u => u.membership?.isOrganist);
           this.updateCounterPlan();
         });

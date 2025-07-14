@@ -89,7 +89,7 @@ exports.getChoirMembers = async (req, res) => {
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
-                    attributes: ['roleInChoir','registrationStatus','isOrganist']
+                    attributes: ['rolesInChoir','registrationStatus','isOrganist']
                 }
             }],
             order: [[db.user, 'name', 'ASC']] // Sortieren Sie die Mitglieder alphabetisch nach Namen.
@@ -107,7 +107,7 @@ exports.getChoirMembers = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 membership: {
-                    roleInChoir: user.user_choir.roleInChoir,
+                    rolesInChoir: user.user_choir.rolesInChoir,
                     registrationStatus: user.user_choir.registrationStatus,
                     isOrganist: user.user_choir.isOrganist
                 }
@@ -131,10 +131,10 @@ exports.getChoirMembers = async (req, res) => {
 
 // Einen Benutzer zum aktiven Chor hinzufügen/einladen
 exports.inviteUserToChoir = async (req, res, next) => {
-    const { email, roleInChoir, isOrganist } = req.body;
+    const { email, rolesInChoir, isOrganist } = req.body;
     const choirId = req.activeChoirId;
 
-    if (!email || !roleInChoir) {
+    if (!email || !rolesInChoir) {
         return res.status(400).send({ message: "Email and role are required." });
     }
 
@@ -143,14 +143,18 @@ exports.inviteUserToChoir = async (req, res, next) => {
         const choir = await db.choir.findByPk(choirId);
 
         if (user) {
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
+            await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'REGISTERED', isOrganist: !!isOrganist } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
             const expiry = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
             user = await db.user.create({ email });
-            await choir.addUser(user, { through: { roleInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
-            await emailService.sendInvitationMail(email, token, choir.name, expiry);
+
+            await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry, isOrganist: !!isOrganist } });
+
+            const invitor = await db.user.findByPk(req.userId);
+            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name);
+
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }
     } catch (err) {
@@ -174,8 +178,9 @@ exports.removeUserFromChoir = async (req, res, next) => {
 
     // Sicherheitsprüfung: Verhindern, dass sich der letzte Choir Admin selbst entfernt.
     if (req.userId === userId) {
-        const members = await db.user_choir.findAll({ where: { choirId: choirId, roleInChoir: 'choir_admin' }});
-        if (members.length <= 1) {
+        const members = await db.user_choir.findAll({ where: { choirId: choirId } });
+        const adminCount = members.filter(m => Array.isArray(m.rolesInChoir) && m.rolesInChoir.includes('choir_admin')).length;
+        if (adminCount <= 1) {
             return res.status(403).send({ message: "You cannot remove the last Choir Admin." });
         }
     }
@@ -199,22 +204,23 @@ exports.removeUserFromChoir = async (req, res, next) => {
 // Mitgliedsdaten aktualisieren (z.B. Organistenstatus)
 exports.updateMember = async (req, res, next) => {
     const { userId } = req.params;
-    const { isOrganist, roleInChoir } = req.body;
+    const { isOrganist, rolesInChoir } = req.body;
     const choirId = req.activeChoirId;
 
     try {
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
         if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
 
-        if (roleInChoir && association.roleInChoir === 'choir_admin' && roleInChoir !== 'choir_admin') {
-            const admins = await db.user_choir.findAll({ where: { choirId, roleInChoir: 'choir_admin' } });
-            if (admins.length <= 1) {
+        if (rolesInChoir && association.rolesInChoir.includes('choir_admin') && !rolesInChoir.includes('choir_admin')) {
+            const admins = await db.user_choir.findAll({ where: { choirId } });
+            const adminCount = admins.filter(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin')).length;
+            if (adminCount <= 1) {
                 return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
             }
         }
 
         await association.update({
-            ...(roleInChoir ? { roleInChoir } : {}),
+            ...(rolesInChoir ? { rolesInChoir } : {}),
             ...(isOrganist !== undefined ? { isOrganist: !!isOrganist } : {})
         });
 

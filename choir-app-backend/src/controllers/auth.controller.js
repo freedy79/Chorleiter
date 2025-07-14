@@ -160,7 +160,7 @@ exports.checkChoirAdminStatus = async (req, res) => {
                 choirId: req.activeChoirId // Prüft den aktiven Chor aus dem Token
             }
         });
-        const isChoirAdmin = association?.roleInChoir === 'choir_admin';
+        const isChoirAdmin = Array.isArray(association?.rolesInChoir) && association.rolesInChoir.includes('choir_admin');
         res.status(200).send({ isChoirAdmin: isChoirAdmin });
     } catch (error) {
         res.status(500).send({ message: "Could not verify role." });
