@@ -77,7 +77,7 @@ export class AuthService {
     );
   }
 
-  logout(): void {
+  logout(reason?: string): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem('theme');
@@ -86,7 +86,8 @@ export class AuthService {
     this.currentUserSubject.next(null);
     this.activeChoir$.next(null);
     this.availableChoirs$.next([]);
-    this.router.navigate(['/login']);
+    const queryParams = reason === 'sessionExpired' ? { sessionExpired: true } : undefined;
+    this.router.navigate(['/login'], { queryParams });
   }
 
   switchChoir(choirId: number): Observable<SwitchChoirResponse> {

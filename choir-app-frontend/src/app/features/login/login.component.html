@@ -7,6 +7,7 @@
       <h1>Anmelden</h1>
     </header>
     <div class="login-pf-body">
+      <p *ngIf="sessionExpired" class="session-expired">Letzte Sitzung abgelaufen.</p>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-pf-settings">
         <mat-form-field appearance="outline">
           <mat-label>E-Mail</mat-label>
