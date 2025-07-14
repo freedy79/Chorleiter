@@ -1,38 +1,40 @@
 const db = require("../models");
 const Composer = db.composer;
+const BaseCrudController = require("./baseCrud.controller");
+const base = new BaseCrudController(Composer);
 
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
     try {
-        const composer = await Composer.create({
+        const composer = await base.service.create({
             name: req.body.name,
             birthYear: req.body.birthYear,
             deathYear: req.body.deathYear
         });
         res.status(201).send(composer);
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };
 
-exports.update = async (req, res) => {
-    const { id } = req.params;  
+exports.update = async (req, res, next) => {
     try {
-        const composer = await Composer.findByPk(id);
-        if (!composer) return res.status(404).send({ message: "Composer not found." });
-
-        composer.name = req.body.name || composer.name;
-        composer.birthYear = req.body.birthYear || composer.birthYear;
-        composer.deathYear = req.body.deathYear || composer.deathYear;
-        await composer.save();
-        res.status(200).send(composer);
+        const id = req.params.id;
+        const num = await base.service.update(id, req.body);
+        if (num === 1) {
+            const updated = await base.service.findById(id);
+            return res.status(200).send(updated);
+        }
+        res.status(404).send({ message: "Composer not found." });
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 }
 
-exports.findAll = async (req, res) => {
+exports.findAll = async (req, res, next) => {
     try {
-        const composers = await Composer.findAll({
+        const composers = await base.service.findAll({
             order: [['name', 'ASC']]
         });
         const result = await Promise.all(
@@ -47,11 +49,12 @@ exports.findAll = async (req, res) => {
         );
         res.status(200).send(result);
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };
 
-exports.remove = async (req, res) => {
+exports.delete = async (req, res, next) => {
     const { id } = req.params;
     try {
         const composer = await Composer.findByPk(id);
@@ -61,9 +64,9 @@ exports.remove = async (req, res) => {
         if (pieceCount + arrangedCount > 0) {
             return res.status(400).send({ message: "Composer has linked pieces." });
         }
-        await composer.destroy();
-        res.status(204).send();
+        return base.delete(req, res, next);
     } catch (err) {
+        if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
 };
