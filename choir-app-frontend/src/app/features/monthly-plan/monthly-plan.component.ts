@@ -173,8 +173,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
       notes: ev.notes || '',
-      directorId: userId,
-      organistId: ev.organist?.id ?? null
+      directorId: userId ?? undefined,
+      organistId: ev.organist?.id ?? undefined
     }).subscribe(updated => {
       ev.director = updated.director;
       this.updateCounterPlan();
@@ -185,8 +185,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
       notes: ev.notes || '',
-      directorId: ev.director?.id ?? null,
-      organistId: userId
+      directorId: ev.director?.id ?? undefined,
+      organistId: userId ?? undefined
     }).subscribe(updated => {
       ev.organist = updated.organist;
       this.updateCounterPlan();
@@ -197,8 +197,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
       notes,
-      directorId: ev.director?.id ?? null,
-      organistId: ev.organist?.id ?? null
+      directorId: ev.director?.id ?? undefined,
+      organistId: ev.organist?.id ?? undefined
     }).subscribe(updated => {
       ev.notes = updated.notes;
     });
