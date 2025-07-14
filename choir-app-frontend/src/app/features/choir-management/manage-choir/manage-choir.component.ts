@@ -157,8 +157,8 @@ export class ManageChoirComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result && result.email && result.role) {
-        this.apiService.inviteUserToChoir(result.email, result.role, result.isOrganist).subscribe({
+      if (result && result.email && result.roles) {
+        this.apiService.inviteUserToChoir(result.email, result.roles, result.isOrganist).subscribe({
           next: (response: { message: string }) => {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle

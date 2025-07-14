@@ -31,7 +31,7 @@ async function requireChoirAdmin(req, res, next) {
         const association = await db.user_choir.findOne({
             where: { userId: req.userId, choirId: req.activeChoirId }
         });
-        if (association && association.roleInChoir === 'choir_admin') {
+        if (association && Array.isArray(association.rolesInChoir) && association.rolesInChoir.includes('choir_admin')) {
             return next();
         }
         return res.status(403).send({ message: 'Require Choir Admin Role!' });

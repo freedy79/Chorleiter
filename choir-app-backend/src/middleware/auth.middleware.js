@@ -38,7 +38,7 @@ isChoirAdminOrAdmin = async (req, res, next) => {
             }
         });
 
-        if (association && association.roleInChoir === 'choir_admin') {
+        if (association && Array.isArray(association.rolesInChoir) && association.rolesInChoir.includes('choir_admin')) {
             return next();
         }
 

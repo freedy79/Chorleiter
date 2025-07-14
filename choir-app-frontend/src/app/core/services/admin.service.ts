@@ -35,11 +35,11 @@ export class AdminService {
     return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
   }
 
-  inviteUserToChoirAdmin(id: number, email: string, roleInChoir: string, isOrganist?: boolean): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, roleInChoir, isOrganist });
+  inviteUserToChoirAdmin(id: number, email: string, rolesInChoir: string[], isOrganist?: boolean): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choirs/${id}/members`, { email, rolesInChoir, isOrganist });
   }
 
-  updateChoirMemberAdmin(id: number, userId: number, data: { roleInChoir?: string; isOrganist?: boolean }): Observable<any> {
+  updateChoirMemberAdmin(id: number, userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }): Observable<any> {
     return this.http.put(`${this.apiUrl}/admin/choirs/${id}/members/${userId}`, data);
   }
 
