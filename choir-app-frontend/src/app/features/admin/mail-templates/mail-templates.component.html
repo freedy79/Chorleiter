@@ -14,7 +14,7 @@
         >HTML bearbeiten</mat-slide-toggle
       >
     </div>
-    <div *ngIf="!inviteHtmlMode" #inviteEditor class="quill-editor"></div>
+    <div [hidden]="inviteHtmlMode" #inviteEditor class="quill-editor"></div>
     <textarea
       *ngIf="inviteHtmlMode"
       class="html-editor"
@@ -43,7 +43,7 @@
         >HTML bearbeiten</mat-slide-toggle
       >
     </div>
-    <div *ngIf="!resetHtmlMode" #resetEditor class="quill-editor"></div>
+    <div [hidden]="resetHtmlMode" #resetEditor class="quill-editor"></div>
     <textarea
       *ngIf="resetHtmlMode"
       class="html-editor"
