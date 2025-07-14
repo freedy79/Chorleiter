@@ -34,8 +34,12 @@
             <mat-option [value]="null">--</mat-option>
             <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
           </mat-select>
+          <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-container>
-        <ng-template #directorText>{{ ev.director?.name }}</ng-template>
+        <ng-template #directorText>
+          {{ ev.director?.name }}
+          <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
+        </ng-template>
       </td>
     </ng-container>
     <ng-container matColumnDef="organist">
@@ -46,8 +50,12 @@
             <mat-option [value]="null">--</mat-option>
             <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
           </mat-select>
+          <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-container>
-        <ng-template #organistText>{{ ev.organist?.name }}</ng-template>
+        <ng-template #organistText>
+          {{ ev.organist?.name }}
+          <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
+        </ng-template>
       </td>
     </ng-container>
     <ng-container matColumnDef="notes">
