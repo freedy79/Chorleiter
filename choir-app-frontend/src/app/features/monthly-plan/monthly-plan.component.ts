@@ -71,6 +71,11 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     return !status || status === 'AVAILABLE' || status === 'MAYBE';
   }
 
+  isMaybe(userId: number | null | undefined, date: string): boolean {
+    if (!userId) return false;
+    return this.availabilityMap[userId]?.[date] === 'MAYBE';
+  }
+
   availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
     return list.filter(u => this.isAvailable(u.id, date));
   }
