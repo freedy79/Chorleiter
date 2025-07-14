@@ -17,27 +17,42 @@ async function createTransporter(existingSettings) {
   });
 }
 
-exports.sendInvitationMail = async (to, token, choirName, expiry, invitorName) => {
+
+
+function replacePlaceholders(text, replacements) {
+  let result = text;
+  for (const [key, value] of Object.entries(replacements)) {
+    result = result.split(`{{${key}}}`).join(value);
+  }
+  return result;
+}
+
+exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'invite' } });
   const transporter = await createTransporter(settings);
   try {
+
     const subjectTemplate = template?.subject || `Invitation to join ${choirName}`;
     const bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
 
-    const subject = subjectTemplate
-      .replace(/{{choir}}/g, choirName)
-      .replace(/{{choirname}}/g, choirName)
-      .replace(/{{invitor}}/g, invitorName || '');
+    const userName = name || to.split('@')[0];
+    const placeholders = {
+      choir: choirName,
+      choirname: choirName,
+      invitor: invitorName
+      link: link,
+      expiry: expiry.toLocaleString(),
+      surname: userName,
+      date: new Date().toLocaleString()
+    };
+    const subjectTemplate = template?.subject || 'Invitation to join {{choir}}';
+    const subject = replacePlaceholders(subjectTemplate, placeholders);
+    let bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
+    const body = replacePlaceholders(bodyTemplate, placeholders);
 
-    let body = bodyTemplate
-      .replace(/{{choir}}/g, choirName)
-      .replace(/{{choirname}}/g, choirName)
-      .replace(/{{invitor}}/g, invitorName || '')
-      .replace(/{{link}}/g, link)
-      .replace(/{{expiry}}/g, expiry.toLocaleString());
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
@@ -51,16 +66,23 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, invitorName) =
   }
 };
 
-exports.sendPasswordResetMail = async (to, token) => {
+exports.sendPasswordResetMail = async (to, token, name) => {
   const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
   const link = `${linkBase}/reset-password/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'reset' } });
   const transporter = await createTransporter(settings);
   try {
-    const subject = template?.subject || 'Password Reset';
-    let body = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
-    body = body.replace('{{link}}', link);
+    const userName = name || to.split('@')[0];
+    const placeholders = {
+      link,
+      surname: userName,
+      date: new Date().toLocaleString()
+    };
+    const subjectTemplate = template?.subject || 'Password Reset';
+    const subject = replacePlaceholders(subjectTemplate, placeholders);
+    let bodyTemplate = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
+    const body = replacePlaceholders(bodyTemplate, placeholders);
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
@@ -74,15 +96,21 @@ exports.sendPasswordResetMail = async (to, token) => {
   }
 };
 
-exports.sendTestMail = async (to, override) => {
+exports.sendTestMail = async (to, override, name) => {
   const settings = override || await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
   try {
+    const userName = name || to.split('@')[0];
+    const placeholders = {
+      surname: userName,
+      date: new Date().toLocaleString()
+    };
+    const body = replacePlaceholders('<p>Dies ist eine Testmail.</p>', placeholders);
     await transporter.sendMail({
       from: settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de',
       to,
       subject: 'Testmail',
-      html: '<p>Dies ist eine Testmail.</p>'
+      html: body
     });
   } catch (err) {
     logger.error(`Error sending test mail to ${to}: ${err.message}`);
