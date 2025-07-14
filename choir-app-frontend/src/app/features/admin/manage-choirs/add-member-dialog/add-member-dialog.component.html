@@ -11,11 +11,12 @@
       </mat-autocomplete>
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Rolle im Chor</mat-label>
-      <mat-select formControlName="role">
+      <mat-label>Rollen im Chor</mat-label>
+      <mat-select formControlName="roles" multiple>
         <mat-option value="director">Dirigent</mat-option>
         <mat-option value="choir_admin">Chor-Admin</mat-option>
         <mat-option value="organist">Organist</mat-option>
+        <mat-option value="singer">Sänger</mat-option>
       </mat-select>
     </mat-form-field>
     <mat-checkbox formControlName="isOrganist">Organist</mat-checkbox>

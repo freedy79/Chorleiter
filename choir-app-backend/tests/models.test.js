@@ -26,7 +26,7 @@ const db = require('../src/models');
     checkFields(db.category, ['name']);
     checkFields(db.collection, ['singleEdition']);
     checkFields(db.collection_piece, ['numberInCollection']);
-    checkFields(db.user_choir, ['roleInChoir', 'registrationStatus', 'isOrganist']);
+    checkFields(db.user_choir, ['rolesInChoir', 'registrationStatus', 'isOrganist']);
     checkFields(db.piece_change, ['data']);
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'starttls', 'fromAddress']);

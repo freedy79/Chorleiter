@@ -8,7 +8,7 @@
 
     <ng-container matColumnDef="voice">
       <th mat-header-cell *matHeaderCellDef>Stimme</th>
-      <td mat-cell *matCellDef="let m">{{ m.membership?.roleInChoir || '-' }}</td>
+      <td mat-cell *matCellDef="let m">{{ m.membership?.rolesInChoir?.join(', ') || '-' }}</td>
     </ng-container>
 
     <ng-container matColumnDef="email">
