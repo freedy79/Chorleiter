@@ -76,6 +76,7 @@ exports.sendPasswordResetMail = async (to, token, name) => {
   const template = await db.mail_template.findOne({ where: { type: 'reset' } });
   const transporter = await createTransporter(settings);
   try {
+
     const userName = name || to.split('@')[0];
     const placeholders = {
       link,
@@ -86,6 +87,7 @@ exports.sendPasswordResetMail = async (to, token, name) => {
     const subject = replacePlaceholders(subjectTemplate, placeholders);
     let bodyTemplate = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
     const body = replacePlaceholders(bodyTemplate, placeholders);
+
     await transporter.sendMail({
       from: getFromAddress(settings),
       to,

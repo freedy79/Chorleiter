@@ -46,8 +46,7 @@ exports.create = async (req, res) => {
         return res.status(400).send({ message: "Date and Type are required." });
     }
 
-    try {
-        const targetDate = new Date(date);
+    const targetDate = new Date(date);
         const dateOnly = isoDateString(targetDate);
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
@@ -93,8 +92,8 @@ exports.create = async (req, res) => {
             await autoUpdatePieceStatuses(type.toUpperCase(), choirId, pieceIds);
         }
 
-        // Event inklusive Director neu laden, um den Namen zurückzugeben
-        const fullEvent = await Event.findByPk(event.id, {
+    // Event inklusive Director neu laden, um den Namen zurückzugeben
+    const fullEvent = await Event.findByPk(event.id, {
             include: [
                 { model: User, as: 'director', attributes: ['id', 'name'] },
                 { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
@@ -102,18 +101,13 @@ exports.create = async (req, res) => {
             ]
         });
 
-        // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
-        res.status(201).send({
-            message: "Event successfully created.",
-            wasUpdated: false,
-            warning: warningMessage,
-            event: fullEvent
-        });
-
-    } catch (err) {
-        console.error("Error in create/update event:", err);
-        res.status(500).send({ message: err.message || "Some error occurred while saving the event." });
-    }
+    // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
+    res.status(201).send({
+        message: "Event successfully created.",
+        wasUpdated: false,
+        warning: warningMessage,
+        event: fullEvent
+    });
 };
 
 
@@ -128,8 +122,7 @@ exports.findLast = async (req, res) => {
         return res.status(400).send({ message: "Event type is required." });
     }
 
-    try {
-        const lastEvent = await Event.findOne({
+    const lastEvent = await Event.findOne({
             where: {
                 choirId: req.activeChoirId,
                 type: type.toUpperCase()
@@ -162,16 +155,11 @@ exports.findLast = async (req, res) => {
             }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: User, as: 'organist', attributes: ['id', 'name'], required: false }]
         });
 
-        if (!lastEvent) {
-            return res.status(200).send(null);
-        }
-
-        res.status(200).send(lastEvent);
-
-    } catch (err) {
-        console.error("ERROR in findLast event:", err);
-        res.status(500).send({ message: err.message || "An error occurred while finding the last event." });
+    if (!lastEvent) {
+        return res.status(200).send(null);
     }
+
+    res.status(200).send(lastEvent);
 };
 
 /**
@@ -184,8 +172,7 @@ exports.findAll = async (req, res) => {
         where.type = type.toUpperCase();
     }
 
-    try {
-        const events = await Event.findAll({
+    const events = await Event.findAll({
             where,
             order: [['date', 'DESC']],
             include: [
@@ -194,10 +181,7 @@ exports.findAll = async (req, res) => {
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
-        res.status(200).send(events);
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Error fetching events.' });
-    }
+    res.status(200).send(events);
 };
 
 exports.findNext = async (req, res) => {
@@ -213,8 +197,7 @@ exports.findNext = async (req, res) => {
             { organistId: req.userId }
         ];
     }
-    try {
-        const events = await Event.findAll({
+    const events = await Event.findAll({
             where,
             order: [['date', 'ASC']],
             limit,
@@ -224,10 +207,7 @@ exports.findNext = async (req, res) => {
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
-        res.status(200).send(events);
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Error fetching events.' });
-    }
+    res.status(200).send(events);
 };
 
 /**
@@ -236,8 +216,7 @@ exports.findNext = async (req, res) => {
 exports.findOne = async (req, res) => {
     const id = req.params.id;
 
-    try {
-        const event = await Event.findOne({
+    const event = await Event.findOne({
             where: { id: id, choirId: req.activeChoirId },
             include: [{
                 model: Piece,
@@ -260,22 +239,18 @@ exports.findOne = async (req, res) => {
             }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
         });
 
-        if (!event) {
-            return res.status(404).send({ message: 'Event not found.' });
-        }
-
-        res.status(200).send(event);
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Error retrieving event.' });
+    if (!event) {
+        return res.status(404).send({ message: 'Event not found.' });
     }
+
+    res.status(200).send(event);
 };
 
 exports.update = async (req, res) => {
     const id = req.params.id;
     const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
 
-    try {
-        const event = await Event.findOne({
+    const event = await Event.findOne({
             where: { id, choirId: req.activeChoirId },
             include: [{ model: Piece, as: 'pieces', through: { attributes: [] } }]
         });
@@ -310,7 +285,7 @@ exports.update = async (req, res) => {
             await autoUpdatePieceStatuses(type.toUpperCase(), req.activeChoirId, pieceIds);
         }
 
-        const updated = await Event.findByPk(id, {
+    const updated = await Event.findByPk(id, {
             include: [
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
                 { model: User, as: 'director', attributes: ['id', 'name'] },
@@ -318,25 +293,18 @@ exports.update = async (req, res) => {
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
-        res.status(200).send(updated);
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Could not update event.' });
-    }
+    res.status(200).send(updated);
 };
 
 exports.delete = async (req, res) => {
     const id = req.params.id;
 
-    try {
-        const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
+    const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
         if (num === 1) {
             res.send({ message: 'Event deleted successfully!' });
         } else {
             res.status(404).send({ message: 'Event not found.' });
         }
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Could not delete event.' });
-    }
 };
 
 /**
@@ -370,18 +338,13 @@ exports.deleteRange = async (req, res) => {
         where.type = upper;
     }
 
-    try {
-        const num = await Event.destroy({ where });
-        res.send({ message: `${num} events deleted.` });
-    } catch (err) {
-        res.status(500).send({ message: err.message || 'Could not delete events.' });
-    }
+    const num = await Event.destroy({ where });
+    res.send({ message: `${num} events deleted.` });
 };
 
 // Recalculate repertoire statuses for all choirs based on past events
 exports.recalculatePieceStatuses = async (req, res) => {
-    try {
-        await db.sequelize.query(`
+    await db.sequelize.query(`
             UPDATE "choir_repertoires" cr
             SET status = CASE
                 WHEN EXISTS (
@@ -401,8 +364,5 @@ exports.recalculatePieceStatuses = async (req, res) => {
                 ELSE 'NOT_READY'
             END
         `);
-        res.status(200).send({ message: 'Piece statuses recalculated.' });
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+    res.status(200).send({ message: 'Piece statuses recalculated.' });
 };

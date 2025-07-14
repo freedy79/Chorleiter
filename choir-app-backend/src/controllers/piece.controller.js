@@ -27,8 +27,7 @@ exports.create = async (req, res) => {
         return res.status(400).send({ message: "Title and Composer are required." });
     }
 
-    try {
-        let resolvedAuthorId = authorId || null;
+    let resolvedAuthorId = authorId || null;
         if (!resolvedAuthorId && authorName) {
             const [author] = await db.author.findOrCreate({ where: { name: authorName }, defaults: { name: authorName }});
             resolvedAuthorId = author.id;
@@ -51,16 +50,11 @@ exports.create = async (req, res) => {
         }
 
         // Fetch the full new piece to return it
-        const result = await db.piece.findByPk(newPiece.id, {
+    const result = await db.piece.findByPk(newPiece.id, {
             include: [ /* all associations */ ]
         });
 
-        res.status(201).send(result);
-
-    } catch (err) {
-        console.error("Error creating piece:", err);
-        res.status(500).send({ message: "An error occurred while creating the piece." });
-    }
+    res.status(201).send(result);
 };
 
 
@@ -70,18 +64,14 @@ exports.create = async (req, res) => {
  * when adding pieces to a collection.
  */
 exports.findAll = async (req, res) => {
-    try {
-        const pieces = await pieceService.findAll({
+    const pieces = await pieceService.findAll({
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] }
             ],
             order: [['title', 'ASC']]
         });
-        res.status(200).send(pieces);
-    } catch (err) {
-        res.status(500).send({ message: err.message || "An error occurred while retrieving pieces." });
-    }
+    res.status(200).send(pieces);
 };
 
 
@@ -91,8 +81,7 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     const id = req.params.id;
 
-    try {
-        const piece = await pieceService.findById(id, {
+    const piece = await pieceService.findById(id, {
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
@@ -100,15 +89,12 @@ exports.findOne = async (req, res) => {
             ]
         });
 
-        if (piece) {
-            res.status(200).send(piece);
-        } else {
-            res.status(404).send({
-                message: `Cannot find Piece with id=${id}.`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({ message: "Error retrieving Piece with id=" + id });
+    if (piece) {
+        res.status(200).send(piece);
+    } else {
+        res.status(404).send({
+            message: `Cannot find Piece with id=${id}.`
+        });
     }
 };
 
@@ -120,21 +106,17 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
     const id = req.params.id;
 
-    try {
-        if (req.userRole !== 'admin') {
+    if (req.userRole !== 'admin') {
             await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
             return res.status(202).send({ message: 'Change proposal created.' });
-        }
+    }
 
-        const num = await pieceService.update(id, req.body);
+    const num = await pieceService.update(id, req.body);
 
-        if (num == 1) {
-            res.send({ message: "Piece was updated successfully." });
-        } else {
-            res.send({ message: `Cannot update Piece with id=${id}. Maybe Piece was not found or req.body is empty!` });
-        }
-    } catch (err) {
-        res.status(500).send({ message: "Error updating Piece with id=" + id });
+    if (num == 1) {
+        res.send({ message: "Piece was updated successfully." });
+    } else {
+        res.send({ message: `Cannot update Piece with id=${id}. Maybe Piece was not found or req.body is empty!` });
     }
 };
 
@@ -147,56 +129,48 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     const id = req.params.id;
 
-    try {
-        const num = await pieceService.delete(id);
+    const num = await pieceService.delete(id);
 
-        if (num == 1) {
-            res.send({
-                message: "Piece was deleted successfully!"
-            });
-        } else {
-            res.send({
-                message: `Cannot delete Piece with id=${id}. Maybe Piece was not found!`
-            });
-        }
-    } catch (err) {
-        res.status(500).send({ message: "Could not delete Piece with id=" + id });
+    if (num == 1) {
+        res.send({
+            message: "Piece was deleted successfully!"
+        });
+    } else {
+        res.send({
+            message: `Cannot delete Piece with id=${id}. Maybe Piece was not found!`
+        });
     }
 };
 
 exports.uploadImage = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+    const id = req.params.id;
+    if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
 
-        const piece = await Piece.findByPk(id);
-        if (!piece) return res.status(404).send({ message: 'Piece not found.' });
+    const piece = await Piece.findByPk(id);
+    if (!piece) return res.status(404).send({ message: 'Piece not found.' });
 
-        await piece.update({ imageIdentifier: req.file.filename });
-        res.status(200).send({ filename: req.file.filename });
-    } catch (err) { next(err); }
+    await piece.update({ imageIdentifier: req.file.filename });
+    res.status(200).send({ filename: req.file.filename });
 };
 
 exports.getImage = async (req, res, next) => {
-    try {
-        const id = req.params.id;
-        const piece = await Piece.findByPk(id);
+    const id = req.params.id;
+    const piece = await Piece.findByPk(id);
 
         if (!piece || !piece.imageIdentifier) {
             return res.status(200).json({ data: '' });
         }
 
-        const filePath = path.join(__dirname, '../../uploads/piece-images', piece.imageIdentifier);
+    const filePath = path.join(__dirname, '../../uploads/piece-images', piece.imageIdentifier);
 
-        try {
-            await fs.access(filePath);
-        } catch (err) {
-            return res.status(200).json({ data: '' });
-        }
+    try {
+        await fs.access(filePath);
+    } catch (err) {
+        return res.status(200).json({ data: '' });
+    }
 
-        const fileData = await fs.readFile(filePath);
-        const base64 = fileData.toString('base64');
-        const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
-        res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
-    } catch (err) { next(err); }
+    const fileData = await fs.readFile(filePath);
+    const base64 = fileData.toString('base64');
+    const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
+    res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
 };
