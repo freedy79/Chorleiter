@@ -207,6 +207,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
                 message: msg,
                 status: err.status,
                 details: err.error?.details,
+                stack: err.stack,
                 url: this.router.url
               });
               return of({ data: [], total: 0 });
@@ -434,14 +435,17 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         console.log(`Status for piece ${pieceId} updated to ${newStatus}`);
         this.snackBar.open('Status updated.', 'OK', { duration: 2000 });
       },
-        error: (err) => {
-          console.error('Failed to update status', err);
-          const msg = err.error?.message || 'Could not update status.';
-          this.errorService.setError({
-            message: msg,
-            status: err.status,
-            url: this.router.url
-          });
+
+      error: (err) => {
+        console.error('Failed to update status', err);
+        const msg = err.error?.message || 'Could not update status.';
+        this.errorService.setError({
+          message: msg,
+          status: err.status,
+          stack: err.stack,
+          url: this.router.url
+        });
+
         this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
         // Revert changes by triggering a refresh
         this.refresh$.next();

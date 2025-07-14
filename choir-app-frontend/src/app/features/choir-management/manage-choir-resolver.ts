@@ -60,7 +60,12 @@ export class ManageChoirResolver implements Resolve<any> {
       catchError((error) => {
         const errorMessage = error.error?.message || 'Could not load data for choir management.';
         console.error('ManageChoirResolver error', error);
-        this.errorService.setError({ message: errorMessage, status: error.status });
+        this.errorService.setError({
+          message: errorMessage,
+          status: error.status,
+          stack: error.stack,
+          url: this.router.url
+        });
         this.router.navigate(['/dashboard']);
         return of(null);
       })
