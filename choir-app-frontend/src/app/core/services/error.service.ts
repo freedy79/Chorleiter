@@ -47,10 +47,9 @@ export class ErrorService {
       status: error.status,
       details: error.details,
       stack: error.stack,
-      url: error.url,
+      url: error.url || window.location.href,
       file: error.file,
-      line: error.line,
-      url: window.location.href
+      line: error.line
     });
   }
 }
