@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const logger = require('../config/logger');
 
 const LOG_DIR = path.join(__dirname, '..', '..', 'logs');
 
@@ -62,12 +63,14 @@ async function deleteLogFile(filename) {
     const filePath = path.join(LOG_DIR, safe);
     try {
         await fs.promises.unlink(filePath);
+        logger.reset();
         return true;
     } catch (err) {
         if (err.code === 'ENOENT') return false;
         if (err.code === 'EPERM') {
             // On Windows the file might still be locked by the logger
             await fs.promises.truncate(filePath, 0);
+            logger.reset();
             return true;
         }
         throw err;

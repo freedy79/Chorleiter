@@ -79,3 +79,18 @@ function getLogger() {
 }
 
 module.exports = getLogger();
+
+/**
+ * Schließt alle aktuellen Logger-Transporte und erstellt sie neu.
+ * Dies wird verwendet, wenn Logdateien gelöscht werden, damit
+ * keine Puffereinträge erneut geschrieben werden.
+ */
+function resetLogger() {
+  if (logger) {
+    logger.close();
+  }
+  logger = buildLogger();
+  return logger;
+}
+
+module.exports.reset = resetLogger;
