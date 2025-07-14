@@ -23,6 +23,8 @@ SMTP_USER=no-reply
 SMTP_PASS=
 EMAIL_FROM=no-reply@nak-chorleiter.de
 SMTP_STARTTLS=false
+# Base address of the frontend used when generating links
+FRONTEND_URL=http://localhost:4200
 ```
 The sender name is automatically set to the `EMAIL_FROM` address so that
 `no-reply@nak-chorleiter.de` appears as the sender in mail clients.
@@ -32,7 +34,9 @@ When the application is started for the first time these settings are written to
 the database and can later be changed through the admin endpoint
 `/admin/mail-settings`.
 After saving new settings you can send yourself a test email from that page to verify the configuration.
-Any errors during mail delivery are written to `logs/error.log` for troubleshooting.
+Set `FRONTEND_URL` to the public address of the Angular frontend so password reset
+and invitation mails contain valid links. Any errors during mail delivery are
+written to `logs/error.log` for troubleshooting.
 
 ## Tests
 
