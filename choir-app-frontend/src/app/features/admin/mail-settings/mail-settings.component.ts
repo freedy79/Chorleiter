@@ -24,6 +24,7 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
       user: [''],
       pass: [''],
       secure: [false],
+      starttls: [false],
       fromAddress: ['']
     });
   }

@@ -22,7 +22,9 @@ SMTP_PORT=25
 SMTP_USER=no-reply
 SMTP_PASS=
 EMAIL_FROM=no-reply@nak-chorleiter.de
+SMTP_STARTTLS=false
 ```
+Set `SMTP_STARTTLS` to `true` to enforce a STARTTLS handshake when connecting to the mail server.
 
 When the application is started for the first time these settings are written to
 the database and can later be changed through the admin endpoint
