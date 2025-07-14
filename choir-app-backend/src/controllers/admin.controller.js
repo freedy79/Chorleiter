@@ -435,6 +435,19 @@ exports.sendTestMail = async (req, res) => {
     }
 };
 
+exports.sendMailTemplateTest = async (req, res) => {
+    try {
+        const { type } = req.params;
+        const user = await db.user.findByPk(req.userId);
+        if (user) {
+            await emailService.sendTemplatePreviewMail(user.email, type, user.name);
+        }
+        res.status(200).send({ message: 'Test mail sent if user exists.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 exports.getMailTemplates = async (req, res) => {
     try {
         const templates = await db.mail_template.findAll();

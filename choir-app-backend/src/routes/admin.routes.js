@@ -42,6 +42,7 @@ router.put('/mail-settings', controller.updateMailSettings);
 router.post('/mail-settings/test', controller.sendTestMail);
 router.get('/mail-templates', controller.getMailTemplates);
 router.put('/mail-templates', controller.updateMailTemplates);
+router.post('/mail-templates/test/:type', controller.sendMailTemplateTest);
 
 module.exports = router;
 
