@@ -67,14 +67,20 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     });
   }
 
+  private dateKey(date: string): string {
+    return new Date(date).toISOString().substring(0, 10);
+  }
+
   isAvailable(userId: number, date: string): boolean {
-    const status = this.availabilityMap[userId]?.[date];
+    const key = this.dateKey(date);
+    const status = this.availabilityMap[userId]?.[key];
     return !status || status === 'AVAILABLE' || status === 'MAYBE';
   }
 
   isMaybe(userId: number | null | undefined, date: string): boolean {
     if (!userId) return false;
-    return this.availabilityMap[userId]?.[date] === 'MAYBE';
+    const key = this.dateKey(date);
+    return this.availabilityMap[userId]?.[key] === 'MAYBE';
   }
 
   availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
