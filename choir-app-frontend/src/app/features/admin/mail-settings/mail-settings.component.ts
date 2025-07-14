@@ -24,6 +24,8 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
       user: [''],
       pass: [''],
       secure: [false],
+      starttls: [false],
+      encryption: ['none'],
       fromAddress: ['']
     });
   }
@@ -35,22 +37,36 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
   load(): void {
     this.api.getMailSettings().subscribe(settings => {
       if (settings) {
-        this.form.patchValue(settings);
+        const encryption = settings.secure
+          ? 'tls'
+          : settings.starttls
+          ? 'starttls'
+          : 'none';
+        this.form.patchValue({ ...settings, encryption });
         this.form.markAsPristine();
       }
     });
   }
 
+  private prepareData(): MailSettings {
+    const { encryption, ...values } = this.form.value;
+    return {
+      ...(values as MailSettings),
+      secure: encryption === 'tls',
+      starttls: encryption === 'starttls'
+    };
+  }
+
   save(): void {
     if (this.form.invalid) return;
-    this.api.updateMailSettings(this.form.value as MailSettings).subscribe(() => {
+    this.api.updateMailSettings(this.prepareData()).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
       this.form.markAsPristine();
     });
   }
 
   sendTest(): void {
-    this.api.sendTestMail(this.form.value as MailSettings).subscribe(() => {
+    this.api.sendTestMail(this.prepareData()).subscribe(() => {
       this.snack.open('Testmail verschickt', 'OK', { duration: 2000 });
     });
   }

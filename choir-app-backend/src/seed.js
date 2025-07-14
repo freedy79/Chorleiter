@@ -38,6 +38,7 @@ async function seedDatabase(options = {}) {
                     user: process.env.SMTP_USER || '',
                     pass: process.env.SMTP_PASS || '',
                     secure: false,
+                    starttls: false,
                     fromAddress: process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de'
                 }
             });
