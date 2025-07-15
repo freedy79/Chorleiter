@@ -17,7 +17,7 @@ import { UserDialogComponent } from './user-dialog/user-dialog.component';
 })
 export class ManageUsersComponent implements OnInit {
   users: User[] = [];
-  displayedColumns = ['name', 'email', 'role', 'choirs', 'actions'];
+  displayedColumns = ['name', 'email', 'role', 'choirs', 'lastLogin', 'actions'];
   dataSource = new MatTableDataSource<User>();
 
   constructor(private api: ApiService, private dialog: MatDialog, private snack: MatSnackBar) {}

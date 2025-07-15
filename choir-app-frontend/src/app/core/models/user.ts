@@ -38,6 +38,7 @@ export interface User {
   activeChoir?: Choir;
   availableChoirs?: Choir[];
   lastDonation?: string;
+  lastLogin?: string;
 }
 
 export interface UserInChoir extends User {
