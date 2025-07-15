@@ -7,7 +7,7 @@
     "startwithtimestamp": "node ./scripts/serve-with-timestamp.js",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test",
+    "test": "ng test --watch=false",
     "pretest": "npm run generate-build-info",
     "generate-build-info": "node ./scripts/generate-build-info.js",
     "prebuild": "npm run generate-build-info",
@@ -42,6 +42,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "puppeteer": "^24.13.0",
     "typescript": "~5.8.2"
   }
 }
