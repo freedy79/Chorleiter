@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
     HttpRequest,
     HttpHandler,
@@ -13,13 +13,14 @@ import { environment } from '@env/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    constructor(private authService: AuthService) {}
+    constructor(private injector: Injector) {}
 
     intercept(
         request: HttpRequest<unknown>,
         next: HttpHandler
     ): Observable<HttpEvent<unknown>> {
-        const token = this.authService.getToken();
+        const authService = this.injector.get(AuthService);
+        const token = authService.getToken();
         const isApiUrl = request.url.startsWith(environment.apiUrl);
 
         // Füge den Authorization-Header hinzu, wenn ein Token vorhanden ist.
@@ -46,7 +47,7 @@ export class AuthInterceptor implements HttpInterceptor {
                     console.warn(
                         'Unauthorized or Forbidden error detected. Logging out user.'
                     );
-                    this.authService.logout('sessionExpired');
+                    authService.logout('sessionExpired');
                 }
                 // Leiten Sie den Fehler an den aufrufenden Service weiter, damit er auch behandelt werden kann.
                 return throwError(() => error);
