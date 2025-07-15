@@ -87,7 +87,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await db.user.findAll({
             order: [['name', 'ASC']],
-            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation'],
+            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -167,7 +167,7 @@ exports.getUserByEmail = async (req, res) => {
     try {
         const user = await db.user.findOne({
             where: { email },
-            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation'],
+            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
             include: [{
                 model: db.choir,
                 as: 'choirs',

@@ -106,6 +106,10 @@ exports.signin = async (req, res) => {
         { expiresIn: tokenExpiresIn }
     );
 
+    // Update last login timestamp
+    user.lastLogin = new Date();
+    await user.save().catch(() => {});
+
     await LoginAttempt.create({ email, success: true, ipAddress, userAgent });
     res.status(200).send({
       id: user.id,

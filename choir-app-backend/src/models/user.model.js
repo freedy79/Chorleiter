@@ -29,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true
       },
+      lastLogin: {
+        type: DataTypes.DATE,
+        allowNull: true
+      },
       street: {
         type: DataTypes.STRING,
         allowNull: true
