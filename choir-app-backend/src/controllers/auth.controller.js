@@ -135,11 +135,13 @@ exports.switchChoir = async (req, res) => {
         const user = await User.findByPk(userId, { include: [Choir] });
         // Sicherheitsprüfung: Gehört der Chor dem Benutzer überhaupt?
         const hasChoir = user.choirs.some(choir => choir.id === newActiveChoirId);
-        if (!hasChoir) {
+        if (!hasChoir && user.role !== 'admin') {
             return res.status(403).send({ message: "Forbidden: User is not a member of this choir." });
         }
 
-        const activeChoir = user.choirs.find(choir => choir.id === newActiveChoirId);
+        const activeChoir = hasChoir
+            ? user.choirs.find(choir => choir.id === newActiveChoirId)
+            : await Choir.findByPk(newActiveChoirId);
 
         // Erstellen Sie ein neues Token mit der neuen aktiven Chor-ID
         const token = jwt.sign(
