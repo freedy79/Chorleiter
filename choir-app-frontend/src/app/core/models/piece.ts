@@ -2,7 +2,6 @@ import { Composer } from './composer';
 import { Category } from './category';
 import { Author } from './author';
 import { PieceLink } from './piece-link';
-import { Event } from './event';
 
 export interface PieceNote {
   id: number;
@@ -43,7 +42,7 @@ export interface Piece {
   author?: Author;
   arrangers?: Composer[];
   links?: PieceLink[];
-  events?: Event[];
+  events?: import('./event').EventPiece[];
   notes?: PieceNote[];
   lastSung?: string | null;
   lastRehearsed?: string | null;

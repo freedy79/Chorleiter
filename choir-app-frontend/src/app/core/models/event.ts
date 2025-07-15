@@ -1,4 +1,10 @@
-import { Piece } from "./piece";
+
+export interface EventPiece {
+  id: number;
+  title: string;
+  composer?: { name: string };
+  collections?: { prefix: string; collection_piece: { numberInCollection: string } }[];
+}
 
 export interface Event {
   id: number;
@@ -18,7 +24,7 @@ export interface Event {
   finalized?: boolean;
   version?: number;
   monthlyPlan?: { year: number; month: number; finalized: boolean; version: number } | null;
-  pieces: Piece[];
+  pieces: EventPiece[];
 }
 
 export interface CreateEventResponse {
