@@ -1,12 +1,12 @@
-<div class="login-pf-page">
-  <div class="login-pf-page-header">
-    <h1 class="login-pf-brand">NAK Chorleiter</h1>
+<div class="login-page">
+  <div class="login-page-header">
+    <h1 class="login-brand">NAK Chorleiter</h1>
   </div>
-  <div class="card-pf">
-    <header class="login-pf-header">
+  <div class="card">
+    <header class="login-header">
       <h1>Anmelden</h1>
     </header>
-    <div class="login-pf-body">
+    <div class="login-body">
       <p *ngIf="sessionExpired" class="session-expired">Letzte Sitzung abgelaufen.</p>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-pf-settings">
         <mat-form-field appearance="outline">
@@ -21,7 +21,7 @@
 
         <mat-checkbox formControlName="rememberMe" color="primary">Angemeldet bleiben</mat-checkbox>
 
-        <div class="pf-m-align-right">
+        <div>
           <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
             <span *ngIf="!isLoading">Anmelden</span>
             <mat-spinner *ngIf="isLoading" diameter="24" class="in-button-spinner"></mat-spinner>

@@ -1,9 +1,23 @@
+@use "@angular/material" as mat;
+@use "../../../themes/_nak-theme" as nak;
+
 mat-form-field {
   width: 100%;
 }
 
 .reset-link {
   margin-top: 1rem;
+  a {
+    color: mat.m2-get-color-from-palette(
+      nak.$choir-app-primary,
+      default
+    ) !important;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 .in-button-spinner {
@@ -17,49 +31,72 @@ mat-form-field {
   margin-bottom: 1rem;
 }
 
-.login-pf-page {
+.login-page {
   padding-top: 20px;
-}
 
-.login-pf-page .login-pf-page-header {
-  margin-bottom: 20px;
-  text-align: center;
-}
+  .login-page-header {
+    margin-bottom: 20px;
+    text-align: center;
+  }
 
-.login-pf-page .card-pf {
-  padding: 10px 20px 30px;
-  margin-bottom: 0;
+  .login-brand {
+    font-size: 24px;
+    color: mat.m2-get-color-from-palette(
+      nak.$choir-app-primary,
+      default
+    ) !important;
+  }
+
+  .card {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 600px;
+    padding: 10px 20px 30px;
+    margin-bottom: 0;
+
+    //border-top: 5px solid var(--primary-color, #3f51b5);
+  }
+
+  :host-context(.light-theme) .card {
+    background-color: #dddddd;
+    border: 1px solid #e0e0e0;
+  }
+
+  :host-context(.dark-theme) .card {
+    color: #666666;
+    border: 1px solid #777777;
+  }
+
+  .login-header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    h1 {
+      text-align: center;
+      font-size: 16px;
+    }
+  }
+
+  .login-settings {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    margin-top: 40px;
+  }
 }
 
 @media (min-width: 768px) {
-  .login-pf-page .card-pf {
+  .login-page .card-pf {
     padding: 20px 40px 30px;
   }
 }
 
-.login-pf-page .login-pf-header {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-}
-
-.login-pf-page .login-pf-header h1 {
-  text-align: center;
-  font-size: 16px;
-}
-
 @media (min-width: 768px) {
-  .login-pf-page .login-pf-header h1 {
+  .login-page .login-pf-header h1 {
     font-size: 24px;
   }
-}
-
-.login-pf-page .login-pf-settings {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.login-pf-page .btn-primary {
-  margin-top: 40px;
 }

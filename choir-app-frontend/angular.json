@@ -31,8 +31,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "src/patternfly-login.css"
+              "src/styles.scss"
             ]
           },
           "configurations": {
