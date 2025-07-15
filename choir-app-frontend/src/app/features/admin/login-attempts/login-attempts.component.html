@@ -1,3 +1,13 @@
+<div class="month-nav">
+  <button mat-icon-button (click)="previousMonth()">
+    <mat-icon>chevron_left</mat-icon>
+  </button>
+  <span>{{ monthLabel }}</span>
+  <button mat-icon-button (click)="nextMonth()">
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+</div>
+
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="email">
     <th mat-header-cell *matHeaderCellDef>E-Mail</th>

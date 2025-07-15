@@ -1,6 +1,7 @@
 const db = require("../models");
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
+const { Op } = require('sequelize');
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
 exports.getAll = (model) => async (req, res) => {
@@ -199,8 +200,16 @@ exports.sendPasswordReset = async (req, res) => {
 };
 
 exports.getLoginAttempts = async (req, res) => {
+    const year = parseInt(req.query.year, 10);
+    const month = parseInt(req.query.month, 10);
+    const where = {};
+    if (!isNaN(year) && !isNaN(month)) {
+        const start = new Date(year, month - 1, 1);
+        const end = new Date(year, month, 1);
+        where.createdAt = { [Op.gte]: start, [Op.lt]: end };
+    }
     try {
-        const attempts = await db.login_attempt.findAll({ order: [['createdAt', 'DESC']] });
+        const attempts = await db.login_attempt.findAll({ where, order: [['createdAt', 'DESC']] });
         res.status(200).send(attempts);
     } catch (err) {
         res.status(500).send({ message: err.message });

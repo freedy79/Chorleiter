@@ -19,6 +19,7 @@ export class LoginAttemptsComponent implements OnInit {
   attempts: LoginAttempt[] = [];
   displayedColumns = ['email', 'success', 'ipAddress', 'userAgent', 'createdAt'];
   dataSource = new MatTableDataSource<LoginAttempt>();
+  currentMonth = new Date();
 
   constructor(private api: ApiService, private dialog: MatDialog, private snack: MatSnackBar) {}
 
@@ -26,11 +27,27 @@ export class LoginAttemptsComponent implements OnInit {
     this.loadAttempts();
   }
 
+  get monthLabel(): string {
+    return this.currentMonth.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+
   loadAttempts(): void {
-    this.api.getLoginAttempts().subscribe(data => {
+    const year = this.currentMonth.getFullYear();
+    const month = this.currentMonth.getMonth() + 1;
+    this.api.getLoginAttempts(year, month).subscribe(data => {
       this.attempts = data;
       this.dataSource.data = data;
     });
+  }
+
+  previousMonth(): void {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+    this.loadAttempts();
+  }
+
+  nextMonth(): void {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+    this.loadAttempts();
   }
 
   openUser(email: string): void {
