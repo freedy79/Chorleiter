@@ -4,10 +4,11 @@ const controller = require("../controllers/backup.controller");
 const router = require("express").Router();
 const { memoryUpload } = require('../utils/upload');
 const upload = memoryUpload();
+const { handler: wrap } = require("../utils/async");
 
 router.use(verifyToken, role.requireAdmin);
 
-router.get('/export', controller.exportData);
-router.post('/import', upload.single('backup'), controller.importData);
+router.get('/export', wrap(controller.exportData));
+router.post('/import', upload.single('backup'), wrap(controller.importData));
 
 module.exports = router;
