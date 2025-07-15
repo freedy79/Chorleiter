@@ -571,7 +571,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.hoverImage = cached;
         return;
       }
-      this.apiService.getPieceImage(piece.id).subscribe(img => {
+      this.pieceService.getPieceImage(piece.id).subscribe(img => {
         this.imageCache.set(piece.id, img);
         this.hoverImage = img;
       });

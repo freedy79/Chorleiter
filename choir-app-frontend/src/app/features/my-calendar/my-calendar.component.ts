@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '@core/services/api.service';
+import { MonthlyPlanService } from '@core/services/monthly-plan.service';
 import { Event } from '@core/models/event';
 import { PlanEntry } from '@core/models/plan-entry';
 import { AuthService } from '@core/services/auth.service';
@@ -41,7 +42,7 @@ export class MyCalendarComponent implements OnInit {
   @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
   @ViewChild(MatCalendar) calendar?: MatCalendar<Date>;
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(private api: ApiService, private monthlyPlan: MonthlyPlanService, private auth: AuthService) {}
 
   ngOnInit(): void {
     this.auth.isAdmin$.subscribe(v => (this.isAdmin = v));
@@ -75,7 +76,7 @@ export class MyCalendarComponent implements OnInit {
     const key = `${year}-${month}`;
     if (this.loadedPlanMonths.has(key)) return;
     this.loadedPlanMonths.add(key);
-    this.api.getMonthlyPlan(year, month).subscribe(plan => {
+    this.monthlyPlan.getMonthlyPlan(year, month).subscribe(plan => {
       if (!plan) return;
       for (const entry of plan.entries || []) {
         const dKey = new Date(entry.date).toISOString().substring(0, 10);
