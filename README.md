@@ -10,6 +10,18 @@ Before starting the backend, install its dependencies:
 npm install --prefix choir-app-backend
 ```
 
+You can initialize the database separately using
+
+```bash
+npm run init --prefix choir-app-backend
+```
+
+Run only the seeding step with
+
+```bash
+npm run seed --prefix choir-app-backend
+```
+
 ### Mail Configuration
 
 Configure the SMTP server used for password resets and invitations by adding the
