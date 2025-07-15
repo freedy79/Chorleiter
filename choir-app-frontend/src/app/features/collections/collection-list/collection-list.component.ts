@@ -68,18 +68,20 @@ export class CollectionListComponent implements OnInit {
   }
 
 
-  addCollectionToChoir(collection: Collection): void {
+  syncCollection(collection: Collection): void {
     this.apiService.addCollectionToChoir(collection.id).subscribe({
       next: () => {
-        this.snackBar.open(`Sammlung '${collection.title}' wurde zum Chorrepertoire hinzugefügt.`, 'OK', {
+        const msg = collection.isAdded
+          ? `Sammlung '${collection.title}' wurde aktualisiert.`
+          : `Sammlung '${collection.title}' wurde zum Chorrepertoire hinzugefügt.`;
+        this.snackBar.open(msg, 'OK', {
           duration: 3000,
           verticalPosition: 'top'
         });
-        // Simply reload the list to get the updated 'isAdded' status.
         this.loadCollections();
       },
       error: (err) => {
-        this.snackBar.open(`Fehler beim Hinzufügen der Sammlung: ${err.message}`, 'Schließen', {
+        this.snackBar.open(`Fehler beim Aktualisieren der Sammlung: ${err.message}`, 'Schließen', {
           duration: 5000,
           verticalPosition: 'top'
         });

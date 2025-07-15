@@ -118,11 +118,20 @@ exports.addToChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Choir or Collection not found." });
         }
 
-        await choir.addCollection(collection);
-        const pieces = await collection.getPieces();
-        await choir.addPieces(pieces);
+        // Ensure the collection is linked to the choir, ignore if it already exists
+        await choir.addCollection(collection).catch(() => {});
 
-        res.status(200).send({ message: `Collection '${collection.title}' and all its pieces added to your repertoire.` });
+        // Add only those pieces that are not yet in the choir's repertoire
+        const pieces = await collection.getPieces({ attributes: ['id'] });
+        const choirPieces = await choir.getPieces({ attributes: ['id'] });
+        const choirPieceIds = new Set(choirPieces.map(p => p.id));
+        const missingPieces = pieces.filter(p => !choirPieceIds.has(p.id));
+
+        if (missingPieces.length) {
+            await choir.addPieces(missingPieces).catch(() => {});
+        }
+
+        res.status(200).send({ message: `Collection '${collection.title}' synced with your repertoire.` });
     } catch (err) { next(err); }
 };
 

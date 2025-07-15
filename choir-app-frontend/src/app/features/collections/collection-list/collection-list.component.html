@@ -63,10 +63,9 @@
             <button
               mat-stroked-button
               color="primary"
-              (click)="addCollectionToChoir(collection); $event.stopPropagation()"
-              [disabled]="collection.isAdded">
-                <mat-icon>add_circle_outline</mat-icon>
-                <span>Zum Repertoire hinzufügen</span>
+              (click)="syncCollection(collection); $event.stopPropagation()">
+                <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
+                <span>{{ collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen' }}</span>
             </button>
             <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
