@@ -1,9 +1,35 @@
 
+import { Composer } from './composer';
+import { Author } from './author';
+import { CollectionReference } from './piece';
+
 export interface EventPiece {
+  /** Identifier of the piece */
   id: number;
+  /** Title of the piece. */
   title: string;
-  composer?: { name: string };
-  collections?: { prefix: string; collection_piece: { numberInCollection: string } }[];
+  /**
+   * Composer information. Some endpoints only provide the name while others
+   * include the full composer object. Making the "id" optional keeps the type
+   * compatible with both variations.
+   */
+  composer?: Composer & { id?: number };
+  /** Optional author data used when displaying the piece in event lists */
+  author?: Author;
+  /** Optional lyrics source text */
+  lyricsSource?: string;
+  /** Collection references when provided by the backend */
+  collections?: CollectionReference[];
+
+  /** --- Event specific properties when a piece is loaded with its events --- */
+  /** Date on which the piece was performed */
+  date?: string;
+  /** Type of the event (rehearsal or service) */
+  type?: 'REHEARSAL' | 'SERVICE';
+  /** Optional notes attached to the event */
+  notes?: string;
+  /** Simplified director information */
+  director?: { name: string };
 }
 
 export interface Event {
