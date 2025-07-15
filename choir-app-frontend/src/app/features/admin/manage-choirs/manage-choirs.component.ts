@@ -5,6 +5,8 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { Choir } from 'src/app/core/models/choir';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { AuthService } from '@core/services/auth.service';
 import { ChoirDialogComponent } from './choir-dialog/choir-dialog.component';
 
 @Component({
@@ -19,7 +21,12 @@ export class ManageChoirsComponent implements OnInit {
   displayedColumns = ['name', 'location', 'memberCount', 'eventCount', 'pieceCount', 'actions'];
   dataSource = new MatTableDataSource<Choir>();
 
-  constructor(private api: ApiService, private dialog: MatDialog) {}
+  constructor(
+    private api: ApiService,
+    private dialog: MatDialog,
+    private auth: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadChoirs();
@@ -42,13 +49,9 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   editChoir(choir: Choir): void {
-    const ref = this.dialog.open(ChoirDialogComponent, { width: '600px', data: choir });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.updateChoir(choir.id, result).subscribe(() => this.loadChoirs());
-      } else {
-        this.loadChoirs();
-      }
+    this.auth.switchChoir(choir.id).subscribe({
+      next: () => this.router.navigate(['/manage-choir']),
+      error: () => this.loadChoirs()
     });
   }
 
