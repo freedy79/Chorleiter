@@ -58,6 +58,11 @@ export class ManageChoirResolver implements Resolve<any> {
         );
       }),
       catchError((error) => {
+        if (error.status === 0 && error.error === 'abort') {
+          // Request was cancelled, e.g. due to logout. Do not report an error.
+          return of(null);
+        }
+
         const errorMessage = error.error?.message || 'Could not load data for choir management.';
         console.error('ManageChoirResolver error', error);
         this.errorService.setError({
