@@ -2,8 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 
-import { Piece } from 'src/app/core/models/piece';
-import { Event } from 'src/app/core/models/event';
+import { Event, EventPiece } from 'src/app/core/models/event';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -28,7 +27,7 @@ export class EventCardComponent {
    */
   @Input() event: Event | null = null;
 
-  getPieceSubtitle(piece: Piece): string {
+  getPieceSubtitle(piece: EventPiece): string {
     if (!piece) {
       return '';
     }
@@ -37,7 +36,7 @@ export class EventCardComponent {
     return author ? `${composer} - ${author}` : composer;
   }
 
-  getPieceReference(piece: Piece): string {
+  getPieceReference(piece: EventPiece): string {
     if (piece.collections && piece.collections.length > 0) {
       const ref = piece.collections[0]; // Nehmen Sie die erste Referenz für die Anzeige
       // Die Datenstruktur hängt davon ab, wie Sequelize sie zurückgibt
