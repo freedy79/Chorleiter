@@ -11,6 +11,9 @@ export class ErrorInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       catchError((error) => {
+        if (req.url.includes('/auth/signin')) {
+          return throwError(() => error);
+        }
         const message = error.name === 'TimeoutError'
           ? 'Die Anfrage hat zu lange gedauert.'
           : (error instanceof HttpErrorResponse ? (error.error?.message || error.message) : 'Unbekannter Fehler');

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { User } from '../models/user';
@@ -54,6 +54,23 @@ export class AuthService {
 
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
+  }
+
+  /**
+   * Check if the currently stored token is still valid.
+   * Returns an observable that emits true when the server
+   * accepts the token and false otherwise.
+   */
+  isTokenValid(): Observable<boolean> {
+    const token = this.getToken();
+    if (!token) {
+      return of(false);
+    }
+
+    return this.http.get<{ valid: boolean }>(`${environment.apiUrl}/auth/check-token`).pipe(
+      map(() => true),
+      catchError(() => of(false))
+    );
   }
 
   login(credentials: any): Observable<User> {

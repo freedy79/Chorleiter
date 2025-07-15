@@ -8,6 +8,7 @@
     </header>
     <div class="login-body">
       <p *ngIf="sessionExpired" class="session-expired">Letzte Sitzung abgelaufen.</p>
+      <p *ngIf="loginError" class="login-error">{{ loginError }}</p>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-pf-settings">
         <mat-form-field appearance="outline">
           <mat-label>E-Mail</mat-label>
