@@ -13,6 +13,14 @@
   transform: translate(-50%, -50%);
 }
 
+:root {
+  @include mat.form-field-overrides((
+    disabled-input-text-placeholder-color: orange,
+    disabled-leading-icon-color: red,
+    filled-input-text-placeholder-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, A100),
+  ));
+}
+
 :host-context(.light-theme) .search-box {
   $white: mat.m2-get-color-from-palette(nak.$choir-app-primary, A100);
   --mdc-outlined-text-field-outline-color: #{$white};

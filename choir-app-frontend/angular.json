@@ -104,8 +104,7 @@
               }
             ],
             "styles": [
-              "src/styles.scss",
-              "src/patternfly-login.css"
+              "src/styles.scss"
             ],
             "karmaConfig": "karma.conf.js"
           }

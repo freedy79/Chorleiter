@@ -1,4 +1,8 @@
-<svg width="40" height="40" viewBox="0 0 40 40" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-<path d="M26.5 12.5C26.5 16.0899 23.5899 19 20 19C16.4101 19 13.5 16.0899 13.5 12.5C13.5 8.91015 16.4101 6 20 6C23.5899 6 26.5 8.91015 26.5 12.5Z"/>
-<path d="M8 24.0007L15 22.0007H25L32 24.0007V32.0007H8V24.0007Z"/>
+<?xml version="1.0" encoding="iso-8859-1"?>
+<svg version="1.1" id="user-filled" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px"
+	 y="0px" viewBox="0 0 24 24" height="24" width="24" style="enable-background:new 0 0 24 24;" xml:space="preserve">
+<g>
+	<path d="M15.9,7.1c0,2.154-1.746,3.9-3.9,3.9S8.1,9.254,8.1,7.1c0-2.154,1.746-3.9,3.9-3.9S15.9,4.946,15.9,7.1z"/>
+	<path d="M4.8,14.001l4.2-1.2h6l4.2,1.2v4.8H4.8V14.001z"/>
+</g>
 </svg>
