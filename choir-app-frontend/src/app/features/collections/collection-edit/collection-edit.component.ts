@@ -13,7 +13,7 @@ import {
     Validators,
     FormControl,
 } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { map, startWith, switchMap, tap } from 'rxjs/operators';
 import {
@@ -48,6 +48,7 @@ interface SelectedPieceWithNumber {
         ReactiveFormsModule,
         MaterialModule,
         MatAutocompleteModule,
+        RouterModule,
     ],
     templateUrl: './collection-edit.component.html',
     styleUrls: ['./collection-edit.component.scss'],
