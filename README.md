@@ -93,6 +93,27 @@ Before packaging the files for upload, the deployment scripts run a syntax check
 on `choir-app-backend/server.js` using `node --check`. This catches backend
 syntax errors locally so you don't discover them only after uploading.
 
+## Error Handling
+
+Backend controllers do not contain repetitive `try`/`catch` blocks. Instead the
+routes wrap each controller function with `src/utils/async.js` which is a thin
+wrapper around `express-async-handler`. Any error thrown inside an async
+controller is forwarded to the global error middleware in `src/app.js` where it
+is logged and answered with status code 500.
+
+Example usage in a route file:
+
+```javascript
+const { handler: wrap } = require('../utils/async');
+router.get('/', wrap(controller.findAll));
+```
+
+Controllers can therefore simply `throw` or allow errors to bubble up without
+manual error handling.
+
+See `src/controllers/example.controller.js` for a minimal controller using this
+approach.
+
 ## Deployment
 
 Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
