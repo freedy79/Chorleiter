@@ -4,7 +4,9 @@
     <h1>Sammlungen</h1>
     <p class="subtitle">Verwalten von globalen Sammlungen und Hinzufügen zum Chorrepertoire.</p>
   </div>
-  <button mat-flat-button color="accent" routerLink="/collections/new">
+  <button mat-flat-button color="accent" routerLink="/collections/new"
+          [disabled]="!isChoirAdmin && !isAdmin"
+          matTooltip="{{ !isChoirAdmin && !isAdmin ? 'Zum Hinzufügen müssen Sie als Chor-Administrator eingeloggt sein.' : '' }}">
     <mat-icon>add</mat-icon>
     <span>Neue Sammlung</span>
   </button>

@@ -9,6 +9,7 @@ import { Collection } from '@core/models/collection';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router'; // Import RouterLink and Router
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
   selector: 'app-collection-list',
@@ -24,6 +25,8 @@ import { RouterLink, Router } from '@angular/router'; // Import RouterLink and R
 export class CollectionListComponent implements OnInit {
   public dataSource = new MatTableDataSource<Collection>();
   public isLoading = true;
+  public isChoirAdmin = false;
+  public isAdmin = false;
   private _sort!: MatSort;
   @ViewChild(MatSort) set sort(sort: MatSort) {
     if (sort) {
@@ -37,11 +40,14 @@ export class CollectionListComponent implements OnInit {
   constructor(
     public apiService: ApiService,
     private snackBar: MatSnackBar,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) { }
 
   ngOnInit(): void {
     this.loadCollections();
+    this.apiService.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
+    this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
   }
 
   loadCollections(): void {
