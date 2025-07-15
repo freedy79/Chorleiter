@@ -114,6 +114,29 @@ manual error handling.
 See `src/controllers/example.controller.js` for a minimal controller using this
 approach.
 
+## Reusable CRUD controller
+
+Standard CRUD operations are implemented once in `src/controllers/baseCrud.controller.js`.
+Controllers instantiate this helper and either use the generic handlers directly
+or call `base.service` for custom logic. Example:
+
+```javascript
+const BaseCrudController = require('./baseCrud.controller');
+const base = new BaseCrudController(Category);
+
+exports.findAll = async (req, res) => {
+    const categories = await base.service.findAll({ order: [['name', 'ASC']] });
+    res.status(200).send(categories);
+};
+
+exports.findById = base.findById;
+exports.update = base.update;
+exports.delete = base.delete;
+```
+
+`piece.controller.js` now delegates its basic operations to this controller so
+that only the piece-specific logic remains.
+
 ## Deployment
 
 Use `deploy.sh` on Unix systems or `deploy.ps1` on Windows to upload the backend
