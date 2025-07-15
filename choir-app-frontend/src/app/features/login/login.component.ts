@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AuthService } from 'src/app/core/services/auth.service';
 import { MaterialModule } from '@modules/material.module';
@@ -23,12 +22,12 @@ export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   isLoading = false;
   sessionExpired = false;
+  loginError: string | null = null;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router, // Injizieren Sie den Angular Router
-    private snackBar: MatSnackBar,
     private route: ActivatedRoute
   ) {
     this.loginForm = this.fb.group({
@@ -41,6 +40,13 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
       this.sessionExpired = params.has('sessionExpired');
+      if (!this.sessionExpired) {
+        this.authService.isTokenValid().subscribe(valid => {
+          if (!valid && this.authService.getToken()) {
+            this.sessionExpired = true;
+          }
+        });
+      }
     });
   }
 
@@ -50,6 +56,7 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    this.loginError = null;
     this.isLoading = true;
 
     // Rufen Sie den AuthService auf, um den Benutzer anzumelden
@@ -64,12 +71,12 @@ export class LoginComponent implements OnInit {
       // --- DIES IST DER FEHLERFALL ---
       error: (err) => {
         this.isLoading = false;
-        // Zeigen Sie dem Benutzer eine freundliche Fehlermeldung
-        const errorMessage = err.error?.message || 'Anmeldung fehlgeschlagen. Bitte überprüfe deine Zugangsdaten.';
-        this.snackBar.open(errorMessage, 'Schließen', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
+        const status = err.status;
+        if (status === 401 || status === 404 || status === 403) {
+          this.loginError = 'Benutzer oder Passwort ungültig';
+        } else {
+          this.loginError = err.error?.message || 'Anmeldung fehlgeschlagen';
+        }
         console.error('Login failed', err);
       },
       // --- WIRD IMMER AUSGEFÜHRT ---
