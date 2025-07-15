@@ -403,7 +403,9 @@ exports.deleteLog = async (req, res) => {
 
 exports.getMailSettings = async (req, res) => {
     try {
-        const settings = await db.mail_setting.findByPk(1);
+        const settings = await db.mail_setting.findByPk(1, {
+            attributes: { exclude: ['pass'] }
+        });
         res.status(200).send(settings);
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -412,12 +414,19 @@ exports.getMailSettings = async (req, res) => {
 
 exports.updateMailSettings = async (req, res) => {
     try {
+        const data = { ...req.body };
+        if (data.pass === undefined || data.pass === '') {
+            delete data.pass;
+        }
         const [settings] = await db.mail_setting.findOrCreate({
             where: { id: 1 },
-            defaults: req.body
+            defaults: data
         });
-        await settings.update(req.body);
-        res.status(200).send(settings);
+        await settings.update(data);
+        const result = await db.mail_setting.findByPk(1, {
+            attributes: { exclude: ['pass'] }
+        });
+        res.status(200).send(result);
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

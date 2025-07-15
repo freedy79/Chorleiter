@@ -37,24 +37,29 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
   load(): void {
     this.api.getMailSettings().subscribe(settings => {
       if (settings) {
-        const encryption = settings.secure
+        const { pass, ...rest } = settings;
+        const encryption = rest.secure
           ? 'tls'
-          : settings.starttls
+          : rest.starttls
           ? 'starttls'
           : 'none';
-        this.form.patchValue({ ...settings, encryption });
+        this.form.patchValue({ ...rest, encryption });
         this.form.markAsPristine();
       }
     });
   }
 
   private prepareData(): MailSettings {
-    const { encryption, ...values } = this.form.value;
-    return {
+    const { encryption, pass, ...values } = this.form.value;
+    const data: MailSettings = {
       ...(values as MailSettings),
       secure: encryption === 'tls',
       starttls: encryption === 'starttls'
     };
+    if (pass) {
+      (data as any).pass = pass;
+    }
+    return data;
   }
 
   save(): void {
