@@ -2,6 +2,10 @@ function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
 }
 
+function textWidth(text, size) {
+  return text.length * size * 0.6;
+}
+
 function monthlyPlanPdf(plan) {
   const left = 50;
   const right = 545;
@@ -11,27 +15,45 @@ function monthlyPlanPdf(plan) {
   const lines = [];
   let y = 800;
 
+  function cellCenter(x1, x2, text, yPos, size = 12) {
+    const width = x2 - x1;
+    const x = x1 + (width - textWidth(text, size)) / 2;
+    return `BT /F1 ${size} Tf ${x} ${yPos - 2} Td (${escape(text)}) Tj ET`;
+  }
+
   // Title
   lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Dienstplan ' + plan.month + '/' + plan.year)}) Tj ET`);
-  y -= 30;
+  y -= 20;
+
+  // Choir name sub heading
+  if (plan.choir && plan.choir.name) {
+    lines.push(`BT /F1 14 Tf ${left} ${y} Td (${escape(plan.choir.name)}) Tj ET`);
+    y -= 20;
+  } else {
+    y -= 10;
+  }
 
   // Table header
   const topLine = y + 8;
+  const headerBottom = y - 12;
+  lines.push('0.9 g');
+  lines.push(`${left} ${headerBottom} ${right - left} 20 re f`);
+  lines.push('0 g');
   lines.push('0.5 w 0 0 0 RG');
   lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-  lines.push(`BT /F1 12 Tf ${left + 5} ${y} Td (${escape('Datum')}) Tj ET`);
-  lines.push(`BT /F1 12 Tf ${col2 + 5} ${y} Td (${escape('Chorleiter')}) Tj ET`);
-  lines.push(`BT /F1 12 Tf ${col3 + 5} ${y} Td (${escape('Organist')}) Tj ET`);
-  lines.push(`BT /F1 12 Tf ${col4 + 5} ${y} Td (${escape('Notizen')}) Tj ET`);
+  lines.push(cellCenter(left, col2, 'Datum', y));
+  lines.push(cellCenter(col2, col3, 'Chorleiter', y));
+  lines.push(cellCenter(col3, col4, 'Organist', y));
+  lines.push(cellCenter(col4, right, 'Notizen', y));
   y -= 20;
   lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
 
   // Table rows
   for (const e of plan.entries) {
-    lines.push(`BT /F1 12 Tf ${left + 5} ${y} Td (${escape(new Date(e.date).toISOString().substring(0,10))}) Tj ET`);
-    lines.push(`BT /F1 12 Tf ${col2 + 5} ${y} Td (${escape(e.director?.name || '')}) Tj ET`);
-    lines.push(`BT /F1 12 Tf ${col3 + 5} ${y} Td (${escape(e.organist?.name || '')}) Tj ET`);
-    lines.push(`BT /F1 12 Tf ${col4 + 5} ${y} Td (${escape(e.notes || '')}) Tj ET`);
+    lines.push(cellCenter(left, col2, new Date(e.date).toISOString().substring(0,10), y));
+    lines.push(cellCenter(col2, col3, e.director?.name || '', y));
+    lines.push(cellCenter(col3, col4, e.organist?.name || '', y));
+    lines.push(cellCenter(col4, right, e.notes || '', y));
     y -= 20;
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
   }

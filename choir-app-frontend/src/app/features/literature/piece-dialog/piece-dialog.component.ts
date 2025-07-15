@@ -275,7 +275,7 @@ export class PieceDialogComponent implements OnInit {
         });
 
         if (piece.imageIdentifier) {
-            this.apiService.getPieceImage(piece.id).subscribe(data => this.imagePreview = data);
+            this.pieceService.getPieceImage(piece.id).subscribe(data => this.imagePreview = data);
         }
 
         // Populate the links FormArray
@@ -308,7 +308,7 @@ export class PieceDialogComponent implements OnInit {
                 .pipe(
                     switchMap(() =>
                         this.imageFile && this.isAdmin
-                            ? this.apiService.uploadPieceImage(this.data.pieceId!, this.imageFile)
+                            ? this.pieceService.uploadPieceImage(this.data.pieceId!, this.imageFile)
                             : of(null)
                     )
                 )
@@ -329,7 +329,7 @@ export class PieceDialogComponent implements OnInit {
                     ),
                     switchMap((createdPiece) =>
                         this.imageFile
-                            ? this.apiService.uploadPieceImage(createdPiece.id, this.imageFile).pipe(map(() => createdPiece))
+                            ? this.pieceService.uploadPieceImage(createdPiece.id, this.imageFile).pipe(map(() => createdPiece))
                             : of(createdPiece)
                     )
                 )

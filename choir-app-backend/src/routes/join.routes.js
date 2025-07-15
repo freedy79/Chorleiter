@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const controller = require('../controllers/join.controller');
+const { handler: wrap } = require('../utils/async');
 
-router.get('/:token', controller.getJoinInfo);
-router.post('/:token', controller.joinChoir);
+router.get('/:token', wrap(controller.getJoinInfo));
+router.post('/:token', wrap(controller.joinChoir));
 
 module.exports = router;

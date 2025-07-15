@@ -2,18 +2,19 @@ const authJwt = require("../middleware/auth.middleware");
 const controller = require("../controllers/repertoire.controller");
 const noteController = require("../controllers/piece-note.controller");
 const router = require("express").Router();
+const { handler: wrap } = require("../utils/async");
 
 router.use(authJwt.verifyToken);
 
-router.get("/", controller.findMyRepertoire);
-router.put("/status", controller.updateStatus);
-router.put("/notes", controller.updateNotes);
-router.post("/add-piece", controller.addPieceToRepertoire);
-router.get("/lookup", controller.lookup);
-router.get("/:id", controller.findOne);
-router.get("/:id/notes", noteController.findForPiece);
-router.post("/:id/notes", noteController.createForPiece);
-router.put("/notes/:noteId", noteController.update);
-router.delete("/notes/:noteId", noteController.remove);
+router.get("/", wrap(controller.findMyRepertoire));
+router.put("/status", wrap(controller.updateStatus));
+router.put("/notes", wrap(controller.updateNotes));
+router.post("/add-piece", wrap(controller.addPieceToRepertoire));
+router.get("/lookup", wrap(controller.lookup));
+router.get("/:id", wrap(controller.findOne));
+router.get("/:id/notes", wrap(noteController.findForPiece));
+router.post("/:id/notes", wrap(noteController.createForPiece));
+router.put("/notes/:noteId", wrap(noteController.update));
+router.delete("/notes/:noteId", wrap(noteController.remove));
 
 module.exports = router;

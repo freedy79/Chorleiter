@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { LookupPiece } from '../models/lookup-piece';
@@ -118,5 +119,17 @@ export class PieceService {
 
   getRepertoireForLookup(): Observable<LookupPiece[]> {
     return this.http.get<LookupPiece[]>(`${this.apiUrl}/repertoire/lookup`);
+  }
+
+  uploadPieceImage(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData);
+  }
+
+  getPieceImage(id: number): Observable<string> {
+    return this.http
+      .get<{ data: string }>(`${this.apiUrl}/pieces/${id}/image`)
+      .pipe(map(res => res.data));
   }
 }
