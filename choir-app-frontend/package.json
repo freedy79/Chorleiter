@@ -46,7 +46,7 @@
     "typescript": "~5.8.2"
   },
   "overrides": {
-    "glob": "^11.0.3",
+    "glob": "^7.1.7",
     "rimraf": "3.0.2",
     "npmlog": "^7.0.1",
     "gauge": "^5.0.2",
