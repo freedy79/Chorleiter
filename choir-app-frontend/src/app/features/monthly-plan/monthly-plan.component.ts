@@ -5,6 +5,7 @@ import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ApiService } from '@core/services/api.service';
+import { MonthlyPlanService } from '@core/services/monthly-plan.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
@@ -116,6 +117,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   constructor(private api: ApiService,
+              private monthlyPlan: MonthlyPlanService,
               private auth: AuthService,
               private dialog: MatDialog,
               private snackBar: MatSnackBar) {}
@@ -142,7 +144,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   loadPlan(year: number, month: number): void {
-    this.api.getMonthlyPlan(year, month).subscribe({
+    this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
       next: plan => {
         this.plan = plan;
         this.entries = (plan?.entries || []).map(e => ({
@@ -206,7 +208,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   finalizePlan(): void {
     if (this.plan) {
-      this.api.finalizeMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      this.monthlyPlan.finalizeMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
   }
 
@@ -214,13 +216,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   reopenPlan(): void {
     if (this.plan) {
-      this.api.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      this.monthlyPlan.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
   }
 
   downloadPdf(): void {
     if (!this.plan) return;
-    this.api.downloadMonthlyPlanPdf(this.plan.id).subscribe(blob => {
+    this.monthlyPlan.downloadMonthlyPlanPdf(this.plan.id).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -235,7 +237,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
     ref.afterClosed().subscribe((ids: number[]) => {
       if (ids && ids.length > 0) {
-        this.api.emailMonthlyPlan(this.plan!.id, ids).subscribe({
+        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, ids).subscribe({
           next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
           error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
         });
@@ -278,7 +280,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   createPlan(): void {
-    this.api.createMonthlyPlan(this.selectedYear, this.selectedMonth).subscribe(plan => {
+    this.monthlyPlan.createMonthlyPlan(this.selectedYear, this.selectedMonth).subscribe(plan => {
       this.plan = plan;
       this.loadPlan(plan.year, plan.month);
     });

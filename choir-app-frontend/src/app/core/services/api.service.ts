@@ -1,8 +1,5 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
 
 // Import all the models your service will interact with
 import { Piece } from '../models/piece';
@@ -40,14 +37,15 @@ import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
+import { SearchService } from './search.service';
+import { MonthlyPlanService } from './monthly-plan.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient,
+  constructor(
               private pieceService: PieceService,
               private composerService: ComposerService,
               private authorService: AuthorService,
@@ -62,7 +60,9 @@ export class ApiService {
               private systemService: SystemService,
               private filterPresetService: FilterPresetService,
               private planRuleService: PlanRuleService,
-              private availabilityService: AvailabilityService) {
+              private availabilityService: AvailabilityService,
+              private searchService: SearchService,
+              private monthlyPlanService: MonthlyPlanService) {
 
   }
 
@@ -165,15 +165,11 @@ export class ApiService {
   }
 
   uploadPieceImage(id: number, file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('image', file);
-    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData);
+    return this.pieceService.uploadPieceImage(id, file);
   }
 
   getPieceImage(id: number): Observable<string> {
-    return this.http
-      .get<{ data: string }>(`${this.apiUrl}/pieces/${id}/image`)
-      .pipe(map(res => res.data));
+    return this.pieceService.getPieceImage(id);
   }
 
   proposePieceChange(id: number, pieceData: any): Observable<any> {
@@ -286,8 +282,7 @@ export class ApiService {
   }
 
   searchAll(term: string): Observable<{ pieces: Piece[]; events: Event[]; collections: Collection[] }> {
-    const params = new HttpParams().set('q', term);
-    return this.http.get<{ pieces: Piece[]; events: Event[]; collections: Collection[] }>(`${this.apiUrl}/search`, { params });
+    return this.searchService.searchAll(term);
   }
 
 
@@ -348,27 +343,27 @@ export class ApiService {
 
   // --- Monthly Plan Methods ---
   getMonthlyPlan(year: number, month: number): Observable<MonthlyPlan | null> {
-    return this.http.get<MonthlyPlan | null>(`${this.apiUrl}/monthly-plans/${year}/${month}`);
+    return this.monthlyPlanService.getMonthlyPlan(year, month);
   }
 
   createMonthlyPlan(year: number, month: number): Observable<MonthlyPlan> {
-    return this.http.post<MonthlyPlan>(`${this.apiUrl}/monthly-plans`, { year, month });
+    return this.monthlyPlanService.createMonthlyPlan(year, month);
   }
 
   finalizeMonthlyPlan(id: number): Observable<MonthlyPlan> {
-    return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/finalize`, {});
+    return this.monthlyPlanService.finalizeMonthlyPlan(id);
   }
 
   reopenMonthlyPlan(id: number): Observable<MonthlyPlan> {
-    return this.http.put<MonthlyPlan>(`${this.apiUrl}/monthly-plans/${id}/reopen`, {});
+    return this.monthlyPlanService.reopenMonthlyPlan(id);
   }
 
   downloadMonthlyPlanPdf(id: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/monthly-plans/${id}/pdf`, { responseType: 'blob' });
+    return this.monthlyPlanService.downloadMonthlyPlanPdf(id);
   }
 
   emailMonthlyPlan(id: number, recipients: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients });
+    return this.monthlyPlanService.emailMonthlyPlan(id, recipients);
   }
 
   // --- Plan Rule Methods ---
