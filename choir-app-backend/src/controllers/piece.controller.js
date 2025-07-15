@@ -5,8 +5,8 @@ const Category = db.category;
 const Author = db.author;
 const path = require('path');
 const fs = require('fs/promises');
-const CrudService = require("../services/crud.service");
-const pieceService = new CrudService(Piece);
+const BaseCrudController = require('./baseCrud.controller');
+const base = new BaseCrudController(Piece);
 
 /**
  * @description Create a new global piece.
@@ -64,7 +64,7 @@ exports.create = async (req, res) => {
  * when adding pieces to a collection.
  */
 exports.findAll = async (req, res) => {
-    const pieces = await pieceService.findAll({
+    const pieces = await base.service.findAll({
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] }
@@ -81,7 +81,7 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     const id = req.params.id;
 
-    const piece = await pieceService.findById(id, {
+    const piece = await base.service.findById(id, {
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
@@ -111,7 +111,7 @@ exports.update = async (req, res) => {
             return res.status(202).send({ message: 'Change proposal created.' });
     }
 
-    const num = await pieceService.update(id, req.body);
+    const num = await base.service.update(id, req.body);
 
     if (num == 1) {
         res.send({ message: "Piece was updated successfully." });
@@ -129,7 +129,7 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     const id = req.params.id;
 
-    const num = await pieceService.delete(id);
+    const num = await base.service.delete(id);
 
     if (num == 1) {
         res.send({

@@ -32,11 +32,31 @@ const controller = require('../src/controllers/piece.controller');
     await controller.create(req, res);
 
     assert.strictEqual(statusCode, 201, 'should return 201');
-    const created = await db.piece.findByPk(res.data.id);
+    const createdId = res.data.id;
+    const created = await db.piece.findByPk(createdId);
     assert.strictEqual(created.composerId, composer.id);
     assert.strictEqual(created.authorId, author.id);
 
-    console.log('piece.controller create test passed');
+    const resOne = { status(c){ this.statusCode=c; return this; }, send(d){ this.data=d; } };
+    await controller.findOne({ params: { id: createdId } }, resOne);
+    assert.strictEqual(resOne.statusCode, 200);
+    assert.strictEqual(resOne.data.id, createdId);
+
+    const resAll = { status(c){ this.statusCode=c; return this; }, send(d){ this.data=d; } };
+    await controller.findAll({}, resAll);
+    assert.strictEqual(resAll.statusCode, 200);
+    assert.strictEqual(resAll.data.length, 1);
+
+    await controller.update({ params: { id: createdId }, body: { title: 'Updated' }, userRole: 'admin' }, res);
+    const updated = await db.piece.findByPk(createdId);
+    assert.strictEqual(updated.title, 'Updated');
+
+    await controller.delete({ params: { id: createdId } }, res);
+    assert.ok(res.data.message.includes('deleted'));
+    const afterDel = await db.piece.findByPk(createdId);
+    assert.strictEqual(afterDel, null);
+
+    console.log('piece.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

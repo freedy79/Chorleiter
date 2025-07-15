@@ -5,7 +5,8 @@ exports.search = async (req, res) => {
   const q = req.query.q || req.query.query || '';
   if (!q) return res.status(400).send({ message: 'Missing search query' });
   try {
-    const like = { [Op.iLike]: `%${q}%` };
+    const op = db.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
+    const like = { [op]: `%${q}%` };
     const pieces = await db.piece.findAll({
       where: { title: like },
       include: [{ model: db.composer, as: 'composer', attributes: ['name'] }],
@@ -16,7 +17,7 @@ exports.search = async (req, res) => {
         choirId: req.activeChoirId,
         [Op.or]: [
           { notes: like },
-          where(cast(col('type'), 'TEXT'), { [Op.iLike]: `%${q}%` })
+          where(cast(col('type'), 'TEXT'), { [op]: `%${q}%` })
         ]
       },
       order: [['date', 'DESC']],
