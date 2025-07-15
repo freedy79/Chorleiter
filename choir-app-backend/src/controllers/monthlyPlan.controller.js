@@ -41,7 +41,7 @@ exports.findByMonth = async (req, res) => {
                     { model: db.user, as: 'director', attributes: ['id', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
                 ]
-            }],
+            }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(204).send();
@@ -111,7 +111,7 @@ exports.downloadPdf = async (req, res) => {
                     { model: db.user, as: 'director', attributes: ['id', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
                 ]
-            }],
+            }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
@@ -140,7 +140,7 @@ exports.emailPdf = async (req, res) => {
                     { model: db.user, as: 'director', attributes: ['id', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
                 ]
-            }],
+            }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
