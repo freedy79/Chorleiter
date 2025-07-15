@@ -558,8 +558,8 @@ export class ApiService {
     return this.adminService.sendPasswordReset(id);
   }
 
-  getLoginAttempts(): Observable<LoginAttempt[]> {
-    return this.adminService.getLoginAttempts();
+  getLoginAttempts(year?: number, month?: number): Observable<LoginAttempt[]> {
+    return this.adminService.getLoginAttempts(year, month);
   }
 
   listLogs(): Observable<string[]> {

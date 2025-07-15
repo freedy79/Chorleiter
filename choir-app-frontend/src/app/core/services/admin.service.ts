@@ -72,8 +72,13 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
   }
 
-  getLoginAttempts(): Observable<LoginAttempt[]> {
-    return this.http.get<LoginAttempt[]>(`${this.apiUrl}/admin/login-attempts`);
+  getLoginAttempts(year?: number, month?: number): Observable<LoginAttempt[]> {
+    const params: any = {};
+    if (year !== undefined && month !== undefined) {
+      params.year = year;
+      params.month = month;
+    }
+    return this.http.get<LoginAttempt[]>(`${this.apiUrl}/admin/login-attempts`, { params });
   }
 
   listLogs(): Observable<string[]> {
