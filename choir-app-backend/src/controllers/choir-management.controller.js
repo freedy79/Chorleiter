@@ -49,6 +49,15 @@ exports.updateMyChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
+        if (req.userRole !== 'admin') {
+            const association = await db.user_choir.findOne({
+                where: { userId: req.userId, choirId: req.activeChoirId }
+            });
+            if (!association || !Array.isArray(association.rolesInChoir) || !association.rolesInChoir.includes('choir_admin')) {
+                return res.status(403).send({ message: 'Require Choir Admin Role!' });
+            }
+        }
+
         // Führen Sie das Update durch. `update` gibt ein Array mit der Anzahl der betroffenen Zeilen zurück.
         const updateData = {};
         if (name !== undefined) updateData.name = name;
