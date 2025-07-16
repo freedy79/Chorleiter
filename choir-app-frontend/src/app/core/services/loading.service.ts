@@ -12,7 +12,7 @@ export class LoadingService {
   show(): void {
     this.counter++;
     if (this.counter === 1) {
-      this.loadingSubject.next(true);
+      Promise.resolve().then(() => this.loadingSubject.next(true));
     }
   }
 
@@ -20,7 +20,7 @@ export class LoadingService {
     if (this.counter > 0) {
       this.counter--;
       if (this.counter === 0) {
-        this.loadingSubject.next(false);
+        Promise.resolve().then(() => this.loadingSubject.next(false));
       }
     }
   }
