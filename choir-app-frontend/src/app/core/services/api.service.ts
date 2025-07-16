@@ -371,16 +371,23 @@ export class ApiService {
     return this.planRuleService.getPlanRules(options?.choirId);
   }
 
-  createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
-    return this.planRuleService.createPlanRule(data);
+  createPlanRule(
+    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    options?: { choirId?: number }
+  ): Observable<PlanRule> {
+    return this.planRuleService.createPlanRule(data, options?.choirId);
   }
 
-  updatePlanRule(id: number, data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
-    return this.planRuleService.updatePlanRule(id, data);
+  updatePlanRule(
+    id: number,
+    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    options?: { choirId?: number }
+  ): Observable<PlanRule> {
+    return this.planRuleService.updatePlanRule(id, data, options?.choirId);
   }
 
-  deletePlanRule(id: number): Observable<any> {
-    return this.planRuleService.deletePlanRule(id);
+  deletePlanRule(id: number, options?: { choirId?: number }): Observable<any> {
+    return this.planRuleService.deletePlanRule(id, options?.choirId);
   }
 
   // --- Availability Methods ---

@@ -34,6 +34,12 @@ export class ManageChoirComponent implements OnInit {
   isChoirAdmin = false;
   dienstplanEnabled = false;
 
+  /**
+   * Holds the choirId from the query parameter when a global admin
+   * manages a different choir. For regular users this remains null.
+   */
+  adminChoirId: number | null = null;
+
   sundayWeeks: number[] = [];
   weekdayDay: number | null = null;
   weekdayWeeks: number[] = [];
@@ -72,6 +78,9 @@ export class ManageChoirComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    const choirIdParam = this.route.snapshot.queryParamMap.get('choirId');
+    this.adminChoirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
+
     this.route.data.subscribe(data => {
       const pageData = data['pageData'];
       if (pageData) {
@@ -119,10 +128,11 @@ export class ManageChoirComponent implements OnInit {
     // Sie könnten einen API-Aufruf machen oder, noch besser, zur Seite neu navigieren,
     // um den Resolver erneut auszulösen.
     if (this.isChoirAdmin) {
-      this.apiService.getChoirMembers().subscribe(members => {
+      const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+      this.apiService.getChoirMembers(opts).subscribe(members => {
         this.dataSource.data = members;
       });
-      this.apiService.getChoirCollections().subscribe(cols => {
+      this.apiService.getChoirCollections(opts).subscribe(cols => {
         this.collectionDataSource.data = cols;
       });
     }
@@ -140,7 +150,8 @@ export class ManageChoirComponent implements OnInit {
     if (this.choirForm.invalid) {
       return;
     }
-    this.apiService.updateMyChoir(this.choirForm.value).subscribe({
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.updateMyChoir(this.choirForm.value, opts).subscribe({
       next: () => {
         this.snackBar.open('Choir details updated successfully!', 'OK', { duration: 3000 });
         this.choirForm.markAsPristine(); // Markiert das Formular als "unverändert"
@@ -159,7 +170,8 @@ export class ManageChoirComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (result && result.email && result.roles) {
-        this.apiService.inviteUserToChoir(result.email, result.roles).subscribe({
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        this.apiService.inviteUserToChoir(result.email, result.roles, undefined, opts).subscribe({
           next: (response: { message: string }) => {
             this.snackBar.open(response.message, 'OK', { duration: 4000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
@@ -185,7 +197,8 @@ export class ManageChoirComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.apiService.removeUserFromChoir(user.id).subscribe({
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        this.apiService.removeUserFromChoir(user.id, opts).subscribe({
           next: () => {
             this.snackBar.open(`${user.name} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
@@ -201,7 +214,8 @@ export class ManageChoirComponent implements OnInit {
     if (!this.isChoirAdmin) return;
     const previous = [...(user.membership?.rolesInChoir || [])];
     user.membership!.rolesInChoir = roles;
-    this.apiService.updateChoirMember(user.id, { rolesInChoir: roles }).subscribe({
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.updateChoirMember(user.id, { rolesInChoir: roles }, opts).subscribe({
       error: () => {
         this.snackBar.open('Fehler beim Aktualisieren.', 'Schließen');
         user.membership!.rolesInChoir = previous;
@@ -216,7 +230,8 @@ export class ManageChoirComponent implements OnInit {
     }
 
     const modules = { dienstplan: this.dienstplanEnabled };
-    this.apiService.updateMyChoir({ modules }).subscribe({
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {
         this.snackBar.open('Einstellungen aktualisiert.', 'OK', { duration: 3000 });
         const choir = this.authService.activeChoir$.value;
@@ -244,20 +259,25 @@ export class ManageChoirComponent implements OnInit {
     const ops = [] as Observable<any>[];
 
     if (this.sundayRuleId) {
-      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }));
+      const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }, opts));
     } else {
-      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }));
+      const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }, opts));
     }
 
     if (this.weekdayDay !== null) {
       const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
       if (this.weekdayRuleId) {
-        ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data));
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data, opts));
       } else {
-        ops.push(this.apiService.createPlanRule(data));
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        ops.push(this.apiService.createPlanRule(data, opts));
       }
     } else if (this.weekdayRuleId) {
-      ops.push(this.apiService.deletePlanRule(this.weekdayRuleId));
+      const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+      ops.push(this.apiService.deletePlanRule(this.weekdayRuleId, opts));
     }
 
     forkJoin(ops).subscribe({
@@ -279,7 +299,8 @@ export class ManageChoirComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(confirmed => {
       if (confirmed) {
-        this.apiService.removeCollectionFromChoir(collection.id).subscribe({
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        this.apiService.removeCollectionFromChoir(collection.id, opts).subscribe({
           next: () => {
             this.snackBar.open(`'${collection.title}' entfernt.`, 'OK', { duration: 3000 });
             this.reloadData();
