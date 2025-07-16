@@ -37,7 +37,7 @@
       <ng-container matColumnDef="organist">
         <th mat-header-cell *matHeaderCellDef>Organist</th>
         <td mat-cell *matCellDef="let user">
-          <mat-checkbox [checked]="user.membership?.isOrganist" (change)="toggleOrganist(user, $event.checked)"></mat-checkbox>
+          <mat-checkbox [checked]="user.membership?.rolesInChoir?.includes('organist')" (change)="toggleOrganist(user, $event.checked)"></mat-checkbox>
         </td>
       </ng-container>
       <ng-container matColumnDef="status">

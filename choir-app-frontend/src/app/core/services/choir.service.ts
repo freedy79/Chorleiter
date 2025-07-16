@@ -27,12 +27,12 @@ export class ChoirService {
     return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params });
   }
 
-  inviteUserToChoir(email: string, rolesInChoir: string[], isOrganist?: boolean, choirId?: number): Observable<{ message: string }> {
+  inviteUserToChoir(email: string, rolesInChoir: string[], choirId?: number): Observable<{ message: string }> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
-    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, rolesInChoir, isOrganist }, { params });
+    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, rolesInChoir }, { params });
   }
 
-  updateMember(userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }, choirId?: number): Observable<any> {
+  updateMember(userId: number, data: { rolesInChoir?: string[] }, choirId?: number): Observable<any> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
     return this.http.put(`${this.apiUrl}/choir-management/members/${userId}`, data, { params });
   }

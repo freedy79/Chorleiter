@@ -57,7 +57,7 @@ export class ChoirDialogComponent implements OnInit {
     const ref = this.dialog.open(AddMemberDialogComponent, { width: '450px', data: memberIds });
     ref.afterClosed().subscribe(result => {
       if (result && result.email && result.roles) {
-        this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.roles, result.isOrganist).subscribe({
+        this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.roles).subscribe({
           next: (resp) => {
             this.snackBar.open(resp.message, 'OK', { duration: 4000 });
             this.loadMembers();
@@ -90,8 +90,10 @@ export class ChoirDialogComponent implements OnInit {
 
   toggleOrganist(user: UserInChoir, checked: boolean): void {
     if (!this.data?.id) return;
-    this.api.updateChoirMemberAdmin(this.data.id, user.id, { isOrganist: checked }).subscribe({
-      next: () => user.membership!.isOrganist = checked,
+    const roles = user.membership?.rolesInChoir || [];
+    const updated = (checked ? [...new Set([...roles, 'organist'])] : roles.filter(r => r !== 'organist')) as ('director' | 'choir_admin' | 'organist' | 'singer')[];
+    this.api.updateChoirMemberAdmin(this.data.id, user.id, { rolesInChoir: updated }).subscribe({
+      next: () => user.membership!.rolesInChoir = updated,
       error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen')
     });
   }

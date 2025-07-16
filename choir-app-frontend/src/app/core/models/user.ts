@@ -45,6 +45,5 @@ export interface UserInChoir extends User {
     membership?: { // Daten aus der Junction-Tabelle
         rolesInChoir: ('director' | 'choir_admin' | 'organist' | 'singer')[];
         registrationStatus: 'REGISTERED' | 'PENDING';
-        isOrganist: boolean;
     }
 }
