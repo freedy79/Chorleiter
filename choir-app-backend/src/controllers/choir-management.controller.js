@@ -262,6 +262,7 @@ exports.getChoirCollections = async (req, res, next) => {
                 through: { attributes: [] },
                 required: false
             }],
+            joinTableAttributes: [],
             group: ['collection.id'],
             order: [['title', 'ASC']]
         });
@@ -279,7 +280,7 @@ exports.getChoirCollections = async (req, res, next) => {
     } catch (err) {
         err.message = `Error fetching collections for choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
-        res.status(500).send(err);
+        //res.status(500).send(err);
     }
 };
 

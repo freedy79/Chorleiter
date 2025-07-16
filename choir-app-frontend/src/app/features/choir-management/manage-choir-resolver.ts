@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Resolve, Router } from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, Resolve, Router } from '@angular/router';
 import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -17,12 +17,15 @@ export class ManageChoirResolver implements Resolve<any> {
     private authService: AuthService
   ) {}
 
-  resolve(): Observable<any> {
+  resolve(route: ActivatedRouteSnapshot): Observable<any> {
     // Leeren Sie alte Fehler, bevor Sie eine neue Seite laden
     this.errorService.clearError();
 
     return this.authService.isAdmin$.pipe(
       switchMap(isAdmin => {
+        const choirId = route.queryParamMap.get('choirId');
+        console.log('ManageChoirResolver: Resolving data for choirId:', choirId);
+
         const choirDetails$ = this.apiService.getMyChoirDetails();
         const collections$ = this.apiService.getChoirCollections();
         const planRules$ = this.apiService.getPlanRules();

@@ -49,10 +49,9 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   editChoir(choir: Choir): void {
-    this.auth.switchChoir(choir.id).subscribe({
-      next: () => this.router.navigate(['/manage-choir']),
-      error: () => this.loadChoirs()
-    });
+    console.log('Editing choir:', choir.id);
+    this.router.navigate(['/manage-choir'], { queryParams: { choirId: choir.id } }
+  );
   }
 
   deleteChoir(choir: Choir): void {

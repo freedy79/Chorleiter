@@ -7,17 +7,16 @@
 }
 
 :host {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
+  top: 0.6rem;
+  right: 1rem;
 }
 
 :root {
   @include mat.form-field-overrides((
     disabled-input-text-placeholder-color: orange,
     disabled-leading-icon-color: red,
-    filled-input-text-placeholder-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, A100),
+    filled-input-text-placeholder-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, 500),
   ));
 }
 
