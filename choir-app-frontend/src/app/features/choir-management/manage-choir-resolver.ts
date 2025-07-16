@@ -23,16 +23,19 @@ export class ManageChoirResolver implements Resolve<any> {
 
     return this.authService.isAdmin$.pipe(
       switchMap(isAdmin => {
-        const choirId = route.queryParamMap.get('choirId');
+        const choirIdParam = route.queryParamMap.get('choirId');
+        const choirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
         console.log('ManageChoirResolver: Resolving data for choirId:', choirId);
 
-        const choirDetails$ = this.apiService.getMyChoirDetails();
-        const collections$ = this.apiService.getChoirCollections();
-        const planRules$ = this.apiService.getPlanRules();
+        const opts = isAdmin && choirId ? { choirId } : undefined;
+
+        const choirDetails$ = this.apiService.getMyChoirDetails(opts);
+        const collections$ = this.apiService.getChoirCollections(opts);
+        const planRules$ = this.apiService.getPlanRules(opts);
         if (isAdmin) {
           return forkJoin({
             choirDetails: choirDetails$,
-            members: this.apiService.getChoirMembers(),
+            members: this.apiService.getChoirMembers(opts),
             collections: collections$,
             planRules: planRules$,
             isChoirAdmin: of(true)

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Choir } from '../models/choir';
@@ -12,36 +12,44 @@ export class ChoirService {
 
   constructor(private http: HttpClient) {}
 
-  getMyChoirDetails(): Observable<Choir> {
-    return this.http.get<Choir>(`${this.apiUrl}/choir-management`);
+  getMyChoirDetails(choirId?: number): Observable<Choir> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<Choir>(`${this.apiUrl}/choir-management`, { params });
   }
 
-  updateMyChoir(choirData: Partial<Choir>): Observable<any> {
-    return this.http.put(`${this.apiUrl}/choir-management`, choirData);
+  updateMyChoir(choirData: Partial<Choir>, choirId?: number): Observable<any> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.put(`${this.apiUrl}/choir-management`, choirData, { params });
   }
 
-  getChoirMembers(): Observable<UserInChoir[]> {
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`);
+  getChoirMembers(choirId?: number): Observable<UserInChoir[]> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params });
   }
 
-  inviteUserToChoir(email: string, rolesInChoir: string[], isOrganist?: boolean): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, rolesInChoir, isOrganist });
+  inviteUserToChoir(email: string, rolesInChoir: string[], isOrganist?: boolean, choirId?: number): Observable<{ message: string }> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.post<{ message: string }>(`${this.apiUrl}/choir-management/members`, { email, rolesInChoir, isOrganist }, { params });
   }
 
-  updateMember(userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }): Observable<any> {
-    return this.http.put(`${this.apiUrl}/choir-management/members/${userId}`, data);
+  updateMember(userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }, choirId?: number): Observable<any> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.put(`${this.apiUrl}/choir-management/members/${userId}`, data, { params });
   }
 
-  removeUserFromChoir(userId: number): Observable<any> {
-    const options = { body: { userId } };
+  removeUserFromChoir(userId: number, choirId?: number): Observable<any> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    const options = { params, body: { userId } };
     return this.http.delete(`${this.apiUrl}/choir-management/members`, options);
   }
 
-  getChoirCollections(): Observable<Collection[]> {
-    return this.http.get<Collection[]>(`${this.apiUrl}/choir-management/collections`);
+  getChoirCollections(choirId?: number): Observable<Collection[]> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<Collection[]>(`${this.apiUrl}/choir-management/collections`, { params });
   }
 
-  removeCollectionFromChoir(collectionId: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/choir-management/collections/${collectionId}`);
+  removeCollectionFromChoir(collectionId: number, choirId?: number): Observable<any> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.delete(`${this.apiUrl}/choir-management/collections/${collectionId}`, { params });
   }
 }

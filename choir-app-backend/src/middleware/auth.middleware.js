@@ -8,8 +8,12 @@ const optionalAuth = (req, res, next) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (!err) {
       req.userId = decoded.id;
-      req.activeChoirId = decoded.activeChoirId;
       req.userRole = decoded.role;
+      const choirParam = parseInt(req.query.choirId, 10);
+      req.activeChoirId =
+        decoded.role === 'admin' && !isNaN(choirParam)
+          ? choirParam
+          : decoded.activeChoirId;
     }
     next();
   });
@@ -29,10 +33,13 @@ const verifyToken = (req, res, next) => {
     if (err) {
       return res.status(401).send({ message: "Unauthorized!" });
     }
-    // Add user and choir id from token payload to the request
     req.userId = decoded.id;
-    req.activeChoirId = decoded.activeChoirId;
     req.userRole = decoded.role;
+    const choirParam = parseInt(req.query.choirId, 10);
+    req.activeChoirId =
+      decoded.role === 'admin' && !isNaN(choirParam)
+        ? choirParam
+        : decoded.activeChoirId;
     next();
   });
 };

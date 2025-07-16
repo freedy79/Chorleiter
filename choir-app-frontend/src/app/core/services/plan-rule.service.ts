@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { PlanRule } from '../models/plan-rule';
@@ -10,8 +10,9 @@ export class PlanRuleService {
 
   constructor(private http: HttpClient) {}
 
-  getPlanRules(): Observable<PlanRule[]> {
-    return this.http.get<PlanRule[]>(`${this.apiUrl}/plan-rules`);
+  getPlanRules(choirId?: number): Observable<PlanRule[]> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<PlanRule[]>(`${this.apiUrl}/plan-rules`, { params });
   }
 
   createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
