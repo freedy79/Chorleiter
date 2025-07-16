@@ -60,8 +60,20 @@ export class LogViewerComponent implements OnInit {
       if (!map.has(day)) map.set(day, []);
       map.get(day)!.push(e);
     }
-    const array: LogGroup[] = Array.from(map.entries()).map(([date, items]) => ({ date, items }));
-    array.sort((a,b) => this.descending ? (a.date < b.date ? 1 : -1) : (a.date > b.date ? 1 : -1));
+
+    const array: LogGroup[] = Array.from(map.entries()).map(([date, items]) => {
+      items.sort((a, b) => {
+        const ta = new Date(a.timestamp || a.date || 0).getTime();
+        const tb = new Date(b.timestamp || b.date || 0).getTime();
+        return tb - ta;
+      });
+      return { date, items };
+    });
+
+    array.sort((a, b) =>
+      this.descending ? (a.date < b.date ? 1 : -1) : (a.date > b.date ? 1 : -1)
+    );
+
     this.groups = array;
   }
 }
