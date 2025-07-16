@@ -19,8 +19,8 @@ export class AuthInterceptor implements HttpInterceptor {
         request: HttpRequest<unknown>,
         next: HttpHandler
     ): Observable<HttpEvent<unknown>> {
-        const authService = this.injector.get(AuthService);
-        const token = authService.getToken();
+        // avoid injecting AuthService eagerly to prevent DI cycles
+        const token = localStorage.getItem('auth-token');
         const isApiUrl = request.url.startsWith(environment.apiUrl);
 
         // Füge den Authorization-Header hinzu, wenn ein Token vorhanden ist.
@@ -47,7 +47,9 @@ export class AuthInterceptor implements HttpInterceptor {
                     console.warn(
                         'Unauthorized or Forbidden error detected. Logging out user.'
                     );
-                    authService.logout('sessionExpired');
+                    // lazily retrieve the AuthService only when needed
+                    const svc = this.injector.get(AuthService);
+                    svc.logout('sessionExpired');
                 }
                 // Leiten Sie den Fehler an den aufrufenden Service weiter, damit er auch behandelt werden kann.
                 return throwError(() => error);
