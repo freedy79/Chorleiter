@@ -77,7 +77,7 @@ exports.updateMyChoir = async (req, res, next) => {
 };
 
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
-exports.getChoirMembers = async (req, res) => {
+exports.getChoirMembers = async (req, res, next) => {
     try {
         await cleanupExpiredInvitations();
         const choir = await db.choir.findByPk(req.activeChoirId, {
