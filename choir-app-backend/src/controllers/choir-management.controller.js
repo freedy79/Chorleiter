@@ -242,11 +242,14 @@ exports.updateMember = async (req, res, next) => {
 
 exports.getChoirCollections = async (req, res, next) => {
     try {
+        console.log("Fetching collections for choirId:", req.activeChoirId);
+
         const choir = await db.choir.findByPk(req.activeChoirId);
         if (!choir) {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
+        console.log("Choir found: ", choir.name, " getting collections...");
         const collections = await choir.getCollections({
             attributes: {
                 include: [
@@ -263,6 +266,7 @@ exports.getChoirCollections = async (req, res, next) => {
             order: [['title', 'ASC']]
         });
 
+        console.log(`Found ${collections.length} collections for choirId ${req.activeChoirId}.`);
         const result = collections.map(c => {
             const plain = c.get ? c.get() : c;
             return {
@@ -275,6 +279,7 @@ exports.getChoirCollections = async (req, res, next) => {
     } catch (err) {
         err.message = `Error fetching collections for choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
+        res.status(500).send(err);
     }
 };
 

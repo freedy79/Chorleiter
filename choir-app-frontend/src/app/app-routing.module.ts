@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 
 // Importieren der Komponenten und des Guards
-import { LoginComponent } from './features/login/login.component';
+import { LoginComponent } from './features/user/login/login.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { DashboardComponent } from './features/home/dashboard/dashboard.component';
 import { LiteratureListComponent } from './features/literature/literature-list/literature-list.component';

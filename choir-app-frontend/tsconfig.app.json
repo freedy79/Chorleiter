@@ -8,7 +8,7 @@
   },
   "include": [
     "src/**/*.ts"
-, "src/app/features/login/login.component.ts", "../choir-app-backend/src/models/piece_arranger.model.js"  ],
+, "src/app/features/user/login/login.component.ts", "../choir-app-backend/src/models/piece_arranger.model.js"  ],
   "exclude": [
     "src/**/*.spec.ts"
   ]
