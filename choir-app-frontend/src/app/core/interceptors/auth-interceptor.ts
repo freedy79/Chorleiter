@@ -10,10 +10,11 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { environment } from '@env/environment';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    constructor(private injector: Injector) {}
+    constructor(private injector: Injector, private snackBar: MatSnackBar) {}
 
     intercept(
         request: HttpRequest<unknown>,
@@ -38,20 +39,13 @@ export class AuthInterceptor implements HttpInterceptor {
 
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
-                // --- DAS IST DIE WICHTIGE LOGIK ---
-                // Wenn der API-Server mit 401 (Unauthorized) oder 403 (Forbidden) antwortet,
-                // bedeutet das, unser Token ist schlecht.
-                if (error.status === 401 || error.status === 403) {
-                    // Loggen Sie den Benutzer aus. Dies löscht den ungültigen Token
-                    // und leitet den Benutzer zur Login-Seite um.
-                    console.warn(
-                        'Unauthorized or Forbidden error detected. Logging out user.'
-                    );
-                    // lazily retrieve the AuthService only when needed
+                if (error.status === 401) {
+                    console.warn('Unauthorized error detected. Logging out user.');
                     const svc = this.injector.get(AuthService);
                     svc.logout('sessionExpired');
+                } else if (error.status === 403) {
+                    this.snackBar.open('Diese Funktion erfordert höhere Rechte.', 'Schließen', { duration: 5000 });
                 }
-                // Leiten Sie den Fehler an den aufrufenden Service weiter, damit er auch behandelt werden kann.
                 return throwError(() => error);
             })
         );
