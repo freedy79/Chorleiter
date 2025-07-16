@@ -367,8 +367,8 @@ export class ApiService {
   }
 
   // --- Plan Rule Methods ---
-  getPlanRules(): Observable<PlanRule[]> {
-    return this.planRuleService.getPlanRules();
+  getPlanRules(options?: { choirId?: number }): Observable<PlanRule[]> {
+    return this.planRuleService.getPlanRules(options?.choirId);
   }
 
   createPlanRule(data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null }): Observable<PlanRule> {
@@ -444,24 +444,33 @@ export class ApiService {
     return this.pieceService.getRepertoirePiece(id);
   }
 
-  getMyChoirDetails(): Observable<Choir> {
-    return this.choirService.getMyChoirDetails();
+  getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
+    return this.choirService.getMyChoirDetails(options?.choirId);
   }
 
-  updateMyChoir(choirData: Partial<Choir>): Observable<any> {
-    return this.choirService.updateMyChoir(choirData);
+  updateMyChoir(choirData: Partial<Choir>, options?: { choirId?: number }): Observable<any> {
+    return this.choirService.updateMyChoir(choirData, options?.choirId);
   }
 
-  getChoirMembers(): Observable<UserInChoir[]> {
-    return this.choirService.getChoirMembers();
+  getChoirMembers(options?: { choirId?: number }): Observable<UserInChoir[]> {
+    return this.choirService.getChoirMembers(options?.choirId);
   }
 
-  inviteUserToChoir(email: string, rolesInChoir: string[], isOrganist?: boolean): Observable<{ message: string }> {
-    return this.choirService.inviteUserToChoir(email, rolesInChoir, isOrganist);
+  inviteUserToChoir(
+    email: string,
+    rolesInChoir: string[],
+    isOrganist?: boolean,
+    options?: { choirId?: number }
+  ): Observable<{ message: string }> {
+    return this.choirService.inviteUserToChoir(email, rolesInChoir, isOrganist, options?.choirId);
   }
 
-  updateChoirMember(userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }): Observable<any> {
-    return this.choirService.updateMember(userId, data);
+  updateChoirMember(
+    userId: number,
+    data: { rolesInChoir?: string[]; isOrganist?: boolean },
+    options?: { choirId?: number }
+  ): Observable<any> {
+    return this.choirService.updateMember(userId, data, options?.choirId);
   }
 
   getInvitation(token: string): Observable<any> {
@@ -488,16 +497,16 @@ export class ApiService {
     return this.userService.joinChoir(token, data);
   }
 
-  removeUserFromChoir(userId: number): Observable<any> {
-    return this.choirService.removeUserFromChoir(userId);
+  removeUserFromChoir(userId: number, options?: { choirId?: number }): Observable<any> {
+    return this.choirService.removeUserFromChoir(userId, options?.choirId);
   }
 
-  getChoirCollections(): Observable<Collection[]> {
-    return this.choirService.getChoirCollections();
+  getChoirCollections(options?: { choirId?: number }): Observable<Collection[]> {
+    return this.choirService.getChoirCollections(options?.choirId);
   }
 
-  removeCollectionFromChoir(collectionId: number): Observable<any> {
-    return this.choirService.removeCollectionFromChoir(collectionId);
+  removeCollectionFromChoir(collectionId: number, options?: { choirId?: number }): Observable<any> {
+    return this.choirService.removeCollectionFromChoir(collectionId, options?.choirId);
   }
 
   // --- Admin Methods ---
