@@ -216,9 +216,13 @@ exports.updateMember = async (req, res, next) => {
     const { isOrganist, rolesInChoir } = req.body;
     const choirId = req.activeChoirId;
 
+    console.log("Update member request:", JSON.stringify(req.params), JSON.stringify(req.body));
+
+
     try {
+        console.log("Updating member:", userId, "for choirId:", choirId);
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
-        if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
+        if (!association) return res.status(412).send({ message: 'User is not a member of this choir.' });
 
         if (rolesInChoir && association.rolesInChoir.includes('choir_admin') && !rolesInChoir.includes('choir_admin')) {
             const admins = await db.user_choir.findAll({ where: { choirId } });

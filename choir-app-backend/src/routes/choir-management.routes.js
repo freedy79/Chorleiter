@@ -18,6 +18,6 @@ router.put("/members/:userId", role.requireChoirAdmin, role.requireNonDemo, wrap
 router.delete("/members", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.removeUserFromChoir));
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", wrap(controller.getChoirCollections));
-router.delete("/collections/:id", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.removeCollectionFromChoir));
+router.delete("/collections/:id", role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));
 
 module.exports = router;

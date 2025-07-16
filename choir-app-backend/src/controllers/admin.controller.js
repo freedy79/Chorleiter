@@ -340,7 +340,7 @@ exports.removeUserFromChoir = async (req, res) => {
         if (result > 0) {
             res.status(200).send({ message: 'User removed from choir.' });
         } else {
-            res.status(404).send({ message: 'User is not a member of this choir.' });
+            res.status(412).send({ message: 'User is not a member of this choir.' });
         }
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -353,14 +353,15 @@ exports.updateChoirMember = async (req, res) => {
     const { rolesInChoir, isOrganist } = req.body;
 
     try {
+        console.log("Updating choir member:", userId, "in choir:", choirId);
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
-        if (!association) return res.status(404).send({ message: 'User is not a member of this choir.' });
+        if (!association) return res.status(412).send({ message: 'User is not a member of this choir.' });
 
         if (rolesInChoir && association.rolesInChoir.includes('choir_admin') && !rolesInChoir.includes('choir_admin')) {
             const admins = await db.user_choir.findAll({ where: { choirId } });
             const adminCount = admins.filter(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin')).length;
             if (adminCount <= 1) {
-                return res.status(403).send({ message: 'You cannot remove the last Choir Admin.' });
+                return res.status(412).send({ message: 'You cannot remove the last Choir Admin.' });
             }
         }
 
