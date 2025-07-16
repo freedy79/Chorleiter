@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { CdkTableModule } from "@angular/cdk/table";
 import { DragDropModule } from "@angular/cdk/drag-drop";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
+import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatBadgeModule } from "@angular/material/badge";
 import { MatBottomSheetModule } from "@angular/material/bottom-sheet";
 import { MatButtonModule } from "@angular/material/button";
@@ -43,6 +44,7 @@ import { MatTreeModule } from "@angular/material/tree";
     CdkTableModule,
     MatTreeModule,
     MatAutocompleteModule,
+    MatFormFieldModule,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
@@ -81,6 +83,7 @@ import { MatTreeModule } from "@angular/material/tree";
     CdkTableModule,
     MatTreeModule,
     MatAutocompleteModule,
+    MatFormFieldModule,
     MatButtonModule,
     MatButtonToggleModule,
     MatCardModule,
