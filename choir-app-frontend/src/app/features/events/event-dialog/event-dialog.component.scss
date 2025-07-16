@@ -44,6 +44,7 @@ h3.mat-subheading-2 {
 // Neuer Container für die Stück-Suche
 .autocomplete-container {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;

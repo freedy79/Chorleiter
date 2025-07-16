@@ -13,15 +13,11 @@
 </div>
 
 <div class="dashboard-grid">
-  <app-event-card
-    cardTitle="Letzter Gottesdienst"
-    [event]="lastService$ | async">
+  <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
   </app-event-card>
 
   <!-- Verwenden Sie die neue Komponente für die Probe -->
-  <app-event-card
-    cardTitle="Letzte Probe"
-    [event]="lastRehearsal$ | async">
+  <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async">
   </app-event-card>
 </div>
 
@@ -40,16 +36,18 @@
   </mat-list>
 </div>
 
-<div *ngIf="pieceChanges$ | async as changes">
-  <h2>Änderungsvorschläge</h2>
-  <mat-list *ngIf="changes.length > 0; else noChanges">
-    <mat-list-item *ngFor="let c of changes">
-      <div matLine>{{ c.piece?.title || 'Piece ' + c.pieceId }}</div>
-      <button mat-button color="primary" (click)="approvePieceChange(c)">Übernehmen</button>
-      <button mat-button color="warn" (click)="declinePieceChange(c)">Ablehnen</button>
-    </mat-list-item>
-  </mat-list>
-  <ng-template #noChanges>
-    <p>Keine Vorschläge vorhanden.</p>
-  </ng-template>
+<div *ngIf="isAdmin$ | async">
+  <div *ngIf="pieceChanges$ | async as changes">
+    <h2>Änderungsvorschläge</h2>
+    <mat-list *ngIf="changes.length > 0; else noChanges">
+      <mat-list-item *ngFor="let c of changes">
+        <div matLine>{{ c.piece?.title || 'Piece ' + c.pieceId }}</div>
+        <button mat-button color="primary" (click)="approvePieceChange(c)">Übernehmen</button>
+        <button mat-button color="warn" (click)="declinePieceChange(c)">Ablehnen</button>
+      </mat-list-item>
+    </mat-list>
+    <ng-template #noChanges>
+      <p>Keine Vorschläge vorhanden.</p>
+    </ng-template>
+  </div>
 </div>

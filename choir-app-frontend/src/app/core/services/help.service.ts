@@ -8,8 +8,7 @@ export class HelpService {
 
   shouldShowHelp(user: User | null): boolean {
     if (!user) return false;
-    if (user.role === 'demo') {
-      // demo users see the help wizard every time they log in
+    if (user.role === 'demo' && !this.prefs.getPreference('helpShown')) {
       return true;
     }
     return !this.prefs.getPreference('helpShown');
@@ -17,8 +16,6 @@ export class HelpService {
 
   markHelpShown(user: User | null): void {
     if (!user) return;
-    if (user.role !== 'demo') {
-      this.prefs.update({ helpShown: true }).subscribe();
-    }
+    this.prefs.update({ helpShown: true }).subscribe();
   }
 }

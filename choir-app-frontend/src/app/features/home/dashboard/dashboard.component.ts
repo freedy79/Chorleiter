@@ -44,6 +44,7 @@ export class DashboardComponent implements OnInit {
   pieceChanges$!: Observable<PieceChange[]>;
   nextEvents$!: Observable<Event[]>;
   showOnlyMine = false;
+  isAdmin$: Observable<boolean | false>;
 
   constructor(
     private apiService: ApiService,
@@ -54,6 +55,7 @@ export class DashboardComponent implements OnInit {
     private prefs: UserPreferencesService
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
+    this.isAdmin$ = this.authService.isAdmin$;
   }
 
   ngOnInit(): void {
