@@ -52,11 +52,11 @@ describe('InviteRegistrationComponent', () => {
     spyOn(router, 'navigate');
 
     component.token = 'abc';
-    component.form.setValue({ name: 'Test', password: 'secret', isOrganist: false });
+    component.form.setValue({ name: 'Test', password: 'secret' });
 
     component.submit();
 
-    expect(api.completeRegistration).toHaveBeenCalledWith('abc', { name: 'Test', password: 'secret', isOrganist: false });
+    expect(api.completeRegistration).toHaveBeenCalledWith('abc', { name: 'Test', password: 'secret' });
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 });

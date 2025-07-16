@@ -30,7 +30,7 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/password-reset/reset/${token}`, { password });
   }
 
-  completeRegistration(token: string, data: { name: string; password: string; isOrganist?: boolean }): Observable<any> {
+  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
   }
 

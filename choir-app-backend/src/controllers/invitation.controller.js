@@ -31,7 +31,7 @@ exports.getInvitation = async (req, res) => {
 
 exports.completeRegistration = async (req, res) => {
   const token = req.params.token;
-  const { name, password, isOrganist } = req.body;
+  const { name, password } = req.body;
   if (!name || !password) {
     return res.status(400).send({ message: 'Name and password are required.' });
   }
@@ -41,7 +41,7 @@ exports.completeRegistration = async (req, res) => {
       return res.status(404).send({ message: 'Invitation not found or expired.' });
     }
     await db.user.update({ name, password: bcrypt.hashSync(password, 8) }, { where: { id: entry.user.id } });
-    await entry.update({ registrationStatus: 'REGISTERED', inviteToken: null, inviteExpiry: null, isOrganist: !!isOrganist });
+    await entry.update({ registrationStatus: 'REGISTERED', inviteToken: null, inviteExpiry: null });
     res.status(200).send({ message: 'Registration completed.' });
   } catch (err) {
     res.status(500).send({ message: err.message });

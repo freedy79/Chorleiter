@@ -22,8 +22,7 @@ export class InviteRegistrationComponent implements OnInit {
   constructor(private route: ActivatedRoute, private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar, private router: Router) {
     this.form = this.fb.group({
       name: ['', Validators.required],
-      password: ['', Validators.required],
-      isOrganist: [false]
+      password: ['', Validators.required]
     });
   }
 

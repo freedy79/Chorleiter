@@ -466,15 +466,14 @@ export class ApiService {
   inviteUserToChoir(
     email: string,
     rolesInChoir: string[],
-    isOrganist?: boolean,
     options?: { choirId?: number }
   ): Observable<{ message: string }> {
-    return this.choirService.inviteUserToChoir(email, rolesInChoir, isOrganist, options?.choirId);
+    return this.choirService.inviteUserToChoir(email, rolesInChoir, options?.choirId);
   }
 
   updateChoirMember(
     userId: number,
-    data: { rolesInChoir?: string[]; isOrganist?: boolean },
+    data: { rolesInChoir?: string[] },
     options?: { choirId?: number }
   ): Observable<any> {
     return this.choirService.updateMember(userId, data, options?.choirId);
@@ -492,7 +491,7 @@ export class ApiService {
     return this.userService.resetPassword(token, password);
   }
 
-  completeRegistration(token: string, data: { name: string; password: string; isOrganist?: boolean }): Observable<any> {
+  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
     return this.userService.completeRegistration(token, data);
   }
 
@@ -538,11 +537,11 @@ export class ApiService {
     return this.adminService.getChoirMembersAdmin(id);
   }
 
-  inviteUserToChoirAdmin(id: number, email: string, rolesInChoir: string[], isOrganist?: boolean): Observable<{ message: string }> {
-    return this.adminService.inviteUserToChoirAdmin(id, email, rolesInChoir, isOrganist);
+  inviteUserToChoirAdmin(id: number, email: string, rolesInChoir: string[]): Observable<{ message: string }> {
+    return this.adminService.inviteUserToChoirAdmin(id, email, rolesInChoir);
   }
 
-  updateChoirMemberAdmin(id: number, userId: number, data: { rolesInChoir?: string[]; isOrganist?: boolean }): Observable<any> {
+  updateChoirMemberAdmin(id: number, userId: number, data: { rolesInChoir?: string[] }): Observable<any> {
     return this.adminService.updateChoirMemberAdmin(id, userId, data);
   }
 

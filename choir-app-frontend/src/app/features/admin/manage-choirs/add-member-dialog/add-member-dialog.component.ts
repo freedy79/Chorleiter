@@ -63,8 +63,10 @@ export class AddMemberDialogComponent implements OnInit {
     if (this.form.valid) {
       const user: User = this.form.value.user;
       const roles = this.form.value.roles as string[];
-      const isOrganist = this.form.value.isOrganist;
-      this.dialogRef.close({ email: user.email, roles, isOrganist });
+      const isOrg = this.form.value.isOrganist;
+      const finalRoles = isOrg && !roles.includes('organist') ? [...roles, 'organist'] :
+        (!isOrg ? roles.filter(r => r !== 'organist') : roles);
+      this.dialogRef.close({ email: user.email, roles: finalRoles });
     }
   }
 }

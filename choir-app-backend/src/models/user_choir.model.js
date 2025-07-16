@@ -12,10 +12,6 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: ['director']
         },
-        isOrganist: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false
-        },
         registrationStatus: {
             type: DataTypes.ENUM('REGISTERED', 'PENDING'),
             defaultValue: 'REGISTERED'
