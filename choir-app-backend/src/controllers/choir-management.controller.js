@@ -241,9 +241,16 @@ exports.getChoirCollections = async (req, res, next) => {
         const collections = await choir.getCollections({
             attributes: {
                 include: [
-                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "collection_pieces" AS cp WHERE cp."collectionId" = "collection"."id")`), 'pieceCount']
+                    [db.sequelize.fn('COUNT', db.sequelize.col('pieces->collection_piece.collectionId')), 'pieceCount']
                 ]
             },
+            include: [{
+                model: db.piece,
+                attributes: [],
+                through: { attributes: [] },
+                required: false
+            }],
+            group: ['collection.id'],
             order: [['title', 'ASC']]
         });
 
