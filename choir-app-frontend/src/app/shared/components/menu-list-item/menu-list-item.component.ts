@@ -5,6 +5,7 @@ import {
     Input,
     OnInit,
     OnDestroy,
+    ChangeDetectorRef,
 } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import {
@@ -46,7 +47,7 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
 
     public isVisible = true;
 
-    constructor(public navService: NavService, public router: Router) {}
+    constructor(public navService: NavService, public router: Router, private cdRef: ChangeDetectorRef) {}
 
     ngOnInit() {
         if (this.depth === undefined) {
@@ -61,6 +62,7 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
                     } else {
                         this.isVisible = vis;
                     }
+                    this.cdRef.detectChanges();
                 });
         }
 
@@ -69,6 +71,7 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
 
         if (this.item?.visible != undefined) {
             this.isVisible = this.item.visible;
+            this.cdRef.detectChanges();
             //console.log("changed to ");
             //console.log(this.isVisible);
         }
