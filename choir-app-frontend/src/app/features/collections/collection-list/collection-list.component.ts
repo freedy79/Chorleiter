@@ -1,15 +1,17 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
+import { MatPaginator } from '@angular/material/paginator';
 import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router'; // Import RouterLink and Router
 import { AuthService } from '@core/services/auth.service';
+import { PaginatorService } from '@core/services/paginator.service';
 
 @Component({
   selector: 'app-collection-list',
@@ -22,11 +24,13 @@ import { AuthService } from '@core/services/auth.service';
   templateUrl: './collection-list.component.html',
   styleUrls: ['./collection-list.component.scss']
 })
-export class CollectionListComponent implements OnInit {
+export class CollectionListComponent implements OnInit, AfterViewInit {
   public dataSource = new MatTableDataSource<Collection>();
   public isLoading = true;
   public isChoirAdmin = false;
   public isAdmin = false;
+  public pageSizeOptions: number[] = [10, 25, 50];
+  public pageSize = 10;
   private _sort!: MatSort;
   @ViewChild(MatSort) set sort(sort: MatSort) {
     if (sort) {
@@ -35,19 +39,32 @@ export class CollectionListComponent implements OnInit {
     }
   }
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
 
   constructor(
     public apiService: ApiService,
     private snackBar: MatSnackBar,
     private router: Router,
-    private authService: AuthService
-  ) { }
+    private authService: AuthService,
+    private paginatorService: PaginatorService
+  ) {
+    this.pageSize = this.paginatorService.getPageSize('collection-list', this.pageSizeOptions[0]);
+  }
 
   ngOnInit(): void {
     this.loadCollections();
     this.apiService.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
     this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
+  }
+
+  ngAfterViewInit(): void {
+    if (this.paginator) {
+      this.paginator.pageSize = this.pageSize;
+      this.dataSource.paginator = this.paginator;
+      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-list', e.pageSize));
+    }
   }
 
   loadCollections(): void {
