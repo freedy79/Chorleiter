@@ -24,7 +24,6 @@ import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-di
     CommonModule,
     FormsModule,
     MaterialModule,
-    PieceDialogComponent,
   ]
 })
 export class ManageCreatorsComponent implements OnInit, AfterViewInit {
