@@ -69,7 +69,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private dateKey(date: string): string {
-    return new Date(date).toISOString().substring(0, 10);
+    return date.split('T')[0];
   }
 
   isAvailable(userId: number, date: string): boolean {
@@ -89,7 +89,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private updateCounterPlan(): void {
-    const dateKeys = Array.from(new Set(this.entries.map(e => new Date(e.date).toISOString().substring(0, 10)))).sort();
+    const dateKeys = Array.from(new Set(this.entries.map(e => this.dateKey(e.date)))).sort();
     this.counterPlanDateKeys = dateKeys;
     this.counterPlanDates = dateKeys.map(d => new Date(d));
 
@@ -104,7 +104,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     }
 
     for (const entry of this.entries) {
-      const key = new Date(entry.date).toISOString().substring(0, 10);
+      const key = this.dateKey(entry.date);
       if (entry.director) {
         const row = this.counterPlanRows.find(r => r.user.id === entry.director!.id);
         if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Chorleitung' : 'Chorleitung';
