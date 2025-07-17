@@ -2,7 +2,7 @@
 <mat-form-field class="search-box" appearance="outline">
   <input matInput [formControl]="searchCtrl" [matAutocomplete]="auto" placeholder="Suche..." (keyup.enter)="goToResults()" />
 </mat-form-field>
-<mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption>
+<mat-autocomplete #auto="matAutocomplete" [autoActiveFirstOption]="false">
   <ng-container *ngIf="results.pieces.length">
     <mat-optgroup label="Pieces">
       <mat-option *ngFor="let p of results.pieces" [value]="p.title">{{p.title}}</mat-option>
