@@ -50,7 +50,9 @@
       <div class="piece-list" *ngIf="expandedPerson?.id === element.id">
         <div *ngIf="expandedPieces.length; else none">
           <ul>
-            <li *ngFor="let p of expandedPieces">{{ p.title }}</li>
+            <li *ngFor="let p of expandedPieces">
+              <a (click)="openEditPieceDialog(p.id, $event)">{{ p.title }}</a>
+            </li>
           </ul>
         </div>
         <ng-template #none>Keine Stücke vorhanden.</ng-template>
@@ -60,7 +62,7 @@
 
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleRow(row)" class="creator-row"></tr>
-  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+  <tr mat-row *matRowDef="let row; columns: ['expandedDetail']; when: isExpansionDetailRow" class="detail-row"></tr>
 </table>
 
 <mat-paginator [length]="totalPeople"

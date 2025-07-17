@@ -13,6 +13,7 @@ import { PaginatorService } from '@core/services/paginator.service';
 import { PieceService } from '@core/services/piece.service';
 import { Piece } from 'src/app/core/models/piece';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
+import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-dialog.component';
 // ...
 @Component({
   selector: 'app-manage-creators',
@@ -23,6 +24,7 @@ import { ComposerDialogComponent } from '@features/composers/composer-dialog/com
     CommonModule,
     FormsModule,
     MaterialModule,
+    PieceDialogComponent,
   ]
 })
 export class ManageCreatorsComponent implements OnInit, AfterViewInit {
@@ -62,7 +64,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  loadData(): void {
+  loadData(openPersonId?: number): void {
     const obs = this.mode === 'composer'
       ? this.composerService.getComposers()
       : this.authorService.getAuthors();
@@ -70,6 +72,12 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     obs.subscribe((data) => {
       this.people = data;
       this.applyFilter();
+      if (openPersonId) {
+        const person = this.people.find(p => p.id === openPersonId);
+        if (person) {
+          this.toggleRow(person);
+        }
+      }
     });
   }
 
@@ -168,6 +176,25 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       if (idx !== -1) {
         this.people[idx] = { ...person, ...updated } as Composer | Author;
         this.applyFilter();
+      }
+    });
+  }
+
+  isExpansionDetailRow = (_: number, row: Composer | Author) =>
+    this.expandedPerson?.id === row.id;
+
+  openEditPieceDialog(pieceId: number, event?: Event): void {
+    event?.stopPropagation();
+    const expandedId = this.expandedPerson?.id;
+    const dialogRef = this.dialog.open(PieceDialogComponent, {
+      width: '90vw',
+      maxWidth: '1000px',
+      data: { pieceId }
+    });
+
+    dialogRef.afterClosed().subscribe(wasUpdated => {
+      if (wasUpdated) {
+        this.loadData(expandedId);
       }
     });
   }
