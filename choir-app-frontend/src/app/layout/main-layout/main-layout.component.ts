@@ -227,6 +227,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
           {
             displayName: 'Protokolle',
             route: '/admin/protocols',
+          },
+          {
+            displayName: 'Develop',
+            route: '/admin/develop',
           }
         ]
       }

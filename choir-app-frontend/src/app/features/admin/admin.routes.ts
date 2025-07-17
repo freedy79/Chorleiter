@@ -18,6 +18,7 @@ export const adminRoutes: Routes = [
       { path: 'choirs', loadComponent: () => import('./manage-choirs/manage-choirs.component').then(m => m.ManageChoirsComponent) },
       { path: 'users', loadComponent: () => import('./manage-users/manage-users.component').then(m => m.ManageUsersComponent) },
       { path: 'protocols', loadComponent: () => import('./protocols/protocols.component').then(m => m.ProtocolsComponent) },
+      { path: 'develop', loadComponent: () => import('./develop/develop.component').then(m => m.DevelopComponent) },
     ],
   },
 ];
