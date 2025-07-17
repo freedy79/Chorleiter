@@ -5,16 +5,21 @@ const base = new BaseCrudController(Author);
 
 exports.create = async (req, res, next) => {
     try {
+        const { name, birthYear, deathYear } = req.body;
+        const force = req.query.force === 'true';
+        if (!force) {
+            const existing = await Author.findOne({ where: { name } });
+            if (existing) {
+                return res.status(409).send({ message: "An author with this name already exists." });
+            }
+        }
         const author = await base.service.create({
-            name: req.body.name,
-            birthYear: req.body.birthYear,
-            deathYear: req.body.deathYear
+            name,
+            birthYear,
+            deathYear
         });
         res.status(201).send(author);
     } catch (err) {
-        if (err.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).send({ message: "An author with this name already exists." });
-        }
         if (next) return next(err);
         res.status(500).send({ message: err.message });
     }
@@ -23,6 +28,14 @@ exports.create = async (req, res, next) => {
 exports.update = async (req, res, next) => {
     try {
         const id = req.params.id;
+        const { name } = req.body;
+        const force = req.query.force === 'true';
+        if (name && !force) {
+            const existing = await Author.findOne({ where: { name } });
+            if (existing && existing.id !== parseInt(id, 10)) {
+                return res.status(409).send({ message: "An author with this name already exists." });
+            }
+        }
         const num = await base.service.update(id, req.body);
         if (num === 1) {
             const updated = await base.service.findById(id);
@@ -30,9 +43,6 @@ exports.update = async (req, res, next) => {
         }
         res.status(404).send({ message: "Author not found." });
     } catch (err) {
-        if (err.name === 'SequelizeUniqueConstraintError') {
-            return res.status(409).send({ message: "An author with this name already exists." });
-        }
         if (next) return next(err);
         res.status(500).send({ message: err.message });
     }

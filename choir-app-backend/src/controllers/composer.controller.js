@@ -5,10 +5,18 @@ const base = new BaseCrudController(Composer);
 
 exports.create = async (req, res, next) => {
     try {
+        const { name, birthYear, deathYear } = req.body;
+        const force = req.query.force === 'true';
+        if (!force) {
+            const existing = await Composer.findOne({ where: { name } });
+            if (existing) {
+                return res.status(409).send({ message: "A composer with this name already exists." });
+            }
+        }
         const composer = await base.service.create({
-            name: req.body.name,
-            birthYear: req.body.birthYear,
-            deathYear: req.body.deathYear
+            name,
+            birthYear,
+            deathYear
         });
         res.status(201).send(composer);
     } catch (err) {
