@@ -326,7 +326,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         this.pieceCtrl.setValue('');
         const pieceDialogRef = this.dialog.open(PieceDialogComponent, {
             width: '90vw',
-            maxWidth: '800px',
+            maxWidth: '1000px',
             disableClose: true,
             data: { pieceId: null },
         });
@@ -345,7 +345,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     openEditPieceDialog(pieceId: number): void {
         const dialogRef = this.dialog.open(PieceDialogComponent, {
             width: '90vw',
-            maxWidth: '800px',
+            maxWidth: '1000px',
             disableClose: true,
             data: { pieceId }
         });

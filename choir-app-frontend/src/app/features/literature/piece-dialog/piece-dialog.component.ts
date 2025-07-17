@@ -146,11 +146,23 @@ export class PieceDialogComponent implements OnInit {
             if (newComposer) {
                 this.apiService
                     .createComposer(newComposer)
-                    .subscribe((created) => {
-                        this.refreshComposers$.next();
-                        this.allComposers.push(created);
-                        this.composerCtrl.setValue(created);
-                        this.pieceForm.get('composerId')?.setValue(created.id);
+                    .subscribe({
+                        next: (created) => {
+                            this.refreshComposers$.next();
+                            this.allComposers.push(created);
+                            this.composerCtrl.setValue(created);
+                            this.pieceForm.get('composerId')?.setValue(created.id);
+                        },
+                        error: err => {
+                            if (err.status === 409 && confirm('Komponist existiert bereits. Trotzdem anlegen?')) {
+                                this.apiService.createComposer(newComposer, true).subscribe(created => {
+                                    this.refreshComposers$.next();
+                                    this.allComposers.push(created);
+                                    this.composerCtrl.setValue(created);
+                                    this.pieceForm.get('composerId')?.setValue(created.id);
+                                });
+                            }
+                        }
                     });
             } else {
                 this.pieceForm.get('composerId')?.setValue(null);
@@ -169,13 +181,21 @@ export class PieceDialogComponent implements OnInit {
             if (newAuthor) {
                 this.apiService
                     .createAuthor(newAuthor)
-                    .subscribe((created) => {
-                        this.refreshAuthors$.next();
-                        this.allAuthors.push(created);
-                        this.authorCtrl.setValue(created);
-                        this.pieceForm
-                            .get('authorId')
-                            ?.setValue(created.id);
+                    .subscribe({
+                        next: (created) => {
+                            this.refreshAuthors$.next();
+                            this.pieceForm
+                                .get('authorId')
+                                ?.setValue(created.id);
+                        },
+                        error: err => {
+                            if (err.status === 409 && confirm('Dichter existiert bereits. Trotzdem anlegen?')) {
+                                this.apiService.createAuthor(newAuthor, true).subscribe(created => {
+                                    this.refreshAuthors$.next();
+                                    this.pieceForm.get('authorId')?.setValue(created.id);
+                                });
+                            }
+                        }
                     });
             } else {
                 this.pieceForm.get('authorId')?.setValue(null);

@@ -74,8 +74,15 @@ export class PieceService {
     return this.http.delete(`${this.apiUrl}/repertoire/notes/${noteId}`);
   }
 
-  getGlobalPieces(): Observable<Piece[]> {
-    return this.http.get<Piece[]>(`${this.apiUrl}/pieces`);
+  getGlobalPieces(filters?: { composerId?: number; authorId?: number }): Observable<Piece[]> {
+    let params = new HttpParams();
+    if (filters?.composerId) {
+      params = params.set('composerId', filters.composerId.toString());
+    }
+    if (filters?.authorId) {
+      params = params.set('authorId', filters.authorId.toString());
+    }
+    return this.http.get<Piece[]>(`${this.apiUrl}/pieces`, { params });
   }
 
   createGlobalPiece(pieceData: any): Observable<Piece> {

@@ -10,6 +10,8 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
+import { PieceService } from '@core/services/piece.service';
+import { Piece } from 'src/app/core/models/piece';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 // ...
 @Component({
@@ -34,12 +36,16 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
 
+  expandedPerson: Composer | Author | null = null;
+  expandedPieces: Piece[] = [];
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private composerService: ComposerService,
               private authorService: AuthorService,
               private dialog: MatDialog,
-              private paginatorService: PaginatorService) {
+              private paginatorService: PaginatorService,
+              private pieceService: PieceService) {
     this.pageSize = this.paginatorService.getPageSize('manage-creators', this.pageSizeOptions[0]);
   }
 
@@ -96,7 +102,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
         const req = this.mode === 'composer'
           ? this.composerService.createComposer(result)
           : this.authorService.createAuthor(result);
-        req.subscribe(() => this.loadData());
+        req.subscribe({
+          next: () => this.loadData(),
+          error: err => {
+            const question = this.mode === 'composer'
+              ? 'Komponist existiert bereits. Trotzdem anlegen?'
+              : 'Dichter existiert bereits. Trotzdem anlegen?';
+            if (err.status === 409 && confirm(question)) {
+              const forceReq = this.mode === 'composer'
+                ? this.composerService.createComposer(result, true)
+                : this.authorService.createAuthor(result, true);
+              forceReq.subscribe(() => this.loadData());
+            }
+          }
+        });
       }
     });
   }
@@ -111,7 +130,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
         const req = this.mode === 'composer'
           ? this.composerService.updateComposer(person.id, result)
           : this.authorService.updateAuthor(person.id, result);
-        req.subscribe(() => this.loadData());
+        req.subscribe({
+          next: () => this.loadData(),
+          error: err => {
+            const question = this.mode === 'composer'
+              ? 'Komponist existiert bereits. Trotzdem speichern?'
+              : 'Dichter existiert bereits. Trotzdem speichern?';
+            if (err.status === 409 && confirm(question)) {
+              const forceReq = this.mode === 'composer'
+                ? this.composerService.updateComposer(person.id, result, true)
+                : this.authorService.updateAuthor(person.id, result, true);
+              forceReq.subscribe(() => this.loadData());
+            }
+          }
+        });
       }
     });
   }
@@ -137,6 +169,21 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
         this.people[idx] = { ...person, ...updated } as Composer | Author;
         this.applyFilter();
       }
+    });
+  }
+
+  toggleRow(person: Composer | Author): void {
+    if (this.expandedPerson && this.expandedPerson.id === person.id) {
+      this.expandedPerson = null;
+      this.expandedPieces = [];
+      return;
+    }
+    const filter = this.mode === 'composer'
+      ? { composerId: person.id }
+      : { authorId: person.id };
+    this.pieceService.getGlobalPieces(filter).subscribe(pieces => {
+      this.expandedPerson = person;
+      this.expandedPieces = pieces;
     });
   }
 }
