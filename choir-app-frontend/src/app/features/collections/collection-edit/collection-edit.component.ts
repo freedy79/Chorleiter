@@ -336,6 +336,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 if (newPiece) {
                     this.allPieces.push(newPiece);
                     this.addPieceForm.patchValue({ piece: newPiece });
+                    this.pieceCtrl.setValue(newPiece);
                     this.proposeNextNumber();
                 }
             });
