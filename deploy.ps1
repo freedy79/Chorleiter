@@ -149,3 +149,5 @@ Write-Host "Deployment completed."
 if (-not $sshUsePlink) {
     & ssh @SshOptions -O exit $Remote
 }
+
+Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Successully deployed"
