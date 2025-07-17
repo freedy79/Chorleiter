@@ -38,7 +38,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   private refresh$ = new BehaviorSubject<void>(undefined);
   public filterByCollectionIds$ = new BehaviorSubject<number[]>([]);
   public filterByCategoryIds$ = new BehaviorSubject<number[]>([]);
-  public onlySingable$ = new BehaviorSubject<boolean>(false);
   public status$ = new BehaviorSubject<('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[]>([]);
   public searchControl = new FormControl('');
   public filtersExpanded = false;
@@ -131,7 +130,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         } else if ((s as any).categoryId !== undefined && (s as any).categoryId !== null) {
           this.filterByCategoryIds$.next([(s as any).categoryId]);
         }
-        if (s.onlySingable !== undefined) this.onlySingable$.next(s.onlySingable);
         if (Array.isArray(s.statuses)) {
           this.status$.next(s.statuses);
         } else if (s.status !== undefined && s.status !== null) {
@@ -143,7 +141,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           s.collectionId ||
           (s.categoryIds && s.categoryIds.length) ||
           (s as any).categoryId ||
-          s.onlySingable ||
           (Array.isArray(s.statuses) && s.statuses.length) ||
           s.status
         ) {
@@ -171,7 +168,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.onlySingable$, this.status$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryIds$, this.status$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -191,8 +188,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
           const statuses = this.status$.value.length
             ? this.status$.value
-            : this.onlySingable$.value
-            ? ['CAN_BE_SUNG']
             : undefined;
           return this.pieceService.getMyRepertoire(
             this.filterByCategoryIds$.value,
@@ -237,7 +232,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     return [
       this.filterByCollectionIds$.value.join(','),
       this.filterByCategoryIds$.value.join(','),
-      this.onlySingable$.value,
       this.status$.value.join(','),
       this.searchControl.value,
       this._sort.active,
@@ -252,8 +246,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const dir = this._sort.direction ? this._sort.direction.toUpperCase() as 'ASC' | 'DESC' : 'ASC';
     const statuses = this.status$.value.length
       ? this.status$.value
-      : this.onlySingable$.value
-      ? ['CAN_BE_SUNG']
       : undefined;
     this.pieceService.getMyRepertoire(
       this.filterByCategoryIds$.value,
@@ -321,14 +313,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.refresh$.next();
   }
 
-  onSingableToggle(checked: boolean): void {
-    if (this._paginator) {
-      this._paginator.firstPage();
-    }
-    this.onlySingable$.next(checked);
-    this.saveFilters();
-    this.refresh$.next();
-  }
 
   onStatusFilterChange(statuses: ('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[]): void {
     if (this._paginator) {
@@ -342,7 +326,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   clearFilters(): void {
     this.filterByCollectionIds$.next([]);
     this.filterByCategoryIds$.next([]);
-    this.onlySingable$.next(false);
     this.status$.next([]);
     this.searchControl.setValue('', { emitEvent: false });
     this.filtersExpanded = false;
@@ -358,7 +341,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const state = {
       collectionIds: this.filterByCollectionIds$.value,
       categoryIds: this.filterByCategoryIds$.value,
-      onlySingable: this.onlySingable$.value,
       statuses: this.status$.value,
       search: this.searchControl.value
     };
@@ -366,7 +348,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.filtersExpanded = !!(
       (state.collectionIds && state.collectionIds.length) ||
       (state.categoryIds && state.categoryIds.length) ||
-      state.onlySingable ||
       (state.statuses && state.statuses.length)
     );
   }
@@ -495,7 +476,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         this.filterByCategoryIds$.next([singleId]);
       }
     }
-    this.onlySingable$.next(!!preset.data.onlySingable);
     if (Array.isArray(preset.data.statuses)) {
       this.status$.next(preset.data.statuses);
     } else if (preset.data.status !== undefined && preset.data.status !== null) {
@@ -508,7 +488,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       preset.data.collectionId ||
       (preset.data.categoryIds && preset.data.categoryIds.length) ||
       singleId ||
-      preset.data.onlySingable ||
       (Array.isArray(preset.data.statuses) && preset.data.statuses.length) ||
       preset.data.status
     );
@@ -529,7 +508,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       const data = {
         collectionIds: this.filterByCollectionIds$.value,
         categoryIds: this.filterByCategoryIds$.value,
-        onlySingable: this.onlySingable$.value,
         statuses: this.status$.value,
         search: this.searchControl.value
       };

@@ -11,7 +11,6 @@ export interface RepertoireFilter {
     /** Legacy single collection filter retained for backwards compatibility */
     collectionId?: number | null;
     categoryIds?: number[];
-    onlySingable?: boolean;
     /**
      * Legacy single-status field. Kept for backwards compatibility when
      * loading older presets or local storage state.

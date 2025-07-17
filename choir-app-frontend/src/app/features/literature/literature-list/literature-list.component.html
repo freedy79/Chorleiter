@@ -23,9 +23,6 @@
           <mat-option *ngFor="let cat of categories$ | async" [value]="cat.id">{{cat.name}}</mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-checkbox [checked]="onlySingable$.value" (change)="onSingableToggle($event.checked)">
-        Nur aufführbare
-      </mat-checkbox>
       <mat-form-field appearance="outline">
         <mat-label>Status</mat-label>
         <mat-select multiple [value]="status$.value" (selectionChange)="onStatusFilterChange($event.value)">
