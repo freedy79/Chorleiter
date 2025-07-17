@@ -26,10 +26,8 @@
         nak.$choir-app-primary,
         default
       ) !important;
-      color: mat.m2-get-contrast-color-from-palette(
-        nak.$choir-app-primary,
-        default
-      ) !important;
+      // Selected SideNav entries should always use white text
+      color: white !important;
       border-radius: 0px;
     }
 
