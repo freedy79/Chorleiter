@@ -17,7 +17,6 @@ import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
 import { Category } from 'src/app/core/models/category';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
-import { PieceDetailDialogComponent } from '../piece-detail-dialog/piece-detail-dialog.component';
 import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
@@ -392,12 +391,6 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  openPieceDetailDialog(pieceId: number): void {
-    this.dialog.open(PieceDetailDialogComponent, {
-      width: '600px',
-      data: { pieceId }
-    });
-  }
 
   // =======================================================================
   // === MISSING FUNCTION 2: onStatusChange ================================
