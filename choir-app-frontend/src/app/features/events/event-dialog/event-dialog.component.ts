@@ -200,6 +200,11 @@ export class EventDialogComponent implements OnInit {
                                           .numberInCollection
                                   }`
                                 : null,
+                        collectionTitle:
+                            newPiece.collections &&
+                            newPiece.collections.length > 0
+                                ? newPiece.collections[0].title || null
+                                : null,
                     };
                     this.allRepertoirePieces.push(lookup);
                     this.selectedPieces = [...this.selectedPieces, lookup];
@@ -227,6 +232,10 @@ export class EventDialogComponent implements OnInit {
                               .numberInCollection
                       }`
                     : '',
+            collectionTitle:
+                p.collections && p.collections.length > 0
+                    ? p.collections[0].title || null
+                    : null,
         }));
         this.selectedPiecesDataSource.data = this.selectedPieces;
     }

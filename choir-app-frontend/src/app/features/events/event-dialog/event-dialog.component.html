@@ -43,15 +43,20 @@
             #pieceInput
           >
           <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="selected($event)">
+            <mat-option disabled class="option-header">
+              <div class="option-grid">
+                <span>Ref</span>
+                <span>Titel</span>
+                <span>Komponist</span>
+                <span>Sammlung</span>
+              </div>
+            </mat-option>
             <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
-              <div class="option-layout">
-                <!-- Zeigt den Titel und den Komponisten an -->
-                <div class="option-main">
-                  <span class="option-title">{{ piece.title }}</span>
-                  <small class="composer-hint"> - {{ piece.composerName }}</small>
-                </div>
-                <!-- Zeigt die Referenz an, wenn eine vorhanden ist -->
-                <span *ngIf="piece.reference" class="option-reference">{{ piece.reference }}</span>
+              <div class="option-grid">
+                <span class="col-reference">{{ piece.reference }}</span>
+                <span class="col-title">{{ piece.title }}</span>
+                <span class="col-composer">{{ piece.composerName }}</span>
+                <span class="col-collection">{{ piece.collectionTitle }}</span>
               </div>
             </mat-option>
           </mat-autocomplete>

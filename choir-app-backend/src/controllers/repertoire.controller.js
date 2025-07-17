@@ -32,7 +32,7 @@ exports.lookup = async (req, res) => {
                 {
                     model: db.collection,
                     as: 'collections',
-                    attributes: ['prefix'],
+                    attributes: ['prefix', 'title'],
                     through: {
                         model: db.collection_piece,
                         attributes: ['numberInCollection']
@@ -46,12 +46,14 @@ exports.lookup = async (req, res) => {
         const lookupResults = pieces.map(piece => {
             const plainPiece = piece.get({ plain: true });
             let referenceString = null;
+            let collectionTitle = null;
 
             // Erstellen Sie den Referenz-String, falls das Stück in einer Sammlung ist.
             if (plainPiece.collections && plainPiece.collections.length > 0) {
                 const ref = plainPiece.collections[0]; // Nehmen Sie die erste Referenz
                 const num = ref.collection_piece.numberInCollection;
                 referenceString = `${ref.prefix || ''}${num}`;
+                collectionTitle = ref.title || null;
             }
 
             // Geben Sie ein sauberes Objekt zurück, das nur das Nötigste enthält.
@@ -59,7 +61,8 @@ exports.lookup = async (req, res) => {
                 id: plainPiece.id,
                 title: plainPiece.title,
                 composerName: plainPiece.composer?.name || '',
-                reference: referenceString // z.B. "CB45" oder null
+                reference: referenceString, // z.B. "CB45" oder null
+                collectionTitle
             };
         });
 
