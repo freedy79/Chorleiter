@@ -110,6 +110,11 @@ export class PieceDialogComponent implements OnInit {
             .subscribe(list => {
                 this.allComposers = list;
                 this.initializeComposerAutocomplete();
+                const composerId = this.pieceForm.get('composerId')?.value;
+                if (composerId && !this.composerCtrl.value) {
+                    const found = this.allComposers.find(c => c.id === composerId);
+                    if (found) this.composerCtrl.setValue(found);
+                }
             });
 
         this.refreshAuthors$
@@ -369,7 +374,7 @@ export class PieceDialogComponent implements OnInit {
 
         if (piece.composer) {
             const found = this.allComposers.find(c => c.id === piece.composer!.id);
-            if (found) this.composerCtrl.setValue(found);
+            this.composerCtrl.setValue(found || piece.composer);
         }
 
         if (piece.author) {
