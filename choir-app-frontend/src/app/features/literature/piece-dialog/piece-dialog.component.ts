@@ -122,6 +122,11 @@ export class PieceDialogComponent implements OnInit {
             .subscribe(list => {
                 this.allAuthors = list;
                 this.initializeAuthorAutocomplete();
+                const authorId = this.pieceForm.get('authorId')?.value;
+                if (authorId && !this.authorCtrl.value) {
+                    const found = this.allAuthors.find(a => a.id === authorId);
+                    if (found) this.authorCtrl.setValue(found);
+                }
             });
 
         this.categories$ = this.refreshComposers$.pipe(
