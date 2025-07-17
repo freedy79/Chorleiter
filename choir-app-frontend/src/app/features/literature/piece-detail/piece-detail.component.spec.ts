@@ -5,6 +5,8 @@ import { of } from 'rxjs';
 import { PieceDetailComponent } from './piece-detail.component';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 describe('PieceDetailComponent', () => {
   let component: PieceDetailComponent;
@@ -19,7 +21,9 @@ describe('PieceDetailComponent', () => {
         {
           provide: AuthService,
           useValue: { currentUser$: of(null), isAdmin$: of(false) }
-        }
+        },
+        { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(false) }) } },
+        { provide: MatSnackBar, useValue: { open: () => {} } }
       ]
     })
     .compileComponents();
