@@ -77,16 +77,19 @@
             <div class="form-section-column">
               <mat-form-field appearance="outline">
                 <mat-label>Dichter</mat-label>
-                <mat-select formControlName="authorId">
-                  <mat-option [value]="addNewAuthorId">
-                    <mat-icon>add</mat-icon>
-                    <span>Neuen Dichter erstellen</span>
+                <input type="text" matInput [formControl]="authorCtrl" [matAutocomplete]="autoAuthor" />
+                <input type="hidden" formControlName="authorId" />
+                <mat-autocomplete #autoAuthor="matAutocomplete" [displayWith]="displayAuthor" (optionSelected)="onAuthorSelected($event)">
+                  <mat-option *ngFor="let author of filteredAuthors$ | async" [value]="author">
+                    <ng-container *ngIf="!author.isNew; else addNewAuthorTpl">
+                      {{ author.name }}
+                    </ng-container>
+                    <ng-template #addNewAuthorTpl>
+                      <mat-icon>add</mat-icon>
+                      <span>Dichter anlegen "{{ author.name }}"</span>
+                    </ng-template>
                   </mat-option>
-                  <mat-divider></mat-divider>
-                  <mat-option *ngFor="let author of authors$ | async" [value]="author.id">
-                    {{ author.name }}
-                  </mat-option>
-                </mat-select>
+                </mat-autocomplete>
               </mat-form-field>
 
               <mat-form-field appearance="outline">
