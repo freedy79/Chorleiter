@@ -51,16 +51,19 @@
 
               <mat-form-field appearance="outline">
                 <mat-label>Komponist</mat-label>
-                <mat-select formControlName="composerId">
-                  <mat-option [value]="addNewComposerId">
-                    <mat-icon>add</mat-icon>
-                    <span>Neuen Komponisten erstellen</span>
+                <input type="text" matInput [formControl]="composerCtrl" [matAutocomplete]="autoComposer">
+                <input type="hidden" formControlName="composerId" />
+                <mat-autocomplete #autoComposer="matAutocomplete" [displayWith]="displayComposer" (optionSelected)="onComposerSelected($event)">
+                  <mat-option *ngFor="let composer of filteredComposers$ | async" [value]="composer">
+                    <ng-container *ngIf="!composer.isNew; else addNew">
+                      {{ composer.name }}
+                    </ng-container>
+                    <ng-template #addNew>
+                      <mat-icon>add</mat-icon>
+                      <span>Komponist anlegen "{{ composer.name }}"</span>
+                    </ng-template>
                   </mat-option>
-                  <mat-divider></mat-divider>
-                  <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
-                    {{ composer.name }}
-                  </mat-option>
-                </mat-select>
+                </mat-autocomplete>
               </mat-form-field>
 
               <mat-form-field appearance="outline">

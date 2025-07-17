@@ -8,16 +8,18 @@ import {
     FormArray,
     ValidatorFn,
     AbstractControl,
-    ValidationErrors
+    ValidationErrors,
+    FormControl,
 } from '@angular/forms';
 import {
     MAT_DIALOG_DATA,
     MatDialog,
     MatDialogRef,
 } from '@angular/material/dialog';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, of, startWith } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -58,6 +60,10 @@ export class PieceDialogComponent implements OnInit {
     imageFile: File | null = null;
     isDragOver = false;
 
+    composerCtrl = new FormControl<string | Composer>('');
+    filteredComposers$!: Observable<(Composer & { isNew?: boolean })[]>;
+    allComposers: Composer[] = [];
+
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
     }
@@ -97,20 +103,18 @@ export class PieceDialogComponent implements OnInit {
 
     ngOnInit(): void {
         this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
-        this.composers$ = this.refreshComposers$.pipe(
-            switchMap(() => this.apiService.getComposers())
-        );
+        this.refreshComposers$
+            .pipe(switchMap(() => this.apiService.getComposers()))
+            .subscribe(list => {
+                this.allComposers = list;
+                this.initializeComposerAutocomplete();
+            });
 
         this.authors$ = this.refreshAuthors$.pipe(
             switchMap(() => this.apiService.getAuthors())
         );
 
-        // Listen for changes on the composerId dropdown
-        this.pieceForm.get('composerId')?.valueChanges.subscribe((value) => {
-            if (value === this.addNewComposerId) {
-                this.openAddComposerDialog();
-            }
-        });
+
 
         this.pieceForm.get('authorId')?.valueChanges.subscribe((value) => {
             if (value === this.addNewAuthorId) {
@@ -135,10 +139,10 @@ export class PieceDialogComponent implements OnInit {
         }
     }
 
-    openAddComposerDialog(): void {
+    openAddComposerDialog(name?: string): void {
         const composerDialogRef = this.dialog.open(ComposerDialogComponent, {
             width: '500px',
-            data: { role: 'composer' }
+            data: { role: 'composer', record: name ? { name } : undefined }
         });
 
         composerDialogRef.afterClosed().subscribe((newComposer) => {
@@ -147,12 +151,13 @@ export class PieceDialogComponent implements OnInit {
                     .createComposer(newComposer)
                     .subscribe((created) => {
                         this.refreshComposers$.next();
-                        this.pieceForm
-                            .get('composerId')
-                            ?.setValue(created.id);
+                        this.allComposers.push(created);
+                        this.composerCtrl.setValue(created);
+                        this.pieceForm.get('composerId')?.setValue(created.id);
                     });
             } else {
                 this.pieceForm.get('composerId')?.setValue(null);
+                this.composerCtrl.setValue('');
             }
         });
     }
@@ -210,6 +215,40 @@ export class PieceDialogComponent implements OnInit {
 
     removeLink(index: number): void {
         this.linksFormArray.removeAt(index);
+    }
+
+    private initializeComposerAutocomplete(): void {
+        this.filteredComposers$ = this.composerCtrl.valueChanges.pipe(
+            startWith(''),
+            map(value => (typeof value === 'string' ? value : value?.name || '')),
+            map(name => {
+                const filtered = this._filterComposers(name);
+                const options = filtered.map(c => ({ ...c }));
+                if (name && !filtered.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+                    options.unshift({ id: this.addNewComposerId, name, isNew: true } as Composer & { isNew: boolean });
+                }
+                return options;
+            })
+        );
+    }
+
+    private _filterComposers(search: string): Composer[] {
+        const filterValue = search.toLowerCase();
+        return this.allComposers.filter(c => c.name.toLowerCase().includes(filterValue));
+    }
+
+    displayComposer(composer: Composer & { isNew?: boolean }): string {
+        return composer ? composer.name : '';
+    }
+
+    onComposerSelected(event: MatAutocompleteSelectedEvent): void {
+        const selected = event.option.value as Composer & { isNew?: boolean };
+        if (selected.isNew) {
+            this.openAddComposerDialog(selected.name);
+        } else {
+            this.pieceForm.get('composerId')?.setValue(selected.id);
+            this.composerCtrl.setValue(selected);
+        }
     }
 
     onFileSelected(event: Event): void {
@@ -273,6 +312,11 @@ export class PieceDialogComponent implements OnInit {
             lyrics: piece.lyrics,
             lyricsSource: piece.lyricsSource,
         });
+
+        if (piece.composer) {
+            const found = this.allComposers.find(c => c.id === piece.composer!.id);
+            if (found) this.composerCtrl.setValue(found);
+        }
 
         if (piece.imageIdentifier) {
             this.pieceService.getPieceImage(piece.id).subscribe(data => this.imagePreview = data);
