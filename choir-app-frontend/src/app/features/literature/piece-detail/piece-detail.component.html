@@ -16,6 +16,20 @@
       </li>
     </ul>
   </div>
+  <div *ngIf="pieceImage || piece.links?.length">
+    <div *ngIf="pieceImage" class="sheet-image">
+      <h3>Notenbild</h3>
+      <img [src]="pieceImage" alt="Notenbild" />
+    </div>
+    <div *ngIf="piece.links?.length">
+      <h3>Links</h3>
+      <ul>
+        <li *ngFor="let link of piece.links">
+          <a [href]="link.url" target="_blank" rel="noopener">{{ link.description }}</a>
+        </li>
+      </ul>
+    </div>
+  </div>
   <p>
     <strong>Status im Chor:</strong>
     <mat-select [value]="piece.choir_repertoire?.status" (selectionChange)="onStatusChange($event.value)">

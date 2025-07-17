@@ -31,6 +31,7 @@ export class PieceDetailComponent implements OnInit {
   editState: { [id: number]: string } = {};
   userId: number | null = null;
   isAdmin = false;
+  pieceImage: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
@@ -50,6 +51,11 @@ export class PieceDetailComponent implements OnInit {
   private loadPiece(id: number): void {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       this.piece = p;
+      if (p.imageIdentifier) {
+        this.apiService.getPieceImage(p.id).subscribe(img => this.pieceImage = img);
+      } else {
+        this.pieceImage = null;
+      }
     });
   }
 
