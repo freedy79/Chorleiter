@@ -107,7 +107,7 @@ export class PieceDetailComponent implements OnInit {
     if (!this.piece) return;
     const dialogRef = this.dialog.open(PieceDialogComponent, {
       width: '90vw',
-      maxWidth: '800px',
+      maxWidth: '1000px',
       data: { pieceId: this.piece.id }
     });
 
