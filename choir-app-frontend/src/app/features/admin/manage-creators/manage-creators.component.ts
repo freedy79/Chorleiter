@@ -3,7 +3,7 @@ import { ComposerService } from 'src/app/core/services/composer.service';
 import { AuthorService } from 'src/app/core/services/author.service';
 import { Composer } from 'src/app/core/models/composer';
 import { Author } from 'src/app/core/models/author';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource, MatTable } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -42,6 +42,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
   expandedPieces: Piece[] = [];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatTable) table!: MatTable<Composer | Author>;
 
   constructor(private composerService: ComposerService,
               private authorService: AuthorService,
@@ -203,6 +204,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     if (this.expandedPerson && this.expandedPerson.id === person.id) {
       this.expandedPerson = null;
       this.expandedPieces = [];
+      this.table.renderRows();
       return;
     }
     const filter = this.mode === 'composer'
@@ -211,6 +213,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     this.pieceService.getGlobalPieces(filter).subscribe(pieces => {
       this.expandedPerson = person;
       this.expandedPieces = pieces;
+      this.table.renderRows();
     });
   }
 }
