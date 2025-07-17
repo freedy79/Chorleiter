@@ -8,6 +8,9 @@ import { ApiService } from '@core/services/api.service';
 import { Piece, PieceNote } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 
 @Component({
   selector: 'app-piece-detail',
@@ -32,16 +35,22 @@ export class PieceDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private apiService: ApiService,
-    private auth: AuthService
+    private auth: AuthService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.loadPiece(id);
+    this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
+    this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+  }
+
+  private loadPiece(id: number): void {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       this.piece = p;
     });
-    this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
-    this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
   }
 
   onStatusChange(newStatus: string): void {
@@ -91,6 +100,22 @@ export class PieceDetailComponent implements OnInit {
       if (!this.piece!.notes) this.piece!.notes = [];
       this.piece!.notes.unshift(n as any);
       this.newNoteText = '';
+    });
+  }
+
+  openEditPieceDialog(): void {
+    if (!this.piece) return;
+    const dialogRef = this.dialog.open(PieceDialogComponent, {
+      width: '90vw',
+      maxWidth: '800px',
+      data: { pieceId: this.piece.id }
+    });
+
+    dialogRef.afterClosed().subscribe(wasUpdated => {
+      if (wasUpdated) {
+        this.snackBar.open('Stück aktualisiert.', 'OK', { duration: 3000 });
+        this.loadPiece(this.piece!.id);
+      }
     });
   }
 }

@@ -1,8 +1,21 @@
 <div class="piece-detail" *ngIf="piece">
-  <h2>{{ piece.title }}</h2>
+  <h2>
+    {{ piece.title }}
+    <button mat-icon-button color="primary" (click)="openEditPieceDialog()" aria-label="Stück bearbeiten">
+      <mat-icon>edit</mat-icon>
+    </button>
+  </h2>
   <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
+  <div *ngIf="piece.collections?.length">
+    <p><strong>Enthalten in:</strong></p>
+    <ul>
+      <li *ngFor="let c of piece.collections">
+        {{ c.title }} ({{ c.prefix }}{{ c.collection_piece.numberInCollection }})
+      </li>
+    </ul>
+  </div>
   <p>
     <strong>Status im Chor:</strong>
     <mat-select [value]="piece.choir_repertoire?.status" (selectionChange)="onStatusChange($event.value)">
