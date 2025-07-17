@@ -1,0 +1,13 @@
+const authJwt = require("../middleware/auth.middleware");
+const controller = require("../controllers/publisher.controller");
+const router = require("express").Router();
+const { handler: wrap } = require("../utils/async");
+
+router.use(authJwt.verifyToken);
+
+router.post("/", wrap(controller.create));
+router.get("/", wrap(controller.findAll));
+router.put("/:id", wrap(controller.update));
+router.delete("/:id", wrap(controller.delete));
+
+module.exports = router;
