@@ -31,7 +31,10 @@
 
         <mat-form-field appearance="outline">
           <mat-label>Verlag</mat-label>
-          <input matInput formControlName="publisher">
+          <input matInput [formControl]="publisherCtrl" [matAutocomplete]="pubAuto">
+          <mat-autocomplete #pubAuto="matAutocomplete" (optionSelected)="onPublisherSelected($event)">
+            <mat-option *ngFor="let p of filteredPublishers$ | async" [value]="p">{{ p }}</mat-option>
+          </mat-autocomplete>
         </mat-form-field>
 
         <mat-form-field appearance="outline">

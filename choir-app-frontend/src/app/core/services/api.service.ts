@@ -13,12 +13,14 @@ import { PlanEntry } from '../models/plan-entry';
 import { Collection } from '../models/collection';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
+import { Publisher } from '@core/models/publisher';
 import { Choir } from '@core/models/choir';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
+import { PublisherService } from './publisher.service';
 import { CategoryService } from './category.service';
 import { CollectionService } from './collection.service';
 import { EventService } from './event.service';
@@ -49,6 +51,7 @@ export class ApiService {
               private pieceService: PieceService,
               private composerService: ComposerService,
               private authorService: AuthorService,
+              private publisherService: PublisherService,
               private categoryService: CategoryService,
               private collectionService: CollectionService,
               private eventService: EventService,
@@ -229,6 +232,23 @@ export class ApiService {
 
   enrichAuthor(id: number): Observable<Author> {
     return this.authorService.enrichAuthor(id);
+  }
+
+  // --- Publisher Methods ---
+  getPublishers(): Observable<Publisher[]> {
+    return this.publisherService.getPublishers();
+  }
+
+  createPublisher(data: { name: string }): Observable<Publisher> {
+    return this.publisherService.createPublisher(data);
+  }
+
+  updatePublisher(id: number, data: { name: string }): Observable<Publisher> {
+    return this.publisherService.updatePublisher(id, data);
+  }
+
+  deletePublisher(id: number): Observable<any> {
+    return this.publisherService.deletePublisher(id);
   }
 
 

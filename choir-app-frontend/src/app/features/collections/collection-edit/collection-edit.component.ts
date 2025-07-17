@@ -34,6 +34,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatSort } from '@angular/material/sort';
+import { Publisher } from '@core/models/publisher';
 
 interface SelectedPieceWithNumber {
     piece: Piece;
@@ -65,6 +66,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     pieceCtrl = new FormControl<string | Piece>('');
     filteredPieces$!: Observable<Piece[]>;
     allPieces: Piece[] = [];
+    publisherCtrl = new FormControl<string>('');
+    publishers: Publisher[] = [];
+    filteredPublishers$!: Observable<string[]>;
     selectedPieceLinks: SelectedPieceWithNumber[] = [];
     coverPreview: string | null = null;
     coverFile: File | null = null;
@@ -128,6 +132,16 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     ngOnInit(): void {
         this.authService.isAdmin$.subscribe(v => (this.isAdmin = v));
+        this.apiService.getPublishers().subscribe(list => {
+            this.publishers = list;
+            this.setupPublisherAutocomplete();
+        });
+        this.collectionForm.get('publisher')?.valueChanges.subscribe(v => {
+            this.publisherCtrl.setValue(v || '', { emitEvent: false });
+        });
+        this.publisherCtrl.valueChanges.subscribe(v => {
+            this.collectionForm.get('publisher')?.setValue(v);
+        });
         // --- Determine Edit/Create Mode (No Change Here) ---
         this.route.paramMap
             .pipe(
@@ -208,6 +222,18 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         );
     }
 
+    private setupPublisherAutocomplete(): void {
+        this.filteredPublishers$ = this.publisherCtrl.valueChanges.pipe(
+            startWith(''),
+            map(value => {
+                const search = (value || '').toLowerCase();
+                return this.publishers
+                    .map(p => p.name)
+                    .filter(name => name.toLowerCase().includes(search));
+            })
+        );
+    }
+
     /**
      * The filtering logic. It takes a search string and returns a list of available pieces.
      */
@@ -234,6 +260,11 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         }
         return piece && piece.title ? piece.title : '';
     };
+
+    onPublisherSelected(event: MatAutocompleteSelectedEvent): void {
+        const value = event.option.value;
+        this.collectionForm.get('publisher')?.setValue(value);
+    }
 
     // --- Event Handlers and other methods (No Changes Here) ---
 
@@ -296,6 +327,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             description: collection.description,
             singleEdition: collection.singleEdition,
         });
+        this.publisherCtrl.setValue(collection.publisher || '');
 
         if (collection.coverImage) {
             this.apiService.getCollectionCover(collection.id).subscribe(data => this.coverPreview = data);

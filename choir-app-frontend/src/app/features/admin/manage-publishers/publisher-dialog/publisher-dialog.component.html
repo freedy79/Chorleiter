@@ -1,0 +1,11 @@
+<h1 mat-dialog-title>{{ title }}</h1>
+<form [formGroup]="form" (ngSubmit)="onSave()" mat-dialog-content>
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+</form>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid">Speichern</button>
+</mat-dialog-actions>
