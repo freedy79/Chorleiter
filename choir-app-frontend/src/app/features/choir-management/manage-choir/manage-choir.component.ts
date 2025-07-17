@@ -17,7 +17,6 @@ import { Piece } from 'src/app/core/models/piece';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute } from '@angular/router';
-import { PieceDetailDialogComponent } from '@features/literature/piece-detail-dialog/piece-detail-dialog.component';
 import { environment } from 'src/environments/environment';
 
 
@@ -311,12 +310,6 @@ export class ManageChoirComponent implements OnInit {
     });
   }
 
-  openPieceDetailDialog(pieceId: number): void {
-    this.dialog.open(PieceDetailDialogComponent, {
-      width: '600px',
-      data: { pieceId }
-    });
-  }
 
   private loadRehearsalPieces(): void {
     this.apiService
