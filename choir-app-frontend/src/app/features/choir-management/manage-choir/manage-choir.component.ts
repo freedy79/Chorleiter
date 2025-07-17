@@ -16,14 +16,14 @@ import { Collection } from 'src/app/core/models/collection';
 import { Piece } from 'src/app/core/models/piece';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 
 
 @Component({
   selector: 'app-manage-choir',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, MaterialModule, RouterModule],
   templateUrl: './manage-choir.component.html',
   styleUrls: ['./manage-choir.component.scss']
 })
