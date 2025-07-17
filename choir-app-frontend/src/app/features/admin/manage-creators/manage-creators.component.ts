@@ -209,8 +209,13 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     const filter = this.mode === 'composer'
       ? { composerId: person.id }
       : { authorId: person.id };
+
+    // Open the row immediately while the pieces are loading
+    this.expandedPerson = person;
+    this.expandedPieces = [];
+    this.table.renderRows();
+
     this.pieceService.getGlobalPieces(filter).subscribe(pieces => {
-      this.expandedPerson = person;
       this.expandedPieces = pieces;
       this.table.renderRows();
     });
