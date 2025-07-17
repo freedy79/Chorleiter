@@ -14,12 +14,14 @@ export class AuthorService {
     return this.http.get<Author[]>(`${this.apiUrl}/authors`);
   }
 
-  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.http.post<Author>(`${this.apiUrl}/authors`, data);
+  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+    const url = force ? `${this.apiUrl}/authors?force=true` : `${this.apiUrl}/authors`;
+    return this.http.post<Author>(url, data);
   }
 
-  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.http.put<Author>(`${this.apiUrl}/authors/${id}`, data);
+  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+    const url = force ? `${this.apiUrl}/authors/${id}?force=true` : `${this.apiUrl}/authors/${id}`;
+    return this.http.put<Author>(url, data);
   }
 
   deleteAuthor(id: number): Observable<any> {

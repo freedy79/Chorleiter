@@ -195,12 +195,12 @@ export class ApiService {
     return this.composerService.getComposers();
   }
 
-  createComposer(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.composerService.createComposer(data);
+  createComposer(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+    return this.composerService.createComposer(data, force);
   }
 
-  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.composerService.updateComposer(id, data);
+  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+    return this.composerService.updateComposer(id, data, force);
   }
 
   deleteComposer(id: number): Observable<any> {
@@ -215,12 +215,12 @@ export class ApiService {
     return this.authorService.getAuthors();
   }
 
-  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.authorService.createAuthor(data);
+  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+    return this.authorService.createAuthor(data, force);
   }
 
-  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Author> {
-    return this.authorService.updateAuthor(id, data);
+  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+    return this.authorService.updateAuthor(id, data, force);
   }
 
   deleteAuthor(id: number): Observable<any> {

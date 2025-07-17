@@ -14,12 +14,14 @@ export class ComposerService {
     return this.http.get<Composer[]>(`${this.apiUrl}/composers`);
   }
 
-  createComposer(data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.http.post<Composer>(`${this.apiUrl}/composers`, data);
+  createComposer(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+    const url = force ? `${this.apiUrl}/composers?force=true` : `${this.apiUrl}/composers`;
+    return this.http.post<Composer>(url, data);
   }
 
-  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }): Observable<Composer> {
-    return this.http.put<Composer>(`${this.apiUrl}/composers/${id}`, data);
+  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+    const url = force ? `${this.apiUrl}/composers/${id}?force=true` : `${this.apiUrl}/composers/${id}`;
+    return this.http.put<Composer>(url, data);
   }
 
   deleteComposer(id: number): Observable<any> {

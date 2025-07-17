@@ -96,7 +96,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
         const req = this.mode === 'composer'
           ? this.composerService.createComposer(result)
           : this.authorService.createAuthor(result);
-        req.subscribe(() => this.loadData());
+        req.subscribe({
+          next: () => this.loadData(),
+          error: err => {
+            const question = this.mode === 'composer'
+              ? 'Komponist existiert bereits. Trotzdem anlegen?'
+              : 'Dichter existiert bereits. Trotzdem anlegen?';
+            if (err.status === 409 && confirm(question)) {
+              const forceReq = this.mode === 'composer'
+                ? this.composerService.createComposer(result, true)
+                : this.authorService.createAuthor(result, true);
+              forceReq.subscribe(() => this.loadData());
+            }
+          }
+        });
       }
     });
   }
@@ -111,7 +124,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
         const req = this.mode === 'composer'
           ? this.composerService.updateComposer(person.id, result)
           : this.authorService.updateAuthor(person.id, result);
-        req.subscribe(() => this.loadData());
+        req.subscribe({
+          next: () => this.loadData(),
+          error: err => {
+            const question = this.mode === 'composer'
+              ? 'Komponist existiert bereits. Trotzdem speichern?'
+              : 'Dichter existiert bereits. Trotzdem speichern?';
+            if (err.status === 409 && confirm(question)) {
+              const forceReq = this.mode === 'composer'
+                ? this.composerService.updateComposer(person.id, result, true)
+                : this.authorService.updateAuthor(person.id, result, true);
+              forceReq.subscribe(() => this.loadData());
+            }
+          }
+        });
       }
     });
   }
