@@ -80,7 +80,7 @@ export class ApiService {
   getMyRepertoire(
     composerId?: number,
     categoryIds?: number[],
-    collectionId?: number,
+    collectionIds?: number[],
     sortBy?:
       | 'title'
       | 'reference'
@@ -100,7 +100,7 @@ export class ApiService {
     // composerId not yet supported by PieceService, pass as part of search/filter when implemented
     return this.pieceService.getMyRepertoire(
       categoryIds,
-      collectionId,
+      collectionIds,
       sortBy,
       page,
       limit,

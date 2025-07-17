@@ -3,6 +3,12 @@ export interface RepertoireFilter {
   name: string;
   visibility: 'personal' | 'local' | 'global';
   data: {
+    /**
+     * New multi collection filter. When present this replaces the legacy
+     * single `collectionId` field. Empty array means no filter.
+     */
+    collectionIds?: number[];
+    /** Legacy single collection filter retained for backwards compatibility */
     collectionId?: number | null;
     categoryIds?: number[];
     /**

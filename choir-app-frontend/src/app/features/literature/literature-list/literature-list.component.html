@@ -10,9 +10,8 @@
         <mat-hint>Anführungszeichen für Wortgruppen verwenden</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
-        <mat-label>Sammlung</mat-label>
-        <mat-select [value]="filterByCollectionId$.value" (selectionChange)="onCollectionFilterChange($event.value)">
-          <mat-option [value]="null">Alle</mat-option>
+        <mat-label>Sammlungen</mat-label>
+        <mat-select multiple [value]="filterByCollectionIds$.value" (selectionChange)="onCollectionFilterChange($event.value)">
           <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">
             {{ collection.title }}
           </mat-option>
