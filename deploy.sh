@@ -118,3 +118,5 @@ if [[ $USE_SSHPASS == true ]]; then
 else
     ssh $SSH_OPTIONS -O exit $REMOTE
 fi
+
+printf "[%s] Successully deployed\n" "$(date '+%H:%M:%S')"
