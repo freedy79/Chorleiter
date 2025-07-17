@@ -254,8 +254,8 @@ export class ApiService {
 
   // --- Category (Rubrik) Methods ---
 
-  getCategories(): Observable<Category[]> {
-    return this.categoryService.getCategories();
+  getCategories(collectionIds?: number[]): Observable<Category[]> {
+    return this.categoryService.getCategories(collectionIds);
   }
 
   createCategory(name: string): Observable<Category> {

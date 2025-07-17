@@ -111,7 +111,10 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.updateDisplayedColumns();
     // Pre-fetch data for the filter dropdowns - only collections present in the choir
     this.collections$ = this.apiService.getChoirCollections();
-    this.categories$ = this.apiService.getCategories();
+    this.categories$ = this.filterByCollectionIds$.pipe(
+      startWith(this.filterByCollectionIds$.value),
+      switchMap(ids => this.apiService.getCategories(ids.length ? ids : undefined))
+    );
     this.loadPresets();
     this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
     this.authService.isAdmin$.subscribe(a => this.isAdmin = a);
@@ -168,7 +171,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryIds$, this.status$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.status$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
