@@ -2,6 +2,14 @@ table {
   width: 100%;
 }
 
+.creator-row {
+  cursor: pointer;
+}
+
+.detail-row td {
+  padding: 0 16px 16px;
+}
+
 .toolbar {
   margin-bottom: 1rem;
   display: flex;

@@ -64,7 +64,13 @@ exports.create = async (req, res) => {
  * when adding pieces to a collection.
  */
 exports.findAll = async (req, res) => {
+    const { composerId, authorId } = req.query;
+    const where = {};
+    if (composerId) where.composerId = composerId;
+    if (authorId) where.authorId = authorId;
+
     const pieces = await base.service.findAll({
+            where,
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] }

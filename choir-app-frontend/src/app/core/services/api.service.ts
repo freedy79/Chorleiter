@@ -148,8 +148,8 @@ export class ApiService {
    * Gets the master list of all pieces in the system, independent of any choir.
    * Useful for lookups when creating collections.
    */
-  getGlobalPieces(): Observable<Piece[]> {
-    return this.pieceService.getGlobalPieces();
+  getGlobalPieces(filters?: { composerId?: number; authorId?: number }): Observable<Piece[]> {
+    return this.pieceService.getGlobalPieces(filters);
   }
 
   /**
