@@ -378,7 +378,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   openAddPieceDialog(): void {
     const dialogRef = this.dialog.open(PieceDialogComponent, {
       width: '90vw',
-      maxWidth: '800px',
+      maxWidth: '1000px',
       data: { pieceId: null }
     });
 
@@ -456,7 +456,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   openEditPieceDialog(pieceId: number): void {
     const dialogRef = this.dialog.open(PieceDialogComponent, {
       width: '90vw',
-      maxWidth: '800px',
+      maxWidth: '1000px',
       data: { pieceId: pieceId }
     });
 

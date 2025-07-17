@@ -180,7 +180,7 @@ export class EventDialogComponent implements OnInit {
     openAddPieceDialog(): void {
         const dialogRef = this.dialog.open(PieceDialogComponent, {
             width: '90vw',
-            maxWidth: '800px',
+            maxWidth: '1000px',
             data: { pieceId: null },
         });
 
