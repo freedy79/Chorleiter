@@ -76,7 +76,7 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, categoryIds, collectionId, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    const { composerId, categoryId, categoryIds, collectionId, collectionIds, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
     let parsedStatuses = [];
     if (status) {
         parsedStatuses = Array.isArray(status) ? status : String(status).split(',');
@@ -88,6 +88,14 @@ exports.findMyRepertoire = async (req, res) => {
         parsedCategoryIds = [categoryId];
     }
     parsedCategoryIds = parsedCategoryIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+
+    let parsedCollectionIds = [];
+    if (collectionIds) {
+        parsedCollectionIds = Array.isArray(collectionIds) ? collectionIds : String(collectionIds).split(',');
+    } else if (collectionId) {
+        parsedCollectionIds = [collectionId];
+    }
+    parsedCollectionIds = parsedCollectionIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 25;
     const offset = (pageNum - 1) * limitNum;
@@ -151,7 +159,7 @@ exports.findMyRepertoire = async (req, res) => {
             { model: db.author, as: 'author' },
             // Zusätzliche Daten wie Arranger oder Links werden in dieser Liste
             // nicht benötigt und können ausgelassen werden.
-            ...(collectionId ? [{
+            ...(parsedCollectionIds.length ? [{
                 model: db.collection,
                 as: 'collections',
                 attributes: ['id', 'prefix', 'title'],
@@ -159,7 +167,7 @@ exports.findMyRepertoire = async (req, res) => {
                     model: db.collection_piece,
                     attributes: ['numberInCollection']
                 },
-                where: { id: collectionId },
+                where: { id: { [Op.in]: parsedCollectionIds } },
                 required: true
             }] : [])
         ];

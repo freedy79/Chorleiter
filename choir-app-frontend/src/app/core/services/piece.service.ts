@@ -17,7 +17,7 @@ export class PieceService {
 
   getMyRepertoire(
     categoryIds?: number[],
-    collectionId?: number,
+    collectionIds?: number[],
     sortBy?:
       | 'title'
       | 'reference'
@@ -38,7 +38,9 @@ export class PieceService {
     if (categoryIds && categoryIds.length > 0) {
       params = params.set('categoryIds', categoryIds.join(','));
     }
-    if (collectionId) params = params.set('collectionId', collectionId.toString());
+    if (collectionIds && collectionIds.length > 0) {
+      params = params.set('collectionIds', collectionIds.join(','));
+    }
     if (sortBy) params = params.set('sortBy', sortBy);
     params = params.set('page', page.toString());
     params = params.set('limit', limit.toString());

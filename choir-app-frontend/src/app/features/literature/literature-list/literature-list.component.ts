@@ -36,7 +36,7 @@ import { Router, RouterModule } from '@angular/router';
 export class LiteratureListComponent implements OnInit, AfterViewInit {
   // --- Reactive Subjects for triggering updates ---
   private refresh$ = new BehaviorSubject<void>(undefined);
-  public filterByCollectionId$ = new BehaviorSubject<number | null>(null);
+  public filterByCollectionIds$ = new BehaviorSubject<number[]>([]);
   public filterByCategoryIds$ = new BehaviorSubject<number[]>([]);
   public onlySingable$ = new BehaviorSubject<boolean>(false);
   public status$ = new BehaviorSubject<('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[]>([]);
@@ -110,8 +110,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.updateDisplayedColumns();
-    // Pre-fetch data for the filter dropdowns
-    this.collections$ = this.apiService.getCollections();
+    // Pre-fetch data for the filter dropdowns - only collections present in the choir
+    this.collections$ = this.apiService.getChoirCollections();
     this.categories$ = this.apiService.getCategories();
     this.loadPresets();
     this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
@@ -121,7 +121,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (saved) {
       try {
         const s = JSON.parse(saved);
-        if (s.collectionId !== undefined) this.filterByCollectionId$.next(s.collectionId);
+        if (Array.isArray(s.collectionIds)) {
+          this.filterByCollectionIds$.next(s.collectionIds);
+        } else if (s.collectionId !== undefined && s.collectionId !== null) {
+          this.filterByCollectionIds$.next([s.collectionId]);
+        }
         if (s.categoryIds !== undefined) {
           this.filterByCategoryIds$.next(s.categoryIds);
         } else if ((s as any).categoryId !== undefined && (s as any).categoryId !== null) {
@@ -135,6 +139,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         }
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
         if (
+          (s.collectionIds && s.collectionIds.length) ||
           s.collectionId ||
           (s.categoryIds && s.categoryIds.length) ||
           (s as any).categoryId ||
@@ -166,7 +171,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionId$, this.filterByCategoryIds$, this.onlySingable$, this.status$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.onlySingable$, this.status$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -191,7 +196,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             : undefined;
           return this.pieceService.getMyRepertoire(
             this.filterByCategoryIds$.value,
-            this.filterByCollectionId$.value ?? undefined,
+            this.filterByCollectionIds$.value,
             this._sort.active as any,
             pageIndex + 1,
             this._paginator.pageSize,
@@ -230,7 +235,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   private currentCacheKey(): string {
     return [
-      this.filterByCollectionId$.value,
+      this.filterByCollectionIds$.value.join(','),
       this.filterByCategoryIds$.value.join(','),
       this.onlySingable$.value,
       this.status$.value.join(','),
@@ -252,7 +257,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       : undefined;
     this.pieceService.getMyRepertoire(
       this.filterByCategoryIds$.value,
-      this.filterByCollectionId$.value ?? undefined,
+      this.filterByCollectionIds$.value,
       this._sort.active as any,
       nextIndex + 1,
       this._paginator.pageSize,
@@ -298,11 +303,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   /**
    * Handles changes from the collection filter dropdown.
    */
-  onCollectionFilterChange(collectionId: number | null): void {
+  onCollectionFilterChange(collectionIds: number[]): void {
     if (this._paginator) {
       this._paginator.firstPage();
     }
-    this.filterByCollectionId$.next(collectionId);
+    this.filterByCollectionIds$.next(collectionIds);
     this.saveFilters();
     this.refresh$.next();
   }
@@ -335,7 +340,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   }
 
   clearFilters(): void {
-    this.filterByCollectionId$.next(null);
+    this.filterByCollectionIds$.next([]);
     this.filterByCategoryIds$.next([]);
     this.onlySingable$.next(false);
     this.status$.next([]);
@@ -351,7 +356,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
 
   private saveFilters(): void {
     const state = {
-      collectionId: this.filterByCollectionId$.value,
+      collectionIds: this.filterByCollectionIds$.value,
       categoryIds: this.filterByCategoryIds$.value,
       onlySingable: this.onlySingable$.value,
       statuses: this.status$.value,
@@ -359,7 +364,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
     this.filtersExpanded = !!(
-      state.collectionId ||
+      (state.collectionIds && state.collectionIds.length) ||
       (state.categoryIds && state.categoryIds.length) ||
       state.onlySingable ||
       (state.statuses && state.statuses.length)
@@ -475,7 +480,13 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   }
 
   private applyPreset(preset: RepertoireFilter): void {
-    this.filterByCollectionId$.next(preset.data.collectionId ?? null);
+    if (Array.isArray(preset.data.collectionIds)) {
+      this.filterByCollectionIds$.next(preset.data.collectionIds);
+    } else if (preset.data.collectionId !== undefined && preset.data.collectionId !== null) {
+      this.filterByCollectionIds$.next([preset.data.collectionId]);
+    } else {
+      this.filterByCollectionIds$.next([]);
+    }
     if (preset.data.categoryIds !== undefined) {
       this.filterByCategoryIds$.next(preset.data.categoryIds);
     } else {
@@ -493,6 +504,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
     const singleId = (preset.data as any).categoryId;
     this.filtersExpanded = !!(
+      (preset.data.collectionIds && preset.data.collectionIds.length) ||
       preset.data.collectionId ||
       (preset.data.categoryIds && preset.data.categoryIds.length) ||
       singleId ||
@@ -515,7 +527,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
       const data = {
-        collectionId: this.filterByCollectionId$.value,
+        collectionIds: this.filterByCollectionIds$.value,
         categoryIds: this.filterByCategoryIds$.value,
         onlySingable: this.onlySingable$.value,
         statuses: this.status$.value,
