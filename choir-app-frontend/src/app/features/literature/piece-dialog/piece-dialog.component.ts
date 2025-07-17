@@ -51,7 +51,6 @@ export class PieceDialogComponent implements OnInit {
     private refreshAuthors$ = new BehaviorSubject<void>(undefined);
     private refreshCategory$ = new BehaviorSubject<void>(undefined);
     public composers$!: Observable<Composer[]>;
-    public authors$!: Observable<Author[]>;
     public categories$!: Observable<Category[]>;
     isEditMode = false;
     isAdmin = false;
@@ -63,6 +62,9 @@ export class PieceDialogComponent implements OnInit {
     composerCtrl = new FormControl<string | Composer>('');
     filteredComposers$!: Observable<(Composer & { isNew?: boolean })[]>;
     allComposers: Composer[] = [];
+    authorCtrl = new FormControl<string | Author>('');
+    filteredAuthors$!: Observable<(Author & { isNew?: boolean })[]>;
+    allAuthors: Author[] = [];
 
     get linksFormArray(): FormArray {
         return this.pieceForm.get('links') as FormArray;
@@ -110,17 +112,12 @@ export class PieceDialogComponent implements OnInit {
                 this.initializeComposerAutocomplete();
             });
 
-        this.authors$ = this.refreshAuthors$.pipe(
-            switchMap(() => this.apiService.getAuthors())
-        );
-
-
-
-        this.pieceForm.get('authorId')?.valueChanges.subscribe((value) => {
-            if (value === this.addNewAuthorId) {
-                this.openAddAuthorDialog();
-            }
-        });
+        this.refreshAuthors$
+            .pipe(switchMap(() => this.apiService.getAuthors()))
+            .subscribe(list => {
+                this.allAuthors = list;
+                this.initializeAuthorAutocomplete();
+            });
 
         this.categories$ = this.refreshComposers$.pipe(
             switchMap(() => this.apiService.getCategories())
@@ -174,10 +171,10 @@ export class PieceDialogComponent implements OnInit {
         });
     }
 
-    openAddAuthorDialog(): void {
+    openAddAuthorDialog(name?: string): void {
         const dialogRef = this.dialog.open(ComposerDialogComponent, {
             width: '500px',
-            data: { role: 'author' }
+            data: { role: 'author', record: name ? { name } : undefined }
         });
 
         dialogRef.afterClosed().subscribe((newAuthor) => {
@@ -202,6 +199,7 @@ export class PieceDialogComponent implements OnInit {
                     });
             } else {
                 this.pieceForm.get('authorId')?.setValue(null);
+                this.authorCtrl.setValue('');
             }
         });
     }
@@ -254,9 +252,29 @@ export class PieceDialogComponent implements OnInit {
         );
     }
 
+    private initializeAuthorAutocomplete(): void {
+        this.filteredAuthors$ = this.authorCtrl.valueChanges.pipe(
+            startWith(''),
+            map(value => (typeof value === 'string' ? value : value?.name || '')),
+            map(name => {
+                const filtered = this._filterAuthors(name);
+                const options = filtered.map(a => ({ ...a }));
+                if (name && !filtered.some(a => a.name.toLowerCase() === name.toLowerCase())) {
+                    options.unshift({ id: this.addNewAuthorId, name, isNew: true } as Author & { isNew: boolean });
+                }
+                return options;
+            })
+        );
+    }
+
     private _filterComposers(search: string): Composer[] {
         const filterValue = search.toLowerCase();
         return this.allComposers.filter(c => c.name.toLowerCase().includes(filterValue));
+    }
+
+    private _filterAuthors(search: string): Author[] {
+        const filterValue = search.toLowerCase();
+        return this.allAuthors.filter(a => a.name.toLowerCase().includes(filterValue));
     }
 
     displayComposer(composer: Composer & { isNew?: boolean }): string {
@@ -270,6 +288,20 @@ export class PieceDialogComponent implements OnInit {
         } else {
             this.pieceForm.get('composerId')?.setValue(selected.id);
             this.composerCtrl.setValue(selected);
+        }
+    }
+
+    displayAuthor(author: Author & { isNew?: boolean }): string {
+        return author ? author.name : '';
+    }
+
+    onAuthorSelected(event: MatAutocompleteSelectedEvent): void {
+        const selected = event.option.value as Author & { isNew?: boolean };
+        if (selected.isNew) {
+            this.openAddAuthorDialog(selected.name);
+        } else {
+            this.pieceForm.get('authorId')?.setValue(selected.id);
+            this.authorCtrl.setValue(selected);
         }
     }
 
@@ -338,6 +370,11 @@ export class PieceDialogComponent implements OnInit {
         if (piece.composer) {
             const found = this.allComposers.find(c => c.id === piece.composer!.id);
             if (found) this.composerCtrl.setValue(found);
+        }
+
+        if (piece.author) {
+            const foundAuthor = this.allAuthors.find(a => a.id === piece.author!.id);
+            if (foundAuthor) this.authorCtrl.setValue(foundAuthor);
         }
 
         if (piece.imageIdentifier) {
