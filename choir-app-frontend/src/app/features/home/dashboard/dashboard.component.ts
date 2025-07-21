@@ -69,7 +69,7 @@ export class DashboardComponent implements OnInit {
     );
 
     this.nextEvents$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getNextEvents(3, this.showOnlyMine))
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
     );
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(
