@@ -1,3 +1,5 @@
+const { isoDateString } = require('../utils/date.utils');
+
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
 }
@@ -50,7 +52,7 @@ function monthlyPlanPdf(plan) {
 
   // Table rows
   for (const e of plan.entries) {
-    lines.push(cellCenter(left, col2, new Date(e.date).toISOString().substring(0,10), y));
+    lines.push(cellCenter(left, col2, isoDateString(new Date(e.date)), y));
     lines.push(cellCenter(col2, col3, e.director?.name || '', y));
     lines.push(cellCenter(col3, col4, e.organist?.name || '', y));
     lines.push(cellCenter(col4, right, e.notes || '', y));
