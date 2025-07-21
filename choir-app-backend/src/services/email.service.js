@@ -168,3 +168,44 @@ exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month) => {
     throw err;
   }
 };
+
+function statusText(status) {
+  switch (status) {
+    case 'AVAILABLE': return 'verfügbar';
+    case 'MAYBE': return 'nach Absprache';
+    case 'UNAVAILABLE': return 'nicht verfügbar';
+    default: return status;
+  }
+}
+
+exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
+  const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'availability-request' } });
+  const transporter = await createTransporter(settings);
+  const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const link = `${linkBase}/dienstplan?year=${year}&month=${month}&tab=avail`;
+  try {
+    const list = '<ul>' + dates.map(d => `<li>${d.date}: ${statusText(d.status)}</li>`).join('') + '</ul>';
+    const userName = name || to.split('@')[0];
+    const placeholders = {
+      month: String(month),
+      year: String(year),
+      list,
+      link,
+      surname: userName,
+      date: new Date().toLocaleString('de-DE')
+    };
+    const subject = replacePlaceholders(template?.subject || `Verfügbarkeit ${month}/${year}`, placeholders);
+    const body = replacePlaceholders(template?.body || `<p>Bitte teile uns deine Verfügbarkeit für {{month}}/{{year}} mit.</p>{{list}}<p><a href="{{link}}">Verfügbarkeit eintragen</a></p>`, placeholders);
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to,
+      subject,
+      html: body
+    });
+  } catch (err) {
+    logger.error(`Error sending availability request mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

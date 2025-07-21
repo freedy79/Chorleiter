@@ -386,6 +386,10 @@ export class ApiService {
     return this.monthlyPlanService.emailMonthlyPlan(id, recipients);
   }
 
+  requestAvailability(id: number, recipients: number[]): Observable<any> {
+    return this.monthlyPlanService.requestAvailability(id, recipients);
+  }
+
   // --- Plan Rule Methods ---
   getPlanRules(options?: { choirId?: number }): Observable<PlanRule[]> {
     return this.planRuleService.getPlanRules(options?.choirId);

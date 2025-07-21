@@ -20,7 +20,8 @@
   </button>
 </div>
 
-<mat-tab-group>
+<mat-tab-group [selectedIndex]="selectedTab" (selectedIndexChange)="tabChanged($event)">
+
   <mat-tab label="Dienstplan">
     <div class="plan" *ngIf="plan; else noPlan">
       <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
@@ -30,6 +31,7 @@
     <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
     <button mat-raised-button color="accent" (click)="downloadPdf()">PDF herunterladen</button>
     <button mat-raised-button color="accent" (click)="openEmailDialog()">Per E-Mail senden</button>
+    <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="accent" (click)="openAvailabilityDialog()">Verfügbarkeit anfragen</button>
   </div>
   <table mat-table [dataSource]="entries" class="mat-elevation-z2">
     <ng-container matColumnDef="date">

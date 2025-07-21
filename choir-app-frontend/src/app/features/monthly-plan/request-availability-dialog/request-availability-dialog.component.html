@@ -1,0 +1,13 @@
+<h1 mat-dialog-title>Verfügbarkeit anfragen</h1>
+<div mat-dialog-content>
+  <p>Empfänger auswählen:</p>
+  <mat-selection-list (selectionChange)="toggle($event.options[0].value, $event.options[0].selected)">
+    <mat-list-option *ngFor="let m of data.members" [value]="m.id">
+      {{ m.name }} ({{ m.email }})
+    </mat-list-option>
+  </mat-selection-list>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="send()" [disabled]="selected.size===0">Mail senden</button>
+</div>

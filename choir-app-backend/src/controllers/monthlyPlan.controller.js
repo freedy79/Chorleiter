@@ -1,8 +1,9 @@
 const db = require('../models');
 const MonthlyPlan = db.monthly_plan;
-const { datesForRule } = require('../utils/date.utils');
+const { datesForRule, isoDateString } = require('../utils/date.utils');
 const { monthlyPlanPdf } = require('../services/pdf.service');
 const emailService = require('../services/email.service');
+const { isPublicHoliday } = require('../services/holiday.service');
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
@@ -152,6 +153,58 @@ exports.emailPdf = async (req, res) => {
         const emails = users.map(u => u.email);
         const buffer = monthlyPlanPdf(plan.toJSON());
         await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month);
+        res.status(200).send({ message: 'Mail sent.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message || 'Could not send mail.' });
+    }
+};
+
+exports.requestAvailability = async (req, res) => {
+    const id = req.params.id;
+    const recipients = req.body.recipients;
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).send({ message: 'recipients required' });
+    }
+    try {
+        const plan = await MonthlyPlan.findOne({
+            where: { id, choirId: req.activeChoirId }
+        });
+        if (!plan) return res.status(404).send({ message: 'Plan not found.' });
+
+        const rules = await db.plan_rule.findAll({ where: { choirId: req.activeChoirId } });
+        const dateSet = new Set();
+        for (const rule of rules) {
+            for (const d of datesForRule(plan.year, plan.month, rule)) {
+                if (isPublicHoliday(d) && d.getUTCDay() !== 0) continue;
+                dateSet.add(isoDateString(d));
+            }
+        }
+        if (plan.month === 12) {
+            const dec25 = new Date(Date.UTC(plan.year, 11, 25));
+            const dec26 = new Date(Date.UTC(plan.year, 11, 26));
+            const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
+            if (!hasRuleForDec25) dateSet.add(isoDateString(dec25));
+            if (dec26.getUTCDay() === 0) dateSet.delete(isoDateString(dec26));
+        }
+        const dates = Array.from(dateSet).sort();
+
+        const users = await db.user.findAll({
+            where: { id: recipients },
+            include: [{ model: db.choir, where: { id: req.activeChoirId } }]
+        });
+
+        for (const user of users) {
+            const avail = await db.user_availability.findAll({
+                where: {
+                    userId: user.id,
+                    choirId: req.activeChoirId,
+                    date: dates
+                }
+            });
+            const map = Object.fromEntries(avail.map(a => [a.date, a.status]));
+            const list = dates.map(d => ({ date: d, status: map[d] || 'AVAILABLE' }));
+            await emailService.sendAvailabilityRequestMail(user.email, user.name, plan.year, plan.month, list);
+        }
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not send mail.' });

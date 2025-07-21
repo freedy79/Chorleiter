@@ -58,6 +58,14 @@ async function seedDatabase(options = {}) {
                     body: '<p>Click <a href="{{link}}">here</a> to set a new password.</p>'
                 }
             });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'availability-request' },
+                defaults: {
+                    subject: 'Verfügbarkeitsanfrage {{month}}/{{year}}',
+                    body: '<p>Bitte teile uns deine Verfügbarkeit für {{month}}/{{year}} mit.</p>{{list}}<p><a href="{{link}}">Verfügbarkeit eintragen</a></p>'
+                }
+            });
             console.log("Initial seeding completed successfully.");
         } else {
             console.log("Database already seeded. Skipping initial setup.");

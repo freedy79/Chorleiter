@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
    * Diese Methode wird vom Angular Router aufgerufen, bevor eine Route aktiviert wird.
    * Sie entscheidet, ob die Navigation zur angeforderten Route erlaubt ist.
    */
-  canActivate(): Observable<boolean | UrlTree> {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean | UrlTree> {
 
     // Wir verwenden das `isLoggedIn$`-Observable aus dem AuthService.
     // `isLoggedIn$` gibt `true` zurück, wenn ein gültiger Token im localStorage vorhanden ist.
@@ -33,7 +33,7 @@ export class AuthGuard implements CanActivate {
           // 1. Wir erstellen eine "UrlTree", die auf die '/login'-Seite verweist.
           // 2. Der Router wird diese Anweisung ausführen und den Benutzer umleiten.
           // Dies ist der empfohlene Weg, um Umleitungen in Guards durchzuführen.
-          return this.router.createUrlTree(['/login']);
+          return this.router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
         }
       })
     );
