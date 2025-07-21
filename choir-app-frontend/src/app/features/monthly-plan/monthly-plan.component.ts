@@ -44,8 +44,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private userSub?: Subscription;
 
-  timestamp(date: string | Date): number {
-    return new Date(date).getTime();
+  timestamp(date: string | Date): string {
+    return new Date(date).getTime().toString();
   }
 
   private updateDisplayedColumns(): void {
