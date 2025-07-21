@@ -185,11 +185,15 @@ exports.findAll = async (req, res) => {
 };
 
 exports.findNext = async (req, res) => {
-    const limit = parseInt(req.query.limit, 10) || 3;
+    const limit = parseInt(req.query.limit, 10) || 5;
     const mine = req.query.mine === 'true';
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     const where = {
         choirId: req.activeChoirId,
-        date: { [Op.gte]: new Date() }
+        date: { [Op.gte]: startOfToday }
     };
     if (mine) {
         where[Op.or] = [
