@@ -193,6 +193,41 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.loadAvailabilities(this.selectedYear, this.selectedMonth);
   }
 
+  get monthLabel(): string {
+    return new Date(this.selectedYear, this.selectedMonth - 1, 1)
+      .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+
+  get prevMonthLabel(): string {
+    return new Date(this.selectedYear, this.selectedMonth - 2, 1)
+      .toLocaleDateString('de-DE', { month: 'long' });
+  }
+
+  get nextMonthLabel(): string {
+    return new Date(this.selectedYear, this.selectedMonth, 1)
+      .toLocaleDateString('de-DE', { month: 'long' });
+  }
+
+  previousMonth(): void {
+    if (this.selectedMonth === 1) {
+      this.selectedMonth = 12;
+      this.selectedYear--;
+    } else {
+      this.selectedMonth--;
+    }
+    this.monthChanged();
+  }
+
+  nextMonth(): void {
+    if (this.selectedMonth === 12) {
+      this.selectedMonth = 1;
+      this.selectedYear++;
+    } else {
+      this.selectedMonth++;
+    }
+    this.monthChanged();
+  }
+
   updateDirector(ev: PlanEntry, userId: number | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,

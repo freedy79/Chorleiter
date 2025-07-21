@@ -1,4 +1,4 @@
-<div>
+<div class="manual-inputs">
   <mat-form-field appearance="fill">
     <mat-label>Monat</mat-label>
     <input matInput type="number" [(ngModel)]="selectedMonth" min="1" max="12" (change)="monthChanged()" />
@@ -13,6 +13,16 @@
   <mat-tab label="Dienstplan">
     <div class="plan" *ngIf="plan; else noPlan">
   <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
+  <div class="month-nav">
+    <button mat-button color="primary" (click)="previousMonth()">
+      <mat-icon>chevron_left</mat-icon>
+      {{ prevMonthLabel }}
+    </button>
+    <button mat-button color="primary" (click)="nextMonth()">
+      {{ nextMonthLabel }}
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
   <div class="actions">
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()">Eintrag hinzufügen</button>
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
