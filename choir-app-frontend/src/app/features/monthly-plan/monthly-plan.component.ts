@@ -44,6 +44,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private userSub?: Subscription;
 
+  timestamp(date: string | Date): number {
+    return new Date(date).getTime();
+  }
+
   private updateDisplayedColumns(): void {
     const base = ['date', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
@@ -124,6 +128,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         }
       }
     }
+    if (this.isChoirAdmin) {
+      console.log('CounterPlan timestamps:',
+        this.counterPlanDateKeys.map(d => ({ date: d, ts: this.timestamp(d) })));
+    }
   }
 
   constructor(private api: ApiService,
@@ -164,6 +172,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.sortEntries();
         this.updateDisplayedColumns();
         this.updateCounterPlan();
+        if (this.isChoirAdmin) {
+          console.log('Plan timestamps:',
+            this.entries.map(e => ({ id: e.id, date: e.date, ts: this.timestamp(e.date) })));
+        }
       },
       error: () => {
         this.plan = null;

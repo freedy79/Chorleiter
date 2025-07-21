@@ -23,7 +23,7 @@
   <table mat-table [dataSource]="entries" class="mat-elevation-z2">
     <ng-container matColumnDef="date">
       <th mat-header-cell *matHeaderCellDef>Datum</th>
-      <td mat-cell *matCellDef="let ev">
+      <td mat-cell *matCellDef="let ev" [matTooltip]="timestamp(ev.date)">
         {{ ev.date | date:'shortDate' }}
         <span class="holiday" *ngIf="ev.holidayHint"> ({{ ev.holidayHint }})</span>
       </td>
@@ -89,7 +89,9 @@
       <thead>
         <tr>
           <th>Name</th>
-          <th *ngFor="let d of counterPlanDates">{{ d | date:'dd.MM.' }}</th>
+          <th *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">
+            {{ d | date:'dd.MM.' }}
+          </th>
         </tr>
       </thead>
       <tbody>
