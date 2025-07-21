@@ -20,17 +20,22 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   form!: FormGroup;
   @ViewChild('inviteEditor') inviteEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('resetEditor') resetEditor!: ElementRef<HTMLDivElement>;
+  @ViewChild('availabilityEditor') availabilityEditor!: ElementRef<HTMLDivElement>;
   private inviteQuill: any;
   private resetQuill: any;
+  private availabilityQuill: any;
   inviteHtmlMode = false;
   resetHtmlMode = false;
+  availabilityHtmlMode = false;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
       inviteSubject: ['', Validators.required],
       inviteBody: ['', Validators.required],
       resetSubject: ['', Validators.required],
-      resetBody: ['', Validators.required]
+      resetBody: ['', Validators.required],
+      availabilitySubject: ['', Validators.required],
+      availabilityBody: ['', Validators.required]
     });
   }
 
@@ -47,23 +52,34 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     this.api.getMailTemplates().subscribe(templates => {
       const invite = templates.find(t => t.type === 'invite');
       const reset = templates.find(t => t.type === 'reset');
+      const avail = templates.find(t => t.type === 'availability-request');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
       if (reset) {
         this.form.patchValue({ resetSubject: reset.subject, resetBody: reset.body });
       }
+      if (avail) {
+        this.form.patchValue({ availabilitySubject: avail.subject, availabilityBody: avail.body });
+      }
       this.form.markAsPristine();
       this.setEditorContents();
     });
   }
 
-  save(): void {
+  save(type?: string): void {
     if (this.form.invalid) return;
-    const templates: MailTemplate[] = [
-      { type: 'invite', subject: this.form.value.inviteSubject, body: this.form.value.inviteBody },
-      { type: 'reset', subject: this.form.value.resetSubject, body: this.form.value.resetBody }
-    ];
+    const templates: MailTemplate[] = [];
+    const value = this.form.value;
+    if (!type || type === 'invite') {
+      templates.push({ type: 'invite', subject: value.inviteSubject, body: value.inviteBody });
+    }
+    if (!type || type === 'reset') {
+      templates.push({ type: 'reset', subject: value.resetSubject, body: value.resetBody });
+    }
+    if (!type || type === 'availability-request') {
+      templates.push({ type: 'availability-request', subject: value.availabilitySubject, body: value.availabilityBody });
+    }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
       this.form.markAsPristine();
@@ -95,6 +111,13 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
         this.form.get('resetBody')?.markAsDirty();
       });
     }
+    if ((window as any).Quill && this.availabilityEditor && !this.availabilityQuill) {
+      this.availabilityQuill = new (window as any).Quill(this.availabilityEditor.nativeElement, options);
+      this.availabilityQuill.on('text-change', () => {
+        this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML });
+        this.form.get('availabilityBody')?.markAsDirty();
+      });
+    }
   }
 
   private setEditorContents(): void {
@@ -103,6 +126,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (this.resetQuill) {
       this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
+    }
+    if (this.availabilityQuill) {
+      this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
     }
   }
 
@@ -123,6 +149,16 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!this.resetHtmlMode && this.resetQuill) {
       this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
+    }
+  }
+
+  toggleAvailabilityHtml(): void {
+    this.availabilityHtmlMode = !this.availabilityHtmlMode;
+    if (this.availabilityHtmlMode && this.availabilityQuill) {
+      this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML });
+    }
+    if (!this.availabilityHtmlMode && this.availabilityQuill) {
+      this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
     }
   }
 
