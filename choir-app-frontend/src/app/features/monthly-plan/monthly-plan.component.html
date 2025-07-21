@@ -123,6 +123,16 @@
   </mat-tab>
 </mat-tab-group>
 <ng-template #noPlan>
+  <div class="month-nav">
+    <button mat-button color="primary" (click)="previousMonth()">
+      <mat-icon>chevron_left</mat-icon>
+      {{ prevMonthLabel }}
+    </button>
+    <button mat-button color="primary" (click)="nextMonth()">
+      {{ nextMonthLabel }}
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>
   <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">Plan erstellen</button>
 </ng-template>
