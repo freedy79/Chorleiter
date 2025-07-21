@@ -9,20 +9,22 @@
   </mat-form-field>
 </div>
 
+<div class="month-nav">
+  <button mat-button color="primary" (click)="previousMonth()">
+    <mat-icon>chevron_left</mat-icon>
+    {{ prevMonthLabel }}
+  </button>
+  <button mat-button color="primary" (click)="nextMonth()">
+    {{ nextMonthLabel }}
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+</div>
+
 <mat-tab-group [selectedIndex]="selectedTab" (selectedIndexChange)="tabChanged($event)">
+
   <mat-tab label="Dienstplan">
     <div class="plan" *ngIf="plan; else noPlan">
-  <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
-  <div class="month-nav">
-    <button mat-button color="primary" (click)="previousMonth()">
-      <mat-icon>chevron_left</mat-icon>
-      {{ prevMonthLabel }}
-    </button>
-    <button mat-button color="primary" (click)="nextMonth()">
-      {{ nextMonthLabel }}
-      <mat-icon>chevron_right</mat-icon>
-    </button>
-  </div>
+      <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
   <div class="actions">
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()">Eintrag hinzufügen</button>
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
@@ -124,16 +126,6 @@
   </mat-tab>
 </mat-tab-group>
 <ng-template #noPlan>
-  <div class="month-nav">
-    <button mat-button color="primary" (click)="previousMonth()">
-      <mat-icon>chevron_left</mat-icon>
-      {{ prevMonthLabel }}
-    </button>
-    <button mat-button color="primary" (click)="nextMonth()">
-      {{ nextMonthLabel }}
-      <mat-icon>chevron_right</mat-icon>
-    </button>
-  </div>
   <p>Kein Dienstplan für diesen Monat vorhanden.</p>
   <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">Plan erstellen</button>
 </ng-template>

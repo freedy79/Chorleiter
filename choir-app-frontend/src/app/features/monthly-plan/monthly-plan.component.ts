@@ -77,7 +77,11 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private dateKey(date: string): string {
-    return date.split('T')[0];
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   }
 
   isAvailable(userId: number, date: string): boolean {
@@ -97,9 +101,14 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private updateCounterPlan(): void {
-    const dateKeys = Array.from(new Set(this.entries.map(e => this.dateKey(e.date)))).sort();
+    const dateMap = new Map<string, string>();
+    for (const e of this.entries) {
+      const key = this.dateKey(e.date);
+      if (!dateMap.has(key)) dateMap.set(key, e.date);
+    }
+    const dateKeys = Array.from(dateMap.keys()).sort();
     this.counterPlanDateKeys = dateKeys;
-    this.counterPlanDates = dateKeys.map(d => new Date(d));
+    this.counterPlanDates = dateKeys.map(k => new Date(dateMap.get(k)!));
 
     const persons: UserInChoir[] = [];
     [...this.directors, ...this.organists].forEach(u => {
