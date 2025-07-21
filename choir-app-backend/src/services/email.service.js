@@ -31,7 +31,7 @@ function replacePlaceholders(text, replacements) {
 }
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
-  const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
   const link = `${linkBase}/register/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'invite' } });
@@ -67,7 +67,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
 };
 
 exports.sendPasswordResetMail = async (to, token, name) => {
-  const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
   const link = `${linkBase}/reset-password/${token}`;
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'reset' } });
@@ -131,7 +131,7 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
       choir: 'Beispielchor',
       choirname: 'Beispielchor',
       invitor: 'Max Mustermann',
-      link: 'https://example.com',
+      link: 'https://nak-chorleiter.de',
       expiry: new Date(Date.now() + 86400000).toLocaleString('de-DE'),
       surname: userName,
       date: new Date().toLocaleString('de-DE')
@@ -182,7 +182,7 @@ exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
   const settings = await db.mail_setting.findByPk(1);
   const template = await db.mail_template.findOne({ where: { type: 'availability-request' } });
   const transporter = await createTransporter(settings);
-  const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}&tab=avail`;
   try {
     const list = '<ul>' + dates.map(d => `<li>${d.date}: ${statusText(d.status)}</li>`).join('') + '</ul>';
