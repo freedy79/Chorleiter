@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs/promises');
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Piece);
+const emailService = require('../services/email.service');
 
 /**
  * @description Create a new global piece.
@@ -114,6 +115,21 @@ exports.update = async (req, res) => {
 
     if (req.userRole !== 'admin') {
             await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
+            const piece = await Piece.findByPk(id);
+            const proposer = await db.user.findByPk(req.userId);
+            const admins = await db.user.findAll({ where: { role: 'admin' } });
+            const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+            const link = `${linkBase}/admin/piece-changes`;
+            await Promise.all(
+                admins.filter(a => a.email).map(a =>
+                    emailService.sendPieceChangeProposalMail(
+                        a.email,
+                        piece?.title || `Piece ${id}`,
+                        proposer?.name || proposer?.email || 'Ein Benutzer',
+                        link
+                    )
+                )
+            );
             return res.status(202).send({ message: 'Change proposal created.' });
     }
 

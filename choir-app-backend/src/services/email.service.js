@@ -3,6 +3,10 @@ const nodemailer = require('nodemailer');
 const db = require('../models');
 const logger = require('../config/logger');
 
+function emailDisabled() {
+  return process.env.DISABLE_EMAIL === 'true';
+}
+
 async function createTransporter(existingSettings) {
   const settings = existingSettings || await db.mail_setting.findByPk(1);
   return nodemailer.createTransport({
@@ -205,6 +209,40 @@ exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
     });
   } catch (err) {
     logger.error(`Error sending availability request mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
+  if (emailDisabled()) return;
+  const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'piece-change' } });
+  const transporter = await createTransporter(settings);
+  try {
+    const placeholders = {
+      piece,
+      proposer,
+      link,
+      date: new Date().toLocaleString('de-DE')
+    };
+    const subject = replacePlaceholders(
+      template?.subject || `Änderungsvorschlag zu {{piece}}`,
+      placeholders
+    );
+    const body = replacePlaceholders(
+      template?.body ||
+        `<p>{{proposer}} hat eine Änderung zu <b>{{piece}}</b> vorgeschlagen.</p><p><a href="{{link}}">Änderung ansehen</a></p>`,
+      placeholders
+    );
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to,
+      subject,
+      html: body
+    });
+  } catch (err) {
+    logger.error(`Error sending piece change mail to ${to}: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }

@@ -66,6 +66,14 @@ async function seedDatabase(options = {}) {
                     body: '<p>Bitte teile uns deine Verfügbarkeit für {{month}}/{{year}} mit.</p>{{list}}<p><a href="{{link}}">Verfügbarkeit eintragen</a></p>'
                 }
             });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'piece-change' },
+                defaults: {
+                    subject: 'Neuer Änderungsvorschlag zu {{piece}}',
+                    body: '<p>{{proposer}} hat eine Änderung zu <b>{{piece}}</b> vorgeschlagen.</p><p><a href="{{link}}">Änderung ansehen</a></p>'
+                }
+            });
             console.log("Initial seeding completed successfully.");
         } else {
             console.log("Database already seeded. Skipping initial setup.");

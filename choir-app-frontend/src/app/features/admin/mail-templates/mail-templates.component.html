@@ -88,5 +88,34 @@
         <button mat-raised-button color="primary" type="button" (click)="save('availability-request')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="Änderungsvorschlag">
+      <mat-form-field appearance="fill">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="changeSubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="changeHtmlMode"
+            (change)="toggleChangeHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <div [hidden]="changeHtmlMode" #changeEditor class="quill-editor"></div>
+        <textarea
+          *ngIf="changeHtmlMode"
+          class="html-editor"
+          formControlName="changeBody"
+        ></textarea>
+        <p class="hint">
+          Folgende Platzhalter werden ersetzt: {{'{{piece}}'}}, {{'{{proposer}}'}}, {{'{{link}}'}}, {{'{{date}}'}}
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('piece-change')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('piece-change')">Speichern</button>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </form>
