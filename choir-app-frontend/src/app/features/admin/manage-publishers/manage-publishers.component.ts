@@ -78,7 +78,10 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
     const ref = this.dialog.open(PublisherDialogComponent, { width: '400px' });
     ref.afterClosed().subscribe(result => {
       if (result) {
-        this.publisherService.createPublisher(result).subscribe(() => this.loadPublishers());
+        this.publisherService.createPublisher(result).subscribe(() => {
+          this.selectedLetter = 'Alle';
+          this.loadPublishers();
+        });
       }
     });
   }
@@ -87,7 +90,10 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
     const ref = this.dialog.open(PublisherDialogComponent, { width: '400px', data: publisher });
     ref.afterClosed().subscribe(result => {
       if (result) {
-        this.publisherService.updatePublisher(publisher.id, result).subscribe(() => this.loadPublishers());
+        this.publisherService.updatePublisher(publisher.id, result).subscribe(() => {
+          this.selectedLetter = 'Alle';
+          this.loadPublishers();
+        });
       }
     });
   }
