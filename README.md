@@ -46,6 +46,30 @@ the database and can later be changed through the admin endpoint
 After saving new settings you can send yourself a test email from that page to verify the configuration.
 Any errors during mail delivery are written to `logs/error.log` for troubleshooting.
 
+### Mail Templates
+
+Invitation, password reset and availability request mails are based on templates
+stored in the database. Administrators can edit the subject and HTML body for
+each type under the `/admin/mail-templates` page. The availability request
+template is used when a plan administrator sends a "Verfügbarkeit anfragen"
+email from the monthly plan view.  The following placeholders are available and
+will be replaced automatically:
+
+```
+{{link}}
+{{choir}}
+{{invitor}}
+{{expiry}}
+{{month}}
+{{year}}
+{{list}}
+{{surname}}
+{{date}}
+```
+
+After saving a template you can send yourself a preview email to verify the
+formatting.
+
 ## Tests
 
 Run frontend unit tests with:
