@@ -21,12 +21,15 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   @ViewChild('inviteEditor') inviteEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('resetEditor') resetEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('availabilityEditor') availabilityEditor!: ElementRef<HTMLDivElement>;
+  @ViewChild('changeEditor') changeEditor!: ElementRef<HTMLDivElement>;
   private inviteQuill: any;
   private resetQuill: any;
   private availabilityQuill: any;
+  private changeQuill: any;
   inviteHtmlMode = false;
   resetHtmlMode = false;
   availabilityHtmlMode = false;
+  changeHtmlMode = false;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
@@ -35,7 +38,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       resetSubject: ['', Validators.required],
       resetBody: ['', Validators.required],
       availabilitySubject: ['', Validators.required],
-      availabilityBody: ['', Validators.required]
+      availabilityBody: ['', Validators.required],
+      changeSubject: ['', Validators.required],
+      changeBody: ['', Validators.required]
     });
   }
 
@@ -53,6 +58,7 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       const invite = templates.find(t => t.type === 'invite');
       const reset = templates.find(t => t.type === 'reset');
       const avail = templates.find(t => t.type === 'availability-request');
+      const change = templates.find(t => t.type === 'piece-change');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -61,6 +67,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       }
       if (avail) {
         this.form.patchValue({ availabilitySubject: avail.subject, availabilityBody: avail.body });
+      }
+      if (change) {
+        this.form.patchValue({ changeSubject: change.subject, changeBody: change.body });
       }
       this.form.markAsPristine();
       this.setEditorContents();
@@ -79,6 +88,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!type || type === 'availability-request') {
       templates.push({ type: 'availability-request', subject: value.availabilitySubject, body: value.availabilityBody });
+    }
+    if (!type || type === 'piece-change') {
+      templates.push({ type: 'piece-change', subject: value.changeSubject, body: value.changeBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
@@ -118,6 +130,13 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
         this.form.get('availabilityBody')?.markAsDirty();
       });
     }
+    if ((window as any).Quill && this.changeEditor && !this.changeQuill) {
+      this.changeQuill = new (window as any).Quill(this.changeEditor.nativeElement, options);
+      this.changeQuill.on('text-change', () => {
+        this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML });
+        this.form.get('changeBody')?.markAsDirty();
+      });
+    }
   }
 
   private setEditorContents(): void {
@@ -129,6 +148,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (this.availabilityQuill) {
       this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
+    }
+    if (this.changeQuill) {
+      this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
     }
   }
 
@@ -159,6 +181,16 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!this.availabilityHtmlMode && this.availabilityQuill) {
       this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
+    }
+  }
+
+  toggleChangeHtml(): void {
+    this.changeHtmlMode = !this.changeHtmlMode;
+    if (this.changeHtmlMode && this.changeQuill) {
+      this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML });
+    }
+    if (!this.changeHtmlMode && this.changeQuill) {
+      this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
     }
   }
 

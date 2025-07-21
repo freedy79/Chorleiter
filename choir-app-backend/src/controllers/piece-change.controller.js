@@ -1,6 +1,7 @@
 const db = require('../models');
 const PieceChange = db.piece_change;
 const Piece = db.piece;
+const emailService = require('../services/email.service');
 
 exports.create = async (req, res) => {
     const { pieceId, data } = req.body;
@@ -9,6 +10,22 @@ exports.create = async (req, res) => {
     }
     try {
         const change = await PieceChange.create({ pieceId, data, userId: req.userId });
+        const piece = await Piece.findByPk(pieceId);
+        const proposer = await db.user.findByPk(req.userId);
+
+        const admins = await db.user.findAll({ where: { role: 'admin' } });
+        const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+        const link = `${linkBase}/admin/piece-changes`;
+        const promises = admins
+            .filter(a => a.email)
+            .map(a => emailService.sendPieceChangeProposalMail(
+                a.email,
+                piece?.title || `Piece ${pieceId}`,
+                proposer?.name || proposer?.email || 'Ein Benutzer',
+                link
+            ));
+        await Promise.all(promises);
+
         res.status(201).send(change);
     } catch (err) {
         res.status(500).send({ message: err.message });
