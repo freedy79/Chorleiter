@@ -23,6 +23,7 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   sessionExpired = false;
   loginError: string | null = null;
+  returnUrl: string | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -40,6 +41,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     this.route.queryParamMap.subscribe(params => {
       this.sessionExpired = params.has('sessionExpired');
+      this.returnUrl = params.get('returnUrl');
       if (!this.sessionExpired) {
         this.authService.isTokenValid().subscribe(valid => {
           if (!valid && this.authService.getToken()) {
@@ -63,10 +65,8 @@ export class LoginComponent implements OnInit {
     this.authService.login(this.loginForm.value).subscribe({
       // --- DIES IST DER ERFOLGSFALL ---
       next: () => {
-        // Wenn der Login erfolgreich war, navigieren Sie zum Dashboard.
-        // Die Route '/dashboard' ist in Ihrer app-routing.module.ts definiert.
-        console.log('Login successful, navigating to dashboard...');
-        this.router.navigate(['/dashboard']);
+        const target = this.returnUrl || '/dashboard';
+        this.router.navigateByUrl(target);
       },
       // --- DIES IST DER FEHLERFALL ---
       error: (err) => {

@@ -14,9 +14,11 @@ import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
+import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-monthly-plan',
@@ -37,6 +39,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   organists: UserInChoir[] = [];
   currentUserId: number | null = null;
   availabilityMap: { [userId: number]: { [date: string]: string } } = {};
+  selectedTab = 0;
 
   counterPlanDates: Date[] = [];
   counterPlanDateKeys: string[] = [];
@@ -138,18 +141,28 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private monthlyPlan: MonthlyPlanService,
               private auth: AuthService,
               private dialog: MatDialog,
-              private snackBar: MatSnackBar) {}
+              private snackBar: MatSnackBar,
+              private router: Router,
+              private route: ActivatedRoute) {}
 
   ngOnInit(): void {
     const now = new Date();
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
-    this.loadPlan(this.selectedYear, this.selectedMonth);
+
+    this.route.queryParamMap.subscribe(params => {
+      const y = Number(params.get('year'));
+      const m = Number(params.get('month'));
+      if (y && m) { this.selectedYear = y; this.selectedMonth = m; }
+      this.selectedTab = params.get('tab') === 'avail' ? 1 : 0;
+      this.loadPlan(this.selectedYear, this.selectedMonth);
+      this.loadAvailabilities(this.selectedYear, this.selectedMonth);
+    });
+
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
     this.api.checkChoirAdminStatus().subscribe(r => {
       this.isChoirAdmin = r.isChoirAdmin;
       this.updateDisplayedColumns();
-      this.loadAvailabilities(this.selectedYear, this.selectedMonth);
       if (this.isChoirAdmin) {
         this.api.getChoirMembers().subscribe(m => {
           this.members = m;
@@ -189,8 +202,26 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   monthChanged(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        year: this.selectedYear,
+        month: this.selectedMonth,
+        tab: this.selectedTab === 1 ? 'avail' : null
+      },
+      queryParamsHandling: 'merge'
+    });
     this.loadPlan(this.selectedYear, this.selectedMonth);
     this.loadAvailabilities(this.selectedYear, this.selectedMonth);
+  }
+
+  tabChanged(index: number): void {
+    this.selectedTab = index;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { year: this.selectedYear, month: this.selectedMonth, tab: index === 1 ? 'avail' : null },
+      queryParamsHandling: 'merge'
+    });
   }
 
   get monthLabel(): string {
@@ -295,6 +326,23 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     ref.afterClosed().subscribe((ids: number[]) => {
       if (ids && ids.length > 0) {
         this.monthlyPlan.emailMonthlyPlan(this.plan!.id, ids).subscribe({
+          next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
+          error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
+        });
+      }
+    });
+  }
+
+  openAvailabilityDialog(): void {
+    if (!this.plan) return;
+    const people = this.members.filter(m =>
+      m.membership?.rolesInChoir?.includes('director') ||
+      m.membership?.rolesInChoir?.includes('choir_admin') ||
+      m.membership?.rolesInChoir?.includes('organist'));
+    const ref = this.dialog.open(RequestAvailabilityDialogComponent, { data: { members: people } });
+    ref.afterClosed().subscribe((ids: number[]) => {
+      if (ids && ids.length > 0) {
+        this.monthlyPlan.requestAvailability(this.plan!.id, ids).subscribe({
           next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
           error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
         });

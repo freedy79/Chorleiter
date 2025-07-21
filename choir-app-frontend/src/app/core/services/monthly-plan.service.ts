@@ -33,4 +33,8 @@ export class MonthlyPlanService {
   emailMonthlyPlan(id: number, recipients: number[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients });
   }
+
+  requestAvailability(id: number, recipients: number[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/request-availability`, { recipients });
+  }
 }
