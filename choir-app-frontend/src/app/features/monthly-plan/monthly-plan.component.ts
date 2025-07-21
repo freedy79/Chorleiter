@@ -65,6 +65,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
         this.availabilityMap[a.userId][a.date] = a.status;
       }
+      this.updateCounterPlan();
     });
   }
 
@@ -100,18 +101,27 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
     this.counterPlanRows = persons.map(u => ({ user: u, assignments: {} }));
     for (const row of this.counterPlanRows) {
-      for (const d of dateKeys) row.assignments[d] = '';
+      for (const d of dateKeys) {
+        const status = this.availabilityMap[row.user.id]?.[d];
+        row.assignments[d] = status === 'UNAVAILABLE' ? '---' : '';
+      }
     }
 
     for (const entry of this.entries) {
       const key = this.dateKey(entry.date);
       if (entry.director) {
         const row = this.counterPlanRows.find(r => r.user.id === entry.director!.id);
-        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Chorleitung' : 'Chorleitung';
+        if (row) {
+          const base = row.assignments[key] === '---' ? '' : row.assignments[key];
+          row.assignments[key] = base ? base + ', Chorleitung' : 'Chorleitung';
+        }
       }
       if (entry.organist) {
         const row = this.counterPlanRows.find(r => r.user.id === entry.organist!.id);
-        if (row) row.assignments[key] = row.assignments[key] ? row.assignments[key] + ', Orgel' : 'Orgel';
+        if (row) {
+          const base = row.assignments[key] === '---' ? '' : row.assignments[key];
+          row.assignments[key] = base ? base + ', Orgel' : 'Orgel';
+        }
       }
     }
   }
@@ -175,7 +185,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
       notes: ev.notes || '',
-      directorId: userId ?? undefined,
+      directorId: userId,
       organistId: ev.organist?.id ?? undefined
     }).subscribe(updated => {
       ev.director = updated.director;
@@ -188,7 +198,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       date: ev.date,
       notes: ev.notes || '',
       directorId: ev.director?.id ?? undefined,
-      organistId: userId ?? undefined
+      organistId: userId
     }).subscribe(updated => {
       ev.organist = updated.organist;
       this.updateCounterPlan();

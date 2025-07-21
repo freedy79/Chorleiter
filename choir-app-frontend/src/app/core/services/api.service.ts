@@ -349,11 +349,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number | null; organistId?: number | null }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number; organistId?: number }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number | null; organistId?: number | null }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
