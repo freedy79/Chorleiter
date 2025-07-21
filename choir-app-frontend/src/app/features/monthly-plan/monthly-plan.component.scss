@@ -44,3 +44,26 @@ mat-tab-group {
   vertical-align: middle;
   margin-left: 4px;
 }
+
+.month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1rem 0;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.manual-inputs {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 599px) {
+  .manual-inputs {
+    display: none;
+  }
+}
