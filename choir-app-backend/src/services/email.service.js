@@ -199,3 +199,22 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
     throw err;
   }
 };
+
+exports.sendPostNotificationMail = async (recipients, title, text) => {
+  if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
+  const settings = await db.mail_setting.findByPk(1);
+  const transporter = await createTransporter(settings);
+  try {
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to: recipients,
+      subject: title,
+      text,
+      html: `<p>${text.replace(/\n/g, '<br>')}</p>`
+    });
+  } catch (err) {
+    logger.error(`Error sending post mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

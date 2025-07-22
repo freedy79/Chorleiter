@@ -17,6 +17,7 @@ import { Publisher } from '@core/models/publisher';
 import { Choir } from '@core/models/choir';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
+import { Post } from '../models/post';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
@@ -42,6 +43,7 @@ import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
 import { SearchService } from './search.service';
 import { MonthlyPlanService } from './monthly-plan.service';
+import { PostService } from './post.service';
 
 @Injectable({
   providedIn: 'root'
@@ -66,7 +68,8 @@ export class ApiService {
               private planRuleService: PlanRuleService,
               private availabilityService: AvailabilityService,
               private searchService: SearchService,
-              private monthlyPlanService: MonthlyPlanService) {
+              private monthlyPlanService: MonthlyPlanService,
+              private postService: PostService) {
 
   }
 
@@ -669,6 +672,27 @@ export class ApiService {
   registerDonation(): Observable<any> {
         return this.userService.registerDonation();
     }
+
+  // --- Post Methods ---
+  getPosts(): Observable<Post[]> {
+    return this.postService.getPosts();
+  }
+
+  getLatestPost(): Observable<Post | null> {
+    return this.postService.getLatestPost();
+  }
+
+  createPost(data: { title: string; text: string }): Observable<Post> {
+    return this.postService.createPost(data);
+  }
+
+  updatePost(id: number, data: { title: string; text: string }): Observable<Post> {
+    return this.postService.updatePost(id, data);
+  }
+
+  deletePost(id: number): Observable<any> {
+    return this.postService.deletePost(id);
+  }
 
   // --- Filter Preset Methods ---
   getRepertoireFilters(): Observable<RepertoireFilter[]> {

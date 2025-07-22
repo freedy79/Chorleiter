@@ -19,6 +19,13 @@
   </app-event-card>
 </div>
 
+<div class="latest-post" *ngIf="latestPost$ | async as post">
+  <h2>Neuster Beitrag</h2>
+  <h3>{{ post.title }}</h3>
+  <p>{{ post.text }}</p>
+  <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+</div>
+
 <div class="upcoming-section">
   <h2>Nächste Termine</h2>
   <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
