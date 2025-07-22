@@ -27,42 +27,42 @@ function getFromAddress(settings) {
   return { name: address, address };
 }
 
-function replacePlaceholders(text, replacements) {
+function replacePlaceholders(text, type, replacements) {
   let result = text;
   for (const [key, value] of Object.entries(replacements)) {
     result = result.split(`{{${key}}}`).join(value);
+    if (type) {
+      result = result.split(`{{${type}-${key}}}`).join(value);
+    }
   }
   return result;
+}
+
+async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
+  if (emailDisabled()) return;
+  const settings = overrideSettings || await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type } });
+  const transporter = await createTransporter(settings);
+  const name = replacements.surname || replacements.name || to.split('@')[0];
+  const final = { surname: name, date: new Date().toLocaleString('de-DE'), ...replacements };
+  const subjectTemplate = template?.subject || '';
+  const bodyTemplate = template?.body || '';
+  const subject = replacePlaceholders(subjectTemplate, type, final);
+  const body = replacePlaceholders(bodyTemplate, type, final);
+  await transporter.sendMail({ from: getFromAddress(settings), to, subject, html: body });
 }
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/register/${token}`;
-  const settings = await db.mail_setting.findByPk(1);
-  const template = await db.mail_template.findOne({ where: { type: 'invite' } });
-  const transporter = await createTransporter(settings);
   try {
-
-    const userName = name || to.split('@')[0];
-  const placeholders = {
-    choir: choirName,
-    choirname: choirName,
-    invitor: invitorName,
-    link: link,
-    expiry: expiry.toLocaleString('de-DE'),
-    surname: userName,
-    date: new Date().toLocaleString('de-DE')
-  };
-  const subjectTemplate = template?.subject || 'Invitation to join {{choir}}';
-  const subject = replacePlaceholders(subjectTemplate, placeholders);
-  let bodyTemplate = template?.body || `<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>`;
-  const body = replacePlaceholders(bodyTemplate, placeholders);
-
-    await transporter.sendMail({
-      from: getFromAddress(settings),
-      to,
-      subject,
-      html: body
+    await sendTemplateMail('invite', to, {
+      choir: choirName,
+      choirname: choirName,
+      invitor: invitorName,
+      link,
+      expiry: expiry.toLocaleString('de-DE'),
+      surname: name
     });
   } catch (err) {
     logger.error(`Error sending invitation mail to ${to}: ${err.message}`);
@@ -74,28 +74,8 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
 exports.sendPasswordResetMail = async (to, token, name) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/reset-password/${token}`;
-  const settings = await db.mail_setting.findByPk(1);
-  const template = await db.mail_template.findOne({ where: { type: 'reset' } });
-  const transporter = await createTransporter(settings);
   try {
-
-    const userName = name || to.split('@')[0];
-    const placeholders = {
-      link,
-      surname: userName,
-      date: new Date().toLocaleString('de-DE')
-    };
-    const subjectTemplate = template?.subject || 'Password Reset';
-    const subject = replacePlaceholders(subjectTemplate, placeholders);
-    let bodyTemplate = template?.body || '<p>Click <a href="{{link}}">here</a> to set a new password.</p>';
-    const body = replacePlaceholders(bodyTemplate, placeholders);
-
-    await transporter.sendMail({
-      from: getFromAddress(settings),
-      to,
-      subject,
-      html: body
-    });
+    await sendTemplateMail('reset', to, { link, surname: name });
   } catch (err) {
     logger.error(`Error sending password reset mail to ${to}: ${err.message}`);
     logger.error(err.stack);
@@ -112,7 +92,7 @@ exports.sendTestMail = async (to, override, name) => {
       surname: userName,
       date: new Date().toLocaleString('de-DE')
     };
-    const body = replacePlaceholders('<p>Dies ist eine Testmail.</p>', placeholders);
+    const body = replacePlaceholders('<p>Dies ist eine Testmail.</p>', 'test', placeholders);
     await transporter.sendMail({
       from: getFromAddress(settings),
       to,
@@ -127,28 +107,16 @@ exports.sendTestMail = async (to, override, name) => {
 };
 
 exports.sendTemplatePreviewMail = async (to, type, name) => {
-  const settings = await db.mail_setting.findByPk(1);
-  const template = await db.mail_template.findOne({ where: { type } });
-  const transporter = await createTransporter(settings);
   try {
-    const userName = name || to.split('@')[0];
     const placeholders = {
       choir: 'Beispielchor',
       choirname: 'Beispielchor',
       invitor: 'Max Mustermann',
       link: 'https://nak-chorleiter.de',
       expiry: new Date(Date.now() + 86400000).toLocaleString('de-DE'),
-      surname: userName,
-      date: new Date().toLocaleString('de-DE')
+      surname: name
     };
-    const subject = replacePlaceholders(template?.subject || '', placeholders);
-    const body = replacePlaceholders(template?.body || '', placeholders);
-    await transporter.sendMail({
-      from: getFromAddress(settings),
-      to,
-      subject,
-      html: body
-    });
+    await sendTemplateMail(type, to, placeholders);
   } catch (err) {
     logger.error(`Error sending template preview mail to ${to}: ${err.message}`);
     logger.error(err.stack);
@@ -159,12 +127,16 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
 exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month) => {
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
+  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const link = `${linkBase}/dienstplan?year=${year}&month=${month}`;
   try {
     await transporter.sendMail({
       from: getFromAddress(settings),
       to: recipients,
       subject: `Dienstplan ${month}/${year}`,
-      text: 'Im Anhang befindet sich der aktuelle Dienstplan.',
+      text: `Im Anhang befindet sich der aktuelle Dienstplan. ${link}`,
+      html: `<p>Im Anhang befindet sich der aktuelle Dienstplan.<br>` +
+            `<a href="${link}">Dienstplan online ansehen</a></p>`,
       attachments: [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }]
     });
   } catch (err) {
@@ -191,22 +163,12 @@ exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}&tab=avail`;
   try {
     const list = '<ul>' + dates.map(d => `<li>${d.date}: ${statusText(d.status)}</li>`).join('') + '</ul>';
-    const userName = name || to.split('@')[0];
-    const placeholders = {
+    await sendTemplateMail('availability-request', to, {
       month: String(month),
       year: String(year),
       list,
       link,
-      surname: userName,
-      date: new Date().toLocaleString('de-DE')
-    };
-    const subject = replacePlaceholders(template?.subject || `Verfügbarkeit ${month}/${year}`, placeholders);
-    const body = replacePlaceholders(template?.body || `<p>Bitte teile uns deine Verfügbarkeit für {{month}}/{{year}} mit.</p>{{list}}<p><a href="{{link}}">Verfügbarkeit eintragen</a></p>`, placeholders);
-    await transporter.sendMail({
-      from: getFromAddress(settings),
-      to,
-      subject,
-      html: body
+      surname: name
     });
   } catch (err) {
     logger.error(`Error sending availability request mail to ${to}: ${err.message}`);
@@ -217,31 +179,8 @@ exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
 
 exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
   if (emailDisabled()) return;
-  const settings = await db.mail_setting.findByPk(1);
-  const template = await db.mail_template.findOne({ where: { type: 'piece-change' } });
-  const transporter = await createTransporter(settings);
   try {
-    const placeholders = {
-      piece,
-      proposer,
-      link,
-      date: new Date().toLocaleString('de-DE')
-    };
-    const subject = replacePlaceholders(
-      template?.subject || `Änderungsvorschlag zu {{piece}}`,
-      placeholders
-    );
-    const body = replacePlaceholders(
-      template?.body ||
-        `<p>{{proposer}} hat eine Änderung zu <b>{{piece}}</b> vorgeschlagen.</p><p><a href="{{link}}">Änderung ansehen</a></p>`,
-      placeholders
-    );
-    await transporter.sendMail({
-      from: getFromAddress(settings),
-      to,
-      subject,
-      html: body
-    });
+    await sendTemplateMail('piece-change', to, { piece, proposer, link });
   } catch (err) {
     logger.error(`Error sending piece change mail to ${to}: ${err.message}`);
     logger.error(err.stack);

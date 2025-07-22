@@ -146,6 +146,7 @@ exports.findMyRepertoire = async (req, res) => {
                     { title: { [Op.iLike]: `%${t}%` } },
                     { '$composer.name$': { [Op.iLike]: `%${t}%` } },
                     { '$category.name$': { [Op.iLike]: `%${t}%` } },
+                    { lyrics: { [Op.iLike]: `%${t}%` } },
                     literal(`${refSub} ILIKE '%${t}%'`)
                 ]
             }));
