@@ -53,7 +53,9 @@ stored in the database. Administrators can edit the subject and HTML body for
 each type under the `/admin/mail-templates` page. The availability request
 template is used when a plan administrator sends a "Verfügbarkeit anfragen"
 email from the monthly plan view.  The following placeholders are available and
-will be replaced automatically:
+will be replaced automatically. Placeholders that are specific to one template
+can also be prefixed with the template type, e.g. `{{invite-link}}` or
+`{{availability-request-link}}`:
 
 ```
 {{link}}
@@ -66,6 +68,10 @@ will be replaced automatically:
 {{surname}}
 {{date}}
 ```
+
+Each of the above placeholders can also appear with a prefix matching the
+template type. For example `{{invite-link}}` will be replaced with the same
+value as `{{link}}` when sending an invitation email.
 
 After saving a template you can send yourself a preview email to verify the
 formatting.
