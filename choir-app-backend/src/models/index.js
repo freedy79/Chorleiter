@@ -39,6 +39,7 @@ db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
 db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 db.mail_template = require("./mail_template.model.js")(sequelize, Sequelize);
 db.system_setting = require("./system_setting.model.js")(sequelize, Sequelize);
+db.post = require("./post.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -131,6 +132,12 @@ db.user.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });
 db.repertoire_filter.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 db.choir.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });
 db.repertoire_filter.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+
+// Posts written by choir members
+db.choir.hasMany(db.post, { as: 'posts' });
+db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.user.hasMany(db.post, { as: 'posts' });
+db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 
 
 module.exports = db;

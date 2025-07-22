@@ -1,0 +1,13 @@
+.post-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.full-width {
+  flex: 1;
+}

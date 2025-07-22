@@ -16,6 +16,7 @@ import { EventCardComponent } from '../event-card/event-card.component';
 import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
+import { Post } from '@core/models/post';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
@@ -43,6 +44,7 @@ export class DashboardComponent implements OnInit {
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
   nextEvents$!: Observable<Event[]>;
+  latestPost$!: Observable<import('@core/models/post').Post | null>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
 
@@ -70,6 +72,10 @@ export class DashboardComponent implements OnInit {
 
     this.nextEvents$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
+    );
+
+    this.latestPost$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLatestPost())
     );
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(

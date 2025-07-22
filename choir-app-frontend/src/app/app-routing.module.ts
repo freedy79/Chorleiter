@@ -110,6 +110,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'posts',
+                loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
+                canActivate: [AuthGuard]
+            },
+            {
                 path: 'stats',
                 component: StatisticsComponent,
                 canActivate: [AuthGuard]

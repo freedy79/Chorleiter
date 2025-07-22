@@ -1,0 +1,17 @@
+<div class="post-header">
+  <h1>Beiträge</h1>
+  <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
+</div>
+<mat-list>
+  <mat-list-item *ngFor="let p of posts">
+    <div class="full-width">
+      <h3>{{ p.title }}</h3>
+      <p>{{ p.text }}</p>
+      <small>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</small>
+    </div>
+    <div *ngIf="canEdit(p)" class="actions">
+      <button mat-icon-button (click)="editPost(p)" matTooltip="Bearbeiten"><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button (click)="deletePost(p)" matTooltip="Löschen"><mat-icon>delete</mat-icon></button>
+    </div>
+  </mat-list-item>
+</mat-list>

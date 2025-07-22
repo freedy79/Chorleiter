@@ -1,0 +1,17 @@
+<h1 mat-dialog-title>{{ isEdit ? 'Beitrag bearbeiten' : 'Neuer Beitrag' }}</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Titel</mat-label>
+      <input matInput formControlName="title">
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Text</mat-label>
+      <textarea matInput rows="5" formControlName="text"></textarea>
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+</div>
