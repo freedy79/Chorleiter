@@ -26,12 +26,12 @@
     <div class="plan" *ngIf="plan; else noPlan">
       <h2>Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
   <div class="actions">
-    <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()">Eintrag hinzufügen</button>
+    <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="openAddEntryDialog()" matTooltip="Eintrag hinzufügen"><mat-icon>add</mat-icon></button>
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="primary" (click)="finalizePlan()">Plan finalisieren</button>
     <button *ngIf="isChoirAdmin && plan.finalized" mat-raised-button color="primary" (click)="reopenPlan()">Plan erneut öffnen</button>
-    <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="downloadPdf()">PDF herunterladen</button>
-    <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="openEmailDialog()">Per E-Mail senden</button>
-    <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="accent" (click)="openAvailabilityDialog()">Verfügbarkeit anfragen</button>
+    <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="downloadPdf()" matTooltip="Als PDF herunterladen"><mat-icon>picture_as_pdf"</mat-icon></button>
+    <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="openEmailDialog()"><mat-icon>mail</mat-icon>Per E-Mail senden</button>
+    <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="accent" (click)="openAvailabilityDialog()"><mat-icon>mail</mat-icon>Verfügbarkeit anfragen</button>
   </div>
   <table mat-table [dataSource]="entries" class="mat-elevation-z2">
     <ng-container matColumnDef="date">
