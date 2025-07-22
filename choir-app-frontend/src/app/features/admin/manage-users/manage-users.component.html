@@ -3,7 +3,7 @@
   <span class="spacer"></span>
   <mat-form-field appearance="outline" class="filter-field">
     <mat-label>Filter</mat-label>
-    <input matInput [value]="filterValue" (input)="applyFilter($event.target.value)">
+    <input matInput [value]="filterValue" (input)="onFilterInput($event)">
   </mat-form-field>
 </div>
 
