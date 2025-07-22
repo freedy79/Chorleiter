@@ -35,6 +35,7 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatSort } from '@angular/material/sort';
 import { Publisher } from '@core/models/publisher';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 interface SelectedPieceWithNumber {
     piece: Piece;
@@ -50,6 +51,9 @@ interface SelectedPieceWithNumber {
         MaterialModule,
         MatAutocompleteModule,
         RouterModule,
+        PageHeaderComponent,
+        PieceDialogComponent,
+        ImportDialogComponent,
     ],
     templateUrl: './collection-edit.component.html',
     styleUrls: ['./collection-edit.component.scss'],
