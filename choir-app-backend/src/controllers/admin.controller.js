@@ -490,3 +490,26 @@ exports.updateMailTemplates = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.getFrontendUrl = async (req, res) => {
+    try {
+        const setting = await db.system_setting.findByPk('FRONTEND_URL');
+        res.status(200).send({ value: setting?.value || null });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateFrontendUrl = async (req, res) => {
+    try {
+        const { value } = req.body;
+        const [setting] = await db.system_setting.findOrCreate({
+            where: { key: 'FRONTEND_URL' },
+            defaults: { value }
+        });
+        await setting.update({ value });
+        res.status(200).send({ value: setting.value });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};

@@ -1,0 +1,10 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="frontend-form">
+  <mat-form-field appearance="fill">
+    <mat-label>Frontend URL</mat-label>
+    <input matInput formControlName="url" />
+    <mat-hint>Basisadresse des Frontend-Systems</mat-hint>
+  </mat-form-field>
+  <div class="actions">
+    <button mat-raised-button color="primary" type="submit">Speichern</button>
+  </div>
+</form>

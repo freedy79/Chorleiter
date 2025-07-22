@@ -35,6 +35,7 @@ import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
+import { FrontendUrl } from '../models/frontend-url';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -643,6 +644,14 @@ export class ApiService {
 
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.adminService.updateMailTemplates(data);
+  }
+
+  getFrontendUrl(): Observable<FrontendUrl> {
+    return this.adminService.getFrontendUrl();
+  }
+
+  updateFrontendUrl(value: string): Observable<FrontendUrl> {
+    return this.adminService.updateFrontendUrl({ value });
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {

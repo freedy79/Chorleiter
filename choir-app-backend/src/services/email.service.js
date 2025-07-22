@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 
 const db = require('../models');
 const logger = require('../config/logger');
+const { getFrontendUrl } = require('../utils/frontend-url');
 
 function emailDisabled() {
   return process.env.DISABLE_EMAIL === 'true';
@@ -52,7 +53,7 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
 }
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
-  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const linkBase = await getFrontendUrl();
   const link = `${linkBase}/register/${token}`;
   try {
     await sendTemplateMail('invite', to, {
@@ -71,7 +72,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
 };
 
 exports.sendPasswordResetMail = async (to, token, name) => {
-  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const linkBase = await getFrontendUrl();
   const link = `${linkBase}/reset-password/${token}`;
   try {
     await sendTemplateMail('reset', to, { link, surname: name });
@@ -155,7 +156,10 @@ function statusText(status) {
 }
 
 exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
-  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'availability-request' } });
+  const transporter = await createTransporter(settings);
+  const linkBase = await getFrontendUrl();
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}&tab=avail`;
   try {
     const list = '<ul>' + dates.map(d => `<li>${d.date}: ${statusText(d.status)}</li>`).join('') + '</ul>';

@@ -74,6 +74,11 @@ async function seedDatabase(options = {}) {
                     body: '<p>{{proposer}} hat eine Änderung zu <b>{{piece}}</b> vorgeschlagen.</p><p><a href="{{link}}">Änderung ansehen</a></p>'
                 }
             });
+
+            await db.system_setting.findOrCreate({
+                where: { key: 'FRONTEND_URL' },
+                defaults: { value: process.env.FRONTEND_URL || 'https://nak-chorleiter.de' }
+            });
             console.log("Initial seeding completed successfully.");
         } else {
             console.log("Database already seeded. Skipping initial setup.");
