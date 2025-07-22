@@ -1,5 +1,5 @@
 <div class="post-header">
-  <h1>Beiträge</h1>
+  <h1>Beiträge – {{ (activeChoir$ | async)?.name }}</h1>
   <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
 </div>
 <mat-list>

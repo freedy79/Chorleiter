@@ -4,6 +4,8 @@ import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { Observable } from 'rxjs';
+import { Choir } from '@core/models/choir';
 import { Post } from '@core/models/post';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
@@ -20,7 +22,10 @@ export class PostListComponent implements OnInit {
   posts: Post[] = [];
   currentUserId: number | null = null;
   isChoirAdmin = false;
-  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {}
+  activeChoir$!: Observable<Choir | null>;
+  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+    this.activeChoir$ = this.auth.activeChoir$;
+  }
 
   ngOnInit(): void {
     this.loadPosts();
