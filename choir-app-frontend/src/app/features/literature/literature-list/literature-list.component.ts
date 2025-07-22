@@ -25,11 +25,12 @@ import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';
 import { Router, RouterModule } from '@angular/router';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PageHeaderComponent],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })

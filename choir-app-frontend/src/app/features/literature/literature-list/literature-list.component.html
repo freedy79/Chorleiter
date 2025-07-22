@@ -36,13 +36,12 @@
   </mat-drawer>
   <mat-drawer-content>
     <div class="page">
-      <div class="page-header">
-        <h1>Chorrepertoire</h1>
+      <app-page-header title="Chorrepertoire">
         <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
           <mat-icon>add</mat-icon>
           <span>Stück hinzufügen</span>
         </button>
-      </div>
+      </app-page-header>
       <div class="filter-bar">
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
           <mat-icon>filter_list</mat-icon>
