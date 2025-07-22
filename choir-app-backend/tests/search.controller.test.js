@@ -11,14 +11,15 @@ const controller = require('../src/controllers/search.controller');
     const choir = await db.choir.create({ name: 'Test Choir' });
     const composer = await db.composer.create({ name: 'Handel' });
     await db.piece.create({ title: 'Hallelujah', composerId: composer.id });
+    await db.piece.create({ title: 'Freedom', lyrics: 'Words of hope and love', composerId: composer.id });
     await db.collection.create({ title: 'Advent', prefix: 'AD' });
     await db.event.create({ choirId: choir.id, date: new Date(), type: 'SERVICE', notes: 'Weekly service' });
 
-    const req = { query: { q: 'Hall' }, activeChoirId: choir.id };
+    const req = { query: { q: 'hope' }, activeChoirId: choir.id };
     const res = { status(code) { this.statusCode = code; return this; }, send(d) { this.data = d; } };
     await controller.search(req, res);
     assert.strictEqual(res.statusCode, 200);
-    assert.ok(res.data.pieces.find(p => p.title === 'Hallelujah'));
+    assert.ok(res.data.pieces.find(p => p.title === 'Freedom'));
     assert.strictEqual(res.data.collections.length, 0);
 
     console.log('search.controller tests passed');

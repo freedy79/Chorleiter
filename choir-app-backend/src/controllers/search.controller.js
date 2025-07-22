@@ -9,7 +9,12 @@ exports.search = async (req, res) => {
   const like = { [likeOp]: `%${q}%` };
 
   const pieces = await db.piece.findAll({
-    where: { title: like },
+    where: {
+      [Op.or]: [
+        { title: like },
+        { lyrics: like }
+      ]
+    },
     include: [{ model: db.composer, as: 'composer', attributes: ['name'] }],
     limit: 10
   });
