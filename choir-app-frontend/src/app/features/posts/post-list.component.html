@@ -1,6 +1,6 @@
-<app-page-header title="Beiträge – {{ (activeChoir$ | async)?.name }}">
+<div class="actions">
   <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
-</app-page-header>
+</div>
 <mat-list>
   <mat-list-item *ngFor="let p of posts">
     <div class="full-width">
