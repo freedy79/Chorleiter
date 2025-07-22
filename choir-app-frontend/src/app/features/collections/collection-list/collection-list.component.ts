@@ -9,7 +9,8 @@ import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { RouterLink, Router } from '@angular/router'; // Import RouterLink and Router
+import { RouterLink, Router } from '@angular/router';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
 
@@ -19,7 +20,8 @@ import { PaginatorService } from '@core/services/paginator.service';
   imports: [
     CommonModule,
     MaterialModule,
-    RouterLink // Add RouterLink to imports
+    RouterLink,
+    PageHeaderComponent
   ],
   templateUrl: './collection-list.component.html',
   styleUrls: ['./collection-list.component.scss']

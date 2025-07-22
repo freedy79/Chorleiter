@@ -11,11 +11,12 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PostDialogComponent, ConfirmDialogComponent, PageHeaderComponent],
   templateUrl: './post-list.component.html'
 })
 export class PostListComponent implements OnInit {

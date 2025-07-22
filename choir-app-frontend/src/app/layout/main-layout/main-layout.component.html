@@ -79,6 +79,7 @@
 
     <main class="main-content">
       <div class="container">
+        <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
         <router-outlet></router-outlet>
       </div>
     </main>
