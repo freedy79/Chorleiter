@@ -2,6 +2,7 @@ const db = require('../models');
 const PieceChange = db.piece_change;
 const Piece = db.piece;
 const emailService = require('../services/email.service');
+const { getFrontendUrl } = require('../utils/frontend-url');
 
 exports.create = async (req, res) => {
     const { pieceId, data } = req.body;
@@ -14,7 +15,7 @@ exports.create = async (req, res) => {
         const proposer = await db.user.findByPk(req.userId);
 
         const admins = await db.user.findAll({ where: { role: 'admin' } });
-        const linkBase = process.env.FRONTEND_URL || 'http://localhost:4200';
+        const linkBase = await getFrontendUrl();
         const link = `${linkBase}/admin/piece-changes`;
         const promises = admins
             .filter(a => a.email)

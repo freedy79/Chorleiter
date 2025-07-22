@@ -8,6 +8,7 @@ import { LoginAttempt } from '../models/login-attempt';
 import { StatsSummary } from '../models/stats-summary';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
+import { FrontendUrl } from '../models/frontend-url';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -133,5 +134,13 @@ export class AdminService {
 
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.http.put<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`, data);
+  }
+
+  getFrontendUrl(): Observable<FrontendUrl> {
+    return this.http.get<FrontendUrl>(`${this.apiUrl}/admin/frontend-url`);
+  }
+
+  updateFrontendUrl(data: FrontendUrl): Observable<FrontendUrl> {
+    return this.http.put<FrontendUrl>(`${this.apiUrl}/admin/frontend-url`, data);
   }
 }

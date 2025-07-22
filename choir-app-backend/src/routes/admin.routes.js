@@ -44,6 +44,8 @@ router.post('/mail-settings/test', wrap(controller.sendTestMail));
 router.get('/mail-templates', wrap(controller.getMailTemplates));
 router.put('/mail-templates', wrap(controller.updateMailTemplates));
 router.post('/mail-templates/test/:type', wrap(controller.sendMailTemplateTest));
+router.get('/frontend-url', wrap(controller.getFrontendUrl));
+router.put('/frontend-url', wrap(controller.updateFrontendUrl));
 
 module.exports = router;
 
