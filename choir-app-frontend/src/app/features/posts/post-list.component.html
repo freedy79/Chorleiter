@@ -1,4 +1,4 @@
-<app-page-header title="Beiträge">
+<app-page-header title="Beiträge – {{ (activeChoir$ | async)?.name }}">
   <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
 </app-page-header>
 <mat-list>
