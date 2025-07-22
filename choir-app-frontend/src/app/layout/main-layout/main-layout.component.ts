@@ -118,10 +118,22 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
       this.evaluateDrawerWidth();
     });
 
-    this.pageTitle$ = this.router.events.pipe(
+    const routeData$ = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
-      map(() => this.getDeepestTitle(this.route)),
-      startWith(this.getDeepestTitle(this.route))
+      map(() => this.getDeepestRouteData(this.route)),
+      startWith(this.getDeepestRouteData(this.route))
+    );
+
+    this.pageTitle$ = combineLatest([routeData$, this.authService.activeChoir$]).pipe(
+      map(([data, choir]) => {
+        if (!data.title) {
+          return null;
+        }
+        if (data.showChoirName && choir?.name) {
+          return `${data.title} – ${choir.name}`;
+        }
+        return data.title;
+      })
     );
   }
 
@@ -139,17 +151,23 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this.drawerOpenByWidth = (this.drawerWidth / width) <= this.maxDrawerRatio;
   }
 
-  private getDeepestTitle(route: ActivatedRoute): string | null {
+  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
     let child = route.firstChild;
-    let title = child?.snapshot?.data?.['title'];
+    let data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
     while (child?.firstChild) {
       child = child.firstChild;
-      if (child.snapshot?.data && child.snapshot.data['title']) {
-        title = child.snapshot.data['title'];
+      if (child.snapshot?.data) {
+        if (child.snapshot.data['title']) {
+          data.title = child.snapshot.data['title'];
+        }
+        if (child.snapshot.data['showChoirName']) {
+          data.showChoirName = child.snapshot.data['showChoirName'];
+        }
       }
     }
-    return title ?? null;
+    return data;
   }
+
 
   ngOnInit(): void {
     //Called before any other lifecycle hook. Use it to inject dependencies, but avoid any serious work here.

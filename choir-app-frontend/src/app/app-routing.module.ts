@@ -121,7 +121,7 @@ export const routes: Routes = [
                 path: 'posts',
                 loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Beiträge' }
+                data: { title: 'Beiträge', showChoirName: true }
             },
             {
                 path: 'stats',

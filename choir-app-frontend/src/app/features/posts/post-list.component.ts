@@ -4,28 +4,23 @@ import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
-import { Choir } from '@core/models/choir';
 import { Post } from '@core/models/post';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
-import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostDialogComponent, ConfirmDialogComponent, PageHeaderComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PostDialogComponent, ConfirmDialogComponent],
   templateUrl: './post-list.component.html'
 })
 export class PostListComponent implements OnInit {
   posts: Post[] = [];
   currentUserId: number | null = null;
   isChoirAdmin = false;
-  activeChoir$!: Observable<Choir | null>;
   constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {
-    this.activeChoir$ = this.auth.activeChoir$;
   }
 
   ngOnInit(): void {
