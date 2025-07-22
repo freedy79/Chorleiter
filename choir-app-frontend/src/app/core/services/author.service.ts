@@ -1,34 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { Author } from '../models/author';
+import { CreatorService } from './creator.service';
 
 @Injectable({ providedIn: 'root' })
-export class AuthorService {
-  private apiUrl = environment.apiUrl;
+export class AuthorService extends CreatorService<Author> {
+  constructor(http: HttpClient) { super(http, 'authors'); }
 
-  constructor(private http: HttpClient) {}
-
-  getAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(`${this.apiUrl}/authors`);
-  }
-
+  getAuthors(): Observable<Author[]> { return this.getAll(); }
   createAuthor(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
-    const url = force ? `${this.apiUrl}/authors?force=true` : `${this.apiUrl}/authors`;
-    return this.http.post<Author>(url, data);
+    return this.create(data, force);
   }
-
   updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
-    const url = force ? `${this.apiUrl}/authors/${id}?force=true` : `${this.apiUrl}/authors/${id}`;
-    return this.http.put<Author>(url, data);
+    return this.update(id, data, force);
   }
-
-  deleteAuthor(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/authors/${id}`);
-  }
-
-  enrichAuthor(id: number): Observable<Author> {
-    return this.http.post<Author>(`${this.apiUrl}/authors/${id}/enrich`, {});
-  }
+  deleteAuthor(id: number): Observable<any> { return this.delete(id); }
+  enrichAuthor(id: number): Observable<Author> { return this.enrich(id); }
 }
