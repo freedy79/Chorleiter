@@ -141,10 +141,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
   private getDeepestTitle(route: ActivatedRoute): string | null {
     let child = route.firstChild;
-    let title = child?.snapshot.data['title'];
+    let title = child?.snapshot?.data?.['title'];
     while (child?.firstChild) {
       child = child.firstChild;
-      if (child.snapshot.data && child.snapshot.data['title']) {
+      if (child.snapshot?.data && child.snapshot.data['title']) {
         title = child.snapshot.data['title'];
       }
     }
