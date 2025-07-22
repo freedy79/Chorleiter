@@ -84,4 +84,9 @@ export class ManageUsersComponent implements OnInit {
     this.filterValue = value;
     this.dataSource.filter = value.trim().toLowerCase();
   }
+
+  onFilterInput(event: Event): void {
+    const value = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.applyFilter(value);
+  }
 }
