@@ -71,7 +71,10 @@ can also be prefixed with the template type, e.g. `{{invite-link}}` or
 
 Each of the above placeholders can also appear with a prefix matching the
 template type. For example `{{invite-link}}` will be replaced with the same
-value as `{{link}}` when sending an invitation email.
+value as `{{link}}` when sending an invitation email.  Additionally any
+placeholder ending in `link` supports a `-html` variant that inserts a clickable
+anchor element. For instance `{{link-html}}` or `{{invite-link-html}}` expands to
+`<a href="https://example.com">https://example.com</a>`.
 
 After saving a template you can send yourself a preview email to verify the
 formatting.
