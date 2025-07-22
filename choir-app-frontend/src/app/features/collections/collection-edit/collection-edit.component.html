@@ -1,10 +1,5 @@
 <div class="form-container">
-  <div class="page-header">
-    <div>
-      <h1>{{ pageTitle }}</h1>
-      <p class="subtitle">{{ pageSubtitle }}</p>
-    </div>
-    <!-- Fügen Sie den Button nur im Edit-Modus hinzu -->
+  <app-page-header [title]="pageTitle">
     <button
       *ngIf="isEditMode && isAdmin"
       mat-stroked-button
@@ -13,7 +8,8 @@
       <mat-icon>upload_file</mat-icon>
       Import aus CSV
     </button>
-  </div>
+  </app-page-header>
+  <p class="subtitle">{{ pageSubtitle }}</p>
 
   <!-- This is the main form, wrapping everything -->
   <form [formGroup]="collectionForm" (ngSubmit)="onSave()" class="edit-form">

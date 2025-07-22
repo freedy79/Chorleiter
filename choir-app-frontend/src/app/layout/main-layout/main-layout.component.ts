@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
-import { Router, RouterModule } from '@angular/router'; // RouterModule importieren
+import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ApiService } from 'src/app/core/services/api.service';
 
@@ -7,7 +7,7 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, combineLatest, map, Observable, of } from 'rxjs';
+import { BehaviorSubject, combineLatest, map, Observable, of, filter, startWith } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
@@ -23,6 +23,7 @@ import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.
 import { HelpService } from '@core/services/help.service';
 import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
 import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -38,7 +39,8 @@ import { SearchBoxComponent } from '@shared/components/search-box/search-box.com
     ErrorDisplayComponent,
     LoadingIndicatorComponent,
     MenuListItemComponent,
-    SearchBoxComponent
+    SearchBoxComponent,
+    PageHeaderComponent
   ],
   providers: [NavService],
 })
@@ -68,6 +70,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   isTablet$: Observable<boolean> | undefined;
   isMedium$: Observable<boolean> | undefined;
 
+  pageTitle$: Observable<string | null>;
+
 
   constructor(private authService: AuthService,
     private themeService: ThemeService,
@@ -75,7 +79,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     private breakpointObserver: BreakpointObserver,
     private dialog: MatDialog,
     private help: HelpService,
-    private api: ApiService
+    private api: ApiService,
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -111,6 +117,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
       this.headerHeight = match ? 56 : 64;
       this.evaluateDrawerWidth();
     });
+
+    this.pageTitle$ = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      map(() => this.getDeepestTitle(this.route)),
+      startWith(this.getDeepestTitle(this.route))
+    );
   }
 
   ngAfterViewInit(): void {
@@ -125,6 +137,18 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   private evaluateDrawerWidth() {
     const width = window.innerWidth;
     this.drawerOpenByWidth = (this.drawerWidth / width) <= this.maxDrawerRatio;
+  }
+
+  private getDeepestTitle(route: ActivatedRoute): string | null {
+    let child = route.firstChild;
+    let title = child?.snapshot.data['title'];
+    while (child?.firstChild) {
+      child = child.firstChild;
+      if (child.snapshot.data && child.snapshot.data['title']) {
+        title = child.snapshot.data['title'];
+      }
+    }
+    return title ?? null;
   }
 
   ngOnInit(): void {

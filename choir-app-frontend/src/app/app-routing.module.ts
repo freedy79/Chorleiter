@@ -73,77 +73,92 @@ export const routes: Routes = [
                 path: 'dashboard',
                 component: DashboardComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Home' },
             },
             {
                 path: 'repertoire',
                 component: LiteratureListComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Repertoire' },
             },
             {
                 path: 'collections',
                 component: CollectionListComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Sammlungen' },
             },
             {
                 path: 'collections/new',
                 component: CollectionEditComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Neue Sammlung' },
             },
             {
                 path: 'collections/edit/:id',
                 component: CollectionEditComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Sammlung bearbeiten' },
             },
             {
                 path: 'events',
                 component: EventListComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Ereignisse' }
             },
             {
                 path: 'dienstplan',
                 component: MonthlyPlanComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Dienstplan' }
             },
             {
                 path: 'termine',
                 component: MyCalendarComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Meine Termine' }
             },
             {
                 path: 'posts',
                 loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Beiträge' }
             },
             {
                 path: 'stats',
                 component: StatisticsComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Statistik' }
             },
             {
                 path: 'pieces/:id',
                 component: PieceDetailComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Stückdetails' }
             },
             {
                 path: 'search',
                 component: SearchResultsComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Suche' }
             },
             {
                 path: 'profile',
                 component: ProfileComponent,
                 canActivate: [AuthGuard],
+                data: { title: 'Profil' },
             },
             {
                 path: 'members',
                 component: ChoirMembersComponent,
-                canActivate: [AuthGuard]
+                canActivate: [AuthGuard],
+                data: { title: 'Chormitglieder' }
             },
             {
                 path: 'manage-choir',
                 component: ManageChoirComponent,
                 canActivate: [AuthGuard],
-                resolve: {pageData: ManageChoirResolver }
+                resolve: {pageData: ManageChoirResolver },
+                data: { title: 'Mein Chor' }
             },
         ],
     },
