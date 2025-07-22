@@ -79,12 +79,18 @@ export class MyCalendarComponent implements OnInit {
         });
     }
 
+    private germanDateKey(d: string | Date): string {
+        return new Date(d).toLocaleDateString('en-CA', {
+            timeZone: 'Europe/Berlin',
+        });
+    }
+
     private loadEvents(): void {
         this.api.getEvents().subscribe((events) => {
             this.events = events;
             this.eventMap = {};
             for (const ev of events) {
-                const key = new Date(ev.date).toISOString().substring(0, 10);
+                const key = this.germanDateKey(ev.date);
                 if (!this.eventMap[key]) this.eventMap[key] = [];
                 this.eventMap[key].push(ev);
             }
@@ -99,9 +105,7 @@ export class MyCalendarComponent implements OnInit {
         this.monthlyPlan.getMonthlyPlan(year, month).subscribe((plan) => {
             if (!plan) return;
             for (const entry of plan.entries || []) {
-                const dKey = new Date(entry.date)
-                    .toISOString()
-                    .substring(0, 10);
+                const dKey = this.germanDateKey(entry.date);
                 if (!this.planEntryMap[dKey]) this.planEntryMap[dKey] = [];
                 this.planEntryMap[dKey].push(entry);
                 this.allPlanEntries.push(entry);
@@ -111,7 +115,7 @@ export class MyCalendarComponent implements OnInit {
     }
 
     private calculateGermanHolidays(year: number): { [date: string]: string } {
-        const toKey = (d: Date) => d.toISOString().substring(0, 10);
+        const toKey = (d: Date) => this.germanDateKey(d);
 
         // Meeus/Jones/Butcher algorithm for Easter Sunday
         const f = Math.floor;
@@ -144,7 +148,7 @@ export class MyCalendarComponent implements OnInit {
     }
 
     dateClass = (d: Date): string => {
-        const key = d.toISOString().substring(0, 10);
+        const key = this.germanDateKey(d);
         const classes: string[] = [];
         if (this.eventMap[key] || this.planEntryMap[key])
             classes.push('has-event');
@@ -169,7 +173,7 @@ export class MyCalendarComponent implements OnInit {
     }
 
     get eventsForSelectedDate(): CalendarEntry[] {
-        const key = this.selectedDate.toISOString().substring(0, 10);
+        const key = this.germanDateKey(this.selectedDate);
         const entries: CalendarEntry[] = [...(this.eventMap[key] || [])];
         for (const e of this.planEntryMap[key] || []) {
             entries.push({ ...e, entryType: 'PLAN' });
