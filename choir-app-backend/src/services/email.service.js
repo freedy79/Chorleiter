@@ -126,12 +126,16 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
 exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month) => {
   const settings = await db.mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
+  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const link = `${linkBase}/dienstplan?year=${year}&month=${month}`;
   try {
     await transporter.sendMail({
       from: getFromAddress(settings),
       to: recipients,
       subject: `Dienstplan ${month}/${year}`,
-      text: 'Im Anhang befindet sich der aktuelle Dienstplan.',
+      text: `Im Anhang befindet sich der aktuelle Dienstplan. ${link}`,
+      html: `<p>Im Anhang befindet sich der aktuelle Dienstplan.<br>` +
+            `<a href="${link}">Dienstplan online ansehen</a></p>`,
       attachments: [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }]
     });
   } catch (err) {
