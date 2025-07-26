@@ -152,7 +152,7 @@ exports.emailPdf = async (req, res) => {
         });
         const emails = users.map(u => u.email);
         const buffer = monthlyPlanPdf(plan.toJSON());
-        await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month);
+        await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not send mail.' });
