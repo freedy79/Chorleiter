@@ -5,6 +5,12 @@
     margin-bottom: 2rem;
 }
 
+.header-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
 .collection-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));

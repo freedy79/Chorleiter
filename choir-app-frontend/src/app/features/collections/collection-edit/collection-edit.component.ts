@@ -35,7 +35,6 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatSort } from '@angular/material/sort';
 import { Publisher } from '@core/models/publisher';
-import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 
 interface SelectedPieceWithNumber {
     piece: Piece;
@@ -51,7 +50,6 @@ interface SelectedPieceWithNumber {
         MaterialModule,
         MatAutocompleteModule,
         RouterModule,
-        PageHeaderComponent,
         PieceDialogComponent,
         ImportDialogComponent,
     ],
@@ -63,7 +61,6 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     addPieceForm: FormGroup;
     isEditMode = false;
     private collectionId: number | null = null;
-    pageTitle = 'Neue Sammlung erstellen';
     pageSubtitle =
         "Beschreibung der Sammlung, Hinzufügen von Stücken.";
     public pieceLinkColumns: string[] = ['number', 'title', 'actions'];
@@ -154,7 +151,6 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                     if (id) {
                         this.isEditMode = true;
                         this.collectionId = +id;
-                        this.pageTitle = 'Sammlung bearbeiten';
                         this.pageSubtitle =
                             "Update the collection's details and manage its pieces.";
                         return this.apiService.getCollectionById(
