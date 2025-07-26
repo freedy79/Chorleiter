@@ -22,14 +22,17 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   @ViewChild('resetEditor') resetEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('availabilityEditor') availabilityEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('changeEditor') changeEditor!: ElementRef<HTMLDivElement>;
+  @ViewChild('monthlyEditor') monthlyEditor!: ElementRef<HTMLDivElement>;
   private inviteQuill: any;
   private resetQuill: any;
   private availabilityQuill: any;
   private changeQuill: any;
+  private monthlyQuill: any;
   inviteHtmlMode = false;
   resetHtmlMode = false;
   availabilityHtmlMode = false;
   changeHtmlMode = false;
+  monthlyHtmlMode = false;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
@@ -40,7 +43,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       availabilitySubject: ['', Validators.required],
       availabilityBody: ['', Validators.required],
       changeSubject: ['', Validators.required],
-      changeBody: ['', Validators.required]
+      changeBody: ['', Validators.required],
+      monthlySubject: ['', Validators.required],
+      monthlyBody: ['', Validators.required]
     });
   }
 
@@ -59,6 +64,7 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       const reset = templates.find(t => t.type === 'reset');
       const avail = templates.find(t => t.type === 'availability-request');
       const change = templates.find(t => t.type === 'piece-change');
+      const monthly = templates.find(t => t.type === 'monthly-plan');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -70,6 +76,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       }
       if (change) {
         this.form.patchValue({ changeSubject: change.subject, changeBody: change.body });
+      }
+      if (monthly) {
+        this.form.patchValue({ monthlySubject: monthly.subject, monthlyBody: monthly.body });
       }
       this.form.markAsPristine();
       this.setEditorContents();
@@ -91,6 +100,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!type || type === 'piece-change') {
       templates.push({ type: 'piece-change', subject: value.changeSubject, body: value.changeBody });
+    }
+    if (!type || type === 'monthly-plan') {
+      templates.push({ type: 'monthly-plan', subject: value.monthlySubject, body: value.monthlyBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
@@ -137,6 +149,13 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
         this.form.get('changeBody')?.markAsDirty();
       });
     }
+    if ((window as any).Quill && this.monthlyEditor && !this.monthlyQuill) {
+      this.monthlyQuill = new (window as any).Quill(this.monthlyEditor.nativeElement, options);
+      this.monthlyQuill.on('text-change', () => {
+        this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML });
+        this.form.get('monthlyBody')?.markAsDirty();
+      });
+    }
   }
 
   private setEditorContents(): void {
@@ -151,6 +170,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (this.changeQuill) {
       this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
+    }
+    if (this.monthlyQuill) {
+      this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
     }
   }
 
@@ -191,6 +213,16 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!this.changeHtmlMode && this.changeQuill) {
       this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
+    }
+  }
+
+  toggleMonthlyHtml(): void {
+    this.monthlyHtmlMode = !this.monthlyHtmlMode;
+    if (this.monthlyHtmlMode && this.monthlyQuill) {
+      this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML });
+    }
+    if (!this.monthlyHtmlMode && this.monthlyQuill) {
+      this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
     }
   }
 

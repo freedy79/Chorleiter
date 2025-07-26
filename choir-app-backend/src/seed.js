@@ -75,6 +75,14 @@ async function seedDatabase(options = {}) {
                 }
             });
 
+            await db.mail_template.findOrCreate({
+                where: { type: 'monthly-plan' },
+                defaults: {
+                    subject: 'Dienstplan {{month}}/{{year}}',
+                    body: '<p>Im Anhang befindet sich der aktuelle Dienstplan.</p><p><a href="{{link}}">Dienstplan online ansehen</a></p>'
+                }
+            });
+
             await db.system_setting.findOrCreate({
                 where: { key: 'FRONTEND_URL' },
                 defaults: { value: process.env.FRONTEND_URL || 'https://nak-chorleiter.de' }

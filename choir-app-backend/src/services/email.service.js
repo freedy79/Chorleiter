@@ -136,19 +136,33 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
   }
 };
 
-exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month) => {
+exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) => {
   const settings = await db.mail_setting.findByPk(1);
+  const template = await db.mail_template.findOne({ where: { type: 'monthly-plan' } });
   const transporter = await createTransporter(settings);
-  const linkBase = process.env.FRONTEND_URL || 'https://nak-chorleiter.de';
+  const linkBase = await getFrontendUrl();
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}`;
   try {
+    const defaults = {
+      month: String(month),
+      year: String(year),
+      choir: choir || '',
+      choirname: choir || '',
+      link
+    };
+    const subjectTemplate = template?.subject || 'Dienstplan {{month}}/{{year}}';
+    const bodyTemplate = template?.body ||
+      '<p>Im Anhang befindet sich der aktuelle Dienstplan.</p>' +
+      '<p><a href="{{link}}">Dienstplan online ansehen</a></p>';
+    const subject = replacePlaceholders(subjectTemplate, 'monthly-plan', defaults);
+    const html = replacePlaceholders(bodyTemplate, 'monthly-plan', defaults);
+    const text = html.replace(/<[^>]+>/g, ' ');
     await transporter.sendMail({
       from: getFromAddress(settings),
       to: recipients,
-      subject: `Dienstplan ${month}/${year}`,
-      text: `Im Anhang befindet sich der aktuelle Dienstplan. ${link}`,
-      html: `<p>Im Anhang befindet sich der aktuelle Dienstplan.<br>` +
-            `<a href="${link}">Dienstplan online ansehen</a></p>`,
+      subject,
+      text,
+      html,
       attachments: [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }]
     });
   } catch (err) {

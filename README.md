@@ -48,7 +48,7 @@ Any errors during mail delivery are written to `logs/error.log` for troubleshoot
 
 ### Mail Templates
 
-Invitation, password reset and availability request mails are based on templates
+Invitation, password reset, monthly plan and availability request mails are based on templates
 stored in the database. Administrators can edit the subject and HTML body for
 each type under the `/admin/mail-templates` page. The availability request
 template is used when a plan administrator sends a "Verfügbarkeit anfragen"

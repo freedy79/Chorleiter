@@ -117,5 +117,34 @@
         <button mat-raised-button color="primary" type="button" (click)="save('piece-change')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="Dienstplan">
+      <mat-form-field appearance="fill">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="monthlySubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="monthlyHtmlMode"
+            (change)="toggleMonthlyHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <div [hidden]="monthlyHtmlMode" #monthlyEditor class="quill-editor"></div>
+        <textarea
+          *ngIf="monthlyHtmlMode"
+          class="html-editor"
+          formControlName="monthlyBody"
+        ></textarea>
+        <p class="hint">
+          Folgende Platzhalter werden ersetzt: {{'{{month}}'}}, {{'{{year}}'}}, {{'{{choir}}'}}, {{'{{link}}'}}, {{'{{date}}'}}
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('monthly-plan')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('monthly-plan')">Speichern</button>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </form>
