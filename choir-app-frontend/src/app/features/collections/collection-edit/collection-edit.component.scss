@@ -3,6 +3,12 @@
     margin: 0 auto;
 }
 
+.header-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
 .edit-form {
     display: flex;
     flex-direction: column;
