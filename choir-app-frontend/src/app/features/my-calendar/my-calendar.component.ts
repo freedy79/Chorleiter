@@ -71,9 +71,14 @@ export class MyCalendarComponent implements OnInit {
         this.auth.currentUser$.subscribe((u) => {
             this.currentUserId = u?.id || null;
             if (this.currentUserId) {
+                const year = this.selectedDate.getFullYear();
+                const month = this.selectedDate.getMonth() + 1;
+                this.loadPlanEntriesForMonth(year, month);
+
+                const next = new Date(year, month, 1);
                 this.loadPlanEntriesForMonth(
-                    this.selectedDate.getFullYear(),
-                    this.selectedDate.getMonth() + 1
+                    next.getFullYear(),
+                    next.getMonth() + 1
                 );
             }
         });
