@@ -1,5 +1,5 @@
 <div class="form-container">
-  <app-page-header [title]="pageTitle">
+  <div class="header-actions">
     <button
       *ngIf="isEditMode && isAdmin"
       mat-stroked-button
@@ -8,7 +8,7 @@
       <mat-icon>upload_file</mat-icon>
       Import aus CSV
     </button>
-  </app-page-header>
+  </div>
   <p class="subtitle">{{ pageSubtitle }}</p>
 
   <!-- This is the main form, wrapping everything -->

@@ -6,6 +6,12 @@
   overflow: hidden;
 }
 
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
 .drawer-container {
   height: 80vh;
 }

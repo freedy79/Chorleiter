@@ -10,7 +10,6 @@ import { Collection } from '@core/models/collection';
 import { forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
-import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
 
@@ -20,8 +19,7 @@ import { PaginatorService } from '@core/services/paginator.service';
   imports: [
     CommonModule,
     MaterialModule,
-    RouterLink,
-    PageHeaderComponent
+    RouterLink
   ],
   templateUrl: './collection-list.component.html',
   styleUrls: ['./collection-list.component.scss']
