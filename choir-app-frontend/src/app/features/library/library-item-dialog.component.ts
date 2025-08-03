@@ -23,7 +23,6 @@ export class LibraryItemDialogComponent {
   ) {
     this.collections$ = data.collections$;
     this.form = this.fb.group({
-      pieceId: [null, Validators.required],
       collectionId: [null, Validators.required],
       copies: [1, [Validators.required, Validators.min(1)]],
       isBorrowed: [false]

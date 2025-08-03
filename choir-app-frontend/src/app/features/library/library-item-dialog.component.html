@@ -1,4 +1,4 @@
-<h1 mat-dialog-title>Stück hinzufügen</h1>
+<h1 mat-dialog-title>Sammlung hinzufügen</h1>
 <div mat-dialog-content>
   <form [formGroup]="form" class="add-form">
     <mat-form-field>
@@ -8,10 +8,6 @@
           {{ c.title }}
         </mat-option>
       </mat-select>
-    </mat-form-field>
-    <mat-form-field>
-      <mat-label>Stück ID</mat-label>
-      <input matInput type="number" formControlName="pieceId" />
     </mat-form-field>
     <mat-form-field>
       <mat-label>Exemplare</mat-label>
