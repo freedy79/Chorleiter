@@ -19,7 +19,7 @@ const controller = require('../src/controllers/library.controller');
       send(data) { this.data = data; }
     };
 
-    await controller.create({ body: { pieceId: piece.id, collectionId: collection.id, copies: 2, isBorrowed: true } }, res);
+    await controller.create({ body: { collectionId: collection.id, copies: 2, isBorrowed: true } }, res);
     assert.strictEqual(res.statusCode, 201);
     assert.strictEqual(res.data.collectionId, collection.id);
     assert.strictEqual(res.data.copies, 2);
@@ -33,6 +33,8 @@ const controller = require('../src/controllers/library.controller');
     assert.strictEqual(listRes.statusCode, 200);
     assert.strictEqual(listRes.data.length, 1);
     assert.strictEqual(listRes.data[0].collection.id, collection.id);
+    assert.strictEqual(listRes.data[0].collection.pieces.length, 1);
+    assert.strictEqual(listRes.data[0].collection.pieces[0].id, piece.id);
 
     console.log('library.controller tests passed');
     await db.sequelize.close();

@@ -4,12 +4,15 @@ const LibraryItem = db.library_item;
 const Piece = db.piece;
 const Collection = db.collection;
 
-// List all library items with piece details
+// List all library items with collection details
 exports.findAll = async (req, res) => {
   const items = await LibraryItem.findAll({
     include: [
-      { model: Piece, as: 'piece' },
-      { model: Collection, as: 'collection' }
+      {
+        model: Collection,
+        as: 'collection',
+        include: [{ model: Piece, through: { attributes: ['numberInCollection'] } }]
+      }
     ]
   });
   res.status(200).send(items);
@@ -17,19 +20,12 @@ exports.findAll = async (req, res) => {
 
 // Create a library item referencing a collection
 exports.create = async (req, res) => {
-  const { pieceId, collectionId, copies = 1, isBorrowed = false } = req.body;
-
-  const piece = await Piece.findByPk(pieceId);
-  if (!piece) return res.status(404).send({ message: 'Piece not found.' });
+  const { collectionId, copies = 1, isBorrowed = false } = req.body;
 
   const collection = await Collection.findByPk(collectionId);
   if (!collection) return res.status(404).send({ message: 'Collection not found.' });
 
-  const hasPiece = await collection.hasPiece(piece);
-  if (!hasPiece) return res.status(400).send({ message: 'Piece not part of collection.' });
-
   const item = await LibraryItem.create({
-    pieceId,
     collectionId,
     copies,
     status: isBorrowed ? 'borrowed' : 'available'
@@ -38,7 +34,7 @@ exports.create = async (req, res) => {
   res.status(201).send(item);
 };
 
-// Import library items from CSV (pieceId;copies)
+// Import library items from CSV (collectionId;copies)
 exports.importCsv = async (req, res) => {
   if (!req.file) return res.status(400).send({ message: 'No CSV file uploaded.' });
 
@@ -46,10 +42,10 @@ exports.importCsv = async (req, res) => {
   const parser = parse(fileContent, { delimiter: ';', columns: header => header.map(h => h.trim().toLowerCase()), skip_empty_lines: true, trim: true });
 
   for await (const record of parser) {
-    const pieceId = parseInt(record.pieceid || record.piece_id || record.id);
-    if (!pieceId) continue;
+    const collectionId = parseInt(record.collectionid || record.collection_id || record.id);
+    if (!collectionId) continue;
     const copies = record.exemplare ? parseInt(record.exemplare) : record.copies ? parseInt(record.copies) : 1;
-    await LibraryItem.create({ pieceId, copies });
+    await LibraryItem.create({ collectionId, copies });
   }
 
   res.status(200).send({ message: 'Import complete.' });

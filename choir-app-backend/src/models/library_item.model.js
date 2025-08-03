@@ -1,9 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
   const LibraryItem = sequelize.define('library_item', {
-    pieceId: {
-      type: DataTypes.INTEGER,
-      allowNull: false
-    },
     collectionId: {
       type: DataTypes.INTEGER,
       allowNull: true

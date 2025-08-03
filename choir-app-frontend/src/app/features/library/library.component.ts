@@ -30,7 +30,6 @@ export class LibraryComponent implements OnInit {
     this.collections$ = this.api.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
     this.form = this.fb.group({
-      pieceId: [null, Validators.required],
       collectionId: [null, Validators.required],
       copies: [1, [Validators.required, Validators.min(1)]],
       isBorrowed: [false]
