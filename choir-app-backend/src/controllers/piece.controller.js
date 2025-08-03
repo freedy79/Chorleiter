@@ -75,7 +75,8 @@ exports.findAll = async (req, res) => {
             where,
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
-                { model: Category, as: 'category', attributes: ['id', 'name'] }
+                { model: Category, as: 'category', attributes: ['id', 'name'] },
+                { model: db.piece_link, as: 'links' }
             ],
             order: [['title', 'ASC']]
         });
@@ -93,7 +94,8 @@ exports.findOne = async (req, res) => {
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
-                { model: Author, as: 'author', attributes: ['id', 'name'] }
+                { model: Author, as: 'author', attributes: ['id', 'name'] },
+                { model: db.piece_link, as: 'links' }
             ]
         });
 
@@ -134,7 +136,16 @@ exports.update = async (req, res) => {
             return res.status(202).send({ message: 'Change proposal created.' });
     }
 
-    const num = await base.service.update(id, req.body);
+    const { links, ...pieceData } = req.body;
+    const num = await base.service.update(id, pieceData);
+
+    if (links) {
+        await db.piece_link.destroy({ where: { pieceId: id } });
+        if (links.length > 0) {
+            const linkObjects = links.map(link => ({ ...link, pieceId: id }));
+            await db.piece_link.bulkCreate(linkObjects);
+        }
+    }
 
     if (num == 1) {
         res.send({ message: "Piece was updated successfully." });
