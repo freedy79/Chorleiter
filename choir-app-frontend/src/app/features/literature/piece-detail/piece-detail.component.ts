@@ -6,11 +6,13 @@ import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { ApiService } from '@core/services/api.service';
 import { Piece, PieceNote } from '@core/models/piece';
+import { PieceLink } from '@core/models/piece-link';
 import { AuthService } from '@core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-piece-detail',
@@ -32,6 +34,8 @@ export class PieceDetailComponent implements OnInit {
   userId: number | null = null;
   isAdmin = false;
   pieceImage: string | null = null;
+  fileLinks: PieceLink[] = [];
+  externalLinks: PieceLink[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -50,12 +54,15 @@ export class PieceDetailComponent implements OnInit {
 
   private loadPiece(id: number): void {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
+      if (!p) return;
       this.piece = p;
       if (p.imageIdentifier) {
         this.apiService.getPieceImage(p.id).subscribe(img => this.pieceImage = img);
       } else {
         this.pieceImage = null;
       }
+      this.fileLinks = p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || [];
+      this.externalLinks = p.links?.filter(l => l.type === 'EXTERNAL') || [];
     });
   }
 
@@ -123,5 +130,14 @@ export class PieceDetailComponent implements OnInit {
         this.loadPiece(this.piece!.id);
       }
     });
+  }
+
+  getLinkUrl(link: PieceLink): string {
+    if (/^https?:\/\//i.test(link.url)) {
+      return link.url;
+    }
+    const base = environment.baseUrl.replace(/\/$/, '');
+    const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
+    return `${base}${path}`;
   }
 }

@@ -16,16 +16,24 @@
       </li>
     </ul>
   </div>
-  <div *ngIf="pieceImage || piece.links?.length">
+  <div *ngIf="pieceImage || fileLinks.length || externalLinks.length">
     <div *ngIf="pieceImage" class="sheet-image">
       <h3>Notenbild</h3>
       <img [src]="pieceImage" alt="Notenbild" />
     </div>
-    <div *ngIf="piece.links?.length">
+    <div *ngIf="fileLinks.length">
+      <h3>Dateien</h3>
+      <ul>
+        <li *ngFor="let link of fileLinks">
+          <a [href]="getLinkUrl(link)" target="_blank" rel="noopener">{{ link.description }}</a>
+        </li>
+      </ul>
+    </div>
+    <div *ngIf="externalLinks.length">
       <h3>Links</h3>
       <ul>
-        <li *ngFor="let link of piece.links">
-          <a [href]="link.url" target="_blank" rel="noopener">{{ link.description }}</a>
+        <li *ngFor="let link of externalLinks">
+          <a [href]="getLinkUrl(link)" target="_blank" rel="noopener">{{ link.description }}</a>
         </li>
       </ul>
     </div>
