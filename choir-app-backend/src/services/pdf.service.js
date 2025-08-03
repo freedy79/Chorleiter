@@ -8,6 +8,37 @@ function textWidth(text, size) {
   return text.length * size * 0.6;
 }
 
+function wrapText(text, size, width) {
+  if (!text) return [''];
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = '';
+  for (const word of words) {
+    const candidate = current ? current + ' ' + word : word;
+    if (textWidth(candidate, size) <= width) {
+      current = candidate;
+    } else {
+      if (current) lines.push(current);
+      if (textWidth(word, size) <= width) {
+        current = word;
+      } else {
+        let part = '';
+        for (const ch of word) {
+          if (textWidth(part + ch, size) <= width) {
+            part += ch;
+          } else {
+            if (part) lines.push(part);
+            part = ch;
+          }
+        }
+        current = part;
+      }
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length ? lines : [''];
+}
+
 function monthlyPlanPdf(plan) {
   const left = 50;
   const right = 545;
@@ -50,13 +81,29 @@ function monthlyPlanPdf(plan) {
   y -= 20;
   lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
 
-  // Table rows
+  // Table rows with wrapping
+  const colWidths = [
+    col2 - left,
+    col3 - col2,
+    col4 - col3,
+    right - col4
+  ];
+
   for (const e of plan.entries) {
-    lines.push(cellCenter(left, col2, isoDateString(new Date(e.date)), y));
-    lines.push(cellCenter(col2, col3, e.director?.name || '', y));
-    lines.push(cellCenter(col3, col4, e.organist?.name || '', y));
-    lines.push(cellCenter(col4, right, e.notes || '', y));
-    y -= 20;
+    const cells = [
+      wrapText(isoDateString(new Date(e.date)), 12, colWidths[0]),
+      wrapText(e.director?.name || '', 12, colWidths[1]),
+      wrapText(e.organist?.name || '', 12, colWidths[2]),
+      wrapText(e.notes || '', 12, colWidths[3])
+    ];
+    const count = Math.max(...cells.map(c => c.length));
+    for (let i = 0; i < count; i++) {
+      lines.push(cellCenter(left, col2, cells[0][i] || '', y));
+      lines.push(cellCenter(col2, col3, cells[1][i] || '', y));
+      lines.push(cellCenter(col3, col4, cells[2][i] || '', y));
+      lines.push(cellCenter(col4, right, cells[3][i] || '', y));
+      y -= 20;
+    }
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
   }
 
