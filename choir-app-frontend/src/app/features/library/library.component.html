@@ -19,6 +19,23 @@
 <div *ngIf="isAdmin" class="import-section">
   <input type="file" (change)="onFileChange($event)" />
   <button mat-raised-button color="primary" (click)="upload()" [disabled]="!selectedFile">CSV importieren</button>
+
+  <form [formGroup]="form" class="add-form">
+    <mat-form-field>
+      <mat-label>Sammlung ID</mat-label>
+      <input matInput type="number" formControlName="collectionId">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Stück ID</mat-label>
+      <input matInput type="number" formControlName="pieceId">
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Exemplare</mat-label>
+      <input matInput type="number" formControlName="copies">
+    </mat-form-field>
+    <mat-checkbox formControlName="isBorrowed">Entliehen</mat-checkbox>
+    <button mat-raised-button color="primary" (click)="add()" [disabled]="form.invalid">Hinzufügen</button>
+  </form>
 </div>
 
 <ng-container *ngIf="items$ | async as items">

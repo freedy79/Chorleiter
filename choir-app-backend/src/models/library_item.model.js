@@ -4,6 +4,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false
     },
+    collectionId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
     copies: {
       type: DataTypes.INTEGER,
       defaultValue: 1

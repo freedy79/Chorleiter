@@ -143,6 +143,9 @@ db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 // Library items referencing pieces
 db.piece.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'pieceId' });
 db.library_item.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
+// Library items referencing collections
+db.collection.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'collectionId' });
+db.library_item.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
 
 
 module.exports = db;
