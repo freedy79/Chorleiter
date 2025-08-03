@@ -18,6 +18,7 @@ import { Choir } from '@core/models/choir';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
+import { LibraryItem } from '../models/library-item';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
@@ -44,6 +45,7 @@ import { AvailabilityService } from './availability.service';
 import { SearchService } from './search.service';
 import { MonthlyPlanService } from './monthly-plan.service';
 import { PostService } from './post.service';
+import { LibraryService } from './library.service';
 
 @Injectable({
   providedIn: 'root'
@@ -69,7 +71,8 @@ export class ApiService {
               private availabilityService: AvailabilityService,
               private searchService: SearchService,
               private monthlyPlanService: MonthlyPlanService,
-              private postService: PostService) {
+              private postService: PostService,
+              private libraryService: LibraryService) {
 
   }
 
@@ -477,6 +480,19 @@ export class ApiService {
 
   getRepertoirePiece(id: number): Observable<Piece> {
     return this.pieceService.getRepertoirePiece(id);
+  }
+
+  // --- Library ---
+  getLibraryItems(): Observable<LibraryItem[]> {
+    return this.libraryService.getLibraryItems();
+  }
+
+  importLibraryCsv(file: File): Observable<any> {
+    return this.libraryService.importCsv(file);
+  }
+
+  borrowLibraryItem(id: number): Observable<any> {
+    return this.libraryService.borrowItem(id);
   }
 
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {

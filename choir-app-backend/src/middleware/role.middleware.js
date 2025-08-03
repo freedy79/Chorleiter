@@ -40,4 +40,11 @@ async function requireChoirAdmin(req, res, next) {
     }
 }
 
-module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin };
+function requireDirector(req, res, next) {
+    if (['director', 'choir_admin', 'admin'].includes(req.userRole)) {
+        return next();
+    }
+    return res.status(403).send({ message: 'Require Director Role!' });
+}
+
+module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector };

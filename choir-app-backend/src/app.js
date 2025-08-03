@@ -70,6 +70,7 @@ const planEntryRoutes = require("./routes/planEntry.routes");
 const availabilityRoutes = require("./routes/availability.routes");
 const clientErrorRoutes = require("./routes/client-error.routes");
 const postRoutes = require("./routes/post.routes");
+const libraryRoutes = require("./routes/library.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -98,6 +99,7 @@ app.use("/api/plan-entries", planEntryRoutes);
 app.use("/api/availabilities", availabilityRoutes);
 app.use("/api/client-errors", clientErrorRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/library", libraryRoutes);
 
 app.use((err, req, res, next) => {
     logger.error(
