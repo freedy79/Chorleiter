@@ -13,7 +13,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostDialogComponent, ConfirmDialogComponent],
+  imports: [CommonModule, RouterModule, MaterialModule],
   templateUrl: './post-list.component.html'
 })
 export class PostListComponent implements OnInit {

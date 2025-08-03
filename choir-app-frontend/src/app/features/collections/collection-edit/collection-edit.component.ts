@@ -50,8 +50,6 @@ interface SelectedPieceWithNumber {
         MaterialModule,
         MatAutocompleteModule,
         RouterModule,
-        PieceDialogComponent,
-        ImportDialogComponent,
     ],
     templateUrl: './collection-edit.component.html',
     styleUrls: ['./collection-edit.component.scss'],
