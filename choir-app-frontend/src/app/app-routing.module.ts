@@ -130,6 +130,12 @@ export const routes: Routes = [
                 data: { title: 'Statistik' }
             },
             {
+                path: 'library',
+                loadComponent: () => import('./features/library/library.component').then(m => m.LibraryComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Bibliothek' }
+            },
+            {
                 path: 'pieces/:id',
                 component: PieceDetailComponent,
                 canActivate: [AuthGuard],

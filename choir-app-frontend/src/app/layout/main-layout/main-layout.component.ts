@@ -246,6 +246,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
         visibleSubject: this.isLoggedIn$,
       },
       {
+        displayName: 'Bibliothek',
+        route: '/library',
+        visibleSubject: this.isLoggedIn$,
+      },
+      {
         displayName: 'Administration',
         //svgIconName: 's-settings',
         visibleSubject: this.isAdmin$,

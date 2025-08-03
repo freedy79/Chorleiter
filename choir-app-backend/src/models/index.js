@@ -40,6 +40,7 @@ db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 db.mail_template = require("./mail_template.model.js")(sequelize, Sequelize);
 db.system_setting = require("./system_setting.model.js")(sequelize, Sequelize);
 db.post = require("./post.model.js")(sequelize, Sequelize);
+db.library_item = require("./library_item.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -138,6 +139,10 @@ db.choir.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
+
+// Library items referencing pieces
+db.piece.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'pieceId' });
+db.library_item.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
 
 module.exports = db;
