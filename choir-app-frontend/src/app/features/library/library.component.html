@@ -22,8 +22,12 @@
 
   <form [formGroup]="form" class="add-form">
     <mat-form-field>
-      <mat-label>Sammlung ID</mat-label>
-      <input matInput type="number" formControlName="collectionId">
+      <mat-label>Sammlung</mat-label>
+      <mat-select formControlName="collectionId">
+        <mat-option *ngFor="let c of collections$ | async" [value]="c.id">
+          {{ c.title }}
+        </mat-option>
+      </mat-select>
     </mat-form-field>
     <mat-form-field>
       <mat-label>Stück ID</mat-label>
