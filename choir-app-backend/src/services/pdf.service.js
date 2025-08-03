@@ -119,7 +119,7 @@ function monthlyPlanPdf(plan) {
   objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
   objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); //2
   objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>'); //3
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica >>'); //4
+  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'); //4
   objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); //5
   const offsets = [];
   let pdf = '%PDF-1.4\n';
