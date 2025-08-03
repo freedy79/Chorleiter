@@ -46,8 +46,8 @@
   </ng-container>
 
   <!-- Zeigen Sie das Log-Fenster an, sobald der Import gestartet wurde -->
-  <div *ngIf="isImporting" class="log-area">
-    <h3>Import läuft...</h3>
+  <div *ngIf="isImporting || importLogs.length > 0" class="log-area">
+    <h3>{{ isImporting ? 'Import läuft...' : 'Importprotokoll' }}</h3>
     <textarea readonly class="log-textarea">{{ importLogs.join('\n') }}</textarea>
   </div>
 </div>

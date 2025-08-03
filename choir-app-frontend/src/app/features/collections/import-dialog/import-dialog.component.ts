@@ -53,7 +53,12 @@ export class ImportDialogComponent implements OnDestroy {
         this.isLoading = false;
       },
       error: (err) => {
-        this.snackBar.open(`Fehler beim Laden der Vorschau: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen');
+        const detail = err.error?.detail ? ` - ${err.error.detail}` : '';
+        const hint = err.error?.hint ? ` (${err.error.hint})` : '';
+        this.snackBar.open(
+          `Fehler beim Laden der Vorschau: ${err.error?.message || 'Unbekannter Fehler'}${detail}${hint}`,
+          'Schließen'
+        );
         this.isLoading = false;
       }
     });
@@ -72,7 +77,12 @@ export class ImportDialogComponent implements OnDestroy {
         this.pollStatus(response.jobId);
       },
       error: (err) => {
-        this.snackBar.open(`Import konnte nicht gestartet werden: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen');
+        const detail = err.error?.detail ? ` - ${err.error.detail}` : '';
+        const hint = err.error?.hint ? ` (${err.error.hint})` : '';
+        this.snackBar.open(
+          `Import konnte nicht gestartet werden: ${err.error?.message || 'Unbekannter Fehler'}${detail}${hint}`,
+          'Schließen'
+        );
         this.isLoading = false;
         this.isImporting = false;
       }
@@ -114,6 +124,9 @@ export class ImportDialogComponent implements OnDestroy {
           this.snackBar.open(finalMessage, 'OK', { duration: 7000 });
           this.dialogRef.close(true); // Schließen und Erfolg signalisieren
         } else if (job.status === 'failed') {
+          if (job.error) {
+            this.importLogs = [...this.importLogs, `ERROR: ${job.error}`];
+          }
           this.snackBar.open(`Import fehlgeschlagen: ${job.error}`, 'Schließen');
           this.isImporting = false;
         }

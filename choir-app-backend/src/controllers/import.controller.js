@@ -163,7 +163,13 @@ exports.startImportCsvToCollection = async (req, res) => {
     const records = [];
     try {
         for await (const record of parser) { records.push(record); }
-    } catch (e) { return res.status(400).send({ message: 'Could not parse CSV file.' }); }
+    } catch (e) {
+        return res.status(400).send({
+            message: 'Could not parse CSV file.',
+            detail: e.message,
+            hint: "Check that the file uses ';' as separator and contains headers: nummer; titel; komponist; kategorie."
+        });
+    }
 
     // Vorschau-Modus bleibt synchron
     if (req.query.mode === 'preview') {
