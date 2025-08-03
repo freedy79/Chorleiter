@@ -6,12 +6,13 @@ import { LibraryItem } from '@core/models/library-item';
 import { Collection } from '@core/models/collection';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { LibraryItemDialogComponent } from './library-item-dialog.component';
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, MaterialModule, ReactiveFormsModule],
+  imports: [CommonModule, MaterialModule],
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
@@ -21,20 +22,13 @@ export class LibraryComponent implements OnInit {
   selectedFile: File | null = null;
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt'];
-  form!: FormGroup;
-
-  constructor(private api: ApiService, private auth: AuthService, private fb: FormBuilder) {}
+  
+  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.load();
     this.collections$ = this.api.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
-    this.form = this.fb.group({
-      pieceId: [null, Validators.required],
-      collectionId: [null, Validators.required],
-      copies: [1, [Validators.required, Validators.min(1)]],
-      isBorrowed: [false]
-    });
   }
 
   load(): void {
@@ -54,12 +48,12 @@ export class LibraryComponent implements OnInit {
     }
   }
 
-  add(): void {
-    if (this.form.valid) {
-      this.api.addLibraryItem(this.form.value).subscribe(() => {
-        this.load();
-        this.form.reset({ copies: 1, isBorrowed: false });
-      });
-    }
+  openAddDialog(): void {
+    const ref = this.dialog.open(LibraryItemDialogComponent, { data: { collections$: this.collections$ } });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.addLibraryItem(result).subscribe(() => this.load());
+      }
+    });
   }
 }
