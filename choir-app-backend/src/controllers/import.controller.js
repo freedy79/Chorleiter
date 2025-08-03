@@ -4,8 +4,48 @@ const crypto = require('crypto');
 const jobs = require('../services/import-jobs.service');
 const { isoDateString } = require('../utils/date.utils');
 
-const findOrCreate = async (model, where, defaults, jobId, entityName) => {
-    const [instance, created] = await model.findOrCreate({ where, defaults });
+// Mapping for CSV header names to canonical field keys
+const FIELD_MAPPINGS = {
+    nummer: 'number',
+    nr: 'number',
+    number: 'number',
+    titel: 'title',
+    title: 'title',
+    name: 'title',
+    komponist: 'composer',
+    composer: 'composer',
+    dichter: 'author',
+    author: 'author',
+    kategorie: 'category',
+    rubrik: 'category',
+    category: 'category',
+    besetzung: 'voicing',
+    voicing: 'voicing',
+    textquelle: 'lyricsSource',
+    tonart: 'key',
+    key: 'key'
+};
+
+const findOrCreate = async (model, where, defaults, jobId, entityName, options = {}) => {
+    const { ignoreCase = false } = options;
+    let instance;
+    let created = false;
+
+    if (ignoreCase && where.name) {
+        instance = await model.findOne({
+            where: db.Sequelize.where(
+                db.Sequelize.fn('lower', db.Sequelize.col('name')),
+                where.name.toLowerCase()
+            )
+        });
+        if (!instance) {
+            instance = await model.create(defaults);
+            created = true;
+        }
+    } else {
+        [instance, created] = await model.findOrCreate({ where, defaults });
+    }
+
     if (created) {
         jobs.updateJobLog(jobId, `${entityName} "${instance.name}" created.`);
     }
@@ -20,21 +60,33 @@ const processImport = async (job, collection, records) => {
 
     for (const [index, record] of records.entries()) {
         try {
-            const number = record.nummer || record.number;
-            const title = record.titel || record.title;
-            const composerName = record.komponist || record.composer;
-            const categoryName = record.kategorie || record.rubrik || record.category;
+            const number = record.number;
+            const title = record.title;
+            const composerName = record.composer;
+            const categoryName = record.category;
+            const authorName = record.author;
 
             if (!number || !title || !composerName) {
                 throw new Error(`Skipping row due to missing data: ${JSON.stringify(record)}`);
             }
-            
+
             jobs.updateJobLog(job.id, `Processing row ${index + 1}: "${title}"...`);
 
             const composer = await findOrCreate(db.composer, { name: composerName }, { name: composerName }, job.id, 'Composer');
             let category = null;
             if (categoryName) {
-                category = await findOrCreate(db.category, { name: categoryName }, { name: categoryName }, job.id, 'Category');
+                category = await findOrCreate(
+                    db.category,
+                    { name: categoryName },
+                    { name: categoryName },
+                    job.id,
+                    'Category',
+                    { ignoreCase: true }
+                );
+            }
+            let author = null;
+            if (authorName) {
+                author = await findOrCreate(db.author, { name: authorName }, { name: authorName }, job.id, 'Author');
             }
 
             const [piece, created] = await db.piece.findOrCreate({
@@ -43,7 +95,10 @@ const processImport = async (job, collection, records) => {
                     title: title,
                     composerId: composer.id,
                     categoryId: category ? category.id : null,
-                    voicing: record.voicing || 'SATB'
+                    authorId: author ? author.id : null,
+                    voicing: record.voicing || 'SATB',
+                    key: record.key || null,
+                    lyricsSource: record.lyricsSource || null
                 }
             });
 
@@ -52,10 +107,10 @@ const processImport = async (job, collection, records) => {
             } else {
                 jobs.updateJobLog(job.id, `Piece "${piece.title}" already exists.`);
             }
-            
+
             await collection.addPiece(piece, { through: { numberInCollection: number.toString() } });
             jobs.updateJobLog(job.id, `-> Linked to collection with number ${number}.`);
-            
+
             addedCount++;
         } catch (rowError) {
             const errorMessage = `Error on row ${index + 1}: ${rowError.message}`;
@@ -82,7 +137,15 @@ exports.startImportCsvToCollection = async (req, res) => {
     if (!collection) return res.status(404).send({ message: 'Collection not found.' });
 
     const fileContent = req.file.buffer.toString('utf-8');
-    const parser = parse(fileContent, { delimiter: ';', columns: header => header.map(h => h.trim().toLowerCase()), skip_empty_lines: true, trim: true });
+    const parser = parse(fileContent, {
+        delimiter: ';',
+        columns: header => header.map(h => {
+            const key = h.trim().toLowerCase();
+            return FIELD_MAPPINGS[key] || key;
+        }),
+        skip_empty_lines: true,
+        trim: true
+    });
 
     const records = [];
     try {
