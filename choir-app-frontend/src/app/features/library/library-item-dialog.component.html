@@ -1,0 +1,26 @@
+<h1 mat-dialog-title>Stück hinzufügen</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form" class="add-form">
+    <mat-form-field>
+      <mat-label>Sammlung</mat-label>
+      <mat-select formControlName="collectionId">
+        <mat-option *ngFor="let c of collections$ | async" [value]="c.id">
+          {{ c.title }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Stück ID</mat-label>
+      <input matInput type="number" formControlName="pieceId" />
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Exemplare</mat-label>
+      <input matInput type="number" formControlName="copies" />
+    </mat-form-field>
+    <mat-checkbox formControlName="isBorrowed">Entliehen</mat-checkbox>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+</div>
