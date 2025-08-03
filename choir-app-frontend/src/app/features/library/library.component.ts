@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { LibraryItem } from '@core/models/library-item';
+import { Collection } from '@core/models/collection';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -16,6 +17,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 })
 export class LibraryComponent implements OnInit {
   items$!: Observable<LibraryItem[]>;
+  collections$!: Observable<Collection[]>;
   selectedFile: File | null = null;
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt'];
@@ -25,6 +27,7 @@ export class LibraryComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.collections$ = this.api.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
     this.form = this.fb.group({
       pieceId: [null, Validators.required],
