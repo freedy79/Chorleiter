@@ -142,8 +142,11 @@
             <ng-container matColumnDef="title">
               <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </th>
               <td mat-cell *matCellDef="let link">
-                <div>{{ link.piece.title }}</div>
-                <div class="composer" *ngIf="link.piece.composer?.name">{{ link.piece.composer.name }}</div>
+                <div class="piece-title">{{ link.piece.title }}</div>
+                <div
+                  class="piece-composer"
+                  *ngIf="link.piece.composer?.name"
+                >{{ link.piece.composer.name }}</div>
               </td>
             </ng-container>
 
