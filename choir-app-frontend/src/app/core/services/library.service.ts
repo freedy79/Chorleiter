@@ -20,6 +20,10 @@ export class LibraryService {
     return this.http.post(`${this.apiUrl}/import`, formData);
   }
 
+  addItem(data: { pieceId: number; collectionId: number; copies: number; isBorrowed?: boolean }): Observable<LibraryItem> {
+    return this.http.post<LibraryItem>(this.apiUrl, data);
+  }
+
   borrowItem(id: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/${id}/borrow`, {});
   }

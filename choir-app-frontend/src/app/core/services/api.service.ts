@@ -491,6 +491,10 @@ export class ApiService {
     return this.libraryService.importCsv(file);
   }
 
+  addLibraryItem(data: { pieceId: number; collectionId: number; copies: number; isBorrowed?: boolean }): Observable<LibraryItem> {
+    return this.libraryService.addItem(data);
+  }
+
   borrowLibraryItem(id: number): Observable<any> {
     return this.libraryService.borrowItem(id);
   }
