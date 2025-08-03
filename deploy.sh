@@ -8,6 +8,19 @@ REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
 BACKEND_DEST="/usr/local/lsws/ChorStatistik/backend"
 FRONTEND_DEST="/usr/local/lsws/ChorStatistik/html"
 
+# Ensure local repository is up to date
+echo "Checking git status..."
+git fetch >/dev/null 2>&1 || true
+STATUS=$(git status -uno)
+if [[ -n $(git status --porcelain) || "$STATUS" == *"behind"* ]]; then
+    read -r -p "Repository is not up to date. Pull latest changes before deploying? (y/N) " update_repo
+    if [[ $update_repo =~ ^[Yy]$ ]]; then
+        git pull --rebase
+    else
+        echo "Continuing with current repository state."
+    fi
+fi
+
 # Build Angular frontend
 echo "Building Angular frontend..."
 if ! npm --prefix choir-app-frontend run build; then

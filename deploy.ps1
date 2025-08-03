@@ -7,6 +7,20 @@ $Remote = "$RemoteUser@$RemoteHost"
 $BackendDest = "/usr/local/lsws/ChorStatistik/backend"
 $FrontendDest = "/usr/local/lsws/ChorStatistik/html"
 
+# Ensure local repository is up to date
+Write-Host "Checking git status..."
+git fetch | Out-Null
+$status = git status -uno
+$changes = git status --porcelain
+if ($changes -or $status -match 'behind') {
+    $update = Read-Host "Repository is not up to date. Pull latest changes before deploying? (y/N)"
+    if ($update -match '^[Yy]') {
+        git pull --rebase
+    } else {
+        Write-Host "Continuing with current repository state."
+    }
+}
+
 # Build Angular frontend
 Write-Host "Building Angular frontend..."
 npm --prefix choir-app-frontend run build
