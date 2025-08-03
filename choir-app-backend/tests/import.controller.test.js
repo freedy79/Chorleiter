@@ -5,30 +5,57 @@ process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
 const controller = require('../src/controllers/import.controller');
+const jobs = require('../src/services/import-jobs.service');
 
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
 
-    const choir = await db.choir.create({ name: 'Test Choir' });
-    const user = await db.user.create({ email: 't@example.com', role: 'USER' });
+    const collection = await db.collection.create({ title: 'Coll', prefix: 'C' });
     const composer = await db.composer.create({ name: 'Composer' });
-    const piece = await db.piece.create({ title: 'Piece', composerId: composer.id });
-    await choir.addPiece(piece); // create choir_repertoire link
-    const collection = await db.collection.create({ title: 'Coll', prefix: 'X' });
-    await piece.addCollection(collection, { through: { numberInCollection: '1' } });
+    const existing = await db.piece.create({ title: 'Existing', composerId: composer.id });
+    await collection.addPiece(existing, { through: { numberInCollection: '10' } });
 
     const records = [
+      { title: 'Piece A', composer: 'Composer' },
+      { title: 'Piece B', composer: 'Composer' }
+    ];
+    const job = jobs.createJob('job1');
+    job.status = 'running';
+    await controller._test.processImport(job, collection, records);
+
+    const links = await db.collection_piece.findAll({
+      where: { collectionId: collection.id },
+      order: [['numberInCollection', 'ASC']]
+    });
+    assert.deepStrictEqual(
+      links.map(l => l.numberInCollection),
+      ['10', '11', '12']
+    );
+
+    console.log('import.controller auto numbering test passed');
+
+    await db.sequelize.sync({ force: true });
+
+    const choir = await db.choir.create({ name: 'Test Choir' });
+    const user = await db.user.create({ email: 't@example.com', role: 'USER' });
+    const comp2 = await db.composer.create({ name: 'Composer' });
+    const piece = await db.piece.create({ title: 'Piece', composerId: comp2.id });
+    await choir.addPiece(piece); // create choir_repertoire link
+    const collection2 = await db.collection.create({ title: 'Coll', prefix: 'X' });
+    await piece.addCollection(collection2, { through: { numberInCollection: '1' } });
+
+    const records2 = [
       { reference: 'X1', date: '01.01.2024' },
       { reference: 'X1', date: '01.01.2024' }
     ];
-    const job = { id: 'job', logs: [], status: 'running', progress: 0, total: records.length };
-    await controller._test.processEventImport(job, 'SERVICE', records, choir.id, user.id);
+    const job2 = { id: 'job2', logs: [], status: 'running', progress: 0, total: records2.length };
+    await controller._test.processEventImport(job2, 'SERVICE', records2, choir.id, user.id);
 
     const events = await db.event.findAll();
     assert.strictEqual(events.length, 1, 'should only create one event');
-    const links = await db.event_pieces.count();
-    assert.strictEqual(links, 1, 'should only link piece once');
+    const links2 = await db.event_pieces.count();
+    assert.strictEqual(links2, 1, 'should only link piece once');
 
     const rep = await db.choir_repertoire.findOne({ where: { choirId: choir.id, pieceId: piece.id } });
     assert.strictEqual(rep.status, 'CAN_BE_SUNG', 'status should be updated');
@@ -41,3 +68,4 @@ const controller = require('../src/controllers/import.controller');
     process.exit(1);
   }
 })();
+

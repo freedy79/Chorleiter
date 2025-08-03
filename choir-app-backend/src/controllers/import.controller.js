@@ -58,16 +58,29 @@ const processImport = async (job, collection, records) => {
     let addedCount = 0;
     let errors = [];
 
+    const existingLinks = await collection.getPieces({ through: { attributes: ['numberInCollection'] } });
+    let maxNumber = existingLinks.reduce((max, piece) => {
+        const num = parseInt(piece.collection_piece.numberInCollection, 10);
+        return !isNaN(num) && num > max ? num : max;
+        }, 0);
+    let nextNumber = maxNumber + 1;
+
     for (const [index, record] of records.entries()) {
         try {
-            const number = record.number;
+            let number = record.number && record.number.toString().trim();
             const title = record.title;
             const composerName = record.composer;
             const categoryName = record.category;
             const authorName = record.author;
 
-            if (!number || !title || !composerName) {
+            if (!title || !composerName) {
                 throw new Error(`Skipping row due to missing data: ${JSON.stringify(record)}`);
+            }
+
+            if (!number) {
+                number = nextNumber.toString();
+                nextNumber++;
+                jobs.updateJobLog(job.id, `No number provided. Using ${number}.`);
             }
 
             jobs.updateJobLog(job.id, `Processing row ${index + 1}: "${title}"...`);
@@ -327,5 +340,6 @@ exports.startImportEvents = async (req, res) => {
 
 // Expose internal helpers for testing
 exports._test = {
-    processEventImport
+    processEventImport,
+    processImport
 };
