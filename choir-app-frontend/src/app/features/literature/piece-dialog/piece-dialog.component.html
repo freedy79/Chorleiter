@@ -106,8 +106,8 @@
 
           <ng-container *ngSwitchCase="'files'">
             <div class="form-section">
-              <h4>Links</h4>
-              <div formArrayName="links">
+              <h4 class="full-width">Links</h4>
+              <div formArrayName="links" class="full-width">
                 <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
                   <mat-form-field appearance="outline"><mat-label>Beschreibung</mat-label><input matInput formControlName="description"></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>URL oder Dateipfad</mat-label><input matInput formControlName="url"></mat-form-field>
@@ -115,7 +115,7 @@
                   <button mat-icon-button color="warn" (click)="removeLink(i)" type="button"><mat-icon>delete</mat-icon></button>
                 </div>
               </div>
-              <button mat-stroked-button (click)="addLink()" type="button">Link hinzufügen</button>
+              <button mat-stroked-button class="full-width" (click)="addLink()" type="button">Link hinzufügen</button>
             </div>
             <mat-divider></mat-divider>
             <div class="form-section">
