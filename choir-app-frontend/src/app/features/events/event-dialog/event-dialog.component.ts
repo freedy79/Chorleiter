@@ -195,7 +195,9 @@ export class EventDialogComponent implements OnInit {
                         reference:
                             newPiece.collections &&
                             newPiece.collections.length > 0
-                                ? `${newPiece.collections[0].prefix || ''}${
+                                ? `${newPiece.collections[0].singleEdition
+                                      ? newPiece.composer?.name || ''
+                                      : newPiece.collections[0].prefix || ''}${
                                       newPiece.collections[0].collection_piece
                                           .numberInCollection
                                   }`
@@ -227,7 +229,9 @@ export class EventDialogComponent implements OnInit {
             composerName: p.composer?.name || '',
             reference:
                 p.collections && p.collections.length > 0
-                    ? `${p.collections[0].prefix || ''}${
+                    ? `${p.collections[0].singleEdition
+                          ? p.composer?.name || ''
+                          : p.collections[0].prefix || ''}${
                           (p as any).collections[0].collection_piece
                               .numberInCollection
                       }`

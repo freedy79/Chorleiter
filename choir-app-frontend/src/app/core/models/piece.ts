@@ -14,6 +14,7 @@ export interface PieceNote {
 export interface CollectionReference {
   prefix: string;
   title?: string;
+  singleEdition?: boolean;
   collection_piece: { // The name of the through model in Sequelize
     numberInCollection: string;
   };

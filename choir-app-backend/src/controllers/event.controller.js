@@ -144,7 +144,7 @@ exports.findLast = async (req, res) => {
                     { // Binde die Sammlungsdaten an jedes Stück
                         model: Collection,
                         as: 'collections',
-                        attributes: ['prefix'], // Wir brauchen nur den Präfix
+                        attributes: ['prefix', 'singleEdition'], // Wir brauchen nur den Präfix
                         through: {
                             model: CollectionPiece,
                             as: 'collection_piece', // Stellen Sie sicher, dass dieser Alias korrekt ist
@@ -232,7 +232,7 @@ exports.findOne = async (req, res) => {
                     {
                         model: Collection,
                         as: 'collections',
-                        attributes: ['prefix'],
+                        attributes: ['prefix', 'singleEdition'],
                         through: {
                             model: CollectionPiece,
                             as: 'collection_piece',
