@@ -16,6 +16,11 @@ export interface Collection {
   title: string;
 
   /**
+   * Optional subtitle providing additional context.
+   */
+  subtitle?: string;
+
+  /**
    * The publisher of the collection (e.g., "Carus-Verlag", "Oxford University Press").
    * This is optional.
    */

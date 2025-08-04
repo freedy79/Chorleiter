@@ -14,6 +14,11 @@ const { createCollectionValidation, updateCollectionValidation } = require('../s
     res = validationResult(req2);
     assert.ok(!res.isEmpty(), 'update should fail when pieces is not array');
 
+    const req3 = { body: { title: 'A', subtitle: 123 } };
+    for (const v of createCollectionValidation) { await v.run(req3); }
+    res = validationResult(req3);
+    assert.ok(!res.isEmpty(), 'create should fail when subtitle is not string');
+
     console.log('collection.validation tests passed');
   } catch (err) {
     console.error(err);

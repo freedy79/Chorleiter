@@ -114,6 +114,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     ) {
         this.collectionForm = this.fb.group({
             title: ['', Validators.required],
+            subtitle: [''],
             publisher: [''],
             prefix: [''],
             publisherNumber: [''],
@@ -319,6 +320,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     populateForm(collection: Collection): void {
         this.collectionForm.patchValue({
             title: collection.title,
+            subtitle: collection.subtitle,
             publisher: collection.publisher,
             prefix: collection.prefix,
             publisherNumber: collection.publisherNumber,

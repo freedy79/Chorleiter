@@ -26,6 +26,11 @@
         </mat-form-field>
 
         <mat-form-field appearance="outline">
+          <mat-label>Untertitel</mat-label>
+          <input matInput formControlName="subtitle">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
           <mat-label>Verlag</mat-label>
           <input matInput [formControl]="publisherCtrl" [matAutocomplete]="pubAuto">
           <mat-autocomplete #pubAuto="matAutocomplete" (optionSelected)="onPublisherSelected($event)">

@@ -9,12 +9,12 @@ const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Collection);
 
 exports.create = async (req, res, next) => {
-    const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
+    const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        const collection = await base.service.create({ title, publisher, prefix, description, publisherNumber, singleEdition });
+        const collection = await base.service.create({ title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         if (pieces && pieces.length > 0) {
             for (const pieceInfo of pieces) {
                 await collection.addPiece(pieceInfo.pieceId, {
@@ -28,7 +28,7 @@ exports.create = async (req, res, next) => {
 
 exports.update = async (req, res, next) => {
     const id = req.params.id;
-    const { title, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
+    const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
     try {
         const collection = await db.collection.findByPk(id);
 
@@ -37,7 +37,7 @@ exports.update = async (req, res, next) => {
         if (singleEdition && pieces && pieces.length > 1) {
             return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
         }
-        await base.service.update(id, { title, publisher, prefix, description, publisherNumber, singleEdition });
+        await base.service.update(id, { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
             for (const pieceLink of pieces) {

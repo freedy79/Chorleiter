@@ -25,7 +25,7 @@ const db = require('../src/models');
     checkFields(db.composer, ['name']);
     checkFields(db.publisher, ['name']);
     checkFields(db.category, ['name']);
-    checkFields(db.collection, ['singleEdition']);
+    checkFields(db.collection, ['singleEdition', 'subtitle']);
     checkFields(db.collection_piece, ['numberInCollection']);
     checkFields(db.user_choir, ['rolesInChoir', 'registrationStatus']);
     checkFields(db.piece_change, ['data']);

@@ -2,6 +2,7 @@ const { body } = require('express-validator');
 
 exports.createCollectionValidation = [
   body('title').notEmpty().withMessage('Title is required.'),
+  body('subtitle').optional().isString(),
   body('pieces').optional().isArray().withMessage('pieces must be an array'),
   body('pieces.*.pieceId').optional().isInt().withMessage('pieceId must be an integer'),
   body('pieces.*.numberInCollection').optional().isInt().withMessage('numberInCollection must be an integer'),
@@ -10,6 +11,7 @@ exports.createCollectionValidation = [
 
 exports.updateCollectionValidation = [
   body('title').optional().notEmpty(),
+  body('subtitle').optional().isString(),
   body('pieces').optional().isArray(),
   body('pieces.*.pieceId').optional().isInt(),
   body('pieces.*.numberInCollection').optional().isInt(),
