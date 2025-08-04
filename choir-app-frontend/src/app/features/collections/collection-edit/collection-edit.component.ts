@@ -319,11 +319,14 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 });
             },
             error: (err) => {
-                let message = err.error?.message || err.message || 'Unbekannter Fehler beim Speichern.';
-                if (err.status === 400 && !err.error?.message) {
+                let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
+                if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
                     message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
                 }
-                this.snackBar.open(`Fehler: ${message}`, 'Schließen', {
+                const action = this.isEditMode ? 'Aktualisieren' : 'Erstellen';
+                const title = this.collectionForm.value.title;
+                const context = title ? ` der Sammlung '${title}'` : '';
+                this.snackBar.open(`Fehler beim ${action}${context}: ${message}`, 'Schließen', {
                     duration: 5000,
                     verticalPosition: 'top',
                 });
