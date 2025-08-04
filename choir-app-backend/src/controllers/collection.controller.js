@@ -18,16 +18,17 @@ exports.create = async (req, res, next) => {
         }
         const collection = await base.service.create({ title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         if (pieces && pieces.length > 0) {
-            const seen = new Set();
+            const seen = new Map();
             for (const pieceInfo of pieces) {
                 if (seen.has(pieceInfo.pieceId)) {
-                    return res.status(400).send({ message: `Piece ${pieceInfo.pieceId} is duplicated.` });
+                    const dupPiece = seen.get(pieceInfo.pieceId);
+                    return res.status(400).send({ message: `Piece '${dupPiece.title}' (id=${pieceInfo.pieceId}) is duplicated.` });
                 }
-                seen.add(pieceInfo.pieceId);
-                const piece = await Piece.findByPk(pieceInfo.pieceId);
+                const piece = await Piece.findByPk(pieceInfo.pieceId, { attributes: ['id', 'title'] });
                 if (!piece) {
                     return res.status(400).send({ message: `Piece with id=${pieceInfo.pieceId} not found.` });
                 }
+                seen.set(pieceInfo.pieceId, piece);
                 await collection.addPiece(pieceInfo.pieceId, {
                     through: { numberInCollection: pieceInfo.numberInCollection }
                 });
@@ -36,7 +37,9 @@ exports.create = async (req, res, next) => {
         res.status(201).send(collection);
     } catch (err) {
         if (err instanceof Sequelize.ForeignKeyConstraintError) {
-            return res.status(400).send({ message: 'Invalid piece reference.' });
+            const field = Object.keys(err.fields || {})[0];
+            const value = err.fields ? err.fields[field] : '';
+            return res.status(400).send({ message: `Invalid reference for ${field}: ${value}` });
         }
         next(err);
     }
@@ -56,16 +59,17 @@ exports.update = async (req, res, next) => {
         await base.service.update(id, { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
-            const seen = new Set();
+            const seen = new Map();
             for (const pieceLink of pieces) {
                 if (seen.has(pieceLink.pieceId)) {
-                    return res.status(400).send({ message: `Piece ${pieceLink.pieceId} is duplicated.` });
+                    const dupPiece = seen.get(pieceLink.pieceId);
+                    return res.status(400).send({ message: `Piece '${dupPiece.title}' (id=${pieceLink.pieceId}) is duplicated.` });
                 }
-                seen.add(pieceLink.pieceId);
-                const piece = await Piece.findByPk(pieceLink.pieceId);
+                const piece = await Piece.findByPk(pieceLink.pieceId, { attributes: ['id', 'title'] });
                 if (!piece) {
                     return res.status(400).send({ message: `Piece with id=${pieceLink.pieceId} not found.` });
                 }
+                seen.set(pieceLink.pieceId, piece);
                 await collection.addPiece(pieceLink.pieceId, {
                     through: { numberInCollection: pieceLink.numberInCollection }
                 });
@@ -74,7 +78,9 @@ exports.update = async (req, res, next) => {
         res.status(200).send({ message: "Collection updated successfully." });
     } catch (err) {
         if (err instanceof Sequelize.ForeignKeyConstraintError) {
-            return res.status(400).send({ message: 'Invalid piece reference.' });
+            const field = Object.keys(err.fields || {})[0];
+            const value = err.fields ? err.fields[field] : '';
+            return res.status(400).send({ message: `Invalid reference for ${field}: ${value}` });
         }
         next(err);
     }
