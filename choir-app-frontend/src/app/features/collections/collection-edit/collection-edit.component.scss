@@ -29,6 +29,10 @@ mat-form-field {
   font-size: 0.9em;
 }
 
+.piece-link-table .number-cell mat-form-field {
+  width: 4rem;
+}
+
 mat-chip-listbox {
     margin-top: 1rem;
     display: block;
