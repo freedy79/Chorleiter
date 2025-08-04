@@ -34,10 +34,12 @@ exports.create = async (req, res) => {
         authorName,
         authorId,
         arrangerIds, // e.g., [12, 15]
-        links        // e.g., [{ description: 'YouTube', url: '...' }]
+        links,       // e.g., [{ description: 'YouTube', url: '...' }]
+        composers    // e.g., [{ id: 1, type: 'Melodie' }]
     } = req.body;
 
-    if (!title || !composerId) {
+    const mainComposerId = composerId || (composers && composers[0]?.id);
+    if (!title || !mainComposerId) {
         return res.status(400).send({ message: "Title and Composer are required." });
     }
 
@@ -51,7 +53,7 @@ exports.create = async (req, res) => {
             title,
             subtitle,
             composerCollection,
-            composerId,
+            composerId: mainComposerId,
             categoryId,
             voicing,
             key,
@@ -68,6 +70,13 @@ exports.create = async (req, res) => {
             await newPiece.setArrangers(arrangerIds);
         }
 
+        const composerEntries = composers && composers.length > 0
+            ? composers
+            : [{ id: mainComposerId, type: null }];
+        await db.piece_composer.bulkCreate(
+            composerEntries.map(c => ({ pieceId: newPiece.id, composerId: c.id, type: c.type }))
+        );
+
         if (links && links.length > 0) {
             const linkObjects = links.map(link => ({ ...link, pieceId: newPiece.id }));
             await db.piece_link.bulkCreate(linkObjects);
@@ -75,7 +84,13 @@ exports.create = async (req, res) => {
 
         // Fetch the full new piece to return it
     const result = await db.piece.findByPk(newPiece.id, {
-            include: [ /* all associations */ ]
+            include: [
+                { model: Composer, as: 'composers', through: { attributes: ['type'] } },
+                { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+                { model: Category, as: 'category', attributes: ['id', 'name'] },
+                { model: Author, as: 'author', attributes: ['id', 'name'] },
+                { model: db.piece_link, as: 'links' }
+            ]
         });
 
     res.status(201).send(result);
@@ -102,6 +117,7 @@ exports.findAll = async (req, res) => {
             },
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+                { model: Composer, as: 'composers', through: { attributes: ['type'] } },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
                 { model: Author, as: 'author', attributes: ['id', 'name'] },
                 { model: db.piece_link, as: 'links' }
@@ -119,8 +135,9 @@ exports.findOne = async (req, res) => {
     const id = req.params.id;
 
     const piece = await base.service.findById(id, {
-            include: [
+        include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+                { model: Composer, as: 'composers', through: { attributes: ['type'] } },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
                 { model: Author, as: 'author', attributes: ['id', 'name'] },
                 { model: db.piece_link, as: 'links' }
@@ -164,7 +181,18 @@ exports.update = async (req, res) => {
             return res.status(202).send({ message: 'Change proposal created.' });
     }
 
-    const { links, ...pieceData } = req.body;
+    const { links, composers, ...pieceData } = req.body;
+
+    if (composers) {
+        await db.piece_composer.destroy({ where: { pieceId: id } });
+        if (composers.length > 0) {
+            await db.piece_composer.bulkCreate(
+                composers.map(c => ({ pieceId: id, composerId: c.id, type: c.type }))
+            );
+            if (!pieceData.composerId) pieceData.composerId = composers[0].id;
+        }
+    }
+
     const num = await base.service.update(id, pieceData);
 
     if (links) {

@@ -14,6 +14,7 @@ const controller = require('../src/controllers/piece.controller');
 
     // create composer, author and users
     const composer = await db.composer.create({ name: 'Test Composer' });
+    const composer2 = await db.composer.create({ name: 'Second Composer' });
     const author = await db.author.create({ name: 'Test Author' });
     const user = await db.user.create({ email: 'user@example.com' });
     const admin = await db.user.create({ email: 'admin@example.com', role: 'admin' });
@@ -25,6 +26,10 @@ const controller = require('../src/controllers/piece.controller');
         composerCollection: 'Deutsche Messe',
         composerId: composer.id,
         authorId: author.id,
+        composers: [
+          { id: composer.id, type: 'Melodie' },
+          { id: composer2.id, type: 'Arrangement' },
+        ],
       },
     };
 
@@ -42,6 +47,11 @@ const controller = require('../src/controllers/piece.controller');
   assert.strictEqual(created.authorId, author.id);
   assert.strictEqual(created.subtitle, 'Subtitle');
   assert.strictEqual(created.composerCollection, 'Deutsche Messe');
+
+  const composerLinks = await db.piece_composer.findAll({ where: { pieceId: res.data.id } });
+  assert.strictEqual(composerLinks.length, 2);
+  const types = composerLinks.map(c => c.type).sort();
+  assert.deepStrictEqual(types, ['Arrangement', 'Melodie']);
 
   // non-admin update should create change request
   await controller.update({

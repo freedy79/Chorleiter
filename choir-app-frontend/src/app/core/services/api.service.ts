@@ -167,7 +167,7 @@ export class ApiService {
    * Creates a new piece in the global master list.
    * @param pieceData - The core data for the new piece.
    */
-  createGlobalPiece(pieceData: { title: string, composerId: number, categoryId?: number, voicing?: string }): Observable<Piece> {
+  createGlobalPiece(pieceData: { title: string, composerId: number, categoryId?: number, voicing?: string, composers?: { id: number; type?: string }[] }): Observable<Piece> {
     return this.pieceService.createGlobalPiece(pieceData);
   }
 

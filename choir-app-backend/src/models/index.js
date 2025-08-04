@@ -30,6 +30,7 @@ db.collection_piece = require("./collection_piece.model.js")(sequelize, Sequeliz
 db.author = require("./author.model.js")(sequelize, Sequelize);
 db.publisher = require("./publisher.model.js")(sequelize, Sequelize);
 db.piece_arranger = require("./piece_arranger.model.js")(sequelize, Sequelize);
+db.piece_composer = require("./piece_composer.model.js")(sequelize, Sequelize);
 db.piece_link = require("./piece_link.model.js")(sequelize, Sequelize);
 db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
@@ -107,6 +108,10 @@ db.piece.belongsTo(db.author, { foreignKey: "authorId", as: "author" });
 
 db.publisher.hasMany(db.collection, { as: "collections" });
 db.collection.belongsTo(db.publisher, { foreignKey: "publisherId", as: "publisherEntity" });
+
+// Piece <> Composer (roles) -> Many-to-Many
+db.piece.belongsToMany(db.composer, { through: db.piece_composer, as: 'composers' });
+db.composer.belongsToMany(db.piece, { through: db.piece_composer, as: 'piecesComposed' });
 
 // Piece <> Composer (as Arranger) -> Many-to-Many
 db.piece.belongsToMany(db.composer, { through: db.piece_arranger, as: "arrangers" });

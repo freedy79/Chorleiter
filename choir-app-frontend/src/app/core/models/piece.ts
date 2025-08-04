@@ -26,6 +26,7 @@ export interface Piece {
   composerCollection?: string;
   voicing?: string;
   composer?: Composer;
+  composers?: (Composer & { piece_composer: { type?: string } })[];
   category?: Category;
   choir_repertoire?: {
     status: 'CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY';
