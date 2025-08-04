@@ -1,8 +1,19 @@
 const db = require("../models");
-const { Sequelize } = require("sequelize");
+const { Sequelize, Op } = require("sequelize");
 
 exports.overview = async (req, res) => {
     const choirId = req.activeChoirId;
+    const { startDate, endDate } = req.query;
+    const dateWhere = {};
+    if (startDate || endDate) {
+        dateWhere.date = {};
+        if (startDate) {
+            dateWhere.date[Op.gte] = new Date(startDate);
+        }
+        if (endDate) {
+            dateWhere.date[Op.lte] = new Date(endDate);
+        }
+    }
     try {
         // Top pieces in services
         const topServicePieces = await db.piece.findAll({
@@ -14,7 +25,7 @@ exports.overview = async (req, res) => {
             include: [{
                 model: db.event,
                 attributes: [],
-                where: { choirId, type: 'SERVICE' },
+                where: { choirId, type: 'SERVICE', ...dateWhere },
                 through: { attributes: [] }
             }],
             group: ['piece.id'],
@@ -33,7 +44,7 @@ exports.overview = async (req, res) => {
             include: [{
                 model: db.event,
                 attributes: [],
-                where: { choirId, type: 'REHEARSAL' },
+                where: { choirId, type: 'REHEARSAL', ...dateWhere },
                 through: { attributes: [] }
             }],
             group: ['piece.id'],
