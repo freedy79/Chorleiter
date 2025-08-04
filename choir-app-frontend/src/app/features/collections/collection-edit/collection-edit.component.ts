@@ -64,10 +64,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     pageSubtitle =
         "Beschreibung der Sammlung, Hinzufügen von Stücken.";
     public pieceLinkColumns: string[] = ['number', 'title', 'actions'];
-    pieceCtrl = new FormControl<string | Piece>('');
-    filteredPieces$!: Observable<Piece[]>;
+    pieceCtrl = new FormControl<string | (Piece & { isNew?: boolean })>('');
+    filteredPieces$!: Observable<(Piece & { isNew?: boolean })[]>;
     allPieces: Piece[] = [];
-    private lastPieceSearch = '';
     publisherCtrl = new FormControl<string>('');
     publishers: Publisher[] = [];
     filteredPublishers$!: Observable<string[]>;
@@ -76,10 +75,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     coverFile: File | null = null;
     isDragOver = false;
     isAdmin = false;
-    public readonly addNewPieceOption: Piece = {
-        id: -1,
-        title: 'Neues Stück anlegen...',
-    };
+    readonly addNewPieceId = -1;
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
 
     public pieceLinkDataSource =
@@ -219,17 +215,18 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     private initializeAutocomplete(): void {
         this.filteredPieces$ = this.pieceCtrl.valueChanges.pipe(
             startWith(''),
-            map((value) => {
-                const searchString =
-                    typeof value === 'string' ? value : value?.title || '';
-                this.lastPieceSearch = searchString;
+            map(value => {
+                const searchString = typeof value === 'string' ? value : value?.title || '';
                 const filteredPieces = this._filter(searchString);
-                return [this.addNewPieceOption, ...filteredPieces];
+                const options = filteredPieces.map(p => ({ ...p }));
+                if (
+                    searchString &&
+                    !filteredPieces.some(p => p.title.toLowerCase() === searchString.toLowerCase())
+                ) {
+                    options.unshift({ id: this.addNewPieceId, title: searchString, isNew: true } as Piece & { isNew: boolean });
+                }
+                return options;
             })
-            // ADD THIS TAP OPERATOR FOR DEBUGGING
-            /*tap(filteredList => {
-            console.log('Autocomplete is emitting:', filteredList);
-        })*/
         );
     }
 
@@ -265,11 +262,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     // --- `displayWith` Function (Arrow function to preserve 'this') ---
-    public displayPiece = (piece: Piece): string => {
-        if (piece?.id === this.addNewPieceOption.id) {
-            return '';
-        }
-        return piece && piece.title ? piece.title : '';
+    public displayPiece = (piece: Piece & { isNew?: boolean }): string => {
+        return piece ? piece.title : '';
     };
 
     onPublisherSelected(event: MatAutocompleteSelectedEvent): void {
@@ -364,9 +358,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     onPieceSelected(event: MatAutocompleteSelectedEvent): void {
-        const selectedPiece = event.option.value as Piece;
-        if (selectedPiece.id === this.addNewPieceOption.id) {
-            this.openAddPieceDialog(this.lastPieceSearch);
+        const selectedPiece = event.option.value as Piece & { isNew?: boolean };
+        if (selectedPiece.isNew || selectedPiece.id === this.addNewPieceId) {
+            this.openAddPieceDialog(selectedPiece.title);
         } else {
             this.addPieceForm.patchValue({ piece: selectedPiece });
             this.proposeNextNumber();

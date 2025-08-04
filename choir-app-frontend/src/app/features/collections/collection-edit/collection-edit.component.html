@@ -98,13 +98,10 @@
               <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece" (optionSelected)="onPieceSelected($event)">
                 <!-- The #auto MUST match the [matAutocomplete] above -->
                 <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
-                  <!-- Use *ngIf inside the mat-option to conditionally show content -->
-                  <div *ngIf="piece.id === addNewPieceOption.id; else regularOption" class="add-new-option">
+                  <div *ngIf="piece.isNew; else regularOption" class="add-new-option">
                     <mat-icon>add</mat-icon>
-                    <span>{{ piece.title }}</span>
+                    <span>Stück anlegen "{{ piece.title }}"</span>
                   </div>
-
-                  <!-- This template will be shown for all regular pieces -->
                   <ng-template #regularOption>
                     {{ piece.title }}
                     <small class="composer-hint"> - {{ piece.composer?.name }}</small>
