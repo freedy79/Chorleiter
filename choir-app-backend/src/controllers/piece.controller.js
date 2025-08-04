@@ -22,6 +22,7 @@ exports.create = async (req, res) => {
         subtitle,
         composerCollection,
         composerId,
+        origin,
         categoryId,
         voicing,
         key,
@@ -39,8 +40,8 @@ exports.create = async (req, res) => {
     } = req.body;
 
     const mainComposerId = composerId || (composers && composers[0]?.id);
-    if (!title || !mainComposerId) {
-        return res.status(400).send({ message: "Title and Composer are required." });
+    if (!title || (!mainComposerId && !origin)) {
+        return res.status(400).send({ message: "Title and either Composer or Origin are required." });
     }
 
     let resolvedAuthorId = authorId || null;
@@ -53,7 +54,7 @@ exports.create = async (req, res) => {
             title,
             subtitle,
             composerCollection,
-            composerId: mainComposerId,
+            composerId: mainComposerId || null,
             categoryId,
             voicing,
             key,
@@ -63,6 +64,7 @@ exports.create = async (req, res) => {
             license,
             opus,
             lyricsSource,
+            origin,
             authorId: resolvedAuthorId
         });
 
@@ -72,10 +74,12 @@ exports.create = async (req, res) => {
 
         const composerEntries = composers && composers.length > 0
             ? composers
-            : [{ id: mainComposerId, type: null }];
-        await db.piece_composer.bulkCreate(
-            composerEntries.map(c => ({ pieceId: newPiece.id, composerId: c.id, type: c.type }))
-        );
+            : (mainComposerId ? [{ id: mainComposerId, type: null }] : []);
+        if (composerEntries.length > 0) {
+            await db.piece_composer.bulkCreate(
+                composerEntries.map(c => ({ pieceId: newPiece.id, composerId: c.id, type: c.type }))
+            );
+        }
 
         if (links && links.length > 0) {
             const linkObjects = links.map(link => ({ ...link, pieceId: newPiece.id }));

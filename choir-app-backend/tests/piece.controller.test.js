@@ -53,6 +53,17 @@ const controller = require('../src/controllers/piece.controller');
   const types = composerLinks.map(c => c.type).sort();
   assert.deepStrictEqual(types, ['Arrangement', 'Melodie']);
 
+  // create piece with origin instead of composer
+  statusCode = undefined;
+  const res2 = { status(code) { statusCode = code; return this; }, send(data) { this.data = data; if (!statusCode) statusCode = 200; } };
+  await controller.create({ body: { title: 'Folk Song', origin: 'Trad.' } }, res2);
+  assert.strictEqual(statusCode, 201, 'should return 201 for origin piece');
+  const createdFolk = await db.piece.findByPk(res2.data.id);
+  assert.strictEqual(createdFolk.origin, 'Trad.');
+  assert.strictEqual(createdFolk.composerId, null);
+  const composerLinksFolk = await db.piece_composer.count({ where: { pieceId: res2.data.id } });
+  assert.strictEqual(composerLinksFolk, 0);
+
   // non-admin update should create change request
   await controller.update({
     params: { id: created.id },

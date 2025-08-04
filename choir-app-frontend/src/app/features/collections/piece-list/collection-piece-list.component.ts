@@ -51,7 +51,7 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
       this.dataSource.sortingDataAccessor = (item, property) => {
         switch (property) {
           case 'composer':
-            return item.composer?.name || '';
+            return item.composer?.name || item.origin || '';
           case 'author':
             return item.author?.name || '';
           default:

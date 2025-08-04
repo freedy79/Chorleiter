@@ -14,6 +14,7 @@ export interface EventPiece {
    * compatible with both variations.
    */
   composer?: Composer & { id?: number };
+  origin?: string;
   /** Optional author data used when displaying the piece in event lists */
   author?: Author;
   /** Optional lyrics source text */

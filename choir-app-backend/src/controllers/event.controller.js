@@ -133,7 +133,7 @@ exports.findLast = async (req, res) => {
             include: [{
                 model: Piece,
                 as: 'pieces',
-                attributes: ['id', 'title'],
+                attributes: ['id', 'title', 'origin'],
                 through: { attributes: [] },
                 include: [
                     { // Binde den Komponisten an jedes Stück
@@ -225,7 +225,7 @@ exports.findOne = async (req, res) => {
             include: [{
                 model: Piece,
                 as: 'pieces',
-                attributes: ['id', 'title'],
+                attributes: ['id', 'title', 'origin'],
                 through: { attributes: [] },
                 include: [
                     { model: Composer, as: 'composer', attributes: ['name'] },

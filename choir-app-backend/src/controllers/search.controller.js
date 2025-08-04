@@ -12,7 +12,8 @@ exports.search = async (req, res) => {
     where: {
       [Op.or]: [
         { title: like },
-        { lyrics: like }
+        { lyrics: like },
+        { origin: like }
       ]
     },
     include: [{ model: db.composer, as: 'composer', attributes: ['name'] }],

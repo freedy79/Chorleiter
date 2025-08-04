@@ -43,7 +43,7 @@
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
         <div *ngIf="collectionForm.value.singleEdition && selectedPieceLinks.length > 0" class="composer-display">
-          <strong>Komponist:</strong> {{ selectedPieceLinks[0].piece.composer?.name || '-' }}
+          <strong>Komponist/Ursprung:</strong> {{ selectedPieceLinks[0].piece.composer?.name || selectedPieceLinks[0].piece.origin || '-' }}
         </div>
 
         <mat-form-field appearance="outline">
@@ -104,7 +104,7 @@
                   </div>
                   <ng-template #regularOption>
                     {{ piece.title }}
-                    <small class="composer-hint"> - {{ piece.composer?.name }}</small>
+                    <small class="composer-hint"> - {{ piece.composer?.name || piece.origin }}</small>
                   </ng-template>
                 </mat-option>
               </mat-autocomplete>
@@ -159,8 +159,8 @@
                 <div class="piece-title">{{ link.piece.title }}</div>
                 <div
                   class="piece-composer"
-                  *ngIf="link.piece.composer?.name"
-                >{{ link.piece.composer.name }}</div>
+                  *ngIf="link.piece.composer?.name || link.piece.origin"
+                >{{ link.piece.composer?.name || link.piece.origin }}</div>
               </td>
             </ng-container>
 

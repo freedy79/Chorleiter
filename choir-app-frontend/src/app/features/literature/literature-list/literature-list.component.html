@@ -101,9 +101,9 @@
 
             <!-- Composer Column -->
             <ng-container matColumnDef="composer">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist </th>
+              <th mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist/Ursprung </th>
               <td mat-cell *matCellDef="let piece">
-                {{piece.composer?.name}}
+                {{piece.composer?.name || piece.origin}}
               </td>
             </ng-container>
 

@@ -53,7 +53,7 @@ exports.lookup = async (req, res) => {
                 const ref = plainPiece.collections[0]; // Nehmen Sie die erste Referenz
                 const num = ref.collection_piece.numberInCollection;
                 const prefix = ref.singleEdition
-                    ? plainPiece.composer?.name || ''
+                    ? plainPiece.composer?.name || plainPiece.origin || ''
                     : ref.prefix || '';
                 referenceString = `${prefix}${num}`;
                 collectionTitle = ref.title || null;
@@ -63,7 +63,7 @@ exports.lookup = async (req, res) => {
             return {
                 id: plainPiece.id,
                 title: plainPiece.title,
-                composerName: plainPiece.composer?.name || '',
+                composerName: plainPiece.composer?.name || plainPiece.origin || '',
                 reference: referenceString, // z.B. "CB45" oder null
                 collectionTitle
             };
@@ -148,6 +148,7 @@ exports.findMyRepertoire = async (req, res) => {
                 [Op.or]: [
                     { title: { [Op.iLike]: `%${t}%` } },
                     { '$composer.name$': { [Op.iLike]: `%${t}%` } },
+                    { origin: { [Op.iLike]: `%${t}%` } },
                     { '$category.name$': { [Op.iLike]: `%${t}%` } },
                     { lyrics: { [Op.iLike]: `%${t}%` } },
                     literal(`${refSub} ILIKE '%${t}%'`)
@@ -184,7 +185,7 @@ exports.findMyRepertoire = async (req, res) => {
                     literal(`(
                         SELECT CASE
                             WHEN c."singleEdition" THEN (
-                                SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"
+                                SELECT COALESCE((SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"), "piece"."origin")
                             )
                             ELSE c.prefix
                         END
@@ -262,7 +263,7 @@ exports.findMyRepertoire = async (req, res) => {
                 const collectionPrefixSubquery = `(
                         SELECT CASE
                             WHEN c."singleEdition" THEN (
-                                SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"
+                                SELECT COALESCE((SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"), "piece"."origin")
                             )
                             ELSE c.prefix
                         END
