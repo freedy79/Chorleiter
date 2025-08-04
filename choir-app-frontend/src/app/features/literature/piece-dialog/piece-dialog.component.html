@@ -5,6 +5,7 @@
     <mat-sidenav mode="side" opened>
       <mat-nav-list>
         <a mat-list-item [class.active]="activeSection==='general'" (click)="activeSection='general'">Grundinformationen</a>
+        <a mat-list-item [class.active]="activeSection==='opus'" (click)="activeSection='opus'">Werkinformationen</a>
         <a mat-list-item [class.active]="activeSection==='text'" (click)="activeSection='text'">Text</a>
         <a mat-list-item [class.active]="activeSection==='files'" (click)="activeSection='files'">Dateien &amp; Links</a>
       </mat-nav-list>
@@ -30,15 +31,6 @@
                 <input matInput formControlName="voicing">
               </mat-form-field>
 
-              <mat-form-field appearance="outline">
-                <mat-label>Tonart</mat-label>
-                <input matInput formControlName="key">
-              </mat-form-field>
-
-              <mat-form-field appearance="outline">
-                <mat-label>Taktart</mat-label>
-                <input matInput formControlName="timeSignature">
-              </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Rubrik</mat-label>
@@ -71,15 +63,32 @@
                 </mat-autocomplete>
               </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Sammlung des Komponisten</mat-label>
-                <input matInput formControlName="composerCollection">
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'opus'">
+            <div class="form-section-column">
+              <mat-form-field appearance="outline">
+                <mat-label>Tonart</mat-label>
+                <input matInput formControlName="key">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Taktart</mat-label>
+                <input matInput formControlName="timeSignature">
               </mat-form-field>
 
               <mat-form-field appearance="outline">
                 <mat-label>Opus</mat-label>
                 <input matInput formControlName="opus" placeholder="">
               </mat-form-field>
+
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Sammlung des Komponisten</mat-label>
+                <input matInput formControlName="composerCollection">
+              </mat-form-field>
+
             </div>
           </ng-container>
 

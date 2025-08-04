@@ -54,7 +54,7 @@ export class PieceDialogComponent implements OnInit {
     public categories$!: Observable<Category[]>;
     isEditMode = false;
     isAdmin = false;
-    activeSection: 'general' | 'text' | 'files' = 'general';
+    activeSection: 'general' | 'opus' | 'text' | 'files' = 'general';
     imagePreview: string | null = null;
     imageFile: File | null = null;
     isDragOver = false;
