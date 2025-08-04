@@ -1,3 +1,10 @@
+<div class="header-actions">
+  <mat-button-toggle-group [value]="viewMode" (change)="onViewChange($event.value)">
+    <mat-button-toggle value="collections">Sammlungen</mat-button-toggle>
+    <mat-button-toggle value="pieces">Stücke</mat-button-toggle>
+  </mat-button-toggle-group>
+</div>
+
 <div class="letter-filter">
   <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
     {{ l }}

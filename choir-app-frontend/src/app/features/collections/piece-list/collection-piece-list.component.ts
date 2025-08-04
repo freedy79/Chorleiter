@@ -25,6 +25,7 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   totalPieces = 0;
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
+  viewMode: 'collections' | 'pieces' = 'pieces';
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -88,5 +89,11 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
 
   openPiece(piece: Piece): void {
     this.router.navigate(['/pieces', piece.id]);
+  }
+
+  onViewChange(value: 'collections' | 'pieces'): void {
+    if (value === 'collections') {
+      this.router.navigate(['/collections']);
+    }
   }
 }
