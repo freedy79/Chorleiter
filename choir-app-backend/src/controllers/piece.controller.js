@@ -17,10 +17,22 @@ const { getFrontendUrl } = require('../utils/frontend-url');
  * will link this piece to a choir.
  */
 exports.create = async (req, res) => {
-     const {
-        title, composerId, categoryId, voicing,
-        key, timeSignature, lyrics, imageIdentifier, license, opus, lyricsSource,
-        authorName, authorId,
+    const {
+        title,
+        subtitle,
+        composerCollection,
+        composerId,
+        categoryId,
+        voicing,
+        key,
+        timeSignature,
+        lyrics,
+        imageIdentifier,
+        license,
+        opus,
+        lyricsSource,
+        authorName,
+        authorId,
         arrangerIds, // e.g., [12, 15]
         links        // e.g., [{ description: 'YouTube', url: '...' }]
     } = req.body;
@@ -36,8 +48,18 @@ exports.create = async (req, res) => {
         }
 
         const newPiece = await base.service.create({
-            title, composerId, categoryId, voicing, key, timeSignature,
-            lyrics, imageIdentifier, license, opus,
+            title,
+            subtitle,
+            composerCollection,
+            composerId,
+            categoryId,
+            voicing,
+            key,
+            timeSignature,
+            lyrics,
+            imageIdentifier,
+            license,
+            opus,
             lyricsSource,
             authorId: resolvedAuthorId
         });

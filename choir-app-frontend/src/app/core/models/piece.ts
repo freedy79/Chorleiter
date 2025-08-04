@@ -22,6 +22,8 @@ export interface CollectionReference {
 export interface Piece {
   id: number;
   title: string;
+  subtitle?: string;
+  composerCollection?: string;
   voicing?: string;
   composer?: Composer;
   category?: Category;

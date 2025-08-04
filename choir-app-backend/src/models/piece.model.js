@@ -4,6 +4,14 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
+        subtitle: { // Untertitel
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        composerCollection: { // Sammlung des Komponisten
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         voicing: {
             type: DataTypes.STRING,
             allowNull: true

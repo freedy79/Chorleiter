@@ -5,7 +5,9 @@
       <mat-icon>edit</mat-icon>
     </button>
   </h2>
+  <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>
   <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
+  <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
   <div *ngIf="piece.collections?.length">
