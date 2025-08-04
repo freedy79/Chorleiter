@@ -394,10 +394,29 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     openEditPieceDialog(pieceId: number): void {
-        const url = this.router.serializeUrl(
-            this.router.createUrlTree(['/pieces', pieceId], { queryParams: { edit: true } })
-        );
-        window.open(url, '_blank');
+        const dialogRef = this.dialog.open(PieceDialogComponent, {
+            width: '90vw',
+            maxWidth: '1000px',
+            data: { pieceId }
+        });
+
+        dialogRef.afterClosed().subscribe((wasUpdated) => {
+            if (wasUpdated) {
+                this.apiService.getPieceById(pieceId).subscribe((updatedPiece) => {
+                    const allIndex = this.allPieces.findIndex((p) => p.id === updatedPiece.id);
+                    if (allIndex !== -1) {
+                        this.allPieces[allIndex] = updatedPiece;
+                    }
+                    const linkIndex = this.selectedPieceLinks.findIndex(
+                        (l) => l.piece.id === updatedPiece.id
+                    );
+                    if (linkIndex !== -1) {
+                        this.selectedPieceLinks[linkIndex].piece = updatedPiece;
+                        this.updateDataSource();
+                    }
+                });
+            }
+        });
     }
 
     addPieceToCollection(): void {
