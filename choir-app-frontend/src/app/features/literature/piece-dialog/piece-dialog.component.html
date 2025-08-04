@@ -20,6 +20,11 @@
                 <input matInput formControlName="title" cdkFocusInitial>
               </mat-form-field>
 
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Untertitel</mat-label>
+                <input matInput formControlName="subtitle">
+              </mat-form-field>
+
               <mat-form-field appearance="outline">
                 <mat-label>Besetzung (z.B. SATB)</mat-label>
                 <input matInput formControlName="voicing">
@@ -64,6 +69,11 @@
                     </ng-template>
                   </mat-option>
                 </mat-autocomplete>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Sammlung des Komponisten</mat-label>
+                <input matInput formControlName="composerCollection">
               </mat-form-field>
 
               <mat-form-field appearance="outline">

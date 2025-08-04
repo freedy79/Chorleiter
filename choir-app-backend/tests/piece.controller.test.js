@@ -21,6 +21,8 @@ const controller = require('../src/controllers/piece.controller');
     const req = {
       body: {
         title: 'Test Piece',
+        subtitle: 'Subtitle',
+        composerCollection: 'Deutsche Messe',
         composerId: composer.id,
         authorId: author.id,
       },
@@ -38,6 +40,8 @@ const controller = require('../src/controllers/piece.controller');
   const created = await db.piece.findByPk(res.data.id);
   assert.strictEqual(created.composerId, composer.id);
   assert.strictEqual(created.authorId, author.id);
+  assert.strictEqual(created.subtitle, 'Subtitle');
+  assert.strictEqual(created.composerCollection, 'Deutsche Messe');
 
   // non-admin update should create change request
   await controller.update({

@@ -89,6 +89,8 @@ export class PieceDialogComponent implements OnInit {
 
         this.pieceForm = this.fb.group({
             title: ['', Validators.required],
+            subtitle: [''],
+            composerCollection: [''],
             voicing: [''],
             lyrics: [''],
             lyricsSource: [''],
@@ -364,6 +366,8 @@ export class PieceDialogComponent implements OnInit {
     populateForm(piece: Piece): void {
         this.pieceForm.patchValue({
             title: piece.title,
+            subtitle: piece.subtitle,
+            composerCollection: piece.composerCollection,
             opus: piece.opus,
             voicing: piece.voicing,
             key: piece.key,
