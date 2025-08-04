@@ -32,7 +32,7 @@ exports.lookup = async (req, res) => {
                 {
                     model: db.collection,
                     as: 'collections',
-                    attributes: ['prefix', 'title'],
+                    attributes: ['prefix', 'title', 'singleEdition'],
                     through: {
                         model: db.collection_piece,
                         attributes: ['numberInCollection']
@@ -52,7 +52,10 @@ exports.lookup = async (req, res) => {
             if (plainPiece.collections && plainPiece.collections.length > 0) {
                 const ref = plainPiece.collections[0]; // Nehmen Sie die erste Referenz
                 const num = ref.collection_piece.numberInCollection;
-                referenceString = `${ref.prefix || ''}${num}`;
+                const prefix = ref.singleEdition
+                    ? plainPiece.composer?.name || ''
+                    : ref.prefix || '';
+                referenceString = `${prefix}${num}`;
                 collectionTitle = ref.title || null;
             }
 
@@ -179,7 +182,12 @@ exports.findMyRepertoire = async (req, res) => {
             include: [
                 [
                     literal(`(
-                        SELECT c.prefix
+                        SELECT CASE
+                            WHEN c."singleEdition" THEN (
+                                SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"
+                            )
+                            ELSE c.prefix
+                        END
                         FROM collection_pieces cp
                         JOIN collections c ON cp."collectionId" = c.id
                         WHERE cp."pieceId" = "piece"."id"
@@ -252,7 +260,12 @@ exports.findMyRepertoire = async (req, res) => {
                 break;
             case 'reference':
                 const collectionPrefixSubquery = `(
-                        SELECT c.prefix
+                        SELECT CASE
+                            WHEN c."singleEdition" THEN (
+                                SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"
+                            )
+                            ELSE c.prefix
+                        END
                         FROM collection_pieces cp
                         JOIN collections c ON cp."collectionId" = c.id
                         WHERE cp."pieceId" = "piece"."id"
@@ -408,7 +421,7 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.collection,
                     as: 'collections',
-                    attributes: ['id', 'prefix', 'title'],
+                    attributes: ['id', 'prefix', 'title', 'singleEdition'],
                     through: { model: db.collection_piece, attributes: ['numberInCollection'] }
                 },
                 {
