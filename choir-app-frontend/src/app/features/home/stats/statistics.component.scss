@@ -1,5 +1,9 @@
 .stats-page {
   mat-card {
     margin-bottom: 1rem;
+
+    .mat-card-content {
+      padding: 0.5rem;
+    }
   }
 }
