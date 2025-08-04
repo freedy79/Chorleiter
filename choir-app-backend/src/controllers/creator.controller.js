@@ -1,8 +1,47 @@
 const BaseCrudController = require('./baseCrud.controller');
+const db = require('../models');
 
 function createCreatorController(Model, options = {}) {
   const base = new BaseCrudController(Model);
-  const { entityName = 'Record', arranged = false } = options;
+  const { entityName = 'Record', arranged = false, pieceField } = options;
+
+  function normalize(str) {
+    return str.toLowerCase().replace(/[^a-z0-9]/g, '');
+  }
+
+  function levenshtein(a, b) {
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i += 1) dp[i][0] = i;
+    for (let j = 0; j <= n; j += 1) dp[0][j] = j;
+    for (let i = 1; i <= m; i += 1) {
+      for (let j = 1; j <= n; j += 1) {
+        if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1];
+        else dp[i][j] = Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]) + 1;
+      }
+    }
+    return dp[m][n];
+  }
+
+  function isDuplicate(a, b) {
+    const na = normalize(a);
+    const nb = normalize(b);
+    if (!na || !nb) return false;
+    if (na.includes(nb) || nb.includes(na)) return true;
+    const lastA = normalize(a.split(' ').pop());
+    const lastB = normalize(b.split(' ').pop());
+    if (lastA && lastA === lastB) {
+      const firstA = normalize(a.split(' ')[0]);
+      const firstB = normalize(b.split(' ')[0]);
+      if (!firstA || !firstB) return true;
+      if (firstA[0] && firstA[0] === firstB[0]) return true;
+    }
+    const distance = levenshtein(na, nb);
+    const maxLen = Math.max(na.length, nb.length);
+    const similarity = 1 - distance / maxLen;
+    return similarity >= 0.8;
+  }
 
   async function create(req, res, next) {
     try {
@@ -109,7 +148,66 @@ function createCreatorController(Model, options = {}) {
     }
   }
 
-  return { create, update, findAll, delete: remove, enrich };
+  async function findDuplicates(req, res, next) {
+    try {
+      const records = await Model.findAll({ order: [['name', 'ASC']] });
+      const duplicates = [];
+      const visited = new Set();
+      for (let i = 0; i < records.length; i += 1) {
+        const current = records[i];
+        if (visited.has(current.id)) continue;
+        const group = [current];
+        for (let j = i + 1; j < records.length; j += 1) {
+          const other = records[j];
+          if (visited.has(other.id)) continue;
+          if (isDuplicate(current.name, other.name)) {
+            group.push(other);
+            visited.add(other.id);
+          }
+        }
+        if (group.length > 1) {
+          duplicates.push(group.map(r => r.get({ plain: true })));
+          group.forEach(r => visited.add(r.id));
+        }
+      }
+      res.status(200).send(duplicates);
+    } catch (err) {
+      if (next) return next(err);
+      res.status(500).send({ message: err.message });
+    }
+  }
+
+  async function migrate(req, res, next) {
+    const { sourceId, targetId } = req.body;
+    const transaction = await db.sequelize.transaction();
+    try {
+      const source = await Model.findByPk(sourceId, { transaction });
+      const target = await Model.findByPk(targetId, { transaction });
+      if (!source || !target) {
+        await transaction.rollback();
+        return res.status(404).send({ message: `${entityName} not found.` });
+      }
+      if (source.id === target.id) {
+        await transaction.rollback();
+        return res.status(400).send({ message: 'Cannot migrate to the same record.' });
+      }
+      const updatePieces = {};
+      updatePieces[pieceField] = targetId;
+      await db.piece.update(updatePieces, { where: { [pieceField]: sourceId }, transaction });
+      if (arranged) {
+        await db.piece_arranger.update({ composerId: targetId }, { where: { composerId: sourceId }, transaction });
+      }
+      await Model.destroy({ where: { id: sourceId }, transaction });
+      await transaction.commit();
+      res.status(200).send({ message: 'Migration completed.' });
+    } catch (err) {
+      await transaction.rollback();
+      if (next) return next(err);
+      res.status(500).send({ message: err.message });
+    }
+  }
+
+  return { create, update, findAll, delete: remove, enrich, findDuplicates, migrate };
 }
 
 module.exports = createCreatorController;

@@ -3,5 +3,6 @@ const createCreatorController = require("./creator.controller");
 
 module.exports = createCreatorController(db.composer, {
   entityName: 'Composer',
-  arranged: true
+  arranged: true,
+  pieceField: 'composerId'
 });
