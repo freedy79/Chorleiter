@@ -1,27 +1,47 @@
-<div class="stats-page" *ngIf="stats">
+<div class="stats-page">
   <h2>Statistik</h2>
 
-  <mat-card>
-    <h3>Top 3 Gottesdienst-Stücke</h3>
-    <ol>
-      <li *ngFor="let item of stats.topServicePieces">
-        <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}}x)
-      </li>
-    </ol>
-  </mat-card>
+  <div class="date-controls">
+    <mat-form-field appearance="fill">
+      <mat-label>Von</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
+      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
 
-  <mat-card>
-    <h3>Meist geprobte Stücke</h3>
-    <ol>
-      <li *ngFor="let item of stats.topRehearsalPieces">
-        <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}}x)
-      </li>
-    </ol>
-  </mat-card>
+    <mat-form-field appearance="fill">
+      <mat-label>Bis</mat-label>
+      <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" />
+      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
 
-  <mat-card>
-    <h3>Stücke im Repertoire</h3>
-    <p>Singfähig: {{stats.singableCount}}</p>
-    <p>Probe: {{stats.rehearsalCount}}</p>
-  </mat-card>
+    <button mat-raised-button color="primary" (click)="loadStats()">Statistik laden</button>
+  </div>
+
+  <ng-container *ngIf="stats">
+    <mat-card>
+      <h3>Top 3 Gottesdienst-Stücke</h3>
+      <ol>
+        <li *ngFor="let item of stats.topServicePieces">
+          <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
+        </li>
+      </ol>
+    </mat-card>
+
+    <mat-card>
+      <h3>Meist geprobte Stücke</h3>
+      <ol>
+        <li *ngFor="let item of stats.topRehearsalPieces">
+          <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
+        </li>
+      </ol>
+    </mat-card>
+
+    <mat-card>
+      <h3>Stücke im Repertoire</h3>
+      <p>Singfähig: {{ stats.singableCount }}</p>
+      <p>Probe: {{ stats.rehearsalCount }}</p>
+    </mat-card>
+  </ng-container>
 </div>
