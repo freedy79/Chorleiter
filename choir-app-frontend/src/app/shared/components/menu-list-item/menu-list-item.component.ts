@@ -94,7 +94,9 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
     onItemSelected(item: NavItem) {
         if (!item.children || !item.children.length) {
             if (item.route) {
-                this.router.navigate([item.route]);
+                this.router.navigate([item.route]).then(() => {
+                    this.navService.closeNav();
+                });
             }
         }
         if (item.children && item.children.length) {

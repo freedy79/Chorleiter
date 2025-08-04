@@ -16,7 +16,9 @@ export class NavService {
   }
 
   public closeNav() {
-    this.appDrawer.close();
+    if (this.appDrawer && this.appDrawer.mode === 'over') {
+      this.appDrawer.close();
+    }
   }
 
   public openNav() {
