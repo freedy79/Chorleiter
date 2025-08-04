@@ -21,6 +21,7 @@ import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';
+import { LibraryItem } from '@core/models/library-item';
 
 @Component({
   selector: 'app-dashboard',
@@ -45,6 +46,7 @@ export class DashboardComponent implements OnInit {
   pieceChanges$!: Observable<PieceChange[]>;
   nextEvents$!: Observable<Event[]>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
+  borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
 
@@ -76,6 +78,11 @@ export class DashboardComponent implements OnInit {
 
     this.latestPost$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLatestPost())
+    );
+
+    this.borrowedItems$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLibraryItems()),
+      map(items => items.filter(i => i.status === 'borrowed'))
     );
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(

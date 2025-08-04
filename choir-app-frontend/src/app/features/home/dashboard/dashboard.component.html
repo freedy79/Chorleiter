@@ -41,6 +41,18 @@
   </mat-list>
 </div>
 
+<ng-container *ngIf="borrowedItems$ | async as borrowed">
+  <div class="borrowed-section" *ngIf="borrowed.length > 0">
+    <h2>Entliehene Sammlungen</h2>
+    <mat-list>
+      <mat-list-item *ngFor="let item of borrowed">
+        {{ item.collection?.title || ('Sammlung ' + item.collectionId) }}
+        (Ablauf: {{ item.availableAt | date:'shortDate' }})
+      </mat-list-item>
+    </mat-list>
+  </div>
+</ng-container>
+
 <div *ngIf="isAdmin$ | async">
   <ng-container *ngIf="pieceChanges$ | async as changes">
     <div *ngIf="changes.length > 0">
