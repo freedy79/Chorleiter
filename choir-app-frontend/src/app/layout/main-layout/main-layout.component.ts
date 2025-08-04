@@ -24,6 +24,7 @@ import { HelpService } from '@core/services/help.service';
 import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
 import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { LoanCartService } from '@core/services/loan-cart.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -71,6 +72,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   isMedium$: Observable<boolean> | undefined;
 
   pageTitle$: Observable<string | null>;
+  cartCount$: Observable<number>;
 
 
   constructor(private authService: AuthService,
@@ -81,7 +83,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     private help: HelpService,
     private api: ApiService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private cart: LoanCartService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -96,6 +99,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
       })
     );
     this.currentTheme = this.themeService.getCurrentTheme();
+    this.cartCount$ = this.cart.items$.pipe(map(items => items.length));
 
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
       map(result => result.matches)

@@ -41,6 +41,8 @@ db.mail_template = require("./mail_template.model.js")(sequelize, Sequelize);
 db.system_setting = require("./system_setting.model.js")(sequelize, Sequelize);
 db.post = require("./post.model.js")(sequelize, Sequelize);
 db.library_item = require("./library_item.model.js")(sequelize, Sequelize);
+db.loan_request = require("./loan_request.model.js")(sequelize, Sequelize);
+db.loan_request_item = require("./loan_request_item.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -143,6 +145,13 @@ db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 // Library items referencing collections
 db.collection.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'collectionId' });
 db.library_item.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
+
+// Loan requests
+db.loan_request.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.loan_request.belongsTo(db.user, { foreignKey: 'userId', as: 'requester' });
+db.loan_request.hasMany(db.loan_request_item, { as: 'items', foreignKey: 'loanRequestId' });
+db.loan_request_item.belongsTo(db.loan_request, { foreignKey: 'loanRequestId', as: 'loanRequest' });
+db.loan_request_item.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
 
 
 module.exports = db;

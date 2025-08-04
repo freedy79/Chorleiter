@@ -19,6 +19,7 @@ import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
 import { LibraryItem } from '../models/library-item';
+import { LoanRequestPayload } from '../models/loan-request';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
@@ -497,6 +498,10 @@ export class ApiService {
 
   borrowLibraryItem(id: number): Observable<any> {
     return this.libraryService.borrowItem(id);
+  }
+
+  requestLibraryLoan(data: LoanRequestPayload): Observable<any> {
+    return this.libraryService.requestLoan(data);
   }
 
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
