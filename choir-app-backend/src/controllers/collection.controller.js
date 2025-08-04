@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Collection);
+const { Sequelize } = db; // access Sequelize error types
 
 exports.create = async (req, res, next) => {
     const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
@@ -17,14 +18,28 @@ exports.create = async (req, res, next) => {
         }
         const collection = await base.service.create({ title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         if (pieces && pieces.length > 0) {
+            const seen = new Set();
             for (const pieceInfo of pieces) {
+                if (seen.has(pieceInfo.pieceId)) {
+                    return res.status(400).send({ message: `Piece ${pieceInfo.pieceId} is duplicated.` });
+                }
+                seen.add(pieceInfo.pieceId);
+                const piece = await Piece.findByPk(pieceInfo.pieceId);
+                if (!piece) {
+                    return res.status(400).send({ message: `Piece with id=${pieceInfo.pieceId} not found.` });
+                }
                 await collection.addPiece(pieceInfo.pieceId, {
                     through: { numberInCollection: pieceInfo.numberInCollection }
                 });
             }
         }
         res.status(201).send(collection);
-    } catch (err) { next(err); }
+    } catch (err) {
+        if (err instanceof Sequelize.ForeignKeyConstraintError) {
+            return res.status(400).send({ message: 'Invalid piece reference.' });
+        }
+        next(err);
+    }
 };
 
 exports.update = async (req, res, next) => {
@@ -41,14 +56,28 @@ exports.update = async (req, res, next) => {
         await base.service.update(id, { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
+            const seen = new Set();
             for (const pieceLink of pieces) {
+                if (seen.has(pieceLink.pieceId)) {
+                    return res.status(400).send({ message: `Piece ${pieceLink.pieceId} is duplicated.` });
+                }
+                seen.add(pieceLink.pieceId);
+                const piece = await Piece.findByPk(pieceLink.pieceId);
+                if (!piece) {
+                    return res.status(400).send({ message: `Piece with id=${pieceLink.pieceId} not found.` });
+                }
                 await collection.addPiece(pieceLink.pieceId, {
                     through: { numberInCollection: pieceLink.numberInCollection }
                 });
             }
         }
         res.status(200).send({ message: "Collection updated successfully." });
-    } catch (err) { next(err); }
+    } catch (err) {
+        if (err instanceof Sequelize.ForeignKeyConstraintError) {
+            return res.status(400).send({ message: 'Invalid piece reference.' });
+        }
+        next(err);
+    }
 };
 
 /**
