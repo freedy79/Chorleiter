@@ -47,12 +47,15 @@ export class PieceDetailComponent implements OnInit {
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.loadPiece(id);
+    const openEdit = this.route.snapshot.queryParamMap.get('edit') === 'true';
+    this.loadPiece(id, () => {
+      if (openEdit) this.openEditPieceDialog();
+    });
     this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
   }
 
-  private loadPiece(id: number): void {
+  private loadPiece(id: number, afterLoad?: () => void): void {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       if (!p) return;
       this.piece = p;
@@ -63,6 +66,7 @@ export class PieceDetailComponent implements OnInit {
       }
       this.fileLinks = p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || [];
       this.externalLinks = p.links?.filter(l => l.type === 'EXTERNAL') || [];
+      if (afterLoad) afterLoad();
     });
   }
 

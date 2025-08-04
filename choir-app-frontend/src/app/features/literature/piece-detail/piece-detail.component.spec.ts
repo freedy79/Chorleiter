@@ -16,7 +16,15 @@ describe('PieceDetailComponent', () => {
     await TestBed.configureTestingModule({
       imports: [PieceDetailComponent],
       providers: [
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } },
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              paramMap: { get: () => '1' },
+              queryParamMap: { get: () => null }
+            }
+          }
+        },
         { provide: ApiService, useValue: { getRepertoirePiece: () => of(null) } },
         {
           provide: AuthService,
