@@ -19,6 +19,6 @@
 <section *ngIf="results.collections.length">
   <h3>Collections</h3>
   <ul>
-    <li *ngFor="let c of results.collections">{{ c.title }}</li>
+    <li *ngFor="let c of results.collections">{{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span></li>
   </ul>
 </section>

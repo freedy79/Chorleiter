@@ -35,6 +35,7 @@ exports.search = async (req, res) => {
     where: {
       [Op.or]: [
         { title: like },
+        { subtitle: like },
         { prefix: like }
       ]
     },
