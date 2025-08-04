@@ -14,7 +14,7 @@ import { PieceService } from '@core/services/piece.service';
 import { Piece } from 'src/app/core/models/piece';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-dialog.component';
-// ...
+import { RouterModule } from '@angular/router';
 @Component({
   selector: 'app-manage-creators',
   templateUrl: './manage-creators.component.html',
@@ -24,6 +24,7 @@ import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-di
     CommonModule,
     FormsModule,
     MaterialModule,
+    RouterModule,
   ]
 })
 export class ManageCreatorsComponent implements OnInit, AfterViewInit {
@@ -184,6 +185,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     this.expandedPerson?.id === row.id;
 
   openEditPieceDialog(pieceId: number, event?: Event): void {
+    event?.preventDefault();
     event?.stopPropagation();
     const expandedId = this.expandedPerson?.id;
     const dialogRef = this.dialog.open(PieceDialogComponent, {
