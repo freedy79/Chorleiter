@@ -2,4 +2,17 @@
   mat-card {
     margin-bottom: 1rem;
   }
+
+  .filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+  }
+
+  .chart-container {
+    display: block;
+    width: 100%;
+  }
 }

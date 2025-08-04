@@ -9,4 +9,6 @@ export interface StatsSummary {
   topRehearsalPieces: PieceStat[];
   singableCount: number;
   rehearsalCount: number;
+  leastUsedPieces: PieceStat[];
+  voicingDistribution: { voicing: string; count: number }[];
 }

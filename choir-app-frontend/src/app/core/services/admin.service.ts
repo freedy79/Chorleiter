@@ -108,8 +108,15 @@ export class AdminService {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
 
-  getStatistics(): Observable<StatsSummary> {
-    return this.http.get<StatsSummary>(`${this.apiUrl}/stats`);
+  getStatistics(startDate?: string, endDate?: string): Observable<StatsSummary> {
+    const params: any = {};
+    if (startDate) {
+      params.startDate = startDate;
+    }
+    if (endDate) {
+      params.endDate = endDate;
+    }
+    return this.http.get<StatsSummary>(`${this.apiUrl}/stats`, { params });
   }
 
   getMailSettings(): Observable<MailSettings> {
