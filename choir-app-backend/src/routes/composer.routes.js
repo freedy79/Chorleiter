@@ -7,6 +7,8 @@ router.use(authJwt.verifyToken);
 
 router.post("/", wrap(controller.create));
 router.get("/", wrap(controller.findAll));
+router.get("/duplicates", wrap(controller.findDuplicates));
+router.post("/migrate", wrap(controller.migrate));
 router.put("/:id", wrap(controller.update));
 router.delete("/:id", wrap(controller.delete));
 router.post("/:id/enrich", wrap(controller.enrich));
