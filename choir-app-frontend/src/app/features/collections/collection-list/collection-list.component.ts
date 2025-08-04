@@ -122,4 +122,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
       this.router.navigate(['/collections/pieces']);
     }
   }
+
+  public getCollectionComposer(collection: Collection): string {
+    if ((collection.pieceCount == 1) && collection.pieces) {
+      return (collection.pieces[0]?.composer?.name || 'error');
+    }
+    return '';
+  }
 }
