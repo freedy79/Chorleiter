@@ -7,6 +7,7 @@ export interface PieceStat {
 export interface StatsSummary {
   topServicePieces: PieceStat[];
   topRehearsalPieces: PieceStat[];
+  leastUsedPieces: PieceStat[];
   singableCount: number;
   rehearsalCount: number;
 }

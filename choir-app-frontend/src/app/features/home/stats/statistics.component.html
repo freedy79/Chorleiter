@@ -15,7 +15,7 @@
       <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
       <mat-datepicker #endPicker></mat-datepicker>
     </mat-form-field>
-
+    
     <button mat-raised-button color="primary" (click)="loadStats()">Statistik laden</button>
   </div>
 
@@ -34,6 +34,15 @@
       <ol>
         <li *ngFor="let item of stats.topRehearsalPieces">
           <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
+        </li>
+      </ol>
+    </mat-card>
+    
+    <mat-card *ngIf="leastUsedPieces.length">
+      <h3>Lange nicht verwendet</h3>
+      <ol>
+        <li *ngFor="let item of leastUsedPieces">
+          <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}} Monate)
         </li>
       </ol>
     </mat-card>
