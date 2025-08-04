@@ -1,0 +1,10 @@
+.form-section {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+
+.reason-field textarea {
+  min-height: 80px;
+}

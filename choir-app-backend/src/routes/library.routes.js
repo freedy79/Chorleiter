@@ -5,7 +5,7 @@ const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
 const { memoryUpload } = require('../utils/upload');
 const upload = memoryUpload();
-const { createLibraryItemValidation } = require("../validators/library.validation");
+const { createLibraryItemValidation, loanRequestValidation } = require("../validators/library.validation");
 const validate = require("../validators/validate");
 
 router.use(authJwt.verifyToken);
@@ -15,5 +15,6 @@ router.post('/', role.requireAdmin, createLibraryItemValidation, validate, wrap(
 router.post('/import', role.requireAdmin, upload.single('csvfile'), wrap(controller.importCsv));
 router.post('/:id/borrow', role.requireDirector, wrap(controller.borrow));
 router.post('/:id/return', role.requireDirector, wrap(controller.returnItem));
+router.post('/request', role.requireDirector, loanRequestValidation, validate, wrap(controller.requestLoan));
 
 module.exports = router;

@@ -10,6 +10,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
 import { LibraryCollectionDialogComponent } from './library-collection-dialog.component';
+import { LoanCartService } from '@core/services/loan-cart.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-library',
@@ -23,9 +25,9 @@ export class LibraryComponent implements OnInit {
   collections$!: Observable<Collection[]>;
   selectedFile: File | null = null;
   isAdmin = false;
-  displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt'];
-  
-  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router) {}
+  displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt', 'actions'];
+
+  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router, private cart: LoanCartService, private snack: MatSnackBar) {}
 
   ngOnInit(): void {
     this.load();
@@ -70,5 +72,11 @@ export class LibraryComponent implements OnInit {
         this.dialog.open(LibraryCollectionDialogComponent, { data: col });
       }
     });
+  }
+
+  addToCart(item: LibraryItem, event: Event): void {
+    event.stopPropagation();
+    this.cart.addItem(item);
+    this.snack.open('Zur Anfrage hinzugefügt', undefined, { duration: 2000 });
   }
 }

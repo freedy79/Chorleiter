@@ -17,6 +17,9 @@
   </ng-container>
 
   <ng-container *ngIf="isLoggedIn$ | async">
+    <button mat-icon-button routerLink="/library/request" [matBadge]="cartCount$ | async" matBadgeColor="accent" [matBadgeHidden]="(cartCount$ | async) === 0" matTooltip="Entleihkorb">
+      <mat-icon>shopping_cart</mat-icon>
+    </button>
     <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}">{{ userName$ | async }}</span>
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
       <mat-icon ><div class="svg_icon_white"><img src="./../../assets/icons/user-filled.svg" ></div></mat-icon>
