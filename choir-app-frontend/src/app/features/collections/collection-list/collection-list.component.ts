@@ -44,6 +44,12 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
 
+  /**
+   * Cache for the composer names of single-edition collections.
+   * Keyed by the collection ID to avoid repeated API calls.
+   */
+  private composerCache = new Map<number, string>();
+
   constructor(
     public apiService: ApiService,
     private snackBar: MatSnackBar,
@@ -124,8 +130,16 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   }
 
   public getCollectionComposer(collection: Collection): string {
-    if ((collection.pieceCount == 1) && collection.pieces) {
-      return (collection.pieces[0]?.composer?.name || 'error');
+    if (collection.pieceCount === 1) {
+      const cached = this.composerCache.get(collection.id);
+      if (cached !== undefined) {
+        return cached;
+      }
+      this.composerCache.set(collection.id, '');
+      this.apiService.getCollectionById(collection.id).subscribe(col => {
+        const name = col.pieces?.[0]?.composer?.name ?? '';
+        this.composerCache.set(collection.id, name);
+      });
     }
     return '';
   }
