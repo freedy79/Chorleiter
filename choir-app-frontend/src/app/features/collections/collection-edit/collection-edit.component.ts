@@ -8,6 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import {
     ReactiveFormsModule,
+    FormsModule,
     FormBuilder,
     FormGroup,
     Validators,
@@ -46,6 +47,7 @@ interface SelectedPieceWithNumber {
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         ReactiveFormsModule,
         MaterialModule,
         MatAutocompleteModule,
@@ -443,7 +445,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     private updateDataSource(goToLastPage = false): void {
         // Assign the new array to the .data property of the datasource
-        this.pieceLinkDataSource.data = this.selectedPieceLinks;
+        this.pieceLinkDataSource.data = [...this.selectedPieceLinks];
 
         // Move paginator to requested page after data change
         if (this.pieceLinkDataSource.paginator) {
@@ -521,5 +523,10 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                     });
             }
         });
+    }
+
+    onNumberChanged(): void {
+        this.sortPieceLinksByNumber();
+        this.updateDataSource();
     }
 }

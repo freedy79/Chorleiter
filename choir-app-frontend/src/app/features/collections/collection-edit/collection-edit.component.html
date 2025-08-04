@@ -140,7 +140,16 @@
             <!-- Number Column Definition -->
             <ng-container matColumnDef="number">
               <th mat-header-cell *matHeaderCellDef mat-sort-header="number"> Nr. </th>
-              <td mat-cell *matCellDef="let link"> {{link.numberInCollection}} </td>
+              <td mat-cell *matCellDef="let link" class="number-cell">
+                <mat-form-field appearance="outline">
+                  <input
+                    matInput
+                    [(ngModel)]="link.numberInCollection"
+                    (change)="onNumberChanged()"
+                    [ngModelOptions]="{standalone: true}"
+                  />
+                </mat-form-field>
+              </td>
             </ng-container>
 
             <!-- Title Column Definition -->
