@@ -7,7 +7,9 @@ import { Collection } from '@core/models/collection';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
+import { LibraryCollectionDialogComponent } from './library-collection-dialog.component';
 
 @Component({
   selector: 'app-library',
@@ -23,7 +25,7 @@ export class LibraryComponent implements OnInit {
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt'];
   
-  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog) {}
+  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router) {}
 
   ngOnInit(): void {
     this.load();
@@ -53,6 +55,19 @@ export class LibraryComponent implements OnInit {
     ref.afterClosed().subscribe(result => {
       if (result) {
         this.api.addLibraryItem(result).subscribe(() => this.load());
+      }
+    });
+  }
+
+  openCollection(item: LibraryItem): void {
+    const colId = item.collection?.id;
+    if (!colId) return;
+
+    this.api.getCollectionById(colId).subscribe(col => {
+      if ((col.singleEdition || (col.pieces && col.pieces.length === 1)) && col.pieces && col.pieces.length === 1) {
+        this.router.navigate(['/pieces', col.pieces[0].id]);
+      } else if (col.pieces && col.pieces.length > 0) {
+        this.dialog.open(LibraryCollectionDialogComponent, { data: col });
       }
     });
   }
