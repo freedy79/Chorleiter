@@ -31,6 +31,16 @@ mat-form-field {
 
 .piece-link-table .number-cell mat-form-field {
   width: 4rem;
+
+  // Hide outline by default and only show on hover or focus
+  .mat-form-field-outline {
+    display: none;
+  }
+
+  &:hover .mat-form-field-outline,
+  &.mat-focused .mat-form-field-outline {
+    display: block;
+  }
 }
 
 mat-chip-listbox {
