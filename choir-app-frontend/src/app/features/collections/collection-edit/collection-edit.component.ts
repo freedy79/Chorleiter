@@ -67,6 +67,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     pieceCtrl = new FormControl<string | Piece>('');
     filteredPieces$!: Observable<Piece[]>;
     allPieces: Piece[] = [];
+    private lastPieceSearch = '';
     publisherCtrl = new FormControl<string>('');
     publishers: Publisher[] = [];
     filteredPublishers$!: Observable<string[]>;
@@ -221,6 +222,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             map((value) => {
                 const searchString =
                     typeof value === 'string' ? value : value?.title || '';
+                this.lastPieceSearch = searchString;
                 const filteredPieces = this._filter(searchString);
                 return [this.addNewPieceOption, ...filteredPieces];
             })
@@ -364,20 +366,20 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     onPieceSelected(event: MatAutocompleteSelectedEvent): void {
         const selectedPiece = event.option.value as Piece;
         if (selectedPiece.id === this.addNewPieceOption.id) {
-            this.openAddPieceDialog();
+            this.openAddPieceDialog(this.lastPieceSearch);
         } else {
             this.addPieceForm.patchValue({ piece: selectedPiece });
             this.proposeNextNumber();
         }
     }
 
-    openAddPieceDialog(): void {
+    openAddPieceDialog(prefillTitle?: string): void {
         this.pieceCtrl.setValue('');
         const pieceDialogRef = this.dialog.open(PieceDialogComponent, {
             width: '90vw',
             maxWidth: '1000px',
             disableClose: true,
-            data: { pieceId: null },
+            data: { pieceId: null, initialTitle: prefillTitle },
         });
         pieceDialogRef
             .afterClosed()

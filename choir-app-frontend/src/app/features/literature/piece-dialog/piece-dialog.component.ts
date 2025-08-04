@@ -83,7 +83,7 @@ export class PieceDialogComponent implements OnInit {
         private snackBar: MatSnackBar,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { pieceId: number | null }
+        @Inject(MAT_DIALOG_DATA) public data: { pieceId?: number | null; initialTitle?: string }
     ) {
         this.isEditMode = !!data.pieceId;
 
@@ -103,6 +103,10 @@ export class PieceDialogComponent implements OnInit {
             authorId: [null],
             categoryId: [null],
         }, { validators: authorOrSourceValidator() });
+
+        if (!this.isEditMode && data.initialTitle) {
+            this.pieceForm.get('title')?.setValue(data.initialTitle);
+        }
     }
 
     ngOnInit(): void {

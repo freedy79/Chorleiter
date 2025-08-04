@@ -18,7 +18,7 @@ describe('PieceDialogComponent', () => {
       providers: [
         { provide: AuthService, useValue: { isAdmin$: of(true) } },
         { provide: MatDialogRef, useValue: {} },
-        { provide: MAT_DIALOG_DATA, useValue: {} },
+        { provide: MAT_DIALOG_DATA, useValue: { pieceId: null, initialTitle: 'Test Title' } },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } }
       ]
@@ -32,5 +32,9 @@ describe('PieceDialogComponent', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should prefill title when initialTitle is provided', () => {
+    expect(component.pieceForm.get('title')?.value).toBe('Test Title');
   });
 });
