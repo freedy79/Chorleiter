@@ -184,9 +184,12 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
   isExpansionDetailRow = (_: number, row: Composer | Author) =>
     this.expandedPerson?.id === row.id;
 
-  openEditPieceDialog(pieceId: number, event?: Event): void {
-    event?.preventDefault();
-    event?.stopPropagation();
+  openEditPieceDialog(event: MouseEvent, pieceId: number): void {
+    if (event.ctrlKey || event.metaKey || event.button !== 0) {
+      return; // allow default navigation for new tab or new window
+    }
+    event.preventDefault();
+    event.stopPropagation();
     const expandedId = this.expandedPerson?.id;
     const dialogRef = this.dialog.open(PieceDialogComponent, {
       width: '90vw',
