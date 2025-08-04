@@ -98,7 +98,10 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             this._paginator = paginator;
             this._paginator.pageSize = this.pageSize;
             this.pieceLinkDataSource.paginator = this._paginator;
-            this._paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-edit', e.pageSize));
+            this._paginator.page.subscribe(e => {
+                this.pageSize = e.pageSize;
+                this.paginatorService.setPageSize('collection-edit', e.pageSize);
+            });
         }
     }
 
@@ -408,7 +411,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         this.selectedPieceLinks = [...this.selectedPieceLinks, newLink];
 
         this.sortPieceLinksByNumber();
-        this.updateDataSource();
+        this.updateDataSource(true);
 
         this.addPieceForm.reset();
         this.pieceCtrl.setValue('');
@@ -438,14 +441,17 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         });
     }
 
-    private updateDataSource(): void {
+    private updateDataSource(goToLastPage = false): void {
         // Assign the new array to the .data property of the datasource
         this.pieceLinkDataSource.data = this.selectedPieceLinks;
 
-        // The datasource automatically informs the table and paginator of the change.
-        // If the paginator is already set, we can optionally move to the first page.
+        // Move paginator to requested page after data change
         if (this.pieceLinkDataSource.paginator) {
-            this.pieceLinkDataSource.paginator.firstPage();
+            if (goToLastPage) {
+                this.pieceLinkDataSource.paginator.lastPage();
+            } else {
+                this.pieceLinkDataSource.paginator.firstPage();
+            }
         }
     }
 
