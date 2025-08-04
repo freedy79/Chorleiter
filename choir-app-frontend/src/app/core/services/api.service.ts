@@ -686,8 +686,8 @@ export class ApiService {
     return this.adminService.checkChoirAdminStatus();
   }
 
-  getStatistics(startDate?: Date, endDate?: Date): Observable<StatsSummary> {
-    return this.adminService.getStatistics(startDate, endDate);
+  getStatistics(startDate?: Date, endDate?: Date, activeMonths?: number): Observable<StatsSummary> {
+    return this.adminService.getStatistics(startDate, endDate, activeMonths);
   }
 
   pingBackend(): Observable<{ message: string }> {

@@ -3,7 +3,7 @@ const { Sequelize, Op } = require("sequelize");
 
 exports.overview = async (req, res) => {
     const choirId = req.activeChoirId;
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate, activeMonths } = req.query;
     const dateWhere = {};
     if (startDate || endDate) {
         dateWhere.date = {};
@@ -14,13 +14,19 @@ exports.overview = async (req, res) => {
             dateWhere.date[Op.lte] = new Date(endDate);
         }
     }
+    let activeThreshold;
+    if (activeMonths) {
+        activeThreshold = new Date();
+        activeThreshold.setMonth(activeThreshold.getMonth() - Number(activeMonths));
+    }
     try {
         // Top pieces in services
-        const topServicePieces = await db.piece.findAll({
+        const topServiceQuery = {
             attributes: [
                 'id',
                 'title',
-                [Sequelize.fn('COUNT', Sequelize.col('events.id')), 'count']
+                [Sequelize.fn('COUNT', Sequelize.col('events.id')), 'count'],
+                [Sequelize.fn('MAX', Sequelize.col('events.date')), 'lastDate']
             ],
             include: [{
                 model: db.event,
@@ -31,15 +37,24 @@ exports.overview = async (req, res) => {
             group: ['piece.id'],
             order: [[Sequelize.literal('count'), 'DESC']],
             limit: 3,
-            subQuery: false
-        });
+            subQuery: false,
+            raw: true
+        };
+        if (activeThreshold) {
+            topServiceQuery.having = Sequelize.where(
+                Sequelize.fn('MAX', Sequelize.col('events.date')),
+                { [Op.gte]: activeThreshold }
+            );
+        }
+        const topServicePieces = await db.piece.findAll(topServiceQuery);
 
         // Top pieces rehearsed
-        const topRehearsalPieces = await db.piece.findAll({
+        const topRehearsalQuery = {
             attributes: [
                 'id',
                 'title',
-                [Sequelize.fn('COUNT', Sequelize.col('events.id')), 'count']
+                [Sequelize.fn('COUNT', Sequelize.col('events.id')), 'count'],
+                [Sequelize.fn('MAX', Sequelize.col('events.date')), 'lastDate']
             ],
             include: [{
                 model: db.event,
@@ -50,8 +65,16 @@ exports.overview = async (req, res) => {
             group: ['piece.id'],
             order: [[Sequelize.literal('count'), 'DESC']],
             limit: 3,
-            subQuery: false
-        });
+            subQuery: false,
+            raw: true
+        };
+        if (activeThreshold) {
+            topRehearsalQuery.having = Sequelize.where(
+                Sequelize.fn('MAX', Sequelize.col('events.date')),
+                { [Op.gte]: activeThreshold }
+            );
+        }
+        const topRehearsalPieces = await db.piece.findAll(topRehearsalQuery);
 
         // Pieces unused for at least 12 months
         const twelveMonthsAgo = new Date();

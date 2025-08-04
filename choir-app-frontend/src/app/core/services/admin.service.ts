@@ -108,13 +108,16 @@ export class AdminService {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
 
-  getStatistics(startDate?: Date | string, endDate?: Date | string): Observable<StatsSummary> {
+  getStatistics(startDate?: Date | string, endDate?: Date | string, activeMonths?: number): Observable<StatsSummary> {
     const params: any = {};
     if (startDate) {
       params.startDate = startDate instanceof Date ? startDate.toISOString() : startDate;
     }
     if (endDate) {
       params.endDate = endDate instanceof Date ? endDate.toISOString() : endDate;
+    }
+    if (activeMonths !== undefined) {
+      params.activeMonths = activeMonths;
     }
     return this.http.get<StatsSummary>(`${this.apiUrl}/stats`, { params });
   }
