@@ -44,4 +44,11 @@ describe('PieceDetailComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should show lyrics when provided', () => {
+    component.piece = { id: 1, title: 'Test', lyrics: 'Line1\nLine2' } as any;
+    fixture.detectChanges();
+    const lyricsEl: HTMLElement | null = fixture.nativeElement.querySelector('.lyrics');
+    expect(lyricsEl?.textContent).toContain('Line1');
+  });
 });

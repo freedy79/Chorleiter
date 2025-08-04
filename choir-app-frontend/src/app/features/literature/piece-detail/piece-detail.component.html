@@ -10,6 +10,12 @@
   <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
+  <mat-expansion-panel *ngIf="piece.lyrics">
+    <mat-expansion-panel-header>
+      <mat-panel-title>Liedtext</mat-panel-title>
+    </mat-expansion-panel-header>
+    <div class="lyrics">{{ piece.lyrics }}</div>
+  </mat-expansion-panel>
   <div *ngIf="piece.collections?.length">
     <p><strong>Enthalten in:</strong></p>
     <ul>
