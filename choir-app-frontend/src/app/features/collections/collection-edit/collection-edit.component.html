@@ -38,10 +38,13 @@
           </mat-autocomplete>
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" *ngIf="!collectionForm.value.singleEdition || selectedPieceLinks.length === 0">
           <mat-label>Präfix (z.B. GL, EG)</mat-label>
           <input matInput formControlName="prefix" placeholder="CB">
         </mat-form-field>
+        <div *ngIf="collectionForm.value.singleEdition && selectedPieceLinks.length > 0" class="composer-display">
+          <strong>Komponist:</strong> {{ selectedPieceLinks[0].piece.composer?.name || '-' }}
+        </div>
 
         <mat-form-field appearance="outline">
           <mat-label>Verlagsnummer</mat-label>

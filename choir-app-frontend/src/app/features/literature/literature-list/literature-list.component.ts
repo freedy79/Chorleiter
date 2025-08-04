@@ -272,7 +272,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (piece.collections && piece.collections.length > 0) {
       const ref = piece.collections[0];
       const num = (ref as any).collection_piece.numberInCollection;
-      return `${ref.prefix || ''}${num}`;
+      const prefix = ref.singleEdition ? piece.composer?.name || '' : ref.prefix || '';
+      return `${prefix}${num}`;
     }
     return '-';
   }

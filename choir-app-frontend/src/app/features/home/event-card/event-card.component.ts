@@ -43,7 +43,8 @@ export class EventCardComponent {
       const num = (ref as any).collection_piece?.numberInCollection;
 
       if (num) {
-        return `${ref.prefix || ''}${num}`;
+        const prefix = ref.singleEdition ? piece.composer?.name || '' : ref.prefix || '';
+        return `${prefix}${num}`;
       }
     }
     // Fallback, wenn keine Referenz vorhanden ist
