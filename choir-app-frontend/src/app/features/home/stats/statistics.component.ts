@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { StatsSummary } from '@core/models/stats-summary';
+import { StatsSummary, PieceStat } from '@core/models/stats-summary';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -14,10 +14,14 @@ import { RouterModule } from '@angular/router';
 })
 export class StatisticsComponent implements OnInit {
   stats?: StatsSummary;
+  leastUsedPieces: PieceStat[] = [];
 
   constructor(private apiService: ApiService) {}
 
   ngOnInit(): void {
-    this.apiService.getStatistics().subscribe(s => this.stats = s);
+    this.apiService.getStatistics().subscribe(s => {
+      this.stats = s;
+      this.leastUsedPieces = s.leastUsedPieces;
+    });
   }
 }

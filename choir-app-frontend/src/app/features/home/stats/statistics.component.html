@@ -19,6 +19,15 @@
     </ol>
   </mat-card>
 
+  <mat-card *ngIf="leastUsedPieces.length">
+    <h3>Lange nicht verwendet</h3>
+    <ol>
+      <li *ngFor="let item of leastUsedPieces">
+        <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}} Monate)
+      </li>
+    </ol>
+  </mat-card>
+
   <mat-card>
     <h3>Stücke im Repertoire</h3>
     <p>Singfähig: {{stats.singableCount}}</p>
