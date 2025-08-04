@@ -18,6 +18,12 @@
   }
 }
 
+.header-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+}
+
 .count-cell {
   text-align: center;
 }

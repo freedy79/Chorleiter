@@ -29,6 +29,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   public isLoading = true;
   public isChoirAdmin = false;
   public isAdmin = false;
+  public viewMode: 'collections' | 'pieces' = 'collections';
   public pageSizeOptions: number[] = [10, 25, 50];
   public pageSize = 10;
   private _sort!: MatSort;
@@ -114,5 +115,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   openCollection(collection: Collection): void {
     this.router.navigate(['/collections/edit', collection.id]);
+  }
+
+  onViewChange(value: 'collections' | 'pieces'): void {
+    if (value === 'pieces') {
+      this.router.navigate(['/collections/pieces']);
+    }
   }
 }
