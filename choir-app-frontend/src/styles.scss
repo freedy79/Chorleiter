@@ -25,6 +25,17 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   .container {
     padding: 1rem;
   }
+
+  .mat-mdc-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .mat-mdc-table th,
+  .mat-mdc-table td {
+    word-break: break-word;
+  }
 }
 
 // Add space below all Material card headers
