@@ -51,7 +51,7 @@
         <div *ngIf="expandedPieces.length; else none">
           <ul>
             <li *ngFor="let p of expandedPieces">
-              <a (click)="openEditPieceDialog(p.id, $event)">{{ p.title }}</a>
+              <a [routerLink]="['/pieces', p.id]" (click)="openEditPieceDialog(p.id, $event)">{{ p.title }}</a>
             </li>
           </ul>
         </div>
