@@ -130,6 +130,12 @@ export const routes: Routes = [
                 data: { title: 'Statistik' }
             },
             {
+                path: 'library/request',
+                loadComponent: () => import('./features/library/loan-cart.component').then(m => m.LoanCartComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Entleihkorb' }
+            },
+            {
                 path: 'library',
                 loadComponent: () => import('./features/library/library.component').then(m => m.LibraryComponent),
                 canActivate: [AuthGuard],

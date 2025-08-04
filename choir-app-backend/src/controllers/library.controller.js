@@ -3,6 +3,8 @@ const db = require('../models');
 const LibraryItem = db.library_item;
 const Piece = db.piece;
 const Collection = db.collection;
+const LoanRequest = db.loan_request;
+const LoanRequestItem = db.loan_request_item;
 
 // List all library items with collection details
 exports.findAll = async (req, res) => {
@@ -71,4 +73,40 @@ exports.returnItem = async (req, res) => {
   if (!item) return res.status(404).send({ message: 'Library item not found.' });
   await item.update({ status: 'available', availableAt: null });
   res.status(200).send(item);
+};
+
+// Create loan request for multiple library items
+exports.requestLoan = async (req, res) => {
+  const { items = [], startDate, endDate, reason } = req.body;
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).send({ message: 'No items provided.' });
+  }
+
+  const ids = items.map(i => i.libraryItemId);
+  const libraryItems = await LibraryItem.findAll({ where: { id: ids } });
+  if (libraryItems.length !== ids.length) {
+    return res.status(404).send({ message: 'One or more library items not found.' });
+  }
+
+  const request = await LoanRequest.create({
+    choirId: req.activeChoirId,
+    userId: req.userId,
+    startDate,
+    endDate,
+    reason
+  });
+
+  for (const item of items) {
+    await LoanRequestItem.create({
+      loanRequestId: request.id,
+      libraryItemId: item.libraryItemId,
+      quantity: item.quantity || 1
+    });
+  }
+
+  const created = await LoanRequest.findByPk(request.id, {
+    include: [{ model: LoanRequestItem, as: 'items' }]
+  });
+
+  res.status(201).send(created);
 };
