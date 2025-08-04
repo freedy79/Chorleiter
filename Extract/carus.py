@@ -5,9 +5,10 @@ import os
 import re
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
-URL = "https://www.carus-verlag.com/musiknoten-und-aufnahmen/chorbuch-advent-208200.html"
-DEFAULT_OUTPUT_CSV = "chorbuch_advent.csv"
+URL = "https://www.carus-verlag.com/musiknoten-und-aufnahmen/christmas-carols-of-the-world-weihnachtslieder-aus-aller-welt-chorbuch-214205.html"
+DEFAULT_OUTPUT_CSV = "christmas_carols.csv"
 ERROR_LOG = "errors.log"
+
 
 def normalize(text: str) -> str:
     return " ".join(text.strip().split())
@@ -251,6 +252,8 @@ def scrape(url: str, output_csv: str):
                                     textquelle = value
                                 elif label in ("komponist*in", "komponistin") and not komponist:
                                     komponist = value
+                                elif label == "bearbeiterin" and not komponist:
+                                    komponist = value  # Fallback: Bearbeiter*in als Komponist
                                 elif label in ("textdichter*in", "textdichterin"):
                                     dichter = value
                                 elif label == "bibelstelle":
@@ -352,3 +355,4 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         target = sys.argv[1]
     scrape(URL, target)
+
