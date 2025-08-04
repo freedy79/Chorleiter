@@ -1,0 +1,41 @@
+<div class="letter-filter">
+  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
+    {{ l }}
+  </button>
+</div>
+
+<div class="table-wrapper mat-elevation-z8">
+  <div class="table-scroll-container">
+    <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="title">Titel</th>
+        <td mat-cell *matCellDef="let piece" class="title-cell">
+          <strong>{{ piece.title }}</strong>
+          <div class="subtitle-hint" *ngIf="piece.subtitle">{{ piece.subtitle }}</div>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="composer">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="composer">Komponist</th>
+        <td mat-cell *matCellDef="let piece">{{ piece.composer?.name || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="author">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="author">Dichter</th>
+        <td mat-cell *matCellDef="let piece">{{ piece.author?.name || '-' }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="collections">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="collectionCount">Anzahl in Sammlungen</th>
+        <td mat-cell *matCellDef="let piece" class="count-cell">{{ piece.collectionCount || 0 }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openPiece(row)"></tr>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Stücke gefunden.</td>
+      </tr>
+    </table>
+  </div>
+  <mat-paginator [length]="totalPieces" [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>
+</div>

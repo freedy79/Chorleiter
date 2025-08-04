@@ -7,6 +7,7 @@ import { DashboardComponent } from './features/home/dashboard/dashboard.componen
 import { LiteratureListComponent } from './features/literature/literature-list/literature-list.component';
 import { CollectionListComponent } from './features/collections/collection-list/collection-list.component';
 import { CollectionEditComponent } from './features/collections/collection-edit/collection-edit.component';
+import { CollectionPieceListComponent } from './features/collections/piece-list/collection-piece-list.component';
 import { ProfileComponent } from './features/user/profile/profile.component';
 import { AuthGuard } from './core/guards/auth-guard'; // Stellen Sie sicher, dass der Pfad korrekt ist
 import { ImprintComponent } from '@features/legal/imprint/imprint.component';
@@ -80,6 +81,12 @@ export const routes: Routes = [
                 component: LiteratureListComponent,
                 canActivate: [AuthGuard],
                 data: { title: 'Repertoire' },
+            },
+            {
+                path: 'collections/pieces',
+                component: CollectionPieceListComponent,
+                canActivate: [AuthGuard],
+                data: { title: 'Stücke' },
             },
             {
                 path: 'collections',
