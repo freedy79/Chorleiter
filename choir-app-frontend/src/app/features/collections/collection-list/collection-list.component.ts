@@ -137,7 +137,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
       }
       this.composerCache.set(collection.id, '');
       this.apiService.getCollectionById(collection.id).subscribe(col => {
-        const name = col.pieces?.[0]?.composer?.name ?? '';
+        const name = col.pieces?.[0]?.composer?.name || col.pieces?.[0]?.origin || '';
         this.composerCache.set(collection.id, name);
       });
     }

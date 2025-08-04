@@ -2,7 +2,14 @@ const { body } = require('express-validator');
 
 exports.createPieceValidation = [
   body('title').notEmpty().withMessage('Title is required.'),
-  body('composerId').isInt().withMessage('Valid composerId is required.'),
+  body('composerId').optional({ nullable: true }).isInt(),
+  body('origin').optional({ nullable: true }).isString(),
+  body().custom((value, { req }) => {
+    if (!req.body.composerId && !(req.body.composers && req.body.composers.length) && !req.body.origin) {
+      throw new Error('composerId or origin is required');
+    }
+    return true;
+  }),
   body('subtitle').optional({ nullable: true }).isString(),
   body('composerCollection').optional({ nullable: true }).isString(),
   body('arrangerIds').optional().isArray().withMessage('arrangerIds must be an array'),
@@ -19,7 +26,8 @@ exports.createPieceValidation = [
 
 exports.updatePieceValidation = [
   body('title').optional().notEmpty(),
-  body('composerId').optional().isInt(),
+  body('composerId').optional({ nullable: true }).isInt(),
+  body('origin').optional({ nullable: true }).isString(),
   body('subtitle').optional({ nullable: true }).isString(),
   body('composerCollection').optional({ nullable: true }).isString(),
   body('arrangerIds').optional().isArray(),

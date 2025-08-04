@@ -9,6 +9,11 @@ const { createPieceValidation, updatePieceValidation } = require('../src/validat
     let res = validationResult(req1);
     assert.ok(!res.isEmpty(), 'create should fail without title');
 
+    const reqNoComposer = { body: { title: 'X' } };
+    for (const v of createPieceValidation) { await v.run(reqNoComposer); }
+    res = validationResult(reqNoComposer);
+    assert.ok(!res.isEmpty(), 'create should fail without composerId or origin');
+
     const req2 = { body: { title: 'X', arrangerIds: 'foo' } };
     for (const v of updatePieceValidation) { await v.run(req2); }
     res = validationResult(req2);

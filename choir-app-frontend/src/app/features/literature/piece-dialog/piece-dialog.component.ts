@@ -38,6 +38,14 @@ export function authorOrSourceValidator(): ValidatorFn {
     };
 }
 
+export function composerOrOriginValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        const composerId = control.get('composerId')?.value;
+        const origin = control.get('origin')?.value;
+        return !composerId && !origin ? { composerOrOriginRequired: true } : null;
+    };
+}
+
 @Component({
     selector: 'app-piece-dialog',
     standalone: true,
@@ -99,10 +107,11 @@ export class PieceDialogComponent implements OnInit {
             key: [''],
             timeSignature: [''],
             license: [''],
-            composerId: [null, Validators.required],
+            composerId: [null],
+            origin: [''],
             authorId: [null],
             categoryId: [null],
-        }, { validators: authorOrSourceValidator() });
+        }, { validators: [authorOrSourceValidator(), composerOrOriginValidator()] });
 
         if (!this.isEditMode && data.initialTitle) {
             this.pieceForm.get('title')?.setValue(data.initialTitle);
@@ -358,7 +367,7 @@ export class PieceDialogComponent implements OnInit {
     isGeneralStepInvalid(): boolean {
         return (
             this.pieceForm.get('title')?.invalid ||
-            this.pieceForm.get('composerId')?.invalid ||
+            this.pieceForm.hasError('composerOrOriginRequired') ||
             false
         );
     }
@@ -378,6 +387,7 @@ export class PieceDialogComponent implements OnInit {
             timeSignature: piece.timeSignature,
             license: piece.license,
             composerId: piece.composer?.id,
+            origin: piece.origin,
             authorId: piece.author?.id,
             categoryId: piece.category?.id,
             arrangerIds: piece.arrangers?.map((a) => a.id) || [],

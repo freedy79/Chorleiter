@@ -191,12 +191,12 @@ export class EventDialogComponent implements OnInit {
                     const lookup: LookupPiece = {
                         id: newPiece.id,
                         title: newPiece.title,
-                        composerName: newPiece.composer?.name || '',
+                        composerName: newPiece.composer?.name || newPiece.origin || '',
                         reference:
                             newPiece.collections &&
                             newPiece.collections.length > 0
                                 ? `${newPiece.collections[0].singleEdition
-                                      ? newPiece.composer?.name || ''
+                                      ? newPiece.composer?.name || newPiece.origin || ''
                                       : newPiece.collections[0].prefix || ''}${
                                       newPiece.collections[0].collection_piece
                                           .numberInCollection
@@ -226,11 +226,11 @@ export class EventDialogComponent implements OnInit {
         this.selectedPieces = event.pieces.map((p) => ({
             id: p.id,
             title: p.title,
-            composerName: p.composer?.name || '',
+            composerName: p.composer?.name || p.origin || '',
             reference:
                 p.collections && p.collections.length > 0
                     ? `${p.collections[0].singleEdition
-                          ? p.composer?.name || ''
+                          ? p.composer?.name || p.origin || ''
                           : p.collections[0].prefix || ''}${
                           (p as any).collections[0].collection_piece
                               .numberInCollection

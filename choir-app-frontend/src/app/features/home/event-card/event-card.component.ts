@@ -31,7 +31,7 @@ export class EventCardComponent {
     if (!piece) {
       return '';
     }
-    const composer = piece.composer?.name || '';
+    const composer = piece.composer?.name || piece.origin || '';
     const author = piece.author?.name || piece.lyricsSource || '';
     return author ? `${composer} - ${author}` : composer;
   }
@@ -43,7 +43,7 @@ export class EventCardComponent {
       const num = (ref as any).collection_piece?.numberInCollection;
 
       if (num) {
-        const prefix = ref.singleEdition ? piece.composer?.name || '' : ref.prefix || '';
+        const prefix = ref.singleEdition ? piece.composer?.name || piece.origin || '' : ref.prefix || '';
         return `${prefix}${num}`;
       }
     }

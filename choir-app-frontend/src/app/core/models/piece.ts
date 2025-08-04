@@ -26,6 +26,7 @@ export interface Piece {
   subtitle?: string;
   composerCollection?: string;
   voicing?: string;
+  origin?: string;
   composer?: Composer;
   composers?: (Composer & { piece_composer: { type?: string } })[];
   category?: Category;

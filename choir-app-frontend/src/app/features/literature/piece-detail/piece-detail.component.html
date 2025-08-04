@@ -6,7 +6,7 @@
     </button>
   </h2>
   <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>
-  <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
+  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}</p>
   <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
@@ -20,7 +20,7 @@
     <p><strong>Enthalten in:</strong></p>
     <ul>
       <li *ngFor="let c of piece.collections">
-        {{ c.title }} ({{ c.singleEdition ? piece.composer?.name : c.prefix }}{{ c.collection_piece.numberInCollection }})
+        {{ c.title }} ({{ c.singleEdition ? (piece.composer?.name || piece.origin) : c.prefix }}{{ c.collection_piece.numberInCollection }})
       </li>
     </ul>
   </div>

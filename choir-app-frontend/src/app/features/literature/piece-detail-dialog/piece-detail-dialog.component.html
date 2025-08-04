@@ -1,6 +1,6 @@
 <h1 mat-dialog-title>{{ piece?.title }}</h1>
 <div mat-dialog-content *ngIf="piece">
-  <p><strong>Komponist:</strong> {{ piece.composer?.name }}</p>
+  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
   <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>

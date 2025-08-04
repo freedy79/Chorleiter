@@ -43,6 +43,10 @@ module.exports = (sequelize, DataTypes) => {
         lyricsSource: { // Sonstige Quelle für den Text
             type: DataTypes.STRING,
             allowNull: true
+        },
+        origin: { // Alternativer Ursprung (z.B. Volksweise)
+            type: DataTypes.STRING,
+            allowNull: true
         }
     });
     return Piece;

@@ -23,8 +23,8 @@
       </ng-container>
 
       <ng-container matColumnDef="composer">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="composer">Komponist</th>
-        <td mat-cell *matCellDef="let piece">{{ piece.composer?.name || '-' }}</td>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="composer">Komponist/Ursprung</th>
+        <td mat-cell *matCellDef="let piece">{{ piece.composer?.name || piece.origin || '-' }}</td>
       </ng-container>
 
       <ng-container matColumnDef="author">

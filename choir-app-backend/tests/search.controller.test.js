@@ -12,6 +12,7 @@ const controller = require('../src/controllers/search.controller');
     const composer = await db.composer.create({ name: 'Handel' });
     await db.piece.create({ title: 'Hallelujah', composerId: composer.id });
     await db.piece.create({ title: 'Freedom', lyrics: 'Words of hope and love', composerId: composer.id });
+    await db.piece.create({ title: 'Folk', origin: 'Tradition' });
     await db.collection.create({ title: 'Advent', prefix: 'AD' });
     await db.event.create({ choirId: choir.id, date: new Date(), type: 'SERVICE', notes: 'Weekly service' });
 
@@ -21,6 +22,10 @@ const controller = require('../src/controllers/search.controller');
     assert.strictEqual(res.statusCode, 200);
     assert.ok(res.data.pieces.find(p => p.title === 'Freedom'));
     assert.strictEqual(res.data.collections.length, 0);
+
+    const reqOrigin = { query: { q: 'Trad' }, activeChoirId: choir.id };
+    await controller.search(reqOrigin, res);
+    assert.ok(res.data.pieces.find(p => p.title === 'Folk'));
 
     console.log('search.controller tests passed');
     await db.sequelize.close();
