@@ -1,5 +1,9 @@
 
 <div class="header-actions">
+  <button mat-stroked-button routerLink="/collections/pieces">
+          <mat-icon>library_music</mat-icon>
+          <span>Alle Stücke</span>
+  </button>
   <button mat-flat-button color="accent" routerLink="/collections/new"
           [disabled]="!isChoirAdmin && !isAdmin"
           matTooltip="{{ !isChoirAdmin && !isAdmin ? 'Zum Hinzufügen müssen Sie als Chor-Administrator eingeloggt sein.' : '' }}">

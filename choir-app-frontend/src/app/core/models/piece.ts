@@ -34,6 +34,7 @@ export interface Piece {
   collections?: CollectionReference[];
   collectionPrefix?: string | null;
   collectionNumber?: string | null;
+  collectionCount?: number;
 
   key?: string;
   timeSignature?: string;

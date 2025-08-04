@@ -1,0 +1,23 @@
+.table-wrapper {
+  width: 100%;
+}
+
+.table-scroll-container {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.title-cell {
+  cursor: pointer;
+}
+
+.letter-filter {
+  margin-bottom: 1rem;
+  button {
+    min-width: 32px;
+  }
+}
+
+.count-cell {
+  text-align: center;
+}

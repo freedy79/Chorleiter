@@ -95,9 +95,15 @@ exports.findAll = async (req, res) => {
 
     const pieces = await base.service.findAll({
             where,
+            attributes: {
+                include: [
+                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "collection_pieces" AS "cp" WHERE "cp"."pieceId" = "piece"."id")`), 'collectionCount']
+                ]
+            },
             include: [
                 { model: Composer, as: 'composer', attributes: ['id', 'name'] },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
+                { model: Author, as: 'author', attributes: ['id', 'name'] },
                 { model: db.piece_link, as: 'links' }
             ],
             order: [['title', 'ASC']]
