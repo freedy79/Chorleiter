@@ -1,7 +1,27 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .actions {
   display: flex;
   gap: 8px;
 }
+
 .full-width {
   flex: 1;
+}
+
+.post-list {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+.no-posts {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 }
