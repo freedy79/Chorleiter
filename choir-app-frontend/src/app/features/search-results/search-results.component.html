@@ -1,7 +1,7 @@
 <h2>Suchergebnisse für "{{ query }}"</h2>
 
 <section *ngIf="results.pieces.length">
-  <h3>Pieces</h3>
+  <h3>Stücke</h3>
   <ul>
     <li *ngFor="let p of results.pieces">
       <a [routerLink]="['/pieces', p.id]">{{ p.title }}</a>
@@ -10,14 +10,14 @@
 </section>
 
 <section *ngIf="results.events.length">
-  <h3>Events</h3>
+  <h3>Ereignisse</h3>
   <ul>
     <li *ngFor="let e of results.events">{{ e.type }} {{ e.date | date }}</li>
   </ul>
 </section>
 
 <section *ngIf="results.collections.length">
-  <h3>Collections</h3>
+  <h3>Sammlungen</h3>
   <ul>
     <li *ngFor="let c of results.collections">{{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span></li>
   </ul>
