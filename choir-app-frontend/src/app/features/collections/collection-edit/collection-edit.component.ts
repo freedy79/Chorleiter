@@ -193,9 +193,14 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 case 'title':
                     return link.piece.title.toLowerCase();
                 case 'number':
-                    // Wir versuchen, die Nummer als Zahl zu parsen, um eine korrekte numerische Sortierung zu ermöglichen.
-                    const num = parseInt(link.numberInCollection, 10);
-                    return isNaN(num) ? link.numberInCollection : num; // Fallback auf String-Sortierung, falls es keine Zahl ist
+                    // Versuche die numerische und alphanumerische Komponente zu trennen
+                    const match = link.numberInCollection.match(/^(\d+)([a-zA-Z]*)$/);
+                    if (match) {
+                        const base = parseInt(match[1], 10);
+                        const suffix = match[2] ? match[2].toLowerCase().charCodeAt(0) / 100 : 0;
+                        return base + suffix;
+                    }
+                    return link.numberInCollection;
                 default:
                     return (link as any)[property];
             }
@@ -414,13 +419,17 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
 
     private sortPieceLinksByNumber(): void {
         this.selectedPieceLinks.sort((a, b) => {
-            const numA = parseInt(a.numberInCollection, 10);
-            const numB = parseInt(b.numberInCollection, 10);
-            // Wenn beide Zahlen sind, vergleiche sie numerisch
-            if (!isNaN(numA) && !isNaN(numB)) {
-                return numA - numB;
+            const pattern = /^(\d+)([a-zA-Z]*)$/;
+            const matchA = a.numberInCollection.match(pattern);
+            const matchB = b.numberInCollection.match(pattern);
+            if (matchA && matchB) {
+                const baseA = parseInt(matchA[1], 10);
+                const baseB = parseInt(matchB[1], 10);
+                if (baseA !== baseB) {
+                    return baseA - baseB;
+                }
+                return matchA[2].localeCompare(matchB[2]);
             }
-            // Ansonsten, vergleiche als Text (Fallback)
             return a.numberInCollection.localeCompare(b.numberInCollection);
         });
     }
