@@ -2,6 +2,7 @@ const db = require("../models");
 const Collection = db.collection;
 const Choir = db.choir;
 const Piece = db.piece;
+const Composer = db.composer;
 const logger = require("../config/logger");
 const path = require('path');
 const fs = require('fs').promises;
@@ -100,6 +101,7 @@ exports.findOne = async (req, res, next) => {
         const collection = await base.service.findById(req.params.id, {
             include: [{
                 model: Piece,
+                include: [{ model: Composer, as: 'composer', attributes: ['id', 'name'] }],
                 through: { attributes: ['numberInCollection'] }
             }]
         });
