@@ -20,6 +20,7 @@ export class StatisticsComponent implements OnInit {
 
   startDate?: Date;
   endDate?: Date;
+  activeMonths?: number;
 
 
   constructor(private apiService: ApiService) {}
@@ -29,7 +30,7 @@ export class StatisticsComponent implements OnInit {
   }
 
   loadStats(): void {
-    this.apiService.getStatistics(this.startDate, this.endDate)
+    this.apiService.getStatistics(this.startDate, this.endDate, this.activeMonths)
       .subscribe(s => {
       this.stats = s;
       this.leastUsedPieces = s.leastUsedPieces;
