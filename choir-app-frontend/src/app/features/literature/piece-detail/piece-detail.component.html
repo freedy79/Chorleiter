@@ -33,7 +33,7 @@
       <h3>Dateien</h3>
       <ul>
         <li *ngFor="let link of fileLinks">
-          <a [href]="getLinkUrl(link)" target="_blank" rel="noopener">{{ link.description }}</a>
+          <a [href]="getLinkUrl(link)">{{ link.description }}</a>
         </li>
       </ul>
     </div>
@@ -41,7 +41,7 @@
       <h3>Links</h3>
       <ul>
         <li *ngFor="let link of externalLinks">
-          <a [href]="getLinkUrl(link)" target="_blank" rel="noopener">{{ link.description }}</a>
+          <a [href]="getLinkUrl(link)">{{ link.description }}</a>
         </li>
       </ul>
     </div>
