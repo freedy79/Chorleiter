@@ -309,7 +309,11 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                 });
             },
             error: (err) => {
-                this.snackBar.open(`Fehler: ${err.message}`, 'Schließen', {
+                let message = err.error?.message || err.message || 'Unbekannter Fehler beim Speichern.';
+                if (err.status === 400 && !err.error?.message) {
+                    message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+                }
+                this.snackBar.open(`Fehler: ${message}`, 'Schließen', {
                     duration: 5000,
                     verticalPosition: 'top',
                 });
