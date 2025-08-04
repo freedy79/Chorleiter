@@ -5,7 +5,10 @@ exports.createCollectionValidation = [
   body('subtitle').optional().isString(),
   body('pieces').optional().isArray().withMessage('pieces must be an array'),
   body('pieces.*.pieceId').optional().isInt().withMessage('pieceId must be an integer'),
-  body('pieces.*.numberInCollection').optional().isInt().withMessage('numberInCollection must be an integer'),
+  body('pieces.*.numberInCollection')
+    .optional()
+    .matches(/^\d+[a-zA-Z]*$/)
+    .withMessage('numberInCollection must be numeric with optional letters'),
   body('singleEdition').optional().isBoolean()
 ];
 
@@ -14,6 +17,8 @@ exports.updateCollectionValidation = [
   body('subtitle').optional().isString(),
   body('pieces').optional().isArray(),
   body('pieces.*.pieceId').optional().isInt(),
-  body('pieces.*.numberInCollection').optional().isInt(),
+  body('pieces.*.numberInCollection')
+    .optional()
+    .matches(/^\d+[a-zA-Z]*$/),
   body('singleEdition').optional().isBoolean()
 ];

@@ -19,6 +19,16 @@ const { createCollectionValidation, updateCollectionValidation } = require('../s
     res = validationResult(req3);
     assert.ok(!res.isEmpty(), 'create should fail when subtitle is not string');
 
+    const req4 = { body: { title: 'A', pieces: [{ pieceId: 1, numberInCollection: '11a' }] } };
+    for (const v of createCollectionValidation) { await v.run(req4); }
+    res = validationResult(req4);
+    assert.ok(res.isEmpty(), 'create should allow alphanumeric numberInCollection');
+
+    const req5 = { body: { title: 'A', pieces: [{ pieceId: 1, numberInCollection: '11!' }] } };
+    for (const v of createCollectionValidation) { await v.run(req5); }
+    res = validationResult(req5);
+    assert.ok(!res.isEmpty(), 'create should fail for invalid numberInCollection');
+
     console.log('collection.validation tests passed');
   } catch (err) {
     console.error(err);
