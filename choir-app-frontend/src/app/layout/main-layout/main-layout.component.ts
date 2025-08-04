@@ -143,6 +143,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
   ngAfterViewInit(): void {
     this.evaluateDrawerWidth();
+    if (this.appDrawer) {
+      this.navService.appDrawer = this.appDrawer;
+    }
   }
 
   @HostListener('window:resize')
