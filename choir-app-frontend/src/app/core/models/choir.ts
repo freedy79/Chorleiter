@@ -8,6 +8,7 @@ export interface Choir {
     pieceCount?: number;
     modules?: {
         dienstplan?: boolean;
+        joinByLink?: boolean;
     };
     joinHash?: string;
 }
