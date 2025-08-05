@@ -30,7 +30,6 @@
           </button>
         </div>
       </form>
-      <p *ngIf="isChoirAdmin && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
     </mat-card-content>
   </mat-card>
 
@@ -40,11 +39,16 @@
       <mat-card-title>Einstellungen</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <mat-checkbox [(ngModel)]="dienstplanEnabled" (change)="onToggleDienstplan()">
+      <mat-checkbox [(ngModel)]="dienstplanEnabled" (change)="onModulesChange()">
         Dienstplan anzeigen
       </mat-checkbox>
 
-      <div class="service-settings">
+      <mat-checkbox [(ngModel)]="joinByLinkEnabled" (change)="onModulesChange()">
+        Beitritt als Sänger per Link erlauben
+      </mat-checkbox>
+      <p *ngIf="joinByLinkEnabled && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
+
+      <div class="service-settings" *ngIf="dienstplanEnabled">
         <h3>Gottesdienste</h3>
         <mat-form-field appearance="outline">
           <mat-label>Sonntags</mat-label>

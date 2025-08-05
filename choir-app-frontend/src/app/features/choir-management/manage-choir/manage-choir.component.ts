@@ -32,6 +32,7 @@ export class ManageChoirComponent implements OnInit {
 
   isChoirAdmin = false;
   dienstplanEnabled = false;
+  joinByLinkEnabled = false;
 
   /**
    * Holds the choirId from the query parameter when a global admin
@@ -87,6 +88,7 @@ export class ManageChoirComponent implements OnInit {
         this.choirForm.patchValue(pageData.choirDetails);
         this.isChoirAdmin = pageData.isChoirAdmin;
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
+        this.joinByLinkEnabled = !!pageData.choirDetails.modules?.joinByLink;
         const rules = pageData.planRules as any[] || [];
         const sundayRule = rules.find(r => r.dayOfWeek === 0);
         if (sundayRule) {
@@ -223,12 +225,12 @@ export class ManageChoirComponent implements OnInit {
   }
 
 
-  onToggleDienstplan(): void {
+  onModulesChange(): void {
     if (!this.isChoirAdmin) {
       return;
     }
 
-    const modules = { dienstplan: this.dienstplanEnabled };
+    const modules = { dienstplan: this.dienstplanEnabled, joinByLink: this.joinByLinkEnabled };
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {
