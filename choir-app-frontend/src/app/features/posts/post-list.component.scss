@@ -9,13 +9,13 @@
   gap: 8px;
 }
 
-.full-width {
-  flex: 1;
-}
-
 .post-list {
   flex: 1 1 auto;
   overflow: auto;
+}
+
+.post {
+  margin-bottom: 1rem;
 }
 
 .no-posts {
