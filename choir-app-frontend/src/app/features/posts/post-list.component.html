@@ -3,19 +3,21 @@
 </div>
 
 <ng-container *ngIf="posts.length; else noPosts">
-  <mat-list class="post-list">
-    <mat-list-item *ngFor="let p of posts">
-      <div class="full-width">
-        <h3>{{ p.title }}</h3>
+  <div class="post-list">
+    <mat-card *ngFor="let p of posts" class="post">
+      <mat-card-header>
+        <mat-card-title>{{ p.title }}</mat-card-title>
+        <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
         <p>{{ p.text }}</p>
-        <small>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</small>
-      </div>
-      <div *ngIf="canEdit(p)" class="actions">
+      </mat-card-content>
+      <mat-card-actions *ngIf="canEdit(p)" class="actions">
         <button mat-icon-button (click)="editPost(p)" matTooltip="Bearbeiten"><mat-icon>edit</mat-icon></button>
         <button mat-icon-button (click)="deletePost(p)" matTooltip="Löschen"><mat-icon>delete</mat-icon></button>
-      </div>
-    </mat-list-item>
-  </mat-list>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </ng-container>
 
 <ng-template #noPosts>

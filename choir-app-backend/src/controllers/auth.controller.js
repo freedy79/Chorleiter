@@ -160,6 +160,9 @@ exports.switchChoir = async (req, res) => {
 
 exports.checkChoirAdminStatus = async (req, res) => {
     try {
+        if (req.userRole === 'admin') {
+            return res.status(200).send({ isChoirAdmin: true });
+        }
         const association = await db.user_choir.findOne({
             where: {
                 userId: req.userId,
