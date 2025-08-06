@@ -262,6 +262,20 @@ export class PieceDialogComponent implements OnInit {
         this.linksFormArray.removeAt(index);
     }
 
+    onLinkFileSelected(event: Event, index: number): void {
+        const file = (event.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        const linkGroup = this.linksFormArray.at(index) as FormGroup;
+        this.pieceService.uploadPieceLinkFile(file).subscribe(res => {
+            linkGroup.get('url')?.setValue(res.path);
+        });
+    }
+
+    onLinkTypeChange(index: number): void {
+        const linkGroup = this.linksFormArray.at(index) as FormGroup;
+        linkGroup.get('url')?.setValue('');
+    }
+
     private initializeComposerAutocomplete(): void {
         this.filteredComposers$ = this.composerCtrl.valueChanges.pipe(
             startWith(''),

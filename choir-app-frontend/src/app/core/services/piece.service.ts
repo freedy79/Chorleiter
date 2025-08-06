@@ -141,4 +141,10 @@ export class PieceService {
       .get<{ data: string }>(`${this.apiUrl}/pieces/${id}/image`)
       .pipe(map(res => res.data));
   }
+
+  uploadPieceLinkFile(file: File): Observable<{ path: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ path: string }>(`${this.apiUrl}/pieces/link-file`, formData);
+  }
 }
