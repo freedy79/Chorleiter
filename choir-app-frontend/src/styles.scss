@@ -29,11 +29,23 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   .mat-mdc-table {
     display: block;
     width: 100%;
-    overflow-x: auto;
   }
 
-  .mat-mdc-table th,
-  .mat-mdc-table td {
+  .mat-mdc-header-row {
+    display: none;
+  }
+
+  .mat-mdc-row {
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 8px 0;
+  }
+
+  .mat-mdc-row .mat-mdc-cell {
+    display: block;
+    width: 100%;
+    padding: 4px 8px;
+    box-sizing: border-box;
     word-break: break-word;
   }
 }
