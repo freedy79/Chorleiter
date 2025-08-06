@@ -133,9 +133,25 @@
               <h4 class="full-width">Links</h4>
               <div formArrayName="links" class="full-width">
                 <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
-                  <mat-form-field appearance="outline"><mat-label>Beschreibung</mat-label><input matInput formControlName="description"></mat-form-field>
-                  <mat-form-field appearance="outline"><mat-label>URL oder Dateipfad</mat-label><input matInput formControlName="url"></mat-form-field>
-                  <mat-form-field appearance="outline"><mat-label>Typ</mat-label><mat-select formControlName="type"><mat-option value="EXTERNAL">Externer Link</mat-option><mat-option value="FILE_DOWNLOAD">Dateidownload</mat-option></mat-select></mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Beschreibung</mat-label>
+                    <input matInput formControlName="description" />
+                  </mat-form-field>
+                  <mat-form-field *ngIf="link.get('type')?.value !== 'FILE_DOWNLOAD'" appearance="outline">
+                    <mat-label>URL</mat-label>
+                    <input matInput formControlName="url" />
+                  </mat-form-field>
+                  <div *ngIf="link.get('type')?.value === 'FILE_DOWNLOAD'" class="file-upload">
+                    <input type="file" (change)="onLinkFileSelected($event, i)" accept="application/pdf,image/*,audio/*" />
+                    <span *ngIf="link.get('url')?.value">Datei hochgeladen</span>
+                  </div>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Typ</mat-label>
+                    <mat-select formControlName="type" (selectionChange)="onLinkTypeChange(i)">
+                      <mat-option value="EXTERNAL">Externer Link</mat-option>
+                      <mat-option value="FILE_DOWNLOAD">Datei</mat-option>
+                    </mat-select>
+                  </mat-form-field>
                   <button mat-icon-button color="warn" (click)="removeLink(i)" type="button"><mat-icon>delete</mat-icon></button>
                 </div>
               </div>

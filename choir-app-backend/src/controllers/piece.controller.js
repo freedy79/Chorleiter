@@ -247,6 +247,11 @@ exports.uploadImage = async (req, res, next) => {
     res.status(200).send({ filename: req.file.filename });
 };
 
+exports.uploadLinkFile = async (req, res, next) => {
+    if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+    res.status(200).send({ path: `/uploads/piece-files/${req.file.filename}` });
+};
+
 exports.getImage = async (req, res, next) => {
     const id = req.params.id;
     const piece = await Piece.findByPk(id);

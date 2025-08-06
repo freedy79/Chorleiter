@@ -19,7 +19,7 @@ exports.createPieceValidation = [
   body('composers.*.type').optional({ nullable: true }).isString(),
   body('links').optional().isArray().withMessage('links must be an array'),
   body('links.*.description').optional().isString(),
-  body('links.*.url').optional().isURL().withMessage('links.*.url must be a valid URL'),
+  body('links.*.url').optional().isString(),
   body('authorId').optional({ nullable: true }).isInt(),
   body('categoryId').optional({ nullable: true }).isInt()
 ];
@@ -37,7 +37,7 @@ exports.updatePieceValidation = [
   body('composers.*.type').optional({ nullable: true }).isString(),
   body('links').optional().isArray(),
   body('links.*.description').optional().isString(),
-  body('links.*.url').optional().isURL(),
+  body('links.*.url').optional().isString(),
   body('authorId').optional({ nullable: true }).isInt(),
   body('categoryId').optional({ nullable: true }).isInt()
 ];
