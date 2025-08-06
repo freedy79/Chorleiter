@@ -14,6 +14,11 @@ export class ErrorInterceptor implements HttpInterceptor {
         if (req.url.includes('/auth/signin')) {
           return throwError(() => error);
         }
+        if (error.status === 401) {
+          // Unauthorized errors are handled by AuthInterceptor (logout and redirect).
+          // Avoid showing them as global errors.
+          return throwError(() => error);
+        }
         if (error.status === 0 && (error as HttpErrorResponse).error === 'abort') {
           // The request was cancelled, e.g. due to logout. Avoid reporting an error.
           return throwError(() => error);
