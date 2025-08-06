@@ -28,7 +28,7 @@
     <!-- Status Column -->
     <ng-container matColumnDef="status">
       <th mat-header-cell *matHeaderCellDef mat-sort-header="status"> Status </th>
-      <td mat-cell *matCellDef="let collection">
+      <td mat-cell *matCellDef="let collection" class="status-cell">
         <mat-icon
           class="status-icon"
           [color]="collection.isAdded ? 'primary' : 'disabled'"
@@ -41,7 +41,7 @@
     <!-- Title Column -->
     <ng-container matColumnDef="title">
       <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </th>
-      <td mat-cell *matCellDef="let collection">
+      <td mat-cell *matCellDef="let collection" class="title-cell">
         <strong>{{ collection.title }}</strong>
         <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
         <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
@@ -59,7 +59,7 @@
     <!-- Publisher Column -->
     <ng-container matColumnDef="publisher">
       <th mat-header-cell *matHeaderCellDef mat-sort-header="publisher"> Verlag </th>
-      <td mat-cell *matCellDef="let collection"> {{ collection.publisher || '-' }} </td>
+      <td mat-cell *matCellDef="let collection" class="publisher-cell"> {{ collection.publisher || '-' }} </td>
     </ng-container>
 
     <!-- Actions Column -->

@@ -91,11 +91,38 @@ mat-card-actions button mat-icon {
 
 @media (prefers-color-scheme: dark) {
     .table-wrapper .mat-row:hover {
-        background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.08);
     }
 }
 
 mat-paginator {
     flex-shrink: 0;
     border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 600px) {
+    .table-wrapper .mat-header-row {
+        display: none;
+    }
+
+    .table-wrapper .mat-row {
+        display: grid;
+        grid-template-columns: 64px 1fr auto;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    .table-wrapper .mat-row .mat-cell {
+        border: none;
+        padding: 4px 8px;
+        display: block;
+    }
+
+    .table-wrapper .mat-row .cover-cell { grid-column: 1; }
+    .table-wrapper .mat-row .status-cell { grid-column: 2; order: 1; }
+    .table-wrapper .mat-row .title-cell { grid-column: 2; order: 2; }
+    .table-wrapper .mat-row .titles-cell { grid-column: 2; order: 3; }
+    .table-wrapper .mat-row .publisher-cell { grid-column: 2; order: 4; }
+    .table-wrapper .mat-row .actions-cell { grid-column: 3; order: 5; text-align: right; }
 }
