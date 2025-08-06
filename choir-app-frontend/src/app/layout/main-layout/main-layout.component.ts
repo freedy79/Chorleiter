@@ -54,8 +54,15 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   showAdminSubmenu: boolean = true;
   isExpanded = true;
   isShowing = false;
-  @ViewChild('appDrawer') appDrawer: MatDrawer | undefined;
-   private isHandset: boolean = false;
+  private _appDrawer: MatDrawer | undefined;
+  @ViewChild('appDrawer')
+  set appDrawer(drawer: MatDrawer | undefined) {
+    this._appDrawer = drawer;
+    if (drawer) {
+      this.navService.appDrawer = drawer;
+    }
+  }
+  private isHandset: boolean = false;
 
   drawerOpenByWidth = true;
   private readonly drawerWidth = 220;
@@ -143,8 +150,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
   ngAfterViewInit(): void {
     this.evaluateDrawerWidth();
-    if (this.appDrawer) {
-      this.navService.appDrawer = this.appDrawer;
+    if (this._appDrawer) {
+      this.navService.appDrawer = this._appDrawer;
     }
   }
 
@@ -311,7 +318,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
   public closeSidenav() {
     if (this.isHandset) {
-      this.appDrawer?.close();
+      this._appDrawer?.close();
     }
   }
 
