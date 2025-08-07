@@ -12,6 +12,10 @@ export interface PieceNote {
 }
 
 export interface CollectionReference {
+  /**
+   * Unique identifier of the referenced collection.
+   */
+  id: number;
   prefix: string;
   title?: string;
   singleEdition?: boolean;
