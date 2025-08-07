@@ -254,6 +254,7 @@ export class PieceDialogComponent implements OnInit {
             description: ['', Validators.required],
             url: ['', Validators.required],
             type: ['EXTERNAL', Validators.required],
+            downloadName: [''],
         });
         this.linksFormArray.push(linkFormGroup);
     }
@@ -269,12 +270,14 @@ export class PieceDialogComponent implements OnInit {
         this.pieceService.uploadPieceLinkFile(file).subscribe(res => {
             linkGroup.get('url')?.setValue(res.path);
             linkGroup.get('description')?.setValue(file.name);
+            linkGroup.get('downloadName')?.setValue(file.name);
         });
     }
 
     onLinkTypeChange(index: number): void {
         const linkGroup = this.linksFormArray.at(index) as FormGroup;
         linkGroup.get('url')?.setValue('');
+        linkGroup.get('downloadName')?.setValue('');
     }
 
     private initializeComposerAutocomplete(): void {
@@ -431,6 +434,7 @@ export class PieceDialogComponent implements OnInit {
                     description: [link.description, Validators.required],
                     url: [link.url, Validators.required],
                     type: [link.type, Validators.required],
+                    downloadName: [link.downloadName || ''],
                 })
             );
         });
