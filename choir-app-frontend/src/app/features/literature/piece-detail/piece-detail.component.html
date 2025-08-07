@@ -21,7 +21,9 @@
     <p><strong>Enthalten in:</strong></p>
     <ul>
       <li *ngFor="let c of piece.collections">
-        {{ c.title }} ({{ c.singleEdition ? (piece.composer?.name || piece.origin) : c.prefix }}{{ c.collection_piece.numberInCollection }})
+        <a [routerLink]="['/collections/edit', c.id]">
+          {{ c.title }} ({{ c.singleEdition ? (piece.composer?.name || piece.origin) : c.prefix }}{{ c.collection_piece.numberInCollection }})
+        </a>
       </li>
     </ul>
   </div>
