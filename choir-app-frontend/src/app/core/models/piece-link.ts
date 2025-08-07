@@ -3,4 +3,5 @@ export interface PieceLink {
     url: string;
     description: string;
     type: 'EXTERNAL' | 'FILE_DOWNLOAD';
+    downloadName?: string;
 }
