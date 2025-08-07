@@ -297,10 +297,12 @@ export class PieceDialogComponent implements OnInit {
             startWith(''),
             map(value => (typeof value === 'string' ? value : value?.name || '')),
             map(name => {
-                const filtered = this._filterComposers(name);
+                const sanitized = this._sanitizeName(name);
+                const normalized = this._normalizeSearch(name);
+                const filtered = this._filterComposers(normalized);
                 const options = filtered.map(c => ({ ...c }));
-                if (name && !filtered.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-                    options.unshift({ id: this.addNewComposerId, name, isNew: true } as Composer & { isNew: boolean });
+                if (sanitized && !filtered.some(c => this._normalizeSearch(c.name) === normalized)) {
+                    options.unshift({ id: this.addNewComposerId, name: sanitized, isNew: true } as Composer & { isNew: boolean });
                 }
                 return options;
             })
@@ -323,8 +325,16 @@ export class PieceDialogComponent implements OnInit {
     }
 
     private _filterComposers(search: string): Composer[] {
-        const filterValue = search.toLowerCase();
-        return this.allComposers.filter(c => c.name.toLowerCase().includes(filterValue));
+        if (!search) return this.allComposers;
+        return this.allComposers.filter(c => this._normalizeSearch(c.name).includes(search));
+    }
+
+    private _sanitizeName(value: string): string {
+        return value.trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+    }
+
+    private _normalizeSearch(value: string): string {
+        return this._sanitizeName(value).toLowerCase();
     }
 
     private _filterAuthors(search: string): Author[] {
