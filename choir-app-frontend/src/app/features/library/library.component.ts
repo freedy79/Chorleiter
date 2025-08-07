@@ -92,7 +92,7 @@ export class LibraryComponent implements OnInit {
 
   getCollectionHint(collection?: Collection): string {
     if (!collection) return '';
-    return collection.subtitle || '-';
+    return collection.subtitle || '';
   }
 
   public getCollectionComposer(collection?: Collection): string {
@@ -110,7 +110,7 @@ export class LibraryComponent implements OnInit {
         return name;
       });
     }
-    return 'c ' + collection.pieceCount?.toString();
+    return '';
   }
 
   addToCart(item: LibraryItem, event: Event): void {
