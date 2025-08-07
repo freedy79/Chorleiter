@@ -7,4 +7,5 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   author?: { id: number; name: string };
+  piece?: { id: number; title: string };
 }

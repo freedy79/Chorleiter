@@ -13,7 +13,7 @@ async function isChoirAdmin(req) {
 }
 
 exports.create = async (req, res) => {
-  const { title, text } = req.body;
+  const { title, text, pieceId } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const sanitizedTitle = stripHtml(title);
@@ -21,10 +21,14 @@ exports.create = async (req, res) => {
     const post = await Post.create({
       title: sanitizedTitle,
       text: sanitizedText,
+      pieceId: pieceId || null,
       choirId: req.activeChoirId,
       userId: req.userId
     });
-    const full = await Post.findByPk(post.id, { include: [{ model: db.user, as: 'author', attributes: ['id','name'] }] });
+    const full = await Post.findByPk(post.id, { include: [
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      { model: db.piece, as: 'piece', attributes: ['id','title'] }
+    ] });
 
     const members = await db.user.findAll({
       include: [{ model: db.choir, where: { id: req.activeChoirId } }]
@@ -44,7 +48,10 @@ exports.findAll = async (req, res) => {
   try {
     const posts = await Post.findAll({
       where: { choirId: req.activeChoirId },
-      include: [{ model: db.user, as: 'author', attributes: ['id','name'] }],
+      include: [
+        { model: db.user, as: 'author', attributes: ['id','name'] },
+        { model: db.piece, as: 'piece', attributes: ['id','title'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     res.status(200).send(posts);
@@ -57,7 +64,10 @@ exports.findLatest = async (req, res) => {
   try {
     const post = await Post.findOne({
       where: { choirId: req.activeChoirId },
-      include: [{ model: db.user, as: 'author', attributes: ['id','name'] }],
+      include: [
+        { model: db.user, as: 'author', attributes: ['id','name'] },
+        { model: db.piece, as: 'piece', attributes: ['id','title'] }
+      ],
       order: [['createdAt', 'DESC']]
     });
     res.status(200).send(post);
@@ -68,7 +78,7 @@ exports.findLatest = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { title, text } = req.body;
+  const { title, text, pieceId } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const post = await Post.findByPk(id);
@@ -77,8 +87,11 @@ exports.update = async (req, res) => {
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
-    await post.update({ title: sanitizedTitle, text: sanitizedText });
-    const full = await Post.findByPk(id, { include: [{ model: db.user, as: 'author', attributes: ['id','name'] }] });
+    await post.update({ title: sanitizedTitle, text: sanitizedText, pieceId: pieceId || null });
+    const full = await Post.findByPk(id, { include: [
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      { model: db.piece, as: 'piece', attributes: ['id','title'] }
+    ] });
     res.status(200).send(full);
   } catch (err) {
     res.status(500).send({ message: err.message });

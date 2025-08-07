@@ -32,7 +32,7 @@ const db = require('../src/models');
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'starttls', 'fromAddress']);
     checkFields(db.plan_rule, ['dayOfWeek', 'weeks', 'notes']);
-    checkFields(db.post, ['title', 'text']);
+    checkFields(db.post, ['title', 'text', 'pieceId']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');

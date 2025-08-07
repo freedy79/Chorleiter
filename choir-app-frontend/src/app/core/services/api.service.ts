@@ -718,11 +718,11 @@ export class ApiService {
     return this.postService.getLatestPost();
   }
 
-  createPost(data: { title: string; text: string }): Observable<Post> {
+  createPost(data: { title: string; text: string; pieceId?: number | null }): Observable<Post> {
     return this.postService.createPost(data);
   }
 
-  updatePost(id: number, data: { title: string; text: string }): Observable<Post> {
+  updatePost(id: number, data: { title: string; text: string; pieceId?: number | null }): Observable<Post> {
     return this.postService.updatePost(id, data);
   }
 

@@ -6,8 +6,15 @@
       <input matInput formControlName="title">
     </mat-form-field>
     <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Stück</mat-label>
+      <input type="text" matInput [formControl]="pieceCtrl" [matAutocomplete]="auto">
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayPiece.bind(this)">
+        <mat-option *ngFor="let p of filteredPieces$ | async" [value]="p">{{ p.title }}</mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
       <mat-label>Text</mat-label>
-      <textarea matInput rows="5" formControlName="text"></textarea>
+      <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich"></textarea>
     </mat-form-field>
   </form>
 </div>
