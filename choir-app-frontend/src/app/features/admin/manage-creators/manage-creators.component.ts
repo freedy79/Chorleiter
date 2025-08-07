@@ -65,14 +65,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  loadData(openPersonId?: number): void {
+  loadData(openPersonId?: number, resetPage = true): void {
+    const currentIndex = this.paginator ? this.paginator.pageIndex : 0;
     const obs = this.mode === 'composer'
       ? this.composerService.getComposers()
       : this.authorService.getAuthors();
 
     obs.subscribe((data) => {
       this.people = data;
-      this.applyFilter();
+      this.applyFilter(resetPage);
+      if (!resetPage && this.paginator) {
+        const maxPageIndex = Math.max(0, Math.ceil(this.totalPeople / this.paginator.pageSize) - 1);
+        this.paginator.pageIndex = Math.min(currentIndex, maxPageIndex);
+        this.dataSource.paginator = this.paginator;
+      }
       if (openPersonId) {
         const person = this.people.find(p => p.id === openPersonId);
         if (person) {
@@ -82,7 +88,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  applyFilter(): void {
+  applyFilter(resetPage = true): void {
     let filtered = this.people;
     if (this.selectedLetter !== 'Alle') {
       const letter = this.selectedLetter.toUpperCase();
@@ -92,7 +98,12 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     this.totalPeople = filtered.length;
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
-      this.paginator.firstPage();
+      if (resetPage) {
+        this.paginator.firstPage();
+      } else {
+        const maxPageIndex = Math.max(0, Math.ceil(filtered.length / this.paginator.pageSize) - 1);
+        this.paginator.pageIndex = Math.min(this.paginator.pageIndex, maxPageIndex);
+      }
     }
   }
 
@@ -164,7 +175,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       const req = this.mode === 'composer'
         ? this.composerService.deleteComposer(person.id)
         : this.authorService.deleteAuthor(person.id);
-      req.subscribe(() => this.loadData());
+      req.subscribe(() => this.loadData(undefined, false));
     }
   }
 
