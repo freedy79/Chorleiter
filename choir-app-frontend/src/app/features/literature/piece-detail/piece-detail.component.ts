@@ -12,6 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
+import { PieceReportDialogComponent } from '../piece-report-dialog/piece-report-dialog.component';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -132,6 +133,16 @@ export class PieceDetailComponent implements OnInit {
       if (wasUpdated) {
         this.snackBar.open('Stück aktualisiert.', 'OK', { duration: 3000 });
         this.loadPiece(this.piece!.id);
+      }
+    });
+  }
+
+  openReportDialog(): void {
+    if (!this.piece) return;
+    const dialogRef = this.dialog.open(PieceReportDialogComponent, { data: { pieceId: this.piece.id } });
+    dialogRef.afterClosed().subscribe(sent => {
+      if (sent) {
+        this.snackBar.open('Meldung gesendet.', 'OK', { duration: 3000 });
       }
     });
   }

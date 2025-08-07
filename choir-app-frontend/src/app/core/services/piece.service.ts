@@ -147,4 +147,8 @@ export class PieceService {
     formData.append('file', file);
     return this.http.post<{ path: string }>(`${this.apiUrl}/pieces/link-file`, formData);
   }
+
+  reportPiece(pieceId: number, category: string, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/pieces/${pieceId}/report`, { category, reason });
+  }
 }
