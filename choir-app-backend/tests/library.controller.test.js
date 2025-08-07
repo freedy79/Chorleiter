@@ -35,6 +35,7 @@ const controller = require('../src/controllers/library.controller');
     assert.strictEqual(listRes.data[0].collection.id, collection.id);
     assert.strictEqual(listRes.data[0].collection.pieces.length, 1);
     assert.strictEqual(listRes.data[0].collection.pieces[0].id, piece.id);
+    assert.strictEqual(listRes.data[0].collection.pieceCount, 1);
 
     console.log('library.controller tests passed');
     await db.sequelize.close();

@@ -17,7 +17,16 @@ exports.findAll = async (req, res) => {
       }
     ]
   });
-  res.status(200).send(items);
+
+  const result = items.map(item => {
+    const plain = item.toJSON();
+    if (plain.collection) {
+      plain.collection.pieceCount = plain.collection.pieces ? plain.collection.pieces.length : 0;
+    }
+    return plain;
+  });
+
+  res.status(200).send(result);
 };
 
 // Create a library item referencing a collection
