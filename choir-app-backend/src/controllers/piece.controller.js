@@ -236,6 +236,34 @@ exports.delete = async (req, res) => {
     }
 };
 
+exports.report = async (req, res) => {
+    const { id } = req.params;
+    const { category, reason } = req.body || {};
+    if (!reason) {
+        return res.status(400).send({ message: 'reason is required' });
+    }
+    try {
+        const piece = await Piece.findByPk(id);
+        if (!piece) return res.status(404).send({ message: 'Piece not found.' });
+        const reporter = await db.user.findByPk(req.userId);
+        const admins = await db.user.findAll({ where: { role: 'admin' } });
+        const recipients = admins.filter(a => a.email).map(a => a.email);
+        const linkBase = await getFrontendUrl();
+        const link = `${linkBase}/pieces/${id}`;
+        await emailService.sendPieceReportMail(
+            recipients,
+            piece.title || `Piece ${id}`,
+            reporter?.name || reporter?.email || 'Ein Benutzer',
+            category || 'Sonstiges',
+            reason,
+            link
+        );
+        res.status(200).send({ message: 'Report sent' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 exports.uploadImage = async (req, res, next) => {
     const id = req.params.id;
     if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });

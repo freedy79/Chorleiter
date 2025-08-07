@@ -232,3 +232,28 @@ exports.sendPostNotificationMail = async (recipients, title, text) => {
     throw err;
   }
 };
+
+exports.sendPieceReportMail = async (recipients, piece, reporter, category, reason, link) => {
+  if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
+  const settings = await db.mail_setting.findByPk(1);
+  const transporter = await createTransporter(settings);
+  try {
+    const subject = `Meldung zu Stück: ${piece}`;
+    const text = `${reporter} hat das Stück "${piece}" gemeldet.\nKategorie: ${category}\nBegründung: ${reason}\n${link}`;
+    const html = `<p>${reporter} hat das Stück "${piece}" gemeldet.</p>` +
+      `<p><strong>Kategorie:</strong> ${category}</p>` +
+      `<p><strong>Begründung:</strong><br>${reason.replace(/\n/g, '<br>')}</p>` +
+      `<p><a href="${link}">Stück ansehen</a></p>`;
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to: recipients,
+      subject,
+      text,
+      html
+    });
+  } catch (err) {
+    logger.error(`Error sending piece report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

@@ -152,7 +152,9 @@ export class ApiService {
   deletePieceNote(noteId: number) {
     return this.pieceService.deletePieceNote(noteId);
   }
-
+  reportPiece(pieceId: number, category: string, reason: string) {
+    return this.pieceService.reportPiece(pieceId, category, reason);
+  }
 
   // --- Global Piece Methods ---
 

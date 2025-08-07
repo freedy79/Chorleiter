@@ -20,6 +20,7 @@ router.get("/:id", wrap(controller.findOne));
 router.post("/", role.requireNonDemo, createPieceValidation, validate, wrap(controller.create));
 router.put("/:id", role.requireNonDemo, updatePieceValidation, validate, wrap(controller.update));
 router.delete("/:id", role.requireNonDemo, wrap(controller.delete));
+router.post("/:id/report", role.requireNonDemo, wrap(controller.report));
 router.post("/:id/image", role.requireNonDemo, imageUpload.single('image'), wrap(controller.uploadImage));
 router.post("/link-file", role.requireNonDemo, fileUpload.single('file'), wrap(controller.uploadLinkFile));
 

@@ -1,0 +1,18 @@
+<h1 mat-dialog-title>Stück melden</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Kategorie</mat-label>
+    <mat-select [(value)]="category">
+      <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Begründung</mat-label>
+    <textarea matInput [(ngModel)]="reason" rows="4"></textarea>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="send()" [disabled]="!reason">Senden</button>
+</div>
+
