@@ -35,6 +35,24 @@ const jobs = require('../src/services/import-jobs.service');
 
     console.log('import.controller auto numbering test passed');
 
+    // Test name formatting for composer and author
+    await db.sequelize.sync({ force: true });
+
+    const collectionFmt = await db.collection.create({ title: 'Fmt', prefix: 'F' });
+    const recordsFmt = [
+      { title: 'Formatted Piece', composer: 'Johann Sebastian Bach', author: 'Martin Luther' }
+    ];
+    const jobFmt = jobs.createJob('jobFmt');
+    jobFmt.status = 'running';
+    await controller._test.processImport(jobFmt, collectionFmt, recordsFmt);
+
+    const storedComposer = await db.composer.findOne();
+    const storedAuthor = await db.author.findOne();
+    assert.strictEqual(storedComposer.name, 'Bach, Johann Sebastian');
+    assert.strictEqual(storedAuthor.name, 'Luther, Martin');
+
+    console.log('import.controller name formatting test passed');
+
     await db.sequelize.sync({ force: true });
 
     const choir = await db.choir.create({ name: 'Test Choir' });
