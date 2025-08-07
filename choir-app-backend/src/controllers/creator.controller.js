@@ -1,47 +1,11 @@
 const BaseCrudController = require('./baseCrud.controller');
 const db = require('../models');
+const { isDuplicate } = require('../utils/name.utils');
 
 function createCreatorController(Model, options = {}) {
   const base = new BaseCrudController(Model);
   const { entityName = 'Record', arranged = false, pieceField } = options;
 
-  function normalize(str) {
-    return str.toLowerCase().replace(/[^a-z0-9]/g, '');
-  }
-
-  function levenshtein(a, b) {
-    const m = a.length;
-    const n = b.length;
-    const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i += 1) dp[i][0] = i;
-    for (let j = 0; j <= n; j += 1) dp[0][j] = j;
-    for (let i = 1; i <= m; i += 1) {
-      for (let j = 1; j <= n; j += 1) {
-        if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1];
-        else dp[i][j] = Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]) + 1;
-      }
-    }
-    return dp[m][n];
-  }
-
-  function isDuplicate(a, b) {
-    const na = normalize(a);
-    const nb = normalize(b);
-    if (!na || !nb) return false;
-    if (na.includes(nb) || nb.includes(na)) return true;
-    const lastA = normalize(a.split(' ').pop());
-    const lastB = normalize(b.split(' ').pop());
-    if (lastA && lastA === lastB) {
-      const firstA = normalize(a.split(' ')[0]);
-      const firstB = normalize(b.split(' ')[0]);
-      if (!firstA || !firstB) return true;
-      if (firstA[0] && firstA[0] === firstB[0]) return true;
-    }
-    const distance = levenshtein(na, nb);
-    const maxLen = Math.max(na.length, nb.length);
-    const similarity = 1 - distance / maxLen;
-    return similarity >= 0.8;
-  }
 
   async function create(req, res, next) {
     try {
@@ -53,8 +17,8 @@ function createCreatorController(Model, options = {}) {
           return res.status(409).send({ message: `A ${entityName.toLowerCase()} with this name already exists.` });
         }
       }
-      const record = await base.service.create({ name, birthYear, deathYear });
-      res.status(201).send(record);
+      req.body = { name, birthYear, deathYear };
+      return await base.create(req, res, next);
     } catch (err) {
       if (next) return next(err);
       res.status(500).send({ message: err.message });
@@ -72,12 +36,7 @@ function createCreatorController(Model, options = {}) {
           return res.status(409).send({ message: `A ${entityName.toLowerCase()} with this name already exists.` });
         }
       }
-      const num = await base.service.update(id, req.body);
-      if (num === 1) {
-        const updated = await base.service.findById(id);
-        return res.status(200).send(updated);
-      }
-      res.status(404).send({ message: `${entityName} not found.` });
+      return await base.update(req, res, next);
     } catch (err) {
       if (next) return next(err);
       res.status(500).send({ message: err.message });
@@ -121,6 +80,18 @@ function createCreatorController(Model, options = {}) {
     }
   }
 
+  async function fetchWithRetry(url, options, retries = 3) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      const response = await fetch(url, options);
+      if (response.status !== 429) return response;
+      const retryAfter = parseInt(response.headers.get('retry-after'), 10);
+      const delay = Number.isNaN(retryAfter) ? (attempt + 1) * 1000 : retryAfter * 1000;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    throw new Error('Too many requests');
+  }
+
   async function enrich(req, res) {
     const { id } = req.params;
     try {
@@ -129,7 +100,7 @@ function createCreatorController(Model, options = {}) {
 
       const query = encodeURIComponent(record.name);
       const url = `https://musicbrainz.org/ws/2/artist/?query=${query}&fmt=json&limit=1`;
-      const response = await fetch(url, {
+      const response = await fetchWithRetry(url, {
         headers: { 'User-Agent': 'chorleiter/1.0 ( https://example.com )' }
       });
       if (!response.ok) throw new Error('Failed to fetch data');
