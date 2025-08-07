@@ -9,6 +9,7 @@ import { StatsSummary } from '../models/stats-summary';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
+import { UploadOverview } from '../models/backend-file';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -92,6 +93,14 @@ export class AdminService {
 
   deleteLog(filename: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/logs/${encodeURIComponent(filename)}`);
+  }
+
+  listUploadFiles(): Observable<UploadOverview> {
+    return this.http.get<UploadOverview>(`${this.apiUrl}/admin/uploads`);
+  }
+
+  deleteUploadFile(category: string, filename: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/uploads/${encodeURIComponent(category)}/${encodeURIComponent(filename)}`);
   }
 
   downloadBackup(): Observable<Blob> {

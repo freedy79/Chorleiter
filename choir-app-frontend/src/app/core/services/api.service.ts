@@ -39,6 +39,7 @@ import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
+import { UploadOverview } from '../models/backend-file';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -640,6 +641,14 @@ export class ApiService {
 
   deleteLog(filename: string): Observable<any> {
     return this.adminService.deleteLog(filename);
+  }
+
+  listUploadFiles(): Observable<UploadOverview> {
+    return this.adminService.listUploadFiles();
+  }
+
+  deleteUploadFile(category: string, filename: string): Observable<any> {
+    return this.adminService.deleteUploadFile(category, filename);
   }
 
   downloadBackup(): Observable<Blob> {

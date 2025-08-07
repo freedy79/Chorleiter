@@ -375,6 +375,7 @@ exports.updateChoirMember = async (req, res) => {
 };
 
 const logService = require('../services/log.service');
+const fileService = require('../services/file.service');
 
 exports.listLogs = async (req, res) => {
     try {
@@ -403,6 +404,27 @@ exports.deleteLog = async (req, res) => {
     try {
         const deleted = await logService.deleteLogFile(filename);
         if (!deleted) return res.status(404).send({ message: 'Log file not found' });
+        res.status(200).send({ message: 'Deleted' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.listUploads = async (req, res) => {
+    try {
+        const data = await fileService.listFiles();
+        res.status(200).send(data);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.deleteUpload = async (req, res) => {
+    const { category, filename } = req.params;
+    try {
+        const result = await fileService.deleteFile(category, filename);
+        if (result.inUse) return res.status(409).send({ message: 'File in use' });
+        if (result.notFound) return res.status(404).send({ message: 'File not found' });
         res.status(200).send({ message: 'Deleted' });
     } catch (err) {
         res.status(500).send({ message: err.message });

@@ -1,0 +1,77 @@
+<h2>Cover</h2>
+<table mat-table [dataSource]="covers" class="mat-elevation-z1" *ngIf="covers.length > 0">
+  <ng-container matColumnDef="filename">
+    <th mat-header-cell *matHeaderCellDef>Datei</th>
+    <td mat-cell *matCellDef="let f">{{ f.filename }}</td>
+  </ng-container>
+  <ng-container matColumnDef="linked">
+    <th mat-header-cell *matHeaderCellDef>Zugewiesen</th>
+    <td mat-cell *matCellDef="let f">
+      <a *ngIf="f.collectionId" [routerLink]="['/collections/edit', f.collectionId]">{{ f.collectionTitle }}</a>
+      <span *ngIf="!f.collectionId">–</span>
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+    <td mat-cell *matCellDef="let f">
+      <button mat-icon-button color="warn" *ngIf="!f.collectionId" (click)="delete('covers', f.filename)" matTooltip="Löschen">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
+<p *ngIf="covers.length === 0">Keine Dateien gefunden.</p>
+
+<h2>Notenbild</h2>
+<table mat-table [dataSource]="images" class="mat-elevation-z1" *ngIf="images.length > 0">
+  <ng-container matColumnDef="filename">
+    <th mat-header-cell *matHeaderCellDef>Datei</th>
+    <td mat-cell *matCellDef="let f">{{ f.filename }}</td>
+  </ng-container>
+  <ng-container matColumnDef="linked">
+    <th mat-header-cell *matHeaderCellDef>Zugewiesen</th>
+    <td mat-cell *matCellDef="let f">
+      <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
+      <span *ngIf="!f.pieceId">–</span>
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+    <td mat-cell *matCellDef="let f">
+      <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('images', f.filename)" matTooltip="Löschen">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
+<p *ngIf="images.length === 0">Keine Dateien gefunden.</p>
+
+<h2>Hochgeladene Dateien</h2>
+<table mat-table [dataSource]="files" class="mat-elevation-z1" *ngIf="files.length > 0">
+  <ng-container matColumnDef="filename">
+    <th mat-header-cell *matHeaderCellDef>Datei</th>
+    <td mat-cell *matCellDef="let f">{{ f.filename }}</td>
+  </ng-container>
+  <ng-container matColumnDef="linked">
+    <th mat-header-cell *matHeaderCellDef>Zugewiesen</th>
+    <td mat-cell *matCellDef="let f">
+      <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
+      <span *ngIf="!f.pieceId">–</span>
+    </td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+    <td mat-cell *matCellDef="let f">
+      <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('files', f.filename)" matTooltip="Löschen">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>
+<p *ngIf="files.length === 0">Keine Dateien gefunden.</p>
