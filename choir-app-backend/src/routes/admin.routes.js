@@ -38,6 +38,8 @@ router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/logs', wrap(controller.listLogs));
 router.get('/logs/:filename', wrap(controller.getLog));
 router.delete('/logs/:filename', wrap(controller.deleteLog));
+router.get('/uploads', wrap(controller.listUploads));
+router.delete('/uploads/:category/:filename', wrap(controller.deleteUpload));
 router.get('/mail-settings', wrap(controller.getMailSettings));
 router.put('/mail-settings', wrap(controller.updateMailSettings));
 router.post('/mail-settings/test', wrap(controller.sendTestMail));
