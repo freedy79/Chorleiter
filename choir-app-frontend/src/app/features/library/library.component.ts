@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -12,9 +12,12 @@ import { RouterModule } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { PageEvent } from '@angular/material/paginator';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
+import { MatSort } from '@angular/material/sort';
 import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
+
 
 @Component({
   selector: 'app-library',
@@ -23,11 +26,21 @@ import { LibraryUtilService } from '@core/services/library-util.service';
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
-export class LibraryComponent implements OnInit {
-  items$!: Observable<LibraryItem[]>;
+export class LibraryComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild('libraryPaginator') paginator!: MatPaginator;
+
   collections$!: Observable<Collection[]>;
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt', 'actions'];
+
+  dataSource = new MatTableDataSource<LibraryItem>();
+  expandedItem: LibraryItem | null = null;
+  expandedPieces: Piece[] = [];
+  piecePageSize = 10;
+  piecePageIndex = 0;
+  private composerCache = new Map<number, string>();
+
 
   constructor(
     private apiService: ApiService,
@@ -45,8 +58,23 @@ export class LibraryComponent implements OnInit {
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
   }
 
+  ngAfterViewInit(): void {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sortingDataAccessor = (item, property) => {
+      switch (property) {
+        case 'title':
+          return item.collection?.title.toLowerCase() || '';
+        case 'availableAt':
+          return item.availableAt ? new Date(item.availableAt).getTime() : 0;
+        default:
+          return (item as any)[property];
+      }
+    };
+  }
+
   load(): void {
-    this.items$ = this.apiService.getLibraryItems();
+    this.apiService.getLibraryItems().subscribe(items => (this.dataSource.data = items));
   }
 
   onFileSelected(event: any): void {
