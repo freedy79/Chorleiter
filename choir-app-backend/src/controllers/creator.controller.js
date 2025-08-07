@@ -17,8 +17,8 @@ function createCreatorController(Model, options = {}) {
           return res.status(409).send({ message: `A ${entityName.toLowerCase()} with this name already exists.` });
         }
       }
-      const record = await base.service.create({ name, birthYear, deathYear });
-      res.status(201).send(record);
+      req.body = { name, birthYear, deathYear };
+      return await base.create(req, res, next);
     } catch (err) {
       if (next) return next(err);
       res.status(500).send({ message: err.message });
@@ -36,12 +36,7 @@ function createCreatorController(Model, options = {}) {
           return res.status(409).send({ message: `A ${entityName.toLowerCase()} with this name already exists.` });
         }
       }
-      const num = await base.service.update(id, req.body);
-      if (num === 1) {
-        const updated = await base.service.findById(id);
-        return res.status(200).send(updated);
-      }
-      res.status(404).send({ message: `${entityName} not found.` });
+      return await base.update(req, res, next);
     } catch (err) {
       if (next) return next(err);
       res.status(500).send({ message: err.message });
