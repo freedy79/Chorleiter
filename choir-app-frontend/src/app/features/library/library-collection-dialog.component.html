@@ -3,6 +3,10 @@
   <mat-nav-list>
     <a mat-list-item *ngFor="let piece of collection.pieces" [routerLink]="['/pieces', piece.id]" (click)="dialogRef.close()">
       {{ piece.title }}
+      <span *ngIf="piece.composer?.name || piece.origin">
+        – {{ piece.composer?.name || piece.origin }}
+      </span>
+      <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
     </a>
   </mat-nav-list>
 </div>
