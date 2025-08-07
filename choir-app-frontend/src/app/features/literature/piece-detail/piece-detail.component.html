@@ -33,7 +33,7 @@
       <h3>Dateien</h3>
       <ul>
         <li *ngFor="let link of fileLinks">
-          <a [href]="getLinkUrl(link)">{{ link.description }}</a>
+          <a [href]="getLinkUrl(link)" [attr.download]="link.description">{{ link.description }}</a>
         </li>
       </ul>
     </div>
