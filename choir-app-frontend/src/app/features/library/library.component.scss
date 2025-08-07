@@ -27,3 +27,9 @@
   font-size: 0.9rem;
   color: #555;
 }
+
+.cover-cell img {
+  height: 48px;
+  width: auto;
+  object-fit: cover;
+}

@@ -5,7 +5,7 @@ import { ApiService } from '@core/services/api.service';
 import { LibraryItem } from '@core/models/library-item';
 import { Collection } from '@core/models/collection';
 import { Piece } from '@core/models/piece';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
@@ -17,6 +17,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
+import { map } from 'rxjs/operators';
 
 
 @Component({
@@ -32,7 +33,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
 
   collections$!: Observable<Collection[]>;
   isAdmin = false;
-  displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt', 'actions'];
+  displayedColumns: string[] = ['cover', 'title', 'copies', 'status', 'availableAt', 'actions'];
 
   dataSource = new MatTableDataSource<LibraryItem>();
   expandedItem: LibraryItem | null = null;
@@ -74,7 +75,32 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   }
 
   load(): void {
-    this.apiService.getLibraryItems().subscribe(items => (this.dataSource.data = items));
+    this.apiService.getLibraryItems().subscribe(items => {
+      const coverRequests = items
+        .filter(i => i.collection?.coverImage)
+        .map(i =>
+          this.apiService
+            .getCollectionCover(i.collection!.id)
+            .pipe(map(data => ({ id: i.collection!.id, data })))
+        );
+
+      if (coverRequests.length) {
+        forkJoin(coverRequests).subscribe(results => {
+          results.forEach(res => {
+            items
+              .filter(i => i.collection?.id === res.id)
+              .forEach(i => {
+                if (i.collection) {
+                  i.collection.coverImageData = res.data;
+                }
+              });
+          });
+          this.dataSource.data = items;
+        });
+      } else {
+        this.dataSource.data = items;
+      }
+    });
   }
 
   onFileSelected(event: any): void {
