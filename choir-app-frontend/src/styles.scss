@@ -17,6 +17,10 @@
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
+:root {
+  --page-header-bg-color: #fff;
+}
+
 .container {
     padding: 2rem;
 }
@@ -63,6 +67,7 @@ mat-card-header {
 // Definieren Sie die Styles für das dunkle Theme unter einer spezifischen Klasse.
 // Diese Regeln werden nur aktiv, wenn der body-Tag die Klasse '.dark-theme' hat.
 .dark-theme {
+  --page-header-bg-color: #303030;
   // Only include the color styles for the dark theme to avoid duplicating
   // typography and density rules.
   @include mat.all-component-colors(nak.$nak-dark-theme);
