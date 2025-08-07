@@ -8,7 +8,7 @@ import { Piece } from '@core/models/piece';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -17,7 +17,7 @@ import { PageEvent } from '@angular/material/paginator';
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, RouterModule],
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
