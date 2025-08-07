@@ -268,7 +268,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
         displayName: 'Administration',
         //svgIconName: 's-settings',
         visibleSubject: this.isAdmin$,
-        route: '',
+        route: 'admin',
         children: [
           {
             displayName: 'Allgemein',
