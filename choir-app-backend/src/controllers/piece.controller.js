@@ -6,6 +6,7 @@ const Author = db.author;
 const path = require('path');
 const fs = require('fs/promises');
 const fileService = require('../services/file.service');
+const pieceService = require('../services/piece.service');
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Piece);
 const emailService = require('../services/email.service');
@@ -35,68 +36,52 @@ exports.create = async (req, res) => {
         lyricsSource,
         authorName,
         authorId,
-        arrangerIds, // e.g., [12, 15]
-        links,       // e.g., [{ description: 'YouTube', url: '...' }]
-        composers    // e.g., [{ id: 1, type: 'Melodie' }]
+        arrangerIds,
+        links,
+        composers
     } = req.body;
 
-    const mainComposerId = composerId || (composers && composers[0]?.id);
-    if (!title || (!mainComposerId && !origin)) {
-        return res.status(400).send({ message: "Title and either Composer or Origin are required." });
-    }
+    const { mainComposerId, error } = pieceService.validatePieceData({
+        title,
+        composerId,
+        composers,
+        origin
+    });
+    if (error) return res.status(400).send({ message: error });
 
-    let resolvedAuthorId = authorId || null;
-        if (!resolvedAuthorId && authorName) {
-            const [author] = await db.author.findOrCreate({ where: { name: authorName }, defaults: { name: authorName }});
-            resolvedAuthorId = author.id;
-        }
+    const resolvedAuthorId = await pieceService.resolveAuthor(authorId, authorName);
 
-        const newPiece = await base.service.create({
-            title,
-            subtitle,
-            composerCollection,
-            composerId: mainComposerId || null,
-            categoryId,
-            voicing,
-            key,
-            timeSignature,
-            lyrics,
-            imageIdentifier,
-            license,
-            opus,
-            lyricsSource,
-            origin,
-            authorId: resolvedAuthorId
-        });
+    const newPiece = await base.service.create({
+        title,
+        subtitle,
+        composerCollection,
+        composerId: mainComposerId || null,
+        categoryId,
+        voicing,
+        key,
+        timeSignature,
+        lyrics,
+        imageIdentifier,
+        license,
+        opus,
+        lyricsSource,
+        origin,
+        authorId: resolvedAuthorId
+    });
 
-        if (arrangerIds && arrangerIds.length > 0) {
-            await newPiece.setArrangers(arrangerIds);
-        }
+    await pieceService.assignArrangers(newPiece, arrangerIds);
+    await pieceService.assignComposers(newPiece.id, composers, mainComposerId);
+    await pieceService.createLinks(newPiece.id, links);
 
-        const composerEntries = composers && composers.length > 0
-            ? composers
-            : (mainComposerId ? [{ id: mainComposerId, type: null }] : []);
-        if (composerEntries.length > 0) {
-            await db.piece_composer.bulkCreate(
-                composerEntries.map(c => ({ pieceId: newPiece.id, composerId: c.id, type: c.type }))
-            );
-        }
-
-        if (links && links.length > 0) {
-            const linkObjects = links.map(link => ({ ...link, pieceId: newPiece.id }));
-            await db.piece_link.bulkCreate(linkObjects);
-        }
-
-        // Fetch the full new piece to return it
     const result = await db.piece.findByPk(newPiece.id, {
-            include: [
-                { model: Composer, as: 'composers', through: { attributes: ['type'] } },
-                { model: Composer, as: 'composer', attributes: ['id', 'name'] },
-                { model: Category, as: 'category', attributes: ['id', 'name'] },
-                { model: Author, as: 'author', attributes: ['id', 'name'] },
-                { model: db.piece_link, as: 'links' }
-            ]
-        });
+        include: [
+            { model: Composer, as: 'composers', through: { attributes: ['type'] } },
+            { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+            { model: Category, as: 'category', attributes: ['id', 'name'] },
+            { model: Author, as: 'author', attributes: ['id', 'name'] },
+            { model: db.piece_link, as: 'links' }
+        ]
+    });
 
     res.status(201).send(result);
 };
