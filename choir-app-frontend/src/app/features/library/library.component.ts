@@ -24,7 +24,6 @@ import { PageEvent } from '@angular/material/paginator';
 export class LibraryComponent implements OnInit {
   items$!: Observable<LibraryItem[]>;
   collections$!: Observable<Collection[]>;
-  selectedFile: File | null = null;
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt', 'actions'];
   expandedItem: LibraryItem | null = null;
@@ -44,16 +43,10 @@ export class LibraryComponent implements OnInit {
     this.items$ = this.api.getLibraryItems();
   }
 
-  onFileChange(event: any): void {
+  onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.selectedFile = file;
-    }
-  }
-
-  upload(): void {
-    if (this.selectedFile) {
-      this.api.importLibraryCsv(this.selectedFile).subscribe(() => this.load());
+      this.api.importLibraryCsv(file).subscribe(() => this.load());
     }
   }
 

@@ -1,73 +1,84 @@
-<section class="library-text">
-  <p>ChorleiterInnen der NAK Nord- und Ostdeutschland können Originale der in der Inventarliste aufgeführten (Einzel-)Kompositionen ausleihen. Sammelbände/Bücher sind nur nach Absprache ausleihbar.</p>
-  <p>Ausleihe und Zusendung der Noten sind für den Entleiher kostenlos.</p>
-  <p>Der Zeitraum der Ausleihe beträgt 3 Monate und kann einmal verlängert werden. Der Entleiher verpflichtet sich zur vollständigen Rückgabe der entliehenen Exemplare bzw. sorgt bei Verlust für Ersatz.</p>
-  <p>Die Nutzer dürfen im probenüblichen Umfang Notizen mit Bleistift in die Noten eintragen.</p>
-  <p>Die Anfrage zur Ausleihe erfolgt per E-Mail an chorbibliothek&commat;nak-nordost.de und enthält mindestens folgende Angaben:</p>
-  <ul>
-    <li>Name des Entleihers</li>
-    <li>Telefonnummer</li>
-    <li>Gemeinde/Bezirk</li>
-    <li>gewünschte/r Titel</li>
-    <li>Anzahl benötigter Exemplare</li>
-    <li>Lieferadresse</li>
-    <li>Grund der Ausleihe (z.B. Konzert, Jugendfreizeit)</li>
-  </ul>
-  <p>Hinweis: Dadurch, dass eine Komposition in unserer Notenbibliothek ausleihbar ist, ist keine Ableitung zur "automatischen Eignung" für spezielle Anlässe (Gottesdienst, Konzert, Freizeiten…) möglich. Die Verwendung dieser Literatur erfolgt genauso wie bei allen anderen Notenmaterialien, die nicht von der NAK herausgegeben wurden.</p>
-</section>
+<mat-tab-group>
+  <mat-tab label="Nutzungshinweise">
+    <section class="library-text">
+      <p>ChorleiterInnen der NAK Nord- und Ostdeutschland können Originale der in der Inventarliste aufgeführten (Einzel-)Kompositionen ausleihen. Sammelbände/Bücher sind nur nach Absprache ausleihbar.</p>
+      <p>Ausleihe und Zusendung der Noten sind für den Entleiher kostenlos.</p>
+      <p>Der Zeitraum der Ausleihe beträgt 3 Monate und kann einmal verlängert werden. Der Entleiher verpflichtet sich zur vollständigen Rückgabe der entliehenen Exemplare bzw. sorgt bei Verlust für Ersatz.</p>
+      <p>Die Nutzer dürfen im probenüblichen Umfang Notizen mit Bleistift in die Noten eintragen.</p>
+      <p>Die Anfrage zur Ausleihe erfolgt per E-Mail an chorbibliothek&commat;nak-nordost.de und enthält mindestens folgende Angaben:</p>
+      <ul>
+        <li>Name des Entleihers</li>
+        <li>Telefonnummer</li>
+        <li>Gemeinde/Bezirk</li>
+        <li>gewünschte/r Titel</li>
+        <li>Anzahl benötigter Exemplare</li>
+        <li>Lieferadresse</li>
+        <li>Grund der Ausleihe (z.B. Konzert, Jugendfreizeit)</li>
+      </ul>
+      <p>Hinweis: Dadurch, dass eine Komposition in unserer Notenbibliothek ausleihbar ist, ist keine Ableitung zur "automatischen Eignung" für spezielle Anlässe (Gottesdienst, Konzert, Freizeiten…) möglich. Die Verwendung dieser Literatur erfolgt genauso wie bei allen anderen Notenmaterialien, die nicht von der NAK herausgegeben wurden.</p>
+    </section>
+  </mat-tab>
 
-<div *ngIf="isAdmin" class="import-section">
-  <input type="file" (change)="onFileChange($event)" />
-  <button mat-raised-button color="primary" (click)="upload()" [disabled]="!selectedFile">CSV importieren</button>
-  <button mat-raised-button color="accent" (click)="openAddDialog()">Stück hinzufügen</button>
-</div>
+  <mat-tab label="Bibliotheksliste">
+    <div class="list-header" *ngIf="isAdmin">
+      <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+      <button mat-icon-button [matMenuTriggerFor]="adminMenu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #adminMenu="matMenu">
+        <button mat-menu-item (click)="fileInput.click()">CSV importieren</button>
+        <button mat-menu-item (click)="openAddDialog()">Stück hinzufügen</button>
+      </mat-menu>
+    </div>
 
-<ng-container *ngIf="items$ | async as items">
-  <table mat-table [dataSource]="items" class="mat-elevation-z8" multiTemplateDataRows>
-    <ng-container matColumnDef="title">
-      <th mat-header-cell *matHeaderCellDef>Titel</th>
-      <td mat-cell *matCellDef="let element">{{element.collection?.title}}</td>
+    <ng-container *ngIf="items$ | async as items">
+      <table mat-table [dataSource]="items" class="mat-elevation-z8" multiTemplateDataRows>
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Titel</th>
+          <td mat-cell *matCellDef="let element">{{element.collection?.title}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="copies">
+          <th mat-header-cell *matHeaderCellDef>Exemplare</th>
+          <td mat-cell *matCellDef="let element">{{element.copies}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let element">{{element.status}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="availableAt">
+          <th mat-header-cell *matHeaderCellDef>Verfügbar ab</th>
+          <td mat-cell *matCellDef="let element">{{element.availableAt | date}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" *ngIf="element.status === 'available'" (click)="addToCart(element, $event)">
+              <mat-icon>add_shopping_cart</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expandedDetail">
+          <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+            <div *ngIf="expandedItem === element">
+              <mat-nav-list>
+                <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
+                  {{ piece.title }}
+                </a>
+              </mat-nav-list>
+              <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></tr>
+        <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
+      </table>
     </ng-container>
-
-    <ng-container matColumnDef="copies">
-      <th mat-header-cell *matHeaderCellDef>Exemplare</th>
-      <td mat-cell *matCellDef="let element">{{element.copies}}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="status">
-      <th mat-header-cell *matHeaderCellDef>Status</th>
-      <td mat-cell *matCellDef="let element">{{element.status}}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="availableAt">
-      <th mat-header-cell *matHeaderCellDef>Verfügbar ab</th>
-      <td mat-cell *matCellDef="let element">{{element.availableAt | date}}</td>
-    </ng-container>
-
-    <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let element">
-        <button mat-icon-button color="primary" *ngIf="element.status === 'available'" (click)="addToCart(element, $event)">
-          <mat-icon>add_shopping_cart</mat-icon>
-        </button>
-      </td>
-    </ng-container>
-
-    <ng-container matColumnDef="expandedDetail">
-      <td mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
-        <div *ngIf="expandedItem === element">
-          <mat-nav-list>
-            <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
-              {{ piece.title }}
-            </a>
-          </mat-nav-list>
-          <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
-        </div>
-      </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></tr>
-  </table>
-</ng-container>
+  </mat-tab>
+</mat-tab-group>
