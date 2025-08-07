@@ -143,7 +143,7 @@
                   </mat-form-field>
                   <div *ngIf="link.get('type')?.value === 'FILE_DOWNLOAD'" class="file-upload">
                     <input type="file" (change)="onLinkFileSelected($event, i)" accept="application/pdf,image/*,audio/*" />
-                    <span *ngIf="link.get('url')?.value">Datei hochgeladen</span>
+                    <span *ngIf="link.get('url')?.value">{{ link.get('downloadName')?.value || 'Datei hochgeladen' }}</span>
                   </div>
                   <mat-form-field appearance="outline">
                     <mat-label>Typ</mat-label>

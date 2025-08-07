@@ -148,6 +148,10 @@ export class PieceService {
     return this.http.post<{ path: string }>(`${this.apiUrl}/pieces/link-file`, formData);
   }
 
+  deletePieceLinkFile(path: string): Observable<any> {
+    return this.http.request('delete', `${this.apiUrl}/pieces/link-file`, { body: { path } });
+  }
+
   reportPiece(pieceId: number, category: string, reason: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/pieces/${pieceId}/report`, { category, reason });
   }

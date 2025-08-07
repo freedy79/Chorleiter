@@ -19,7 +19,7 @@ import {
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap, map, of, startWith } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, of, startWith, forkJoin } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -66,6 +66,7 @@ export class PieceDialogComponent implements OnInit {
     imagePreview: string | null = null;
     imageFile: File | null = null;
     isDragOver = false;
+    removedLinkPaths: string[] = [];
 
     composerCtrl = new FormControl<string | Composer>('');
     filteredComposers$!: Observable<(Composer & { isNew?: boolean })[]>;
@@ -260,6 +261,12 @@ export class PieceDialogComponent implements OnInit {
     }
 
     removeLink(index: number): void {
+        const linkGroup = this.linksFormArray.at(index) as FormGroup;
+        const type = linkGroup.get('type')?.value;
+        const url = linkGroup.get('url')?.value;
+        if (type === 'FILE_DOWNLOAD' && url) {
+            this.removedLinkPaths.push(url);
+        }
         this.linksFormArray.removeAt(index);
     }
 
@@ -276,6 +283,11 @@ export class PieceDialogComponent implements OnInit {
 
     onLinkTypeChange(index: number): void {
         const linkGroup = this.linksFormArray.at(index) as FormGroup;
+        const prevUrl = linkGroup.get('url')?.value;
+        const newType = linkGroup.get('type')?.value;
+        if (newType !== 'FILE_DOWNLOAD' && prevUrl) {
+            this.removedLinkPaths.push(prevUrl);
+        }
         linkGroup.get('url')?.setValue('');
         linkGroup.get('downloadName')?.setValue('');
     }
@@ -460,6 +472,11 @@ export class PieceDialogComponent implements OnInit {
                         this.imageFile && this.isAdmin
                             ? this.pieceService.uploadPieceImage(this.data.pieceId!, this.imageFile)
                             : of(null)
+                    ),
+                    switchMap(() =>
+                        this.removedLinkPaths.length && this.isAdmin
+                            ? forkJoin(this.removedLinkPaths.map(p => this.pieceService.deletePieceLinkFile(p)))
+                            : of(null)
                     )
                 )
                 .subscribe({
@@ -480,6 +497,11 @@ export class PieceDialogComponent implements OnInit {
                     switchMap((createdPiece) =>
                         this.imageFile
                             ? this.pieceService.uploadPieceImage(createdPiece.id, this.imageFile).pipe(map(() => createdPiece))
+                            : of(createdPiece)
+                    ),
+                    switchMap((createdPiece) =>
+                        this.removedLinkPaths.length
+                            ? forkJoin(this.removedLinkPaths.map(p => this.pieceService.deletePieceLinkFile(p))).pipe(map(() => createdPiece))
                             : of(createdPiece)
                     )
                 )

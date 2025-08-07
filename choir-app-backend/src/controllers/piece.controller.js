@@ -5,6 +5,7 @@ const Category = db.category;
 const Author = db.author;
 const path = require('path');
 const fs = require('fs/promises');
+const fileService = require('../services/file.service');
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Piece);
 const emailService = require('../services/email.service');
@@ -278,6 +279,17 @@ exports.uploadImage = async (req, res, next) => {
 exports.uploadLinkFile = async (req, res, next) => {
     if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
     res.status(200).send({ path: `/uploads/piece-files/${req.file.filename}` });
+};
+
+exports.deleteLinkFile = async (req, res, next) => {
+    const { path: filePath } = req.body || {};
+    if (!filePath) return res.status(400).send({ message: 'No file path provided.' });
+
+    const filename = path.basename(filePath);
+    const result = await fileService.deleteFile('files', filename);
+    if (result.notFound) return res.status(404).send({ message: 'File not found.' });
+    if (result.inUse) return res.status(400).send({ message: 'File in use.' });
+    return res.status(200).send({ message: 'File deleted.' });
 };
 
 exports.getImage = async (req, res, next) => {
