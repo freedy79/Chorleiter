@@ -19,6 +19,16 @@ const { createCollectionValidation, updateCollectionValidation } = require('../s
     res = validationResult(req3);
     assert.ok(!res.isEmpty(), 'create should fail when subtitle is not string');
 
+    const req6 = { body: { title: 'A', subtitle: null } };
+    for (const v of createCollectionValidation) { await v.run(req6); }
+    res = validationResult(req6);
+    assert.ok(res.isEmpty(), 'create should allow null subtitle');
+
+    const req7 = { body: { subtitle: null } };
+    for (const v of updateCollectionValidation) { await v.run(req7); }
+    res = validationResult(req7);
+    assert.ok(res.isEmpty(), 'update should allow null subtitle');
+
     const req4 = { body: { title: 'A', pieces: [{ pieceId: 1, numberInCollection: '11a' }] } };
     for (const v of createCollectionValidation) { await v.run(req4); }
     res = validationResult(req4);
