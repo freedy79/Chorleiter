@@ -36,4 +36,16 @@ export class ManageFilesComponent implements OnInit {
     if (!confirm('Datei wirklich löschen?')) return;
     this.api.deleteUploadFile(category, filename).subscribe(() => this.load());
   }
+
+  get unassignedCovers(): number {
+    return this.covers.filter((c) => !c.collectionId).length;
+  }
+
+  get unassignedImages(): number {
+    return this.images.filter((i) => !i.pieceId).length;
+  }
+
+  get unassignedFiles(): number {
+    return this.files.filter((f) => !f.pieceId).length;
+  }
 }
