@@ -10,7 +10,10 @@
         <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <p>{{ p.text }}</p>
+        <div [innerHTML]="p.text | markdown"></div>
+        <div *ngIf="p.piece" class="piece-link">
+          <a [routerLink]="['/pieces', p.piece.id]">Zum Stück "{{ p.piece.title }}"</a>
+        </div>
       </mat-card-content>
       <mat-card-actions *ngIf="canEdit(p)" class="actions">
         <button mat-icon-button (click)="editPost(p)" matTooltip="Bearbeiten"><mat-icon>edit</mat-icon></button>

@@ -6,5 +6,6 @@ function noHtml(value) {
 
 exports.postValidation = [
   body('title').isString().notEmpty().custom(noHtml).withMessage('HTML not allowed'),
-  body('text').isString().notEmpty().custom(noHtml).withMessage('HTML not allowed')
+  body('text').isString().notEmpty().custom(noHtml).withMessage('HTML not allowed'),
+  body('pieceId').optional().isInt()
 ];

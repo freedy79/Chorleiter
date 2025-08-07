@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
     text: {
       type: DataTypes.TEXT,
       allowNull: false
+    },
+    pieceId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     }
   });
   return Post;

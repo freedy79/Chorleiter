@@ -146,6 +146,8 @@ db.choir.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
+db.piece.hasMany(db.post, { as: 'posts' });
+db.post.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
 // Library items referencing collections
 db.collection.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'collectionId' });
