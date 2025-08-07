@@ -46,7 +46,7 @@
       <h3>Links</h3>
       <ul>
         <li *ngFor="let link of externalLinks">
-          <a [href]="getLinkUrl(link)">{{ link.description }}</a>
+          <a [href]="getLinkUrl(link)" target="_blank" rel="noopener noreferrer">{{ link.description }}</a>
         </li>
       </ul>
     </div>

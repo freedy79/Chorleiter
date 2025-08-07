@@ -7,6 +7,7 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
 describe('PieceDetailComponent', () => {
   let component: PieceDetailComponent;
@@ -14,7 +15,7 @@ describe('PieceDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PieceDetailComponent],
+      imports: [PieceDetailComponent, HttpClientTestingModule],
       providers: [
         {
           provide: ActivatedRoute,
