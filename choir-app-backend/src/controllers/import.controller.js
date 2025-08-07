@@ -3,6 +3,7 @@ const db = require("../models");
 const crypto = require('crypto');
 const jobs = require('../services/import-jobs.service');
 const { isoDateString } = require('../utils/date.utils');
+const { formatPersonName } = require('../utils/name.utils');
 
 // Mapping for CSV header names to canonical field keys
 const FIELD_MAPPINGS = {
@@ -69,9 +70,9 @@ const processImport = async (job, collection, records) => {
         try {
             let number = record.number && record.number.toString().trim();
             const title = record.title;
-            const composerName = record.composer;
+            let composerName = formatPersonName(record.composer);
             const categoryName = record.category;
-            const authorName = record.author;
+            let authorName = record.author ? formatPersonName(record.author) : null;
 
             if (!title || !composerName) {
                 throw new Error(`Skipping row due to missing data: ${JSON.stringify(record)}`);
@@ -85,7 +86,14 @@ const processImport = async (job, collection, records) => {
 
             jobs.updateJobLog(job.id, `Processing row ${index + 1}: "${title}"...`);
 
-            const composer = await findOrCreate(db.composer, { name: composerName }, { name: composerName }, job.id, 'Composer');
+            const composer = await findOrCreate(
+                db.composer,
+                { name: composerName },
+                { name: composerName },
+                job.id,
+                'Composer',
+                { ignoreCase: true }
+            );
             let category = null;
             if (categoryName) {
                 category = await findOrCreate(
@@ -99,7 +107,14 @@ const processImport = async (job, collection, records) => {
             }
             let author = null;
             if (authorName) {
-                author = await findOrCreate(db.author, { name: authorName }, { name: authorName }, job.id, 'Author');
+                author = await findOrCreate(
+                    db.author,
+                    { name: authorName },
+                    { name: authorName },
+                    job.id,
+                    'Author',
+                    { ignoreCase: true }
+                );
             }
 
             const [piece, created] = await db.piece.findOrCreate({

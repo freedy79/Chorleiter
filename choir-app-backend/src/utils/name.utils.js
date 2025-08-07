@@ -36,4 +36,15 @@ function isDuplicate(a, b) {
   return similarity >= 0.8;
 }
 
-module.exports = { normalize, levenshtein, isDuplicate };
+function formatPersonName(name) {
+  if (!name) return name;
+  const trimmed = name.trim();
+  if (trimmed.includes(',')) return trimmed;
+  const parts = trimmed.split(/\s+/);
+  if (parts.length <= 1) return trimmed;
+  const lastName = parts.pop();
+  const firstNames = parts.join(' ');
+  return `${lastName}, ${firstNames}`;
+}
+
+module.exports = { normalize, levenshtein, isDuplicate, formatPersonName };
