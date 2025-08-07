@@ -89,6 +89,15 @@ export class LibraryComponent implements OnInit {
     return this.expandedPieces.slice(start, start + this.piecePageSize);
   }
 
+  getCollectionHint(collection?: Collection): string {
+    if (!collection) return '';
+    if (collection.singleEdition || (collection.pieces && collection.pieces.length === 1)) {
+      const piece = collection.pieces?.[0];
+      return piece?.composer?.name || piece?.origin || '';
+    }
+    return collection.subtitle || '';
+  }
+
   addToCart(item: LibraryItem, event: Event): void {
     event.stopPropagation();
     this.cart.addItem(item);
