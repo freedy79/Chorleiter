@@ -140,7 +140,7 @@ export class PieceDetailComponent implements OnInit {
     if (/^https?:\/\//i.test(link.url)) {
       return link.url;
     }
-    const apiBase = environment.apiUrl.replace(/\/$/, '');
+    const apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
     const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
     return `${apiBase}${path}`;
   }
