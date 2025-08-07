@@ -142,6 +142,7 @@ export class PieceDetailComponent implements OnInit {
     }
     const apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
     const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
-    return `${apiBase}${path}`;
+    const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
+    return `${apiBase}${fullPath}`;
   }
 }
