@@ -1,7 +1,7 @@
 const multer = require('multer');
 const path = require('path');
 
-const DEFAULT_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const DEFAULT_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function memoryUpload(options = {}) {
   const limits = { fileSize: DEFAULT_FILE_SIZE, ...options.limits };

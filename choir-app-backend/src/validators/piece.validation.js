@@ -20,6 +20,7 @@ exports.createPieceValidation = [
   body('links').optional().isArray().withMessage('links must be an array'),
   body('links.*.description').optional().isString(),
   body('links.*.url').optional().isString(),
+  body('links.*.downloadName').optional().isString(),
   body('authorId').optional({ nullable: true }).isInt(),
   body('categoryId').optional({ nullable: true }).isInt()
 ];
@@ -38,6 +39,7 @@ exports.updatePieceValidation = [
   body('links').optional().isArray(),
   body('links.*.description').optional().isString(),
   body('links.*.url').optional().isString(),
+  body('links.*.downloadName').optional().isString(),
   body('authorId').optional({ nullable: true }).isInt(),
   body('categoryId').optional({ nullable: true }).isInt()
 ];

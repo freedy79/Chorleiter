@@ -4,6 +4,7 @@ export interface BackendFile {
   pieceTitle?: string | null;
   collectionId?: number | null;
   collectionTitle?: string | null;
+  downloadName?: string | null;
 }
 
 export interface UploadOverview {

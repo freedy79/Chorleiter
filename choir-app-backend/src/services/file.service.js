@@ -27,7 +27,7 @@ async function listFiles() {
     db.piece.findAll({ attributes: ['id', 'title', 'imageIdentifier'], where: { imageIdentifier: { [Op.not]: null } } }),
     db.piece_link.findAll({
       where: { type: 'FILE_DOWNLOAD' },
-      attributes: ['url', 'pieceId'],
+      attributes: ['url', 'pieceId', 'downloadName'],
       include: [{ model: db.piece, attributes: ['id', 'title'] }],
     }),
   ]);
@@ -45,7 +45,7 @@ async function listFiles() {
   const fileMap = new Map();
   links.forEach(l => {
     const file = path.basename(l.url || '');
-    if (file) fileMap.set(file, { id: l.piece?.id, title: l.piece?.title });
+    if (file) fileMap.set(file, { id: l.piece?.id, title: l.piece?.title, downloadName: l.downloadName });
   });
 
   return {
@@ -63,6 +63,7 @@ async function listFiles() {
       filename: name,
       pieceId: fileMap.get(name)?.id || null,
       pieceTitle: fileMap.get(name)?.title || null,
+      downloadName: fileMap.get(name)?.downloadName || null,
     })),
   };
 }

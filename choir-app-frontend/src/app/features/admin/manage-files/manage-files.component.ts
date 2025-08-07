@@ -17,6 +17,7 @@ export class ManageFilesComponent implements OnInit {
   images: BackendFile[] = [];
   files: BackendFile[] = [];
   displayedColumns = ['filename', 'linked', 'actions'];
+  displayedFileColumns = ['filename', 'downloadName', 'linked', 'actions'];
 
   constructor(private api: ApiService) {}
 

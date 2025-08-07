@@ -9,6 +9,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false
         },
+        downloadName: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         type: {
             type: DataTypes.ENUM('EXTERNAL', 'FILE_DOWNLOAD'),
             defaultValue: 'EXTERNAL'
