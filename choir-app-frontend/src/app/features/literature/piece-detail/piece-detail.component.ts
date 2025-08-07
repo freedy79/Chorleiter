@@ -13,6 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { environment } from 'src/environments/environment';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-piece-detail',
@@ -34,7 +35,7 @@ export class PieceDetailComponent implements OnInit {
   userId: number | null = null;
   isAdmin = false;
   pieceImage: string | null = null;
-  fileLinks: PieceLink[] = [];
+  fileLinks: (PieceLink & { isPdf: boolean; size?: number })[] = [];
   externalLinks: PieceLink[] = [];
 
   constructor(
@@ -42,7 +43,8 @@ export class PieceDetailComponent implements OnInit {
     private apiService: ApiService,
     private auth: AuthService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -64,7 +66,19 @@ export class PieceDetailComponent implements OnInit {
       } else {
         this.pieceImage = null;
       }
-      this.fileLinks = p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || [];
+      this.fileLinks = (p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || []).map(l => ({
+        ...l,
+        isPdf: /\.pdf$/i.test(l.url) || /\.pdf$/i.test(l.description)
+      }));
+      this.fileLinks.forEach(link => {
+        const url = this.getLinkUrl(link);
+        this.http.head(url, { observe: 'response', responseType: 'blob' }).subscribe(res => {
+          const size = Number(res.headers.get('Content-Length'));
+          if (!isNaN(size)) {
+            link.size = size;
+          }
+        });
+      });
       this.externalLinks = p.links?.filter(l => l.type === 'EXTERNAL') || [];
       if (afterLoad) afterLoad();
     });
@@ -144,5 +158,13 @@ export class PieceDetailComponent implements OnInit {
     const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
     return `${apiBase}${fullPath}`;
+  }
+
+  formatFileSize(bytes: number): string {
+    const kb = bytes / 1024;
+    if (kb < 1024) {
+      return `${kb.toFixed(1)} kB`;
+    }
+    return `${(kb / 1024).toFixed(1)} MB`;
   }
 }
