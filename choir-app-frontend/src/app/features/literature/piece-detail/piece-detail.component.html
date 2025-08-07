@@ -33,7 +33,11 @@
       <h3>Dateien</h3>
       <ul>
         <li *ngFor="let link of fileLinks">
-          <a [href]="getLinkUrl(link)" [attr.download]="link.description">{{ link.description }}</a>
+          <a [href]="getLinkUrl(link)" [attr.download]="link.description">
+            <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
+            {{ link.description }}
+          </a>
+          <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
         </li>
       </ul>
     </div>
