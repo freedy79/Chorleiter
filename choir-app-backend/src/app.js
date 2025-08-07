@@ -15,7 +15,7 @@ app.use(helmet());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+app.use(['/uploads', '/api/uploads'], express.static(path.join(__dirname, '..', 'uploads')));
 
 if (process.env.NODE_ENV != "production") {
     app.use((req, res, next) => {
