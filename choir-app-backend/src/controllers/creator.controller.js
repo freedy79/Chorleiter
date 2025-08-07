@@ -121,6 +121,18 @@ function createCreatorController(Model, options = {}) {
     }
   }
 
+  async function fetchWithRetry(url, options, retries = 3) {
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      const response = await fetch(url, options);
+      if (response.status !== 429) return response;
+      const retryAfter = parseInt(response.headers.get('retry-after'), 10);
+      const delay = Number.isNaN(retryAfter) ? (attempt + 1) * 1000 : retryAfter * 1000;
+      // eslint-disable-next-line no-await-in-loop
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    throw new Error('Too many requests');
+  }
+
   async function enrich(req, res) {
     const { id } = req.params;
     try {
@@ -129,7 +141,7 @@ function createCreatorController(Model, options = {}) {
 
       const query = encodeURIComponent(record.name);
       const url = `https://musicbrainz.org/ws/2/artist/?query=${query}&fmt=json&limit=1`;
-      const response = await fetch(url, {
+      const response = await fetchWithRetry(url, {
         headers: { 'User-Agent': 'chorleiter/1.0 ( https://example.com )' }
       });
       if (!response.ok) throw new Error('Failed to fetch data');
