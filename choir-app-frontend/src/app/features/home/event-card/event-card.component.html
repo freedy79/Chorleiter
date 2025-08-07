@@ -9,18 +9,25 @@
         {{ event.date | date:'fullDate' }}
         <span class="event-creator" *ngIf="event.director">({{ event.director.name }})</span>
       </h3>
-      <mat-list>
-        <mat-list-item *ngFor="let piece of event.pieces">
-          <div matListItemTitle>
-            <a [routerLink]="['/pieces', piece.id]" class="piece-link">
-              {{getPieceReference(piece)}} {{ piece.title }}
-            </a>
-          </div>
-          <div matListItemLine>
-              <span>{{ getPieceSubtitle(piece) }}</span>
-          </div>
-        </mat-list-item>
-      </mat-list>
+      <ng-container *ngIf="event.pieces.length > 0; else noteBlock">
+        <mat-list>
+          <mat-list-item *ngFor="let piece of event.pieces">
+            <div matListItemTitle>
+              <a [routerLink]="['/pieces', piece.id]" class="piece-link">
+                {{getPieceReference(piece)}} {{ piece.title }}
+              </a>
+            </div>
+            <div matListItemLine>
+                <span>{{ getPieceSubtitle(piece) }}</span>
+            </div>
+          </mat-list-item>
+        </mat-list>
+      </ng-container>
+      <ng-template #noteBlock>
+        <div *ngIf="event.notes" class="event-note">
+          {{ event.notes }}
+        </div>
+      </ng-template>
     </ng-container>
 
     <!-- Diese Vorlage wird angezeigt, wenn das 'event'-Input null ist -->

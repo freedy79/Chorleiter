@@ -35,4 +35,19 @@ describe('EventCardComponent', () => {
     const h3 = fixture.nativeElement.querySelector('h3');
     expect(h3.textContent).toContain('(Alice)');
   });
+
+  it('should show notes when no pieces are present', () => {
+    component.event = {
+      id: 2,
+      date: '2023-01-02',
+      type: 'SERVICE',
+      createdAt: '2023-01-02',
+      updatedAt: '2023-01-02',
+      notes: 'General rehearsal',
+      pieces: []
+    } as any;
+    fixture.detectChanges();
+    const noteEl = fixture.nativeElement.querySelector('.event-note');
+    expect(noteEl.textContent).toContain('General rehearsal');
+  });
 });
