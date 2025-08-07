@@ -32,6 +32,13 @@
     </div>
 
     <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
+      <ng-container matColumnDef="cover">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element" class="cover-cell">
+          <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" />
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Titel</th>
         <td mat-cell *matCellDef="let element">
