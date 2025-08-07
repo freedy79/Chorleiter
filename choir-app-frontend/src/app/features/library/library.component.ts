@@ -51,7 +51,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     this.dataSource.sortingDataAccessor = (item, property) => {
       switch (property) {
         case 'title':
-          return item.collection?.title || '';
+          return item.collection?.title.toLowerCase() || '';
         case 'availableAt':
           return item.availableAt ? new Date(item.availableAt).getTime() : 0;
         default:
