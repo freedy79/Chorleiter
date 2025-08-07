@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 
 import { PieceDetailComponent } from './piece-detail.component';
@@ -14,7 +15,7 @@ describe('PieceDetailComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PieceDetailComponent],
+      imports: [PieceDetailComponent, HttpClientTestingModule],
       providers: [
         {
           provide: ActivatedRoute,
