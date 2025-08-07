@@ -7,6 +7,8 @@ mat-card {
 
 mat-card-content {
     flex-grow: 1; // Lässt den Inhalt wachsen, um den Platz zu füllen
+    display: flex;
+    flex-direction: column;
 }
 
 mat-card-content h3 {
@@ -28,6 +30,15 @@ mat-card-content h3 {
     align-items: center;
     height: 100px;
     color: #999;
+}
+
+.event-note {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 1rem;
 }
 
 // In dunklem Modus anpassen
