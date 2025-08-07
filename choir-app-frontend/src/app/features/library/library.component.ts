@@ -8,11 +8,13 @@ import { Piece } from '@core/models/piece';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
-import { Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { PageEvent } from '@angular/material/paginator';
+import { FileUploadService } from '@core/services/file-upload.service';
+import { LibraryUtilService } from '@core/services/library-util.service';
 
 @Component({
   selector: 'app-library',
@@ -26,13 +28,16 @@ export class LibraryComponent implements OnInit {
   collections$!: Observable<Collection[]>;
   isAdmin = false;
   displayedColumns: string[] = ['title', 'copies', 'status', 'availableAt', 'actions'];
-  expandedItem: LibraryItem | null = null;
-  expandedPieces: Piece[] = [];
-  piecePageSize = 10;
-  piecePageIndex = 0;
-  private composerCache = new Map<number, string>();
 
-  constructor(private apiService: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router, private cart: LoanCartService, private snack: MatSnackBar) {}
+  constructor(
+    private apiService: ApiService,
+    private auth: AuthService,
+    private dialog: MatDialog,
+    private cart: LoanCartService,
+    private snack: MatSnackBar,
+    private fileUpload: FileUploadService,
+    public libraryUtil: LibraryUtilService
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -47,7 +52,7 @@ export class LibraryComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.apiService.importLibraryCsv(file).subscribe(() => this.load());
+      this.fileUpload.importLibraryCsv(file).subscribe(() => this.load());
     }
   }
 
@@ -61,56 +66,23 @@ export class LibraryComponent implements OnInit {
   }
 
   toggleCollection(item: LibraryItem): void {
-    const colId = item.collection?.id;
-    if (!colId) return;
-
-    if (this.expandedItem === item) {
-      this.expandedItem = null;
-      return;
-    }
-
-    this.apiService.getCollectionById(colId).subscribe(col => {
-      if ((col.singleEdition || (col.pieces && col.pieces.length === 1)) && col.pieces && col.pieces.length === 1) {
-        this.router.navigate(['/pieces', col.pieces[0].id]);
-      } else {
-        this.expandedItem = item;
-        this.expandedPieces = col.pieces || [];
-        this.piecePageIndex = 0;
-      }
-    });
+    this.libraryUtil.toggleCollection(item);
   }
 
   onPiecePage(event: PageEvent): void {
-    this.piecePageIndex = event.pageIndex;
-    this.piecePageSize = event.pageSize;
+    this.libraryUtil.onPiecePage(event);
   }
 
   get paginatedPieces(): Piece[] {
-    const start = this.piecePageIndex * this.piecePageSize;
-    return this.expandedPieces.slice(start, start + this.piecePageSize);
+    return this.libraryUtil.paginatedPieces;
   }
 
   getCollectionHint(collection?: Collection): string {
-    if (!collection) return '';
-    return collection.subtitle || '';
+    return this.libraryUtil.getCollectionHint(collection);
   }
 
   public getCollectionComposer(collection?: Collection): string {
-    if (!collection) return '';
-
-    if (collection.pieceCount === 1) {
-      const cached = this.composerCache.get(collection.id);
-      if (cached !== undefined) {
-        return cached;
-      }
-      this.composerCache.set(collection.id, '');
-      this.apiService.getCollectionById(collection.id).subscribe(col => {
-        const name = col.pieces?.[0]?.composer?.name || col.pieces?.[0]?.origin || '';
-        this.composerCache.set(collection.id, name);
-        return name;
-      });
-    }
-    return '';
+    return this.libraryUtil.getCollectionComposer(collection);
   }
 
   addToCart(item: LibraryItem, event: Event): void {
