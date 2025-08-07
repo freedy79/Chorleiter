@@ -268,6 +268,7 @@ export class PieceDialogComponent implements OnInit {
         const linkGroup = this.linksFormArray.at(index) as FormGroup;
         this.pieceService.uploadPieceLinkFile(file).subscribe(res => {
             linkGroup.get('url')?.setValue(res.path);
+            linkGroup.get('description')?.setValue(file.name);
         });
     }
 
