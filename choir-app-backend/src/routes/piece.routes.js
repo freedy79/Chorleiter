@@ -23,5 +23,6 @@ router.delete("/:id", role.requireNonDemo, wrap(controller.delete));
 router.post("/:id/report", role.requireNonDemo, wrap(controller.report));
 router.post("/:id/image", role.requireNonDemo, imageUpload.single('image'), wrap(controller.uploadImage));
 router.post("/link-file", role.requireNonDemo, fileUpload.single('file'), wrap(controller.uploadLinkFile));
+router.delete("/link-file", role.requireNonDemo, wrap(controller.deleteLinkFile));
 
 module.exports = router;
