@@ -23,6 +23,7 @@ import {
 } from '@angular/material/autocomplete';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '@core/services/auth.service';
 import { ImportDialogComponent } from '../import-dialog/import-dialog.component';
 
@@ -510,10 +511,27 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     private handleFile(file: File): void {
-        this.coverFile = file;
-        const reader = new FileReader();
-        reader.onload = () => (this.coverPreview = reader.result as string);
-        reader.readAsDataURL(file);
+        const proceed = () => {
+            this.coverFile = file;
+            const reader = new FileReader();
+            reader.onload = () => (this.coverPreview = reader.result as string);
+            reader.readAsDataURL(file);
+        };
+
+        if (this.coverPreview) {
+            const dialogData: ConfirmDialogData = {
+                title: 'Cover überschreiben?',
+                message: 'Es existiert bereits ein Coverbild. Möchten Sie es überschreiben?',
+            };
+            const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+            ref.afterClosed().subscribe(confirmed => {
+                if (confirmed) {
+                    proceed();
+                }
+            });
+        } else {
+            proceed();
+        }
     }
 
     // Fügen Sie diese Methode hinzu
