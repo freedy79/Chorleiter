@@ -30,23 +30,24 @@ export class LibraryComponent implements OnInit {
   expandedPieces: Piece[] = [];
   piecePageSize = 10;
   piecePageIndex = 0;
+  private composerCache = new Map<number, string>();
 
-  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router, private cart: LoanCartService, private snack: MatSnackBar) {}
+  constructor(private apiService: ApiService, private auth: AuthService, private dialog: MatDialog, private router: Router, private cart: LoanCartService, private snack: MatSnackBar) {}
 
   ngOnInit(): void {
     this.load();
-    this.collections$ = this.api.getCollections();
+    this.collections$ = this.apiService.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
   }
 
   load(): void {
-    this.items$ = this.api.getLibraryItems();
+    this.items$ = this.apiService.getLibraryItems();
   }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.api.importLibraryCsv(file).subscribe(() => this.load());
+      this.apiService.importLibraryCsv(file).subscribe(() => this.load());
     }
   }
 
@@ -54,7 +55,7 @@ export class LibraryComponent implements OnInit {
     const ref = this.dialog.open(LibraryItemDialogComponent, { data: { collections$: this.collections$ } });
     ref.afterClosed().subscribe(result => {
       if (result) {
-        this.api.addLibraryItem(result).subscribe(() => this.load());
+        this.apiService.addLibraryItem(result).subscribe(() => this.load());
       }
     });
   }
@@ -68,7 +69,7 @@ export class LibraryComponent implements OnInit {
       return;
     }
 
-    this.api.getCollectionById(colId).subscribe(col => {
+    this.apiService.getCollectionById(colId).subscribe(col => {
       if ((col.singleEdition || (col.pieces && col.pieces.length === 1)) && col.pieces && col.pieces.length === 1) {
         this.router.navigate(['/pieces', col.pieces[0].id]);
       } else {
@@ -91,11 +92,25 @@ export class LibraryComponent implements OnInit {
 
   getCollectionHint(collection?: Collection): string {
     if (!collection) return '';
-    if (collection.singleEdition || (collection.pieces && collection.pieces.length === 1)) {
-      const piece = collection.pieces?.[0];
-      return piece?.composer?.name || piece?.origin || '';
+    return collection.subtitle || '-';
+  }
+
+  public getCollectionComposer(collection?: Collection): string {
+    if (!collection) return '';
+
+    if (collection.pieceCount === 1) {
+      const cached = this.composerCache.get(collection.id);
+      if (cached !== undefined) {
+        return cached;
+      }
+      this.composerCache.set(collection.id, '');
+      this.apiService.getCollectionById(collection.id).subscribe(col => {
+        const name = col.pieces?.[0]?.composer?.name || col.pieces?.[0]?.origin || '';
+        this.composerCache.set(collection.id, name);
+        return name;
+      });
     }
-    return collection.subtitle || '';
+    return 'c ' + collection.pieceCount?.toString();
   }
 
   addToCart(item: LibraryItem, event: Event): void {
