@@ -19,6 +19,10 @@
 <section *ngIf="results.collections.length">
   <h3>Sammlungen</h3>
   <ul>
-    <li *ngFor="let c of results.collections">{{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span></li>
+    <li *ngFor="let c of results.collections">
+      <a [routerLink]="['/collections/edit', c.id]">
+        {{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span>
+      </a>
+    </li>
   </ul>
 </section>
