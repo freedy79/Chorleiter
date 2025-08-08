@@ -10,6 +10,7 @@ import { AuthService } from '@core/services/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
+import { LibraryStatusDialogComponent } from './library-status-dialog.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
@@ -160,8 +161,12 @@ export class LibraryComponent implements OnInit, AfterViewInit {
 
   changeStatus(item: LibraryItem, event: Event): void {
     event.stopPropagation();
-    const newStatus = item.status === 'available' ? 'borrowed' : 'available';
-    this.apiService.updateLibraryItem(item.id, { status: newStatus }).subscribe(() => this.load());
+    const ref = this.dialog.open(LibraryStatusDialogComponent, { data: { item } });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.apiService.updateLibraryItem(item.id, result).subscribe(() => this.load());
+      }
+    });
   }
 
   deleteItem(item: LibraryItem, event: Event): void {
