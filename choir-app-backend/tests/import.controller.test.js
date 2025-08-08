@@ -53,6 +53,23 @@ const jobs = require('../src/services/import-jobs.service');
 
     console.log('import.controller name formatting test passed');
 
+    // Test interpolation of abbreviated composer names
+    await db.sequelize.sync({ force: true });
+
+    const collectionAbbr = await db.collection.create({ title: 'Abbr', prefix: 'A' });
+    const existingComp = await db.composer.create({ name: 'Bach, Johann Sebastian' });
+    const recordsAbbr = [
+      { title: 'Abbrev Piece', composer: 'J. S. Bach' }
+    ];
+    const jobAbbr = jobs.createJob('jobAbbr');
+    jobAbbr.status = 'running';
+    await controller._test.processImport(jobAbbr, collectionAbbr, recordsAbbr);
+    const composers = await db.composer.findAll();
+    assert.strictEqual(composers.length, 1, 'should reuse existing composer');
+    assert.strictEqual(composers[0].id, existingComp.id);
+
+    console.log('import.controller abbreviation match test passed');
+
     await db.sequelize.sync({ force: true });
 
     const choir = await db.choir.create({ name: 'Test Choir' });
