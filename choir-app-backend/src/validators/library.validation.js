@@ -15,3 +15,9 @@ exports.loanRequestValidation = [
   body('reason').optional().isString()
 ];
 
+exports.updateLibraryItemValidation = [
+  body('copies').optional().isInt({ min: 1 }).withMessage('copies must be an integer'),
+  body('status').optional().isIn(['available', 'borrowed']).withMessage('status must be valid'),
+  body('availableAt').optional().isISO8601().toDate()
+];
+
