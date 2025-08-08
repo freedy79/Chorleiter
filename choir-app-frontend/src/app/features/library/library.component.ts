@@ -39,11 +39,6 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   displayedColumns: string[] = ['cover', 'title', 'copies', 'status', 'availableAt', 'actions'];
 
   dataSource = new MatTableDataSource<LibraryItem>();
-  expandedItem: LibraryItem | null = null;
-  expandedPieces: Piece[] = [];
-  piecePageSize = 10;
-  piecePageIndex = 0;
-  private composerCache = new Map<number, string>();
 
 
   constructor(
@@ -121,6 +116,18 @@ export class LibraryComponent implements OnInit, AfterViewInit {
         this.apiService.addLibraryItem(result).subscribe(() => this.load());
       }
     });
+  }
+
+  get expandedItem(): LibraryItem | null {
+    return this.libraryUtil.expandedItem;
+  }
+
+  get expandedPieces(): Piece[] {
+    return this.libraryUtil.expandedPieces;
+  }
+
+  get piecePageSize(): number {
+    return this.libraryUtil.piecePageSize;
   }
 
   toggleCollection(item: LibraryItem): void {
