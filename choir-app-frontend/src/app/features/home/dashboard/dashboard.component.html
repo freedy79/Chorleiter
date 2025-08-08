@@ -2,12 +2,11 @@
   <h1 *ngIf="(activeChoir$ | async)?.name as name">
     Willkommen bei {{ name }}
   </h1>
-  <button mat-flat-button color="primary" (click)="openAddEventDialog()" matTooltip="Neues Ereignis erstellen">
+  <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neues Ereignis erstellen">
     <mat-icon>add</mat-icon>
   </button>
-  <button mat-flat-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
-    <mat-icon>list</mat-icon>
-  </button>
+  <button mat-icon-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
+    <mat-icon>list</mat-icon>  </button>
 </div>
 
 <div class="dashboard-grid">
