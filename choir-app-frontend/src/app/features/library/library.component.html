@@ -20,7 +20,7 @@
   </mat-tab>
 
   <mat-tab label="Bibliotheksliste">
-    <div class="list-header" *ngIf="isAdmin">
+    <div class="list-header" *ngIf="isAdmin || isLibrarian">
       <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
       <button mat-icon-button [matMenuTriggerFor]="adminMenu">
         <mat-icon>more_vert</mat-icon>
@@ -69,6 +69,14 @@
           <button mat-icon-button color="primary" *ngIf="element.status === 'available'" (click)="addToCart(element, $event)">
             <mat-icon>add_shopping_cart</mat-icon>
           </button>
+          <button mat-icon-button *ngIf="isAdmin || isLibrarian" [matMenuTriggerFor]="itemMenu" (click)="$event.stopPropagation()">
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #itemMenu="matMenu">
+            <button mat-menu-item (click)="editCopies(element, $event)">Bestand ändern</button>
+            <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
+            <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
+          </mat-menu>
         </td>
       </ng-container>
 

@@ -33,6 +33,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
 
   collections$!: Observable<Collection[]>;
   isAdmin = false;
+  isLibrarian = false;
   displayedColumns: string[] = ['cover', 'title', 'copies', 'status', 'availableAt', 'actions'];
 
   dataSource = new MatTableDataSource<LibraryItem>();
@@ -57,6 +58,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     this.load();
     this.collections$ = this.apiService.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.auth.isLibrarian$.subscribe(l => this.isLibrarian = l);
   }
 
   ngAfterViewInit(): void {
@@ -143,5 +145,29 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     event.stopPropagation();
     this.cart.addItem(item);
     this.snack.open('Zur Anfrage hinzugefügt', undefined, { duration: 2000 });
+  }
+
+  editCopies(item: LibraryItem, event: Event): void {
+    event.stopPropagation();
+    const input = prompt('Neue Anzahl Exemplare:', item.copies.toString());
+    if (input !== null) {
+      const copies = Number(input);
+      if (!isNaN(copies) && copies > 0) {
+        this.apiService.updateLibraryItem(item.id, { copies }).subscribe(() => this.load());
+      }
+    }
+  }
+
+  changeStatus(item: LibraryItem, event: Event): void {
+    event.stopPropagation();
+    const newStatus = item.status === 'available' ? 'borrowed' : 'available';
+    this.apiService.updateLibraryItem(item.id, { status: newStatus }).subscribe(() => this.load());
+  }
+
+  deleteItem(item: LibraryItem, event: Event): void {
+    event.stopPropagation();
+    if (confirm('Diesen Eintrag wirklich löschen?')) {
+      this.apiService.deleteLibraryItem(item.id).subscribe(() => this.load());
+    }
   }
 }

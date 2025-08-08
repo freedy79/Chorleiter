@@ -19,6 +19,8 @@ export class UserRoleLabelPipe implements PipeTransform {
         return 'Chor-Admin';
       case 'admin':
         return 'Administrator';
+      case 'librarian':
+        return 'Bibliothekar';
       case 'demo':
         return 'Demo';
       case 'singer':

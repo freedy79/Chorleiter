@@ -29,6 +29,18 @@ export class LibraryService {
     return this.http.post(`${this.apiUrl}/${id}/borrow`, {});
   }
 
+  returnItem(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${id}/return`, {});
+  }
+
+  updateItem(id: number, data: Partial<LibraryItem>): Observable<LibraryItem> {
+    return this.http.put<LibraryItem>(`${this.apiUrl}/${id}`, data);
+  }
+
+  deleteItem(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
+  }
+
   requestLoan(data: LoanRequestPayload): Observable<any> {
     return this.http.post(`${this.apiUrl}/request`, data);
   }

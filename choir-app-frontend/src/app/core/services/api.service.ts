@@ -503,6 +503,18 @@ export class ApiService {
     return this.libraryService.borrowItem(id);
   }
 
+  returnLibraryItem(id: number): Observable<any> {
+    return this.libraryService.returnItem(id);
+  }
+
+  updateLibraryItem(id: number, data: Partial<LibraryItem>): Observable<LibraryItem> {
+    return this.libraryService.updateItem(id, data);
+  }
+
+  deleteLibraryItem(id: number): Observable<any> {
+    return this.libraryService.deleteItem(id);
+  }
+
   requestLibraryLoan(data: LoanRequestPayload): Observable<any> {
     return this.libraryService.requestLoan(data);
   }

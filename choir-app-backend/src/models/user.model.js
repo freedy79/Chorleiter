@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
       },
       role: {
         // Include 'singer' so regular choir members can register
-        type: DataTypes.ENUM('director', 'choir_admin', 'admin', 'demo', 'singer'),
+        type: DataTypes.ENUM('director', 'choir_admin', 'admin', 'demo', 'singer', 'librarian'),
         defaultValue: 'director'
       },
       lastDonation: {

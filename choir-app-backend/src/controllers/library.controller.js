@@ -62,6 +62,30 @@ exports.importCsv = async (req, res) => {
   res.status(200).send({ message: 'Import complete.' });
 };
 
+// Update copies or status of a library item
+exports.update = async (req, res) => {
+  const id = req.params.id;
+  const { copies, status, availableAt } = req.body;
+  const item = await LibraryItem.findByPk(id);
+  if (!item) return res.status(404).send({ message: 'Library item not found.' });
+
+  const data = {};
+  if (copies !== undefined) data.copies = copies;
+  if (status) {
+    data.status = status;
+    if (status === 'available') {
+      data.availableAt = null;
+    } else if (availableAt) {
+      data.availableAt = availableAt;
+    }
+  } else if (availableAt !== undefined) {
+    data.availableAt = availableAt;
+  }
+
+  await item.update(data);
+  res.status(200).send(item);
+};
+
 // Borrow an item - only directors may borrow
 exports.borrow = async (req, res) => {
   const id = req.params.id;
@@ -82,6 +106,15 @@ exports.returnItem = async (req, res) => {
   if (!item) return res.status(404).send({ message: 'Library item not found.' });
   await item.update({ status: 'available', availableAt: null });
   res.status(200).send(item);
+};
+
+// Delete a library item
+exports.remove = async (req, res) => {
+  const id = req.params.id;
+  const item = await LibraryItem.findByPk(id);
+  if (!item) return res.status(404).send({ message: 'Library item not found.' });
+  await item.destroy();
+  res.status(204).send();
 };
 
 // Create loan request for multiple library items

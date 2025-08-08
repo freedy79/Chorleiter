@@ -41,10 +41,16 @@ async function requireChoirAdmin(req, res, next) {
 }
 
 function requireDirector(req, res, next) {
-    if (['director', 'choir_admin', 'admin'].includes(req.userRole)) {
+    if (['director', 'choir_admin', 'admin', 'librarian'].includes(req.userRole)) {
         return next();
     }
     return res.status(403).send({ message: 'Require Director Role!' });
 }
 
-module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector };
+function requireLibrarian(req, res, next) {
+    if (['librarian', 'admin'].includes(req.userRole)) {
+        return next();
+    }
+    return res.status(403).send({ message: 'Require Librarian Role!' });
+}
+module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian };
