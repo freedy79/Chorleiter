@@ -21,3 +21,17 @@
   vertical-align: middle;
   margin-right: 0.25rem;
 }
+
+.collection-item {
+  display: flex;
+  align-items: center;
+}
+
+.collection-item a {
+  flex: 1;
+}
+
+.library-icon {
+  margin-left: auto;
+  cursor: pointer;
+}

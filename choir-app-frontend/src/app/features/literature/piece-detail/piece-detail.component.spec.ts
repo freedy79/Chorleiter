@@ -26,7 +26,7 @@ describe('PieceDetailComponent', () => {
             }
           }
         },
-        { provide: ApiService, useValue: { getRepertoirePiece: () => of(null) } },
+        { provide: ApiService, useValue: { getRepertoirePiece: () => of(null), getLibraryItems: () => of([]) } },
         {
           provide: AuthService,
           useValue: { currentUser$: of(null), isAdmin$: of(false) }

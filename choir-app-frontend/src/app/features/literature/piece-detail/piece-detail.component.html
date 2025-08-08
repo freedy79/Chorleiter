@@ -20,10 +20,17 @@
   <div *ngIf="piece.collections?.length">
     <p><strong>Enthalten in:</strong></p>
     <ul>
-      <li *ngFor="let c of piece.collections">
+      <li *ngFor="let c of piece.collections" class="collection-item">
         <a [routerLink]="['/collections/edit', c.id]">
           {{ c.title }} ({{ c.singleEdition ? (piece.composer?.name || piece.origin) : c.prefix }}{{ c.collection_piece.numberInCollection }})
         </a>
+        <mat-icon
+          *ngIf="libraryItems[c.id]"
+          class="library-icon"
+          matTooltip="In Notenbibliothek vorhanden"
+          (click)="openLibraryItem(c.id, $event)"
+          >library_music</mat-icon
+        >
       </li>
     </ul>
   </div>
