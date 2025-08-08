@@ -5,6 +5,8 @@ import { ApiService } from '@core/services/api.service';
 import { StatsSummary, PieceStat } from '@core/models/stats-summary';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { MatTableDataSource } from '@angular/material/table';
+import { Piece } from '@core/models/piece';
 
 @Component({
   selector: 'app-statistics',
@@ -18,6 +20,9 @@ export class StatisticsComponent implements OnInit {
 
   leastUsedPieces: PieceStat[] = [];
 
+  displayedRehearsalColumns: string[] = ['title', 'composer'];
+  rehearsalDataSource = new MatTableDataSource<Piece>();
+
   startDate?: Date;
   endDate?: Date;
   activeMonths?: number;
@@ -27,6 +32,7 @@ export class StatisticsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStats();
+    this.loadRehearsalPieces();
   }
 
   loadStats(): void {
@@ -35,5 +41,11 @@ export class StatisticsComponent implements OnInit {
       this.stats = s;
       this.leastUsedPieces = s.leastUsedPieces;
     });
+  }
+
+  private loadRehearsalPieces(): void {
+    this.apiService
+      .getMyRepertoire(undefined, undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
+      .subscribe(res => (this.rehearsalDataSource.data = res.data));
   }
 }
