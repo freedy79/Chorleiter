@@ -1,0 +1,12 @@
+<h1 mat-dialog-title>{{ item.collection?.title }}</h1>
+<div mat-dialog-content>
+  <p><strong>Exemplare:</strong> {{ item.copies }}</p>
+  <p><strong>Status:</strong> {{ item.status }}</p>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="addToCart()" *ngIf="item.status === 'available'">
+    Zur Ausleihe hinzufügen
+  </button>
+  <span class="spacer"></span>
+  <button mat-button mat-dialog-close>Schließen</button>
+</div>

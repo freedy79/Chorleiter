@@ -15,6 +15,8 @@ import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { PieceReportDialogComponent } from '../piece-report-dialog/piece-report-dialog.component';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { LibraryItem } from '@core/models/library-item';
+import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-dialog.component';
 
 @Component({
   selector: 'app-piece-detail',
@@ -38,6 +40,7 @@ export class PieceDetailComponent implements OnInit {
   pieceImage: string | null = null;
   fileLinks: (PieceLink & { isPdf: boolean; size?: number })[] = [];
   externalLinks: PieceLink[] = [];
+  libraryItems: { [collectionId: number]: LibraryItem } = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -56,6 +59,7 @@ export class PieceDetailComponent implements OnInit {
     });
     this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.loadLibraryItems();
   }
 
   private loadPiece(id: number, afterLoad?: () => void): void {
@@ -133,6 +137,26 @@ export class PieceDetailComponent implements OnInit {
       this.piece!.notes.unshift(n as any);
       this.newNoteText = '';
     });
+  }
+
+  private loadLibraryItems(): void {
+    this.apiService.getLibraryItems().subscribe(items => {
+      this.libraryItems = {};
+      items.forEach(i => {
+        const id = i.collectionId || i.collection?.id;
+        if (id != null) {
+          this.libraryItems[id] = i;
+        }
+      });
+    });
+  }
+
+  openLibraryItem(collectionId: number, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const item = this.libraryItems[collectionId];
+    if (!item) return;
+    this.dialog.open(LibraryItemInfoDialogComponent, { data: item });
   }
 
   openEditPieceDialog(): void {
