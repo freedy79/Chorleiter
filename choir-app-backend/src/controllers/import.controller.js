@@ -53,6 +53,43 @@ const findOrCreate = async (model, where, defaults, jobId, entityName, options =
     return instance;
 };
 
+const findExistingByAbbreviation = async (model, name) => {
+    if (!name || !name.includes(',')) return null;
+    const [last, first] = name.split(',').map(s => s.trim());
+    if (!first) return null;
+    const parts = first.split(/\s+/);
+    if (!parts.some(p => p.includes('.'))) return null;
+    const initials = parts.map(p => p[0] ? p[0].toLowerCase() : '').join('');
+    const { Op } = db.Sequelize;
+    const candidates = await model.findAll({
+        where: db.Sequelize.where(
+            db.Sequelize.fn('lower', db.Sequelize.col('name')),
+            { [Op.like]: `${last.toLowerCase()},%` }
+        )
+    });
+    for (const cand of candidates) {
+        const candFirst = cand.name.split(',')[1]?.trim() || '';
+        const candInitials = candFirst.split(/\s+/).map(p => p[0] ? p[0].toLowerCase() : '').join('');
+        if (candInitials === initials) {
+            return cand;
+        }
+    }
+    return null;
+};
+
+const findOrCreatePerson = async (model, name, jobId, entityName) => {
+    const existing = await findExistingByAbbreviation(model, name);
+    if (existing) return existing;
+    return await findOrCreate(
+        model,
+        { name },
+        { name },
+        jobId,
+        entityName,
+        { ignoreCase: true }
+    );
+};
+
 // Diese Funktion führt den eigentlichen Import aus, ohne auf den Request zu warten.
 const processImport = async (job, collection, records) => {
     jobs.updateJobProgress(job.id, 0, records.length);
@@ -86,13 +123,11 @@ const processImport = async (job, collection, records) => {
 
             jobs.updateJobLog(job.id, `Processing row ${index + 1}: "${title}"...`);
 
-            const composer = await findOrCreate(
+            const composer = await findOrCreatePerson(
                 db.composer,
-                { name: composerName },
-                { name: composerName },
+                composerName,
                 job.id,
-                'Composer',
-                { ignoreCase: true }
+                'Composer'
             );
             let category = null;
             if (categoryName) {
@@ -107,13 +142,11 @@ const processImport = async (job, collection, records) => {
             }
             let author = null;
             if (authorName) {
-                author = await findOrCreate(
+                author = await findOrCreatePerson(
                     db.author,
-                    { name: authorName },
-                    { name: authorName },
+                    authorName,
                     job.id,
-                    'Author',
-                    { ignoreCase: true }
+                    'Author'
                 );
             }
 
