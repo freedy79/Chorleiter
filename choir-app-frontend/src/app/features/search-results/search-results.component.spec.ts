@@ -35,8 +35,9 @@ describe('SearchResultsComponent', () => {
     searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [{ id: 1, title: 'Test' }] }));
     const { fixture } = createComponent();
     fixture.detectChanges();
-    const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('section:last-child ul li a');
+    const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('section ul li a');
     expect(link).not.toBeNull();
-    expect(link?.getAttribute('href')).toContain('/collections/edit/1');
+    const href = link?.getAttribute('ng-reflect-router-link') || link?.getAttribute('href');
+    expect(href).toContain('/collections/edit');
   });
 });

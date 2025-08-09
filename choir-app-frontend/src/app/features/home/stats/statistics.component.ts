@@ -20,7 +20,7 @@ export class StatisticsComponent implements OnInit {
 
   leastUsedPieces: PieceStat[] = [];
 
-  displayedRehearsalColumns: string[] = ['title', 'composer'];
+  displayedRehearsalColumns: string[] = ['title', 'composer', 'reference'];
   rehearsalDataSource = new MatTableDataSource<Piece>();
 
   startDate?: Date;
@@ -47,5 +47,18 @@ export class StatisticsComponent implements OnInit {
     this.apiService
       .getMyRepertoire(undefined, undefined, undefined, undefined, undefined, 100, ['IN_REHEARSAL'])
       .subscribe(res => (this.rehearsalDataSource.data = res.data));
+  }
+
+  formatReference(piece: Piece): string {
+    if (piece.collectionPrefix && piece.collectionNumber) {
+      return `${piece.collectionPrefix}${piece.collectionNumber}`;
+    }
+    if (piece.collections && piece.collections.length > 0) {
+      const ref = piece.collections[0];
+      const num = ref.collection_piece.numberInCollection;
+      const prefix = ref.singleEdition ? piece.composer?.name || piece.origin || '' : ref.prefix || '';
+      return `${prefix}${num}`;
+    }
+    return '-';
   }
 }
