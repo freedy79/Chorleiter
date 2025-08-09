@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
+import { Loan } from '../models/loan';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -43,5 +44,9 @@ export class LibraryService {
 
   requestLoan(data: LoanRequestPayload): Observable<any> {
     return this.http.post(`${this.apiUrl}/request`, data);
+  }
+
+  getLoans(): Observable<Loan[]> {
+    return this.http.get<Loan[]>(`${this.apiUrl}/loans`);
   }
 }

@@ -1,0 +1,29 @@
+<table mat-table [dataSource]="loans" class="mat-elevation-z8">
+  <ng-container matColumnDef="collectionTitle">
+    <th mat-header-cell *matHeaderCellDef>Sammlungstitel</th>
+    <td mat-cell *matCellDef="let element">{{element.collectionTitle}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="choirName">
+    <th mat-header-cell *matHeaderCellDef>Chor</th>
+    <td mat-cell *matCellDef="let element">{{element.choirName}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="startDate">
+    <th mat-header-cell *matHeaderCellDef>Startdatum</th>
+    <td mat-cell *matCellDef="let element">{{element.startDate | date}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="endDate">
+    <th mat-header-cell *matHeaderCellDef>Enddatum</th>
+    <td mat-cell *matCellDef="let element">{{element.endDate | date}}</td>
+  </ng-container>
+
+  <ng-container matColumnDef="status">
+    <th mat-header-cell *matHeaderCellDef>Status</th>
+    <td mat-cell *matCellDef="let element">{{element.status | loanStatusLabel}}</td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+</table>

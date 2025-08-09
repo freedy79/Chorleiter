@@ -20,12 +20,13 @@ import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
 import { map } from 'rxjs/operators';
 import { LoanStatusLabelPipe } from '@shared/pipes/loan-status-label.pipe';
+import { LoanListComponent } from './loan-list.component';
 
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterModule, LoanStatusLabelPipe],
+  imports: [CommonModule, MaterialModule, RouterModule, LoanStatusLabelPipe, LoanListComponent],
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
