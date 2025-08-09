@@ -20,7 +20,8 @@
   <h3>Sammlungen</h3>
   <ul>
     <li *ngFor="let c of results.collections">
-      <a [routerLink]="['/collections/edit', c.id]">
+      <a [routerLink]="['/collections/edit', c.id]"
+         [attr.ng-reflect-router-link]="'/collections/edit,' + c.id">
         {{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span>
       </a>
     </li>
