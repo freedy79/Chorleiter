@@ -19,14 +19,13 @@ import { MatSort } from '@angular/material/sort';
 import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
 import { map } from 'rxjs/operators';
-import { LoanStatusLabelPipe } from '@shared/pipes/loan-status-label.pipe';
 import { LoanListComponent } from './loan-list.component';
 
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterModule, LoanStatusLabelPipe, LoanListComponent],
+  imports: [CommonModule, MaterialModule, RouterModule, LoanListComponent],
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
@@ -37,7 +36,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   collections$!: Observable<Collection[]>;
   isAdmin = false;
   isLibrarian = false;
-  displayedColumns: string[] = ['cover', 'title', 'copies', 'status', 'availableAt', 'actions'];
+  displayedColumns: string[] = ['cover', 'title', 'copies', 'actions'];
 
   dataSource = new MatTableDataSource<LibraryItem>();
 
@@ -66,8 +65,6 @@ export class LibraryComponent implements OnInit, AfterViewInit {
       switch (property) {
         case 'title':
           return item.collection?.title.toLowerCase() || '';
-        case 'availableAt':
-          return item.availableAt ? new Date(item.availableAt).getTime() : 0;
         default:
           return (item as any)[property];
       }
