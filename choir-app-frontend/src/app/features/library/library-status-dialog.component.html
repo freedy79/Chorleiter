@@ -26,8 +26,11 @@
   <mat-form-field appearance="fill" class="full-width">
     <mat-label>Entleihstatus</mat-label>
     <mat-select formControlName="status">
-      <mat-option value="available">available</mat-option>
-      <mat-option value="borrowed">borrowed</mat-option>
+      <mat-option value="available">Verfügbar</mat-option>
+      <mat-option value="requested">Angefragt</mat-option>
+      <mat-option value="borrowed">Entliehen</mat-option>
+      <mat-option value="due">Fällig</mat-option>
+      <mat-option value="partial_return">Teilweise Rückgabe</mat-option>
     </mat-select>
   </mat-form-field>
 </div>

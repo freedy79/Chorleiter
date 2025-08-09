@@ -11,6 +11,7 @@ const validate = require("../validators/validate");
 router.use(authJwt.verifyToken);
 
 router.get('/', wrap(controller.findAll));
+router.get('/loans', role.requireLibrarian, wrap(controller.listLoans));
 router.post('/', role.requireLibrarian, createLibraryItemValidation, validate, wrap(controller.create));
 router.post('/import', role.requireLibrarian, upload.single('csvfile'), wrap(controller.importCsv));
 router.put('/:id', role.requireLibrarian, updateLibraryItemValidation, validate, wrap(controller.update));

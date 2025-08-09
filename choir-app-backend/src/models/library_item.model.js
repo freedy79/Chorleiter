@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 1
     },
     status: {
-      type: DataTypes.ENUM('available', 'borrowed'),
+      type: DataTypes.ENUM('available', 'requested', 'borrowed', 'due', 'partial_return'),
       defaultValue: 'available'
     },
     availableAt: {

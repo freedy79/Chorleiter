@@ -103,4 +103,8 @@
     </table>
     <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
   </mat-tab>
+
+  <mat-tab *ngIf="isAdmin || isLibrarian" label="Ausleihen">
+    <app-loan-list></app-loan-list>
+  </mat-tab>
 </mat-tab-group>

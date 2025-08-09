@@ -5,6 +5,6 @@ export interface LibraryItem {
   collection?: Collection;
   collectionId?: number;
   copies: number;
-  status: 'available' | 'borrowed';
+  status: 'available' | 'requested' | 'borrowed' | 'due' | 'partial_return';
   availableAt?: string | null;
 }

@@ -15,8 +15,14 @@ export class LoanStatusLabelPipe implements PipeTransform {
     switch (value) {
       case 'available':
         return 'Verfügbar';
+      case 'requested':
+        return 'Angefragt';
       case 'borrowed':
-        return 'Verliehen';
+        return 'Entliehen';
+      case 'due':
+        return 'Fällig';
+      case 'partial_return':
+        return 'Teilweise Rückgabe';
       default:
         return value;
     }
