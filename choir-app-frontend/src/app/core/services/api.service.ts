@@ -524,6 +524,14 @@ export class ApiService {
     return this.libraryService.getLoans();
   }
 
+  updateLibraryLoan(id: number, data: Partial<Loan>): Observable<any> {
+    return this.libraryService.updateLoan(id, data);
+  }
+
+  endLibraryLoan(id: number): Observable<any> {
+    return this.libraryService.endLoan(id);
+  }
+
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
     return this.choirService.getMyChoirDetails(options?.choirId);
   }

@@ -193,3 +193,65 @@ exports.listLoans = async (req, res) => {
 
   res.status(200).send(result);
 };
+
+// Update loan request details and optionally item status
+exports.updateLoan = async (req, res) => {
+  const id = req.params.id;
+  const { startDate, endDate, status } = req.body;
+
+  const request = await LoanRequest.findByPk(id, {
+    include: [
+      {
+        model: LoanRequestItem,
+        as: 'items',
+        include: [{ model: LibraryItem, as: 'libraryItem' }]
+      }
+    ]
+  });
+  if (!request) return res.status(404).send({ message: 'Loan request not found.' });
+
+  const data = {};
+  if (startDate !== undefined) data.startDate = startDate;
+  if (endDate !== undefined) data.endDate = endDate;
+  await request.update(data);
+
+  if (status) {
+    for (const item of request.items) {
+      if (item.libraryItem) {
+        const itemData = { status };
+        if (status === 'available') {
+          itemData.availableAt = null;
+        } else if (endDate) {
+          itemData.availableAt = endDate;
+        }
+        await item.libraryItem.update(itemData);
+      }
+    }
+  }
+
+  res.status(200).send({ message: 'Loan updated.' });
+};
+
+// End loan by marking items available and removing request
+exports.endLoan = async (req, res) => {
+  const id = req.params.id;
+  const request = await LoanRequest.findByPk(id, {
+    include: [
+      {
+        model: LoanRequestItem,
+        as: 'items',
+        include: [{ model: LibraryItem, as: 'libraryItem' }]
+      }
+    ]
+  });
+  if (!request) return res.status(404).send({ message: 'Loan request not found.' });
+
+  for (const item of request.items) {
+    if (item.libraryItem) {
+      await item.libraryItem.update({ status: 'available', availableAt: null });
+    }
+  }
+
+  await request.destroy();
+  res.status(200).send({ message: 'Loan ended.' });
+};
