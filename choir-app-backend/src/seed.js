@@ -24,7 +24,7 @@ async function seedDatabase(options = {}) {
                     name: "Administrator",
                     email: "admin@nak-chorleiter.de",
                     password: bcrypt.hashSync("admin", 8),
-                    role: "admin",
+                    roles: ["admin"],
                 },
             });
             if (createdUser) {
@@ -111,7 +111,7 @@ async function seedDatabase(options = {}) {
                     name: "Demo User",
                     email: "demo@nak-chorleiter.de",
                     password: bcrypt.hashSync("demo", 8),
-                    role: "demo"
+                    roles: ["demo"]
                 }
             });
             await demoUser.addChoir(choir).catch(() => { });

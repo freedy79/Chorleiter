@@ -14,7 +14,7 @@ exports.create = async (req, res) => {
         const piece = await Piece.findByPk(pieceId);
         const proposer = await db.user.findByPk(req.userId);
 
-        const admins = await db.user.findAll({ where: { role: 'admin' } });
+        const admins = (await db.user.findAll()).filter(u => Array.isArray(u.roles) && u.roles.includes('admin'));
         const linkBase = await getFrontendUrl();
         const link = `${linkBase}/admin/piece-changes`;
         const promises = admins

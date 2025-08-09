@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'name', 'email', 'role', 'lastDonation', 'street', 'postalCode', 'city', 'shareWithChoir'],
+            attributes: ['id', 'name', 'email', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'shareWithChoir'],
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association

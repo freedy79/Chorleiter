@@ -19,7 +19,7 @@ import { UserRoleLabelPipe } from '@shared/pipes/user-role-label.pipe';
 })
 export class ManageUsersComponent implements OnInit {
   users: User[] = [];
-  displayedColumns = ['name', 'email', 'role', 'choirs', 'lastLogin', 'actions'];
+  displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'actions'];
   dataSource = new MatTableDataSource<User>();
   filterValue = '';
 

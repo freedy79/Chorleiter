@@ -26,7 +26,7 @@ export interface User {
   shareWithChoir?: boolean;
 
 
-  role?: 'director' | 'choir_admin' | 'admin' | 'demo' | 'singer' | 'librarian';
+  roles?: ('director' | 'choir_admin' | 'admin' | 'demo' | 'singer' | 'librarian')[];
 
   /**
    * The JSON Web Token received upon successful login.

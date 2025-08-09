@@ -83,7 +83,7 @@
         </mat-card-content>
       </mat-card>
 
-      <div class="actions-footer" *ngIf="currentUser?.role != 'demo'">
+      <div class="actions-footer" *ngIf="!(currentUser?.roles?.includes('demo'))">
         <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileForm.pristine">
           Speichern
         </button>

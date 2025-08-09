@@ -17,7 +17,7 @@ async function ensureDemoAccount() {
             name: "Demo User",
             email: "demo@nak-chorleiter.de",
             password: bcrypt.hashSync("demo", 8),
-            role: "demo"
+            roles: ["demo"]
         }
     });
     await demoUser.addChoir(choir).catch(() => {});
@@ -90,7 +90,7 @@ exports.signin = async (req, res) => {
       return res.status(401).send({ message: "Invalid Password!" });
     }
 
-    if (user.role === 'demo') {
+    if (Array.isArray(user.roles) && user.roles.includes('demo')) {
       const choir = user.choirs[0];
       await resetDemoEvents(user, choir);
     }
@@ -101,7 +101,7 @@ exports.signin = async (req, res) => {
     const tokenExpiresIn = rememberMe ? '30d' : '8h';
 
     const token = jwt.sign(
-        { id: user.id, activeChoirId: activeChoirId, role: user.role }, // Verwenden Sie 'activeChoirId'
+        { id: user.id, activeChoirId: activeChoirId, roles: user.roles }, // Verwenden Sie 'activeChoirId'
         process.env.JWT_SECRET,
         { expiresIn: tokenExpiresIn }
     );
@@ -115,7 +115,7 @@ exports.signin = async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
+      roles: user.roles,
       accessToken: token,
       // Senden Sie die Liste aller Chöre und den aktuell aktiven
       activeChoir: user.choirs[0],
@@ -135,7 +135,7 @@ exports.switchChoir = async (req, res) => {
         const user = await User.findByPk(userId, { include: [Choir] });
         // Sicherheitsprüfung: Gehört der Chor dem Benutzer überhaupt?
         const hasChoir = user.choirs.some(choir => choir.id === newActiveChoirId);
-        if (!hasChoir && user.role !== 'admin') {
+        if (!hasChoir && !user.roles.includes('admin')) {
             return res.status(403).send({ message: "Forbidden: User is not a member of this choir." });
         }
 
@@ -145,7 +145,7 @@ exports.switchChoir = async (req, res) => {
 
         // Erstellen Sie ein neues Token mit der neuen aktiven Chor-ID
         const token = jwt.sign(
-            { id: user.id, activeChoirId: newActiveChoirId, role: user.role },
+            { id: user.id, activeChoirId: newActiveChoirId, roles: user.roles },
             process.env.JWT_SECRET,
             { expiresIn: '8h' } // Oder die verbleibende Zeit des alten Tokens
         );
@@ -160,7 +160,7 @@ exports.switchChoir = async (req, res) => {
 
 exports.checkChoirAdminStatus = async (req, res) => {
     try {
-        if (req.userRole === 'admin') {
+        if (req.userRoles.includes('admin')) {
             return res.status(200).send({ isChoirAdmin: true });
         }
         const association = await db.user_choir.findOne({

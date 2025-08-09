@@ -87,7 +87,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await db.user.findAll({
             order: [['name', 'ASC']],
-            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
+            attributes: ['id', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -104,12 +104,12 @@ exports.getAllUsers = async (req, res) => {
 const bcrypt = require('bcryptjs');
 
 exports.createUser = async (req, res) => {
-    const { name, email, password, role, street, postalCode, city, shareWithChoir } = req.body;
+    const { name, email, password, roles, street, postalCode, city, shareWithChoir } = req.body;
     try {
         const user = await db.user.create({
             name,
             email,
-            role: role || 'director',
+            roles: roles || ['director'],
             password: password ? bcrypt.hashSync(password, 8) : null,
             street,
             postalCode,
@@ -128,14 +128,14 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { name, email, password, role, street, postalCode, city, shareWithChoir } = req.body;
+    const { name, email, password, roles, street, postalCode, city, shareWithChoir } = req.body;
     try {
         const user = await db.user.findByPk(id);
         if (!user) return res.status(404).send({ message: 'Not found' });
         await user.update({
             name: name ?? user.name,
             email: email ?? user.email,
-            role: role ?? user.role,
+            roles: roles ?? user.roles,
             street: street ?? user.street,
             postalCode: postalCode ?? user.postalCode,
             city: city ?? user.city,
@@ -167,7 +167,7 @@ exports.getUserByEmail = async (req, res) => {
     try {
         const user = await db.user.findOne({
             where: { email },
-            attributes: ['id', 'name', 'email', 'role', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
+            attributes: ['id', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'shareWithChoir', 'lastDonation', 'lastLogin'],
             include: [{
                 model: db.choir,
                 as: 'choirs',

@@ -151,11 +151,11 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
     const id = req.params.id;
 
-    if (req.userRole !== 'admin') {
+    if (!req.userRoles.includes('admin')) {
             await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
             const piece = await Piece.findByPk(id);
             const proposer = await db.user.findByPk(req.userId);
-            const admins = await db.user.findAll({ where: { role: 'admin' } });
+            const admins = (await db.user.findAll()).filter(u => Array.isArray(u.roles) && u.roles.includes('admin'));
             const linkBase = await getFrontendUrl();
             const link = `${linkBase}/admin/piece-changes`;
             await Promise.all(
@@ -232,7 +232,7 @@ exports.report = async (req, res) => {
         const piece = await Piece.findByPk(id);
         if (!piece) return res.status(404).send({ message: 'Piece not found.' });
         const reporter = await db.user.findByPk(req.userId);
-        const admins = await db.user.findAll({ where: { role: 'admin' } });
+        const admins = (await db.user.findAll()).filter(u => Array.isArray(u.roles) && u.roles.includes('admin'));
         const recipients = admins.filter(a => a.email).map(a => a.email);
         const linkBase = await getFrontendUrl();
         const link = `${linkBase}/pieces/${id}`;

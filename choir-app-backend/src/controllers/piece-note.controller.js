@@ -39,7 +39,7 @@ exports.update = async (req, res) => {
     try {
         const note = await PieceNote.findByPk(noteId);
         if (!note) return res.status(404).send({ message: 'Note not found' });
-        if (note.userId !== req.userId && req.userRole !== 'admin') {
+        if (note.userId !== req.userId && !req.userRoles.includes('admin')) {
             return res.status(403).send({ message: 'Not allowed' });
         }
         await note.update({ text });
@@ -55,7 +55,7 @@ exports.remove = async (req, res) => {
     try {
         const note = await PieceNote.findByPk(noteId);
         if (!note) return res.status(404).send({ message: 'Note not found' });
-        if (note.userId !== req.userId && req.userRole !== 'admin') {
+        if (note.userId !== req.userId && !req.userRoles.includes('admin')) {
             return res.status(403).send({ message: 'Not allowed' });
         }
         await note.destroy();

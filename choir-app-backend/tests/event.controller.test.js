@@ -10,8 +10,8 @@ const controller = require('../src/controllers/event.controller');
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const user = await db.user.create({ email: 't@example.com', role: 'USER' });
-    const organist = await db.user.create({ email: 'o@example.com', role: 'USER' });
+    const user = await db.user.create({ email: 't@example.com', roles: ['USER'] });
+    const organist = await db.user.create({ email: 'o@example.com', roles: ['USER'] });
     const plan = await db.monthly_plan.create({ choirId: choir.id, year: 2024, month: 1 });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
@@ -61,7 +61,7 @@ const controller = require('../src/controllers/event.controller');
     assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
 
     // --- Next events tests ---
-    const otherUser = await db.user.create({ email: 'other@example.com', role: 'USER' });
+    const otherUser = await db.user.create({ email: 'other@example.com', roles: ['USER'] });
     await controller.create({ ...baseReq, body: { date: '2099-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
     const futureId = res.data.event.id;
     await controller.create({ ...baseReq, body: { date: '2099-01-02T10:00:00Z', type: 'REHEARSAL', pieceIds: [], directorId: otherUser.id } }, res);

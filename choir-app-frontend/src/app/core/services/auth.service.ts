@@ -34,8 +34,8 @@ export class AuthService {
               private router: Router,
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
-    this.isAdmin$ = this.currentUser$.pipe(map(user => user?.role === 'admin'));
-    this.isLibrarian$ = this.currentUser$.pipe(map(user => user?.role === 'librarian'));
+    this.isAdmin$ = this.currentUser$.pipe(map(user => user?.roles?.includes('admin') ?? false));
+    this.isLibrarian$ = this.currentUser$.pipe(map(user => user?.roles?.includes('librarian') ?? false));
     if (this.hasToken()) {
       this.prefs.load().subscribe(p => {
         if (p.theme) {
