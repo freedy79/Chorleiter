@@ -5,6 +5,7 @@ const Piece = db.piece;
 const Collection = db.collection;
 const LoanRequest = db.loan_request;
 const LoanRequestItem = db.loan_request_item;
+const Choir = db.choir;
 
 // List all library items with collection details
 exports.findAll = async (req, res) => {
@@ -18,10 +19,14 @@ exports.findAll = async (req, res) => {
     ]
   });
 
+  const now = new Date();
   const result = items.map(item => {
     const plain = item.toJSON();
     if (plain.collection) {
       plain.collection.pieceCount = plain.collection.pieces ? plain.collection.pieces.length : 0;
+    }
+    if (plain.status === 'borrowed' && plain.availableAt && new Date(plain.availableAt) < now) {
+      plain.status = 'due';
     }
     return plain;
   });
@@ -130,6 +135,10 @@ exports.requestLoan = async (req, res) => {
     return res.status(404).send({ message: 'One or more library items not found.' });
   }
 
+  for (const libItem of libraryItems) {
+    await libItem.update({ status: 'requested' });
+  }
+
   const request = await LoanRequest.create({
     choirId: req.activeChoirId,
     userId: req.userId,
@@ -151,4 +160,36 @@ exports.requestLoan = async (req, res) => {
   });
 
   res.status(201).send(created);
+};
+
+// List all loan requests with associated items
+exports.listLoans = async (req, res) => {
+  const requests = await LoanRequest.findAll({
+    include: [
+      { model: LoanRequestItem, as: 'items', include: [{ model: LibraryItem, as: 'libraryItem', include: [{ model: Collection, as: 'collection' }] }] },
+      { model: Choir, as: 'choir' }
+    ]
+  });
+
+  const now = new Date();
+  const result = [];
+  for (const reqItem of requests) {
+    for (const item of reqItem.items) {
+      if (!item.libraryItem || !item.libraryItem.collection) continue;
+      let status = item.libraryItem.status;
+      if (status === 'borrowed' && reqItem.endDate && new Date(reqItem.endDate) < now) {
+        status = 'due';
+      }
+      result.push({
+        id: reqItem.id,
+        collectionTitle: item.libraryItem.collection.title,
+        choirName: reqItem.choir ? reqItem.choir.name : '',
+        startDate: reqItem.startDate,
+        endDate: reqItem.endDate,
+        status
+      });
+    }
+  }
+
+  res.status(200).send(result);
 };

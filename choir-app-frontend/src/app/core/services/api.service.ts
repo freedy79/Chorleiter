@@ -20,6 +20,7 @@ import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
+import { Loan } from '../models/loan';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
@@ -517,6 +518,10 @@ export class ApiService {
 
   requestLibraryLoan(data: LoanRequestPayload): Observable<any> {
     return this.libraryService.requestLoan(data);
+  }
+
+  getLibraryLoans(): Observable<Loan[]> {
+    return this.libraryService.getLoans();
   }
 
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
