@@ -49,4 +49,12 @@ export class LibraryService {
   getLoans(): Observable<Loan[]> {
     return this.http.get<Loan[]>(`${this.apiUrl}/loans`);
   }
+
+  updateLoan(id: number, data: Partial<Loan>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/loans/${id}`, data);
+  }
+
+  endLoan(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/loans/${id}/end`, {});
+  }
 }

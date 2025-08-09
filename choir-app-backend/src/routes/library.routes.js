@@ -12,6 +12,8 @@ router.use(authJwt.verifyToken);
 
 router.get('/', wrap(controller.findAll));
 router.get('/loans', role.requireLibrarian, wrap(controller.listLoans));
+router.put('/loans/:id', role.requireLibrarian, wrap(controller.updateLoan));
+router.post('/loans/:id/end', role.requireLibrarian, wrap(controller.endLoan));
 router.post('/', role.requireLibrarian, createLibraryItemValidation, validate, wrap(controller.create));
 router.post('/import', role.requireLibrarian, upload.single('csvfile'), wrap(controller.importCsv));
 router.put('/:id', role.requireLibrarian, updateLibraryItemValidation, validate, wrap(controller.update));
