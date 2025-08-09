@@ -27,11 +27,12 @@
       <input matInput type="password" formControlName="password">
     </mat-form-field>
     <mat-form-field appearance="outline">
-      <mat-label>Rolle</mat-label>
-      <mat-select formControlName="role">
+      <mat-label>Rollen</mat-label>
+      <mat-select formControlName="roles" multiple>
         <mat-option value="director">Dirigent</mat-option>
         <mat-option value="choir_admin">Chor-Admin</mat-option>
         <mat-option value="admin">Admin</mat-option>
+        <mat-option value="librarian">Bibliothekar</mat-option>
       </mat-select>
     </mat-form-field>
   </form>

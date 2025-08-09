@@ -25,7 +25,7 @@ exports.joinChoir = async (req, res) => {
     }
     const existing = await db.user.findOne({ where: { email } });
     if (existing) return res.status(409).send({ message: 'User already exists.' });
-    const user = await db.user.create({ name, email, password: bcrypt.hashSync(password, 8), role: 'singer' });
+    const user = await db.user.create({ name, email, password: bcrypt.hashSync(password, 8), roles: ['singer'] });
     await choir.addUser(user, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
     res.status(201).send({ message: 'Registration completed.' });
   } catch (err) {

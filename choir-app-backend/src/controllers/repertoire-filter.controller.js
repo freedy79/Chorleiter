@@ -26,10 +26,10 @@ exports.save = async (req, res) => {
         return res.status(400).send({ message: 'Name and data are required.' });
     }
     try {
-        if (visibility === 'global' && req.userRole !== 'admin') {
+        if (visibility === 'global' && !req.userRoles.includes('admin')) {
             return res.status(403).send({ message: 'Require Admin Role!' });
         }
-        if (visibility === 'local' && req.userRole !== 'admin') {
+        if (visibility === 'local' && !req.userRoles.includes('admin')) {
             const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: req.activeChoirId } });
             if (!assoc || !Array.isArray(assoc.rolesInChoir) || !assoc.rolesInChoir.includes('choir_admin')) {
                 return res.status(403).send({ message: 'Require Choir Admin Role!' });
@@ -64,9 +64,9 @@ exports.delete = async (req, res) => {
         if (!preset) return res.status(404).send({ message: 'Filter not found.' });
 
         if (preset.visibility === 'global') {
-            if (req.userRole !== 'admin') return res.status(403).send({ message: 'Require Admin Role!' });
+            if (!req.userRoles.includes('admin')) return res.status(403).send({ message: 'Require Admin Role!' });
         } else if (preset.visibility === 'local') {
-            if (req.userRole !== 'admin') {
+            if (!req.userRoles.includes('admin')) {
                 const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: preset.choirId } });
                 if (!assoc || !Array.isArray(assoc.rolesInChoir) || !assoc.rolesInChoir.includes('choir_admin')) return res.status(403).send({ message: 'Require Choir Admin Role!' });
             }

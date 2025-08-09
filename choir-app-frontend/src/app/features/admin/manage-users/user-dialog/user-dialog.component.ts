@@ -29,7 +29,7 @@ export class UserDialogComponent {
       postalCode: [data?.postalCode || ''],
       city: [data?.city || ''],
       shareWithChoir: [data?.shareWithChoir || false],
-      role: [data?.role || 'director', Validators.required],
+      roles: [data?.roles || ['director'], Validators.required],
       password: ['', data ? [] : [Validators.required]]
     });
   }

@@ -49,7 +49,7 @@ exports.updateMyChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
-        if (req.userRole !== 'admin') {
+        if (!req.userRoles.includes('admin')) {
             const association = await db.user_choir.findOne({
                 where: { userId: req.userId, choirId: req.activeChoirId }
             });
@@ -120,7 +120,7 @@ exports.getChoirMembers = async (req, res, next) => {
                     registrationStatus: user.user_choir.registrationStatus
                 }
             };
-            if (req.userRole === 'admin' || user.shareWithChoir) {
+            if (req.userRoles.includes('admin') || user.shareWithChoir) {
                 return Object.assign(base, {
                     street: user.street,
                     postalCode: user.postalCode,

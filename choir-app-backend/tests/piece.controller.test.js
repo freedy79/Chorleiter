@@ -17,7 +17,7 @@ const controller = require('../src/controllers/piece.controller');
     const composer2 = await db.composer.create({ name: 'Second Composer' });
     const author = await db.author.create({ name: 'Test Author' });
     const user = await db.user.create({ email: 'user@example.com' });
-    const admin = await db.user.create({ email: 'admin@example.com', role: 'admin' });
+    const admin = await db.user.create({ email: 'admin@example.com', roles: ['admin'] });
 
     const req = {
       body: {
@@ -68,7 +68,7 @@ const controller = require('../src/controllers/piece.controller');
   await controller.update({
     params: { id: created.id },
     body: { title: 'New' },
-    userRole: 'user',
+    userRoles: ['user'],
     userId: user.id
   }, res);
   assert.strictEqual(statusCode, 202, 'non-admin update returns 202');
@@ -82,7 +82,7 @@ const controller = require('../src/controllers/piece.controller');
   await controller.update({
     params: { id: created.id },
     body: { title: 'Updated' },
-    userRole: 'admin',
+    userRoles: ['admin'],
     userId: admin.id
   }, res);
   assert.strictEqual(statusCode, 200, 'admin update returns 200');

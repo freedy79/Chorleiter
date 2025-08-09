@@ -7,7 +7,7 @@ function stripHtml(text) {
 }
 
 async function isChoirAdmin(req) {
-  if (req.userRole === 'admin') return true;
+  if (req.userRoles.includes('admin')) return true;
   const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: req.activeChoirId } });
   return assoc && Array.isArray(assoc.rolesInChoir) && assoc.rolesInChoir.includes('choir_admin');
 }

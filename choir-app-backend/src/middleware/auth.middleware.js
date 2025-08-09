@@ -8,10 +8,10 @@ const optionalAuth = (req, res, next) => {
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (!err) {
       req.userId = decoded.id;
-      req.userRole = decoded.role;
+      req.userRoles = decoded.roles || [];
       const choirParam = parseInt(req.query.choirId, 10);
       req.activeChoirId =
-        decoded.role === 'admin' && !isNaN(choirParam)
+        req.userRoles.includes('admin') && !isNaN(choirParam)
           ? choirParam
           : decoded.activeChoirId;
     }
@@ -34,10 +34,10 @@ const verifyToken = (req, res, next) => {
       return res.status(401).send({ message: "Unauthorized!" });
     }
     req.userId = decoded.id;
-    req.userRole = decoded.role;
+    req.userRoles = decoded.roles || [];
     const choirParam = parseInt(req.query.choirId, 10);
     req.activeChoirId =
-      decoded.role === 'admin' && !isNaN(choirParam)
+      req.userRoles.includes('admin') && !isNaN(choirParam)
         ? choirParam
         : decoded.activeChoirId;
     next();
@@ -46,7 +46,7 @@ const verifyToken = (req, res, next) => {
 
 const isChoirAdminOrAdmin = async (req, res, next) => {
     // Der globale Admin darf alles
-    if (req.userRole === 'admin') {
+    if (req.userRoles.includes('admin')) {
         return next();
     }
 
@@ -71,7 +71,7 @@ const isChoirAdminOrAdmin = async (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-    if (req.userRole === 'admin') {
+    if (req.userRoles.includes('admin')) {
         next();
         return;
     }

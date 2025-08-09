@@ -4,7 +4,7 @@ const db = require('../models');
  * Middleware to disallow actions for demo users.
  */
 function requireNonDemo(req, res, next) {
-    if (req.userRole === 'demo') {
+    if (req.userRoles.includes('demo')) {
         return res.status(403).send({ message: 'Demo user cannot perform this action.' });
     }
     next();
@@ -14,7 +14,7 @@ function requireNonDemo(req, res, next) {
  * Middleware that allows only global admins.
  */
 function requireAdmin(req, res, next) {
-    if (req.userRole === 'admin') {
+    if (req.userRoles.includes('admin')) {
         return next();
     }
     return res.status(403).send({ message: 'Require Admin Role!' });
@@ -24,7 +24,7 @@ function requireAdmin(req, res, next) {
  * Middleware that allows choir admins or global admins.
  */
 async function requireChoirAdmin(req, res, next) {
-    if (req.userRole === 'admin') {
+    if (req.userRoles.includes('admin')) {
         return next();
     }
     try {
@@ -41,14 +41,14 @@ async function requireChoirAdmin(req, res, next) {
 }
 
 function requireDirector(req, res, next) {
-    if (['director', 'choir_admin', 'admin', 'librarian'].includes(req.userRole)) {
+    if (['director', 'choir_admin', 'admin', 'librarian'].some(r => req.userRoles.includes(r))) {
         return next();
     }
     return res.status(403).send({ message: 'Require Director Role!' });
 }
 
 function requireLibrarian(req, res, next) {
-    if (['librarian', 'admin'].includes(req.userRole)) {
+    if (['librarian', 'admin'].some(r => req.userRoles.includes(r))) {
         return next();
     }
     return res.status(403).send({ message: 'Require Librarian Role!' });

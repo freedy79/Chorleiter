@@ -20,10 +20,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DATE,
         allowNull: true
       },
-      role: {
-        // Include 'singer' so regular choir members can register
-        type: DataTypes.ENUM('director', 'choir_admin', 'admin', 'demo', 'singer', 'librarian'),
-        defaultValue: 'director'
+      roles: {
+        type: DataTypes.JSON,
+        allowNull: false,
+        defaultValue: ['director']
       },
       lastDonation: {
         type: DataTypes.DATE,

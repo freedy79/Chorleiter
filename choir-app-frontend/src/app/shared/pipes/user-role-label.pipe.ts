@@ -8,9 +8,12 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true
 })
 export class UserRoleLabelPipe implements PipeTransform {
-  transform(value: string | null | undefined): string {
+  transform(value: string | string[] | null | undefined): string {
     if (!value) {
       return '';
+    }
+    if (Array.isArray(value)) {
+      return value.map(v => this.transform(v)).join(', ');
     }
     switch (value) {
       case 'director':

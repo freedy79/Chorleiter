@@ -8,7 +8,7 @@ export class HelpService {
 
   shouldShowHelp(user: User | null): boolean {
     if (!user) return false;
-    if (user.role === 'demo' && !this.prefs.getPreference('helpShown')) {
+    if (user.roles?.includes('demo') && !this.prefs.getPreference('helpShown')) {
       return true;
     }
     return !this.prefs.getPreference('helpShown');
