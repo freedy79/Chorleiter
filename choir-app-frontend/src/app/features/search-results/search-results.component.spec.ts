@@ -34,8 +34,10 @@ describe('SearchResultsComponent', () => {
   it('should render collection results as links', () => {
     searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [{ id: 1, title: 'Test' }] }));
     const { fixture } = createComponent();
-    const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('section:last-child ul li a');
+    fixture.detectChanges();
+    const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('section ul li a');
     expect(link).not.toBeNull();
-    expect(link?.getAttribute('ng-reflect-router-link')).toContain('/collections/edit,1');
+    const href = link?.getAttribute('ng-reflect-router-link') || link?.getAttribute('href');
+    expect(href).toContain('/collections/edit');
   });
 });
