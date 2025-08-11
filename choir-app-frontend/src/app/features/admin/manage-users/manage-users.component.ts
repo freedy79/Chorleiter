@@ -8,12 +8,11 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
-import { UserRoleLabelPipe } from '@shared/pipes/user-role-label.pipe';
 
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, UserRoleLabelPipe],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })
