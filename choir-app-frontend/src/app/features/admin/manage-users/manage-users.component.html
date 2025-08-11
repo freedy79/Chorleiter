@@ -20,7 +20,20 @@
 
   <ng-container matColumnDef="roles">
     <th mat-header-cell *matHeaderCellDef>Rollen</th>
-    <td mat-cell *matCellDef="let element">{{ element.roles | userRoleLabel }}</td>
+    <td mat-cell *matCellDef="let element">
+      <mat-form-field appearance="outline" class="roles-select">
+        <mat-select
+          [ngModel]="element.roles"
+          (ngModelChange)="onRolesChange(element, $event)"
+          multiple
+        >
+          <mat-option value="director">Dirigent</mat-option>
+          <mat-option value="choir_admin">Chor-Admin</mat-option>
+          <mat-option value="admin">Admin</mat-option>
+          <mat-option value="librarian">Bibliothekar</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </td>
   </ng-container>
 
   <ng-container matColumnDef="choirs">
