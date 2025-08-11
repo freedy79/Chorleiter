@@ -22,7 +22,14 @@ describe('CollectionListComponent', () => {
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } },
         { provide: AuthService, useValue: { isAdmin$: of(false) } },
-        { provide: ApiService, useValue: { getCollections: () => of([]), checkChoirAdminStatus: () => of({ isChoirAdmin: false }) } }
+        {
+          provide: ApiService,
+          useValue: {
+            getCollections: () => of([]),
+            checkChoirAdminStatus: () => of({ isChoirAdmin: false }),
+            getLibraryItems: () => of([])
+          }
+        }
       ]
     })
     .compileComponents();
