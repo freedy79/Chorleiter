@@ -30,4 +30,12 @@ describe('ProfileComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should display admin info when user has admin role', () => {
+    component.currentUser = { id: 1, name: 'Admin', email: 'admin@example.com', roles: ['admin'] } as any;
+    component.isLoading = false;
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.admin-info')?.textContent).toContain('Administrator');
+  });
 });
