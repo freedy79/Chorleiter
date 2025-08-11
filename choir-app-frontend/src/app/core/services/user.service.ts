@@ -26,6 +26,10 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/password-reset/request`, { email });
   }
 
+  validateResetToken(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/password-reset/validate/${token}`);
+  }
+
   resetPassword(token: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/password-reset/reset/${token}`, { password });
   }

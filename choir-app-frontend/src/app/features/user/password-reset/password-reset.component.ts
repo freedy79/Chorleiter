@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 
@@ -12,16 +12,26 @@ import { ApiService } from '@core/services/api.service';
   templateUrl: './password-reset.component.html',
   styleUrls: ['./password-reset.component.scss']
 })
-export class PasswordResetComponent {
+export class PasswordResetComponent implements OnInit {
   form: ReturnType<FormBuilder['group']>;
   isLoading = false;
   message = '';
   token: string;
 
-  constructor(private fb: FormBuilder, private route: ActivatedRoute, private api: ApiService) {
+  constructor(private fb: FormBuilder, private route: ActivatedRoute, private api: ApiService, private router: Router) {
     this.token = this.route.snapshot.params['token'];
     this.form = this.fb.group({
       password: ['', Validators.required]
+    });
+  }
+
+  ngOnInit(): void {
+    this.api.validateResetToken(this.token).subscribe({
+      error: err => {
+        this.message = err.error?.message || 'Link ungültig oder abgelaufen.';
+        this.form.disable();
+        setTimeout(() => this.router.navigate(['/login']), 3000);
+      }
     });
   }
 
@@ -36,6 +46,7 @@ export class PasswordResetComponent {
       error: err => {
         this.message = err.error?.message || 'Link ungültig oder abgelaufen.';
         this.isLoading = false;
+        setTimeout(() => this.router.navigate(['/login']), 3000);
       }
     });
   }
