@@ -40,6 +40,7 @@ import { RepertoireFilter } from '../models/repertoire-filter';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
+import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
@@ -716,6 +717,14 @@ export class ApiService {
 
   updateFrontendUrl(value: string): Observable<FrontendUrl> {
     return this.adminService.updateFrontendUrl({ value });
+  }
+
+  getSystemAdminEmail(): Observable<SystemAdminEmail> {
+    return this.adminService.getSystemAdminEmail();
+  }
+
+  updateSystemAdminEmail(value: string): Observable<SystemAdminEmail> {
+    return this.adminService.updateSystemAdminEmail({ value });
   }
 
   checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {

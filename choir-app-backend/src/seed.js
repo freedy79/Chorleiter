@@ -87,6 +87,10 @@ async function seedDatabase(options = {}) {
                 where: { key: 'FRONTEND_URL' },
                 defaults: { value: process.env.FRONTEND_URL || 'https://nak-chorleiter.de' }
             });
+            await db.system_setting.findOrCreate({
+                where: { key: 'SYSTEM_ADMIN_EMAIL' },
+                defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
+            });
             console.log("Initial seeding completed successfully.");
         } else {
             console.log("Database already seeded. Skipping initial setup.");

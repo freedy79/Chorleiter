@@ -9,6 +9,7 @@ import { StatsSummary } from '../models/stats-summary';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
+import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 
 @Injectable({ providedIn: 'root' })
@@ -161,5 +162,13 @@ export class AdminService {
 
   updateFrontendUrl(data: FrontendUrl): Observable<FrontendUrl> {
     return this.http.put<FrontendUrl>(`${this.apiUrl}/admin/frontend-url`, data);
+  }
+
+  getSystemAdminEmail(): Observable<SystemAdminEmail> {
+    return this.http.get<SystemAdminEmail>(`${this.apiUrl}/admin/system-admin-email`);
+  }
+
+  updateSystemAdminEmail(data: SystemAdminEmail): Observable<SystemAdminEmail> {
+    return this.http.put<SystemAdminEmail>(`${this.apiUrl}/admin/system-admin-email`, data);
   }
 }
