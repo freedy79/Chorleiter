@@ -569,6 +569,10 @@ export class ApiService {
     return this.userService.requestPasswordReset(email);
   }
 
+  validateResetToken(token: string): Observable<any> {
+    return this.userService.validateResetToken(token);
+  }
+
   resetPassword(token: string, password: string): Observable<any> {
     return this.userService.resetPassword(token, password);
   }

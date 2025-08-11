@@ -26,6 +26,24 @@ exports.requestPasswordReset = async (req, res) => {
   }
 };
 
+exports.validateToken = async (req, res) => {
+  const { token } = req.params;
+  try {
+    const user = await db.user.findOne({
+      where: {
+        resetToken: token,
+        resetTokenExpiry: { [Op.gt]: new Date() }
+      }
+    });
+    if (!user) {
+      return res.status(400).send({ message: 'Invalid or expired token.' });
+    }
+    res.status(200).send({ message: 'Token is valid.' });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 exports.resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
