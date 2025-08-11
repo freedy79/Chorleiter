@@ -7,9 +7,6 @@
   </div>
 
   <ng-template #profileContent>
-    <div *ngIf="currentUser?.roles?.includes('admin')" class="admin-info">
-      Sie sind als Administrator angemeldet.
-    </div>
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
       <mat-card>
         <mat-card-header>
@@ -45,6 +42,28 @@
           </mat-form-field>
 
           <mat-checkbox formControlName="shareWithChoir">Erlaube Nutzung meiner Daten für Chorleiter</mat-checkbox>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Systemrolle</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ng-container *ngIf="profileForm.get('roles')?.enabled; else readonlyRoles">
+            <mat-form-field appearance="outline">
+              <mat-label>Systemrollen</mat-label>
+              <mat-select formControlName="roles" multiple>
+                <mat-option value="director">Dirigent</mat-option>
+                <mat-option value="choir_admin">Chor-Admin</mat-option>
+                <mat-option value="admin" disabled>Administrator</mat-option>
+                <mat-option value="librarian">Bibliothekar</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+          <ng-template #readonlyRoles>
+            <div class="roles-display">{{ profileForm.get('roles')?.value?.join(', ') }}</div>
+          </ng-template>
         </mat-card-content>
       </mat-card>
 

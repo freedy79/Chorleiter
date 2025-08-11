@@ -3,8 +3,17 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { of } from 'rxjs';
+import { ApiService } from '@core/services/api.service';
 
 import { ProfileComponent } from './profile.component';
+
+class MockApiService {
+  getCurrentUser() {
+    return of({ id: 1, name: 'Admin', email: 'admin@example.com', roles: ['admin'] });
+  }
+  updateCurrentUser() { return of({}); }
+}
 
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
@@ -17,7 +26,8 @@ describe('ProfileComponent', () => {
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
-        { provide: MatSnackBar, useValue: { open: () => {} } }
+        { provide: MatSnackBar, useValue: { open: () => {} } },
+        { provide: ApiService, useClass: MockApiService }
       ]
     })
     .compileComponents();
@@ -31,11 +41,10 @@ describe('ProfileComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should display admin info when user has admin role', () => {
+  it('should enable roles control for admin users', () => {
     component.currentUser = { id: 1, name: 'Admin', email: 'admin@example.com', roles: ['admin'] } as any;
     component.isLoading = false;
     fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.admin-info')?.textContent).toContain('Administrator');
+    expect(component.profileForm.get('roles')?.enabled).toBeTrue();
   });
 });
