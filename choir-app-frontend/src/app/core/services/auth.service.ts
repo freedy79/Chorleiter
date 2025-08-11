@@ -22,11 +22,11 @@ export class AuthService {
 
   private userReloadTriggered = false;
 
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  public activeChoir$ = new BehaviorSubject<Choir | null>(this.getUserFromStorage()?.activeChoir || null);
-  public availableChoirs$ = new BehaviorSubject<Choir[]>(this.getUserFromStorage()?.availableChoirs || []);
+  public activeChoir$ = new BehaviorSubject<Choir | null>(null);
+  public availableChoirs$ = new BehaviorSubject<Choir[]>([]);
 
   // --- Wir leiten die Berechtigungen direkt vom currentUser$ ab ---
   public isAdmin$: Observable<boolean>;
@@ -36,6 +36,13 @@ export class AuthService {
               private router: Router,
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
+    const storedUser = this.getUserFromStorage();
+    if (storedUser) {
+      this.currentUserSubject.next(storedUser);
+      this.activeChoir$.next(storedUser.activeChoir || null);
+      this.availableChoirs$.next(storedUser.availableChoirs || []);
+    }
+
     this.isAdmin$ = this.currentUser$.pipe(
       map(user => {
         const roles = Array.isArray(user?.roles)
