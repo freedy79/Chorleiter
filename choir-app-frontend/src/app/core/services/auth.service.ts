@@ -20,6 +20,8 @@ export class AuthService {
   private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
   isLoggedIn$ = this.loggedIn.asObservable();
 
+  private userReloadTriggered = false;
+
   private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -64,8 +66,20 @@ export class AuthService {
   }
 
   private getUserFromStorage(): User | null {
-    const user = localStorage.getItem(USER_KEY);
-    return user ? JSON.parse(user) : null;
+    const stored = localStorage.getItem(USER_KEY);
+    if (stored && !this.userReloadTriggered) {
+      this.userReloadTriggered = true;
+      this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
+        tap(freshUser => {
+          localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
+          this.currentUserSubject.next(freshUser);
+          this.activeChoir$.next(freshUser.activeChoir || null);
+          this.availableChoirs$.next(freshUser.availableChoirs || []);
+        }),
+        catchError(() => of(null))
+      ).subscribe();
+    }
+    return stored ? JSON.parse(stored) : null;
   }
 
   getToken(): string | null {
