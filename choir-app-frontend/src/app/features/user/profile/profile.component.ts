@@ -49,6 +49,7 @@ export class ProfileComponent implements OnInit {
       postalCode: [''],
       city: [''],
       shareWithChoir: [false],
+      roles: [{ value: [], disabled: true }],
       passwords: this.fb.group({
         oldPassword: [''],
         newPassword: [''],
@@ -68,8 +69,12 @@ export class ProfileComponent implements OnInit {
           street: user.street || '',
           postalCode: user.postalCode || '',
           city: user.city || '',
-          shareWithChoir: !!user.shareWithChoir
+          shareWithChoir: !!user.shareWithChoir,
+          roles: user.roles || []
         });
+        if (user.roles?.includes('admin')) {
+          this.profileForm.get('roles')?.enable();
+        }
         this.isLoading = false;
       },
       error: (err) => {
@@ -85,7 +90,7 @@ export class ProfileComponent implements OnInit {
     }
 
     const formValue = this.profileForm.value;
-    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string } = {
+    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
       name: formValue.name,
       email: formValue.email,
       street: formValue.street,
@@ -93,6 +98,11 @@ export class ProfileComponent implements OnInit {
       city: formValue.city,
       shareWithChoir: formValue.shareWithChoir
     };
+
+    if (this.profileForm.get('roles')?.enabled) {
+      const roles = formValue.roles as string[];
+      updatePayload.roles = roles?.includes('admin') ? roles : [...roles, 'admin'];
+    }
 
     const passwordGroup = formValue.passwords;
     // Senden Sie die Passwörter nur, wenn das neue Passwort-Feld ausgefüllt ist.

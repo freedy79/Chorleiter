@@ -28,7 +28,7 @@ exports.getMe = async (req, res) => {
  * @description Update the profile of the currently logged-in user.
  */
 exports.updateMe = async (req, res) => {
-     const { name, email, street, postalCode, city, shareWithChoir, oldPassword, newPassword } = req.body;
+     const { name, email, street, postalCode, city, shareWithChoir, oldPassword, newPassword, roles } = req.body;
 
     try {
         const user = await User.findByPk(req.userId);
@@ -55,6 +55,10 @@ exports.updateMe = async (req, res) => {
         }
         if (shareWithChoir !== undefined) {
             updateData.shareWithChoir = !!shareWithChoir;
+        }
+        if (Array.isArray(roles) && user.roles.includes('admin')) {
+            const newRoles = roles.includes('admin') ? roles : [...roles, 'admin'];
+            updateData.roles = newRoles;
         }
 
         if (newPassword) {
