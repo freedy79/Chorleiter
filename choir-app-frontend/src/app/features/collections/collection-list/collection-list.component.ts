@@ -12,6 +12,7 @@ import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
+import { LibraryItem } from '@core/models/library-item';
 
 @Component({
   selector: 'app-collection-list',
@@ -43,6 +44,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
+  public libraryItemIds = new Set<number>();
 
   /**
    * Cache for the composer names of single-edition collections.
@@ -62,6 +64,13 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.loadCollections();
+    this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
+      this.libraryItemIds.clear();
+      items.forEach(i => {
+        const id = i.collectionId || i.collection?.id;
+        if (id != null) this.libraryItemIds.add(id);
+      });
+    });
     this.apiService.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
     this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
   }

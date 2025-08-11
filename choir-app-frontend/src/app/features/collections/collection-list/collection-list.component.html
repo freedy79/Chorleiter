@@ -67,12 +67,18 @@
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let collection" class="actions-cell">
             <button
-              mat-stroked-button
+              mat-icon-button
               color="primary"
-              (click)="syncCollection(collection); $event.stopPropagation()">
+              (click)="syncCollection(collection); $event.stopPropagation()"
+              [matTooltip]="collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen'">
                 <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
-                <span>{{ collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen' }}</span>
             </button>
+            <mat-icon
+              *ngIf="libraryItemIds.has(collection.id)"
+              class="library-icon"
+              matTooltip="In Notenbibliothek vorhanden">
+              library_music
+            </mat-icon>
             <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
             </button>
