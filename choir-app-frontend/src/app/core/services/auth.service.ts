@@ -35,12 +35,24 @@ export class AuthService {
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
     this.isAdmin$ = this.currentUser$.pipe(
-      map(user => user?.roles?.some(r => {
-        const lower = r.toLowerCase();
-        return lower === 'admin' || lower === 'role_admin';
-      }) ?? false)
+      map(user => {
+        const roles = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.roles ? [user.roles] : [];
+        return roles.some(r => {
+          const lower = r.toLowerCase();
+          return lower === 'admin' || lower === 'role_admin';
+        });
+      })
     );
-    this.isLibrarian$ = this.currentUser$.pipe(map(user => user?.roles?.includes('librarian') ?? false));
+    this.isLibrarian$ = this.currentUser$.pipe(
+      map(user => {
+        const roles = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.roles ? [user.roles] : [];
+        return roles.includes('librarian');
+      })
+    );
     if (this.hasToken()) {
       this.prefs.load().subscribe(p => {
         if (p.theme) {
