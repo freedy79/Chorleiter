@@ -34,7 +34,12 @@ export class AuthService {
               private router: Router,
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
-    this.isAdmin$ = this.currentUser$.pipe(map(user => user?.roles?.includes('admin') ?? false));
+    this.isAdmin$ = this.currentUser$.pipe(
+      map(user => user?.roles?.some(r => {
+        const lower = r.toLowerCase();
+        return lower === 'admin' || lower === 'role_admin';
+      }) ?? false)
+    );
     this.isLibrarian$ = this.currentUser$.pipe(map(user => user?.roles?.includes('librarian') ?? false));
     if (this.hasToken()) {
       this.prefs.load().subscribe(p => {
