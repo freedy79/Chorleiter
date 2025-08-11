@@ -7,9 +7,7 @@
   </div>
 
   <ng-template #profileContent>
-    <div *ngIf="currentUser?.roles?.includes('admin')" class="admin-info">
-      Sie sind als Administrator angemeldet.
-    </div>
+
     <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
       <mat-card>
         <mat-card-header>

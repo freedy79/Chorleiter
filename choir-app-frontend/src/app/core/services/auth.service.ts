@@ -39,10 +39,7 @@ export class AuthService {
         const roles = Array.isArray(user?.roles)
           ? user.roles
           : user?.roles ? [user.roles] : [];
-        return roles.some(r => {
-          const lower = r.toLowerCase();
-          return lower === 'admin' || lower === 'role_admin';
-        });
+        return roles.includes('admin');
       })
     );
     this.isLibrarian$ = this.currentUser$.pipe(
