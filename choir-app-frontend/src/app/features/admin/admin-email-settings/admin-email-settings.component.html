@@ -1,0 +1,11 @@
+<form [formGroup]="form" (ngSubmit)="save()" class="admin-email-form">
+  <mat-form-field appearance="fill">
+    <mat-label>System-Admin E-Mail</mat-label>
+    <input matInput formControlName="email" />
+    <mat-hint>E-Mail für Systemausfall-Benachrichtigungen</mat-hint>
+    <mat-error *ngIf="form.controls['email'].invalid">Ungültige E-Mail-Adresse</mat-error>
+  </mat-form-field>
+  <div class="actions">
+    <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Speichern</button>
+  </div>
+</form>

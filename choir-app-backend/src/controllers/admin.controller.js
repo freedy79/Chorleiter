@@ -535,3 +535,26 @@ exports.updateFrontendUrl = async (req, res) => {
         res.status(500).send({ message: err.message });
     }
 };
+
+exports.getSystemAdminEmail = async (req, res) => {
+    try {
+        const setting = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+        res.status(200).send({ value: setting?.value || null });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateSystemAdminEmail = async (req, res) => {
+    try {
+        const { value } = req.body;
+        const [setting] = await db.system_setting.findOrCreate({
+            where: { key: 'SYSTEM_ADMIN_EMAIL' },
+            defaults: { value }
+        });
+        await setting.update({ value });
+        res.status(200).send({ value: setting.value });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
