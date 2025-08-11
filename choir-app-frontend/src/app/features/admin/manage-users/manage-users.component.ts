@@ -89,4 +89,11 @@ export class ManageUsersComponent implements OnInit {
     const value = (event.target as HTMLInputElement | null)?.value ?? '';
     this.applyFilter(value);
   }
+
+  onRolesChange(user: User, roles: ('director' | 'choir_admin' | 'admin' | 'librarian')[]): void {
+    this.api.updateUser(user.id, { roles }).subscribe(() => {
+      user.roles = roles;
+      this.snack.open('Rollen aktualisiert', 'OK', { duration: 3000 });
+    });
+  }
 }

@@ -2,6 +2,7 @@ const { syncDatabase } = require('./dbSync');
 const { ensureJoinHashes } = require('./joinHashes');
 const { seedDatabase } = require('../seed');
 const { migrateRoles } = require('./migrateRoles');
+const { assignAdminRole } = require('./assignAdminRole');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = { alter: true } } = options;
@@ -9,6 +10,7 @@ async function init(options = {}) {
     await syncDatabase(syncOptions);
     await ensureJoinHashes();
     await seedDatabase({ includeDemoData });
+    await assignAdminRole();
 }
 
 module.exports = {
@@ -16,4 +18,5 @@ module.exports = {
     syncDatabase,
     ensureJoinHashes,
     migrateRoles,
+    assignAdminRole,
 };
