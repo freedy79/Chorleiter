@@ -35,10 +35,14 @@ SMTP_USER=no-reply
 SMTP_PASS=
 EMAIL_FROM=no-reply@nak-chorleiter.de
 SMTP_STARTTLS=false
+ADMIN_EMAIL=admin@example.com
 ```
 The sender name is automatically set to the `EMAIL_FROM` address so that
 `no-reply@nak-chorleiter.de` appears as the sender in mail clients.
 Set `SMTP_STARTTLS` to `true` to enforce a STARTTLS handshake when connecting to the mail server.
+
+If `ADMIN_EMAIL` is defined, the application sends a notification to that
+address when the backend shuts down due to an unhandled error.
 
 When the application is started for the first time these settings are written to
 the database and can later be changed through the admin endpoint

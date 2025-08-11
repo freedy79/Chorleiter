@@ -176,3 +176,15 @@ exports.sendPieceReportMail = async (recipients, piece, reporter, category, reas
     throw err;
   }
 };
+
+exports.sendCrashReportMail = async (to, error) => {
+  if (emailDisabled() || !to) return;
+  try {
+    const subject = 'Backend crashed';
+    const message = error instanceof Error ? `${error.message}\n\n${error.stack}` : String(error);
+    await sendMail({ to, subject, text: message, html: `<pre>${message}</pre>` });
+  } catch (err) {
+    logger.error(`Error sending crash report mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+  }
+};

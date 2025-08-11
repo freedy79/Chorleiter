@@ -6,6 +6,27 @@ try {
 }
 const app = require("./src/app");
 const { init } = require("./src/init");
+const logger = require("./src/config/logger");
+const { sendCrashReportMail } = require("./src/services/email.service");
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+let shuttingDown = false;
+
+async function handleFatal(error) {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    logger.error("Fatal error:", error);
+    try {
+        await sendCrashReportMail(ADMIN_EMAIL, error);
+    } catch (e) {
+        logger.error("Failed to send crash report mail:", e);
+    } finally {
+        process.exit(1);
+    }
+}
+
+process.on('uncaughtException', handleFatal);
+process.on('unhandledRejection', handleFatal);
 
 
 const PORT = process.env.PORT || 8088;
