@@ -163,6 +163,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   private evaluateDrawerWidth() {
     const width = window.innerWidth;
     this.drawerOpenByWidth = (this.drawerWidth / width) <= this.maxDrawerRatio;
+
+    if (this.isHandset) {
+      this._appDrawer?.close();
+    } else if (this.drawerOpenByWidth) {
+      this._appDrawer?.open();
+    } else {
+      this._appDrawer?.close();
+    }
   }
 
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {

@@ -68,7 +68,7 @@
   <mat-sidenav *ngIf="isLoggedIn$ | async" #appDrawer [fixedInViewport]="false"
     [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    [opened]="!(isHandset$ | async) && drawerOpenByWidth" class="appDrawer">
+    class="appDrawer">
 
     <mat-nav-list>
       <app-choir-switcher></app-choir-switcher>
