@@ -166,8 +166,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this.drawerOpenByWidth = (this.drawerWidth / width) <= this.maxDrawerRatio;
 
     if (this.isHandset) {
-      this._appDrawer?.close();
-    } else if (this.drawerOpenByWidth) {
+      // Do not automatically toggle the drawer on handset devices while it is open.
+      if (!this._appDrawer?.opened) {
+        this._appDrawer?.close();
+      }
+      return;
+    }
+
+    if (this.drawerOpenByWidth) {
       this._appDrawer?.open();
     } else {
       this._appDrawer?.close();
