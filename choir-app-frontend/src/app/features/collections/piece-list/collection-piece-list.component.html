@@ -11,6 +11,7 @@
   </button>
 </div>
 
+<ng-container *ngIf="!(isHandset$ | async); else mobileView">
 <div class="table-wrapper mat-elevation-z8">
   <div class="table-scroll-container">
     <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
@@ -46,3 +47,21 @@
   </div>
   <mat-paginator [length]="totalPieces" [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>
 </div>
+</ng-container>
+
+<ng-template #mobileView>
+  <div class="mobile-list">
+    <div class="mobile-item" *ngFor="let piece of dataSource.data" (click)="toggleSelection(piece)">
+      <div><strong>{{ piece.title }}</strong></div>
+      <div class="subtitle-hint" *ngIf="piece.subtitle">{{ piece.subtitle }}</div>
+      <div class="detail">Komponist/Ursprung: {{ piece.composer?.name || piece.origin || '-' }}</div>
+      <div class="detail">Dichter: {{ piece.author?.name || '-' }}</div>
+      <div class="detail">Anzahl in Sammlungen: {{ piece.collectionCount || 0 }}</div>
+      <div class="mobile-actions" *ngIf="selectedPiece === piece">
+        <button mat-icon-button (click)="openPiece(piece); $event.stopPropagation()" matTooltip="Details">
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

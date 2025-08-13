@@ -27,3 +27,35 @@
 .count-cell {
   text-align: center;
 }
+
+.subtitle-hint {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.mobile-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mobile-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.mobile-item:last-child {
+  border-bottom: none;
+}
+
+.detail {
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.mobile-actions {
+  margin-top: 4px;
+  text-align: right;
+}

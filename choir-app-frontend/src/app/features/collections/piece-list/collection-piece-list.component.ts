@@ -8,6 +8,9 @@ import { PieceService } from '@core/services/piece.service';
 import { Piece } from '@core/models/piece';
 import { Router } from '@angular/router';
 import { PaginatorService } from '@core/services/paginator.service';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-collection-piece-list',
@@ -26,14 +29,18 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
   viewMode: 'collections' | 'pieces' = 'pieces';
+  isHandset$: Observable<boolean>;
+  selectedPiece: Piece | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(private pieceService: PieceService,
               private router: Router,
-              private paginatorService: PaginatorService) {
+              private paginatorService: PaginatorService,
+              private breakpointObserver: BreakpointObserver) {
     this.pageSize = this.paginatorService.getPageSize('collection-piece-list', this.pageSizeOptions[0]);
+    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
   }
 
   ngOnInit(): void {
@@ -89,6 +96,10 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
 
   openPiece(piece: Piece): void {
     this.router.navigate(['/pieces', piece.id]);
+  }
+
+  toggleSelection(piece: Piece): void {
+    this.selectedPiece = this.selectedPiece === piece ? null : piece;
   }
 
   onViewChange(value: 'collections' | 'pieces'): void {
