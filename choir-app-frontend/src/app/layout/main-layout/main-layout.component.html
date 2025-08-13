@@ -1,5 +1,5 @@
 <mat-toolbar color="primary" class="main-toolbar">
-  <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="appDrawer?.toggle()">
+  <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="toggleDrawer()">
     <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
   </button>
 
@@ -65,16 +65,18 @@
 </mat-toolbar>
 
 <mat-sidenav-container class="site-container">
-  <mat-sidenav *ngIf="isLoggedIn$ | async" #appDrawer [fixedInViewport]="false"
-    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'"
-    class="appDrawer">
+  <ng-container *ngIf="isLoggedIn$ | async">
+    <mat-sidenav #appDrawer [fixedInViewport]="false"
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+      [mode]="(isHandset$ | async) ? 'over' : 'side'"
+      class="appDrawer">
 
-    <mat-nav-list>
-      <app-choir-switcher></app-choir-switcher>
-      <app-menu-list-item *ngFor="let item of navItems" [item]="item"></app-menu-list-item>
-    </mat-nav-list>
-  </mat-sidenav>
+      <mat-nav-list>
+        <app-choir-switcher></app-choir-switcher>
+        <app-menu-list-item *ngFor="let item of navItems" [item]="item"></app-menu-list-item>
+      </mat-nav-list>
+    </mat-sidenav>
+  </ng-container>
 
 
   <mat-sidenav-content class="main-content">
