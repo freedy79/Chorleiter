@@ -70,7 +70,7 @@ SSH_OPTIONS="-o ControlMaster=auto -o ControlPath=${CONTROL_PATH} -o ControlPers
 
 ssh_cmd() {
     if [[ $USE_SSHPASS == true ]]; then
-        sshpass -p "$PASSWORD" ssh $SSH_OPTIONS "$@"
+        sshpass -p "$PASSWORD" ssh -v $SSH_OPTIONS "$@"
     else
         ssh $SSH_OPTIONS "$@"
     fi

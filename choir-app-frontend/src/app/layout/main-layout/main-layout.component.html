@@ -1,7 +1,9 @@
 <mat-toolbar color="primary" class="main-toolbar">
+  <ng-container *ngIf="(isLoggedIn$ | async)">
   <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="toggleDrawer()">
     <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
   </button>
+  </ng-container>
 
   <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
@@ -65,18 +67,18 @@
 </mat-toolbar>
 
 <mat-sidenav-container class="site-container">
-  <ng-container *ngIf="isLoggedIn$ | async">
-    <mat-sidenav #appDrawer [fixedInViewport]="false"
-      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-      [mode]="(isHandset$ | async) ? 'over' : 'side'"
-      class="appDrawer">
+  <mat-sidenav #appDrawer [fixedInViewport]="false"
+    [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
+    [mode]="(isHandset$ | async) ? 'over' : 'side'"
+    class="appDrawer">
 
+    <ng-container *ngIf="(isLoggedIn$ | async)">
+      <app-choir-switcher></app-choir-switcher>
       <mat-nav-list>
-        <app-choir-switcher></app-choir-switcher>
         <app-menu-list-item *ngFor="let item of navItems" [item]="item"></app-menu-list-item>
       </mat-nav-list>
-    </mat-sidenav>
-  </ng-container>
+    </ng-container>
+  </mat-sidenav>
 
 
   <mat-sidenav-content class="main-content">
