@@ -13,6 +13,10 @@ export class HelpService {
     if (user.roles?.includes('demo')) {
       return true;
     }
+    const storageKey = `helpShown_${user.id}`;
+    if (localStorage.getItem(storageKey) === 'true') {
+      return false;
+    }
     return !this.prefs.getPreference('helpShown');
   }
 
@@ -20,6 +24,8 @@ export class HelpService {
     if (!user || user.roles?.includes('demo')) {
       return;
     }
+    const storageKey = `helpShown_${user.id}`;
+    localStorage.setItem(storageKey, 'true');
     this.prefs.update({ helpShown: true }).subscribe();
   }
 }
