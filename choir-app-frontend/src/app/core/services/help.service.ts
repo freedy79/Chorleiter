@@ -7,15 +7,19 @@ export class HelpService {
   constructor(private prefs: UserPreferencesService) {}
 
   shouldShowHelp(user: User | null): boolean {
-    if (!user) return false;
-    if (user.roles?.includes('demo') && !this.prefs.getPreference('helpShown')) {
+    if (!user) {
+      return false;
+    }
+    if (user.roles?.includes('demo')) {
       return true;
     }
     return !this.prefs.getPreference('helpShown');
   }
 
   markHelpShown(user: User | null): void {
-    if (!user) return;
+    if (!user || user.roles?.includes('demo')) {
+      return;
+    }
     this.prefs.update({ helpShown: true }).subscribe();
   }
 }
