@@ -13,6 +13,7 @@
 </div>
 <p class="subtitle">Verwalten von globalen Sammlungen und Hinzufügen zum Chorrepertoire.</p>
 
+<ng-container *ngIf="!(isHandset$ | async); else mobileView">
 <div class="table-wrapper mat-elevation-z8">
   <div class="table-scroll-container">
   <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
@@ -98,3 +99,39 @@
                  [pageSize]="pageSize"
                  showFirstLastButtons></mat-paginator>
 </div>
+</ng-container>
+
+<ng-template #mobileView>
+  <div class="mobile-list">
+    <div class="mobile-item" *ngFor="let collection of dataSource.data" (click)="toggleSelection(collection)">
+      <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" class="cover-img" />
+      <div><strong>{{ collection.title }}</strong></div>
+      <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
+      <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
+      <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+      <div class="detail">Status:
+        <mat-icon [color]="collection.isAdded ? 'primary' : 'disabled'">{{ collection.isAdded ? 'check_circle' : 'do_not_disturb_on' }}</mat-icon>
+      </div>
+      <div class="detail">Stücke: {{ collection.pieceCount || 0 }}</div>
+      <div class="detail">Verlag: {{ collection.publisher || '-' }}</div>
+      <div class="mobile-actions" *ngIf="selectedCollection === collection">
+        <button
+          mat-icon-button
+          color="primary"
+          (click)="syncCollection(collection); $event.stopPropagation()"
+          [matTooltip]="collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen'">
+            <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
+        </button>
+        <mat-icon
+          *ngIf="libraryItemIds.has(collection.id)"
+          class="library-icon"
+          matTooltip="In Notenbibliothek vorhanden">
+          library_music
+        </mat-icon>
+        <button mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
+            <mat-icon>edit</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</ng-template>

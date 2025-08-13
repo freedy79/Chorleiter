@@ -7,12 +7,13 @@ import { MatSort } from '@angular/material/sort';
 import { MatPaginator } from '@angular/material/paginator';
 import { ApiService } from '@core/services/api.service';
 import { Collection } from '@core/models/collection';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
 import { LibraryItem } from '@core/models/library-item';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 
 @Component({
   selector: 'app-collection-list',
@@ -45,6 +46,8 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
   public libraryItemIds = new Set<number>();
+  public isHandset$: Observable<boolean>;
+  public selectedCollection: Collection | null = null;
 
   /**
    * Cache for the composer names of single-edition collections.
@@ -57,9 +60,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     private snackBar: MatSnackBar,
     private router: Router,
     private authService: AuthService,
-    private paginatorService: PaginatorService
+    private paginatorService: PaginatorService,
+    private breakpointObserver: BreakpointObserver
   ) {
     this.pageSize = this.paginatorService.getPageSize('collection-list', this.pageSizeOptions[0]);
+    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
   }
 
   ngOnInit(): void {
@@ -81,6 +86,10 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
       this.dataSource.paginator = this.paginator;
       this.paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-list', e.pageSize));
     }
+  }
+
+  toggleSelection(collection: Collection): void {
+    this.selectedCollection = this.selectedCollection === collection ? null : collection;
   }
 
   loadCollections(): void {
