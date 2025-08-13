@@ -8,6 +8,9 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manage-users',
@@ -21,8 +24,18 @@ export class ManageUsersComponent implements OnInit {
   displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'actions'];
   dataSource = new MatTableDataSource<User>();
   filterValue = '';
+  isHandset$: Observable<boolean>;
 
-  constructor(private api: ApiService, private dialog: MatDialog, private snack: MatSnackBar) {}
+  constructor(
+    private api: ApiService,
+    private dialog: MatDialog,
+    private snack: MatSnackBar,
+    private breakpointObserver: BreakpointObserver
+  ) {
+    this.isHandset$ = this.breakpointObserver
+      .observe([Breakpoints.Handset])
+      .pipe(map(result => result.matches));
+  }
 
   ngOnInit(): void {
     this.dataSource.filterPredicate = (data, filter) => {
