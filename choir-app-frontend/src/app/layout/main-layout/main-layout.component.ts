@@ -173,6 +173,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     }
   }
 
+  toggleDrawer() {
+    this._appDrawer?.toggle();
+  }
+
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
     let child = route.firstChild;
     let data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
