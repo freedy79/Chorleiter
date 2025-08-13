@@ -60,6 +60,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this._appDrawer = drawer;
     if (drawer) {
       this.navService.appDrawer = drawer;
+      this.evaluateDrawerWidth();
     }
   }
   private isHandset: boolean = false;
