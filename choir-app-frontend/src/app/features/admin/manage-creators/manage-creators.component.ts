@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import { ComposerService } from 'src/app/core/services/composer.service';
 import { AuthorService } from 'src/app/core/services/author.service';
 import { Composer } from 'src/app/core/models/composer';
@@ -15,6 +15,7 @@ import { Piece } from 'src/app/core/models/piece';
 import { ComposerDialogComponent } from '@features/composers/composer-dialog/composer-dialog.component';
 import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-dialog.component';
 import { RouterModule } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'app-manage-creators',
   templateUrl: './manage-creators.component.html',
@@ -27,7 +28,7 @@ import { RouterModule } from '@angular/router';
     RouterModule,
   ]
 })
-export class ManageCreatorsComponent implements OnInit, AfterViewInit {
+export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy {
   mode: 'composer' | 'author' = 'composer';
   people: (Composer | Author)[] = [];
   displayedColumns = ['name', 'birthYear', 'deathYear', 'actions'];
@@ -40,6 +41,8 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
 
   expandedPerson: Composer | Author | null = null;
   expandedPieces: Piece[] = [];
+
+  private destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatTable) table!: MatTable<Composer | Author>;
@@ -61,8 +64,15 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
       this.applyFilter();
-      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('manage-creators', e.pageSize));
+      this.paginator.page
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(e => this.paginatorService.setPageSize('manage-creators', e.pageSize));
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadData(openPersonId?: number, resetPage = true): void {
@@ -71,7 +81,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       ? this.composerService.getComposers()
       : this.authorService.getAuthors();
 
-    obs.subscribe((data) => {
+    obs.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       this.people = data;
       this.applyFilter(resetPage);
       if (!resetPage && this.paginator) {
@@ -117,12 +127,12 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       width: '500px',
       data: { role: this.mode }
     });
-    ref.afterClosed().subscribe(result => {
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
           ? this.composerService.createComposer(result)
           : this.authorService.createAuthor(result);
-        req.subscribe({
+        req.pipe(takeUntil(this.destroy$)).subscribe({
           next: () => this.loadData(),
           error: err => {
             const question = this.mode === 'composer'
@@ -132,7 +142,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
               const forceReq = this.mode === 'composer'
                 ? this.composerService.createComposer(result, true)
                 : this.authorService.createAuthor(result, true);
-              forceReq.subscribe(() => this.loadData());
+              forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
             }
           }
         });
@@ -145,12 +155,12 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       width: '500px',
       data: { role: this.mode, record: person }
     });
-    ref.afterClosed().subscribe(result => {
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
           ? this.composerService.updateComposer(person.id, result)
           : this.authorService.updateAuthor(person.id, result);
-        req.subscribe({
+        req.pipe(takeUntil(this.destroy$)).subscribe({
           next: () => this.loadData(),
           error: err => {
             const question = this.mode === 'composer'
@@ -160,7 +170,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
               const forceReq = this.mode === 'composer'
                 ? this.composerService.updateComposer(person.id, result, true)
                 : this.authorService.updateAuthor(person.id, result, true);
-              forceReq.subscribe(() => this.loadData());
+              forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
             }
           }
         });
@@ -175,7 +185,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       const req = this.mode === 'composer'
         ? this.composerService.deleteComposer(person.id)
         : this.authorService.deleteAuthor(person.id);
-      req.subscribe(() => this.loadData(undefined, false));
+      req.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData(undefined, false));
     }
   }
 
@@ -183,7 +193,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     const req = this.mode === 'composer'
       ? this.composerService.enrichComposer(person.id)
       : this.authorService.enrichAuthor(person.id);
-    req.subscribe(updated => {
+    req.pipe(takeUntil(this.destroy$)).subscribe(updated => {
       const idx = this.people.findIndex(p => p.id === person.id);
       if (idx !== -1) {
         this.people[idx] = { ...person, ...updated } as Composer | Author;
@@ -208,7 +218,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
       data: { pieceId }
     });
 
-    dialogRef.afterClosed().subscribe(wasUpdated => {
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(wasUpdated => {
       if (wasUpdated) {
         this.loadData(expandedId);
       }
@@ -219,7 +229,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     if (this.expandedPerson && this.expandedPerson.id === person.id) {
       this.expandedPerson = null;
       this.expandedPieces = [];
-      this.table.renderRows();
+      this.table?.renderRows();
       return;
     }
     const filter = this.mode === 'composer'
@@ -229,11 +239,13 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit {
     // Open the row immediately while the pieces are loading
     this.expandedPerson = person;
     this.expandedPieces = [];
-    this.table.renderRows();
+    this.table?.renderRows();
 
-    this.pieceService.getGlobalPieces(filter).subscribe(pieces => {
-      this.expandedPieces = pieces;
-      this.table.renderRows();
-    });
+    this.pieceService.getGlobalPieces(filter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(pieces => {
+        this.expandedPieces = pieces;
+        this.table?.renderRows();
+      });
   }
 }
