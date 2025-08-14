@@ -75,18 +75,24 @@ exports.signin = async (req, res) => {
     });
 
     if (!user || !user.choirs || user.choirs.length === 0) {
-      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
-      return res.status(404).send({ message: "User not found or not assigned to any choir." });
+      const reason = "User not found or not assigned to any choir.";
+      logger.warn(`Login failed for ${email}: ${reason}`);
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
+      return res.status(404).send({ message: reason });
     }
 
     if (!user.password) {
-      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
-      return res.status(403).send({ message: "Registration not completed." });
+      const reason = "Registration not completed.";
+      logger.warn(`Login failed for ${email}: ${reason}`);
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
+      return res.status(403).send({ message: reason });
     }
 
     const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
     if (!passwordIsValid) {
-      await LoginAttempt.create({ email, success: false, ipAddress, userAgent });
+      const reason = "Invalid password";
+      logger.warn(`Login failed for ${email}: ${reason}`);
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
       return res.status(401).send({ message: "Invalid Password!" });
     }
 
@@ -122,7 +128,9 @@ exports.signin = async (req, res) => {
       availableChoirs: user.choirs
     });
   } catch (error) {
-    await LoginAttempt.create({ email, success: false, ipAddress, userAgent }).catch(() => {});
+    const reason = error.message;
+    logger.error(`Login failed for ${email}: ${reason}`);
+    await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason }).catch(() => {});
     res.status(500).send({ message: error.message });
   }
 };

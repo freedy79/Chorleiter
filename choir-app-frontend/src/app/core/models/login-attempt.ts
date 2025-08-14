@@ -4,6 +4,7 @@ export interface LoginAttempt {
   success: boolean;
   ipAddress?: string;
   userAgent?: string;
+  reason?: string;
   createdAt: string;
   updatedAt: string;
 }

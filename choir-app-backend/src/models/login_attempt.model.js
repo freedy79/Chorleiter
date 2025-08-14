@@ -13,6 +13,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         userAgent: {
             type: DataTypes.STRING
+        },
+        reason: {
+            type: DataTypes.STRING,
+            allowNull: true
         }
     });
     return LoginAttempt;

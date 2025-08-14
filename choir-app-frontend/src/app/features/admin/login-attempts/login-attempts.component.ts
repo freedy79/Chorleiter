@@ -17,7 +17,7 @@ import { UserDialogComponent } from '../manage-users/user-dialog/user-dialog.com
 })
 export class LoginAttemptsComponent implements OnInit {
   attempts: LoginAttempt[] = [];
-  displayedColumns = ['email', 'success', 'ipAddress', 'userAgent', 'createdAt'];
+  displayedColumns = ['email', 'success', 'reason', 'ipAddress', 'userAgent', 'createdAt'];
   dataSource = new MatTableDataSource<LoginAttempt>();
   currentMonth = new Date();
 
