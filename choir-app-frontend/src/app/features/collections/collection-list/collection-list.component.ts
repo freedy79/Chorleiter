@@ -14,6 +14,7 @@ import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
 import { LibraryItem } from '@core/models/library-item';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
 
 @Component({
   selector: 'app-collection-list',
@@ -48,6 +49,8 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   public libraryItemIds = new Set<number>();
   public isHandset$: Observable<boolean>;
   public selectedCollection: Collection | null = null;
+  private readonly stateKey = 'collection-list';
+  private initialState: ListViewState | null = null;
 
   /**
    * Cache for the composer names of single-edition collections.
@@ -61,13 +64,17 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     private router: Router,
     private authService: AuthService,
     private paginatorService: PaginatorService,
-    private breakpointObserver: BreakpointObserver
+    private breakpointObserver: BreakpointObserver,
+    private navState: NavigationStateService
   ) {
     this.pageSize = this.paginatorService.getPageSize('collection-list', this.pageSizeOptions[0]);
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
+    // Update cached state when navigating with browser history
+    this.navState.onPopState(this.stateKey, s => this.initialState = s);
   }
 
   ngOnInit(): void {
+    this.initialState = this.navState.getState(this.stateKey);
     this.loadCollections();
     this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
       this.libraryItemIds.clear();
@@ -84,6 +91,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     if (this.paginator) {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
+      if (this.initialState) {
+        this.paginator.pageIndex = this.initialState.page;
+        const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
+        if (sel) this.selectedCollection = sel;
+      }
       this.paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-list', e.pageSize));
     }
   }
@@ -106,10 +118,18 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
             if (col) col.coverImageData = res.data;
           });
           this.dataSource.data = collections;
+          if (this.initialState) {
+            const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
+            if (sel) this.selectedCollection = sel;
+          }
           this.isLoading = false;
         });
       } else {
         this.dataSource.data = collections;
+        if (this.initialState) {
+          const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
+          if (sel) this.selectedCollection = sel;
+        }
         this.isLoading = false;
       }
     });
@@ -138,6 +158,10 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   }
 
   openCollection(collection: Collection): void {
+    const page = this.paginator ? this.paginator.pageIndex : 0;
+    this.navState.saveState(this.stateKey, { page, selectedId: collection.id });
+    // Create an extra history entry so the back button returns to this list with state
+    this.navState.pushPlaceholderState();
     this.router.navigate(['/collections/edit', collection.id]);
   }
 

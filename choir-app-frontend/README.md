@@ -59,3 +59,23 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+## Navigation state handling
+
+The frontend uses the browser History API together with `sessionStorage` to
+remember pagination and the currently selected entry when navigating from a
+list to a detail view. The helper `NavigationStateService` wraps the most
+important calls:
+
+- `history.replaceState` is used to attach the current page and selection to
+  the list route before leaving it.
+- `history.pushState` adds a placeholder entry so the browser's Back button
+  returns to the list with the stored state.
+- The `popstate` event is exposed via the service and can be consumed by any
+  component that needs to react to history navigation immediately.
+
+To integrate the same behaviour elsewhere, inject the service into a list
+component, call `saveState` before navigating to a detail page and restore the
+state with `getState` when the component is created. This pattern scales to
+larger projects because each view can manage its own key and the underlying
+implementation centralises History API usage.
