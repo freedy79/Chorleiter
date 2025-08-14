@@ -32,6 +32,31 @@ export class ManageChoirComponent implements OnInit {
   isChoirAdmin = false;
   dienstplanEnabled = false;
   joinByLinkEnabled = false;
+  isDirector = false;
+  isAdmin = false;
+  canManageMenu = false;
+  singerMenu: Record<string, boolean> = {
+    events: true,
+    dienstplan: true,
+    termine: true,
+    posts: true,
+    stats: true,
+    manageChoir: true,
+    repertoire: true,
+    collections: true,
+    library: true,
+  };
+  menuOptions = [
+    { key: 'events', label: 'Ereignisse' },
+    { key: 'dienstplan', label: 'Dienstplan' },
+    { key: 'termine', label: 'Meine Termine' },
+    { key: 'posts', label: 'Beiträge' },
+    { key: 'stats', label: 'Statistik' },
+    { key: 'manageChoir', label: 'Mein Chor' },
+    { key: 'repertoire', label: 'Repertoire' },
+    { key: 'collections', label: 'Sammlungen' },
+    { key: 'library', label: 'Bibliothek' },
+  ];
 
   /**
    * Holds the choirId from the query parameter when a global admin
@@ -76,6 +101,15 @@ export class ManageChoirComponent implements OnInit {
   ngOnInit(): void {
     const choirIdParam = this.route.snapshot.queryParamMap.get('choirId');
     this.adminChoirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
+    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+      const roles = Array.isArray(user?.roles) ? user!.roles : [];
+      this.isDirector = roles.includes('director');
+      this.updateCanManageMenu();
+    });
+    this.authService.isAdmin$.pipe(take(1)).subscribe(isAdmin => {
+      this.isAdmin = isAdmin;
+      this.updateCanManageMenu();
+    });
 
     this.route.data.subscribe(data => {
       const pageData = data['pageData'];
@@ -83,8 +117,13 @@ export class ManageChoirComponent implements OnInit {
         // Füllen Sie das Formular und die Tabelle
         this.choirForm.patchValue(pageData.choirDetails);
         this.isChoirAdmin = pageData.isChoirAdmin;
+        this.updateCanManageMenu();
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
         this.joinByLinkEnabled = !!pageData.choirDetails.modules?.joinByLink;
+        const menu = pageData.choirDetails.modules?.singerMenu || {};
+        this.menuOptions.forEach(opt => {
+          this.singerMenu[opt.key] = menu[opt.key] !== false;
+        });
         const rules = pageData.planRules as any[] || [];
         const sundayRule = rules.find(r => r.dayOfWeek === 0);
         if (sundayRule) {
@@ -118,6 +157,10 @@ export class ManageChoirComponent implements OnInit {
         this.collectionDataSource.data = pageData.collections;
       }
     });
+  }
+
+  private updateCanManageMenu(): void {
+    this.canManageMenu = this.isChoirAdmin || this.isDirector || this.isAdmin;
   }
 
   private reloadData(): void {
@@ -221,11 +264,11 @@ export class ManageChoirComponent implements OnInit {
 
 
   onModulesChange(): void {
-    if (!this.isChoirAdmin) {
+    if (!this.canManageMenu) {
       return;
     }
 
-    const modules = { dienstplan: this.dienstplanEnabled, joinByLink: this.joinByLinkEnabled };
+    const modules = { dienstplan: this.dienstplanEnabled, joinByLink: this.joinByLinkEnabled, singerMenu: this.singerMenu };
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {

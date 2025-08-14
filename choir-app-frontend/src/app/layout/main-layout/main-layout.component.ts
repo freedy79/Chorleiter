@@ -8,7 +8,7 @@ import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
 import { BehaviorSubject, combineLatest, map, Observable, of, filter, startWith } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, take } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
@@ -122,6 +122,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     ).subscribe(choir => {
       if (choir) {
         this.dienstplanEnabled$.next(!!choir.modules?.dienstplan);
+        this.authService.activeChoir$.next(choir);
+        this.authService.currentUser$.pipe(take(1)).subscribe(user => {
+          if (user) {
+            const updatedUser = { ...user, activeChoir: choir } as any;
+            this.authService.setCurrentUser(updatedUser);
+          }
+        });
       }
     });
     this.isHandset$.subscribe(match => {
@@ -184,6 +191,27 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this._appDrawer?.toggle();
   }
 
+  private singerMenuVisible(key: string): Observable<boolean> {
+    return combineLatest([this.authService.currentUser$, this.authService.activeChoir$]).pipe(
+      map(([user, choir]) => {
+        const roles = Array.isArray(user?.roles) ? user!.roles : [];
+        const isSingerOnly = roles.includes('singer') &&
+          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+        if (!isSingerOnly) {
+          return true;
+        }
+        const menu = choir?.modules?.singerMenu || {};
+        return menu[key] !== false;
+      })
+    );
+  }
+
+  private visibleFor(key: string, base$: Observable<boolean>): Observable<boolean> {
+    return combineLatest([base$, this.singerMenuVisible(key)]).pipe(
+      map(([base, allowed]) => base && allowed)
+    );
+  }
+
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
     let child = route.firstChild;
     let data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
@@ -229,59 +257,64 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
     this.navItems = [
       {
+        key: 'dashboard',
         displayName: 'Home',
-        //svgIconName: 's-house',
         route: '/dashboard',
         visibleSubject: this.isLoggedIn$,
       },
       {
+          key: 'events',
           displayName: 'Ereignisse',
-          //svgIconName: 's-messages',
           route: '/events',
-          visibleSubject: this.isLoggedIn$,
+          visibleSubject: this.visibleFor('events', this.isLoggedIn$),
       },
       {
+        key: 'dienstplan',
         displayName: 'Dienstplan',
         route: '/dienstplan',
-        visibleSubject: dienstplanVisible$,
+        visibleSubject: this.visibleFor('dienstplan', dienstplanVisible$),
       },
       {
+        key: 'termine',
         displayName: 'Meine Termine',
         route: '/termine',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('termine', this.isLoggedIn$),
       },
       {
+        key: 'posts',
         displayName: 'Beiträge',
         route: '/posts',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('posts', this.isLoggedIn$),
       },
       {
+        key: 'stats',
         displayName: 'Statistik',
         route: '/stats',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('stats', this.isLoggedIn$),
       },
       {
+        key: 'manageChoir',
         displayName: 'Mein Chor',
-        //svgIconName: 's-lens-display',
         route: '/manage-choir',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('manageChoir', this.isLoggedIn$),
       },
       {
+        key: 'repertoire',
         displayName: 'Repertoire',
-        //svgIconName: 's-lens-display',
         route: '/repertoire',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('repertoire', this.isLoggedIn$),
       },
       {
+        key: 'collections',
         displayName: 'Sammlungen',
-        //svgIconName: 's-lens-display',
         route: '/collections',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('collections', this.isLoggedIn$),
       },
       {
+        key: 'library',
         displayName: 'Bibliothek',
         route: '/library',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.visibleFor('library', this.isLoggedIn$),
       },
       {
         displayName: 'Administration',
