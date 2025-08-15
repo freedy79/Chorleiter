@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-category-dialog',
@@ -10,22 +11,21 @@ import { MaterialModule } from '@modules/material.module';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './category-dialog.component.html',
 })
-export class CategoryDialogComponent {
-  form: FormGroup;
-
+export class CategoryDialogComponent extends BaseFormDialog<string> {
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<CategoryDialogComponent>
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<CategoryDialogComponent>
   ) {
-    this.form = this.fb.group({
+    super(fb, dialogRef);
+  }
+
+  protected buildForm(): FormGroup {
+    return this.fb.group({
       name: ['', Validators.required]
     });
   }
 
-  onCancel(): void { this.dialogRef.close(); }
-  onSave(): void {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value.name);
-    }
+  protected override getResult(): string {
+    return this.form.value.name;
   }
 }
