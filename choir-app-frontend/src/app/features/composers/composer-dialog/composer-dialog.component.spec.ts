@@ -15,7 +15,7 @@ describe('ComposerDialogComponent', () => {
       imports: [ComposerDialogComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
         { provide: MatDialogRef, useValue: {} },
-        { provide: MAT_DIALOG_DATA, useValue: {} },
+        { provide: MAT_DIALOG_DATA, useValue: { role: 'composer' } },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } }
       ]

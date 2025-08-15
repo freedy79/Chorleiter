@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angula
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Publisher } from '@core/models/publisher';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-publisher-dialog',
@@ -11,25 +12,21 @@ import { Publisher } from '@core/models/publisher';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './publisher-dialog.component.html',
 })
-export class PublisherDialogComponent {
-  form: FormGroup;
+export class PublisherDialogComponent extends BaseFormDialog<Publisher, Publisher | null> {
   title = 'Verlag hinzufügen';
 
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<PublisherDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Publisher | null
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<PublisherDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) public override data: Publisher | null
   ) {
+    super(fb, dialogRef, data);
     this.title = data ? 'Verlag bearbeiten' : 'Verlag hinzufügen';
-    this.form = this.fb.group({
-      name: [data?.name || '', Validators.required]
-    });
   }
 
-  onCancel(): void { this.dialogRef.close(); }
-  onSave(): void {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
-    }
+  protected buildForm(): FormGroup {
+    return this.fb.group({
+      name: [this.data?.name || '', Validators.required]
+    });
   }
 }
