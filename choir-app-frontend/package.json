@@ -12,7 +12,8 @@
     "generate-build-info": "node ./scripts/generate-build-info.js",
     "prebuild": "npm run generate-build-info",
     "prestart": "npm run generate-build-info",
-    "prestartwithtimestamp": "npm run generate-build-info"
+    "prestartwithtimestamp": "npm run generate-build-info",
+    "prune": "ts-prune -p tsconfig.app.json"
   },
   "private": true,
   "dependencies": {
@@ -45,6 +46,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "puppeteer": "^24.13.0",
+    "ts-prune": "^0.10.3",
     "typescript": "~5.8.2"
   },
   "overrides": {
