@@ -12,7 +12,6 @@ import { Collection } from '@core/models/collection';
   standalone: true,
   imports: [CommonModule, MaterialModule, RouterModule],
   templateUrl: './search-results.component.html',
-  styleUrls: ['./search-results.component.scss']
 })
 export class SearchResultsComponent implements OnInit {
   query = '';

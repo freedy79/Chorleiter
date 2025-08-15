@@ -11,7 +11,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './join-choir.component.html',
-  styleUrls: ['./join-choir.component.scss']
 })
 export class JoinChoirComponent implements OnInit {
   form: FormGroup;

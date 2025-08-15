@@ -15,7 +15,6 @@ interface BuildInfo {
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './build-info-dialog.component.html',
-  styleUrls: ['./build-info-dialog.component.scss']
 })
 export class BuildInfoDialogComponent {
   info: BuildInfo = buildInfo;

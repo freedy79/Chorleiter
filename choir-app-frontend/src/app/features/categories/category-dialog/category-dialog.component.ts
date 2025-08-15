@@ -9,7 +9,6 @@ import { MaterialModule } from '@modules/material.module';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './category-dialog.component.html',
-  styleUrls: ['./category-dialog.component.scss']
 })
 export class CategoryDialogComponent {
   form: FormGroup;

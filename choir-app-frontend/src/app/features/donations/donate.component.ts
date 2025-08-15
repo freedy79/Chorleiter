@@ -8,7 +8,6 @@ import { environment } from 'src/environments/environment';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './donate.component.html',
-  styleUrls: ['./donate.component.scss']
 })
 export class DonateComponent {
   openPaypal() {

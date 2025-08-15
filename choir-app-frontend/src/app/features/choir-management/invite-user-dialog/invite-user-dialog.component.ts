@@ -9,7 +9,6 @@ import { MaterialModule } from '@modules/material.module';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './invite-user-dialog.component.html',
-  styleUrls: ['./invite-user-dialog.component.scss']
 })
 export class InviteUserDialogComponent {
   inviteForm: FormGroup;

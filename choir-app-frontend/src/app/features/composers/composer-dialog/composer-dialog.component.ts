@@ -13,7 +13,6 @@ import { MaterialModule } from '@modules/material.module';
     MaterialModule
   ],
   templateUrl: './composer-dialog.component.html',
-  styleUrls: ['./composer-dialog.component.scss']
 })
 export class ComposerDialogComponent {
   form: FormGroup;

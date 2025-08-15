@@ -11,7 +11,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './invite-registration.component.html',
-  styleUrls: ['./invite-registration.component.scss']
 })
 export class InviteRegistrationComponent implements OnInit {
   form: FormGroup;
