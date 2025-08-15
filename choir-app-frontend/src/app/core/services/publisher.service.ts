@@ -1,28 +1,22 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { Publisher } from '../models/publisher';
+import { CreatorService } from './creator.service';
 
 @Injectable({ providedIn: 'root' })
-export class PublisherService {
-  private apiUrl = environment.apiUrl;
+export class PublisherService extends CreatorService<Publisher> {
+  constructor(http: HttpClient) { super(http, 'publishers'); }
 
-  constructor(private http: HttpClient) {}
+  getPublishers(): Observable<Publisher[]> { return this.getAll(); }
 
-  getPublishers(): Observable<Publisher[]> {
-    return this.http.get<Publisher[]>(`${this.apiUrl}/publishers`);
+  createPublisher(data: { name: string }, force = false): Observable<Publisher> {
+    return this.create(data, force);
   }
 
-  createPublisher(data: { name: string }): Observable<Publisher> {
-    return this.http.post<Publisher>(`${this.apiUrl}/publishers`, data);
+  updatePublisher(id: number, data: { name: string }, force = false): Observable<Publisher> {
+    return this.update(id, data, force);
   }
 
-  updatePublisher(id: number, data: { name: string }): Observable<Publisher> {
-    return this.http.put<Publisher>(`${this.apiUrl}/publishers/${id}`, data);
-  }
-
-  deletePublisher(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/publishers/${id}`);
-  }
+  deletePublisher(id: number): Observable<any> { return this.delete(id); }
 }
