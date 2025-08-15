@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, HostListener, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -7,8 +7,8 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { BehaviorSubject, combineLatest, map, Observable, of, filter, startWith } from 'rxjs';
-import { switchMap, take } from 'rxjs/operators';
+import { combineLatest, map, Observable, of, filter, startWith, Subject } from 'rxjs';
+import { switchMap, takeUntil, withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
@@ -45,7 +45,7 @@ import { LoanCartService } from '@core/services/loan-cart.service';
   ],
   providers: [NavService],
 })
-export class MainLayoutComponent implements OnInit, AfterViewInit{
+export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
@@ -64,6 +64,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     }
   }
   private isHandset: boolean = false;
+  private destroy$ = new Subject<void>();
 
   drawerOpenByWidth = true;
   private readonly drawerWidth = 220;
@@ -73,7 +74,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
   footerHeight = 56;
 
   public navItems: NavItem[] = [];
-  private dienstplanEnabled$ = new BehaviorSubject<boolean>(false);
+  dienstplanEnabled$: Observable<boolean>;
 
   isHandset$: Observable<boolean>;
   isTablet$: Observable<boolean> | undefined;
@@ -110,31 +111,31 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
     this.cartCount$ = this.cart.items$.pipe(map(items => items.length));
 
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
-      map(result => result.matches)
+      map(result => result.matches),
+      tap(match => {
+        this.isHandset = match;
+        this.headerHeight = match ? 56 : 64;
+        this.evaluateDrawerWidth();
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.authService.activeChoir$.subscribe(c => {
-      this.dienstplanEnabled$.next(!!c?.modules?.dienstplan);
-    });
+    this.dienstplanEnabled$ = this.authService.activeChoir$.pipe(
+      map(c => !!c?.modules?.dienstplan)
+    );
 
     this.isLoggedIn$.pipe(
-      switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null))
-    ).subscribe(choir => {
+      switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null)),
+      withLatestFrom(this.authService.currentUser$),
+      takeUntil(this.destroy$)
+    ).subscribe(([choir, user]) => {
       if (choir) {
-        this.dienstplanEnabled$.next(!!choir.modules?.dienstplan);
         this.authService.activeChoir$.next(choir);
-        this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-          if (user) {
-            const updatedUser = { ...user, activeChoir: choir } as any;
-            this.authService.setCurrentUser(updatedUser);
-          }
-        });
+        if (user) {
+          const updatedUser = { ...user, activeChoir: choir } as any;
+          this.authService.setCurrentUser(updatedUser);
+        }
       }
-    });
-    this.isHandset$.subscribe(match => {
-      this.isHandset = match;
-      this.headerHeight = match ? 56 : 64;
-      this.evaluateDrawerWidth();
     });
 
     const routeData$ = this.router.events.pipe(
@@ -384,5 +385,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit{
 
   openHelp(): void {
     this.dialog.open(HelpWizardComponent, { width: '600px' });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }
