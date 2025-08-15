@@ -10,7 +10,6 @@ import { Publisher } from '@core/models/publisher';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './publisher-dialog.component.html',
-  styleUrls: ['./publisher-dialog.component.scss']
 })
 export class PublisherDialogComponent {
   form: FormGroup;

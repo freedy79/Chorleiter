@@ -10,7 +10,6 @@ import { AuthService } from '@core/services/auth.service';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './donation-success.component.html',
-  styleUrls: ['./donation-success.component.scss']
 })
 export class DonationSuccessComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService, private router: Router) {}

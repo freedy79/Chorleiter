@@ -12,7 +12,6 @@ import { Observable, map, startWith } from 'rxjs';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './add-member-dialog.component.html',
-  styleUrls: ['./add-member-dialog.component.scss']
 })
 export class AddMemberDialogComponent implements OnInit {
   form: FormGroup;

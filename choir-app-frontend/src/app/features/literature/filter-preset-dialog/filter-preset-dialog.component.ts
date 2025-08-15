@@ -14,7 +14,6 @@ export interface FilterPresetDialogData {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './filter-preset-dialog.component.html',
-  styleUrls: ['./filter-preset-dialog.component.scss']
 })
 export class FilterPresetDialogComponent {
   form: FormGroup;

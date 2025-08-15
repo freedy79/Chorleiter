@@ -11,7 +11,6 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [RouterModule, ServiceUnavailableComponent, CommonModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
   backendAvailable = true;

@@ -8,7 +8,6 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './donation-cancel.component.html',
-  styleUrls: ['./donation-cancel.component.scss']
 })
 export class DonationCancelComponent {
   constructor(private router: Router) {}

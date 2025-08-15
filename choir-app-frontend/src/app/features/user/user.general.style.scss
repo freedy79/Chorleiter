@@ -1,10 +1,6 @@
 @use "@angular/material" as mat;
 @use "../../../themes/_nak-theme" as nak;
 
-mat-form-field {
-  width: 100%;
-}
-
 .reset-link {
   margin-top: 1rem;
   a {
