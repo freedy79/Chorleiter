@@ -7,7 +7,6 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { CreateEventResponse, Event } from '@core/models/event';
-import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { startWith } from 'rxjs/operators';
@@ -19,6 +18,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
+import { ListDataSource } from '@shared/util/list-data-source';
 
 @Component({
   selector: 'app-event-list',
@@ -36,13 +36,13 @@ import { ActivatedRoute } from '@angular/router';
 export class EventListComponent implements OnInit, AfterViewInit {
   typeControl = new FormControl('ALL');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
-  dataSource = new MatTableDataSource<Event>();
+  dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
   selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
-  pageSize = 25;
+  pageSize: number = this.pageSizeOptions[0];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -52,14 +52,12 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private snackBar: MatSnackBar,
               private paginatorService: PaginatorService,
               private route: ActivatedRoute) {
-    this.pageSize = this.paginatorService.getPageSize('event-list', this.pageSizeOptions[0]);
+    this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
   }
 
   ngAfterViewInit(): void {
     if (this.paginator) {
-      this.paginator.pageSize = this.pageSize;
-      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('event-list', e.pageSize));
-      this.dataSource.paginator = this.paginator;
+      this.pageSize = this.dataSource.connectPaginator(this.paginator, this.pageSizeOptions);
     }
   }
 
@@ -90,9 +88,6 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
       .subscribe(events => {
         this.dataSource.data = events;
-        if (this.paginator) {
-          this.dataSource.paginator = this.paginator;
-        }
         this.selectedEvent = null;
       });
   }
