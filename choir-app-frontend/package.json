@@ -6,6 +6,7 @@
     "start": "ng serve",
     "startwithtimestamp": "node ./scripts/serve-with-timestamp.js",
     "build": "ng build",
+    "lint": "ng lint",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false",
     "pretest": "npm run generate-build-info",
