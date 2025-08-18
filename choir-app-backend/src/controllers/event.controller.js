@@ -8,6 +8,7 @@ const User = db.user;
 const logger = require("../config/logger");
 const { Op, fn, col, where } = require("sequelize");
 const { isoDateString } = require('../utils/date.utils');
+const jwt = require("jsonwebtoken");
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -182,6 +183,61 @@ exports.findAll = async (req, res) => {
             ]
         });
     res.status(200).send(events);
+};
+
+/**
+ * Export all events for the authenticated choir in ICS format.
+ * Authentication is done via a JWT provided as "token" query parameter.
+ */
+exports.ics = async (req, res) => {
+    const token = req.query.token;
+    if (!token) {
+        return res.status(403).send({ message: "No token provided." });
+    }
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        return res.status(401).send({ message: "Unauthorized" });
+    }
+
+    const events = await Event.findAll({
+        where: { choirId: decoded.activeChoirId },
+        order: [['date', 'ASC']]
+    });
+
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const lines = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Chorleiter//EN',
+        'CALSCALE:GREGORIAN'
+    ];
+
+    const formatDate = (d) => new Date(d).toISOString().split('T')[0].replace(/-/g, '');
+    const summaryMap = { SERVICE: 'Gottesdienst', REHEARSAL: 'Probe' };
+
+    for (const ev of events) {
+        const start = formatDate(ev.date);
+        const endDate = new Date(ev.date);
+        endDate.setDate(endDate.getDate() + 1);
+        const end = formatDate(endDate);
+        const summary = summaryMap[ev.type] || ev.type;
+        const desc = ev.notes ? ev.notes.replace(/\r?\n/g, '\\n') : '';
+        lines.push('BEGIN:VEVENT');
+        lines.push(`UID:${ev.id}@chorleiter`);
+        lines.push(`DTSTAMP:${dtStamp}`);
+        lines.push(`DTSTART;VALUE=DATE:${start}`);
+        lines.push(`DTEND;VALUE=DATE:${end}`);
+        lines.push(`SUMMARY:${summary}`);
+        if (desc) lines.push(`DESCRIPTION:${desc}`);
+        lines.push('END:VEVENT');
+    }
+
+    lines.push('END:VCALENDAR');
+    res.setHeader('Content-Type', 'text/calendar');
+    res.setHeader('Content-Disposition', 'attachment; filename="events.ics"');
+    res.send(lines.join('\r\n'));
 };
 
 exports.findNext = async (req, res) => {

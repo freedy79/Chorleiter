@@ -15,6 +15,7 @@ import { Event } from '@core/models/event';
 import { PlanEntry } from '@core/models/plan-entry';
 import { AuthService } from '@core/services/auth.service';
 import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+import { environment } from 'src/environments/environment';
 
 interface HolidayEvent {
     type: 'HOLIDAY';
@@ -188,5 +189,19 @@ export class MyCalendarComponent implements OnInit {
             entries.push({ type: 'HOLIDAY', name: holiday, date: key });
         }
         return entries;
+    }
+
+    downloadIcs(): void {
+        const token = this.auth.getToken();
+        if (!token) return;
+        const url = `${environment.apiUrl}/events/ics?token=${token}`;
+        window.open(url, '_blank');
+    }
+
+    get googleCalendarUrl(): string | null {
+        const token = this.auth.getToken();
+        if (!token) return null;
+        const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
+        return `https://calendar.google.com/calendar/r?cid=${icsUrl}`;
     }
 }

@@ -6,6 +6,8 @@ const validate = require("../validators/validate");
 const { handler: wrap } = require("../utils/async");
 const router = require("express").Router();
 
+router.get("/ics", wrap(controller.ics));
+
 router.use(authJwt.verifyToken);
 
 router.get("/last", wrap(controller.findLast));
