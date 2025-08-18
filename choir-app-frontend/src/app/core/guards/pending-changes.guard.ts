@@ -6,6 +6,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 
 export interface PendingChanges {
   hasPendingChanges(): boolean;
+  getChangedFields(): string[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -14,9 +15,13 @@ export class PendingChangesGuard implements CanDeactivate<PendingChanges> {
 
   canDeactivate(component: PendingChanges): boolean | Observable<boolean> {
     if (component.hasPendingChanges()) {
+      const fields = component.getChangedFields();
+      const message = fields.length
+        ? `Sie haben ungespeicherte Änderungen an folgenden Feldern: ${fields.join(', ')}. Wirklich verlassen?`
+        : 'Sie haben ungespeicherte Änderungen. Wirklich verlassen?';
       const dialogData: ConfirmDialogData = {
         title: 'Änderungen verwerfen?',
-        message: 'Sie haben ungespeicherte Änderungen. Wirklich verlassen?'
+        message
       };
       const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
       return dialogRef.afterClosed();
