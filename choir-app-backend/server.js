@@ -27,6 +27,17 @@ async function handleFatal(error) {
 
 process.on('uncaughtException', handleFatal);
 process.on('unhandledRejection', handleFatal);
+process.on('SIGTERM', () => {
+    logger.warn('SIGTERM received. Shutting down.');
+    process.exit(0);
+});
+process.on('SIGINT', () => {
+    logger.warn('SIGINT received. Shutting down.');
+    process.exit(0);
+});
+process.on('exit', (code) => {
+    logger.info(`Process exited with code ${code}`);
+});
 
 
 const PORT = process.env.PORT || 8088;
