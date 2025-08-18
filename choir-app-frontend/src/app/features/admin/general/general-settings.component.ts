@@ -27,4 +27,13 @@ export class GeneralSettingsComponent implements PendingChanges {
            (this.mailSettings?.hasPendingChanges() ?? false) ||
            (this.mailTemplates?.hasPendingChanges() ?? false);
   }
+
+  getChangedFields(): string[] {
+    return [
+      ...(this.frontendUrl?.getChangedFields() ?? []),
+      ...(this.adminEmail?.getChangedFields() ?? []),
+      ...(this.mailSettings?.getChangedFields() ?? []),
+      ...(this.mailTemplates?.getChangedFields() ?? [])
+    ];
+  }
 }

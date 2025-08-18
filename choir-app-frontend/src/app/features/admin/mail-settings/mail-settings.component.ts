@@ -80,6 +80,10 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
     return this.form.dirty;
   }
 
+  getChangedFields(): string[] {
+    return Object.keys(this.form.controls).filter(key => this.form.get(key)?.dirty);
+  }
+
   @HostListener('window:beforeunload', ['$event'])
   confirmUnload(event: BeforeUnloadEvent): void {
     if (this.hasPendingChanges()) {
