@@ -30,6 +30,12 @@
     overflow-y: auto;
   }
 
+  .calendar-actions {
+    margin-bottom: 8px;
+    display: flex;
+    gap: 8px;
+  }
+
   ::ng-deep mat-calendar.compact {
     width: 100%;
     max-width: 360px;
