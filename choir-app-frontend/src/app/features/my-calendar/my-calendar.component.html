@@ -1,5 +1,9 @@
 <div class="calendar-wrapper">
   <h2>Meine Termine</h2>
+  <div class="calendar-actions">
+    <button mat-stroked-button (click)="downloadIcs()">ICS herunterladen</button>
+    <a mat-stroked-button *ngIf="googleCalendarUrl" [href]="googleCalendarUrl" target="_blank" rel="noopener">Google Kalender</a>
+  </div>
   <mat-calendar class="compact"
                 [selected]="selectedDate"
                 (selectedChange)="onSelectedChange($event)"
