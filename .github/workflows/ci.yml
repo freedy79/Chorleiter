@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: '20' # Passe die Node.js Version an
 
+      - name: Install backend dependencies
+        run: npm install --prefix choir-app-backend
+
+      - name: Run backend tests
+        run: npm test --prefix choir-app-backend
+
       - name: Install Angular CLI dependencies
         run: npm install --prefix choir-app-frontend
 
