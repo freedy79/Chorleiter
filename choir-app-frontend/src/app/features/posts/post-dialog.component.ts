@@ -30,11 +30,12 @@ export class PostDialogComponent {
     this.form = this.fb.group({
       title: ['', Validators.required],
       text: ['', Validators.required],
-      pieceId: [null]
+      pieceId: [null],
+      expiresAt: [null]
     });
     if (data?.post) {
       this.isEdit = true;
-      this.form.patchValue({ title: data.post.title, text: data.post.text, pieceId: data.post.piece?.id });
+      this.form.patchValue({ title: data.post.title, text: data.post.text, pieceId: data.post.piece?.id, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null });
       if (data.post.piece) this.pieceCtrl.setValue({
         id: data.post.piece.id,
         title: data.post.piece.title,
@@ -69,7 +70,8 @@ export class PostDialogComponent {
     if (this.form.valid) {
       const piece = this.pieceCtrl.value;
       const pieceId = piece && typeof piece === 'object' ? piece.id : null;
-      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, pieceId });
+      const expiresAt = this.form.value.expiresAt ? this.form.value.expiresAt.toISOString() : null;
+      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, pieceId, expiresAt });
     }
   }
 
