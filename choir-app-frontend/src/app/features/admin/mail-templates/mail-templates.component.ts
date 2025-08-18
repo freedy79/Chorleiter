@@ -33,6 +33,7 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   availabilityHtmlMode = false;
   changeHtmlMode = false;
   monthlyHtmlMode = false;
+  private initializing = true;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
@@ -56,6 +57,10 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   ngAfterViewInit(): void {
     this.initEditors();
     this.setEditorContents();
+    setTimeout(() => {
+      this.form.markAsPristine();
+      this.initializing = false;
+    });
   }
 
   load(): void {
@@ -124,8 +129,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     if ((window as any).Quill && this.inviteEditor && !this.inviteQuill) {
       this.inviteQuill = new (window as any).Quill(this.inviteEditor.nativeElement, options);
       this.inviteQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML });
-        if (source === 'user') {
+        this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
           this.form.get('inviteBody')?.markAsDirty();
         }
       });
@@ -133,8 +138,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     if ((window as any).Quill && this.resetEditor && !this.resetQuill) {
       this.resetQuill = new (window as any).Quill(this.resetEditor.nativeElement, options);
       this.resetQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML });
-        if (source === 'user') {
+        this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
           this.form.get('resetBody')?.markAsDirty();
         }
       });
@@ -142,8 +147,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     if ((window as any).Quill && this.availabilityEditor && !this.availabilityQuill) {
       this.availabilityQuill = new (window as any).Quill(this.availabilityEditor.nativeElement, options);
       this.availabilityQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML });
-        if (source === 'user') {
+        this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
           this.form.get('availabilityBody')?.markAsDirty();
         }
       });
@@ -151,8 +156,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     if ((window as any).Quill && this.changeEditor && !this.changeQuill) {
       this.changeQuill = new (window as any).Quill(this.changeEditor.nativeElement, options);
       this.changeQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML });
-        if (source === 'user') {
+        this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
           this.form.get('changeBody')?.markAsDirty();
         }
       });
@@ -160,8 +165,8 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     if ((window as any).Quill && this.monthlyEditor && !this.monthlyQuill) {
       this.monthlyQuill = new (window as any).Quill(this.monthlyEditor.nativeElement, options);
       this.monthlyQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML });
-        if (source === 'user') {
+        this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
           this.form.get('monthlyBody')?.markAsDirty();
         }
       });
