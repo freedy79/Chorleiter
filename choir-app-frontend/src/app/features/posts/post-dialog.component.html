@@ -16,6 +16,12 @@
       <mat-label>Text</mat-label>
       <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich"></textarea>
     </mat-form-field>
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Ablaufdatum</mat-label>
+      <input matInput [matDatepicker]="picker" formControlName="expiresAt">
+      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-datepicker #picker></mat-datepicker>
+    </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions>

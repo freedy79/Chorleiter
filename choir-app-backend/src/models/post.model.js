@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
     pieceId: {
       type: DataTypes.INTEGER,
       allowNull: true
+    },
+    expiresAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   });
   return Post;

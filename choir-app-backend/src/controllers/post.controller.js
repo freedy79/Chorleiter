@@ -1,6 +1,7 @@
 const db = require('../models');
 const Post = db.post;
 const emailService = require('../services/email.service');
+const { Op } = require('sequelize');
 
 function stripHtml(text) {
   return text.replace(/<[^>]*>/g, '');
@@ -13,15 +14,17 @@ async function isChoirAdmin(req) {
 }
 
 exports.create = async (req, res) => {
-  const { title, text, pieceId } = req.body;
+  const { title, text, pieceId, expiresAt } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
+    const expDate = expiresAt ? new Date(expiresAt) : null;
     const post = await Post.create({
       title: sanitizedTitle,
       text: sanitizedText,
       pieceId: pieceId || null,
+      expiresAt: expDate,
       choirId: req.activeChoirId,
       userId: req.userId
     });
@@ -46,8 +49,17 @@ exports.create = async (req, res) => {
 
 exports.findAll = async (req, res) => {
   try {
+    const admin = await isChoirAdmin(req);
+    const where = { choirId: req.activeChoirId };
+    if (!admin) {
+      where[Op.or] = [
+        { expiresAt: null },
+        { expiresAt: { [Op.gt]: new Date() } },
+        { userId: req.userId }
+      ];
+    }
     const posts = await Post.findAll({
-      where: { choirId: req.activeChoirId },
+      where,
       include: [
         { model: db.user, as: 'author', attributes: ['id','name'] },
         { model: db.piece, as: 'piece', attributes: ['id','title'] }
@@ -62,8 +74,17 @@ exports.findAll = async (req, res) => {
 
 exports.findLatest = async (req, res) => {
   try {
+    const admin = await isChoirAdmin(req);
+    const where = { choirId: req.activeChoirId };
+    if (!admin) {
+      where[Op.or] = [
+        { expiresAt: null },
+        { expiresAt: { [Op.gt]: new Date() } },
+        { userId: req.userId }
+      ];
+    }
     const post = await Post.findOne({
-      where: { choirId: req.activeChoirId },
+      where,
       include: [
         { model: db.user, as: 'author', attributes: ['id','name'] },
         { model: db.piece, as: 'piece', attributes: ['id','title'] }
@@ -78,7 +99,7 @@ exports.findLatest = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { title, text, pieceId } = req.body;
+  const { title, text, pieceId, expiresAt } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const post = await Post.findByPk(id);
@@ -87,7 +108,8 @@ exports.update = async (req, res) => {
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
-    await post.update({ title: sanitizedTitle, text: sanitizedText, pieceId: pieceId || null });
+    const expDate = expiresAt ? new Date(expiresAt) : null;
+    await post.update({ title: sanitizedTitle, text: sanitizedText, pieceId: pieceId || null, expiresAt: expDate });
     const full = await Post.findByPk(id, { include: [
       { model: db.user, as: 'author', attributes: ['id','name'] },
       { model: db.piece, as: 'piece', attributes: ['id','title'] }
