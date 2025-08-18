@@ -2,7 +2,10 @@
   "name": "chorleiter-root",
   "private": true,
   "scripts": {
+    "lint": "npm run lint --prefix choir-app-frontend && npm run check --prefix choir-app-backend",
+    "build": "npm run build --prefix choir-app-frontend",
     "test": "npm test --prefix choir-app-frontend",
+    "test:backend": "npm test --prefix choir-app-backend",
     "check-backend": "npm run check --prefix choir-app-backend"
   }
 }
