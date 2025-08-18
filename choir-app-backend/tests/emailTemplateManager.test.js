@@ -14,7 +14,6 @@ const { replacePlaceholders, buildTemplate } = require('../src/services/emailTem
     const mail = buildTemplate({ subject: 'Hi {{surname}}', body: '<p>Use {{link}}</p>' }, 'reset', { surname: 'Bob', link: 'http://example.com' });
     assert.strictEqual(mail.subject, 'Hi Bob');
     assert.strictEqual(mail.text.trim(), 'Use http://example.com');
-    console.log('emailTemplateManager tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

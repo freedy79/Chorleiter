@@ -25,7 +25,6 @@ export class ManageChoirResolver implements Resolve<any> {
       switchMap(isAdmin => {
         const choirIdParam = route.queryParamMap.get('choirId');
         const choirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
-        console.log('ManageChoirResolver: Resolving data for choirId:', choirId);
 
         const opts = isAdmin && choirId ? { choirId } : undefined;
 
@@ -70,7 +69,6 @@ export class ManageChoirResolver implements Resolve<any> {
         }
 
         const errorMessage = error.error?.message || 'Could not load data for choir management.';
-        console.error('ManageChoirResolver error', error);
         this.errorService.setError({
           message: errorMessage,
           status: error.status,

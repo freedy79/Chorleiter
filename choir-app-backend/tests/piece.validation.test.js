@@ -18,8 +18,6 @@ const { createPieceValidation, updatePieceValidation } = require('../src/validat
     for (const v of updatePieceValidation) { await v.run(req2); }
     res = validationResult(req2);
     assert.ok(!res.isEmpty(), 'update should fail with invalid arrangerIds');
-
-    console.log('piece.validation tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

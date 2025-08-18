@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const db = require("./models");
+const logger = require("./config/logger");
 
 async function seedDatabase(options = {}) {
     const { includeDemoData = false } = options;
@@ -9,7 +10,7 @@ async function seedDatabase(options = {}) {
         // Initial seed
         const userCount = await db.user.count();
         if (userCount === 0) {
-            console.log("No users found. Seeding initial admin user and choir...");
+            logger.info("No users found. Seeding initial admin user and choir...");
             const [choir] = await db.choir.findOrCreate({
                 where: { name: "My First Choir" },
                 defaults: { name: "My First Choir" },
@@ -91,12 +92,12 @@ async function seedDatabase(options = {}) {
                 where: { key: 'SYSTEM_ADMIN_EMAIL' },
                 defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
             });
-            console.log("Initial seeding completed successfully.");
+            logger.info("Initial seeding completed successfully.");
         } else {
-            console.log("Database already seeded. Skipping initial setup.");
+            logger.info("Database already seeded. Skipping initial setup.");
         }
     } catch (error) {
-        console.error("Error during initial seeding:", error);
+        logger.error("Error during initial seeding:", error);
     }
 
     if (includeDemoData) {
@@ -124,7 +125,7 @@ async function seedDatabase(options = {}) {
                 await choir.addCollection(collection).catch(() => { });
             }
         } catch (err) {
-            console.error("Error during demo seeding:", err);
+            logger.error("Error during demo seeding:", err);
         }
     }
 }

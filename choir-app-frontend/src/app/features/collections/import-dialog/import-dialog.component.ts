@@ -101,8 +101,6 @@ export class ImportDialogComponent implements OnDestroy {
     this.statusSubscription = timer(0, 500).pipe(
       // Holen Sie den Job-Status vom Server
       switchMap(() => this.apiService.getImportStatus(jobId)),
-      // Loggen Sie den Job-Status zum Debuggen
-      tap(job => console.log('Polling status:', job)),
       // Fahren Sie fort, bis der Job abgeschlossen oder fehlgeschlagen ist
       takeWhile(job => job.status === 'running' || job.status === 'pending', true)
     ).subscribe({

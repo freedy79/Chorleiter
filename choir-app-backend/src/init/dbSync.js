@@ -1,8 +1,9 @@
 const db = require('../models');
+const logger = require("../config/logger");
 
 async function syncDatabase(options = { alter: true }) {
     await db.sequelize.sync(options);
-    console.log('Database synchronized.');
+    logger.info('Database synchronized.');
 }
 
 module.exports = { syncDatabase };

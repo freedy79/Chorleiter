@@ -68,8 +68,6 @@ async function sendRequest(middleware, context) {
     res = await sendRequest(requireChoirAdmin, { userRoles: ['singer'], userId: normal.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 500, 'db error should return 500');
     db.user_choir.findOne = originalFindOne;
-
-    console.log('role.middleware tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

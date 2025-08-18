@@ -15,7 +15,6 @@ const { isPublicHoliday } = require('../src/services/holiday.service');
     assert.ok(isPublicHoliday(entMarch));
     assert.ok(isPublicHoliday(entJuly));
     assert.ok(isPublicHoliday(entNov));
-    console.log('holiday.service tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

@@ -50,8 +50,6 @@ const authorController = require('../src/controllers/author.controller');
     assert.strictEqual(migratedPiece2.authorId, a2.id);
     const deletedAuthor = await db.author.findByPk(a1.id);
     assert.strictEqual(deletedAuthor, null);
-
-    console.log('creator duplicate tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

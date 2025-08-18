@@ -40,8 +40,6 @@ const db = require('../src/models');
     assert(db.choir.associations.events, 'Choir should have events association');
     assert(db.choir.associations.monthlyPlans, 'Choir should have monthlyPlans association');
     assert(db.choir.associations.planRules, 'Choir should have planRules association');
-
-    console.log('All model tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

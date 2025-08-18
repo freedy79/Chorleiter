@@ -33,8 +33,6 @@ const jobs = require('../src/services/import-jobs.service');
       ['10', '11', '12']
     );
 
-    console.log('import.controller auto numbering test passed');
-
     // Test name formatting for composer and author
     await db.sequelize.sync({ force: true });
 
@@ -51,8 +49,6 @@ const jobs = require('../src/services/import-jobs.service');
     assert.strictEqual(storedComposer.name, 'Bach, Johann Sebastian');
     assert.strictEqual(storedAuthor.name, 'Luther, Martin');
 
-    console.log('import.controller name formatting test passed');
-
     // Test interpolation of abbreviated composer names
     await db.sequelize.sync({ force: true });
 
@@ -67,8 +63,6 @@ const jobs = require('../src/services/import-jobs.service');
     const composers = await db.composer.findAll();
     assert.strictEqual(composers.length, 1, 'should reuse existing composer');
     assert.strictEqual(composers[0].id, existingComp.id);
-
-    console.log('import.controller abbreviation match test passed');
 
     await db.sequelize.sync({ force: true });
 
@@ -94,8 +88,6 @@ const jobs = require('../src/services/import-jobs.service');
 
     const rep = await db.choir_repertoire.findOne({ where: { choirId: choir.id, pieceId: piece.id } });
     assert.strictEqual(rep.status, 'CAN_BE_SUNG', 'status should be updated');
-
-    console.log('import.controller duplicate handling test passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

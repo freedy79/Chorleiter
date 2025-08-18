@@ -2,6 +2,7 @@ const db = require("../models");
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
+const logger = require("../config/logger");
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
 exports.getAll = (model) => async (req, res) => {
@@ -352,7 +353,7 @@ exports.updateChoirMember = async (req, res) => {
     const { rolesInChoir } = req.body;
 
     try {
-        console.log("Updating choir member:", userId, "in choir:", choirId);
+        logger.debug("Updating choir member:", userId, "in choir:", choirId);
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
         if (!association) return res.status(412).send({ message: 'User is not a member of this choir.' });
 

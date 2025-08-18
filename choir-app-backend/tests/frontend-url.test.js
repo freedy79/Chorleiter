@@ -14,8 +14,6 @@ const { getFrontendUrl } = require('../src/utils/frontend-url');
     process.env.FRONTEND_URL = 'https://foo.bar/app/';
     url = await getFrontendUrl();
     assert.strictEqual(url, 'https://foo.bar/app');
-
-    console.log('frontend-url tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

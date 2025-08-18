@@ -1,4 +1,5 @@
 const db = require('../models');
+const logger = require("../config/logger");
 
 async function migrateRoles() {
   const qi = db.sequelize.getQueryInterface();
@@ -26,7 +27,7 @@ async function migrateRoles() {
       }
     }
     await qi.removeColumn('users', 'role');
-    console.log(`Migrated role to roles for ${users.length} users.`);
+    logger.info(`Migrated role to roles for ${users.length} users.`);
   } catch (err) {
     // Table does not exist or other error, ignore
   }

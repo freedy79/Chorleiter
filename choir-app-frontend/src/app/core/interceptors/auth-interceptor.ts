@@ -40,7 +40,6 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
                 if (error.status === 401) {
-                    console.warn('Unauthorized error detected. Logging out user.');
                     const svc = this.injector.get(AuthService);
                     svc.logout('sessionExpired');
                 } else if (error.status === 403) {

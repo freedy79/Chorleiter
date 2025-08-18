@@ -18,7 +18,6 @@ const { sendMail } = require('../src/services/emailTransporter');
     assert.strictEqual(createdOptions.host, 'smtp.example.com');
     assert.strictEqual(result.to, 'a@b.c');
     assert.strictEqual(result.from.address, 'from@example.com');
-    console.log('emailTransporter tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

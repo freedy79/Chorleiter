@@ -41,8 +41,6 @@ const controller = require('../src/controllers/availability.controller');
   const xmasDates = res.data.map(a => a.date);
   assert.ok(xmasDates.includes('2021-12-25'));
   assert.ok(!xmasDates.includes('2021-12-26'));
-
-    console.log('availability.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
