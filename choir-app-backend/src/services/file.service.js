@@ -12,7 +12,8 @@ const DIRS = {
 
 async function safeReaddir(sub) {
   try {
-    return await fs.readdir(path.join(BASE_DIR, sub));
+    const entries = await fs.readdir(path.join(BASE_DIR, sub));
+    return entries.filter(name => name !== '.gitkeep');
   } catch {
     return [];
   }
