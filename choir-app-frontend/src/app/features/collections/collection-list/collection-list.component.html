@@ -10,6 +10,10 @@
     <mat-icon>add</mat-icon>
     <span>Neue Sammlung</span>
   </button>
+  <button mat-flat-button color="primary" (click)="syncAllCollections()" [disabled]="dataSource.data.length === 0">
+    <mat-icon>sync</mat-icon>
+    <span>Alle aktualisieren</span>
+  </button>
 </div>
 <p class="subtitle">Verwalten von globalen Sammlungen und Hinzufügen zum Chorrepertoire.</p>
 

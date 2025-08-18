@@ -137,7 +137,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
 
   syncCollection(collection: Collection): void {
-    this.apiService.addCollectionToChoir(collection.id).subscribe({
+    this.apiService.addCollectionsToChoir([collection.id]).subscribe({
       next: () => {
         const msg = collection.isAdded
           ? `Sammlung '${collection.title}' wurde aktualisiert.`
@@ -150,6 +150,26 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
       },
       error: (err) => {
         this.snackBar.open(`Fehler beim Aktualisieren der Sammlung: ${err.message}`, 'Schließen', {
+          duration: 5000,
+          verticalPosition: 'top'
+        });
+      }
+    });
+  }
+
+  syncAllCollections(): void {
+    const ids = this.dataSource.data.map(c => c.id);
+    if (!ids.length) { return; }
+    this.apiService.addCollectionsToChoir(ids).subscribe({
+      next: () => {
+        this.snackBar.open('Alle Sammlungen wurden synchronisiert.', 'OK', {
+          duration: 3000,
+          verticalPosition: 'top'
+        });
+        this.loadCollections();
+      },
+      error: (err) => {
+        this.snackBar.open(`Fehler beim Aktualisieren der Sammlungen: ${err.message}`, 'Schließen', {
           duration: 5000,
           verticalPosition: 'top'
         });

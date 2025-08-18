@@ -172,6 +172,42 @@ exports.addToChoir = async (req, res, next) => {
     } catch (err) { next(err); }
 };
 
+// Synchronize multiple collections with the active choir in one request
+// to avoid rate limiting issues when the frontend triggers many updates.
+exports.bulkAddToChoir = async (req, res, next) => {
+    try {
+        const { collectionIds } = req.body;
+        if (!Array.isArray(collectionIds) || collectionIds.length === 0) {
+            return res.status(400).send({ message: 'collectionIds array required.' });
+        }
+
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        if (!choir) {
+            return res.status(404).send({ message: 'Choir not found.' });
+        }
+
+        // Cache existing choir pieces to avoid duplicate additions
+        const choirPieces = await choir.getPieces({ attributes: ['id'] });
+        const choirPieceIds = new Set(choirPieces.map(p => p.id));
+
+        for (const id of collectionIds) {
+            const collection = await db.collection.findByPk(id);
+            if (!collection) continue;
+
+            await choir.addCollection(collection).catch(() => {});
+
+            const pieces = await collection.getPieces({ attributes: ['id'] });
+            const missingPieces = pieces.filter(p => !choirPieceIds.has(p.id));
+            if (missingPieces.length) {
+                await choir.addPieces(missingPieces).catch(() => {});
+                missingPieces.forEach(p => choirPieceIds.add(p.id));
+            }
+        }
+
+        res.status(200).send({ message: 'Collections synced with your repertoire.' });
+    } catch (err) { next(err); }
+};
+
 exports.uploadCover = async (req, res, next) => {
     try {
         const id = req.params.id;

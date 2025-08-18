@@ -46,4 +46,8 @@ export class CollectionService {
   addCollectionToChoir(collectionId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/collections/${collectionId}/addToChoir`, {});
   }
+
+  addCollectionsToChoir(collectionIds: number[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/collections/bulkAddToChoir`, { collectionIds });
+  }
 }
