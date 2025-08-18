@@ -26,8 +26,6 @@ const controller = require('../src/controllers/choir-management.controller');
 
     await controller.updateMyChoir({ activeChoirId: choir.id, userId: adminUser.id, userRoles: ['admin'], body: { modules: { dienstplan: false } } }, res);
     assert.strictEqual(res.statusCode, 200, 'admin should change modules');
-
-    console.log('choir-management controller permissions test passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

@@ -173,7 +173,6 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
         this.apiService.getGlobalPieces().subscribe((pieces) => {
             //console.log('Fetched pieces:', pieces);
             if (!pieces || pieces.length === 0) {
-                console.warn('No pieces found, initializing with empty array.');
                 pieces = [];
             }
             // Assign the fetched pieces to allPieces.

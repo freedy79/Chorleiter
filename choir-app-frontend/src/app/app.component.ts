@@ -23,11 +23,9 @@ export class AppComponent {
     this.api.pingBackend().subscribe({
       next: () => {
         this.backendAvailable = true;
-        console.log("Successfully connected.");
       },
       error: () => {
         this.backendAvailable = false;
-        console.error("Could not connect to the backend.");
       }
     });
   }

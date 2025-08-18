@@ -45,8 +45,6 @@ global.fetch = async () => {
     const updated = await db.composer.findByPk(composer.id);
     assert.strictEqual(updated.birthYear, '1800');
     assert.strictEqual(calls, 2, 'should retry once');
-
-    console.log('creator enrich tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

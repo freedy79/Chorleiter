@@ -26,8 +26,6 @@ const controller = require('../src/controllers/join.controller');
 
     await controller.joinChoir({ params: { token: 'token123' }, body: { name: 'User', email: 'u@example.com', password: 'pw' } }, res);
     assert.strictEqual(res.statusCode, 201, 'join should succeed when enabled');
-
-    console.log('join.controller test passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

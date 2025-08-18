@@ -72,7 +72,7 @@ exports.lookup = async (req, res) => {
         res.status(200).send(lookupResults);
 
     } catch (err) {
-        console.error("ERROR in repertoire lookup:", err);
+        logger.error("ERROR in repertoire lookup:", err);
         res.status(500).send({ message: "An error occurred during repertoire lookup." });
     }
 };
@@ -460,7 +460,7 @@ exports.findOne = async (req, res) => {
 
         res.status(200).send(result);
     } catch (err) {
-        console.error('ERROR finding repertoire piece:', err);
+        logger.error('ERROR finding repertoire piece:', err);
         res.status(500).send({ message: err.message || 'Error retrieving piece.' });
     }
 };

@@ -26,8 +26,6 @@ const controller = require('../src/controllers/search.controller');
     const reqOrigin = { query: { q: 'Trad' }, activeChoirId: choir.id };
     await controller.search(reqOrigin, res);
     assert.ok(res.data.pieces.find(p => p.title === 'Folk'));
-
-    console.log('search.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

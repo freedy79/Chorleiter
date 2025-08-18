@@ -49,7 +49,6 @@ export class ManageChoirsComponent implements OnInit {
   }
 
   editChoir(choir: Choir): void {
-    console.log('Editing choir:', choir.id);
     this.router.navigate(['/manage-choir'], { queryParams: { choirId: choir.id } }
   );
   }

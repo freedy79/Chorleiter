@@ -1,4 +1,5 @@
 const db = require('../models');
+const logger = require("../config/logger");
 
 async function assignAdminRole() {
     const email = 'm.free@nak-goettingen.de';
@@ -12,10 +13,10 @@ async function assignAdminRole() {
             roles.push('admin');
             user.roles = roles;
             await user.save();
-            console.log(`Added admin role to ${email}.`);
+            logger.info(`Added admin role to ${email}.`);
         }
     } catch (err) {
-        console.error('Failed to assign admin role:', err);
+        logger.error('Failed to assign admin role:', err);
     }
 }
 

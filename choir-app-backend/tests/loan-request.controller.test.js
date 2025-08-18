@@ -33,8 +33,6 @@ const controller = require('../src/controllers/library.controller');
     assert.strictEqual(res.data.items[0].quantity, 2);
     assert.strictEqual(res.data.choirId, choir.id);
     assert.strictEqual(res.data.userId, user.id);
-
-    console.log('loan-request.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const db = require('../models');
+const logger = require("../config/logger");
 
 async function ensureJoinHashes() {
     const choirs = await db.choir.findAll({ where: { joinHash: null } });
@@ -8,7 +9,7 @@ async function ensureJoinHashes() {
         await choir.save();
     }
     if (choirs.length > 0) {
-        console.log(`Generated join hashes for ${choirs.length} choirs.`);
+        logger.info(`Generated join hashes for ${choirs.length} choirs.`);
     }
 }
 

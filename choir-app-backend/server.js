@@ -36,16 +36,16 @@ async function start() {
     try {
         await init({ includeDemoData: true });
         const server = app.listen(PORT, ADDRESS, () => {
-            console.log(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
+            logger.info(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
         });
         // Close requests that take longer than 20 seconds
         server.setTimeout(20 * 1000);
         server.on('timeout', (socket) => {
-            console.warn('Request timed out.');
+            logger.warn('Request timed out.');
             socket.destroy();
         });
     } catch (err) {
-        console.error("Database startup failed:", err);
+        logger.error("Database startup failed:", err);
     }
 }
 

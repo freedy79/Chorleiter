@@ -415,12 +415,10 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           }
         });
 
-        console.log(`Status for piece ${pieceId} updated to ${newStatus}`);
         this.snackBar.open('Status updated.', 'OK', { duration: 2000 });
       },
 
       error: (err) => {
-        console.error('Failed to update status', err);
         const msg = err.error?.message || 'Could not update status.';
         this.errorService.setError({
           message: msg,

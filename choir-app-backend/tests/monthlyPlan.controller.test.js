@@ -44,8 +44,6 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     const dates = entries2021.map(e => e.date.toISOString().split('T')[0]);
     assert.ok(dates.includes('2021-12-25'));
     assert.ok(!dates.includes('2021-12-26'));
-
-    console.log('monthlyPlan controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

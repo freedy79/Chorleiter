@@ -70,7 +70,6 @@ export class EventImportDialogComponent implements OnDestroy {
 
     this.statusSubscription = timer(0, 500).pipe(
       switchMap(() => this.apiService.getImportStatus(jobId)),
-      tap(job => console.log('Polling status:', job)),
       takeWhile(job => job.status === 'running' || job.status === 'pending', true)
     ).subscribe({
       next: job => {

@@ -38,8 +38,6 @@ const { createCollectionValidation, updateCollectionValidation } = require('../s
     for (const v of createCollectionValidation) { await v.run(req5); }
     res = validationResult(req5);
     assert.ok(!res.isEmpty(), 'create should fail for invalid numberInCollection');
-
-    console.log('collection.validation tests passed');
   } catch (err) {
     console.error(err);
     process.exit(1);

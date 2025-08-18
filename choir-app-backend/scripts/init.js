@@ -1,8 +1,9 @@
 const { init } = require('../src/init');
+const logger = require("../src/config/logger");
 
 init().then(() => {
-    console.log('Initialization completed.');
+    logger.info('Initialization completed.');
 }).catch(err => {
-    console.error('Initialization failed:', err);
+    logger.error('Initialization failed:', err);
     process.exit(1);
 });

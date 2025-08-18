@@ -75,8 +75,6 @@ const controller = require('../src/controllers/event.controller');
     const ids = res.data.map(e => e.id);
     assert.ok(ids.includes(futureId));
     assert.ok(!ids.includes(res.data.find(e => e.id !== futureId)?.id || false));
-
-    console.log('event.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

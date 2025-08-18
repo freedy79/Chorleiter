@@ -95,8 +95,6 @@ const controller = require('../src/controllers/piece.controller');
   assert.strictEqual(res.data.message.includes('deleted'), true);
   const deleted = await db.piece.findByPk(created.id);
   assert.strictEqual(deleted, null);
-
-    console.log('piece.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

@@ -18,8 +18,6 @@ const service = require('../src/services/log.service');
 
     if (!Array.isArray(errorEntries) || errorEntries.length !== 1) throw new Error('error log parse failed');
     if (!Array.isArray(jsonEntries) || jsonEntries.length !== 1) throw new Error('json log parse failed');
-
-    console.log('log.service tests passed');
     fs.rmSync(logDir, { recursive: true, force: true });
   } catch (err) {
     console.error(err);

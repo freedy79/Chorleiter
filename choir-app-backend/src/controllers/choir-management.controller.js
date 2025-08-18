@@ -215,11 +215,15 @@ exports.updateMember = async (req, res, next) => {
     const { rolesInChoir } = req.body;
     const choirId = req.activeChoirId;
 
-    console.log("Update member request:", JSON.stringify(req.params), JSON.stringify(req.body));
+    logger.debug(
+        "Update member request:",
+        JSON.stringify(req.params),
+        JSON.stringify(req.body)
+    );
 
 
     try {
-        console.log("Updating member:", userId, "for choirId:", choirId);
+        logger.debug("Updating member:", userId, "for choirId:", choirId);
         const association = await db.user_choir.findOne({ where: { userId, choirId } });
         if (!association) return res.status(412).send({ message: 'User is not a member of this choir.' });
 
@@ -244,14 +248,14 @@ exports.updateMember = async (req, res, next) => {
 
 exports.getChoirCollections = async (req, res, next) => {
     try {
-        console.log("Fetching collections for choirId:", req.activeChoirId);
+        logger.debug("Fetching collections for choirId:", req.activeChoirId);
 
         const choir = await db.choir.findByPk(req.activeChoirId);
         if (!choir) {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
-        console.log("Choir found: ", choir.name, " getting collections...");
+        logger.debug("Choir found: ", choir.name, " getting collections...");
         const collections = await choir.getCollections({
             attributes: {
                 include: [
@@ -269,7 +273,9 @@ exports.getChoirCollections = async (req, res, next) => {
             order: [['title', 'ASC']]
         });
 
-        console.log(`Found ${collections.length} collections for choirId ${req.activeChoirId}.`);
+        logger.info(
+            `Found ${collections.length} collections for choirId ${req.activeChoirId}.`
+        );
         const result = collections.map(c => {
             const plain = c.get ? c.get() : c;
             return {

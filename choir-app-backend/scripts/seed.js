@@ -1,10 +1,11 @@
 const { seedDatabase } = require('../src/seed');
+const logger = require("../src/config/logger");
 
 const includeDemo = process.env.INCLUDE_DEMO === 'true';
 
 seedDatabase({ includeDemoData: includeDemo }).then(() => {
-    console.log('Seeding completed.');
+    logger.info('Seeding completed.');
 }).catch(err => {
-    console.error('Seeding failed:', err);
+    logger.error('Seeding failed:', err);
     process.exit(1);
 });
