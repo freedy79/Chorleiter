@@ -154,7 +154,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
                         this.isEditMode = true;
                         this.collectionId = +id;
                         this.pageSubtitle =
-                            "Update the collection's details and manage its pieces.";
+                            "Sammlungsdetails und Stücke verwalten";
                         return this.apiService.getCollectionById(
                             this.collectionId
                         );
