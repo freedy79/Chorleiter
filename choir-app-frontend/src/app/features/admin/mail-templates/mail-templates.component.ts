@@ -123,37 +123,47 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     };
     if ((window as any).Quill && this.inviteEditor && !this.inviteQuill) {
       this.inviteQuill = new (window as any).Quill(this.inviteEditor.nativeElement, options);
-      this.inviteQuill.on('text-change', () => {
+      this.inviteQuill.on('text-change', (_: any, __: any, source: string) => {
         this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML });
-        this.form.get('inviteBody')?.markAsDirty();
+        if (source === 'user') {
+          this.form.get('inviteBody')?.markAsDirty();
+        }
       });
     }
     if ((window as any).Quill && this.resetEditor && !this.resetQuill) {
       this.resetQuill = new (window as any).Quill(this.resetEditor.nativeElement, options);
-      this.resetQuill.on('text-change', () => {
+      this.resetQuill.on('text-change', (_: any, __: any, source: string) => {
         this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML });
-        this.form.get('resetBody')?.markAsDirty();
+        if (source === 'user') {
+          this.form.get('resetBody')?.markAsDirty();
+        }
       });
     }
     if ((window as any).Quill && this.availabilityEditor && !this.availabilityQuill) {
       this.availabilityQuill = new (window as any).Quill(this.availabilityEditor.nativeElement, options);
-      this.availabilityQuill.on('text-change', () => {
+      this.availabilityQuill.on('text-change', (_: any, __: any, source: string) => {
         this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML });
-        this.form.get('availabilityBody')?.markAsDirty();
+        if (source === 'user') {
+          this.form.get('availabilityBody')?.markAsDirty();
+        }
       });
     }
     if ((window as any).Quill && this.changeEditor && !this.changeQuill) {
       this.changeQuill = new (window as any).Quill(this.changeEditor.nativeElement, options);
-      this.changeQuill.on('text-change', () => {
+      this.changeQuill.on('text-change', (_: any, __: any, source: string) => {
         this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML });
-        this.form.get('changeBody')?.markAsDirty();
+        if (source === 'user') {
+          this.form.get('changeBody')?.markAsDirty();
+        }
       });
     }
     if ((window as any).Quill && this.monthlyEditor && !this.monthlyQuill) {
       this.monthlyQuill = new (window as any).Quill(this.monthlyEditor.nativeElement, options);
-      this.monthlyQuill.on('text-change', () => {
+      this.monthlyQuill.on('text-change', (_: any, __: any, source: string) => {
         this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML });
-        this.form.get('monthlyBody')?.markAsDirty();
+        if (source === 'user') {
+          this.form.get('monthlyBody')?.markAsDirty();
+        }
       });
     }
   }
