@@ -18,4 +18,5 @@ router.get("/:id", wrap(controller.findOne));
 router.put("/:id", role.requireNonDemo, updateCollectionValidation, validate, wrap(controller.update));
 router.post("/:id/cover", role.requireNonDemo, upload.single('cover'), wrap(controller.uploadCover));
 router.post("/:id/addToChoir", wrap(controller.addToChoir)); // Crucial endpoint
+router.post("/bulkAddToChoir", wrap(controller.bulkAddToChoir));
 module.exports = router;

@@ -314,6 +314,10 @@ export class ApiService {
     return this.collectionService.addCollectionToChoir(collectionId);
   }
 
+  addCollectionsToChoir(collectionIds: number[]): Observable<any> {
+    return this.collectionService.addCollectionsToChoir(collectionIds);
+  }
+
   searchAll(term: string): Observable<{ pieces: Piece[]; events: Event[]; collections: Collection[] }> {
     return this.searchService.searchAll(term);
   }
