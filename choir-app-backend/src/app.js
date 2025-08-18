@@ -31,6 +31,12 @@ const limiter = RateLimit({
     max: 100, // Erhöhen Sie das Limit auf einen vernünftigeren Wert
     standardHeaders: true,
     legacyHeaders: false,
+    handler: (req, res, _next) => {
+        logger.warn(`429 - Too Many Requests - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+        res.status(429).send({
+            message: "Too many requests, please try again later.",
+        });
+    },
 });
 // Apply rate limiter to all requests
 app.use(limiter);
@@ -100,6 +106,12 @@ app.use("/api/availabilities", availabilityRoutes);
 app.use("/api/client-errors", clientErrorRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/library", libraryRoutes);
+
+// Handle 404 for unknown routes
+app.use((req, res, _next) => {
+    logger.warn(`404 - Not Found - ${req.originalUrl} - ${req.method} - ${req.ip}`);
+    res.status(404).send({ message: "Not Found" });
+});
 
 app.use((err, req, res, next) => {
     logger.error(
