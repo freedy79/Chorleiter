@@ -141,6 +141,20 @@
             </ng-container>
 
             <!-- Status Column (Not sortable in this example) -->
+            <!-- Rating Column -->
+            <ng-container matColumnDef="rating">
+              <th mat-header-cell *matHeaderCellDef> Bewertung </th>
+              <td mat-cell *matCellDef="let piece">
+                <mat-select [value]="piece.choir_repertoire?.rating"
+                            (selectionChange)="onRatingChange($event.value, piece.id)"
+                            (click)="$event.stopPropagation()" [disabled]="!canRate">
+                  <mat-option [value]="null">-</mat-option>
+                  <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
+                </mat-select>
+              </td>
+            </ng-container>
+
+            <!-- Status Column (Not sortable in this example) -->
             <ng-container matColumnDef="status">
               <th mat-header-cell *matHeaderCellDef> Status </th>
               <td mat-cell *matCellDef="let piece">

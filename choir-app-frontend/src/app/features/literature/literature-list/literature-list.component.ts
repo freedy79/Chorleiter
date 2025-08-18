@@ -66,6 +66,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   selectedPresetId: number | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+  isDirector = false;
 
   // --- Hover Image Preview ---
   hoverImage: string | null = null;
@@ -118,6 +119,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.loadPresets();
     this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
     this.authService.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.authService.currentUser$.subscribe(u => this.isDirector = u?.roles?.includes('director') || false);
 
     const saved = localStorage.getItem(this.FILTER_KEY);
     if (saved) {
@@ -434,6 +436,25 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  onRatingChange(newRating: number | null, pieceId: number): void {
+    this.pieceService.updatePieceRating(pieceId, newRating).subscribe(() => {
+      const data = [...this.dataSource.data];
+      const idx = data.findIndex(p => p.id === pieceId);
+      if (idx !== -1) {
+        const piece = { ...data[idx] };
+        const rep = piece.choir_repertoire ?? ({ status: 'CAN_BE_SUNG' } as any);
+        rep.rating = newRating ?? null;
+        piece.choir_repertoire = rep;
+        data[idx] = piece;
+        this.dataSource.data = data;
+      }
+    });
+  }
+
+  get canRate(): boolean {
+    return this.isDirector || this.isChoirAdmin || this.isAdmin;
+  }
+
   openEditPieceDialog(pieceId: number): void {
     const dialogRef = this.dialog.open(PieceDialogComponent, {
       width: '90vw',
@@ -579,7 +600,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (this.showLastRehearsed) this.displayedColumns.push('lastRehearsed');
     if (this.showTimesSung) this.displayedColumns.push('timesSung');
     if (this.showTimesRehearsed) this.displayedColumns.push('timesRehearsed');
-    this.displayedColumns.push('status', 'actions');
+    this.displayedColumns.push('rating', 'status', 'actions');
   }
 
   toggleColumn(col: 'lastSung' | 'lastRehearsed' | 'timesSung' | 'timesRehearsed'): void {

@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
         notes: {
             type: DataTypes.TEXT,
             allowNull: true
+        },
+        rating: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            validate: { min: 1, max: 5 }
         }
     });
     return ChoirRepertoire;

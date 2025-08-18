@@ -60,6 +60,10 @@ export class PieceService {
     return this.http.put(`${this.apiUrl}/repertoire/notes`, { pieceId, notes });
   }
 
+  updatePieceRating(pieceId: number, rating: number | null): Observable<any> {
+    return this.http.put(`${this.apiUrl}/repertoire/rating`, { pieceId, rating });
+  }
+
   getPieceNotes(pieceId: number) {
     return this.http.get(`${this.apiUrl}/repertoire/${pieceId}/notes`);
   }

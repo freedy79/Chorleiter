@@ -37,6 +37,7 @@ export class PieceDetailComponent implements OnInit {
   editState: { [id: number]: string } = {};
   userId: number | null = null;
   isAdmin = false;
+  canRate = false;
   pieceImage: string | null = null;
   fileLinks: (PieceLink & { isPdf: boolean; size?: number })[] = [];
   externalLinks: PieceLink[] = [];
@@ -59,6 +60,10 @@ export class PieceDetailComponent implements OnInit {
     });
     this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.auth.currentUser$.subscribe(u => {
+      const roles = u?.roles || [];
+      this.canRate = roles.includes('director') || roles.includes('choir_admin') || roles.includes('admin');
+    });
     this.loadLibraryItems();
   }
 
@@ -95,6 +100,15 @@ export class PieceDetailComponent implements OnInit {
       if (!this.piece) return;
       this.piece.choir_repertoire = this.piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
       this.piece.choir_repertoire.status = newStatus as any;
+    });
+  }
+
+  onRatingChange(newRating: number | null): void {
+    if (!this.piece) return;
+    this.apiService.updatePieceRating(this.piece.id, newRating).subscribe(() => {
+      if (!this.piece) return;
+      this.piece.choir_repertoire = this.piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
+      this.piece.choir_repertoire.rating = newRating ?? null;
     });
   }
 

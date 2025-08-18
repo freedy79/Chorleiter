@@ -8,7 +8,7 @@ exports.search = async (req, res) => {
   const likeOp = db.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
   const like = { [likeOp]: `%${q}%` };
 
-  const pieces = await db.piece.findAll({
+  let pieces = await db.piece.findAll({
     where: {
       [Op.or]: [
         { title: like },
@@ -19,6 +19,17 @@ exports.search = async (req, res) => {
     include: [{ model: db.composer, as: 'composer', attributes: ['name'] }],
     limit: 10
   });
+
+  pieces = pieces.map(p => p.get({ plain: true }));
+  if (pieces.length) {
+    const ratings = await db.choir_repertoire.findAll({
+      where: { choirId: req.activeChoirId, pieceId: pieces.map(p => p.id) },
+      attributes: ['pieceId', 'rating'],
+      raw: true
+    });
+    const ratingMap = new Map(ratings.map(r => [r.pieceId, r.rating]));
+    pieces = pieces.map(p => ({ ...p, choir_repertoire: { rating: ratingMap.get(p.id) || null } }));
+  }
 
   const events = await db.event.findAll({
     where: {
