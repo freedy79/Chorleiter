@@ -121,6 +121,7 @@ exports.signin = async (req, res) => {
       id: user.id,
       name: user.name,
       email: user.email,
+      voice: user.voice,
       roles: user.roles,
       accessToken: token,
       // Senden Sie die Liste aller Chöre und den aktuell aktiven

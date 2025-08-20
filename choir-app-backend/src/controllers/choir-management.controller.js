@@ -94,7 +94,7 @@ exports.getChoirMembers = async (req, res, next) => {
             include: [{
                 model: db.user,
                 as: 'users',
-                attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'shareWithChoir'],
+                attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir'],
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
@@ -115,6 +115,7 @@ exports.getChoirMembers = async (req, res, next) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                voice: user.voice,
                 membership: {
                     rolesInChoir: user.user_choir.rolesInChoir,
                     registrationStatus: user.user_choir.registrationStatus
