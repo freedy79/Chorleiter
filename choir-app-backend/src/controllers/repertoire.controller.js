@@ -79,7 +79,7 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, categoryIds, collectionId, collectionIds, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search } = req.query;
+    const { composerId, categoryId, categoryIds, collectionId, collectionIds, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search, license } = req.query;
     let parsedStatuses = [];
     if (status) {
         parsedStatuses = Array.isArray(status) ? status : String(status).split(',');
@@ -99,6 +99,11 @@ exports.findMyRepertoire = async (req, res) => {
         parsedCollectionIds = [collectionId];
     }
     parsedCollectionIds = parsedCollectionIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+
+    let parsedLicenses = [];
+    if (license) {
+        parsedLicenses = Array.isArray(license) ? license : String(license).split(',');
+    }
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 25;
     const offset = (pageNum - 1) * limitNum;
@@ -132,6 +137,7 @@ exports.findMyRepertoire = async (req, res) => {
             ...(parsedCategoryIds.length && { categoryId: { [Op.in]: parsedCategoryIds } }),
             ...(voicing && { voicing: { [Op.iLike]: `%${voicing}%` } }), // Case-insensitive search
             ...(key && { key }),
+            ...(parsedLicenses.length && { license: { [Op.in]: parsedLicenses } }),
         };
 
         if (search) {

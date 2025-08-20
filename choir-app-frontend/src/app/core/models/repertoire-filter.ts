@@ -22,5 +22,6 @@ export interface RepertoireFilter {
      */
     statuses?: ('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[];
     search?: string;
+    licenses?: string[];
   };
 }

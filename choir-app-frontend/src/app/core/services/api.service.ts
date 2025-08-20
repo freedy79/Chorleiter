@@ -106,7 +106,8 @@ export class ApiService {
     limit: number = 25,
     statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
-    search?: string
+    search?: string,
+    licenses?: string[]
   ): Observable<{ data: Piece[]; total: number }> {
     // composerId not yet supported by PieceService, pass as part of search/filter when implemented
     return this.pieceService.getMyRepertoire(
@@ -117,7 +118,8 @@ export class ApiService {
       limit,
       statuses,
       sortDir,
-      search
+      search,
+      licenses
     );
   }
 
@@ -164,7 +166,7 @@ export class ApiService {
    * Gets the master list of all pieces in the system, independent of any choir.
    * Useful for lookups when creating collections.
    */
-  getGlobalPieces(filters?: { composerId?: number; authorId?: number }): Observable<Piece[]> {
+  getGlobalPieces(filters?: { composerId?: number; authorId?: number; license?: string[] }): Observable<Piece[]> {
     return this.pieceService.getGlobalPieces(filters);
   }
 

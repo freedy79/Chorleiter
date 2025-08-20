@@ -24,6 +24,13 @@
         </mat-select>
       </mat-form-field>
       <mat-form-field appearance="outline">
+        <mat-label>Lizenz</mat-label>
+        <mat-select multiple [value]="filterByLicense$.value" (selectionChange)="onLicenseFilterChange($event.value)">
+          <mat-option *ngFor="let lic of licenseOptions" [value]="lic.type">{{lic.label}}</mat-option>
+        </mat-select>
+        <mat-hint *ngIf="filterByLicense$.value.length === 1">{{licenseHintMap[filterByLicense$.value[0]]}}</mat-hint>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
         <mat-label>Status</mat-label>
         <mat-select multiple [value]="status$.value" (selectionChange)="onStatusFilterChange($event.value)">
           <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
