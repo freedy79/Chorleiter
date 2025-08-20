@@ -113,8 +113,9 @@ exports.create = async (req, res) => {
 
 
 /**
- * @description Findet das letzte Event eines bestimmten Typs für den eingeloggten Chor.
- * Dies ist die korrigierte Funktion für das Dashboard.
+ * @description Findet das letzte bereits stattgefundene Event eines bestimmten Typs
+ * für den eingeloggten Chor. Zukünftige Termine werden ignoriert, damit das
+ * Dashboard nicht versehentlich kommende Ereignisse als "letzten" Termin anzeigt.
  */
 exports.findLast = async (req, res) => {
     const { type } = req.query;
@@ -123,10 +124,14 @@ exports.findLast = async (req, res) => {
         return res.status(400).send({ message: "Event type is required." });
     }
 
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
     const lastEvent = await Event.findOne({
             where: {
                 choirId: req.activeChoirId,
-                type: type.toUpperCase()
+                type: type.toUpperCase(),
+                date: { [Op.lt]: startOfToday }
             },
             order: [['date', 'DESC']],
             // --- DIE ANPASSUNG IST HIER ---
