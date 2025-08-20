@@ -5,7 +5,7 @@
   <ul>
     <li *ngFor="let p of results.pieces">
       <a [routerLink]="['/pieces', p.id]">{{ p.title }}</a>
-      <span *ngIf="p.choir_repertoire?.rating"> (Bewertung: {{ p.choir_repertoire.rating }})</span>
+      <span *ngIf="p.choir_repertoire?.rating"> (Bewertung: {{ p.choir_repertoire?.rating }})</span>
     </li>
   </ul>
 </section>
