@@ -21,12 +21,18 @@ export class PostListComponent implements OnInit {
   posts: Post[] = [];
   currentUserId: number | null = null;
   isChoirAdmin = false;
+  isSingerOnly = false;
   constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {
   }
 
   ngOnInit(): void {
     this.loadPosts();
-    this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
+    this.auth.currentUser$.subscribe(u => {
+      this.currentUserId = u?.id || null;
+      const roles = Array.isArray(u?.roles) ? u!.roles : [];
+      this.isSingerOnly = roles.includes('singer') &&
+        !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+    });
     this.api.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
   }
 
