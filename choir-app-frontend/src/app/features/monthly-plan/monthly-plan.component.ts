@@ -100,6 +100,11 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     return list.filter(u => this.isAvailable(u.id, date));
   }
 
+  membersByAvailability(date: string, status: string): UserInChoir[] {
+    const key = this.dateKey(date);
+    return this.members.filter(m => (this.availabilityMap[m.id]?.[key] || 'AVAILABLE') === status);
+  }
+
   private updateCounterPlan(): void {
     const dateMap = new Map<string, string>();
     for (const e of this.entries) {
