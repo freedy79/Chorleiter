@@ -10,11 +10,11 @@
     </mat-form-field>
   </div>
   <span class="spacer"></span>
-  <button mat-flat-button color="primary" (click)="openAddEventDialog()">
+  <button *ngIf="!isSingerOnly" mat-flat-button color="primary" (click)="openAddEventDialog()">
     <mat-icon>add</mat-icon>
     <span>Neues Ereignis</span>
   </button>
-  <button mat-stroked-button color="accent" (click)="openImportDialog()" style="margin-left:8px;">
+  <button *ngIf="!isSingerOnly" mat-stroked-button color="accent" (click)="openImportDialog()" style="margin-left:8px;">
     <mat-icon>upload_file</mat-icon>
     <span>Import</span>
   </button>
@@ -58,7 +58,7 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let ev" class="actions-cell">
-        <button mat-icon-button (click)="editEvent(ev); $event.stopPropagation()">
+        <button *ngIf="!isSingerOnly" mat-icon-button (click)="editEvent(ev); $event.stopPropagation()">
           <mat-icon>edit</mat-icon>
         </button>
         <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">

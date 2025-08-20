@@ -40,6 +40,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+  isSingerOnly = false;
   selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
@@ -76,10 +77,19 @@ export class EventListComponent implements OnInit, AfterViewInit {
       this.isAdmin = isAdmin;
       this.updateDisplayedColumns();
     });
+    this.authService.currentUser$.subscribe(user => {
+      const roles = Array.isArray(user?.roles) ? user!.roles : [];
+      this.isSingerOnly = roles.includes('singer') &&
+        !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+      this.updateDisplayedColumns();
+    });
   }
 
   private updateDisplayedColumns(): void {
-    const base = ['date', 'type', 'updatedAt', 'director', 'actions'];
+    const base = ['date', 'type', 'updatedAt', 'director'];
+    if (!this.isSingerOnly) {
+      base.push('actions');
+    }
     this.displayedColumns = this.isAdmin ? ['select', ...base] : base;
   }
 
