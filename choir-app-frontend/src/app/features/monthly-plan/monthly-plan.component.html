@@ -122,6 +122,15 @@
     <div>
       <h3>Meine Verfügbarkeiten</h3>
       <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
+      <div *ngIf="isChoirAdmin" class="member-availabilities">
+        <h3>Verfügbarkeiten aller Mitglieder</h3>
+        <div *ngFor="let ev of entries">
+          <h4>{{ ev.date | date:'EEE dd.MM.yyyy' }}</h4>
+          <p><strong>verfügbar:</strong> {{ membersByAvailability(ev.date, 'AVAILABLE').map(m => m.name).join(', ') || '—' }}</p>
+          <p><strong>nach Absprache:</strong> {{ membersByAvailability(ev.date, 'MAYBE').map(m => m.name).join(', ') || '—' }}</p>
+          <p><strong>nicht verfügbar:</strong> {{ membersByAvailability(ev.date, 'UNAVAILABLE').map(m => m.name).join(', ') || '—' }}</p>
+        </div>
+      </div>
     </div>
   </mat-tab>
 </mat-tab-group>
