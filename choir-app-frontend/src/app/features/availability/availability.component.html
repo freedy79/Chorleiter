@@ -1,0 +1,23 @@
+<div class="manual-inputs">
+  <mat-form-field appearance="fill">
+    <mat-label>Monat</mat-label>
+    <input matInput type="number" [(ngModel)]="selectedMonth" min="1" max="12" (change)="monthChanged()" />
+  </mat-form-field>
+  <mat-form-field appearance="fill">
+    <mat-label>Jahr</mat-label>
+    <input matInput type="number" [(ngModel)]="selectedYear" (change)="monthChanged()" />
+  </mat-form-field>
+</div>
+
+<div class="month-nav">
+  <button mat-button color="primary" (click)="previousMonth()">
+    <mat-icon>chevron_left</mat-icon>
+    {{ prevMonthLabel }}
+  </button>
+  <button mat-button color="primary" (click)="nextMonth()">
+    {{ nextMonthLabel }}
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+</div>
+
+<app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>

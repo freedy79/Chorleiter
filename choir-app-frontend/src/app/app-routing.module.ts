@@ -19,6 +19,7 @@ import { ManageChoirComponent } from '@features/choir-management/manage-choir/ma
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { EventListComponent } from '@features/events/event-list/event-list.component';
 import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.component';
+import { AvailabilityComponent } from '@features/availability/availability.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
@@ -124,6 +125,12 @@ export const routes: Routes = [
                 component: MyCalendarComponent,
                 canActivate: [AuthGuard],
                 data: { title: 'Meine Termine' }
+            },
+            {
+                path: 'availability',
+                component: AvailabilityComponent,
+                canActivate: [AuthGuard],
+                data: { title: 'Verfügbarkeiten' }
             },
             {
                 path: 'posts',
