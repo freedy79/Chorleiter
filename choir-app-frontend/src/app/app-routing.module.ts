@@ -30,6 +30,7 @@ import { DonationSuccessComponent } from '@features/donations/donation-success.c
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
 import { SearchResultsComponent } from './features/search-results/search-results.component';
 import { ChoirMembersComponent } from '@features/choir-members/choir-members.component';
+import { ParticipationComponent } from '@features/participation/participation.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -171,6 +172,12 @@ export const routes: Routes = [
                 component: ChoirMembersComponent,
                 canActivate: [AuthGuard],
                 data: { title: 'Chormitglieder' }
+            },
+            {
+                path: 'participation',
+                component: ParticipationComponent,
+                canActivate: [AuthGuard],
+                data: { title: 'Beteiligung' }
             },
             {
                 path: 'manage-choir',
