@@ -10,4 +10,6 @@ export interface StatsSummary {
   leastUsedPieces: PieceStat[];
   singableCount: number;
   rehearsalCount: number;
+  globalAvailable: boolean;
+  isGlobal: boolean;
 }

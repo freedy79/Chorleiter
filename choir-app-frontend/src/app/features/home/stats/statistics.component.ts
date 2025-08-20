@@ -26,21 +26,31 @@ export class StatisticsComponent implements OnInit {
   startDate?: Date;
   endDate?: Date;
   activeMonths?: number;
+  globalMode = false;
 
 
   constructor(private apiService: ApiService) {}
 
   ngOnInit(): void {
     this.loadStats();
-    this.loadRehearsalPieces();
   }
 
   loadStats(): void {
-    this.apiService.getStatistics(this.startDate, this.endDate, this.activeMonths)
+    this.apiService.getStatistics(this.startDate, this.endDate, this.activeMonths, this.globalMode)
       .subscribe(s => {
-      this.stats = s;
-      this.leastUsedPieces = s.leastUsedPieces;
-    });
+        this.stats = s;
+        this.leastUsedPieces = s.leastUsedPieces;
+        this.globalMode = s.isGlobal;
+        if (!this.globalMode) {
+          this.loadRehearsalPieces();
+        } else {
+          this.rehearsalDataSource.data = [];
+        }
+      });
+  }
+
+  onModeChange(): void {
+    this.loadStats();
   }
 
   private loadRehearsalPieces(): void {
