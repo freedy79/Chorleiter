@@ -2,7 +2,7 @@
   <h1 *ngIf="(activeChoir$ | async)?.name as name">
     Willkommen bei {{ name }}
   </h1>
-  <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neues Ereignis erstellen">
+  <button *ngIf="!(isSingerOnly$ | async)" mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neues Ereignis erstellen">
     <mat-icon>add</mat-icon>
   </button>
   <button mat-icon-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">

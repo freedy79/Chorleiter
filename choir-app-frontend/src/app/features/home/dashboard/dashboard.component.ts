@@ -49,6 +49,7 @@ export class DashboardComponent implements OnInit {
   borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
+  isSingerOnly$: Observable<boolean>;
 
   constructor(
     private apiService: ApiService,
@@ -60,6 +61,13 @@ export class DashboardComponent implements OnInit {
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
     this.isAdmin$ = this.authService.isAdmin$;
+    this.isSingerOnly$ = this.authService.currentUser$.pipe(
+      map(user => {
+        const roles = Array.isArray(user?.roles) ? user.roles : [];
+        return roles.includes('singer') &&
+          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+      })
+    );
   }
 
   ngOnInit(): void {
