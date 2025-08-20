@@ -68,6 +68,22 @@ export class PieceDialogComponent implements OnInit {
     isDragOver = false;
     removedLinkPaths: string[] = [];
 
+    licenseOptions = [
+        { type: 'CC0', label: 'CC0' },
+        { type: 'CC-BY', label: 'CC BY' },
+        { type: 'CC-BY-SA', label: 'CC BY-SA' },
+        { type: 'CC-BY-NC', label: 'CC BY-NC' },
+        { type: 'CC-BY-ND', label: 'CC BY-ND' }
+    ];
+    licenseHintMap: Record<string, string> = {
+        'CC0': 'Keine Rechte vorbehalten',
+        'CC-BY': 'Namensnennung erforderlich',
+        'CC-BY-SA': 'Weitergabe unter gleichen Bedingungen',
+        'CC-BY-NC': 'Keine kommerzielle Nutzung',
+        'CC-BY-ND': 'Keine Bearbeitungen'
+    };
+    licenseHint: string | null = null;
+
     composerCtrl = new FormControl<string | Composer>('');
     filteredComposers$!: Observable<(Composer & { isNew?: boolean })[]>;
     allComposers: Composer[] = [];
@@ -158,6 +174,7 @@ export class PieceDialogComponent implements OnInit {
                 .getPieceById(this.data.pieceId)
                 .subscribe((piece) => {
                     this.populateForm(piece);
+                    this.onLicenseChange(this.pieceForm.get('license')?.value);
                 });
         }
     }
@@ -434,6 +451,7 @@ export class PieceDialogComponent implements OnInit {
             lyrics: piece.lyrics,
             lyricsSource: piece.lyricsSource,
         });
+        this.onLicenseChange(piece.license || '');
 
         if (piece.composer) {
             const found = this.allComposers.find(c => c.id === piece.composer!.id);
@@ -460,6 +478,10 @@ export class PieceDialogComponent implements OnInit {
                 })
             );
         });
+    }
+
+    onLicenseChange(license: string): void {
+        this.licenseHint = this.licenseHintMap[license] || null;
     }
 
     onCancel(): void {

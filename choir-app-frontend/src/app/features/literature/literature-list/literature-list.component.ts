@@ -38,6 +38,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   private refresh$ = new BehaviorSubject<void>(undefined);
   public filterByCollectionIds$ = new BehaviorSubject<number[]>([]);
   public filterByCategoryIds$ = new BehaviorSubject<number[]>([]);
+  public filterByLicense$ = new BehaviorSubject<string[]>([]);
   public status$ = new BehaviorSubject<('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[]>([]);
   public searchControl = new FormControl('');
   public filtersExpanded = false;
@@ -46,6 +47,20 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
   // --- Observables for filter display ---
   public collections$!: Observable<Collection[]>;
   public categories$!: Observable<Category[]>;
+  public licenseOptions = [
+    { type: 'CC0', label: 'CC0' },
+    { type: 'CC-BY', label: 'CC BY' },
+    { type: 'CC-BY-SA', label: 'CC BY-SA' },
+    { type: 'CC-BY-NC', label: 'CC BY-NC' },
+    { type: 'CC-BY-ND', label: 'CC BY-ND' }
+  ];
+  public licenseHintMap: Record<string, string> = {
+    'CC0': 'Keine Rechte vorbehalten',
+    'CC-BY': 'Namensnennung erforderlich',
+    'CC-BY-SA': 'Weitergabe unter gleichen Bedingungen',
+    'CC-BY-NC': 'Keine kommerzielle Nutzung',
+    'CC-BY-ND': 'Keine Bearbeitungen'
+  };
 
   // --- Table, Paginator, and Sort Logic ---
   public displayedColumns: string[] = [];
@@ -140,6 +155,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         } else if (s.status !== undefined && s.status !== null) {
           this.status$.next([s.status]);
         }
+        if (s.licenses !== undefined) {
+          this.filterByLicense$.next(s.licenses);
+        }
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
         if (
           (s.collectionIds && s.collectionIds.length) ||
@@ -147,7 +165,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           (s.categoryIds && s.categoryIds.length) ||
           (s as any).categoryId ||
           (Array.isArray(s.statuses) && s.statuses.length) ||
-          s.status
+          s.status ||
+          (s.licenses && s.licenses.length)
         ) {
           this.filtersExpanded = true;
         }
@@ -173,7 +192,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.status$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.status$, this.filterByLicense$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -202,7 +221,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
             this._paginator.pageSize,
             statuses,
             dir,
-            this.searchControl.value || undefined
+            this.searchControl.value || undefined,
+            this.filterByLicense$.value.length ? this.filterByLicense$.value : undefined
           ).pipe(
             catchError((err) => {
               const msg = err.error?.message || 'Could not load repertoire.';
@@ -238,6 +258,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       this.filterByCollectionIds$.value.join(','),
       this.filterByCategoryIds$.value.join(','),
       this.status$.value.join(','),
+      this.filterByLicense$.value.join(','),
       this.searchControl.value,
       this._sort.active,
       this._sort.direction
@@ -329,10 +350,20 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     this.refresh$.next();
   }
 
+  onLicenseFilterChange(licenses: string[]): void {
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.filterByLicense$.next(licenses);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
   clearFilters(): void {
     this.filterByCollectionIds$.next([]);
     this.filterByCategoryIds$.next([]);
     this.status$.next([]);
+    this.filterByLicense$.next([]);
     this.searchControl.setValue('', { emitEvent: false });
     this.filtersExpanded = false;
     this.pageCache.clear();
@@ -348,13 +379,15 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       collectionIds: this.filterByCollectionIds$.value,
       categoryIds: this.filterByCategoryIds$.value,
       statuses: this.status$.value,
-      search: this.searchControl.value
+      search: this.searchControl.value,
+      licenses: this.filterByLicense$.value
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
     this.filtersExpanded = !!(
       (state.collectionIds && state.collectionIds.length) ||
       (state.categoryIds && state.categoryIds.length) ||
-      (state.statuses && state.statuses.length)
+      (state.statuses && state.statuses.length) ||
+      (state.licenses && state.licenses.length)
     );
   }
 
@@ -504,6 +537,11 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     } else if (preset.data.status !== undefined && preset.data.status !== null) {
       this.status$.next([preset.data.status]);
     }
+    if (Array.isArray((preset.data as any).licenses)) {
+      this.filterByLicense$.next((preset.data as any).licenses);
+    } else {
+      this.filterByLicense$.next([]);
+    }
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
     const singleId = (preset.data as any).categoryId;
     this.filtersExpanded = !!(
@@ -512,7 +550,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       (preset.data.categoryIds && preset.data.categoryIds.length) ||
       singleId ||
       (Array.isArray(preset.data.statuses) && preset.data.statuses.length) ||
-      preset.data.status
+      preset.data.status ||
+      ((preset.data as any).licenses && (preset.data as any).licenses.length)
     );
     if (this._paginator) {
       this._paginator.firstPage();
@@ -532,7 +571,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         collectionIds: this.filterByCollectionIds$.value,
         categoryIds: this.filterByCategoryIds$.value,
         statuses: this.status$.value,
-        search: this.searchControl.value
+        search: this.searchControl.value,
+        licenses: this.filterByLicense$.value
       };
       this.apiService.saveRepertoireFilter({ name: result.name, data, visibility: result.visibility }).subscribe(() => this.loadPresets());
     });

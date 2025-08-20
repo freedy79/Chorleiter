@@ -3,6 +3,7 @@ const Piece = db.piece;
 const Composer = db.composer;
 const Category = db.category;
 const Author = db.author;
+const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs/promises');
 const fileService = require('../services/file.service');
@@ -93,10 +94,14 @@ exports.create = async (req, res) => {
  * when adding pieces to a collection.
  */
 exports.findAll = async (req, res) => {
-    const { composerId, authorId } = req.query;
+    const { composerId, authorId, license } = req.query;
     const where = {};
     if (composerId) where.composerId = composerId;
     if (authorId) where.authorId = authorId;
+    if (license) {
+        const licenses = Array.isArray(license) ? license : String(license).split(',');
+        where.license = { [Op.in]: licenses };
+    }
 
     const pieces = await base.service.findAll({
             where,

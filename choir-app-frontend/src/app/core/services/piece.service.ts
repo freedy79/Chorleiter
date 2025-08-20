@@ -32,7 +32,8 @@ export class PieceService {
     limit = 25,
     statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
-    search?: string
+    search?: string,
+    licenses?: string[]
   ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
     if (categoryIds && categoryIds.length > 0) {
@@ -48,6 +49,7 @@ export class PieceService {
     params = params.set('sortDir', sortDir || 'ASC');
     if (statuses && statuses.length) params = params.set('status', statuses.join(','));
     if (search) params = params.set('search', search);
+    if (licenses && licenses.length) params = params.set('license', licenses.join(','));
 
     return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
   }
@@ -80,13 +82,16 @@ export class PieceService {
     return this.http.delete(`${this.apiUrl}/repertoire/notes/${noteId}`);
   }
 
-  getGlobalPieces(filters?: { composerId?: number; authorId?: number }): Observable<Piece[]> {
+  getGlobalPieces(filters?: { composerId?: number; authorId?: number; license?: string[] }): Observable<Piece[]> {
     let params = new HttpParams();
     if (filters?.composerId) {
       params = params.set('composerId', filters.composerId.toString());
     }
     if (filters?.authorId) {
       params = params.set('authorId', filters.authorId.toString());
+    }
+    if (filters?.license && filters.license.length) {
+      params = params.set('license', filters.license.join(','));
     }
     return this.http.get<Piece[]>(`${this.apiUrl}/pieces`, { params });
   }

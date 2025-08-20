@@ -68,6 +68,15 @@
                 <input matInput formControlName="origin">
               </mat-form-field>
 
+              <mat-form-field appearance="outline">
+                <mat-label>Lizenz</mat-label>
+                <mat-select formControlName="license" (selectionChange)="onLicenseChange($event.value)">
+                  <mat-option value=""></mat-option>
+                  <mat-option *ngFor="let lic of licenseOptions" [value]="lic.type">{{lic.label}}</mat-option>
+                </mat-select>
+                <mat-hint *ngIf="licenseHint">{{licenseHint}}</mat-hint>
+              </mat-form-field>
+
             </div>
           </ng-container>
 
