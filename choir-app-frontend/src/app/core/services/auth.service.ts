@@ -160,8 +160,16 @@ export class AuthService {
     );
   }
 
-  setCurrentUser(user: User) {
+  setCurrentUser(user: User): void {
+    console.debug('AuthService.setCurrentUser called', user);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
+    this.activeChoir$.next(user.activeChoir || null);
+    const choirs = user.availableChoirs || [];
+    console.debug('AuthService.setCurrentUser updated choirs', {
+      active: user.activeChoir,
+      available: choirs
+    });
+    this.availableChoirs$.next(choirs);
   }
 }
