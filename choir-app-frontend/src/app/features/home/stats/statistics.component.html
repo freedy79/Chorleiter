@@ -23,9 +23,13 @@
     <button mat-raised-button color="primary" (click)="loadStats()">Statistik laden</button>
   </div>
 
+  <div class="mode-toggle" *ngIf="stats?.globalAvailable">
+    <mat-slide-toggle [(ngModel)]="globalMode" (change)="onModeChange()">Global</mat-slide-toggle>
+  </div>
+
   <ng-container *ngIf="stats">
     <mat-card>
-      <h3>Top 3 Gottesdienst-Stücke</h3>
+      <h3>Top 3 Gottesdienst-Stücke{{ globalMode ? ' (global)' : '' }}</h3>
       <ol>
         <li *ngFor="let item of stats.topServicePieces">
           <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
@@ -34,7 +38,7 @@
     </mat-card>
 
     <mat-card>
-      <h3>Meist geprobte Stücke</h3>
+      <h3>Meist geprobte Stücke{{ globalMode ? ' (global)' : '' }}</h3>
       <ol>
         <li *ngFor="let item of stats.topRehearsalPieces">
           <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
@@ -57,7 +61,7 @@
       <p>Probe: {{ stats.rehearsalCount }}</p>
     </mat-card>
 
-    <mat-card class="table-card">
+    <mat-card class="table-card" *ngIf="!globalMode">
       <mat-card-header>
         <mat-card-title>Probe</mat-card-title>
       </mat-card-header>

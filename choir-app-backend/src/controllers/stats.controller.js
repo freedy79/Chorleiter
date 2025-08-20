@@ -3,7 +3,8 @@ const { Sequelize, Op } = require("sequelize");
 
 exports.overview = async (req, res) => {
     const choirId = req.activeChoirId;
-    const { startDate, endDate, activeMonths } = req.query;
+    const { startDate, endDate, activeMonths, global } = req.query;
+    const requestedGlobal = String(global).toLowerCase() === 'true';
     const dateWhere = {};
     if (startDate || endDate) {
         dateWhere.date = {};
@@ -20,6 +21,10 @@ exports.overview = async (req, res) => {
         activeThreshold.setMonth(activeThreshold.getMonth() - Number(activeMonths));
     }
     try {
+        const choirCount = await db.choir.count();
+        const allowGlobal = choirCount > 3;
+        const useGlobal = requestedGlobal && allowGlobal;
+        const choirFilter = useGlobal ? {} : { choirId };
         // Top pieces in services
         const topServiceQuery = {
             attributes: [
@@ -31,7 +36,7 @@ exports.overview = async (req, res) => {
             include: [{
                 model: db.event,
                 attributes: [],
-                where: { choirId, type: 'SERVICE', ...dateWhere },
+                where: { ...choirFilter, type: 'SERVICE', ...dateWhere },
                 through: { attributes: [] }
             }],
             group: ['piece.id'],
@@ -59,7 +64,7 @@ exports.overview = async (req, res) => {
             include: [{
                 model: db.event,
                 attributes: [],
-                where: { choirId, type: 'REHEARSAL', ...dateWhere },
+                where: { ...choirFilter, type: 'REHEARSAL', ...dateWhere },
                 through: { attributes: [] }
             }],
             group: ['piece.id'],
@@ -89,7 +94,7 @@ exports.overview = async (req, res) => {
             include: [{
                 model: db.event,
                 attributes: [],
-                where: { choirId },
+                where: { ...choirFilter },
                 through: { attributes: [] }
             }],
             group: ['piece.id'],
@@ -111,12 +116,12 @@ exports.overview = async (req, res) => {
 
         // Count singable pieces
         const singableCount = await db.choir_repertoire.count({
-            where: { choirId, status: 'CAN_BE_SUNG' }
+            where: { ...choirFilter, status: 'CAN_BE_SUNG' }
         });
 
         // Count pieces currently in rehearsal
         const rehearsalCount = await db.choir_repertoire.count({
-            where: { choirId, status: 'IN_REHEARSAL' }
+            where: { ...choirFilter, status: 'IN_REHEARSAL' }
         });
 
         res.status(200).send({
@@ -124,7 +129,9 @@ exports.overview = async (req, res) => {
             topRehearsalPieces,
             leastUsedPieces,
             singableCount,
-            rehearsalCount
+            rehearsalCount,
+            globalAvailable: allowGlobal,
+            isGlobal: useGlobal
         });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Error generating statistics.' });

@@ -118,7 +118,7 @@ export class AdminService {
     return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
   }
 
-  getStatistics(startDate?: Date | string, endDate?: Date | string, activeMonths?: number): Observable<StatsSummary> {
+  getStatistics(startDate?: Date | string, endDate?: Date | string, activeMonths?: number, global?: boolean): Observable<StatsSummary> {
     const params: any = {};
     if (startDate) {
       params.startDate = startDate instanceof Date ? startDate.toISOString() : startDate;
@@ -128,6 +128,9 @@ export class AdminService {
     }
     if (activeMonths !== undefined) {
       params.activeMonths = activeMonths;
+    }
+    if (global) {
+      params.global = true;
     }
     return this.http.get<StatsSummary>(`${this.apiUrl}/stats`, { params });
   }
