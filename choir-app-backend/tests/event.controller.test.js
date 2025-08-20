@@ -75,6 +75,11 @@ const controller = require('../src/controllers/event.controller');
     const ids = res.data.map(e => e.id);
     assert.ok(ids.includes(futureId));
     assert.ok(!ids.includes(res.data.find(e => e.id !== futureId)?.id || false));
+
+    // --- Last event tests ---
+    await controller.findLast({ ...baseReq, query: { type: 'SERVICE' } }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.id, updateId);
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
