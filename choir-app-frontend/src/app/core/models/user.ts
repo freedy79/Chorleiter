@@ -23,6 +23,7 @@ export interface User {
   street?: string;
   postalCode?: string;
   city?: string;
+  voice?: string;
   shareWithChoir?: boolean;
 
 

@@ -45,6 +45,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: true
       },
+      voice: {
+        type: DataTypes.ENUM('Sopran I', 'Sopran II', 'Alt I', 'Alt II', 'Tenor I', 'Tenor II', 'Bass I', 'Bass II'),
+        allowNull: true
+      },
       shareWithChoir: {
         type: DataTypes.BOOLEAN,
         allowNull: false,

@@ -21,6 +21,20 @@
       <mat-label>Ort</mat-label>
       <input matInput formControlName="city">
     </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Stimmlage</mat-label>
+      <mat-select formControlName="voice">
+        <mat-option value="">-</mat-option>
+        <mat-option value="Sopran I">Sopran I</mat-option>
+        <mat-option value="Sopran II">Sopran II</mat-option>
+        <mat-option value="Alt I">Alt I</mat-option>
+        <mat-option value="Alt II">Alt II</mat-option>
+        <mat-option value="Tenor I">Tenor I</mat-option>
+        <mat-option value="Tenor II">Tenor II</mat-option>
+        <mat-option value="Bass I">Bass I</mat-option>
+        <mat-option value="Bass II">Bass II</mat-option>
+      </mat-select>
+    </mat-form-field>
     <mat-checkbox formControlName="shareWithChoir">Daten für Chorleiter freigeben</mat-checkbox>
     <mat-form-field appearance="outline">
       <mat-label>Passwort</mat-label>

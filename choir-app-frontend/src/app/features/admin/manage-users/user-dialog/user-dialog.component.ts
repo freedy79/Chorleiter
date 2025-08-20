@@ -28,6 +28,7 @@ export class UserDialogComponent {
       street: [data?.street || ''],
       postalCode: [data?.postalCode || ''],
       city: [data?.city || ''],
+      voice: [data?.voice || ''],
       shareWithChoir: [data?.shareWithChoir || false],
       roles: [data?.roles || ['director'], Validators.required],
       password: ['', data ? [] : [Validators.required]]

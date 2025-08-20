@@ -48,6 +48,7 @@ export class ProfileComponent implements OnInit {
       street: [''],
       postalCode: [''],
       city: [''],
+      voice: [''],
       shareWithChoir: [false],
       roles: [{ value: [], disabled: true }],
       passwords: this.fb.group({
@@ -69,6 +70,7 @@ export class ProfileComponent implements OnInit {
           street: user.street || '',
           postalCode: user.postalCode || '',
           city: user.city || '',
+          voice: user.voice || '',
           shareWithChoir: !!user.shareWithChoir,
           roles: user.roles || []
         });
@@ -90,12 +92,13 @@ export class ProfileComponent implements OnInit {
     }
 
     const formValue = this.profileForm.value;
-    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
       name: formValue.name,
       email: formValue.email,
       street: formValue.street,
       postalCode: formValue.postalCode,
       city: formValue.city,
+      voice: formValue.voice,
       shareWithChoir: formValue.shareWithChoir
     };
 

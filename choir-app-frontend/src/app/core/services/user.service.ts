@@ -14,7 +14,7 @@ export class UserService {
     return this.http.get<User>(`${this.apiUrl}/users/me`);
   }
 
-  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
+  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
     return this.http.put(`${this.apiUrl}/users/me`, profileData);
   }
 
