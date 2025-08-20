@@ -10,7 +10,12 @@
     </mat-step>
     <mat-step>
       <ng-template matStepLabel>Rollen</ng-template>
-      <p>Je nachdem in welcher Rolle du den Chorleiter benutzt, siehst du unterschiedliche Menüpunkte und kannst Funktionen nutzen. In der Rolle <strong>Chorleiter</strong> verwaltest du das Repertoire und kannst Ereignisse einsehen und anlegen. Als <strong>Choradministrator</strong> verwaltest du zusätzlich die Sammlungen und die Benutzer des Chores, also besitzt du fast alle Rechte au&szlig;erhalb des musikalischen Bereichs.</p>
+      <ng-container *ngIf="isSingerOnly$ | async; else otherRoles">
+        <p>Du nutzt den Chorleiter als <strong>Sänger</strong>. Dein Chorleiter kann dir je nach Bedarf verschiedene Bereiche freischalten.</p>
+      </ng-container>
+      <ng-template #otherRoles>
+        <p>Je nachdem in welcher Rolle du den Chorleiter benutzt, siehst du unterschiedliche Menüpunkte und kannst Funktionen nutzen. In der Rolle <strong>Chorleiter</strong> verwaltest du das Repertoire und kannst Ereignisse einsehen und anlegen. Als <strong>Choradministrator</strong> verwaltest du zusätzlich die Sammlungen und die Benutzer des Chores, also besitzt du fast alle Rechte au&szlig;erhalb des musikalischen Bereichs.</p>
+      </ng-template>
       <div>
         <button mat-button matStepperPrevious>Zur&uuml;ck</button>
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>
@@ -18,14 +23,36 @@
     </mat-step>
     <mat-step>
       <ng-template matStepLabel>Navigation</ng-template>
-      <p>Im linken Men&uuml; findest du Dashboard, Ereignisse, Statistik, Mein Chor, Repertoire und Sammlungen.</p>
-      <p>Dort gelangst du zu allen wichtigen Funktionen der Anwendung. Die wichtigsten Funktionen sind die Ereignisse, um Daten zu Gottesdiensten und Proben einzugeben.</p>
+      <ng-container *ngIf="isSingerOnly$ | async; else otherNavigation">
+        <p>Im linken Men&uuml; findest du folgende Bereiche:</p>
+        <ul>
+          <li *ngIf="menuVisible('dashboard') | async">Dashboard</li>
+          <li *ngIf="menuVisible('dienstplan') | async">Dienstplan</li>
+          <li *ngIf="menuVisible('termine') | async">Meine Termine</li>
+          <li *ngIf="menuVisible('posts') | async">Beiträge</li>
+          <li *ngIf="menuVisible('repertoire') | async">Repertoire</li>
+          <li *ngIf="menuVisible('collections') | async">Sammlungen</li>
+          <li *ngIf="menuVisible('library') | async">Bibliothek</li>
+        </ul>
+      </ng-container>
+      <ng-template #otherNavigation>
+        <p>Im linken Men&uuml; findest du Dashboard, Ereignisse, Statistik, Mein Chor, Repertoire und Sammlungen.</p>
+        <p>Dort gelangst du zu allen wichtigen Funktionen der Anwendung. Die wichtigsten Funktionen sind die Ereignisse, um Daten zu Gottesdiensten und Proben einzugeben.</p>
+      </ng-template>
       <div>
         <button mat-button matStepperPrevious>Zur&uuml;ck</button>
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>
       </div>
     </mat-step>
-    <mat-step>
+    <mat-step *ngIf="(isSingerOnly$ | async) && (menuVisible('termine') | async)">
+      <ng-template matStepLabel>Kalender</ng-template>
+      <p>Unter &bdquo;Meine Termine&ldquo; kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
+      <div>
+        <button mat-button matStepperPrevious>Zur&uuml;ck</button>
+        <button mat-flat-button color="primary" matStepperNext>Weiter</button>
+      </div>
+    </mat-step>
+    <mat-step *ngIf="!(isSingerOnly$ | async)">
       <ng-template matStepLabel>Kalender</ng-template>
       <p>Unter &bdquo;Meine Termine&ldquo; kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
       <div>
