@@ -23,6 +23,7 @@ describe('MainLayoutComponent', () => {
       isAdmin$: of(false),
       currentUser$: new BehaviorSubject<any>({ roles: ['singer'] }),
       activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false } } }),
+      availableChoirs$: of([]),
       setCurrentUser: () => {},
       logout: () => {}
     };
