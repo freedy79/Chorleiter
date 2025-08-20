@@ -53,4 +53,10 @@ function requireLibrarian(req, res, next) {
     }
     return res.status(403).send({ message: 'Require Librarian Role!' });
 }
-module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian };
+function requireDirectorOrHigher(req, res, next) {
+    if (['director', 'choir_admin', 'admin'].some(r => req.userRoles.includes(r))) {
+        return next();
+    }
+    return res.status(403).send({ message: 'Require Director Role!' });
+}
+module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher };

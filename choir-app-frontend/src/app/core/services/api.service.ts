@@ -139,6 +139,10 @@ export class ApiService {
     return this.pieceService.updatePieceNotes(pieceId, notes);
   }
 
+  updatePieceRating(pieceId: number, rating: number | null): Observable<any> {
+    return this.pieceService.updatePieceRating(pieceId, rating);
+  }
+
   getPieceNotes(pieceId: number) {
     return this.pieceService.getPieceNotes(pieceId);
   }

@@ -69,6 +69,14 @@
     </mat-select>
   </p>
 
+  <p>
+    <strong>Bewertung:</strong>
+    <mat-select [value]="piece.choir_repertoire?.rating" (selectionChange)="onRatingChange($event.value)" [disabled]="!canRate">
+      <mat-option [value]="null">-</mat-option>
+      <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
+    </mat-select>
+  </p>
+
   <h3>Notizen</h3>
   <div class="note" *ngFor="let n of piece.notes">
     <mat-card>
