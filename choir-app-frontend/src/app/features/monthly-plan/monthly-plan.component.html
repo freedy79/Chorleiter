@@ -126,9 +126,9 @@
         <h3>Verfügbarkeiten aller Mitglieder</h3>
         <div *ngFor="let ev of entries">
           <h4>{{ ev.date | date:'EEE dd.MM.yyyy' }}</h4>
-          <p><strong>verfügbar:</strong> {{ membersByAvailability(ev.date, 'AVAILABLE').map(m => m.name).join(', ') || '—' }}</p>
-          <p><strong>nach Absprache:</strong> {{ membersByAvailability(ev.date, 'MAYBE').map(m => m.name).join(', ') || '—' }}</p>
-          <p><strong>nicht verfügbar:</strong> {{ membersByAvailability(ev.date, 'UNAVAILABLE').map(m => m.name).join(', ') || '—' }}</p>
+          <p><strong>verfügbar:</strong> {{ memberNamesByAvailability(ev.date, 'AVAILABLE') }}</p>
+          <p><strong>nach Absprache:</strong> {{ memberNamesByAvailability(ev.date, 'MAYBE') }}</p>
+          <p><strong>nicht verfügbar:</strong> {{ memberNamesByAvailability(ev.date, 'UNAVAILABLE') }}</p>
         </div>
       </div>
     </div>
