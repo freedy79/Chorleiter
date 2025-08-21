@@ -1,7 +1,7 @@
 <div class="form-container">
   <div class="header-actions">
     <button
-      *ngIf="isEditMode && isAdmin"
+      *ngIf="isEditMode && (isAdmin || isChoirAdmin)"
       mat-stroked-button
       color="accent"
       (click)="openImportDialog()">
