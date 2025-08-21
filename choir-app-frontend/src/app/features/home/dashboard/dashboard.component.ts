@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, tap, take } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
@@ -223,6 +223,10 @@ export class DashboardComponent implements OnInit {
 
   onToggleMine(): void {
     this.refresh$.next();
+  }
+
+  openLatestPost(post: Post): void {
+    this.router.navigate(['/posts'], { fragment: `post-${post.id}` });
   }
 
 }

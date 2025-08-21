@@ -178,6 +178,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
   }
 
   openCollection(collection: Collection): void {
+    if (!this.isChoirAdmin && !this.isAdmin) { return; }
     const page = this.paginator ? this.paginator.pageIndex : 0;
     this.navState.saveState(this.stateKey, { page, selectedId: collection.id });
     // Create an extra history entry so the back button returns to this list with state

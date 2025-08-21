@@ -15,8 +15,8 @@ import {
     FormControl,
 } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, of } from 'rxjs';
-import { map, startWith, switchMap, tap } from 'rxjs/operators';
+import { Observable, of, combineLatest } from 'rxjs';
+import { map, startWith, switchMap } from 'rxjs/operators';
 import {
     MatAutocompleteModule,
     MatAutocompleteSelectedEvent,
@@ -76,6 +76,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     coverFile: File | null = null;
     isDragOver = false;
     isAdmin = false;
+    isChoirAdmin = false;
     readonly addNewPieceId = -1;
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
 
@@ -134,7 +135,14 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
-        this.authService.isAdmin$.subscribe(v => (this.isAdmin = v));
+        combineLatest([this.authService.isAdmin$, this.apiService.checkChoirAdminStatus()]).subscribe(([isAdmin, s]) => {
+            this.isAdmin = isAdmin;
+            this.isChoirAdmin = s.isChoirAdmin;
+            if (!this.isAdmin && !this.isChoirAdmin) {
+                this.router.navigate(['/collections']);
+                this.snackBar.open('Keine Berechtigung Sammlungen zu bearbeiten.', 'Schließen');
+            }
+        });
         this.apiService.getPublishers().subscribe(list => {
             this.publishers = list;
             this.setupPublisherAutocomplete();

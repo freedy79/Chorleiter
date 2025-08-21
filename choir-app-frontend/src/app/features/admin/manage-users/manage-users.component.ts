@@ -102,7 +102,7 @@ export class ManageUsersComponent implements OnInit {
     this.applyFilter(value);
   }
 
-  onRolesChange(user: User, roles: ('director' | 'choir_admin' | 'admin' | 'librarian')[]): void {
+  onRolesChange(user: User, roles: ('director' | 'choir_admin' | 'admin' | 'librarian' | 'singer')[]): void {
     this.api.updateUser(user.id, { roles }).subscribe(() => {
       user.roles = roles;
       this.snack.open('Rollen aktualisiert', 'OK', { duration: 3000 });

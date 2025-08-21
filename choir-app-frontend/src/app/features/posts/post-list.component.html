@@ -4,7 +4,7 @@
 
 <ng-container *ngIf="posts.length; else noPosts">
   <div class="post-list">
-    <mat-card *ngFor="let p of posts" class="post">
+    <mat-card *ngFor="let p of posts" class="post" id="post-{{ p.id }}">
       <mat-card-header>
         <mat-card-title>{{ p.title }}</mat-card-title>
         <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</mat-card-subtitle>
