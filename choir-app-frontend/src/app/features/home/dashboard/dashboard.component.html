@@ -18,7 +18,12 @@
   </app-event-card>
 </div>
 
-<div class="latest-post" *ngIf="latestPost$ | async as post">
+<div
+  class="latest-post"
+  *ngIf="latestPost$ | async as post"
+  (click)="openLatestPost(post)"
+  tabindex="0"
+  role="link">
   <h2>Neuster Beitrag</h2>
   <h3>{{ post.title }}</h3>
   <p>{{ post.text }}</p>
