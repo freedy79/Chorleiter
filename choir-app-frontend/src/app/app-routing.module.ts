@@ -14,6 +14,7 @@ import { ImprintComponent } from '@features/legal/imprint/imprint.component';
 import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
 import { AdminGuard } from '@core/guards/admin-guard';
 import { LoginGuard } from '@core/guards/login.guard';
+import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
@@ -99,13 +100,13 @@ export const routes: Routes = [
             {
                 path: 'collections/new',
                 component: CollectionEditComponent,
-                canActivate: [AuthGuard],
+                canActivate: [AuthGuard, ChoirAdminGuard],
                 data: { title: 'Neue Sammlung' },
             },
             {
                 path: 'collections/edit/:id',
                 component: CollectionEditComponent,
-                canActivate: [AuthGuard],
+                canActivate: [AuthGuard, ChoirAdminGuard],
                 data: { title: 'Sammlung bearbeiten' },
             },
             {
