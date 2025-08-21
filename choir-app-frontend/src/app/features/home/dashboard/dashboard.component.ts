@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map, switchMap, tap, take } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
@@ -57,7 +57,8 @@ export class DashboardComponent implements OnInit {
     private dialog: MatDialog, // Zum Öffnen von Dialogen
     private snackBar: MatSnackBar, // Zum Anzeigen von Benachrichtigungen
     private help: HelpService,
-    private prefs: UserPreferencesService
+    private prefs: UserPreferencesService,
+    private router: Router
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -193,6 +194,10 @@ export class DashboardComponent implements OnInit {
 
   onToggleMine(): void {
     this.refresh$.next();
+  }
+
+  openLatestPost(post: Post): void {
+    this.router.navigate(['/posts'], { fragment: `post-${post.id}` });
   }
 
 }

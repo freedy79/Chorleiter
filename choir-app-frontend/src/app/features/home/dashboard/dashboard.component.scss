@@ -27,4 +27,13 @@ mat-card-content h3 {
   color: #999;
 }
 
-.latest-post{margin-top:1rem;}
+.latest-post {
+  margin-top: 1rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #f5f5f5;
+  }
+}

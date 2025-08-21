@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, ActivatedRoute } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -22,7 +22,13 @@ export class PostListComponent implements OnInit {
   currentUserId: number | null = null;
   isChoirAdmin = false;
   isSingerOnly = false;
-  constructor(private api: ApiService, private auth: AuthService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+  constructor(
+    private api: ApiService,
+    private auth: AuthService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private route: ActivatedRoute
+  ) {
   }
 
   ngOnInit(): void {
@@ -37,7 +43,13 @@ export class PostListComponent implements OnInit {
   }
 
   loadPosts(): void {
-    this.api.getPosts().subscribe(p => this.posts = p);
+    this.api.getPosts().subscribe(p => {
+      this.posts = p;
+      const fragment = this.route.snapshot.fragment;
+      if (fragment) {
+        setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth' }), 0);
+      }
+    });
   }
 
   canEdit(post: Post): boolean {
