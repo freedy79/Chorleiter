@@ -153,6 +153,35 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  openEvent(ev: Event): void {
+    this.isSingerOnly$.pipe(take(1)).subscribe(isSinger => {
+      if (isSinger) {
+        const d = new Date(ev.date);
+        this.router.navigate(['/availability'], {
+          queryParams: { year: d.getFullYear(), month: d.getMonth() + 1 }
+        });
+      } else {
+        this.apiService.getEventById(ev.id).subscribe(fullEvent => {
+          const dialogRef = this.dialog.open(EventDialogComponent, {
+            width: '600px',
+            data: { event: fullEvent }
+          });
+          dialogRef.afterClosed().subscribe(result => {
+            if (result && result.id) {
+              this.apiService.updateEvent(result.id, result).subscribe({
+                next: () => {
+                  this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000, verticalPosition: 'top' });
+                  this.refresh$.next();
+                },
+                error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000, verticalPosition: 'top' })
+              });
+            }
+          });
+        });
+      }
+    });
+  }
+
 
   approvePieceChange(change: PieceChange): void {
     this.apiService.approvePieceChange(change.id).subscribe({

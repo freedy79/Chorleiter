@@ -37,7 +37,7 @@
   </mat-slide-toggle>
   <mat-list>
     <mat-list-item *ngFor="let ev of nextEvents$ | async">
-      <a [routerLink]="['/events', ev.id]">
+      <a href="#" (click)="openEvent(ev); $event.preventDefault()">
         {{ ev.date | date:'shortDate' }} -
         {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
       </a>
