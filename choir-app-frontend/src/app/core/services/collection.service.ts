@@ -23,8 +23,12 @@ export class CollectionService {
     return this.http.post<Collection>(`${this.apiUrl}/collections`, data);
   }
 
-  updateCollection(id: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/collections/${id}`, data);
+  updateCollection(id: number, data: any): Observable<{ jobId: string }> {
+    return this.http.put<{ jobId: string }>(`${this.apiUrl}/collections/${id}`, data);
+  }
+
+  getUpdateStatus(jobId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/collections/status/${jobId}`);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
