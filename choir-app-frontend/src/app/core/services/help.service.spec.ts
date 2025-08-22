@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 
 import { HelpService } from './help.service';
-import { UserPreferencesService } from './user-preferences.service';
+import { UserService } from './user.service';
 import { User } from '../models/user';
 
 describe('HelpService', () => {
@@ -14,7 +14,7 @@ describe('HelpService', () => {
     TestBed.configureTestingModule({
       providers: [
         HelpService,
-        { provide: UserPreferencesService, useValue: { getPreference: () => undefined, update: () => of({}) } }
+        { provide: UserService, useValue: { updateCurrentUser: () => of({}) } }
       ]
     });
     service = TestBed.inject(HelpService);

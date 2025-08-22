@@ -19,8 +19,7 @@ import { PieceChange } from '@core/models/piece-change';
 import { Post } from '@core/models/post';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
-import { UserPreferencesService } from '@core/services/user-preferences.service';
-import { UserPreferences } from '@core/models/user-preferences';
+import { UserService } from '@core/services/user.service';
 import { LibraryItem } from '@core/models/library-item';
 
 @Component({
@@ -57,7 +56,7 @@ export class DashboardComponent implements OnInit {
     private dialog: MatDialog, // Zum Öffnen von Dialogen
     private snackBar: MatSnackBar, // Zum Anzeigen von Benachrichtigungen
     private help: HelpService,
-    private prefs: UserPreferencesService,
+    private userService: UserService,
     private router: Router
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
@@ -99,17 +98,12 @@ export class DashboardComponent implements OnInit {
     );
 
     // Willkommenstext ggf. anzeigen
-    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-      if (!user) return;
-      const load$: Observable<UserPreferences | null> = this.prefs.isLoaded()
-        ? of(null)
-        : this.prefs.load();
-      load$.pipe(take(1)).subscribe(() => {
-        if (this.help.shouldShowHelp(user)) {
-          const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
-          ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
-        }
-      });
+    this.userService.getCurrentUser().pipe(take(1)).subscribe(user => {
+      this.authService.setCurrentUser(user);
+      if (this.help.shouldShowHelp(user)) {
+        const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
+        ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
+      }
     });
   }
 

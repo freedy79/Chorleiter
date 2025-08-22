@@ -30,6 +30,11 @@ export interface User {
   roles?: ('director' | 'choir_admin' | 'admin' | 'demo' | 'singer' | 'librarian')[];
 
   /**
+   * Indicates whether the help wizard has been displayed for this user.
+   */
+  helpShown?: boolean;
+
+  /**
    * The JSON Web Token received upon successful login.
    * This property is only present in the response from the sign-in endpoint.
    * It is optional ('?') because the profile endpoint (/users/me) does not return it.

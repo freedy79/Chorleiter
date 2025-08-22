@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { User } from '../models/user';
-import { UserPreferencesService } from './user-preferences.service';
+import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class HelpService {
-  constructor(private prefs: UserPreferencesService) {}
+  constructor(private users: UserService) {}
 
   shouldShowHelp(user: User | null): boolean {
     if (!user) {
@@ -13,19 +13,15 @@ export class HelpService {
     if (user.roles?.includes('demo')) {
       return true;
     }
-    const storageKey = `helpShown_${user.id}`;
-    if (localStorage.getItem(storageKey) === 'true') {
-      return false;
-    }
-    return !this.prefs.getPreference('helpShown');
+    return !user.helpShown;
   }
 
   markHelpShown(user: User | null): void {
     if (!user || user.roles?.includes('demo')) {
       return;
     }
-    const storageKey = `helpShown_${user.id}`;
-    localStorage.setItem(storageKey, 'true');
-    this.prefs.update({ helpShown: true }).subscribe();
+    this.users.updateCurrentUser({ helpShown: true }).subscribe(() => {
+      user.helpShown = true;
+    });
   }
 }
