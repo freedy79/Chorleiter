@@ -9,6 +9,8 @@ const fs = require('fs').promises;
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Collection);
 const { Sequelize } = db; // access Sequelize error types
+const jobs = require('../services/import-jobs.service');
+const crypto = require('crypto');
 
 exports.create = async (req, res, next) => {
     const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
@@ -45,37 +47,55 @@ exports.create = async (req, res, next) => {
     }
 };
 
-exports.update = async (req, res, next) => {
-    const id = req.params.id;
-    const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
+const processCollectionUpdate = async (job, collection, data) => {
     try {
-        const collection = await db.collection.findByPk(id);
-
-        if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
-
-        if (singleEdition && pieces && pieces.length > 1) {
-            return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
-        }
-        await base.service.update(id, { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
+        const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = data;
+        jobs.updateJobLog(job.id, 'Updating collection metadata...');
+        await collection.update({ title, subtitle, publisher, prefix, description, publisherNumber, singleEdition });
+        jobs.updateJobLog(job.id, 'Clearing existing pieces...');
         await collection.setPieces([]);
         if (pieces && pieces.length > 0) {
             const seen = new Map();
-            for (const pieceLink of pieces) {
+            for (const [index, pieceLink] of pieces.entries()) {
+                jobs.updateJobProgress(job.id, index, pieces.length);
                 if (seen.has(pieceLink.pieceId)) {
                     const dupPiece = seen.get(pieceLink.pieceId);
-                    return res.status(400).send({ message: `Piece '${dupPiece.title}' (id=${pieceLink.pieceId}) is duplicated.` });
+                    throw new Error(`Piece '${dupPiece.title}' (id=${pieceLink.pieceId}) is duplicated.`);
                 }
                 const piece = await Piece.findByPk(pieceLink.pieceId, { attributes: ['id', 'title'] });
                 if (!piece) {
-                    return res.status(400).send({ message: `Piece with id=${pieceLink.pieceId} not found.` });
+                    throw new Error(`Piece with id=${pieceLink.pieceId} not found.`);
                 }
                 seen.set(pieceLink.pieceId, piece);
                 await collection.addPiece(pieceLink.pieceId, {
                     through: { numberInCollection: pieceLink.numberInCollection }
                 });
+                jobs.updateJobLog(job.id, `Linked piece '${piece.title}'.`);
             }
+            jobs.updateJobProgress(job.id, pieces.length, pieces.length);
         }
-        res.status(200).send({ message: "Collection updated successfully." });
+        jobs.completeJob(job.id, { message: 'Collection updated successfully.' });
+    } catch (err) {
+        jobs.failJob(job.id, err.message);
+    }
+};
+
+exports.update = async (req, res, next) => {
+    const id = req.params.id;
+    const { singleEdition, pieces } = req.body;
+    try {
+        const collection = await db.collection.findByPk(id);
+        if (!collection) return res.status(404).send({ message: `Collection with id=${id} not found.` });
+
+        if (singleEdition && pieces && pieces.length > 1) {
+            return res.status(400).send({ message: 'Einzelausgabe kann nur ein Stück enthalten.' });
+        }
+
+        const jobId = crypto.randomUUID();
+        const job = jobs.createJob(jobId);
+        job.status = 'running';
+        processCollectionUpdate(job, collection, req.body);
+        res.status(202).send({ jobId });
     } catch (err) {
         if (err instanceof Sequelize.ForeignKeyConstraintError) {
             const field = Object.keys(err.fields || {})[0];
@@ -84,6 +104,12 @@ exports.update = async (req, res, next) => {
         }
         next(err);
     }
+};
+
+exports.getUpdateStatus = (req, res) => {
+    const job = jobs.getJob(req.params.jobId);
+    if (!job) return res.status(404).send({ message: 'Job not found.' });
+    res.status(200).send(job);
 };
 
 /**

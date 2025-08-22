@@ -4,6 +4,7 @@ import {
     ElementRef,
     OnInit,
     ViewChild,
+    OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,8 +16,8 @@ import {
     FormControl,
 } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
-import { Observable, of, combineLatest } from 'rxjs';
-import { map, startWith, switchMap } from 'rxjs/operators';
+import { Observable, of, combineLatest, Subscription, timer } from 'rxjs';
+import { map, startWith, switchMap, takeWhile } from 'rxjs/operators';
 import {
     MatAutocompleteModule,
     MatAutocompleteSelectedEvent,
@@ -57,7 +58,7 @@ interface SelectedPieceWithNumber {
     templateUrl: './collection-edit.component.html',
     styleUrls: ['./collection-edit.component.scss'],
 })
-export class CollectionEditComponent implements OnInit, AfterViewInit {
+export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy {
     collectionForm: FormGroup;
     addPieceForm: FormGroup;
     isEditMode = false;
@@ -79,6 +80,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
     isChoirAdmin = false;
     readonly addNewPieceId = -1;
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
+    isSaving = false;
+    private statusSub?: Subscription;
 
     public pieceLinkDataSource =
         new MatTableDataSource<SelectedPieceWithNumber>([]);
@@ -293,49 +296,97 @@ export class CollectionEditComponent implements OnInit, AfterViewInit {
             })),
         };
 
-        let saveObservable: Observable<any>;
         if (this.isEditMode && this.collectionId) {
-            saveObservable = this.apiService.updateCollection(
-                this.collectionId,
-                payload
-            );
+            this.isSaving = true;
+            this.apiService.updateCollection(this.collectionId, payload).subscribe({
+                next: (response) => this.pollUpdateStatus(response.jobId),
+                error: (err) => {
+                    this.isSaving = false;
+                    let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
+                    if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
+                        message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+                    }
+                    const title = this.collectionForm.value.title;
+                    const context = title ? ` der Sammlung '${title}'` : '';
+                    this.snackBar.open(`Fehler beim Aktualisieren${context}: ${message}`, 'Schließen', {
+                        duration: 5000,
+                        verticalPosition: 'top',
+                    });
+                },
+            });
         } else {
-            saveObservable = this.apiService.createCollection(payload);
+            this.apiService.createCollection(payload).subscribe({
+                next: (response) => {
+                    const id = response.id;
+                    const afterSave = () => this.router.navigate(['/collections']);
+                    const upload$ = this.coverFile
+                        ? this.apiService.uploadCollectionCover(id, this.coverFile)
+                        : of(null);
+                    upload$.subscribe({ next: afterSave, error: afterSave });
+                    this.snackBar.open('Die Sammlung wurde erfolgreich erstellt.', 'OK', {
+                        duration: 3000,
+                        verticalPosition: 'top',
+                    });
+                },
+                error: (err) => {
+                    let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
+                    if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
+                        message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+                    }
+                    const title = this.collectionForm.value.title;
+                    const context = title ? ` der Sammlung '${title}'` : '';
+                    this.snackBar.open(`Fehler beim Erstellen${context}: ${message}`, 'Schließen', {
+                        duration: 5000,
+                        verticalPosition: 'top',
+                    });
+                },
+            });
         }
+    }
 
-        saveObservable.subscribe({
-            next: (response) => {
-                const id = this.isEditMode ? this.collectionId! : response.id;
-                const afterSave = () => this.router.navigate(['/collections']);
-
-                const upload$ = this.coverFile
-                    ? this.apiService.uploadCollectionCover(id, this.coverFile)
-                    : of(null);
-
-                upload$.subscribe({ next: afterSave, error: afterSave });
-
-                const message = this.isEditMode
-                    ? 'Die Sammlung wurde erfolgreich aktualisiert.'
-                    : 'Die Sammlung wurde erfolgreich erstellt.';
-                this.snackBar.open(message, 'OK', {
-                    duration: 3000,
-                    verticalPosition: 'top',
-                });
-            },
-            error: (err) => {
-                let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
-                if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
-                    message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+    private pollUpdateStatus(jobId: string): void {
+        if (this.statusSub) {
+            this.statusSub.unsubscribe();
+        }
+        this.statusSub = timer(0, 500).pipe(
+            switchMap(() => this.apiService.getCollectionUpdateStatus(jobId)),
+            takeWhile((job) => job.status === 'running', true)
+        ).subscribe({
+            next: (job) => {
+                if (job.status === 'completed') {
+                    const id = this.collectionId!;
+                    const afterSave = () => this.router.navigate(['/collections']);
+                    const upload$ = this.coverFile
+                        ? this.apiService.uploadCollectionCover(id, this.coverFile)
+                        : of(null);
+                    upload$.subscribe({ next: afterSave, error: afterSave });
+                    this.snackBar.open('Die Sammlung wurde erfolgreich aktualisiert.', 'OK', {
+                        duration: 3000,
+                        verticalPosition: 'top',
+                    });
+                    this.isSaving = false;
+                } else if (job.status === 'failed') {
+                    this.snackBar.open(`Fehler beim Aktualisieren der Sammlung: ${job.error}`, 'Schließen', {
+                        duration: 5000,
+                        verticalPosition: 'top',
+                    });
+                    this.isSaving = false;
                 }
-                const action = this.isEditMode ? 'Aktualisieren' : 'Erstellen';
-                const title = this.collectionForm.value.title;
-                const context = title ? ` der Sammlung '${title}'` : '';
-                this.snackBar.open(`Fehler beim ${action}${context}: ${message}`, 'Schließen', {
+            },
+            error: () => {
+                this.snackBar.open('Fehler beim Abrufen des Update-Status.', 'Schließen', {
                     duration: 5000,
                     verticalPosition: 'top',
                 });
+                this.isSaving = false;
             },
         });
+    }
+
+    ngOnDestroy(): void {
+        if (this.statusSub) {
+            this.statusSub.unsubscribe();
+        }
     }
 
     populateForm(collection: Collection): void {

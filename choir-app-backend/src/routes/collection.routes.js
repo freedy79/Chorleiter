@@ -14,6 +14,7 @@ router.get("/:id/cover", wrap(controller.getCover));
 router.use(authJwt.verifyToken);
 router.post("/", role.requireNonDemo, role.requireChoirAdmin, createCollectionValidation, validate, wrap(controller.create));
 router.get("/", wrap(controller.findAll));
+router.get("/status/:jobId", wrap(controller.getUpdateStatus));
 router.get("/:id", wrap(controller.findOne));
 router.put("/:id", role.requireNonDemo, role.requireChoirAdmin, updateCollectionValidation, validate, wrap(controller.update));
 router.post("/:id/cover", role.requireNonDemo, role.requireChoirAdmin, upload.single('cover'), wrap(controller.uploadCover));

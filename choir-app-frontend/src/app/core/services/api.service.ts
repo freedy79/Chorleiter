@@ -299,8 +299,12 @@ export class ApiService {
   }
 
   // Updates an existing collection
-  updateCollection(id: number, data: any): Observable<any> {
+  updateCollection(id: number, data: any): Observable<{ jobId: string }> {
     return this.collectionService.updateCollection(id, data);
+  }
+
+  getCollectionUpdateStatus(jobId: string): Observable<any> {
+    return this.collectionService.getUpdateStatus(jobId);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
