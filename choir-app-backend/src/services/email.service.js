@@ -188,3 +188,42 @@ exports.sendCrashReportMail = async (to, error) => {
     logger.error(err.stack);
   }
 };
+
+exports.notifyAdminsOnCrash = async (error, req) => {
+  try {
+    if (emailDisabled() || (!process.env.SMTP_HOST && !process.env.SMTP_USER)) return;
+    const users = await db.user.findAll();
+    const recipients = new Set();
+    users.forEach(u => {
+      if (Array.isArray(u.roles) && u.roles.includes('admin') && u.email) {
+        recipients.add(u.email);
+      }
+    });
+    const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+    if (systemEmail?.value) {
+      recipients.add(systemEmail.value);
+    }
+    if (recipients.size === 0) return;
+
+    const details = [
+      `Time: ${new Date().toISOString()}`,
+      `Error: ${error.message || error}`
+    ];
+    if (req) {
+      details.push(`Request: ${req.method} ${req.originalUrl}`);
+      if (req.userId) details.push(`User: ${req.userId}`);
+      if (req.body && Object.keys(req.body).length > 0) {
+        details.push(`Body: ${JSON.stringify(req.body)}`);
+      }
+    }
+    if (error?.stack) {
+      details.push('Stack:', error.stack);
+    }
+    const message = details.join('\n');
+
+    await Promise.all([...recipients].map(to => exports.sendCrashReportMail(to, message)));
+  } catch (err) {
+    logger.error(`Error notifying admins of crash: ${err.message}`);
+    logger.error(err.stack);
+  }
+};
