@@ -7,6 +7,7 @@ const RateLimit = require("express-rate-limit");
 const path = require('path');
 
 const logger = require("./config/logger");
+const emailService = require('./services/email.service');
 
 app.set("trust proxy", 1);
 
@@ -120,6 +121,10 @@ app.use((err, req, res, next) => {
         } - ${req.ip}`
     );
     logger.error(err.stack);
+    emailService.notifyAdminsOnCrash(err, req).catch(e => {
+        logger.error(`Error notifying admins of crash: ${e.message}`);
+        logger.error(e.stack);
+    });
     res.status(err.status || 500).send({
         message: "An internal server error occurred. Please try again later.",
     });
