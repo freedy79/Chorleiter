@@ -8,11 +8,12 @@ import { ApiService } from '@core/services/api.service';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 
 @Component({
   selector: 'app-post-dialog',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule, MarkdownPipe],
   templateUrl: './post-dialog.component.html'
 })
 export class PostDialogComponent {

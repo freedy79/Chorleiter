@@ -16,6 +16,19 @@
       <mat-label>Text</mat-label>
       <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich"></textarea>
     </mat-form-field>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>Markdown-Hilfe</mat-panel-title>
+      </mat-expansion-panel-header>
+      <p><code># Überschrift</code> → <strong>Überschrift</strong></p>
+      <p><code>**fett**</code> → <strong>fett</strong></p>
+      <p><code>*kursiv*</code> → <em>kursiv</em></p>
+      <p><code>`Code`</code> → <code>Code</code></p>
+      <p><code>[Link](https://beispiel.de)</code></p>
+      <p><code>- Liste</code></p>
+    </mat-expansion-panel>
+    <h3>Vorschau</h3>
+    <div class="preview" [innerHTML]="form.get('text')?.value | markdown"></div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="expiresAt">
