@@ -11,14 +11,20 @@ exports.getMe = async (req, res) => {
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
                 attributes: ['id', 'name'],
-                // We don't want the junction table's data in this response.
                 through: { attributes: [] }
             }]
         });
+
         if (!user) {
             return res.status(404).send({ message: "User not found." });
         }
-        res.status(200).send(user);
+
+        const result = user.toJSON();
+        result.availableChoirs = result.choirs || [];
+        result.activeChoir = result.availableChoirs.find(c => c.id === req.activeChoirId) || result.availableChoirs[0] || null;
+        delete result.choirs;
+
+        res.status(200).send(result);
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
