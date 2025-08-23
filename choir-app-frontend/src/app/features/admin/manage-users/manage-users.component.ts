@@ -8,6 +8,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
+import { AddToChoirDialogComponent } from './add-to-choir-dialog/add-to-choir-dialog.component';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -77,6 +78,15 @@ export class ManageUsersComponent implements OnInit {
     if (confirm('Benutzer löschen?')) {
       this.api.deleteUser(user.id).subscribe(() => this.loadUsers());
     }
+  }
+
+  addToChoir(user: User): void {
+    const ref = this.dialog.open(AddToChoirDialogComponent, { width: '400px' });
+    ref.afterClosed().subscribe(result => {
+      if (result) {
+        this.api.inviteUserToChoirAdmin(result.choirId, user.email, result.roles).subscribe(() => this.loadUsers());
+      }
+    });
   }
 
   sendReset(user: User): void {
