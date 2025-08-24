@@ -191,7 +191,10 @@ exports.addToChoir = async (req, res, next) => {
         const missingPieces = pieces.filter(p => !choirPieceIds.has(p.id));
 
         if (missingPieces.length) {
-            await choir.addPieces(missingPieces).catch(() => {});
+            for (const piece of missingPieces) {
+                // add individually so one failure does not abort the entire batch
+                await choir.addPiece(piece).catch(() => {});
+            }
         }
 
         res.status(200).send({ message: `Collection '${collection.title}' synced with your repertoire.` });
@@ -225,8 +228,10 @@ exports.bulkAddToChoir = async (req, res, next) => {
             const pieces = await collection.getPieces({ attributes: ['id'] });
             const missingPieces = pieces.filter(p => !choirPieceIds.has(p.id));
             if (missingPieces.length) {
-                await choir.addPieces(missingPieces).catch(() => {});
-                missingPieces.forEach(p => choirPieceIds.add(p.id));
+                for (const piece of missingPieces) {
+                    await choir.addPiece(piece).catch(() => {});
+                    choirPieceIds.add(piece.id);
+                }
             }
         }
 
