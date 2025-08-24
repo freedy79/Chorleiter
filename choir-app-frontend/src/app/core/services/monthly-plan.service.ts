@@ -30,8 +30,8 @@ export class MonthlyPlanService {
     return this.http.get(`${this.apiUrl}/monthly-plans/${id}/pdf`, { responseType: 'blob' });
   }
 
-  emailMonthlyPlan(id: number, recipients: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients });
+  emailMonthlyPlan(id: number, recipients: number[], emails: string[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients, emails });
   }
 
   requestAvailability(id: number, recipients: number[]): Observable<any> {

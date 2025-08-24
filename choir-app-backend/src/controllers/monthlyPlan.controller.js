@@ -127,8 +127,9 @@ exports.downloadPdf = async (req, res) => {
 
 exports.emailPdf = async (req, res) => {
     const id = req.params.id;
-    const recipients = req.body.recipients;
-    if (!Array.isArray(recipients) || recipients.length === 0) {
+    const recipients = Array.isArray(req.body.recipients) ? req.body.recipients : [];
+    const extraEmails = Array.isArray(req.body.emails) ? req.body.emails.filter(e => typeof e === 'string' && e) : [];
+    if (recipients.length === 0 && extraEmails.length === 0) {
         return res.status(400).send({ message: 'recipients required' });
     }
     try {
@@ -146,11 +147,15 @@ exports.emailPdf = async (req, res) => {
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
 
-        const users = await db.user.findAll({
-            where: { id: recipients },
-            include: [{ model: db.choir, where: { id: req.activeChoirId } }]
-        });
-        const emails = users.map(u => u.email);
+        let emails = [];
+        if (recipients.length > 0) {
+            const users = await db.user.findAll({
+                where: { id: recipients },
+                include: [{ model: db.choir, where: { id: req.activeChoirId } }]
+            });
+            emails = users.map(u => u.email);
+        }
+        emails = emails.concat(extraEmails);
         const buffer = monthlyPlanPdf(plan.toJSON());
         await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
         res.status(200).send({ message: 'Mail sent.' });

@@ -409,8 +409,8 @@ export class ApiService {
     return this.monthlyPlanService.downloadMonthlyPlanPdf(id);
   }
 
-  emailMonthlyPlan(id: number, recipients: number[]): Observable<any> {
-    return this.monthlyPlanService.emailMonthlyPlan(id, recipients);
+  emailMonthlyPlan(id: number, recipients: number[], emails: string[]): Observable<any> {
+    return this.monthlyPlanService.emailMonthlyPlan(id, recipients, emails);
   }
 
   requestAvailability(id: number, recipients: number[]): Observable<any> {
