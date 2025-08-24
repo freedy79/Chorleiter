@@ -333,9 +333,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   openEmailDialog(): void {
     if (!this.plan) return;
     const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
-    ref.afterClosed().subscribe((ids: number[]) => {
-      if (ids && ids.length > 0) {
-        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, ids).subscribe({
+    ref.afterClosed().subscribe((result: { ids: number[]; emails: string[] }) => {
+      if (result && (result.ids.length > 0 || result.emails.length > 0)) {
+        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).subscribe({
           next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
           error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
         });

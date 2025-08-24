@@ -2,6 +2,7 @@ const assert = require('assert');
 
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
+process.env.DISABLE_EMAIL = 'true';
 
 const db = require('../src/models');
 const controller = require('../src/controllers/monthlyPlan.controller');
@@ -34,6 +35,11 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     await controller.reopen({ ...baseReq, params: { id: planId } }, res);
     assert.strictEqual(res.data.finalized, false);
     assert.strictEqual(res.data.version, versionAfter); // version should not change on reopen
+
+    // send plan via email to additional address
+    const emailRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.emailPdf({ ...baseReq, params: { id: planId }, body: { recipients: [], emails: ['foo@example.com'] } }, emailRes);
+    assert.strictEqual(emailRes.statusCode, 200);
 
     // Christmas rules
     const choir2 = await db.choir.create({ name: 'Xmas Choir', modules: { dienstplan: true } });

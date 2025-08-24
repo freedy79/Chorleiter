@@ -6,8 +6,13 @@
       {{ m.name }} ({{ m.email }})
     </mat-list-option>
   </mat-selection-list>
+  <mat-form-field appearance="outline" class="extra-emails">
+    <mat-label>Weitere E-Mail-Adressen</mat-label>
+    <input matInput [(ngModel)]="emails" placeholder="name@example.com, ..." />
+    <mat-hint>Mehrere Adressen durch Komma oder Leerzeichen trennen</mat-hint>
+  </mat-form-field>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-flat-button color="primary" (click)="send()" [disabled]="selected.size===0">Senden</button>
+  <button mat-flat-button color="primary" (click)="send()" [disabled]="!canSend">Senden</button>
 </div>
