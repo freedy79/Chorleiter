@@ -46,6 +46,8 @@ db.loan_request = require("./loan_request.model.js")(sequelize, Sequelize);
 db.loan_request_item = require("./loan_request_item.model.js")(sequelize, Sequelize);
 db.program = require("./program.model.js")(sequelize, Sequelize);
 db.program_element = require("./program_element.model.js")(sequelize, Sequelize);
+db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
+
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -170,6 +172,21 @@ db.loan_request.belongsTo(db.user, { foreignKey: 'userId', as: 'requester' });
 db.loan_request.hasMany(db.loan_request_item, { as: 'items', foreignKey: 'loanRequestId' });
 db.loan_request_item.belongsTo(db.loan_request, { foreignKey: 'loanRequestId', as: 'loanRequest' });
 db.loan_request_item.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
+
+// Programs and items
+db.choir.hasMany(db.program, { as: 'programs' });
+db.program.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+
+db.user.hasMany(db.program, { as: 'createdPrograms', foreignKey: 'createdBy' });
+db.user.hasMany(db.program, { as: 'updatedPrograms', foreignKey: 'updatedBy' });
+db.program.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator' });
+db.program.belongsTo(db.user, { foreignKey: 'updatedBy', as: 'updater' });
+
+db.program.hasMany(db.program_item, { as: 'items', foreignKey: 'programId' });
+db.program_item.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
+
+db.piece.hasMany(db.program_item, { as: 'programItems', foreignKey: 'pieceId' });
+db.program_item.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
 
 module.exports = db;

@@ -591,6 +591,10 @@ export class ApiService {
     return this.userService.resetPassword(token, password);
   }
 
+  confirmEmailChange(token: string): Observable<any> {
+    return this.userService.confirmEmailChange(token);
+  }
+
   completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
     return this.userService.completeRegistration(token, data);
   }

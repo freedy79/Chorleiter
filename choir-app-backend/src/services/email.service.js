@@ -44,6 +44,19 @@ exports.sendPasswordResetMail = async (to, token, name) => {
   }
 };
 
+exports.sendEmailChangeMail = async (to, token, name) => {
+  const linkBase = await getFrontendUrl();
+  const link = `${linkBase}/confirm-email/${token}`;
+  const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString('de-DE');
+  try {
+    await sendTemplateMail('email-change', to, { link, expiry, surname: name });
+  } catch (err) {
+    logger.error(`Error sending email change mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
 exports.sendTestMail = async (to, override, name) => {
   try {
     const userName = name || to.split('@')[0];
