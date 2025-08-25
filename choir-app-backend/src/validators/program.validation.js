@@ -14,3 +14,13 @@ exports.programItemPieceValidation = [
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
 ];
+
+// Validation rules for adding a free piece item to a program
+exports.programItemFreePieceValidation = [
+  body('title').isString().notEmpty(),
+  body('composer').optional().isString(),
+  body('instrument').optional().isString(),
+  body('performerNames').optional().isString(),
+  body('durationSec').optional().isInt({ min: 0 }),
+  body('note').optional().isString(),
+];

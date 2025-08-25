@@ -45,6 +45,27 @@ const controller = require('../src/controllers/program.controller');
     assert.strictEqual(addRes.data.pieceTitleSnapshot, 'Song');
     assert.strictEqual(addRes.data.durationSec, 120);
 
+    // add a free piece
+    const freeReq = {
+      params: { id: res.data.id },
+      body: {
+        title: 'Free Song',
+        composer: 'Anon',
+        instrument: 'Piano',
+        performerNames: 'Alice',
+        durationSec: 150,
+        note: 'Solo',
+      },
+    };
+    const freeRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addFreePieceItem(freeReq, freeRes);
+    assert.strictEqual(freeRes.statusCode, 201);
+    assert.strictEqual(freeRes.data.pieceId, null);
+    assert.strictEqual(freeRes.data.pieceTitleSnapshot, 'Free Song');
+    assert.strictEqual(freeRes.data.instrument, 'Piano');
+    assert.strictEqual(freeRes.data.performerNames, 'Alice');
+    assert.strictEqual(freeRes.data.durationSec, 150);
+
     console.log('program.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
