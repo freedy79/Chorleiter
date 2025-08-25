@@ -44,6 +44,8 @@ db.post = require("./post.model.js")(sequelize, Sequelize);
 db.library_item = require("./library_item.model.js")(sequelize, Sequelize);
 db.loan_request = require("./loan_request.model.js")(sequelize, Sequelize);
 db.loan_request_item = require("./loan_request_item.model.js")(sequelize, Sequelize);
+db.program = require("./program.model.js")(sequelize, Sequelize);
+db.program_element = require("./program_element.model.js")(sequelize, Sequelize);
 
 // --- Define Associations ---
 // A Choir has many Users
@@ -77,6 +79,15 @@ db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
 db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
+
+db.choir.hasMany(db.program, { as: 'programs' });
+db.program.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+
+db.program.hasMany(db.program_element, { as: 'elements' });
+db.program_element.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
+
+db.piece.hasMany(db.program_element, { as: 'programElements' });
+db.program_element.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
 db.user.hasMany(db.user_availability, { as: 'availabilities' });
 db.user_availability.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });

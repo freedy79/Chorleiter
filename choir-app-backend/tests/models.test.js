@@ -33,6 +33,8 @@ const db = require('../src/models');
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'starttls', 'fromAddress']);
     checkFields(db.plan_rule, ['dayOfWeek', 'weeks', 'notes']);
     checkFields(db.post, ['title', 'text', 'pieceId', 'expiresAt']);
+    checkFields(db.program, ['title', 'description', 'status', 'startTime']);
+    checkFields(db.program_element, ['type', 'position', 'duration']);
 
     // Basic association checks
     assert(db.user.associations.choirs, 'User should have choirs association');
@@ -40,6 +42,8 @@ const db = require('../src/models');
     assert(db.choir.associations.events, 'Choir should have events association');
     assert(db.choir.associations.monthlyPlans, 'Choir should have monthlyPlans association');
     assert(db.choir.associations.planRules, 'Choir should have planRules association');
+    assert(db.choir.associations.programs, 'Choir should have programs association');
+    assert(db.program.associations.elements, 'Program should have elements association');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
