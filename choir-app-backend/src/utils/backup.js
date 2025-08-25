@@ -23,9 +23,9 @@ async function backupDatabase() {
   const dialect = (dbConfig.dialect || '').toLowerCase();
   let cmd;
   if (dialect === 'postgres' || dialect === 'postgresql') {
-    cmd = `pg_dump -h ${dbConfig.HOST} -U ${dbConfig.USER} ${dbConfig.DB} > "${filePath}"`;
+    cmd = `PGPASSWORD='${dbConfig.PASSWORD}' pg_dump -h ${dbConfig.HOST} -U ${dbConfig.USER} ${dbConfig.DB} > "${filePath}"`;
   } else if (dialect === 'mysql' || dialect === 'mariadb') {
-    cmd = `mysqldump -h ${dbConfig.HOST} -u ${dbConfig.USER} -p${dbConfig.PASSWORD} ${dbConfig.DB} > "${filePath}"`;
+    cmd = `mysqldump -h ${dbConfig.HOST} -u ${dbConfig.USER} -p'${dbConfig.PASSWORD}' ${dbConfig.DB} > "${filePath}"`;
   } else if (dialect === 'sqlite' || dialect === 'sqlite3') {
     cmd = `sqlite3 ${dbConfig.DB} .dump > "${filePath}"`;
   } else {
@@ -33,14 +33,19 @@ async function backupDatabase() {
     return;
   }
 
-  await new Promise(resolve => {
-    exec(cmd, err => {
+  console.log('Starting database backup...');
+  await new Promise((resolve, reject) => {
+    exec(cmd, (err, stdout, stderr) => {
+      if (stdout) process.stdout.write(stdout);
+      if (stderr) process.stderr.write(stderr);
       if (err) {
-        console.error('Database backup failed:', err.message);
+        reject(err);
+        return;
       }
       resolve();
     });
   });
+  console.log(`Backup written to ${filePath}`);
 }
 
 module.exports = { backupDatabase };
