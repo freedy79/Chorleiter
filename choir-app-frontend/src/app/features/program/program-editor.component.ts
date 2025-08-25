@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
@@ -10,7 +11,7 @@ import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
 @Component({
   selector: 'app-program-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, RouterModule],
   templateUrl: './program-editor.component.html',
   styleUrls: ['./program-editor.component.scss'],
 })
