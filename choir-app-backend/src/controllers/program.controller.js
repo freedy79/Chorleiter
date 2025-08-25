@@ -100,7 +100,7 @@ exports.publish = async (req, res) => {
 // Add a piece item to an existing program
 exports.addPieceItem = async (req, res) => {
 
-  const { id } = req.params;
+  let { id } = req.params;
   const { pieceId, title, composer, durationSec, note, slotId } = req.body;
 
   try {
@@ -150,7 +150,7 @@ exports.addPieceItem = async (req, res) => {
 
 // Add a free piece item to an existing program
 exports.addFreePieceItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { title, composer, instrument, performerNames, durationSec, note, slotId } = req.body;
   try {
     const program = await ensureEditableProgram(id, req.userId);
@@ -197,7 +197,7 @@ exports.addFreePieceItem = async (req, res) => {
 };
 
 exports.addSpeechItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { title, source, speaker, text, durationSec, note, slotId } = req.body;
   try {
     const program = await ensureEditableProgram(id, req.userId);
@@ -243,7 +243,7 @@ exports.addSpeechItem = async (req, res) => {
 // Add a break item to an existing program
 exports.addBreakItem = async (req, res) => {
 
-  const { id } = req.params;
+  let { id } = req.params;
   const { durationSec, note, slotId } = req.body;
 
   try {
