@@ -57,6 +57,33 @@ exports.create = async (req, res) => {
   }
 };
 
+// Retrieve all programs for the active choir
+exports.findAll = async (req, res) => {
+  try {
+    const programs = await Program.findAll({
+      where: { choirId: req.activeChoirId },
+      order: [['createdAt', 'DESC']],
+    });
+    res.status(200).send(programs);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// Retrieve a single program with its items
+exports.findOne = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findByPk(id, {
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    res.status(200).send(program);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 // Publish a program so that choir members can view it
 exports.publish = async (req, res) => {
   const { id } = req.params;

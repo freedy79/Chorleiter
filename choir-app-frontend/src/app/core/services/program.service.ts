@@ -14,6 +14,14 @@ export class ProgramService {
     return this.http.post<Program>(`${this.apiUrl}/programs`, data);
   }
 
+  getPrograms(): Observable<Program[]> {
+    return this.http.get<Program[]>(`${this.apiUrl}/programs`);
+  }
+
+  getProgram(id: string): Observable<Program> {
+    return this.http.get<Program>(`${this.apiUrl}/programs/${id}`);
+  }
+
   addPieceItem(
     programId: string,
     data: { pieceId: string; title: string; composer?: string; durationSec?: number; note?: string; slotId?: string }

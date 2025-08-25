@@ -146,10 +146,22 @@ export const routes: Routes = [
                 data: { title: 'Beiträge', showChoirName: true }
             },
             {
+                path: 'programs',
+                loadComponent: () => import('./features/programs/program-list.component').then(m => m.ProgramListComponent),
+                canActivate: [AuthGuard, ProgramGuard],
+                data: { title: 'Programme' }
+            },
+            {
                 path: 'programs/create',
                 loadComponent: () => import('./features/programs/program-create.component').then(m => m.ProgramCreateComponent),
                 canActivate: [AuthGuard, ProgramGuard],
                 data: { title: 'Programm erstellen' }
+            },
+            {
+                path: 'programs/:id',
+                loadComponent: () => import('./features/program/program-editor.component').then(m => m.ProgramEditorComponent),
+                canActivate: [AuthGuard, ProgramGuard],
+                data: { title: 'Programm bearbeiten' }
             },
             {
                 path: 'stats',

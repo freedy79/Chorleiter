@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
@@ -18,7 +18,7 @@ import { ProgramBreakDialogComponent } from './program-break-dialog.component';
   templateUrl: './program-editor.component.html',
   styleUrls: ['./program-editor.component.scss'],
 })
-export class ProgramEditorComponent {
+export class ProgramEditorComponent implements OnInit {
   programId = '';
   startTime: string | null = null;
   items: ProgramItem[] = [];
@@ -26,7 +26,21 @@ export class ProgramEditorComponent {
   private readonly baseColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
   private readonly columnsWithTime = ['move', 'title', 'composer', 'duration', 'note', 'time', 'sum', 'actions'];
 
-  constructor(private dialog: MatDialog, private programService: ProgramService) {}
+  constructor(
+    private dialog: MatDialog,
+    private programService: ProgramService,
+    private route: ActivatedRoute
+  ) {}
+
+  ngOnInit(): void {
+    this.programId = this.route.snapshot.paramMap.get('id') ?? '';
+    if (this.programId) {
+      this.programService.getProgram(this.programId).subscribe(program => {
+        this.startTime = program.startTime ?? null;
+        this.items = program.items;
+      });
+    }
+  }
 
   get displayedColumns(): string[] {
     return this.startTime ? this.columnsWithTime : this.baseColumns;
