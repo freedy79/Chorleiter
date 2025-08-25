@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -16,7 +17,7 @@ interface PieceLookup {
 @Component({
   selector: 'app-program-piece-dialog',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, MaterialModule, FormsModule, ReactiveFormsModule, RouterModule],
   templateUrl: './program-piece-dialog.component.html',
   styleUrls: ['./program-piece-dialog.component.scss'],
 })

@@ -1,13 +1,48 @@
 <button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
-<button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()">+ Sprachbeitrag</button>
 
-<table mat-table [dataSource]="items" *ngIf="items.length" class="program-table">
+<button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()">+ Sprachbeitrag</button>
+<button mat-raised-button color="accent" (click)="addBreak()">+ Pause</button>
+
+<table
+  mat-table
+  [dataSource]="items"
+  *ngIf="items.length"
+  class="program-table"
+  cdkDropList
+  (cdkDropListDropped)="drop($event)"
+>
+  <ng-container matColumnDef="move">
+    <th mat-header-cell *matHeaderCellDef></th>
+    <td mat-cell *matCellDef="let item; let i = index">
+      <button
+        mat-icon-button
+        (click)="moveUp(i)"
+        [disabled]="i === 0"
+        aria-label="Nach oben"
+      >
+        <mat-icon>arrow_upward</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        (click)="moveDown(i)"
+        [disabled]="i === items.length - 1"
+        aria-label="Nach unten"
+      >
+        <mat-icon>arrow_downward</mat-icon>
+      </button>
+      <span class="drag-handle" cdkDragHandle aria-label="Greifen">
+        <mat-icon>drag_indicator</mat-icon>
+      </span>
+    </td>
+  </ng-container>
+
   <ng-container matColumnDef="title">
     <th mat-header-cell *matHeaderCellDef> Titel </th>
     <td mat-cell *matCellDef="let item">
       <ng-container [ngSwitch]="item.type">
         <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
         <span *ngSwitchCase="'speech'">{{ item.speechTitle }}</span>
+        <span *ngSwitchCase="'break'">Pause</span>
       </ng-container>
     </td>
   </ng-container>
@@ -29,6 +64,34 @@
     </td>
   </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="['title', 'composer', 'duration']"></tr>
-  <tr mat-row *matRowDef="let row; columns: ['title', 'composer', 'duration'];"></tr>
+  <ng-container matColumnDef="note">
+    <th mat-header-cell *matHeaderCellDef> Notiz </th>
+    <td mat-cell *matCellDef="let item">
+      <input matInput [(ngModel)]="item.note" />
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="sum">
+    <th mat-header-cell *matHeaderCellDef> Summe </th>
+    <td mat-cell *matCellDef="let item; let i = index">
+      {{ getCumulativeDuration(i) }}
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef> Aktionen </th>
+    <td mat-cell *matCellDef="let item">
+      <a *ngIf="item.pieceId" [routerLink]="['/pieces', item.pieceId]" target="_blank"
+        >Details</a
+      >
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns" cdkDrag></tr>
 </table>
+
+<div *ngIf="items.length" class="total-duration">
+  Gesamtdauer: {{ getTotalDuration() }}
+</div>
+
