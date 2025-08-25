@@ -56,3 +56,32 @@ exports.addPieceItem = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
+
+// Add a free piece item to an existing program
+exports.addFreePieceItem = async (req, res) => {
+  const { id } = req.params;
+  const { title, composer, instrument, performerNames, durationSec, note } = req.body;
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    const sortIndex = await db.program_item.count({ where: { programId: id } });
+
+    const item = await db.program_item.create({
+      programId: id,
+      sortIndex,
+      type: 'piece',
+      durationSec: typeof durationSec === 'number' ? durationSec : null,
+      note: note || null,
+      pieceId: null,
+      pieceTitleSnapshot: title,
+      pieceComposerSnapshot: composer || null,
+      pieceDurationSecSnapshot: typeof durationSec === 'number' ? durationSec : null,
+      instrument: instrument || null,
+      performerNames: performerNames || null,
+    });
+    res.status(201).send(item);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};

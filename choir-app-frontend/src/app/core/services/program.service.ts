@@ -17,4 +17,18 @@ export class ProgramService {
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`/api/programs/${programId}/items`, data);
   }
+
+  addFreePieceItem(
+    programId: string,
+    data: {
+      title: string;
+      composer?: string;
+      instrument?: string;
+      performerNames?: string;
+      durationSec?: number;
+      note?: string;
+    }
+  ): Observable<ProgramItem> {
+    return this.http.post<ProgramItem>(`/api/programs/${programId}/items/free`, data);
+  }
 }

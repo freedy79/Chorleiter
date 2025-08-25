@@ -9,6 +9,8 @@ export interface ProgramItem {
   pieceTitleSnapshot?: string;
   pieceComposerSnapshot?: string;
   pieceDurationSecSnapshot?: number | null;
+  instrument?: string | null;
+  performerNames?: string | null;
 }
 
 export interface Program {
