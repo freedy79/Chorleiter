@@ -79,6 +79,7 @@ const availabilityRoutes = require("./routes/availability.routes");
 const clientErrorRoutes = require("./routes/client-error.routes");
 const postRoutes = require("./routes/post.routes");
 const libraryRoutes = require("./routes/library.routes");
+const programRoutes = require("./routes/program.routes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
@@ -109,6 +110,7 @@ app.use("/api/availabilities", availabilityRoutes);
 app.use("/api/client-errors", clientErrorRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/library", libraryRoutes);
+app.use("/api/programs", programRoutes);
 
 // Handle 404 for unknown routes
 app.use((req, res, _next) => {

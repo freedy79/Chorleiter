@@ -82,15 +82,6 @@ db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "mon
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 
-db.choir.hasMany(db.program, { as: 'programs' });
-db.program.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
-
-db.program.hasMany(db.program_element, { as: 'elements' });
-db.program_element.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
-
-db.piece.hasMany(db.program_element, { as: 'programElements' });
-db.program_element.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
-
 db.user.hasMany(db.user_availability, { as: 'availabilities' });
 db.user_availability.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 db.choir.hasMany(db.user_availability, { as: 'availabilities' });
@@ -187,6 +178,12 @@ db.program_item.belongsTo(db.program, { foreignKey: 'programId', as: 'program' }
 
 db.piece.hasMany(db.program_item, { as: 'programItems', foreignKey: 'pieceId' });
 db.program_item.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
+
+db.program.hasMany(db.program_element, { as: 'elements', foreignKey: 'programId' });
+db.program_element.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
+
+db.piece.hasMany(db.program_element, { as: 'programElements', foreignKey: 'pieceId' });
+db.program_element.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
 
 module.exports = db;
