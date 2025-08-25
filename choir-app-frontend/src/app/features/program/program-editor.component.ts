@@ -10,7 +10,7 @@ import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
 @Component({
   selector: 'app-program-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, ProgramPieceDialogComponent],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './program-editor.component.html',
   styleUrls: ['./program-editor.component.scss'],
 })
