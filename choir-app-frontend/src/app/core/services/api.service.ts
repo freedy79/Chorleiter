@@ -18,6 +18,7 @@ import { Choir } from '@core/models/choir';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
+import { Program } from '../models/program';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
 import { Loan } from '../models/loan';
@@ -50,6 +51,7 @@ import { SearchService } from './search.service';
 import { MonthlyPlanService } from './monthly-plan.service';
 import { PostService } from './post.service';
 import { LibraryService } from './library.service';
+import { ProgramService } from './program.service';
 
 @Injectable({
   providedIn: 'root'
@@ -76,7 +78,8 @@ export class ApiService {
               private searchService: SearchService,
               private monthlyPlanService: MonthlyPlanService,
               private postService: PostService,
-              private libraryService: LibraryService) {
+              private libraryService: LibraryService,
+              private programService: ProgramService) {
 
   }
 
@@ -784,6 +787,10 @@ export class ApiService {
 
   deletePost(id: number): Observable<any> {
     return this.postService.deletePost(id);
+  }
+
+  createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {
+    return this.programService.createProgram(data);
   }
 
   // --- Filter Preset Methods ---

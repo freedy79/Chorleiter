@@ -18,9 +18,9 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    startAt: {
+    startTime: {
       type: DataTypes.DATE,
-      field: 'start_at',
+      field: 'start_time',
     },
     status: {
       type: DataTypes.ENUM('draft', 'published', 'archived'),
