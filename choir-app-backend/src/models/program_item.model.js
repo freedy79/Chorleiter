@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(1000),
     },
     pieceId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       field: 'piece_id',
     },
     pieceTitleSnapshot: {
