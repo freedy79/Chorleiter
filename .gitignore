@@ -138,3 +138,4 @@ dist
 choir-app-frontend/src/environments/build-info.ts
 src/environment/build-info.ts
 Extract/*.csv
+choir-app-backend/backups/

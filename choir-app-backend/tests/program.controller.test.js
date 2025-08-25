@@ -40,10 +40,11 @@ const controller = require('../src/controllers/program.controller');
     };
     const addRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
     await controller.addPieceItem(addReq, addRes);
+    const pieceItem = addRes.data;
     assert.strictEqual(addRes.statusCode, 201);
-    assert.strictEqual(addRes.data.pieceId, piece.id);
-    assert.strictEqual(addRes.data.pieceTitleSnapshot, 'Song');
-    assert.strictEqual(addRes.data.durationSec, 120);
+    assert.strictEqual(pieceItem.pieceId, piece.id);
+    assert.strictEqual(pieceItem.pieceTitleSnapshot, 'Song');
+    assert.strictEqual(pieceItem.durationSec, 120);
 
     // add a free piece
     const freeReq = {
@@ -59,12 +60,58 @@ const controller = require('../src/controllers/program.controller');
     };
     const freeRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
     await controller.addFreePieceItem(freeReq, freeRes);
+    const freeItem = freeRes.data;
     assert.strictEqual(freeRes.statusCode, 201);
-    assert.strictEqual(freeRes.data.pieceId, null);
-    assert.strictEqual(freeRes.data.pieceTitleSnapshot, 'Free Song');
-    assert.strictEqual(freeRes.data.instrument, 'Piano');
-    assert.strictEqual(freeRes.data.performerNames, 'Alice');
-    assert.strictEqual(freeRes.data.durationSec, 150);
+    assert.strictEqual(freeItem.pieceId, null);
+    assert.strictEqual(freeItem.pieceTitleSnapshot, 'Free Song');
+    assert.strictEqual(freeItem.instrument, 'Piano');
+    assert.strictEqual(freeItem.performerNames, 'Alice');
+    assert.strictEqual(freeItem.durationSec, 150);
+
+    // add a break
+    const breakReq = {
+      params: { id: res.data.id },
+      body: {
+        durationSec: 300,
+        note: 'Umbau Bühne',
+      },
+    };
+    const breakRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addBreakItem(breakReq, breakRes);
+    const breakItem = breakRes.data;
+    assert.strictEqual(breakRes.statusCode, 201);
+    assert.strictEqual(breakItem.type, 'break');
+    assert.strictEqual(breakItem.durationSec, 300);
+    assert.strictEqual(breakItem.note, 'Umbau Bühne');
+
+    // reorder items
+    const orderReq = {
+      params: { id: res.data.id },
+      body: { order: [breakItem.id, pieceItem.id, freeItem.id] },
+    };
+    const orderRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.reorderItems(orderReq, orderRes);
+    assert.strictEqual(orderRes.statusCode, 200);
+    assert.deepStrictEqual(orderRes.data.map(i => i.id), [breakItem.id, pieceItem.id, freeItem.id]);
+    assert.strictEqual(orderRes.data[0].sortIndex, 0);
+
+    // add a speech item
+    const speechReq = {
+      params: { id: res.data.id },
+      body: {
+        title: 'Welcome',
+        source: 'Author',
+        speaker: 'Bob',
+        text: 'Welcome everyone',
+        durationSec: 30,
+      },
+    };
+    const speechRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addSpeechItem(speechReq, speechRes);
+    assert.strictEqual(speechRes.statusCode, 201);
+    assert.strictEqual(speechRes.data.speechTitle, 'Welcome');
+    assert.strictEqual(speechRes.data.speechSpeaker, 'Bob');
+    assert.strictEqual(speechRes.data.durationSec, 30);
 
     console.log('program.controller tests passed');
     await db.sequelize.close();
