@@ -108,3 +108,33 @@ exports.addBreakItem = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
+
+// Reorder items of a program
+exports.reorderItems = async (req, res) => {
+  const { id } = req.params;
+  const { order } = req.body; // array of item IDs in new order
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    const items = await db.program_item.findAll({ where: { programId: id } });
+    const itemIds = items.map(i => i.id);
+    if (order.length !== items.length || !order.every(o => itemIds.includes(o))) {
+      return res.status(400).send({ message: 'invalid order' });
+    }
+
+    await Promise.all(
+      order.map((itemId, index) =>
+        db.program_item.update({ sortIndex: index }, { where: { id: itemId, programId: id } })
+      )
+    );
+
+    const updated = await db.program_item.findAll({
+      where: { programId: id },
+      order: [['sortIndex', 'ASC']],
+    });
+    res.status(200).send(updated);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};

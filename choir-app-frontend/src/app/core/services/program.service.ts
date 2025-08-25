@@ -38,4 +38,8 @@ export class ProgramService {
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`/api/programs/${programId}/items/break`, data);
   }
+
+  reorderItems(programId: string, order: string[]): Observable<ProgramItem[]> {
+    return this.http.put<ProgramItem[]>(`/api/programs/${programId}/items/reorder`, { order });
+  }
 }

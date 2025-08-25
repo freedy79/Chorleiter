@@ -1,7 +1,13 @@
 const authJwt = require('../middleware/auth.middleware');
 const role = require('../middleware/role.middleware');
 const validate = require('../validators/validate');
-const { programValidation, programItemPieceValidation, programItemFreePieceValidation, programItemBreakValidation } = require('../validators/program.validation');
+const {
+  programValidation,
+  programItemPieceValidation,
+  programItemFreePieceValidation,
+  programItemBreakValidation,
+  programItemsReorderValidation,
+} = require('../validators/program.validation');
 const controller = require('../controllers/program.controller');
 const { handler: wrap } = require('../utils/async');
 const router = require('express').Router();
@@ -12,5 +18,12 @@ router.post('/', role.requireDirector, programValidation, validate, wrap(control
 router.post('/:id/items', role.requireDirector, programItemPieceValidation, validate, wrap(controller.addPieceItem));
 router.post('/:id/items/free', role.requireDirector, programItemFreePieceValidation, validate, wrap(controller.addFreePieceItem));
 router.post('/:id/items/break', role.requireDirector, programItemBreakValidation, validate, wrap(controller.addBreakItem));
+router.put(
+  '/:id/items/reorder',
+  role.requireDirector,
+  programItemsReorderValidation,
+  validate,
+  wrap(controller.reorderItems)
+);
 
 module.exports = router;
