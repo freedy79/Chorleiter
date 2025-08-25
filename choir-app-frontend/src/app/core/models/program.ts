@@ -15,6 +15,8 @@ export interface ProgramItem {
   speechSource?: string | null;
   speechSpeaker?: string | null;
   speechText?: string | null;
+  breakTitle?: string | null;
+  slotLabel?: string | null;
 }
 
 export interface Program {
