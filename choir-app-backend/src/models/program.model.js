@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     description: {
       type: DataTypes.TEXT,
+      allowNull: true
     },
     startAt: {
       type: DataTypes.DATE,
@@ -49,6 +50,7 @@ module.exports = (sequelize, DataTypes) => {
     underscored: true,
     paranoid: true,
   });
+
 
   return Program;
 };
