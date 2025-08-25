@@ -1,3 +1,16 @@
+export interface ProgramItem {
+  id: string;
+  programId: string;
+  sortIndex: number;
+  type: 'piece' | 'break' | 'speech' | 'slot';
+  durationSec?: number | null;
+  note?: string | null;
+  pieceId?: string;
+  pieceTitleSnapshot?: string;
+  pieceComposerSnapshot?: string;
+  pieceDurationSecSnapshot?: number | null;
+}
+
 export interface Program {
   id: string;
   choirId: string;
@@ -5,5 +18,5 @@ export interface Program {
   description?: string;
   startTime?: string;
   status: string;
-  items: any[];
+  items: ProgramItem[];
 }
