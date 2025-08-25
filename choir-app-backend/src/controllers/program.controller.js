@@ -1,6 +1,40 @@
 const db = require('../models');
 const Program = db.program;
 
+// Create a draft revision of a published program so that further changes
+// do not modify the published version. Copies all existing items to the new
+// revision and returns it.
+async function ensureEditableProgram(id, userId) {
+  const program = await Program.findByPk(id);
+  if (!program) return null;
+  if (program.status !== 'published') return program;
+
+  const revision = await Program.create({
+    choirId: program.choirId,
+    title: program.title,
+    description: program.description,
+    startTime: program.startTime,
+    status: 'draft',
+    publishedFromId: program.id,
+    createdBy: program.createdBy,
+    updatedBy: userId ?? program.updatedBy,
+  });
+
+  const items = await db.program_item.findAll({ where: { programId: id } });
+  await Promise.all(
+    items.map(item => {
+      const data = item.get({ plain: true });
+      delete data.id;
+      delete data.createdAt;
+      delete data.updatedAt;
+      delete data.deletedAt;
+      data.programId = revision.id;
+      return db.program_item.create(data);
+    })
+  );
+  return revision;
+}
+
 exports.create = async (req, res) => {
   const { title, description, startTime } = req.body;
   if (!title) return res.status(400).send({ message: 'title required' });
@@ -23,13 +57,27 @@ exports.create = async (req, res) => {
   }
 };
 
-// Add a piece item to an existing program
-exports.addPieceItem = async (req, res) => {
+// Publish a program so that choir members can view it
+exports.publish = async (req, res) => {
   const { id } = req.params;
-  const { pieceId, title, composer, durationSec, note } = req.body;
   try {
     const program = await Program.findByPk(id);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    await program.update({ status: 'published', publishedAt: new Date(), updatedBy: req.userId });
+    res.status(200).send(program);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// Add a piece item to an existing program
+exports.addPieceItem = async (req, res) => {
+  let { id } = req.params;
+  const { pieceId, title, composer, durationSec, note } = req.body;
+  try {
+    const program = await ensureEditableProgram(id, req.userId);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const piece = await db.piece.findByPk(pieceId, {
       include: [{ model: db.composer, as: 'composer' }],
@@ -59,11 +107,12 @@ exports.addPieceItem = async (req, res) => {
 
 // Add a free piece item to an existing program
 exports.addFreePieceItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { title, composer, instrument, performerNames, durationSec, note } = req.body;
   try {
-    const program = await Program.findByPk(id);
+    const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -87,11 +136,12 @@ exports.addFreePieceItem = async (req, res) => {
 };
 
 exports.addSpeechItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { title, source, speaker, text, durationSec, note } = req.body;
   try {
-    const program = await Program.findByPk(id);
+    const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -115,11 +165,12 @@ exports.addSpeechItem = async (req, res) => {
 
 // Add a break item to an existing program
 exports.addBreakItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { durationSec, note } = req.body;
   try {
-    const program = await Program.findByPk(id);
+    const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -139,11 +190,12 @@ exports.addBreakItem = async (req, res) => {
 
 // Reorder items of a program
 exports.reorderItems = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { order } = req.body; // array of item IDs in new order
   try {
-    const program = await Program.findByPk(id);
+    const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const items = await db.program_item.findAll({ where: { programId: id } });
     const itemIds = items.map(i => i.id);

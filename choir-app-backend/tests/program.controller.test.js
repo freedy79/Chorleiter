@@ -110,12 +110,34 @@ const controller = require('../src/controllers/program.controller');
     await controller.addSpeechItem(speechReq, speechRes);
     assert.strictEqual(speechRes.statusCode, 201);
     assert.strictEqual(speechRes.data.speechTitle, 'Welcome');
-    assert.strictEqual(speechRes.data.speechSpeaker, 'Bob');
-    assert.strictEqual(speechRes.data.durationSec, 30);
+      assert.strictEqual(speechRes.data.speechSpeaker, 'Bob');
+      assert.strictEqual(speechRes.data.durationSec, 30);
 
-    console.log('program.controller tests passed');
-    await db.sequelize.close();
-  } catch (err) {
+      // publish program
+      const publishReq = { params: { id: res.data.id }, userId: user.id };
+      const publishRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+      await controller.publish(publishReq, publishRes);
+      assert.strictEqual(publishRes.statusCode, 200);
+      assert.strictEqual(publishRes.data.status, 'published');
+      assert.ok(publishRes.data.publishedAt);
+
+      // modifying after publish should create a revision
+      const afterReq = {
+        params: { id: publishRes.data.id },
+        body: { durationSec: 60, note: 'after publish' },
+        userId: user.id
+      };
+      const afterRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+      await controller.addBreakItem(afterReq, afterRes);
+      assert.strictEqual(afterRes.statusCode, 201);
+      assert.notStrictEqual(afterRes.data.programId, publishRes.data.id);
+      const newProgram = await db.program.findByPk(afterRes.data.programId);
+      assert.strictEqual(newProgram.publishedFromId, publishRes.data.id);
+      assert.strictEqual(newProgram.status, 'draft');
+
+      console.log('program.controller tests passed');
+      await db.sequelize.close();
+    } catch (err) {
     console.error(err);
     await db.sequelize.close();
     process.exit(1);
