@@ -2,6 +2,9 @@ const db = require("../models");
 const User = db.user;
 const Choir = db.choir;
 const bcrypt = require("bcryptjs");
+const crypto = require('crypto');
+const { Op } = require('sequelize');
+const emailService = require('../services/email.service');
 
 exports.getMe = async (req, res) => {
     try {
@@ -47,8 +50,18 @@ exports.getMe = async (req, res) => {
         if (name) {
             updateData.name = name;
         }
-        if (email) {
-            updateData.email = email;
+        let emailMessage = null;
+        if (email && email !== user.email) {
+            const existing = await User.findOne({ where: { email } });
+            if (existing) {
+                return res.status(409).send({ message: "Diese E-Mail-Adresse wird bereits verwendet." });
+            }
+            const token = crypto.randomBytes(32).toString('hex');
+            const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000);
+            updateData.pendingEmail = email;
+            updateData.emailChangeToken = token;
+            updateData.emailChangeTokenExpiry = expiry;
+            emailMessage = 'Eine Bestätigungsmail wurde an die neue Adresse gesendet. Der Link ist 2 Stunden gültig.';
         }
         if (street !== undefined) {
             updateData.street = street;
@@ -86,7 +99,15 @@ exports.getMe = async (req, res) => {
 
         await user.update(updateData);
 
-        res.status(200).send({ message: "Profile updated successfully." });
+        if (email && email !== user.email) {
+            try {
+                await emailService.sendEmailChangeMail(email, updateData.emailChangeToken, user.name);
+            } catch (e) {
+                return res.status(500).send({ message: e.message });
+            }
+        }
+
+        res.status(200).send({ message: emailMessage || "Profil erfolgreich aktualisiert." });
 
     } catch (err) {
         // Handle potential unique constraint violation for email
@@ -133,6 +154,30 @@ exports.updatePreferences = async (req, res) => {
         user.preferences = prefs;
         await user.save();
         res.status(200).send(prefs);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.confirmEmailChange = async (req, res) => {
+    const { token } = req.params;
+    try {
+        const user = await User.findOne({
+            where: {
+                emailChangeToken: token,
+                emailChangeTokenExpiry: { [Op.gt]: new Date() }
+            }
+        });
+        if (!user || !user.pendingEmail) {
+            return res.status(400).send({ message: 'Link ungültig oder abgelaufen.' });
+        }
+        await user.update({
+            email: user.pendingEmail,
+            pendingEmail: null,
+            emailChangeToken: null,
+            emailChangeTokenExpiry: null
+        });
+        res.status(200).send({ message: 'E-Mail-Adresse bestätigt.' });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
