@@ -1,0 +1,19 @@
+<h2>Programm erstellen</h2>
+<form (ngSubmit)="create()" #f="ngForm">
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Titel</mat-label>
+    <input matInput name="title" required [(ngModel)]="title">
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Beschreibung</mat-label>
+    <textarea matInput name="description" rows="4" [(ngModel)]="description"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Startzeit</mat-label>
+    <input matInput type="datetime-local" name="startTime" [(ngModel)]="startTime">
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit" [disabled]="!f.form.valid">Erstellen</button>
+</form>

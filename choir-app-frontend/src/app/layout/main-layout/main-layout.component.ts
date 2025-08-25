@@ -82,6 +82,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   pageTitle$: Observable<string | null>;
   cartCount$: Observable<number>;
+  canCreateProgram$: Observable<boolean>;
 
 
   constructor(private authService: AuthService,
@@ -109,6 +110,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     );
     this.currentTheme = this.themeService.getCurrentTheme();
     this.cartCount$ = this.cart.items$.pipe(map(items => items.length));
+    this.canCreateProgram$ = this.authService.currentUser$.pipe(
+      map(user => {
+        const roles = Array.isArray(user?.roles) ? user!.roles : [];
+        return roles.some(r => ['director', 'choir_admin', 'admin'].includes(r));
+      })
+    );
 
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
       map(result => result.matches),
@@ -292,6 +299,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         displayName: 'Beiträge',
         route: '/posts',
         visibleSubject: this.visibleFor('posts', this.isLoggedIn$),
+      },
+      {
+        key: 'programs',
+        displayName: 'Programm',
+        route: '/programs/create',
+        visibleSubject: this.canCreateProgram$,
       },
       {
         key: 'stats',

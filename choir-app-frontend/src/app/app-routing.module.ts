@@ -15,6 +15,7 @@ import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
 import { AdminGuard } from '@core/guards/admin-guard';
 import { LoginGuard } from '@core/guards/login.guard';
 import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
+import { ProgramGuard } from '@core/guards/program.guard';
 import { HomeComponent } from '@features/home/home.component';
 import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
@@ -143,6 +144,12 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Beiträge', showChoirName: true }
+            },
+            {
+                path: 'programs/create',
+                loadComponent: () => import('./features/programs/program-create.component').then(m => m.ProgramCreateComponent),
+                canActivate: [AuthGuard, ProgramGuard],
+                data: { title: 'Programm erstellen' }
             },
             {
                 path: 'stats',

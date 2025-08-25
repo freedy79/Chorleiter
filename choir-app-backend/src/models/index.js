@@ -82,7 +82,6 @@ db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "mon
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 
-
 db.user.hasMany(db.user_availability, { as: 'availabilities' });
 db.user_availability.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 db.choir.hasMany(db.user_availability, { as: 'availabilities' });
