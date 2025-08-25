@@ -26,9 +26,7 @@ export class ProgramEditorComponent {
   constructor(private dialog: MatDialog, private programService: ProgramService) {}
 
   addPiece() {
-    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, {
-      width: '600px',
-    });
+    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
@@ -38,23 +36,19 @@ export class ProgramEditorComponent {
     });
   }
 
-
   addSpeech() {
-    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, {
-      width: '600px',
-    });
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addSpeechItem(this.programId, result).subscribe(item => {
-           this.items = [...this.items, item];
-        }
-                                                                            });
-   }
+          this.items = [...this.items, item];
+        });
+      }
+    });
+  }
 
   addBreak() {
-    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, {
-      width: '400px',
-    });
+    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, { width: '400px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addBreakItem(this.programId, result).subscribe(item => {
@@ -64,6 +58,44 @@ export class ProgramEditorComponent {
     });
   }
 
+  fillSlotWithPiece(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addPieceItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+          });
+      }
+    });
+  }
+
+  fillSlotWithSpeech(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, { width: '600px' });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addSpeechItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+          });
+      }
+    });
+  }
+
+  fillSlotWithBreak(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, { width: '400px' });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addBreakItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+          });
+      }
+    });
+  }
 
   drop(event: CdkDragDrop<ProgramItem[]>) {
     moveItemInArray(this.items, event.previousIndex, event.currentIndex);
@@ -83,11 +115,9 @@ export class ProgramEditorComponent {
   }
 
   saveOrder() {
-    this.programService
-      .reorderItems(this.programId, this.items.map(i => i.id))
-      .subscribe(items => {
-        this.items = items;
-      });
+    this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe(items => {
+      this.items = items;
+    });
   }
 
   getCumulativeDuration(index: number): string {

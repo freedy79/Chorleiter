@@ -11,6 +11,14 @@
   </mat-form-field>
 
   <mat-form-field appearance="fill" class="full-width">
+    <mat-label>Vorlage</mat-label>
+    <mat-select name="template" [(ngModel)]="template">
+      <mat-option value="empty">Konzert (leer)</mat-option>
+      <mat-option value="nak-service">Gottesdienst (NAK)</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill" class="full-width">
     <mat-label>Startzeit</mat-label>
     <input matInput type="datetime-local" name="startTime" [(ngModel)]="startTime">
   </mat-form-field>
