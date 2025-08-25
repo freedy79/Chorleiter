@@ -30,3 +30,9 @@ exports.programItemBreakValidation = [
   body('durationSec').isInt({ min: 0 }),
   body('note').optional().isString(),
 ];
+
+// Validation rules for reordering program items
+exports.programItemsReorderValidation = [
+  body('order').isArray(),
+  body('order.*').isUUID(),
+];
