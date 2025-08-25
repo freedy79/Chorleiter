@@ -6,6 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
 import { ProgramItem } from '@core/models/program';
 import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
+import { ProgramSpeechDialogComponent } from './program-speech-dialog.component';
 
 @Component({
   selector: 'app-program-editor',
@@ -27,6 +28,19 @@ export class ProgramEditorComponent {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
+          this.items = [...this.items, item];
+        });
+      }
+    });
+  }
+
+  addSpeech() {
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, {
+      width: '600px',
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService.addSpeechItem(this.programId, result).subscribe(item => {
           this.items = [...this.items, item];
         });
       }

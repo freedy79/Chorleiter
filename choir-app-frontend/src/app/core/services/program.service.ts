@@ -31,4 +31,11 @@ export class ProgramService {
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`/api/programs/${programId}/items/free`, data);
   }
+
+  addSpeechItem(
+    programId: string,
+    data: { title: string; source?: string; speaker?: string; text?: string; durationSec?: number; note?: string }
+  ): Observable<ProgramItem> {
+    return this.http.post<ProgramItem>(`/api/programs/${programId}/items/speech`, data);
+  }
 }

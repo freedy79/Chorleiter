@@ -24,3 +24,13 @@ exports.programItemFreePieceValidation = [
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
 ];
+
+// Validation rules for adding a speech item to a program
+exports.programItemSpeechValidation = [
+  body('title').isString().notEmpty(),
+  body('source').optional().isString(),
+  body('speaker').optional().isString(),
+  body('text').optional().isString(),
+  body('durationSec').optional().isInt({ min: 0 }),
+  body('note').optional().isString(),
+];
