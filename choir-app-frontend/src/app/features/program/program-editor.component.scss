@@ -3,9 +3,9 @@
   margin-top: 16px;
 }
 
-
 .add-speech {
   margin-left: 8px;
+}
 
 .drag-handle {
   cursor: move;
@@ -16,4 +16,13 @@
 .total-duration {
   margin-top: 8px;
   font-weight: bold;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  padding: 8px 0;
+}
+
+.duration-warning {
+  margin-top: 8px;
+  color: #b00020;
 }

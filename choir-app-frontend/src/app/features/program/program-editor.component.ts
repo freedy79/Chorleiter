@@ -20,15 +20,20 @@ import { ProgramBreakDialogComponent } from './program-break-dialog.component';
 })
 export class ProgramEditorComponent {
   programId = '';
+  startTime: string | null = null;
   items: ProgramItem[] = [];
-  displayedColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
+
+  private readonly baseColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
+  private readonly columnsWithTime = ['move', 'title', 'composer', 'duration', 'note', 'time', 'sum', 'actions'];
 
   constructor(private dialog: MatDialog, private programService: ProgramService) {}
 
+  get displayedColumns(): string[] {
+    return this.startTime ? this.columnsWithTime : this.baseColumns;
+  }
+
   addPiece() {
-    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, {
-      width: '600px',
-    });
+    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
@@ -38,23 +43,19 @@ export class ProgramEditorComponent {
     });
   }
 
-
   addSpeech() {
-    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, {
-      width: '600px',
-    });
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addSpeechItem(this.programId, result).subscribe(item => {
-           this.items = [...this.items, item];
-        }
-                                                                            });
-   }
+          this.items = [...this.items, item];
+        });
+      }
+    });
+  }
 
   addBreak() {
-    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, {
-      width: '400px',
-    });
+    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, { width: '400px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addBreakItem(this.programId, result).subscribe(item => {
@@ -63,7 +64,6 @@ export class ProgramEditorComponent {
       }
     });
   }
-
 
   drop(event: CdkDragDrop<ProgramItem[]>) {
     moveItemInArray(this.items, event.previousIndex, event.currentIndex);
@@ -83,11 +83,23 @@ export class ProgramEditorComponent {
   }
 
   saveOrder() {
-    this.programService
-      .reorderItems(this.programId, this.items.map(i => i.id))
-      .subscribe(items => {
-        this.items = items;
-      });
+    this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe(items => {
+      this.items = items;
+    });
+  }
+
+  hasMissingDurations(): boolean {
+    return this.items.some(i => typeof i.durationSec !== 'number');
+  }
+
+  getPlannedTime(index: number): string {
+    if (!this.startTime) return '';
+    const start = new Date(this.startTime);
+    const offset = this.items
+      .slice(0, index)
+      .reduce((sum, item) => sum + (item.durationSec || 0), 0);
+    const time = new Date(start.getTime() + offset * 1000);
+    return this.formatClockTime(time);
   }
 
   getCumulativeDuration(index: number): string {
@@ -110,5 +122,11 @@ export class ProgramEditorComponent {
       .toString()
       .padStart(2, '0');
     return `${m}:${s}`;
+  }
+
+  private formatClockTime(date: Date): string {
+    const h = date.getHours().toString().padStart(2, '0');
+    const m = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
   }
 }

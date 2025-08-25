@@ -1,7 +1,15 @@
-<button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
+<mat-form-field appearance="fill">
+  <mat-label>Startzeit</mat-label>
+  <input matInput type="datetime-local" [(ngModel)]="startTime" />
+</mat-form-field>
 
+<button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
 <button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()">+ Sprachbeitrag</button>
 <button mat-raised-button color="accent" (click)="addBreak()">+ Pause</button>
+
+<div *ngIf="hasMissingDurations()" class="duration-warning">
+  Es existieren Elemente ohne Dauerangabe.
+</div>
 
 <table
   mat-table
@@ -71,6 +79,13 @@
     </td>
   </ng-container>
 
+  <ng-container matColumnDef="time">
+    <th mat-header-cell *matHeaderCellDef> Uhrzeit </th>
+    <td mat-cell *matCellDef="let item; let i = index">
+      {{ getPlannedTime(i) }}
+    </td>
+  </ng-container>
+
   <ng-container matColumnDef="sum">
     <th mat-header-cell *matHeaderCellDef> Summe </th>
     <td mat-cell *matCellDef="let item; let i = index">
@@ -81,9 +96,7 @@
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef> Aktionen </th>
     <td mat-cell *matCellDef="let item">
-      <a *ngIf="item.pieceId" [routerLink]="['/pieces', item.pieceId]" target="_blank"
-        >Details</a
-      >
+      <a *ngIf="item.pieceId" [routerLink]="['/pieces', item.pieceId]" target="_blank">Details</a>
     </td>
   </ng-container>
 
@@ -94,4 +107,3 @@
 <div *ngIf="items.length" class="total-duration">
   Gesamtdauer: {{ getTotalDuration() }}
 </div>
-
