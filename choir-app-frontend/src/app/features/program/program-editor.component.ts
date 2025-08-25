@@ -20,10 +20,17 @@ import { ProgramBreakDialogComponent } from './program-break-dialog.component';
 })
 export class ProgramEditorComponent {
   programId = '';
+  startTime: string | null = null;
   items: ProgramItem[] = [];
-  displayedColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
+
+  private readonly baseColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
+  private readonly columnsWithTime = ['move', 'title', 'composer', 'duration', 'note', 'time', 'sum', 'actions'];
 
   constructor(private dialog: MatDialog, private programService: ProgramService) {}
+
+  get displayedColumns(): string[] {
+    return this.startTime ? this.columnsWithTime : this.baseColumns;
+  }
 
   addPiece() {
     const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
@@ -57,6 +64,7 @@ export class ProgramEditorComponent {
       }
     });
   }
+
 
   fillSlotWithPiece(item: ProgramItem) {
     const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
@@ -97,6 +105,7 @@ export class ProgramEditorComponent {
     });
   }
 
+
   drop(event: CdkDragDrop<ProgramItem[]>) {
     moveItemInArray(this.items, event.previousIndex, event.currentIndex);
     this.saveOrder();
@@ -120,6 +129,21 @@ export class ProgramEditorComponent {
     });
   }
 
+  hasMissingDurations(): boolean {
+    return this.items.some(i => typeof i.durationSec !== 'number');
+  }
+
+  getPlannedTime(index: number): string {
+    if (!this.startTime) return '';
+    const start = new Date(this.startTime);
+    const offset = this.items
+      .slice(0, index)
+      .reduce((sum, item) => sum + (item.durationSec || 0), 0);
+    const time = new Date(start.getTime() + offset * 1000);
+    return this.formatClockTime(time);
+
+  }
+
   getCumulativeDuration(index: number): string {
     const total = this.items
       .slice(0, index + 1)
@@ -140,5 +164,11 @@ export class ProgramEditorComponent {
       .toString()
       .padStart(2, '0');
     return `${m}:${s}`;
+  }
+
+  private formatClockTime(date: Date): string {
+    const h = date.getHours().toString().padStart(2, '0');
+    const m = date.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
   }
 }
