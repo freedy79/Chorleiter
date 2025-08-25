@@ -50,7 +50,7 @@ exports.signup = async (req, res) => {
     const [choir] = await db.choir.findOrCreate({ where: { name: req.body.choirName }, defaults: { name: req.body.choirName }});
     const user = await db.user.create({
       name: req.body.name,
-      email: req.body.email,
+      email: req.body.email?.toLowerCase(),
       password: bcrypt.hashSync(req.body.password, 8)
     });
     // Ordnen Sie den Benutzer dem Chor zu (fügt einen Eintrag in 'user_choirs' hinzu)
@@ -61,15 +61,16 @@ exports.signup = async (req, res) => {
 
 exports.signin = async (req, res) => {
     logger.info("Sign-in request received:", req.body);
-    const email = req.body.email;
+    const rawEmail = req.body.email;
+    const email = rawEmail?.toLowerCase();
     const ipAddress = req.ip;
     const userAgent = req.get('User-Agent');
     try {
-    if (req.body.email === 'demo@nak-chorleiter.de') {
+    if (email === 'demo@nak-chorleiter.de') {
         await ensureDemoAccount();
     }
     const user = await User.findOne({
-      where: { email: req.body.email },
+      where: db.Sequelize.where(db.Sequelize.fn('lower', db.Sequelize.col('email')), email),
       // Laden Sie alle Chöre, denen der Benutzer zugeordnet ist
       include: [{ model: Choir, attributes: ['id', 'name'] }]
     });
