@@ -34,6 +34,10 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/password-reset/reset/${token}`, { password });
   }
 
+  confirmEmailChange(token: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/email-change/confirm/${token}`);
+  }
+
   completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
   }

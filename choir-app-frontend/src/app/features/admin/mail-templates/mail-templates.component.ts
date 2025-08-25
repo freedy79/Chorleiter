@@ -23,16 +23,19 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
   @ViewChild('availabilityEditor') availabilityEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('changeEditor') changeEditor!: ElementRef<HTMLDivElement>;
   @ViewChild('monthlyEditor') monthlyEditor!: ElementRef<HTMLDivElement>;
+  @ViewChild('emailChangeEditor') emailChangeEditor!: ElementRef<HTMLDivElement>;
   private inviteQuill: any;
   private resetQuill: any;
   private availabilityQuill: any;
   private changeQuill: any;
   private monthlyQuill: any;
+  private emailChangeQuill: any;
   inviteHtmlMode = false;
   resetHtmlMode = false;
   availabilityHtmlMode = false;
   changeHtmlMode = false;
   monthlyHtmlMode = false;
+  emailChangeHtmlMode = false;
   private initializing = true;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
@@ -46,7 +49,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       changeSubject: ['', Validators.required],
       changeBody: ['', Validators.required],
       monthlySubject: ['', Validators.required],
-      monthlyBody: ['', Validators.required]
+      monthlyBody: ['', Validators.required],
+      emailChangeSubject: ['', Validators.required],
+      emailChangeBody: ['', Validators.required]
     });
   }
 
@@ -70,6 +75,7 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       const avail = templates.find(t => t.type === 'availability-request');
       const change = templates.find(t => t.type === 'piece-change');
       const monthly = templates.find(t => t.type === 'monthly-plan');
+      const emailChange = templates.find(t => t.type === 'email-change');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -84,6 +90,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
       }
       if (monthly) {
         this.form.patchValue({ monthlySubject: monthly.subject, monthlyBody: monthly.body });
+      }
+      if (emailChange) {
+        this.form.patchValue({ emailChangeSubject: emailChange.subject, emailChangeBody: emailChange.body });
       }
       this.form.markAsPristine();
       this.setEditorContents();
@@ -108,6 +117,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!type || type === 'monthly-plan') {
       templates.push({ type: 'monthly-plan', subject: value.monthlySubject, body: value.monthlyBody });
+    }
+    if (!type || type === 'email-change') {
+      templates.push({ type: 'email-change', subject: value.emailChangeSubject, body: value.emailChangeBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
@@ -171,6 +183,15 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
         }
       });
     }
+    if ((window as any).Quill && this.emailChangeEditor && !this.emailChangeQuill) {
+      this.emailChangeQuill = new (window as any).Quill(this.emailChangeEditor.nativeElement, options);
+      this.emailChangeQuill.on('text-change', (_: any, __: any, source: string) => {
+        this.form.patchValue({ emailChangeBody: this.emailChangeQuill.root.innerHTML }, { emitEvent: false });
+        if (!this.initializing && source === 'user') {
+          this.form.get('emailChangeBody')?.markAsDirty();
+        }
+      });
+    }
   }
 
   private setEditorContents(): void {
@@ -188,6 +209,9 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (this.monthlyQuill) {
       this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
+    }
+    if (this.emailChangeQuill) {
+      this.emailChangeQuill.root.innerHTML = this.form.value.emailChangeBody || '';
     }
   }
 
@@ -238,6 +262,16 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     }
     if (!this.monthlyHtmlMode && this.monthlyQuill) {
       this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
+    }
+  }
+
+  toggleEmailChangeHtml(): void {
+    this.emailChangeHtmlMode = !this.emailChangeHtmlMode;
+    if (this.emailChangeHtmlMode && this.emailChangeQuill) {
+      this.form.patchValue({ emailChangeBody: this.emailChangeQuill.root.innerHTML });
+    }
+    if (!this.emailChangeHtmlMode && this.emailChangeQuill) {
+      this.emailChangeQuill.root.innerHTML = this.form.value.emailChangeBody || '';
     }
   }
 

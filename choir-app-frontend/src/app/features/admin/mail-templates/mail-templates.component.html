@@ -59,6 +59,29 @@
         <button mat-raised-button color="primary" type="button" (click)="save('reset')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="E-Mail ändern">
+      <mat-form-field appearance="fill">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="emailChangeSubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="emailChangeHtmlMode"
+            (change)="toggleEmailChangeHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <div [hidden]="emailChangeHtmlMode" #emailChangeEditor class="quill-editor"></div>
+        <textarea *ngIf="emailChangeHtmlMode" class="html-editor" formControlName="emailChangeBody"></textarea>
+        <p class="hint">Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}</p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('email-change')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('email-change')">Speichern</button>
+      </div>
+    </mat-tab>
     <mat-tab label="Verfügbarkeitsanfrage">
       <mat-form-field appearance="fill">
         <mat-label>Betreff</mat-label>

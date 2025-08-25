@@ -84,6 +84,14 @@ async function seedDatabase(options = {}) {
                 }
             });
 
+            await db.mail_template.findOrCreate({
+                where: { type: 'email-change' },
+                defaults: {
+                    subject: 'Bestätige deine neue E-Mail-Adresse',
+                    body: '<p>Hallo {{surname}},</p><p>bitte bestätige deine neue E-Mail-Adresse über <a href="{{link}}">diesen Link</a>.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
+                }
+            });
+
             await db.system_setting.findOrCreate({
                 where: { key: 'FRONTEND_URL' },
                 defaults: { value: process.env.FRONTEND_URL || 'https://nak-chorleiter.de' }

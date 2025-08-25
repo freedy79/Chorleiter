@@ -26,6 +26,7 @@ import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
+import { EmailConfirmComponent } from '@features/user/email-confirm/email-confirm.component';
 import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';
 import { DonateComponent } from '@features/donations/donate.component';
 import { DonationSuccessComponent } from '@features/donations/donation-success.component';
@@ -65,6 +66,10 @@ export const routes: Routes = [
             {
                 path: 'reset-password/:token',
                 component: PasswordResetComponent
+            },
+            {
+                path: 'confirm-email/:token',
+                component: EmailConfirmComponent
             },
             { path: 'imprint', component: ImprintComponent },
             { path: 'privacy', component: PrivacyComponent },

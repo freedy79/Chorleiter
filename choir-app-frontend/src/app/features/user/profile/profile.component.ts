@@ -92,6 +92,7 @@ export class ProfileComponent implements OnInit {
     }
 
     const formValue = this.profileForm.value;
+    const oldEmail = this.currentUser?.email;
     const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
       name: formValue.name,
       email: formValue.email,
@@ -115,9 +116,12 @@ export class ProfileComponent implements OnInit {
     }
 
     this.apiService.updateCurrentUser(updatePayload).subscribe({
-      next: () => {
-        this.snackBar.open('Profile updated successfully!', 'OK', { duration: 3000, verticalPosition: 'top' });
-        // Setzen Sie die Passwort-Felder zurück
+      next: (res) => {
+        if (formValue.email && oldEmail && formValue.email !== oldEmail) {
+          this.profileForm.patchValue({ email: oldEmail });
+        }
+        const msg = res?.message || 'Profil erfolgreich aktualisiert!';
+        this.snackBar.open(msg, 'OK', { duration: 3000, verticalPosition: 'top' });
         this.profileForm.get('passwords')?.reset();
       },
       error: (err) => {
