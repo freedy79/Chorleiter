@@ -148,6 +148,10 @@ Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
 Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
 Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"
 
+# Create database backup
+Write-Host "Creating database backup on server..."
+Invoke-Ssh "cd '$BackendDest' && npm run backup"
+
 # Ensure backend dependencies are installed
 Invoke-Ssh "cd '$BackendDest' && npm install"
 

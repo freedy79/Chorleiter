@@ -1,5 +1,3 @@
-const { backupDatabase } = require('../utils/backup');
-
 class CrudService {
   constructor(model) {
     this.model = model;
@@ -18,7 +16,6 @@ class CrudService {
   }
 
   async update(id, data, options = {}) {
-    await backupDatabase();
     const [num] = await this.model.update(data, { where: { id }, ...options });
     return num;
   }
