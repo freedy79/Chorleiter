@@ -66,6 +66,21 @@ const controller = require('../src/controllers/program.controller');
     assert.strictEqual(freeRes.data.performerNames, 'Alice');
     assert.strictEqual(freeRes.data.durationSec, 150);
 
+    // add a break
+    const breakReq = {
+      params: { id: res.data.id },
+      body: {
+        durationSec: 300,
+        note: 'Umbau Bühne',
+      },
+    };
+    const breakRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addBreakItem(breakReq, breakRes);
+    assert.strictEqual(breakRes.statusCode, 201);
+    assert.strictEqual(breakRes.data.type, 'break');
+    assert.strictEqual(breakRes.data.durationSec, 300);
+    assert.strictEqual(breakRes.data.note, 'Umbau Bühne');
+
     console.log('program.controller tests passed');
     await db.sequelize.close();
   } catch (err) {

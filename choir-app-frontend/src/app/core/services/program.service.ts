@@ -31,4 +31,11 @@ export class ProgramService {
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`/api/programs/${programId}/items/free`, data);
   }
+
+  addBreakItem(
+    programId: string,
+    data: { durationSec: number; note?: string }
+  ): Observable<ProgramItem> {
+    return this.http.post<ProgramItem>(`/api/programs/${programId}/items/break`, data);
+  }
 }
