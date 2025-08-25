@@ -5,6 +5,8 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { ProgramService } from '@core/services/program.service';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-program-create',
@@ -17,8 +19,14 @@ export class ProgramCreateComponent {
   title = '';
   description = '';
   startTime: string | null = null;
+  template: 'empty' | 'nak-service' = 'empty';
 
-  constructor(private api: ApiService, private snackBar: MatSnackBar, private router: Router) {}
+  constructor(
+    private api: ApiService,
+    private programService: ProgramService,
+    private snackBar: MatSnackBar,
+    private router: Router
+  ) {}
 
   create(): void {
     const data: any = { title: this.title };
@@ -26,9 +34,26 @@ export class ProgramCreateComponent {
     if (this.startTime) data.startTime = this.startTime;
 
     this.api.createProgram(data).subscribe({
-      next: () => {
-        this.snackBar.open('Programm erstellt', 'OK', { duration: 3000 });
-        this.router.navigate(['/dashboard']);
+      next: program => {
+        if (this.template === 'nak-service') {
+          const labels = [
+            'Eingangslied',
+            'Lied nach Bibelwort',
+            'Musik zur Predigt',
+            'Bußlied',
+            'Musik zum Abendmahl (inkl. Orgel)',
+            'Schlusslied'
+          ];
+          forkJoin(labels.map(label => this.programService.addSlotItem(program.id, { label }))).subscribe({
+            complete: () => {
+              this.snackBar.open('Programm erstellt', 'OK', { duration: 3000 });
+              this.router.navigate(['/dashboard']);
+            }
+          });
+        } else {
+          this.snackBar.open('Programm erstellt', 'OK', { duration: 3000 });
+          this.router.navigate(['/dashboard']);
+        }
       },
       error: () => this.snackBar.open('Fehler beim Erstellen', 'Schließen', { duration: 4000 })
     });
