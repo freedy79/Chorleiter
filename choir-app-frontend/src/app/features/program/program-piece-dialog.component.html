@@ -1,0 +1,30 @@
+<h1 mat-dialog-title>Musikstück</h1>
+<mat-dialog-content>
+  <mat-slide-toggle [(ngModel)]="repertoireOnly" (change)="toggleSource()">
+    Nur Repertoire dieses Chors
+  </mat-slide-toggle>
+  <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="search-form">
+    <mat-form-field appearance="fill">
+      <mat-label>Titel</mat-label>
+      <input matInput formControlName="title" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Komponist</mat-label>
+      <input matInput formControlName="composer" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Tags</mat-label>
+      <input matInput formControlName="tags" />
+    </mat-form-field>
+    <mat-checkbox formControlName="hasDuration">Dauer vorhanden?</mat-checkbox>
+    <button mat-raised-button color="primary" type="submit">Suchen</button>
+  </form>
+  <mat-list>
+    <mat-list-item *ngFor="let piece of pieces" (click)="selectPiece(piece)">
+      {{ piece.title }} – {{ piece.composerName }}
+    </mat-list-item>
+  </mat-list>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+</mat-dialog-actions>

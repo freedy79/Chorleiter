@@ -26,6 +26,25 @@ const controller = require('../src/controllers/program.controller');
     assert.ok(Array.isArray(res.data.items));
     assert.strictEqual(res.data.items.length, 0);
 
+    // create a piece to add
+    const piece = await db.piece.create({ title: 'Song' });
+
+    const addReq = {
+      params: { id: res.data.id },
+      body: {
+        pieceId: piece.id,
+        title: piece.title,
+        composer: 'Anon',
+        durationSec: 120,
+      },
+    };
+    const addRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addPieceItem(addReq, addRes);
+    assert.strictEqual(addRes.statusCode, 201);
+    assert.strictEqual(addRes.data.pieceId, piece.id);
+    assert.strictEqual(addRes.data.pieceTitleSnapshot, 'Song');
+    assert.strictEqual(addRes.data.durationSec, 120);
+
     console.log('program.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
