@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Program } from '../models/program';
+import { Program, ProgramItem } from '../models/program';
 
 @Injectable({ providedIn: 'root' })
 export class ProgramService {
@@ -9,5 +9,12 @@ export class ProgramService {
 
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {
     return this.http.post<Program>('/api/programs', data);
+  }
+
+  addPieceItem(
+    programId: string,
+    data: { pieceId: string; title: string; composer?: string; durationSec?: number; note?: string }
+  ): Observable<ProgramItem> {
+    return this.http.post<ProgramItem>(`/api/programs/${programId}/items`, data);
   }
 }
