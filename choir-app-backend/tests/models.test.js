@@ -33,7 +33,7 @@ const db = require('../src/models');
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'starttls', 'fromAddress']);
     checkFields(db.plan_rule, ['dayOfWeek', 'weeks', 'notes']);
     checkFields(db.post, ['title', 'text', 'pieceId', 'expiresAt']);
-    checkFields(db.program, ['title', 'description', 'status', 'startTime']);
+    checkFields(db.program, ['title', 'description', 'status', 'startAt']);
     checkFields(db.program_element, ['type', 'position', 'duration']);
 
     // Basic association checks
