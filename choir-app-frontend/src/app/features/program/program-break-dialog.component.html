@@ -1,0 +1,17 @@
+<h1 mat-dialog-title>Pause</h1>
+<mat-dialog-content>
+  <form [formGroup]="breakForm" class="break-form">
+    <mat-form-field appearance="fill">
+      <mat-label>Dauer (mm:ss)</mat-label>
+      <input matInput formControlName="duration" placeholder="05:00" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Notiz</mat-label>
+      <input matInput formControlName="note" />
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="breakForm.invalid">Speichern</button>
+</mat-dialog-actions>
