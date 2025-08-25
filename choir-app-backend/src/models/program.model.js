@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
     },
     choirId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: 'choir_id',
     },
@@ -32,16 +32,16 @@ module.exports = (sequelize, DataTypes) => {
       field: 'published_at',
     },
     publishedFromId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       field: 'published_from_id',
     },
     createdBy: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: 'created_by',
     },
     updatedBy: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: 'updated_by',
     },
