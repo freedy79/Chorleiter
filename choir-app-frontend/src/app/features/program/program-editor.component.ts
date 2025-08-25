@@ -7,6 +7,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
 import { ProgramItem } from '@core/models/program';
 import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
+import { ProgramBreakDialogComponent } from './program-break-dialog.component';
 
 @Component({
   selector: 'app-program-editor',
@@ -28,6 +29,19 @@ export class ProgramEditorComponent {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
+          this.items = [...this.items, item];
+        });
+      }
+    });
+  }
+
+  addBreak() {
+    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, {
+      width: '400px',
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService.addBreakItem(this.programId, result).subscribe(item => {
           this.items = [...this.items, item];
         });
       }

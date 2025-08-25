@@ -24,3 +24,9 @@ exports.programItemFreePieceValidation = [
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
 ];
+
+// Validation rules for adding a break item to a program
+exports.programItemBreakValidation = [
+  body('durationSec').isInt({ min: 0 }),
+  body('note').optional().isString(),
+];
