@@ -13,6 +13,7 @@ exports.programItemPieceValidation = [
   body('composer').optional().isString(),
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
+  body('slotId').optional().isUUID(),
 ];
 
 // Validation rules for adding a free piece item to a program
@@ -23,6 +24,7 @@ exports.programItemFreePieceValidation = [
   body('performerNames').optional().isString(),
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
+  body('slotId').optional().isUUID(),
 ];
 
 
@@ -34,11 +36,19 @@ exports.programItemSpeechValidation = [
   body('text').optional().isString(),
   body('durationSec').optional().isInt({ min: 0 }),
   body('note').optional().isString(),
+  body('slotId').optional().isUUID(),
 ];
 
 // Validation rules for adding a break item to a program
 exports.programItemBreakValidation = [
   body('durationSec').isInt({ min: 0 }),
+  body('note').optional().isString(),
+  body('slotId').optional().isUUID(),
+];
+
+// Validation for adding a slot item
+exports.programItemSlotValidation = [
+  body('label').isString().notEmpty(),
   body('note').optional().isString(),
 ];
 

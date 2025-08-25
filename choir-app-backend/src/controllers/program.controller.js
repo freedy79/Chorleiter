@@ -72,8 +72,10 @@ exports.publish = async (req, res) => {
 
 // Add a piece item to an existing program
 exports.addPieceItem = async (req, res) => {
-  let { id } = req.params;
-  const { pieceId, title, composer, durationSec, note } = req.body;
+
+  const { id } = req.params;
+  const { pieceId, title, composer, durationSec, note, slotId } = req.body;
+
   try {
     const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
@@ -83,6 +85,22 @@ exports.addPieceItem = async (req, res) => {
       include: [{ model: db.composer, as: 'composer' }],
     });
     if (!piece) return res.status(404).send({ message: 'piece not found' });
+
+    if (slotId) {
+      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
+      if (!slot) return res.status(404).send({ message: 'slot not found' });
+      const updated = await slot.update({
+        type: 'piece',
+        durationSec: typeof durationSec === 'number' ? durationSec : null,
+        note: note || null,
+        pieceId: piece.id,
+        pieceTitleSnapshot: title || piece.title,
+        pieceComposerSnapshot: composer || piece.composer?.name || null,
+        pieceDurationSecSnapshot: typeof durationSec === 'number' ? durationSec : null,
+        slotLabel: null,
+      });
+      return res.status(200).send(updated);
+    }
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -94,10 +112,8 @@ exports.addPieceItem = async (req, res) => {
       note: note || null,
       pieceId: piece.id,
       pieceTitleSnapshot: title || piece.title,
-      pieceComposerSnapshot:
-        composer || piece.composer?.name || null,
-      pieceDurationSecSnapshot:
-        typeof durationSec === 'number' ? durationSec : null,
+      pieceComposerSnapshot: composer || piece.composer?.name || null,
+      pieceDurationSecSnapshot: typeof durationSec === 'number' ? durationSec : null,
     });
     res.status(201).send(item);
   } catch (err) {
@@ -107,12 +123,30 @@ exports.addPieceItem = async (req, res) => {
 
 // Add a free piece item to an existing program
 exports.addFreePieceItem = async (req, res) => {
-  let { id } = req.params;
-  const { title, composer, instrument, performerNames, durationSec, note } = req.body;
+  const { id } = req.params;
+  const { title, composer, instrument, performerNames, durationSec, note, slotId } = req.body;
   try {
     const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
+
+    if (slotId) {
+      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
+      if (!slot) return res.status(404).send({ message: 'slot not found' });
+      const updated = await slot.update({
+        type: 'piece',
+        durationSec: typeof durationSec === 'number' ? durationSec : null,
+        note: note || null,
+        pieceId: null,
+        pieceTitleSnapshot: title,
+        pieceComposerSnapshot: composer || null,
+        pieceDurationSecSnapshot: typeof durationSec === 'number' ? durationSec : null,
+        instrument: instrument || null,
+        performerNames: performerNames || null,
+        slotLabel: null,
+      });
+      return res.status(200).send(updated);
+    }
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -136,12 +170,28 @@ exports.addFreePieceItem = async (req, res) => {
 };
 
 exports.addSpeechItem = async (req, res) => {
-  let { id } = req.params;
-  const { title, source, speaker, text, durationSec, note } = req.body;
+  const { id } = req.params;
+  const { title, source, speaker, text, durationSec, note, slotId } = req.body;
   try {
     const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
+
+    if (slotId) {
+      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
+      if (!slot) return res.status(404).send({ message: 'slot not found' });
+      const updated = await slot.update({
+        type: 'speech',
+        durationSec: typeof durationSec === 'number' ? durationSec : null,
+        note: note || null,
+        speechTitle: title,
+        speechSource: source || null,
+        speechSpeaker: speaker || null,
+        speechText: text || null,
+        slotLabel: null,
+      });
+      return res.status(200).send(updated);
+    }
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -165,12 +215,26 @@ exports.addSpeechItem = async (req, res) => {
 
 // Add a break item to an existing program
 exports.addBreakItem = async (req, res) => {
-  let { id } = req.params;
-  const { durationSec, note } = req.body;
+
+  const { id } = req.params;
+  const { durationSec, note, slotId } = req.body;
+
   try {
     const program = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
+
+    if (slotId) {
+      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
+      if (!slot) return res.status(404).send({ message: 'slot not found' });
+      const updated = await slot.update({
+        type: 'break',
+        durationSec: typeof durationSec === 'number' ? durationSec : null,
+        note: note || null,
+        slotLabel: null,
+      });
+      return res.status(200).send(updated);
+    }
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -180,6 +244,29 @@ exports.addBreakItem = async (req, res) => {
       type: 'break',
       durationSec: typeof durationSec === 'number' ? durationSec : null,
       note: note || null,
+    });
+    res.status(201).send(item);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// Add a slot item to an existing program
+exports.addSlotItem = async (req, res) => {
+  const { id } = req.params;
+  const { label, note } = req.body;
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    const sortIndex = await db.program_item.count({ where: { programId: id } });
+
+    const item = await db.program_item.create({
+      programId: id,
+      sortIndex,
+      type: 'slot',
+      note: note || null,
+      slotLabel: label,
     });
     res.status(201).send(item);
   } catch (err) {

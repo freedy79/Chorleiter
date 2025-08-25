@@ -16,7 +16,7 @@ export class ProgramService {
 
   addPieceItem(
     programId: string,
-    data: { pieceId: string; title: string; composer?: string; durationSec?: number; note?: string }
+    data: { pieceId: string; title: string; composer?: string; durationSec?: number; note?: string; slotId?: string }
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items`, data);
   }
@@ -30,28 +30,42 @@ export class ProgramService {
       performerNames?: string;
       durationSec?: number;
       note?: string;
+      slotId?: string;
     }
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/free`, data);
   }
 
-
   addSpeechItem(
     programId: string,
-    data: { title: string; source?: string; speaker?: string; text?: string; durationSec?: number; note?: string }
+    data: {
+      title: string;
+      source?: string;
+      speaker?: string;
+      text?: string;
+      durationSec?: number;
+      note?: string;
+      slotId?: string;
+    }
   ): Observable<ProgramItem> {
-    return this.http.post<ProgramItem>(`/api/programs/${programId}/items/speech`, data);
-  }
+    return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/speech`, data);
   }
 
   addBreakItem(
     programId: string,
-    data: { durationSec: number; note?: string }
+    data: { durationSec: number; note?: string; slotId?: string }
   ): Observable<ProgramItem> {
     return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/break`, data);
   }
 
+  addSlotItem(
+    programId: string,
+    data: { label: string; note?: string }
+  ): Observable<ProgramItem> {
+    return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/slot`, data);
+  }
+
   reorderItems(programId: string, order: string[]): Observable<ProgramItem[]> {
-    return this.http.put<ProgramItem[]>(`/api/programs/${programId}/items/reorder`, { order });
+    return this.http.put<ProgramItem[]>(`${this.apiUrl}/programs/${programId}/items/reorder`, { order });
   }
 }
