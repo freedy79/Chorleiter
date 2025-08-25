@@ -6,6 +6,7 @@ const {
   programItemPieceValidation,
   programItemFreePieceValidation,
   programItemBreakValidation,
+  programItemSpeechValidation
   programItemsReorderValidation,
 } = require('../validators/program.validation');
 const controller = require('../controllers/program.controller');
@@ -17,6 +18,7 @@ router.use(authJwt.verifyToken);
 router.post('/', role.requireDirector, programValidation, validate, wrap(controller.create));
 router.post('/:id/items', role.requireDirector, programItemPieceValidation, validate, wrap(controller.addPieceItem));
 router.post('/:id/items/free', role.requireDirector, programItemFreePieceValidation, validate, wrap(controller.addFreePieceItem));
+router.post('/:id/items/speech', role.requireDirector, programItemSpeechValidation, validate, wrap(controller.addSpeechItem));
 router.post('/:id/items/break', role.requireDirector, programItemBreakValidation, validate, wrap(controller.addBreakItem));
 router.put(
   '/:id/items/reorder',

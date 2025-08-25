@@ -95,6 +95,24 @@ const controller = require('../src/controllers/program.controller');
     assert.deepStrictEqual(orderRes.data.map(i => i.id), [breakItem.id, pieceItem.id, freeItem.id]);
     assert.strictEqual(orderRes.data[0].sortIndex, 0);
 
+    // add a speech item
+    const speechReq = {
+      params: { id: res.data.id },
+      body: {
+        title: 'Welcome',
+        source: 'Author',
+        speaker: 'Bob',
+        text: 'Welcome everyone',
+        durationSec: 30,
+      },
+    };
+    const speechRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.addSpeechItem(speechReq, speechRes);
+    assert.strictEqual(speechRes.statusCode, 201);
+    assert.strictEqual(speechRes.data.speechTitle, 'Welcome');
+    assert.strictEqual(speechRes.data.speechSpeaker, 'Bob');
+    assert.strictEqual(speechRes.data.durationSec, 30);
+
     console.log('program.controller tests passed');
     await db.sequelize.close();
   } catch (err) {

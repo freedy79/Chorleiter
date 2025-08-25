@@ -11,6 +11,10 @@ export interface ProgramItem {
   pieceDurationSecSnapshot?: number | null;
   instrument?: string | null;
   performerNames?: string | null;
+  speechTitle?: string | null;
+  speechSource?: string | null;
+  speechSpeaker?: string | null;
+  speechText?: string | null;
 }
 
 export interface Program {

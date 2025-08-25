@@ -86,6 +86,33 @@ exports.addFreePieceItem = async (req, res) => {
   }
 };
 
+exports.addSpeechItem = async (req, res) => {
+  const { id } = req.params;
+  const { title, source, speaker, text, durationSec, note } = req.body;
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    const sortIndex = await db.program_item.count({ where: { programId: id } });
+
+    const item = await db.program_item.create({
+      programId: id,
+      sortIndex,
+      type: 'speech',
+      durationSec: typeof durationSec === 'number' ? durationSec : null,
+      note: note || null,
+      speechTitle: title,
+      speechSource: source || null,
+      speechSpeaker: speaker || null,
+      speechText: text || null,
+    });
+    res.status(201).send(item);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+  
+
 // Add a break item to an existing program
 exports.addBreakItem = async (req, res) => {
   const { id } = req.params;
@@ -108,6 +135,7 @@ exports.addBreakItem = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
+
 
 // Reorder items of a program
 exports.reorderItems = async (req, res) => {

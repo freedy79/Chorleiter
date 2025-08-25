@@ -8,6 +8,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
 import { ProgramItem } from '@core/models/program';
 import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
+import { ProgramSpeechDialogComponent } from './program-speech-dialog.component';
 import { ProgramBreakDialogComponent } from './program-break-dialog.component';
 
 @Component({
@@ -37,6 +38,19 @@ export class ProgramEditorComponent {
     });
   }
 
+
+  addSpeech() {
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, {
+      width: '600px',
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService.addSpeechItem(this.programId, result).subscribe(item => {
+           this.items = [...this.items, item];
+        }
+                                                                            });
+   }
+
   addBreak() {
     const dialogRef = this.dialog.open(ProgramBreakDialogComponent, {
       width: '400px',
@@ -49,6 +63,7 @@ export class ProgramEditorComponent {
       }
     });
   }
+
 
   drop(event: CdkDragDrop<ProgramItem[]>) {
     moveItemInArray(this.items, event.previousIndex, event.currentIndex);
