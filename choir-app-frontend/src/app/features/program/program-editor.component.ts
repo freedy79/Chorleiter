@@ -10,6 +10,7 @@ import { ProgramItem } from '@core/models/program';
 import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
 import { ProgramSpeechDialogComponent } from './program-speech-dialog.component';
 import { ProgramBreakDialogComponent } from './program-break-dialog.component';
+import { ProgramFreePieceDialogComponent } from './program-free-piece-dialog.component';
 
 @Component({
   selector: 'app-program-editor',
@@ -57,6 +58,17 @@ export class ProgramEditorComponent implements OnInit {
     });
   }
 
+  addFreePiece() {
+    const dialogRef = this.dialog.open(ProgramFreePieceDialogComponent, { width: '600px' });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService.addFreePieceItem(this.programId, result).subscribe(item => {
+          this.items = [...this.items, this.enhanceItem(item)];
+        });
+      }
+    });
+  }
+
   addSpeech() {
     const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
@@ -86,6 +98,20 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          });
+      }
+    });
+  }
+
+  fillSlotWithFreePiece(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramFreePieceDialogComponent, { width: '600px' });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addFreePieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
