@@ -24,6 +24,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: true
         },
+        durationSec: { // Dauer in Sekunden
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
         lyrics: { // Text
             type: DataTypes.TEXT,
             allowNull: true

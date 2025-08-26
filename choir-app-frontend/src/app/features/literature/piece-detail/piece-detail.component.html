@@ -11,6 +11,7 @@
   <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
+  <p *ngIf="piece.durationSec != null"><strong>Dauer:</strong> {{ formatDuration(piece.durationSec) }}</p>
   <mat-expansion-panel *ngIf="piece.lyrics">
     <mat-expansion-panel-header>
       <mat-panel-title>Liedtext</mat-panel-title>

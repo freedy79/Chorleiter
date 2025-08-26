@@ -19,7 +19,7 @@ const db = require('../src/models');
 
     checkFields(db.user, ['email', 'roles', 'lastDonation', 'preferences', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir']);
     checkFields(db.choir, ['name', 'modules', 'joinHash']);
-    checkFields(db.piece, ['title']);
+    checkFields(db.piece, ['title', 'durationSec']);
     checkFields(db.event, ['date', 'type', 'organistId', 'finalized', 'version', 'monthlyPlanId']);
     checkFields(db.monthly_plan, ['year', 'month', 'finalized', 'version']);
     checkFields(db.composer, ['name']);

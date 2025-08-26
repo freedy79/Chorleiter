@@ -65,7 +65,8 @@ exports.lookup = async (req, res) => {
                 title: plainPiece.title,
                 composerName: plainPiece.composer?.name || plainPiece.origin || '',
                 reference: referenceString, // z.B. "CB45" oder null
-                collectionTitle
+                collectionTitle,
+                durationSec: plainPiece.durationSec
             };
         });
 

@@ -123,6 +123,7 @@ export class PieceDialogComponent implements OnInit {
             opus: [''],
             key: [''],
             timeSignature: [''],
+            duration: ['', Validators.pattern(/^\d{1,2}:\d{2}$/)],
             license: [''],
             composerId: [null],
             origin: [''],
@@ -442,6 +443,7 @@ export class PieceDialogComponent implements OnInit {
             voicing: piece.voicing,
             key: piece.key,
             timeSignature: piece.timeSignature,
+            duration: this.formatDurationInput(piece.durationSec),
             license: piece.license,
             composerId: piece.composer?.id,
             origin: piece.origin,
@@ -480,6 +482,24 @@ export class PieceDialogComponent implements OnInit {
         });
     }
 
+    private formatDurationInput(seconds?: number | null): string {
+        return typeof seconds === 'number' ? this.formatDuration(seconds) : '';
+    }
+
+    private parseDuration(value: string | undefined): number | null {
+        if (!value) return null;
+        const match = value.match(/^\d{1,2}:\d{2}$/);
+        if (!match) return null;
+        const [m, s] = value.split(':').map(v => parseInt(v, 10));
+        return m * 60 + s;
+    }
+
+    private formatDuration(seconds: number): string {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
     onLicenseChange(license: string): void {
         this.licenseHint = this.licenseHintMap[license] || null;
     }
@@ -494,10 +514,13 @@ export class PieceDialogComponent implements OnInit {
             return;
         }
 
+        const { duration, ...formValue } = this.pieceForm.value;
+        const payload = { ...formValue, durationSec: this.parseDuration(duration) };
+
         if (this.isEditMode && this.data.pieceId) {
             const obs = this.isAdmin
-                ? this.pieceService.updateGlobalPiece(this.data.pieceId, this.pieceForm.value)
-                : this.pieceService.proposePieceChange(this.data.pieceId, this.pieceForm.value);
+                ? this.pieceService.updateGlobalPiece(this.data.pieceId, payload)
+                : this.pieceService.proposePieceChange(this.data.pieceId, payload);
             obs
                 .pipe(
                     switchMap(() =>
@@ -519,7 +542,7 @@ export class PieceDialogComponent implements OnInit {
                 });
         } else {
             this.pieceService
-                .createGlobalPiece(this.pieceForm.value)
+                .createGlobalPiece(payload)
                 .pipe(
                     switchMap((newlyCreatedPiece) =>
                         this.pieceService

@@ -69,6 +69,11 @@
               </mat-form-field>
 
               <mat-form-field appearance="outline">
+                <mat-label>Dauer (mm:ss)</mat-label>
+                <input matInput formControlName="duration" placeholder="03:30" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
                 <mat-label>Lizenz</mat-label>
                 <mat-select formControlName="license" (selectionChange)="onLicenseChange($event.value)">
                   <mat-option value=""></mat-option>

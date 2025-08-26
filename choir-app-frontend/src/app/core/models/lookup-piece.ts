@@ -5,4 +5,5 @@ export interface LookupPiece {
   composerName: string;
   collectionTitle: string | null;
   reference: string | null;
+  durationSec?: number;
 }

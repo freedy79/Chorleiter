@@ -3,6 +3,7 @@
   <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
+  <p *ngIf="piece.durationSec != null"><strong>Dauer:</strong> {{ formatDuration(piece.durationSec) }}</p>
   <p><strong>Status im Chor:</strong> {{ piece.choir_repertoire?.status | pieceStatusLabel }}</p>
   <h3>Notizen</h3>
   <mat-list *ngIf="piece.notes?.length; else noNotes">
