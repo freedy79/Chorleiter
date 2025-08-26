@@ -21,6 +21,9 @@ export class ProgramService {
   getProgram(id: string): Observable<Program> {
     return this.http.get<Program>(`${this.apiUrl}/programs/${id}`);
   }
+  deleteProgram(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/programs/${id}`);
+  }
 
   addPieceItem(
     programId: string,

@@ -84,6 +84,21 @@ exports.findOne = async (req, res) => {
   }
 };
 
+exports.delete = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    await db.program_item.destroy({ where: { programId: id } });
+    await db.program_element.destroy({ where: { programId: id } });
+    await program.destroy();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+
 // Publish a program so that choir members can view it
 exports.publish = async (req, res) => {
   const { id } = req.params;

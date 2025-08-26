@@ -8,9 +8,10 @@
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+        <th mat-header-cell *matHeaderCellDef>Aktionen</th>
     <td mat-cell *matCellDef="let program">
       <button mat-button [routerLink]="['/programs', program.id]">Bearbeiten</button>
+      <button mat-button color="warn" (click)="delete(program)">Löschen</button>
     </td>
   </ng-container>
 

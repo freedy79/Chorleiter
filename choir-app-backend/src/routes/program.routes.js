@@ -18,6 +18,7 @@ router.use(authJwt.verifyToken);
 
 router.get('/', role.requireDirector, wrap(controller.findAll));
 router.get('/:id', role.requireDirector, wrap(controller.findOne));
+router.delete('/:id', role.requireDirector, wrap(controller.delete));
 router.post('/', role.requireDirector, programValidation, validate, wrap(controller.create));
 router.post('/:id/publish', role.requireDirector, wrap(controller.publish));
 router.post('/:id/items', role.requireDirector, programItemPieceValidation, validate, wrap(controller.addPieceItem));
