@@ -175,6 +175,13 @@ export class ProgramEditorComponent implements OnInit {
 
   onDurationChange(item: ProgramItem) {
     item.durationSec = this.parseDuration(item.durationStr);
+    if (item.durationStr === '' || item.durationSec !== null) {
+      this.programService
+        .updateItem(this.programId, item.id, { durationSec: item.durationSec ?? null })
+        .subscribe(updated => {
+          Object.assign(item, this.enhanceItem(updated));
+        });
+    }
   }
 
   private enhanceItem(item: ProgramItem): ProgramItem {

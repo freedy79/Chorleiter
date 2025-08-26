@@ -69,14 +69,22 @@ export class ProgramService {
     return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/break`, data);
   }
 
-  addSlotItem(
-    programId: string,
-    data: { label: string; note?: string }
-  ): Observable<ProgramItem> {
-    return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/slot`, data);
-  }
+    addSlotItem(
+      programId: string,
+      data: { label: string; note?: string }
+    ): Observable<ProgramItem> {
+      return this.http.post<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/slot`, data);
+    }
 
-  reorderItems(programId: string, order: string[]): Observable<ProgramItem[]> {
-    return this.http.put<ProgramItem[]>(`${this.apiUrl}/programs/${programId}/items/reorder`, { order });
+    reorderItems(programId: string, order: string[]): Observable<ProgramItem[]> {
+      return this.http.put<ProgramItem[]>(`${this.apiUrl}/programs/${programId}/items/reorder`, { order });
+    }
+
+    updateItem(
+      programId: string,
+      itemId: string,
+      data: { durationSec?: number | null; note?: string | null }
+    ): Observable<ProgramItem> {
+      return this.http.put<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/${itemId}`, data);
+    }
   }
-}

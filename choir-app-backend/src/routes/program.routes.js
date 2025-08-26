@@ -9,6 +9,7 @@ const {
   programItemSpeechValidation,
   programItemSlotValidation,
   programItemsReorderValidation,
+  programItemUpdateValidation,
 } = require('../validators/program.validation');
 const controller = require('../controllers/program.controller');
 const { handler: wrap } = require('../utils/async');
@@ -32,6 +33,13 @@ router.put(
   programItemsReorderValidation,
   validate,
   wrap(controller.reorderItems)
+);
+router.put(
+  '/:id/items/:itemId',
+  role.requireDirector,
+  programItemUpdateValidation,
+  validate,
+  wrap(controller.updateItem)
 );
 
 module.exports = router;
