@@ -23,7 +23,11 @@ exports.programItemPieceValidation = [
 exports.programItemFreePieceValidation = [
   body('title').isString().notEmpty(),
   body('composer').optional().isString(),
-  body('instrument').optional().isString(),
+  body('instrument')
+    .optional()
+    .isString()
+    .matches(/^[\p{L}\s.,-]+$/u)
+    .withMessage('instrument contains invalid characters'),
   body('performerNames').optional().isString(),
   body('durationSec').optional({ nullable: true }).isInt({ min: 0 }),
   body('note').optional().isString(),
