@@ -37,7 +37,7 @@ export class ProgramEditorComponent implements OnInit {
     if (this.programId) {
       this.programService.getProgram(this.programId).subscribe(program => {
         this.startTime = program.startTime ?? null;
-        this.items = program.items;
+        this.items = program.items.map(i => this.enhanceItem(i));
       });
     }
   }
@@ -51,7 +51,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
-          this.items = [...this.items, item];
+          this.items = [...this.items, this.enhanceItem(item)];
         });
       }
     });
@@ -62,7 +62,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addSpeechItem(this.programId, result).subscribe(item => {
-          this.items = [...this.items, item];
+          this.items = [...this.items, this.enhanceItem(item)];
         });
       }
     });
@@ -73,7 +73,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addBreakItem(this.programId, result).subscribe(item => {
-          this.items = [...this.items, item];
+          this.items = [...this.items, this.enhanceItem(item)];
         });
       }
     });
@@ -87,7 +87,8 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
-            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
       }
     });
@@ -100,7 +101,8 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addSpeechItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
-            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
       }
     });
@@ -113,7 +115,8 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addBreakItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
-            this.items = this.items.map(i => (i.id === item.id ? updated : i));
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
       }
     });
@@ -139,7 +142,7 @@ export class ProgramEditorComponent implements OnInit {
 
   saveOrder() {
     this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe(items => {
-      this.items = items;
+      this.items = items.map(i => this.enhanceItem(i));
     });
   }
 
@@ -168,6 +171,29 @@ export class ProgramEditorComponent implements OnInit {
   getTotalDuration(): string {
     const total = this.items.reduce((sum, item) => sum + (item.durationSec || 0), 0);
     return this.formatDuration(total);
+  }
+
+  onDurationChange(item: ProgramItem) {
+    item.durationSec = this.parseDuration(item.durationStr);
+  }
+
+  private enhanceItem(item: ProgramItem): ProgramItem {
+    return {
+      ...item,
+      durationStr: this.formatDurationInput(item.durationSec),
+    };
+  }
+
+  private formatDurationInput(seconds?: number | null): string {
+    return typeof seconds === 'number' ? this.formatDuration(seconds) : '';
+  }
+
+  private parseDuration(value: string | undefined): number | null {
+    if (!value) return null;
+    const match = value.match(/^\d{1,2}:\d{2}$/);
+    if (!match) return null;
+    const [m, s] = value.split(':').map(v => parseInt(v, 10));
+    return m * 60 + s;
   }
 
   private formatDuration(seconds: number): string {

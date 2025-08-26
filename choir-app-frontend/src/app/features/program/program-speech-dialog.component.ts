@@ -20,13 +20,19 @@ export class ProgramSpeechDialogComponent {
       source: [''],
       speaker: [''],
       text: [''],
-      durationSec: [null],
+      duration: ['', Validators.pattern(/^\d{1,2}:\d{2}$/)],
     });
   }
 
   save() {
     if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
+      const { duration, ...rest } = this.form.value;
+      let durationSec: number | undefined;
+      if (duration) {
+        const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
+        durationSec = m * 60 + s;
+      }
+      this.dialogRef.close({ ...rest, durationSec });
     }
   }
 
