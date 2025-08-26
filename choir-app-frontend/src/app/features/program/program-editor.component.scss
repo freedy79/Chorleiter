@@ -3,6 +3,10 @@
   margin-top: 16px;
 }
 
+.table-container {
+  overflow-x: auto;
+}
+
 .add-speech {
   margin-left: 8px;
 }
@@ -25,4 +29,28 @@
 .duration-warning {
   margin-top: 8px;
   color: #b00020;
+}
+
+@media (max-width: 600px) {
+  .program-table {
+    display: table;
+    width: 100%;
+  }
+
+  .program-table .mat-mdc-header-row {
+    display: table-row;
+  }
+
+  .program-table .mat-mdc-row {
+    display: table-row;
+    border-bottom: none;
+    padding: 0;
+  }
+
+  .program-table .mat-mdc-row .mat-mdc-cell {
+    display: table-cell;
+    width: auto;
+    padding: 4px 8px;
+    box-sizing: border-box;
+  }
 }
