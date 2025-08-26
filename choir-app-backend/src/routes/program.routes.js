@@ -41,5 +41,6 @@ router.put(
   validate,
   wrap(controller.updateItem)
 );
+router.delete('/:id/items/:itemId', role.requireDirector, wrap(controller.deleteItem));
 
 module.exports = router;

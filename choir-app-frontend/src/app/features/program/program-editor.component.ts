@@ -210,6 +210,20 @@ export class ProgramEditorComponent implements OnInit {
     }
   }
 
+  onNoteChange(item: ProgramItem) {
+    this.programService
+      .updateItem(this.programId, item.id, { note: item.note ?? null })
+      .subscribe(updated => {
+        Object.assign(item, this.enhanceItem(updated));
+      });
+  }
+
+  deleteItem(item: ProgramItem) {
+    this.programService.deleteItem(this.programId, item.id).subscribe(() => {
+      this.items = this.items.filter(i => i.id !== item.id);
+    });
+  }
+
   private enhanceItem(item: ProgramItem): ProgramItem {
     return {
       ...item,

@@ -87,4 +87,8 @@ export class ProgramService {
     ): Observable<ProgramItem> {
       return this.http.put<ProgramItem>(`${this.apiUrl}/programs/${programId}/items/${itemId}`, data);
     }
+
+    deleteItem(programId: string, itemId: string): Observable<void> {
+      return this.http.delete<void>(`${this.apiUrl}/programs/${programId}/items/${itemId}`);
+    }
   }
