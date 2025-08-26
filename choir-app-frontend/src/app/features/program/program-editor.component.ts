@@ -7,6 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
 import { ProgramItem } from '@core/models/program';
+import { ProgramBasicsDialogComponent } from './program-basics-dialog.component';
 import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
 import { ProgramSpeechDialogComponent } from './program-speech-dialog.component';
 import { ProgramBreakDialogComponent } from './program-break-dialog.component';
@@ -22,6 +23,8 @@ import { ProgramFreePieceDialogComponent } from './program-free-piece-dialog.com
 export class ProgramEditorComponent implements OnInit {
   programId = '';
   startTime: string | null = null;
+  programTitle = '';
+  programDescription = '';
   items: ProgramItem[] = [];
 
   private readonly baseColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
@@ -37,6 +40,8 @@ export class ProgramEditorComponent implements OnInit {
     this.programId = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.programId) {
       this.programService.getProgram(this.programId).subscribe(program => {
+        this.programTitle = program.title;
+        this.programDescription = program.description ?? '';
         this.startTime = program.startTime ?? null;
         this.items = program.items.map(i => this.enhanceItem(i));
       });
@@ -86,6 +91,26 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService.addBreakItem(this.programId, result).subscribe(item => {
           this.items = [...this.items, this.enhanceItem(item)];
+        });
+      }
+    });
+  }
+
+  editBasics() {
+    const dialogRef = this.dialog.open(ProgramBasicsDialogComponent, {
+      width: '600px',
+      data: {
+        title: this.programTitle,
+        description: this.programDescription,
+        startTime: this.startTime,
+      },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService.updateProgram(this.programId, result).subscribe(updated => {
+          this.programTitle = updated.title;
+          this.programDescription = updated.description ?? '';
+          this.startTime = updated.startTime ?? null;
         });
       }
     });

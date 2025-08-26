@@ -3,6 +3,13 @@
   margin-top: 16px;
 }
 
+.program-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
 .program-table .mat-column-duration {
   width: 5em;
 }

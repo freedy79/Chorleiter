@@ -21,6 +21,12 @@ export class ProgramService {
   getProgram(id: string): Observable<Program> {
     return this.http.get<Program>(`${this.apiUrl}/programs/${id}`);
   }
+  updateProgram(
+    id: string,
+    data: { title?: string; description?: string; startTime?: string | null }
+  ): Observable<Program> {
+    return this.http.put<Program>(`${this.apiUrl}/programs/${id}`, data);
+  }
   deleteProgram(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/programs/${id}`);
   }
