@@ -20,5 +20,11 @@ export class ProgramListComponent implements OnInit {
   ngOnInit(): void {
     this.programService.getPrograms().subscribe(programs => (this.programs = programs));
   }
+  delete(program: Program): void {
+    this.programService.deleteProgram(program.id).subscribe(() => {
+      this.programs = this.programs.filter(p => p.id !== program.id);
+    });
+  }
+
 }
 

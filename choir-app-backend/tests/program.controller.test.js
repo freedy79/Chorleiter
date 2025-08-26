@@ -135,6 +135,16 @@ const controller = require('../src/controllers/program.controller');
       assert.strictEqual(newProgram.publishedFromId, publishRes.data.id);
       assert.strictEqual(newProgram.status, 'draft');
 
+      // delete program
+      const delReq = { params: { id: afterRes.data.programId } };
+      const delRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+      await controller.delete(delReq, delRes);
+      assert.strictEqual(delRes.statusCode, 204);
+      const deleted = await db.program.findByPk(afterRes.data.programId);
+      assert.strictEqual(deleted, null);
+      const itemsAfterDelete = await db.program_item.findAll({ where: { programId: afterRes.data.programId } });
+      assert.strictEqual(itemsAfterDelete.length, 0);
+
       console.log('program.controller tests passed');
       await db.sequelize.close();
     } catch (err) {
