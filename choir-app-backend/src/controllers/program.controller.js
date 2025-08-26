@@ -98,6 +98,30 @@ exports.delete = async (req, res) => {
   }
 };
 
+exports.update = async (req, res) => {
+  let { id } = req.params;
+  const { title, description, startTime } = req.body;
+  try {
+    const program = await ensureEditableProgram(id, req.userId);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
+
+    const start = typeof startTime !== 'undefined' ? (startTime === null ? null : new Date(startTime)) : program.startTime;
+
+    await program.update(
+      {
+        title: typeof title === 'string' && title ? title : program.title,
+        description: typeof description !== 'undefined' ? description || null : program.description,
+        startTime: start,
+        updatedBy: req.userId,
+      }
+    );
+    res.status(200).send(program);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 
 // Publish a program so that choir members can view it
 exports.publish = async (req, res) => {

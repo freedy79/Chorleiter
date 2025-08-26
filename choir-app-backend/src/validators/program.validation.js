@@ -6,6 +6,12 @@ exports.programValidation = [
   body('startTime').optional({ nullable: true }).isISO8601(),
 ];
 
+exports.programUpdateValidation = [
+  body('title').optional().isString().notEmpty(),
+  body('description').optional({ nullable: true }).isString(),
+  body('startTime').optional({ nullable: true }).isISO8601(),
+];
+
 // Validation rules for adding a piece item to a program
 exports.programItemPieceValidation = [
   oneOf(

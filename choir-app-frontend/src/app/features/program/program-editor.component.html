@@ -1,7 +1,7 @@
-<mat-form-field appearance="fill">
-  <mat-label>Startzeit</mat-label>
-  <input matInput type="datetime-local" [(ngModel)]="startTime" />
-</mat-form-field>
+<div class="program-header">
+  <span>Startzeit: {{ startTime ? (startTime | date:'short') : '-' }}</span>
+  <button mat-button (click)="editBasics()">Stammdaten bearbeiten</button>
+</div>
 
 <button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
 <button mat-raised-button color="accent" (click)="addFreePiece()">+ Freies Stück</button>

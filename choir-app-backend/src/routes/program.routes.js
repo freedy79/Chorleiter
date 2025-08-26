@@ -3,6 +3,7 @@ const role = require('../middleware/role.middleware');
 const validate = require('../validators/validate');
 const {
   programValidation,
+  programUpdateValidation,
   programItemPieceValidation,
   programItemFreePieceValidation,
   programItemBreakValidation,
@@ -21,6 +22,7 @@ router.get('/', role.requireDirector, wrap(controller.findAll));
 router.get('/:id', role.requireDirector, wrap(controller.findOne));
 router.delete('/:id', role.requireDirector, wrap(controller.delete));
 router.post('/', role.requireDirector, programValidation, validate, wrap(controller.create));
+router.put('/:id', role.requireDirector, programUpdateValidation, validate, wrap(controller.update));
 router.post('/:id/publish', role.requireDirector, wrap(controller.publish));
 router.post('/:id/items', role.requireDirector, programItemPieceValidation, validate, wrap(controller.addPieceItem));
 router.post('/:id/items/free', role.requireDirector, programItemFreePieceValidation, validate, wrap(controller.addFreePieceItem));

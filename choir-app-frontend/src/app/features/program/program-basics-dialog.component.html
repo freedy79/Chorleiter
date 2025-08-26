@@ -1,0 +1,22 @@
+<h1 mat-dialog-title>Stammdaten bearbeiten</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="fill">
+    <mat-label>Titel</mat-label>
+    <input matInput [(ngModel)]="title" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Beschreibung</mat-label>
+    <textarea matInput rows="3" [(ngModel)]="description"></textarea>
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Startzeit</mat-label>
+    <input matInput type="datetime-local" [(ngModel)]="startTime" />
+  </mat-form-field>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="dialogRef.close()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()">Speichern</button>
+</div>
+
