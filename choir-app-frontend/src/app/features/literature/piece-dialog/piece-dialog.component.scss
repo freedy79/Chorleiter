@@ -31,12 +31,12 @@
 
 mat-sidenav-container.dialog-container {
   max-width: 1000px;
-  height: 100%;
+  height: auto;
 }
 
 div[mat-dialog-content] {
-  height: 80vh;
-  overflow: hidden;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 mat-sidenav {
