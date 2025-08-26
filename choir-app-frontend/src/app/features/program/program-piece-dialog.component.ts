@@ -60,6 +60,7 @@ export class ProgramPieceDialogComponent implements OnInit {
           id: p.id,
           title: p.title,
           composerName: p.composerName,
+          durationSec: p.durationSec,
         }));
         this.pieces = this.applyFilters(mapped);
       });

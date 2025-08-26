@@ -46,6 +46,7 @@ export interface Piece {
 
   key?: string;
   timeSignature?: string;
+  durationSec?: number;
   lyrics?: string;
   imageIdentifier?: string;
   license?: string;
