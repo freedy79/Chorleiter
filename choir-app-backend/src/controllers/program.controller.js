@@ -347,3 +347,26 @@ exports.reorderItems = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
+
+// Update attributes of a program item
+exports.updateItem = async (req, res) => {
+  let { id, itemId } = req.params;
+  const { durationSec, note } = req.body;
+  try {
+    const program = await ensureEditableProgram(id, req.userId);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
+
+    const item = await db.program_item.findOne({ where: { id: itemId, programId: id } });
+    if (!item) return res.status(404).send({ message: 'item not found' });
+
+    await item.update({
+      durationSec: typeof durationSec === 'number' ? durationSec : null,
+      note: typeof note === 'string' ? note : item.note,
+    });
+
+    res.status(200).send(item);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};

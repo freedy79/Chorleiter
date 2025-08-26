@@ -60,3 +60,9 @@ exports.programItemsReorderValidation = [
   body('order').isArray(),
   body('order.*').isUUID(),
 ];
+
+// Validation rules for updating a program item
+exports.programItemUpdateValidation = [
+  body('durationSec').optional({ nullable: true }).isInt({ min: 0 }),
+  body('note').optional({ nullable: true }).isString(),
+];

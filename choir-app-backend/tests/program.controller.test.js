@@ -46,6 +46,17 @@ const controller = require('../src/controllers/program.controller');
     assert.strictEqual(pieceItem.pieceTitleSnapshot, 'Song');
     assert.strictEqual(pieceItem.durationSec, 120);
 
+    // update duration of piece item
+    const updReq = {
+      params: { id: res.data.id, itemId: pieceItem.id },
+      body: { durationSec: 180 },
+      userId: user.id,
+    };
+    const updRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.updateItem(updReq, updRes);
+    assert.strictEqual(updRes.statusCode, 200);
+    assert.strictEqual(updRes.data.durationSec, 180);
+
     // add a free piece
     const freeReq = {
       params: { id: res.data.id },
