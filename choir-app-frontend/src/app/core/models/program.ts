@@ -4,6 +4,11 @@ export interface ProgramItem {
   sortIndex: number;
   type: 'piece' | 'break' | 'speech' | 'slot';
   durationSec?: number | null;
+  /**
+   * Optional helper string used in the editor to keep the mm:ss input value
+   * while editing. Converted to {@link durationSec} on save.
+   */
+  durationStr?: string;
   note?: string | null;
   pieceId?: string;
   pieceTitleSnapshot?: string;
