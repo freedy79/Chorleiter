@@ -47,12 +47,12 @@ export class ProgramCreateComponent {
           forkJoin(labels.map(label => this.programService.addSlotItem(program.id, { label }))).subscribe({
             complete: () => {
               this.snackBar.open('Programm erstellt', 'OK', { duration: 3000 });
-              this.router.navigate(['/dashboard']);
+              this.router.navigate(['/programs', program.id]);
             }
           });
         } else {
           this.snackBar.open('Programm erstellt', 'OK', { duration: 3000 });
-          this.router.navigate(['/dashboard']);
+          this.router.navigate(['/programs', program.id]);
         }
       },
       error: () => this.snackBar.open('Fehler beim Erstellen', 'Schließen', { duration: 4000 })
