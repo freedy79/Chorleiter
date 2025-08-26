@@ -4,6 +4,7 @@
 </mat-form-field>
 
 <button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
+<button mat-raised-button color="accent" (click)="addFreePiece()">+ Freies Stück</button>
 <button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()">+ Sprachbeitrag</button>
 <button mat-raised-button color="accent" (click)="addBreak()">+ Pause</button>
 
@@ -108,6 +109,7 @@
         <a *ngSwitchCase="'piece'" [routerLink]="['/pieces', item.pieceId]" target="_blank">Details</a>
         <ng-container *ngSwitchCase="'slot'">
           <button mat-button (click)="fillSlotWithPiece(item)">Stück</button>
+          <button mat-button (click)="fillSlotWithFreePiece(item)">Freies Stück</button>
           <button mat-button (click)="fillSlotWithSpeech(item)">Text</button>
           <button mat-button (click)="fillSlotWithBreak(item)">Pause</button>
         </ng-container>

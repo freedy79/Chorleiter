@@ -1,0 +1,29 @@
+<h1 mat-dialog-title>Freies Stück</h1>
+<div mat-dialog-content>
+  <form [formGroup]="form" class="free-piece-form">
+    <mat-form-field appearance="fill">
+      <mat-label>Titel</mat-label>
+      <input matInput formControlName="title" required />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Komponist:in</mat-label>
+      <input matInput formControlName="composer" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Instrument</mat-label>
+      <input matInput formControlName="instrument" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Ausführende</mat-label>
+      <input matInput formControlName="performerNames" />
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Dauer (mm:ss)</mat-label>
+      <input matInput formControlName="duration" placeholder="mm:ss" />
+    </mat-form-field>
+  </form>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+</div>
