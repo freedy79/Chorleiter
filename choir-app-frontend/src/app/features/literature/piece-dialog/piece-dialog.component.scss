@@ -43,6 +43,11 @@ mat-sidenav {
   width: 220px;
 }
 
+mat-nav-list.mobile-nav {
+  display: none;
+  padding: 0;
+}
+
 @media (max-width: 599px) {
   .form-section {
     grid-template-columns: 1fr;
@@ -52,8 +57,18 @@ mat-sidenav {
     grid-template-columns: 1fr;
   }
 
-  mat-sidenav {
-    width: 70vw;
+  mat-sidenav.desktop-nav {
+    display: none;
+  }
+
+  mat-nav-list.mobile-nav {
+    display: flex;
+    overflow-x: auto;
+    margin-bottom: 1rem;
+    a.mat-list-item {
+      flex: 1 0 auto;
+      justify-content: center;
+    }
   }
 }
 
