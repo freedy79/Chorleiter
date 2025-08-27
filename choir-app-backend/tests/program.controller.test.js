@@ -49,13 +49,14 @@ const controller = require('../src/controllers/program.controller');
     // update duration of piece item
     const updReq = {
       params: { id: res.data.id, itemId: pieceItem.id },
-      body: { durationSec: 180 },
+      body: { durationSec: 180, note: 'updated note' },
       userId: user.id,
     };
     const updRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
     await controller.updateItem(updReq, updRes);
     assert.strictEqual(updRes.statusCode, 200);
     assert.strictEqual(updRes.data.durationSec, 180);
+    assert.strictEqual(updRes.data.note, 'updated note');
 
     // add a free piece
     const freeReq = {
@@ -105,6 +106,14 @@ const controller = require('../src/controllers/program.controller');
     assert.strictEqual(orderRes.statusCode, 200);
     assert.deepStrictEqual(orderRes.data.map(i => i.id), [breakItem.id, pieceItem.id, freeItem.id]);
     assert.strictEqual(orderRes.data[0].sortIndex, 0);
+
+    // delete free piece item
+    const delItemReq = { params: { id: res.data.id, itemId: freeItem.id }, userId: user.id };
+    const delItemRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.deleteItem(delItemReq, delItemRes);
+    assert.strictEqual(delItemRes.statusCode, 204);
+    const afterDeleteItems = await db.program_item.findAll({ where: { programId: res.data.id } });
+    assert.strictEqual(afterDeleteItems.length, 2);
 
     // add a speech item
     const speechReq = {

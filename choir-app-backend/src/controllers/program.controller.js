@@ -394,3 +394,28 @@ exports.updateItem = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
+
+// Delete a program item
+exports.deleteItem = async (req, res) => {
+  let { id, itemId } = req.params;
+  try {
+    const program = await ensureEditableProgram(id, req.userId);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
+
+    const item = await db.program_item.findOne({ where: { id: itemId, programId: id } });
+    if (!item) return res.status(404).send({ message: 'item not found' });
+
+    await item.destroy();
+
+    const remaining = await db.program_item.findAll({
+      where: { programId: id },
+      order: [['sortIndex', 'ASC']],
+    });
+    await Promise.all(remaining.map((it, index) => it.update({ sortIndex: index })));
+
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
