@@ -16,9 +16,10 @@ import { MainLayoutComponent } from './main-layout.component';
 describe('MainLayoutComponent', () => {
   let component: MainLayoutComponent;
   let fixture: ComponentFixture<MainLayoutComponent>;
+  let authServiceMock: any;
 
   beforeEach(async () => {
-    const authServiceMock = {
+    authServiceMock = {
       isLoggedIn$: of(true),
       isAdmin$: of(false),
       currentUser$: new BehaviorSubject<any>({ roles: ['singer'] }),
@@ -66,5 +67,14 @@ describe('MainLayoutComponent', () => {
     const homeVisible = await firstValueFrom(homeItem!.visibleSubject!);
     expect(eventsVisible).toBeFalse();
     expect(homeVisible).toBeTrue();
+  });
+
+  it('shows dienstplan for organists even if singers cannot see it', async () => {
+    authServiceMock.currentUser$.next({ roles: ['singer', 'organist'] });
+    authServiceMock.activeChoir$.next({ modules: { dienstplan: true, singerMenu: { dienstplan: false } } });
+    fixture.detectChanges();
+    const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
+    const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
+    expect(visible).toBeTrue();
   });
 });
