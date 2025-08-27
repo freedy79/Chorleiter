@@ -204,7 +204,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(([user, choir]) => {
         const roles = Array.isArray(user?.roles) ? user!.roles : [];
         const isSingerOnly = roles.includes('singer') &&
-          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian', 'organist'].includes(r));
         if (!isSingerOnly) {
           return true;
         }
