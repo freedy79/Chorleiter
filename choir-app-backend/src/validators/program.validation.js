@@ -30,7 +30,7 @@ exports.programItemFreePieceValidation = [
   body('title').isString().notEmpty(),
   body('composer').optional().isString(),
   body('instrument')
-    .optional()
+    .optional({ checkFalsy: true })
     .isString()
     .matches(/^[\p{L}\s.,-]+$/u)
     .withMessage('instrument contains invalid characters'),
