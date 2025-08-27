@@ -66,4 +66,20 @@ mat-tab-group {
   .manual-inputs {
     display: none;
   }
+
+  .plan {
+    overflow-x: auto;
+  }
+
+  .plan table {
+    min-width: 600px;
+  }
+
+  .counter-plan {
+    overflow-x: auto;
+  }
+
+  .counter-plan table {
+    min-width: 600px;
+  }
 }
