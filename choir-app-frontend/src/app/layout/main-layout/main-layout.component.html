@@ -24,11 +24,11 @@
     </button>
     <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}">{{ userName$ | async }}</span>
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
-      <mat-icon ><div class="svg_icon_white"><img src="./../../assets/icons/user-filled.svg" ></div></mat-icon>
+      <mat-icon ><div class="svg_icon_white"><img src="./../../assets/icons/user-filled.svg" loading="lazy"></div></mat-icon>
     </button>
     <mat-menu #userMenu="matMenu">
       <a mat-menu-item routerLink="/profile">
-        <mat-icon><img src="./../../assets/icons/user-filled.svg" class="own_icon_size"></mat-icon>
+          <mat-icon><img src="./../../assets/icons/user-filled.svg" class="own_icon_size" loading="lazy"></mat-icon>
         <span>Profil</span>
       </a>
       <button mat-menu-item [matMenuTriggerFor]="themeMenu">
@@ -44,7 +44,7 @@
         <span>Hilfe</span>
       </button>
       <button mat-menu-item (click)="logout()">
-        <mat-icon><img src="./../../assets/icons/logout.svg" class="own_icon_size"></mat-icon>
+          <mat-icon><img src="./../../assets/icons/logout.svg" class="own_icon_size" loading="lazy"></mat-icon>
         <span>Abmelden</span>
       </button>
     </mat-menu>

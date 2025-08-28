@@ -192,7 +192,7 @@
                   <ng-container *ngIf="!imagePreview">
                     <p>Bild hierher ziehen oder klicken</p>
                   </ng-container>
-                  <img *ngIf="imagePreview" [src]="imagePreview" alt="Notenbild Vorschau" />
+                  <img *ngIf="imagePreview" [src]="imagePreview" alt="Notenbild Vorschau" loading="lazy" />
                 </div>
                 <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
               </div>

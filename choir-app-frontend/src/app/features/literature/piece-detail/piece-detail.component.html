@@ -38,7 +38,7 @@
   <div *ngIf="pieceImage || fileLinks.length || externalLinks.length">
     <div *ngIf="pieceImage" class="sheet-image">
       <h3>Notenbild</h3>
-      <img [src]="pieceImage" alt="Notenbild" />
+      <img [src]="pieceImage" alt="Notenbild" loading="lazy" />
     </div>
     <div *ngIf="fileLinks.length">
       <h3>Dateien</h3>

@@ -162,6 +162,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         return data.title;
       })
     );
+
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.closeSidenav());
   }
 
   ngAfterViewInit(): void {

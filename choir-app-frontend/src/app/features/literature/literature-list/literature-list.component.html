@@ -210,7 +210,7 @@
     </div>
     <div class="hover-image" *ngIf="hoverImage"
          [style.top.px]="hoverY + 10" [style.left.px]="hoverX + 10">
-      <img [src]="hoverImage" alt="Notenbild" />
+      <img [src]="hoverImage" alt="Notenbild" loading="lazy" />
     </div>
   </mat-drawer-content>
 </mat-drawer-container>
