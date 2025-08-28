@@ -35,7 +35,7 @@
       <ng-container matColumnDef="cover">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let element" class="cover-cell">
-          <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" />
+          <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
         </td>
       </ng-container>
 

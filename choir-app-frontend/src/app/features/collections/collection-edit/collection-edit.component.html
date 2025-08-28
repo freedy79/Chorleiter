@@ -73,7 +73,7 @@
             <ng-container *ngIf="!coverPreview">
               <p>Cover hierher ziehen oder klicken</p>
             </ng-container>
-            <img *ngIf="coverPreview" [src]="coverPreview" alt="Cover preview" />
+            <img *ngIf="coverPreview" [src]="coverPreview" alt="Cover preview" loading="lazy" />
           </div>
           <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
         </div>

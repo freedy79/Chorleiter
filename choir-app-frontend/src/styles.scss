@@ -33,7 +33,19 @@ mat-form-field {
   padding: 1rem;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 960px) {
+  .container {
+    padding: 1.5rem;
+  }
+
+  .mat-mdc-table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 768px) {
   .container {
     padding: 1rem;
   }
