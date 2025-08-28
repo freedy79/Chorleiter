@@ -17,7 +17,7 @@ const USER_KEY = 'user';
   providedIn: 'root'
 })
 export class AuthService {
-  private loggedIn = new BehaviorSubject<boolean>(this.hasToken());
+  private loggedIn = new BehaviorSubject<boolean>(false);
   isLoggedIn$ = this.loggedIn.asObservable();
 
   private userReloadTriggered = false;
@@ -36,6 +36,9 @@ export class AuthService {
               private router: Router,
               private theme: ThemeService,
               private prefs: UserPreferencesService) {
+    this.migrateStorage();
+    this.loggedIn.next(this.hasToken());
+
     const storedUser = this.getUserFromStorage();
     if (storedUser) {
       this.currentUserSubject.next(storedUser);
@@ -59,10 +62,18 @@ export class AuthService {
         return roles.includes('librarian');
       })
     );
+
     if (this.hasToken()) {
-      this.prefs.load().subscribe(p => {
-        if (p.theme) {
-          this.theme.setTheme(p.theme);
+      this.isTokenValid().subscribe(valid => {
+        if (valid) {
+          this.reloadUserFromServer();
+          this.prefs.load().subscribe(p => {
+            if (p.theme) {
+              this.theme.setTheme(p.theme);
+            }
+          });
+        } else {
+          this.logout('sessionExpired');
         }
       });
     }
@@ -74,19 +85,38 @@ export class AuthService {
 
   private getUserFromStorage(): User | null {
     const stored = localStorage.getItem(USER_KEY);
-    if (stored && !this.userReloadTriggered) {
-      this.userReloadTriggered = true;
-      this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
-        tap(freshUser => {
-          localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
-          this.currentUserSubject.next(freshUser);
-          this.activeChoir$.next(freshUser.activeChoir || null);
-          this.availableChoirs$.next(freshUser.availableChoirs || []);
-        }),
-        catchError(() => of(null))
-      ).subscribe();
-    }
     return stored ? JSON.parse(stored) : null;
+  }
+
+  private reloadUserFromServer(): void {
+    if (this.userReloadTriggered) {
+      return;
+    }
+    this.userReloadTriggered = true;
+    this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
+      tap(freshUser => {
+        localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
+        this.currentUserSubject.next(freshUser);
+        this.activeChoir$.next(freshUser.activeChoir || null);
+        this.availableChoirs$.next(freshUser.availableChoirs || []);
+      }),
+      catchError(() => of(null))
+    ).subscribe();
+  }
+
+  private migrateStorage(): void {
+    const storedUser = localStorage.getItem(USER_KEY);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token && storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed?.accessToken) {
+          localStorage.setItem(TOKEN_KEY, parsed.accessToken);
+        }
+      } catch {
+        // ignore malformed data
+      }
+    }
   }
 
   getToken(): string | null {
