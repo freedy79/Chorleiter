@@ -20,14 +20,17 @@
           <input matInput formControlName="password" type="password">
         </mat-form-field>
 
-        <mat-checkbox formControlName="rememberMe" color="primary">Angemeldet bleiben</mat-checkbox>
+        <div class="two-cols">
+          <mat-checkbox formControlName="rememberMe" color="primary">Angemeldet bleiben</mat-checkbox>
 
-        <div>
-          <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
-            <span *ngIf="!isLoading">Anmelden</span>
-            <mat-spinner *ngIf="isLoading" diameter="24" class="in-button-spinner"></mat-spinner>
-          </button>
+          <div>
+            <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading">
+              <span *ngIf="!isLoading">Anmelden</span>
+              <mat-spinner *ngIf="isLoading" diameter="24" class="in-button-spinner"></mat-spinner>
+            </button>
+          </div>
         </div>
+
       </form>
       <p class="reset-link"><a routerLink="/forgot-password">Passwort vergessen?</a></p>
     </div>

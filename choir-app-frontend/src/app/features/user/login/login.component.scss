@@ -1,1 +1,7 @@
 @use "../user.general.style.scss";
+
+.two-cols {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

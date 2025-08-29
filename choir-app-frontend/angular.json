@@ -64,6 +64,35 @@
                 "fonts": true
               }
             },
+            "localdata": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2000kB",
+                  "maximumError": "2.5MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.dev.ts"
+                }
+              ],
+              "optimization": {
+                "scripts": true,
+                "styles": {
+                  "minify": true,
+                  "inlineCritical": false
+                },
+                "fonts": true
+              }
+            },
             "development": {
               "optimization": false,
               "extractLicenses": false,
@@ -77,6 +106,9 @@
           "configurations": {
             "production": {
               "buildTarget": "choir-app-frontend:build:production"
+            },
+            "localdata": {
+              "buildTarget": "choir-app-frontend:build:localdata"
             },
             "development": {
               "buildTarget": "choir-app-frontend:build:development"
