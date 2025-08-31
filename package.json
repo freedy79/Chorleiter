@@ -2,10 +2,21 @@
   "name": "chorleiter-root",
   "private": true,
   "scripts": {
-    "lint": "npm run lint --prefix choir-app-frontend && npm run check --prefix choir-app-backend",
+    "lint": "npm run lint --prefix choir-app-frontend && npm run lint --prefix choir-app-backend",
     "build": "npm run build --prefix choir-app-frontend",
     "test": "npm test --prefix choir-app-frontend",
     "test:backend": "npm test --prefix choir-app-backend",
     "check-backend": "npm run check --prefix choir-app-backend"
+  }
+  ,
+  "devDependencies": {
+    "@angular-eslint/builder": "^20.2.0",
+    "@angular-eslint/eslint-plugin": "^20.2.0",
+    "@angular-eslint/eslint-plugin-template": "^20.2.0",
+    "@angular-eslint/template-parser": "^20.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.8.2"
   }
 }
