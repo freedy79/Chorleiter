@@ -66,15 +66,7 @@ mat-tab-group {
 }
 
 @media (max-width: 599px) {
-  tr {
-    display: block;
-    margin-bottom: 7rem;
-    border: none;;
-  }
-  th, td {
-    min-height: 3rem;
-    border: none;
-  }
+
 
   .manual-inputs {
     display: none;
@@ -86,6 +78,18 @@ mat-tab-group {
 
   .plan table {
     min-width: 600px;
+
+    tr {
+      margin-top: 2rem;
+      display: block;
+      margin-bottom: 7rem;
+      border-bottom:  1px solid #ddd;
+      border: none;
+    }
+    th, td {
+      min-height: 2.5rem;
+      border: none;
+    }
   }
 
   .counter-plan {
