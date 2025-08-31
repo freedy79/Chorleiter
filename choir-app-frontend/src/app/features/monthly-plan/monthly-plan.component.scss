@@ -60,9 +60,22 @@ mat-tab-group {
 
 .manual-inputs {
   margin-bottom: 1rem;
+  display: flex;
+  flex-flow: row;
+  max-width: 400px;
 }
 
 @media (max-width: 599px) {
+  tr {
+    display: block;
+    margin-bottom: 7rem;
+    border: none;;
+  }
+  th, td {
+    min-height: 3rem;
+    border: none;
+  }
+
   .manual-inputs {
     display: none;
   }
