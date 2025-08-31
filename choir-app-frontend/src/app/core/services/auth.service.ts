@@ -95,10 +95,16 @@ export class AuthService {
     this.userReloadTriggered = true;
     this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
       tap(freshUser => {
-        localStorage.setItem(USER_KEY, JSON.stringify(freshUser));
-        this.currentUserSubject.next(freshUser);
-        this.activeChoir$.next(freshUser.activeChoir || null);
-        this.availableChoirs$.next(freshUser.availableChoirs || []);
+        const existingModules = this.activeChoir$.value?.modules;
+        let activeChoir = freshUser.activeChoir || null;
+        if (activeChoir) {
+          activeChoir = { ...activeChoir, modules: activeChoir.modules ?? existingModules };
+        }
+        const updatedUser = { ...freshUser, activeChoir } as User;
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        this.currentUserSubject.next(updatedUser);
+        this.activeChoir$.next(activeChoir);
+        this.availableChoirs$.next(updatedUser.availableChoirs || []);
       }),
       catchError(() => of(null))
     ).subscribe();
