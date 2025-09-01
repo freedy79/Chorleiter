@@ -64,18 +64,17 @@ export class AuthService {
     );
 
     if (this.hasToken()) {
-      this.isTokenValid().subscribe(valid => {
-        if (valid) {
-          this.reloadUserFromServer();
-          this.prefs.load().subscribe(p => {
-            if (p.theme) {
-              this.theme.setTheme(p.theme);
-            }
-          });
-        } else {
-          this.logout('sessionExpired');
-        }
-      });
+      const token = this.getToken();
+      if (token && !this.isTokenExpired(token)) {
+        this.reloadUserFromServer();
+        this.prefs.load().subscribe(p => {
+          if (p.theme) {
+            this.theme.setTheme(p.theme);
+          }
+        });
+      } else {
+        this.logout('sessionExpired');
+      }
     }
   }
 
@@ -131,19 +130,31 @@ export class AuthService {
 
   /**
    * Check if the currently stored token is still valid.
-   * Returns an observable that emits true when the server
-   * accepts the token and false otherwise.
+   * Returns an observable that emits true when the token
+   * has not expired and false otherwise.
    */
   isTokenValid(): Observable<boolean> {
     const token = this.getToken();
     if (!token) {
       return of(false);
     }
+    if (this.isTokenExpired(token)) {
+      return of(false);
+    }
+    return of(true);
+  }
 
-    return this.http.get<{ valid: boolean }>(`${environment.apiUrl}/auth/check-token`).pipe(
-      map(() => true),
-      catchError(() => of(false))
-    );
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (!payload.exp) {
+        return false;
+      }
+      const expiry = payload.exp * 1000;
+      return Date.now() >= expiry;
+    } catch {
+      return true;
+    }
   }
 
   login(credentials: any): Observable<User> {
