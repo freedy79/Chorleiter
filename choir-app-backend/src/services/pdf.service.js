@@ -1,4 +1,4 @@
-const { isoDateString } = require('../utils/date.utils');
+const { isoDateString, germanDateString } = require('../utils/date.utils');
 
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
@@ -114,6 +114,8 @@ function monthlyPlanPdf(plan) {
   lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
   lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
   lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
+  const standDate = germanDateString(plan.updatedAt ? new Date(plan.updatedAt) : new Date());
+  lines.push(`BT /F1 12 Tf ${left} ${y - 12} Td (${escape('Stand: ' + standDate)}) Tj ET`);
   const content = lines.join('\n');
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
