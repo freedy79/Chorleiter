@@ -21,43 +21,43 @@
       <mat-icon>add</mat-icon>
       Mitglied hinzufügen
     </button>
-    <div mat-table [dataSource]="dataSource" class="member-table">
+    <mat-table [dataSource]="dataSource" class="member-table">
       <ng-container matColumnDef="name">
-        <div mat-header-cell *matHeaderCellDef>Name</div>
-        <div mat-cell *matCellDef="let user">{{user.name}}</div>
+        <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+        <mat-cell *matCellDef="let user">{{user.name}}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="email">
-        <div mat-header-cell *matHeaderCellDef>E-Mail</div>
-        <div mat-cell *matCellDef="let user">{{user.email}}</div>
+        <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
+        <mat-cell *matCellDef="let user">{{user.email}}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="role">
-        <div mat-header-cell *matHeaderCellDef>Rollen</div>
-        <div mat-cell *matCellDef="let user">{{user.membership?.rolesInChoir?.join(', ') || '-'}}</div>
+        <mat-header-cell *matHeaderCellDef>Rollen</mat-header-cell>
+        <mat-cell *matCellDef="let user">{{user.membership?.rolesInChoir?.join(', ') || '-'}}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="organist">
-        <div mat-header-cell *matHeaderCellDef>Organist</div>
-        <div mat-cell *matCellDef="let user">
+        <mat-header-cell *matHeaderCellDef>Organist</mat-header-cell>
+        <mat-cell *matCellDef="let user">
           <mat-checkbox [checked]="user.membership?.rolesInChoir?.includes('organist')" (change)="toggleOrganist(user, $event.checked)"></mat-checkbox>
-        </div>
+        </mat-cell>
       </ng-container>
       <ng-container matColumnDef="status">
-        <div mat-header-cell *matHeaderCellDef>Status</div>
-        <div mat-cell *matCellDef="let user">{{user.membership?.registrationStatus === 'PENDING' ? 'Registrierung ausstehend' : 'Registriert'}}</div>
+        <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+        <mat-cell *matCellDef="let user">{{user.membership?.registrationStatus === 'PENDING' ? 'Registrierung ausstehend' : 'Registriert'}}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let user">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let user">
           <button mat-icon-button color="warn" (click)="removeMember(user)">
             <mat-icon>person_remove</mat-icon>
           </button>
-        </div>
+        </mat-cell>
       </ng-container>
-      <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-      <div mat-row *matRowDef="let row; columns: displayedColumns"></div>
-      <div class="mat-row" *matNoDataRow>
-        <div class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Mitglieder gefunden.</div>
-      </div>
-    </div>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+      <mat-row *matNoDataRow>
+        <mat-cell [attr.colspan]="displayedColumns.length">Keine Mitglieder gefunden.</mat-cell>
+      </mat-row>
+    </mat-table>
   </div>
 </div>
 <div mat-dialog-actions align="end">

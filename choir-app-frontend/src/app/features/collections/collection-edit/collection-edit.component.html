@@ -139,11 +139,11 @@
 
           <div *ngIf="selectedPieceLinks.length > 0; else noPieces">
           <!-- Using a mat-table for a clean, structured display -->
-          <div class="piece-link-table" mat-table [dataSource]="pieceLinkDataSource" matSort matSortActive="number" matSortDirection="asc">
+          <mat-table class="piece-link-table" [dataSource]="pieceLinkDataSource" matSort matSortActive="number" matSortDirection="asc">
             <!-- Number Column Definition -->
             <ng-container matColumnDef="number">
-              <div mat-header-cell *matHeaderCellDef mat-sort-header="number"> Nr. </div>
-              <div mat-cell *matCellDef="let link" class="number-cell">
+              <mat-header-cell *matHeaderCellDef mat-sort-header="number"> Nr. </mat-header-cell>
+              <mat-cell *matCellDef="let link" class="number-cell">
                 <mat-form-field appearance="outline">
                   <input
                     matInput
@@ -152,38 +152,38 @@
                     [ngModelOptions]="{standalone: true}"
                   />
                 </mat-form-field>
-              </div>
+              </mat-cell>
             </ng-container>
 
             <!-- Title Column Definition -->
             <ng-container matColumnDef="title">
-              <div mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </div>
-              <div mat-cell *matCellDef="let link">
+              <mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
+              <mat-cell *matCellDef="let link">
                 <div class="piece-title">{{ link.piece.title }}</div>
                 <div
                   class="piece-composer"
                   *ngIf="link.piece.composer?.name || link.piece.origin"
                 >{{ link.piece.composer?.name || link.piece.origin }}</div>
-              </div>
+              </mat-cell>
             </ng-container>
 
             <!-- Actions Column Definition -->
             <ng-container matColumnDef="actions">
-              <div mat-header-cell *matHeaderCellDef></div>
-              <div mat-cell *matCellDef="let link" class="actions-cell">
+              <mat-header-cell *matHeaderCellDef></mat-header-cell>
+              <mat-cell *matCellDef="let link" class="actions-cell">
                 <button type="button" mat-icon-button (click)="openEditPieceDialog(link.piece.id)" matTooltip="Stück bearbeiten">
                   <mat-icon>edit</mat-icon>
                 </button>
                 <button type="button" mat-icon-button color="warn" (click)="removePieceFromCollection(link.piece)" matTooltip="Stück aus Sammlung entfernen">
                   <mat-icon>delete</mat-icon>
                 </button>
-              </div>
+              </mat-cell>
             </ng-container>
 
             <!-- Update the row definitions to use the new column array name -->
-            <div mat-header-row *matHeaderRowDef="pieceLinkColumns"></div>
-            <div mat-row *matRowDef="let row; columns: pieceLinkColumns;"></div>
-          </div>
+            <mat-header-row *matHeaderRowDef="pieceLinkColumns"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: pieceLinkColumns;"></mat-row>
+          </mat-table>
 
           <mat-paginator
             *ngIf="selectedPieceLinks.length > 0"

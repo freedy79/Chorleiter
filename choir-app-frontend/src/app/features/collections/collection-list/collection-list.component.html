@@ -20,57 +20,57 @@
 <ng-container *ngIf="!(isHandset$ | async); else mobileView">
 <div class="table-wrapper mat-elevation-z8">
   <div class="table-scroll-container">
-  <div mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
+  <mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
 
     <!-- Cover Column -->
     <ng-container matColumnDef="cover">
-      <div mat-header-cell *matHeaderCellDef></div>
-      <div mat-cell *matCellDef="let collection" class="cover-cell">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let collection" class="cover-cell">
         <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" loading="lazy" />
-      </div>
+      </mat-cell>
     </ng-container>
 
     <!-- Status Column -->
     <ng-container matColumnDef="status">
-      <div mat-header-cell *matHeaderCellDef mat-sort-header="status"> Status </div>
-      <div mat-cell *matCellDef="let collection" class="status-cell">
+      <mat-header-cell *matHeaderCellDef mat-sort-header="status"> Status </mat-header-cell>
+      <mat-cell *matCellDef="let collection" class="status-cell">
         <mat-icon
           class="status-icon"
           [color]="collection.isAdded ? 'primary' : 'disabled'"
           [matTooltip]="collection.isAdded ? 'Sammlung ist im Chorrepertoire.' : 'Nicht im Repertoire.'">
           {{ collection.isAdded ? 'check_circle' : 'do_not_disturb_on' }}
         </mat-icon>
-      </div>
+      </mat-cell>
     </ng-container>
 
     <!-- Title Column -->
     <ng-container matColumnDef="title">
-      <div mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </div>
-      <div mat-cell *matCellDef="let collection" class="title-cell">
+      <mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
+      <mat-cell *matCellDef="let collection" class="title-cell">
         <strong>{{ collection.title }}</strong>
         <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
         <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
         <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
-      </div>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="titles">
-      <div mat-header-cell *matHeaderCellDef mat-sort-header="titles"> Stücke </div>
-      <div mat-cell *matCellDef="let collection" class="titles-cell">
+      <mat-header-cell *matHeaderCellDef mat-sort-header="titles"> Stücke </mat-header-cell>
+      <mat-cell *matCellDef="let collection" class="titles-cell">
         {{ collection.pieceCount || 0 }}
-      </div>
+      </mat-cell>
     </ng-container>
 
     <!-- Publisher Column -->
     <ng-container matColumnDef="publisher">
-      <div mat-header-cell *matHeaderCellDef mat-sort-header="publisher"> Verlag </div>
-      <div mat-cell *matCellDef="let collection" class="publisher-cell"> {{ collection.publisher || '-' }} </div>
+      <mat-header-cell *matHeaderCellDef mat-sort-header="publisher"> Verlag </mat-header-cell>
+      <mat-cell *matCellDef="let collection" class="publisher-cell"> {{ collection.publisher || '-' }} </mat-cell>
     </ng-container>
 
     <!-- Actions Column -->
     <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let collection" class="actions-cell">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let collection" class="actions-cell">
             <button
               mat-icon-button
               color="primary"
@@ -87,17 +87,17 @@
             <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
             </button>
-        </div>
+        </mat-cell>
     </ng-container>
 
-    <div mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></div>
-    <div mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)" [class.selected]="selectedCollection?.id === row.id"></div>
-    <div class="mat-row" *matNoDataRow>
-      <div class="mat-cell" [attr.colspan]="displayedColumns.length">
+    <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)" [class.selected]="selectedCollection?.id === row.id"></mat-row>
+    <mat-row *matNoDataRow>
+      <mat-cell [attr.colspan]="displayedColumns.length">
         Es wurden noch keine Sammlungen erstellt.
-      </div>
-    </div>
-  </div>
+      </mat-cell>
+    </mat-row>
+  </mat-table>
   </div>
   <mat-paginator [pageSizeOptions]="pageSizeOptions"
                  [pageSize]="pageSize"

@@ -26,53 +26,53 @@
 
 
 <div class="table-wrapper mat-elevation-z4">
-  <div mat-table [dataSource]="dataSource" class="event-table">
+  <mat-table [dataSource]="dataSource" class="event-table">
     <ng-container matColumnDef="select">
-      <div mat-header-cell *matHeaderCellDef>
+      <mat-header-cell *matHeaderCellDef>
         <mat-checkbox (change)="toggleAll()" [checked]="isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()"></mat-checkbox>
-      </div>
-      <div mat-cell *matCellDef="let ev">
+      </mat-header-cell>
+      <mat-cell *matCellDef="let ev">
         <mat-checkbox (click)="$event.stopPropagation()" (change)="toggleEvent(ev)" [checked]="selection.isSelected(ev)"></mat-checkbox>
-      </div>
+      </mat-cell>
     </ng-container>
     <ng-container matColumnDef="date">
-      <div mat-header-cell *matHeaderCellDef>Datum</div>
-      <div mat-cell *matCellDef="let ev">{{ ev.date | date:'shortDate' }}</div>
+      <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.date | date:'shortDate' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="type">
-      <div mat-header-cell *matHeaderCellDef>Typ</div>
-      <div mat-cell *matCellDef="let ev">{{ ev.type | eventTypeLabel }}</div>
+      <mat-header-cell *matHeaderCellDef>Typ</mat-header-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.type | eventTypeLabel }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="updatedAt">
-      <div mat-header-cell *matHeaderCellDef>Geändert</div>
-      <div mat-cell *matCellDef="let ev">{{ ev.updatedAt | date:'short' }}</div>
+      <mat-header-cell *matHeaderCellDef>Geändert</mat-header-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.updatedAt | date:'short' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="director">
-      <div mat-header-cell *matHeaderCellDef>Leiter</div>
-      <div mat-cell *matCellDef="let ev">{{ ev.director?.name }}</div>
+      <mat-header-cell *matHeaderCellDef>Leiter</mat-header-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.director?.name }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
-      <div mat-header-cell *matHeaderCellDef></div>
-      <div mat-cell *matCellDef="let ev" class="actions-cell">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let ev" class="actions-cell">
         <button *ngIf="!isSingerOnly" mat-icon-button (click)="editEvent(ev); $event.stopPropagation()">
           <mat-icon>edit</mat-icon>
         </button>
         <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">
           <mat-icon>delete</mat-icon>
         </button>
-      </div>
+      </mat-cell>
     </ng-container>
 
-    <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-    <div mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectEvent(row)"></div>
-    <div class="mat-row" *matNoDataRow>
-      <div class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Events gefunden.</div>
-    </div>
-  </div>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectEvent(row)"></mat-row>
+    <mat-row *matNoDataRow>
+      <mat-cell [attr.colspan]="displayedColumns.length">Keine Events gefunden.</mat-cell>
+    </mat-row>
+  </mat-table>
 
   <mat-paginator [pageSizeOptions]="pageSizeOptions"
                  [pageSize]="pageSize"

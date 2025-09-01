@@ -1,26 +1,26 @@
 <h2>Änderungsvorschläge</h2>
-<div mat-table [dataSource]="dataSource" class="mat-elevation-z8 full-width">
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8 full-width">
     <ng-container matColumnDef="piece">
-        <div mat-header-cell *matHeaderCellDef>Stück</div>
-        <div mat-cell *matCellDef="let c">{{ c.piece?.title || ('Piece ' + c.pieceId) }}</div>
+        <mat-header-cell *matHeaderCellDef>Stück</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{ c.piece?.title || ('Piece ' + c.pieceId) }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="createdAt">
-        <div mat-header-cell *matHeaderCellDef>Datum</div>
-        <div mat-cell *matCellDef="let c">{{ c.createdAt | date:'short' }}</div>
+        <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
+        <mat-cell *matCellDef="let c">{{ c.createdAt | date:'short' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let c">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let c">
             <button mat-button color="primary" (click)="approve(c)">Übernehmen</button>
             <button mat-button color="warn" (click)="decline(c)">Ablehnen</button>
-        </div>
+        </mat-cell>
     </ng-container>
 
-    <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-    <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-    <div class="mat-row" *matNoDataRow>
-        <div class="mat-cell" colspan="3">Keine Vorschläge vorhanden.</div>
-    </div>
-</div>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matNoDataRow>
+        <mat-cell colspan="3">Keine Vorschläge vorhanden.</mat-cell>
+    </mat-row>
+</mat-table>

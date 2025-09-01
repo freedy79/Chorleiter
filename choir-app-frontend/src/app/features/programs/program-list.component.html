@@ -1,23 +1,23 @@
 <h2>Programme</h2>
 <button mat-raised-button color="primary" routerLink="/programs/create">Neues Programm</button>
 
-<div mat-table [dataSource]="programs" *ngIf="programs.length > 0">
+<mat-table [dataSource]="programs" *ngIf="programs.length > 0">
   <ng-container matColumnDef="title">
-    <div mat-header-cell *matHeaderCellDef>Titel</div>
-    <div mat-cell *matCellDef="let program">{{ program.title }}</div>
+    <mat-header-cell *matHeaderCellDef>Titel</mat-header-cell>
+    <mat-cell *matCellDef="let program">{{ program.title }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef>Aktionen</div>
-    <div mat-cell *matCellDef="let program">
+    <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
+    <mat-cell *matCellDef="let program">
       <button mat-button [routerLink]="['/programs', program.id]">Bearbeiten</button>
       <button mat-button color="warn" (click)="delete(program)">Löschen</button>
-    </div>
+    </mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="['title', 'actions']"></div>
-  <div mat-row *matRowDef="let row; columns: ['title', 'actions']"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="['title', 'actions']"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: ['title', 'actions']"></mat-row>
+</mat-table>
 
 <p *ngIf="programs.length === 0">Keine Programme vorhanden.</p>
 

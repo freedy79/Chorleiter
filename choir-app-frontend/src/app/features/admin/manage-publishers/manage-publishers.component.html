@@ -4,23 +4,23 @@
 <div class="letter-filter">
   <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">{{ l }}</button>
 </div>
-<div mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Name</div>
-    <div mat-cell *matCellDef="let element">{{ element.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
   </ng-container>
   <ng-container matColumnDef="actions">
-    <div mat-header-cell *matHeaderCellDef></div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="editPublisher(element)">
         <mat-icon>edit</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="deletePublisher(element)" [disabled]="!element.canDelete">
         <mat-icon>delete</mat-icon>
       </button>
-    </div>
+    </mat-cell>
   </ng-container>
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>
 <mat-paginator [length]="totalPublishers" [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>
