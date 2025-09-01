@@ -1,4 +1,4 @@
-const { shortWeekdayDateString } = require('../utils/date.utils');
+const { shortWeekdayDateString, isoDateString, germanDateString } = require('../utils/date.utils');
 
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
@@ -55,7 +55,7 @@ function monthlyPlanPdf(plan) {
   }
 
   // Title
-  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Dienstplan ' + plan.month + '/' + plan.year)}) Tj ET`);
+  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Musikplan ' + plan.month + '/' + plan.year)}) Tj ET`);
   y -= 20;
 
   // Choir name sub heading
@@ -114,6 +114,8 @@ function monthlyPlanPdf(plan) {
   lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
   lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
   lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
+  const standDate = germanDateString(plan.updatedAt ? new Date(plan.updatedAt) : new Date());
+  lines.push(`BT /F1 12 Tf ${left} ${y - 12} Td (${escape('Stand: ' + standDate)}) Tj ET`);
   const content = lines.join('\n');
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
