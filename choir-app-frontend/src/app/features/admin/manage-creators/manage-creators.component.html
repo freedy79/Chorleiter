@@ -14,25 +14,25 @@
   </button>
 </div>
 
-<div mat-table [dataSource]="dataSource" class="mat-elevation-z8" multiTemplateDataRows>
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8" multiTemplateDataRows>
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Name</div>
-    <div mat-cell *matCellDef="let element">{{ element.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="birthYear">
-    <div mat-header-cell *matHeaderCellDef>Geburt</div>
-    <div mat-cell *matCellDef="let element">{{ element.birthYear }}</div>
+    <mat-header-cell *matHeaderCellDef>Geburt</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.birthYear }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="deathYear">
-    <div mat-header-cell *matHeaderCellDef>Tod</div>
-    <div mat-cell *matCellDef="let element">{{ element.deathYear }}</div>
+    <mat-header-cell *matHeaderCellDef>Tod</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.deathYear }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <div mat-header-cell *matHeaderCellDef></div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="editPerson(element)">
         <mat-icon>edit</mat-icon>
       </button>
@@ -42,11 +42,11 @@
       <button mat-icon-button color="warn" (click)="deletePerson(element)" [disabled]="!element.canDelete">
         <mat-icon>delete</mat-icon>
       </button>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="expandedDetail">
-    <div mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+    <mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
       <div class="piece-list" *ngIf="expandedPerson?.id === element.id">
         <div *ngIf="expandedPieces.length; else none">
           <ul>
@@ -57,13 +57,13 @@
         </div>
         <ng-template #none>Keine Stücke vorhanden.</ng-template>
       </div>
-    </div>
+    </mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleRow(row)" class="creator-row"></div>
-  <div mat-row *matRowDef="let row; columns: ['expandedDetail']; when: isExpansionDetailRow" class="detail-row"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleRow(row)" class="creator-row"></mat-row>
+  <mat-row *matRowDef="let row; columns: ['expandedDetail']; when: isExpansionDetailRow" class="detail-row"></mat-row>
+</mat-table>
 
 <mat-paginator [length]="totalPeople"
                [pageSizeOptions]="pageSizeOptions"
