@@ -84,11 +84,13 @@
             </ng-container>
             <mat-header-row *matHeaderRowDef="displayedRehearsalColumns"></mat-header-row>
             <mat-row *matRowDef="let row; columns: displayedRehearsalColumns;"></mat-row>
-            <mat-row *matNoDataRow>
-              <mat-cell [attr.colspan]="displayedRehearsalColumns.length">
-                Keine Stücke in Probe.
-              </mat-cell>
-            </mat-row>
+            <ng-container matNoDataRow>
+              <mat-row>
+                <mat-cell [attr.colspan]="displayedRehearsalColumns.length">
+                  Keine Stücke in Probe.
+                </mat-cell>
+              </mat-row>
+            </ng-container>
           </mat-table>
         </div>
       </mat-card-content>
