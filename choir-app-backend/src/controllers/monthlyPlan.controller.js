@@ -3,6 +3,7 @@ const MonthlyPlan = db.monthly_plan;
 const { datesForRule, isoDateString } = require('../utils/date.utils');
 const { monthlyPlanPdf } = require('../services/pdf.service');
 const emailService = require('../services/email.service');
+const { emailDisabled } = require('../services/emailTransporter');
 const { isPublicHoliday } = require('../services/holiday.service');
 
 async function createEntriesFromRules(plan) {
@@ -157,7 +158,9 @@ exports.emailPdf = async (req, res) => {
         }
         emails = emails.concat(extraEmails);
         const buffer = monthlyPlanPdf(plan.toJSON());
-        await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
+        if (!emailDisabled()) {
+            await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
+        }
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not send mail.' });
