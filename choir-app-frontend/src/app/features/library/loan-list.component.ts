@@ -15,7 +15,6 @@ import { LoanEditDialogComponent } from './loan-edit-dialog.component';
   styleUrls: ['./loan-list.component.scss']
 })
 export class LoanListComponent implements OnInit {
-  displayedColumns: string[] = ['collectionTitle', 'choirName', 'startDate', 'endDate', 'status', 'actions'];
   loans: Loan[] = [];
 
   constructor(private api: ApiService, private dialog: MatDialog) {}

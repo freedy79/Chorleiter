@@ -95,109 +95,109 @@
 
         <!-- The table itself. It is always present in the DOM, but can be overlaid by the loading shade. -->
         <div class="table-scroll-container">
-          <table mat-table [dataSource]="dataSource" matSort>
+          <div mat-table [dataSource]="dataSource" matSort>
 
             <!-- Title Column -->
             <ng-container matColumnDef="title">
               <!-- mat-sort-header tells the table this column is sortable. 'title' must match the column name. -->
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </th>
-              <td mat-cell *matCellDef="let piece">
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </div>
+              <div mat-cell *matCellDef="let piece">
                 <a [routerLink]="['/pieces', piece.id]" class="title-link">{{ piece.title }}</a>
-              </td>
+              </div>
             </ng-container>
 
             <!-- Composer Column -->
             <ng-container matColumnDef="composer">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist/Ursprung </th>
-              <td mat-cell *matCellDef="let piece">
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist/Ursprung </div>
+              <div mat-cell *matCellDef="let piece">
                 {{piece.composer?.name || piece.origin}}
-              </td>
+              </div>
             </ng-container>
 
             <!-- Reference Column -->
             <ng-container matColumnDef="reference">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="reference"> Nr. </th>
-              <td mat-cell *matCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </td>
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="reference"> Nr. </div>
+              <div mat-cell *matCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </div>
             </ng-container>
 
             <ng-container matColumnDef="category">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="category"> Rubrik </th>
-              <td mat-cell *matCellDef="let piece">
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="category"> Rubrik </div>
+              <div mat-cell *matCellDef="let piece">
                 {{piece.category?.name}}
-              </td>
+              </div>
             </ng-container>
 
             <ng-container matColumnDef="lastSung">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="lastSung"> Zuletzt gesungen </th>
-              <td mat-cell *matCellDef="let piece"> {{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }} </td>
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="lastSung"> Zuletzt gesungen </div>
+              <div mat-cell *matCellDef="let piece"> {{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }} </div>
             </ng-container>
 
             <ng-container matColumnDef="lastRehearsed">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="lastRehearsed"> Zuletzt geprobt </th>
-              <td mat-cell *matCellDef="let piece"> {{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }} </td>
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="lastRehearsed"> Zuletzt geprobt </div>
+              <div mat-cell *matCellDef="let piece"> {{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }} </div>
             </ng-container>
 
             <ng-container matColumnDef="timesSung">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="timesSung"> Anzahl gesungen </th>
-              <td mat-cell *matCellDef="let piece"> {{ piece.timesSung || 0 }} </td>
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="timesSung"> Anzahl gesungen </div>
+              <div mat-cell *matCellDef="let piece"> {{ piece.timesSung || 0 }} </div>
             </ng-container>
 
             <ng-container matColumnDef="timesRehearsed">
-              <th mat-header-cell *matHeaderCellDef mat-sort-header="timesRehearsed"> Anzahl geprobt </th>
-              <td mat-cell *matCellDef="let piece"> {{ piece.timesRehearsed || 0 }} </td>
+              <div mat-header-cell *matHeaderCellDef mat-sort-header="timesRehearsed"> Anzahl geprobt </div>
+              <div mat-cell *matCellDef="let piece"> {{ piece.timesRehearsed || 0 }} </div>
             </ng-container>
 
             <!-- Status Column (Not sortable in this example) -->
             <!-- Rating Column -->
             <ng-container matColumnDef="rating">
-              <th mat-header-cell *matHeaderCellDef> Bewertung </th>
-              <td mat-cell *matCellDef="let piece">
+              <div mat-header-cell *matHeaderCellDef> Bewertung </div>
+              <div mat-cell *matCellDef="let piece">
                 <mat-select [value]="piece.choir_repertoire?.rating"
                             (selectionChange)="onRatingChange($event.value, piece.id)"
                             (click)="$event.stopPropagation()" [disabled]="!canRate">
                   <mat-option [value]="null">-</mat-option>
                   <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
                 </mat-select>
-              </td>
+              </div>
             </ng-container>
 
             <!-- Status Column (Not sortable in this example) -->
             <ng-container matColumnDef="status">
-              <th mat-header-cell *matHeaderCellDef> Status </th>
-              <td mat-cell *matCellDef="let piece">
+              <div mat-header-cell *matHeaderCellDef> Status </div>
+              <div mat-cell *matCellDef="let piece">
                 <mat-select [value]="piece.choir_repertoire?.status"
                   (selectionChange)="onStatusChange($event.value, piece.id)" (click)="$event.stopPropagation()">
                   <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
                   <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
                   <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
                 </mat-select>
-              </td>
+              </div>
             </ng-container>
 
             <!-- Actions Column (Not sortable) -->
             <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let piece" class="actions-cell">
+              <div mat-header-cell *matHeaderCellDef></div>
+              <div mat-cell *matCellDef="let piece" class="actions-cell">
                 <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
                   <mat-icon>edit</mat-icon>
                 </button>
-              </td>
+              </div>
             </ng-container>
 
             <!-- Define the header and data rows -->
-            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            <div mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></div>
+            <div mat-row *matRowDef="let row; columns: displayedColumns;"
                 (mouseenter)="onRowMouseEnter($event, row)"
                 (mousemove)="onRowMouseMove($event)"
-                (mouseleave)="onRowMouseLeave()"></tr>
+                (mouseleave)="onRowMouseLeave()"></div>
 
             <!-- Row shown when there is no matching data. -->
-            <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <div class="mat-row" *matNoDataRow>
+              <div class="mat-cell" [attr.colspan]="displayedColumns.length">
                 Keine Stücken passend zu den Filtern gefunden.
-              </td>
-            </tr>
-          </table>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- The Paginator -->

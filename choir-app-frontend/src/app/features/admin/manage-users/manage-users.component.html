@@ -7,25 +7,25 @@
   </mat-form-field>
 </div>
 
-<table
+<div
   mat-table
   [dataSource]="dataSource"
   class="mat-elevation-z8"
   *ngIf="!(isHandset$ | async)"
 >
   <ng-container matColumnDef="name">
-    <th mat-header-cell *matHeaderCellDef>Name</th>
-    <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+    <div mat-header-cell *matHeaderCellDef>Name</div>
+    <div mat-cell *matCellDef="let element">{{ element.name }}</div>
   </ng-container>
 
   <ng-container matColumnDef="email">
-    <th mat-header-cell *matHeaderCellDef>E-Mail</th>
-    <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+    <div mat-header-cell *matHeaderCellDef>E-Mail</div>
+    <div mat-cell *matCellDef="let element">{{ element.email }}</div>
   </ng-container>
 
   <ng-container matColumnDef="roles">
-    <th mat-header-cell *matHeaderCellDef>Rollen</th>
-    <td mat-cell *matCellDef="let element">
+    <div mat-header-cell *matHeaderCellDef>Rollen</div>
+    <div mat-cell *matCellDef="let element">
       <mat-form-field appearance="outline" class="roles-select">
         <mat-select
           [ngModel]="element.roles"
@@ -39,22 +39,22 @@
           <mat-option value="librarian">Bibliothekar</mat-option>
         </mat-select>
       </mat-form-field>
-    </td>
+    </div>
   </ng-container>
 
   <ng-container matColumnDef="choirs">
-    <th mat-header-cell *matHeaderCellDef>Chöre</th>
-    <td mat-cell *matCellDef="let element">{{ choirList(element) }}</td>
+    <div mat-header-cell *matHeaderCellDef>Chöre</div>
+    <div mat-cell *matCellDef="let element">{{ choirList(element) }}</div>
   </ng-container>
 
   <ng-container matColumnDef="lastLogin">
-    <th mat-header-cell *matHeaderCellDef>Letzter Login</th>
-    <td mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</td>
+    <div mat-header-cell *matHeaderCellDef>Letzter Login</div>
+    <div mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</div>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <th mat-header-cell *matHeaderCellDef></th>
-    <td mat-cell *matCellDef="let element">
+    <div mat-header-cell *matHeaderCellDef></div>
+    <div mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="editUser(element)">
         <mat-icon>edit</mat-icon>
       </button>
@@ -67,12 +67,12 @@
       <button mat-icon-button color="warn" (click)="deleteUser(element)">
         <mat-icon>delete</mat-icon>
       </button>
-    </td>
+    </div>
   </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-</table>
+  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
+  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
+</div>
 
 <mat-accordion *ngIf="isHandset$ | async">
   <mat-expansion-panel *ngFor="let element of dataSource.filteredData">

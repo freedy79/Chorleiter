@@ -11,23 +11,23 @@
 
 <div *ngFor="let group of groups">
   <h3>{{ group.date }}</h3>
-  <table mat-table [dataSource]="group.items" class="mat-elevation-z8 log-table">
+  <div mat-table [dataSource]="group.items" class="mat-elevation-z8 log-table">
     <ng-container matColumnDef="timestamp">
-      <th mat-header-cell *matHeaderCellDef>Zeit</th>
-      <td mat-cell *matCellDef="let row">{{ row.timestamp || (row.date | date:'short') }}</td>
+      <div mat-header-cell *matHeaderCellDef>Zeit</div>
+      <div mat-cell *matCellDef="let row">{{ row.timestamp || (row.date | date:'short') }}</div>
     </ng-container>
 
     <ng-container matColumnDef="level">
-      <th mat-header-cell *matHeaderCellDef>Level</th>
-      <td mat-cell *matCellDef="let row">{{ row.level }}</td>
+      <div mat-header-cell *matHeaderCellDef>Level</div>
+      <div mat-cell *matCellDef="let row">{{ row.level }}</div>
     </ng-container>
 
     <ng-container matColumnDef="message">
-      <th mat-header-cell *matHeaderCellDef>Nachricht</th>
-      <td mat-cell *matCellDef="let row"><pre>{{ row.message || row.stack || row.raw }}</pre></td>
+      <div mat-header-cell *matHeaderCellDef>Nachricht</div>
+      <div mat-cell *matCellDef="let row"><pre>{{ row.message || row.stack || row.raw }}</pre></div>
     </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="['timestamp','level','message']"></tr>
-    <tr mat-row *matRowDef="let row; columns: ['timestamp','level','message']"></tr>
-  </table>
+    <div mat-header-row *matHeaderRowDef="['timestamp','level','message']"></div>
+    <div mat-row *matRowDef="let row; columns: ['timestamp','level','message']"></div>
+  </div>
 </div>

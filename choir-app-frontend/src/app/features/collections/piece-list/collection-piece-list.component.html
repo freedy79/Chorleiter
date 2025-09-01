@@ -14,36 +14,36 @@
 <ng-container *ngIf="!(isHandset$ | async); else mobileView">
 <div class="table-wrapper mat-elevation-z8">
   <div class="table-scroll-container">
-    <table mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
+    <div mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
       <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="title">Titel</th>
-        <td mat-cell *matCellDef="let piece" class="title-cell">
+        <div mat-header-cell *matHeaderCellDef mat-sort-header="title">Titel</div>
+        <div mat-cell *matCellDef="let piece" class="title-cell">
           <strong>{{ piece.title }}</strong>
           <div class="subtitle-hint" *ngIf="piece.subtitle">{{ piece.subtitle }}</div>
-        </td>
+        </div>
       </ng-container>
 
       <ng-container matColumnDef="composer">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="composer">Komponist/Ursprung</th>
-        <td mat-cell *matCellDef="let piece">{{ piece.composer?.name || piece.origin || '-' }}</td>
+        <div mat-header-cell *matHeaderCellDef mat-sort-header="composer">Komponist/Ursprung</div>
+        <div mat-cell *matCellDef="let piece">{{ piece.composer?.name || piece.origin || '-' }}</div>
       </ng-container>
 
       <ng-container matColumnDef="author">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="author">Dichter</th>
-        <td mat-cell *matCellDef="let piece">{{ piece.author?.name || '-' }}</td>
+        <div mat-header-cell *matHeaderCellDef mat-sort-header="author">Dichter</div>
+        <div mat-cell *matCellDef="let piece">{{ piece.author?.name || '-' }}</div>
       </ng-container>
 
       <ng-container matColumnDef="collections">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="collectionCount">Anzahl in Sammlungen</th>
-        <td mat-cell *matCellDef="let piece" class="count-cell">{{ piece.collectionCount || 0 }}</td>
+        <div mat-header-cell *matHeaderCellDef mat-sort-header="collectionCount">Anzahl in Sammlungen</div>
+        <div mat-cell *matCellDef="let piece" class="count-cell">{{ piece.collectionCount || 0 }}</div>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openPiece(row)"></tr>
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Stücke gefunden.</td>
-      </tr>
-    </table>
+      <div mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></div>
+      <div mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openPiece(row)"></div>
+      <div class="mat-row" *matNoDataRow>
+        <div class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Stücke gefunden.</div>
+      </div>
+    </div>
   </div>
   <mat-paginator [length]="totalPieces" [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons></mat-paginator>
 </div>

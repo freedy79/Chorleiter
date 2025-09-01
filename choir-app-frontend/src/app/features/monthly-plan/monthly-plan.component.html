@@ -33,17 +33,17 @@
     <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="openEmailDialog()" matTooltip="Als E-Mail versenden"><mat-icon>mail</mat-icon></button>
     <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="accent" (click)="openAvailabilityDialog()" matTooltip="Verfügbarkeit anfragen"><mat-icon>Drafts</mat-icon></button>
   </div>
-  <table mat-table [dataSource]="entries" class="mat-elevation-z2">
+  <div mat-table [dataSource]="entries" class="mat-elevation-z2">
     <ng-container matColumnDef="date">
-      <th mat-header-cell *matHeaderCellDef>Datum</th>
-      <td mat-cell *matCellDef="let ev" [matTooltip]="timestamp(ev.date)">
+      <div mat-header-cell *matHeaderCellDef>Datum</div>
+      <div mat-cell *matCellDef="let ev" [matTooltip]="timestamp(ev.date)">
         {{ ev.date | date:'shortDate' }}
         <span class="holiday" *ngIf="ev.holidayHint"> ({{ ev.holidayHint }})</span>
-      </td>
+      </div>
     </ng-container>
     <ng-container matColumnDef="director">
-      <th mat-header-cell *matHeaderCellDef>Chorleiter</th>
-      <td mat-cell *matCellDef="let ev">
+      <div mat-header-cell *matHeaderCellDef>Chorleiter</div>
+      <div mat-cell *matCellDef="let ev">
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorText">
           <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
@@ -55,11 +55,11 @@
           {{ ev.director?.name }}
           <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-template>
-      </td>
+      </div>
     </ng-container>
     <ng-container matColumnDef="organist">
-      <th mat-header-cell *matHeaderCellDef>Organist</th>
-      <td mat-cell *matCellDef="let ev">
+      <div mat-header-cell *matHeaderCellDef>Organist</div>
+      <div mat-cell *matCellDef="let ev">
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistText">
           <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
@@ -71,49 +71,49 @@
           {{ ev.organist?.name }}
           <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-template>
-      </td>
+      </div>
     </ng-container>
     <ng-container matColumnDef="notes">
-      <th mat-header-cell *matHeaderCellDef>Notizen</th>
-      <td mat-cell *matCellDef="let ev">
+      <div mat-header-cell *matHeaderCellDef>Notizen</div>
+      <div mat-cell *matCellDef="let ev">
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else notesText">
           <input matInput [(ngModel)]="ev.notes" (blur)="updateNotes(ev, ev.notes)" />
         </ng-container>
         <ng-template #notesText>{{ ev.notes }}</ng-template>
-      </td>
+      </div>
     </ng-container>
     <ng-container matColumnDef="actions">
-      <th mat-header-cell *matHeaderCellDef></th>
-      <td mat-cell *matCellDef="let ev">
+      <div mat-header-cell *matHeaderCellDef></div>
+      <div mat-cell *matCellDef="let ev">
         <button mat-icon-button color="warn" *ngIf="isChoirAdmin && !plan.finalized" (click)="deleteEntry(ev)">
           <mat-icon>delete</mat-icon>
         </button>
-      </td>
+      </div>
     </ng-container>
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-        [class.assigned]="plan.finalized && (row.director?.id === currentUserId || row.organist?.id === currentUserId)"></tr>
-  </table>
+    <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
+    <div mat-row *matRowDef="let row; columns: displayedColumns;"
+        [class.assigned]="plan.finalized && (row.director?.id === currentUserId || row.organist?.id === currentUserId)"></div>
+  </div>
 
   <div class="spacer"></div>
   <div class="counter-plan" *ngIf="counterPlanDates.length > 0">
     <h3>Gegenplan</h3>
-    <table class="counter-plan-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">
+    <div class="counter-plan-table">
+      <divead>
+        <div>
+          <div>Name</div>
+          <div *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">
             {{ d | date:'dd.MM.' }}
-          </th>
-        </tr>
+          </div>
+        </div>
       </thead>
       <tbody>
-        <tr *ngFor="let row of counterPlanRows">
-          <td>{{ row.user.name }}</td>
-          <td *ngFor="let key of counterPlanDateKeys">{{ row.assignments[key] }}</td>
-        </tr>
+        <div *ngFor="let row of counterPlanRows">
+          <div>{{ row.user.name }}</div>
+          <div *ngFor="let key of counterPlanDateKeys">{{ row.assignments[key] }}</div>
+        </div>
       </tbody>
-    </table>
+    </div>
   </div>
 
     </div>
