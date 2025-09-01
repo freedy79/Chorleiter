@@ -287,60 +287,79 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
     onSave(): void {
         if (this.collectionForm.invalid) return;
 
-        const formValue = this.collectionForm.value;
-        const payload = {
-            ...formValue,
-            pieces: this.selectedPieceLinks.map((link) => ({
-                pieceId: link.piece.id,
-                numberInCollection: link.numberInCollection,
-            })),
+        const proceed = () => {
+            const formValue = this.collectionForm.value;
+            const payload = {
+                ...formValue,
+                pieces: this.selectedPieceLinks.map((link) => ({
+                    pieceId: link.piece.id,
+                    numberInCollection: link.numberInCollection,
+                })),
+            };
+
+            if (this.isEditMode && this.collectionId) {
+                this.isSaving = true;
+                this.apiService.updateCollection(this.collectionId, payload).subscribe({
+                    next: (response) => this.pollUpdateStatus(response.jobId),
+                    error: (err) => {
+                        this.isSaving = false;
+                        let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
+                        if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
+                            message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+                        }
+                        const title = this.collectionForm.value.title;
+                        const context = title ? ` der Sammlung '${title}'` : '';
+                        this.snackBar.open(`Fehler beim Aktualisieren${context}: ${message}`, 'Schließen', {
+                            duration: 5000,
+                            verticalPosition: 'top',
+                        });
+                    },
+                });
+            } else {
+                this.apiService.createCollection(payload).subscribe({
+                    next: (response) => {
+                        const id = response.id;
+                        const afterSave = () => this.router.navigate(['/collections']);
+                        const upload$ = this.coverFile
+                            ? this.apiService.uploadCollectionCover(id, this.coverFile)
+                            : of(null);
+                        upload$.subscribe({ next: afterSave, error: afterSave });
+                        this.snackBar.open('Die Sammlung wurde erfolgreich erstellt.', 'OK', {
+                            duration: 3000,
+                            verticalPosition: 'top',
+                        });
+                    },
+                    error: (err) => {
+                        let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
+                        if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
+                            message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
+                        }
+                        const title = this.collectionForm.value.title;
+                        const context = title ? ` der Sammlung '${title}'` : '';
+                        this.snackBar.open(`Fehler beim Erstellen${context}: ${message}`, 'Schließen', {
+                            duration: 5000,
+                            verticalPosition: 'top',
+                        });
+                    },
+                });
+            }
         };
 
-        if (this.isEditMode && this.collectionId) {
-            this.isSaving = true;
-            this.apiService.updateCollection(this.collectionId, payload).subscribe({
-                next: (response) => this.pollUpdateStatus(response.jobId),
-                error: (err) => {
-                    this.isSaving = false;
-                    let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
-                    if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
-                        message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
-                    }
-                    const title = this.collectionForm.value.title;
-                    const context = title ? ` der Sammlung '${title}'` : '';
-                    this.snackBar.open(`Fehler beim Aktualisieren${context}: ${message}`, 'Schließen', {
-                        duration: 5000,
-                        verticalPosition: 'top',
-                    });
-                },
+        if (this.selectedPieceLinks.length === 0) {
+            const dialogData: ConfirmDialogData = {
+                title: 'Leere Sammlung speichern?',
+                message: 'Diese Sammlung enthält keine Stücke. Möchten Sie sie trotzdem speichern?',
+                confirmButtonText: 'Speichern',
+                cancelButtonText: 'Abbrechen',
+            };
+            const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+            ref.afterClosed().subscribe((confirmed) => {
+                if (confirmed) {
+                    proceed();
+                }
             });
         } else {
-            this.apiService.createCollection(payload).subscribe({
-                next: (response) => {
-                    const id = response.id;
-                    const afterSave = () => this.router.navigate(['/collections']);
-                    const upload$ = this.coverFile
-                        ? this.apiService.uploadCollectionCover(id, this.coverFile)
-                        : of(null);
-                    upload$.subscribe({ next: afterSave, error: afterSave });
-                    this.snackBar.open('Die Sammlung wurde erfolgreich erstellt.', 'OK', {
-                        duration: 3000,
-                        verticalPosition: 'top',
-                    });
-                },
-                error: (err) => {
-                    let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
-                    if (err.status === 400 && !err.error?.message && typeof err.error !== 'string') {
-                        message = 'Ungültige Eingaben. Bitte prüfen Sie die Angaben.';
-                    }
-                    const title = this.collectionForm.value.title;
-                    const context = title ? ` der Sammlung '${title}'` : '';
-                    this.snackBar.open(`Fehler beim Erstellen${context}: ${message}`, 'Schließen', {
-                        duration: 5000,
-                        verticalPosition: 'top',
-                    });
-                },
-            });
+            proceed();
         }
     }
 
