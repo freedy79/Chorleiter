@@ -113,27 +113,27 @@
     </mat-card-header>
     <mat-card-content *ngIf="membersExpanded">
       <div class="table-wrapper mat-elevation-z4">
-        <div mat-table [dataSource]="dataSource">
+        <mat-table [dataSource]="dataSource">
           <!-- Name Column -->
           <ng-container matColumnDef="name">
-            <div mat-header-cell *matHeaderCellDef> Name </div>
-            <div mat-cell *matCellDef="let user"> {{user.name}} </div>
+            <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
+            <mat-cell *matCellDef="let user"> {{user.name}} </mat-cell>
           </ng-container>
           <!-- Email Column -->
           <ng-container matColumnDef="email">
-            <div mat-header-cell *matHeaderCellDef> E-Mail </div>
-            <div mat-cell *matCellDef="let user"> {{user.email}} </div>
+            <mat-header-cell *matHeaderCellDef> E-Mail </mat-header-cell>
+            <mat-cell *matCellDef="let user"> {{user.email}} </mat-cell>
           </ng-container>
           <ng-container matColumnDef="address">
-            <div mat-header-cell *matHeaderCellDef>Adresse</div>
-            <div mat-cell *matCellDef="let user">
+            <mat-header-cell *matHeaderCellDef>Adresse</mat-header-cell>
+            <mat-cell *matCellDef="let user">
               {{ user.street ? user.street + ',' : '' }} {{ user.postalCode }} {{ user.city }}
-            </div>
+            </mat-cell>
           </ng-container>
           <!-- Role Column -->
           <ng-container matColumnDef="role">
-            <div mat-header-cell *matHeaderCellDef> Rollen </div>
-            <div mat-cell *matCellDef="let user">
+            <mat-header-cell *matHeaderCellDef> Rollen </mat-header-cell>
+            <mat-cell *matCellDef="let user">
               <ng-container *ngIf="isChoirAdmin; else roleText">
                 <mat-form-field appearance="outline" class="roles-select">
                   <mat-select
@@ -149,16 +149,16 @@
                 </mat-form-field>
               </ng-container>
               <ng-template #roleText>{{ user.membership?.rolesInChoir?.join(', ') || '-' }}</ng-template>
-            </div>
+            </mat-cell>
           </ng-container>
           <ng-container matColumnDef="status">
-            <div mat-header-cell *matHeaderCellDef> Status </div>
-            <div mat-cell *matCellDef="let user"> {{user.membership?.registrationStatus === 'PENDING' ? 'Registrierung ausstehend' : 'Registriert'}} </div>
+            <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
+            <mat-cell *matCellDef="let user"> {{user.membership?.registrationStatus === 'PENDING' ? 'Registrierung ausstehend' : 'Registriert'}} </mat-cell>
           </ng-container>
           <!-- Actions Column -->
           <ng-container matColumnDef="actions">
-            <div mat-header-cell *matHeaderCellDef></div>
-            <div mat-cell *matCellDef="let user" class="actions-cell">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let user" class="actions-cell">
               <!-- Verhindern, dass man sich selbst entfernt -->
               <button
                 mat-icon-button
@@ -168,16 +168,16 @@
                 [disabled]="dataSource.data.length <= 1">
                 <mat-icon>person_remove</mat-icon>
               </button>
-            </div>
+            </mat-cell>
           </ng-container>
-          <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-          <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-          <div class="mat-row" *matNoDataRow>
-            <div class="mat-cell" [attr.colspan]="displayedColumns.length">
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          <mat-row class="mat-row" *matNoDataRow>
+            <mat-cell class="mat-cell" [attr.colspan]="displayedColumns.length">
               Keine Mitglieder gefunden.
-            </div>
-          </div>
-        </div>
+            </mat-cell>
+          </mat-row>
+        </mat-table>
       </div>
     </mat-card-content>
   </mat-card>
@@ -188,31 +188,31 @@
     </mat-card-header>
     <mat-card-content>
       <div class="table-wrapper mat-elevation-z4">
-        <div mat-table [dataSource]="collectionDataSource">
+        <mat-table [dataSource]="collectionDataSource">
           <ng-container matColumnDef="title">
-            <div mat-header-cell *matHeaderCellDef> Titel </div>
-            <div mat-cell *matCellDef="let col">{{ col.title }}</div>
+            <mat-header-cell *matHeaderCellDef> Titel </mat-header-cell>
+            <mat-cell *matCellDef="let col">{{ col.title }}</mat-cell>
           </ng-container>
           <ng-container matColumnDef="publisher">
-            <div mat-header-cell *matHeaderCellDef> Verlag </div>
-            <div mat-cell *matCellDef="let col">{{ col.publisher || '-' }}</div>
+            <mat-header-cell *matHeaderCellDef> Verlag </mat-header-cell>
+            <mat-cell *matCellDef="let col">{{ col.publisher || '-' }}</mat-cell>
           </ng-container>
           <ng-container matColumnDef="actions">
-            <div mat-header-cell *matHeaderCellDef></div>
-            <div mat-cell *matCellDef="let col" class="actions-cell">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let col" class="actions-cell">
               <button *ngIf="isChoirAdmin" mat-icon-button color="warn" (click)="removeCollection(col)" matTooltip="Sammlung entfernen">
                 <mat-icon>delete</mat-icon>
               </button>
-            </div>
+            </mat-cell>
           </ng-container>
-          <div mat-header-row *matHeaderRowDef="displayedCollectionColumns"></div>
-          <div mat-row *matRowDef="let row; columns: displayedCollectionColumns;"></div>
-          <div class="mat-row" *matNoDataRow>
-            <div class="mat-cell" [attr.colspan]="displayedCollectionColumns.length">
+          <mat-header-row *matHeaderRowDef="displayedCollectionColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedCollectionColumns;"></mat-row>
+          <mat-row class="mat-row" *matNoDataRow>
+            <mat-cell class="mat-cell" [attr.colspan]="displayedCollectionColumns.length">
               Keine Sammlungen vorhanden.
-            </div>
-          </div>
-        </div>
+            </mat-cell>
+          </mat-row>
+        </mat-table>
       </div>
     </mat-card-content>
   </mat-card>

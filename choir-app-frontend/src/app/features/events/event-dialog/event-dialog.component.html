@@ -68,32 +68,32 @@
     </div>
 
     <!-- Display Selected Pieces in a Table -->
-    <div mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
+    <mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
       <ng-container matColumnDef="reference">
-        <div mat-header-cell *matHeaderCellDef>Ref</div>
-        <div mat-cell *matCellDef="let piece">{{ piece.reference }}</div>
+        <mat-header-cell *matHeaderCellDef>Ref</mat-header-cell>
+        <mat-cell *matCellDef="let piece">{{ piece.reference }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="title">
-        <div mat-header-cell *matHeaderCellDef>Titel</div>
-        <div mat-cell *matCellDef="let piece">{{ piece.title }}</div>
+        <mat-header-cell *matHeaderCellDef>Titel</mat-header-cell>
+        <mat-cell *matCellDef="let piece">{{ piece.title }}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let piece">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let piece">
           <button mat-icon-button color="warn" (click)="remove(piece)">
             <mat-icon>delete</mat-icon>
           </button>
-        </div>
+        </mat-cell>
       </ng-container>
 
-      <div mat-header-row *matHeaderRowDef="pieceColumns"></div>
-      <div mat-row *matRowDef="let row; columns: pieceColumns;"></div>
-      <div class="mat-row" *matNoDataRow>
-        <div class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</div>
-      </div>
-    </div>
+      <mat-header-row *matHeaderRowDef="pieceColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: pieceColumns;"></mat-row>
+      <mat-row class="mat-row" *matNoDataRow>
+        <mat-cell class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</mat-cell>
+      </mat-row>
+    </mat-table>
 
   </form>
 </div>
