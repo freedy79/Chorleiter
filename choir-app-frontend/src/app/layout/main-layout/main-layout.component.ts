@@ -244,26 +244,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
 
   ngOnInit(): void {
-    //Called before any other lifecycle hook. Use it to inject dependencies, but avoid any serious work here.
-    //Add '${implements OnChanges}' to the class.
-/*
-    <ng-container *ngIf="isLoggedIn$ | async">
-        <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" [routerLinkActiveOptions]="{exact: true}">Dashboard</a>
-        <a mat-list-item routerLink="/repertoire" routerLinkActive="active-link">Repertoire</a>
-        <a mat-list-item routerLink="/collections" routerLinkActive="active-link">Sammlungen</a>
-        <a mat-list-item routerLink="/manage-choir" routerLinkActive="active-link">Chorverwaltung</a>
-        <ng-container *ngIf="isAdmin$ | async">
-          <mat-divider></mat-divider>
-          <mat-list-item (click)="showAdminSubmenu = !showAdminSubmenu" class="parent">
-            <span class="full-width" *ngIf="isExpanded || isShowing">Administration</span>
-            <mat-icon mat-list-icon>home</mat-icon>
-            <mat-icon class="menu-button" [ngClass]="{'rotated' : showAdminSubmenu}" *ngIf="isExpanded || isShowing">expand_more</mat-icon>
-          </mat-list-item>
-          <div class="submenu" [ngClass]="{'expanded' : showAdminSubmenu}" *ngIf="isShowing || isExpanded">
-              <a mat-list-item routerLink="/admin/creators" routerLinkActive="active-link">Komponisten/Autoren</a>
-          </div>
-        </ng-container>
-      </ng-container>*/
+    this.authService.activeChoir$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.setupNavItems());
+  }
+
+  private setupNavItems(): void {
     const dienstplanVisible$ = combineLatest([this.isLoggedIn$, this.dienstplanEnabled$]).pipe(
       map(([loggedIn, enabled]) => loggedIn && enabled)
     );
@@ -276,10 +262,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         visibleSubject: this.isLoggedIn$,
       },
       {
-          key: 'events',
-          displayName: 'Ereignisse',
-          route: '/events',
-          visibleSubject: this.visibleFor('events', this.isLoggedIn$),
+        key: 'events',
+        displayName: 'Ereignisse',
+        route: '/events',
+        visibleSubject: this.visibleFor('events', this.isLoggedIn$),
       },
       {
         key: 'dienstplan',
@@ -343,46 +329,18 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       },
       {
         displayName: 'Administration',
-        //svgIconName: 's-settings',
         visibleSubject: this.isAdmin$,
         route: 'admin',
         children: [
-          {
-            displayName: 'Allgemein',
-            route: '/admin/general',
-          },
-          {
-            displayName: 'Chöre',
-            route: '/admin/choirs',
-          },
-          {
-            displayName: 'Benutzer',
-            route: '/admin/users',
-          },
-          {
-            displayName: 'Komponisten/Autoren',
-            route: '/admin/creators'
-          },
-          {
-            displayName: 'Verlage',
-            route: '/admin/publishers'
-          },
-          {
-            displayName: 'Änderungsvorschläge',
-            route: '/admin/piece-changes'
-          },
-          {
-            displayName: 'Protokolle',
-            route: '/admin/protocols',
-          },
-          {
-            displayName: 'Dateien',
-            route: '/admin/files',
-          },
-          {
-            displayName: 'Develop',
-            route: '/admin/develop',
-          }
+          { displayName: 'Allgemein', route: '/admin/general' },
+          { displayName: 'Chöre', route: '/admin/choirs' },
+          { displayName: 'Benutzer', route: '/admin/users' },
+          { displayName: 'Komponisten/Autoren', route: '/admin/creators' },
+          { displayName: 'Verlage', route: '/admin/publishers' },
+          { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
+          { displayName: 'Protokolle', route: '/admin/protocols' },
+          { displayName: 'Dateien', route: '/admin/files' },
+          { displayName: 'Develop', route: '/admin/develop' }
         ]
       }
     ];
