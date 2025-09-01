@@ -1,26 +1,26 @@
 <div *ngIf="items$ | async as items">
-  <div mat-table [dataSource]="items" class="mat-elevation-z8" *ngIf="items.length > 0">
+  <mat-table [dataSource]="items" class="mat-elevation-z8" *ngIf="items.length > 0">
     <ng-container matColumnDef="title">
-      <div mat-header-cell *matHeaderCellDef>Sammlung</div>
-      <div mat-cell *matCellDef="let row">{{row.item.collection?.title}}</div>
+      <mat-header-cell *matHeaderCellDef>Sammlung</mat-header-cell>
+      <mat-cell *matCellDef="let row">{{row.item.collection?.title}}</mat-cell>
     </ng-container>
     <ng-container matColumnDef="quantity">
-      <div mat-header-cell *matHeaderCellDef>Anzahl</div>
-      <div mat-cell *matCellDef="let row">
+      <mat-header-cell *matHeaderCellDef>Anzahl</mat-header-cell>
+      <mat-cell *matCellDef="let row">
         <input matInput type="number" [(ngModel)]="row.quantity" min="1" />
-      </div>
+      </mat-cell>
     </ng-container>
     <ng-container matColumnDef="remove">
-      <div mat-header-cell *matHeaderCellDef></div>
-      <div mat-cell *matCellDef="let row">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let row">
         <button mat-icon-button color="warn" (click)="remove(row.item.id)">
           <mat-icon>delete</mat-icon>
         </button>
-      </div>
+      </mat-cell>
     </ng-container>
-    <div mat-header-row *matHeaderRowDef="['title','quantity','remove']"></div>
-    <div mat-row *matRowDef="let row; columns: ['title','quantity','remove']"></div>
-  </div>
+    <mat-header-row *matHeaderRowDef="['title','quantity','remove']"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: ['title','quantity','remove']"></mat-row>
+  </mat-table>
   <p *ngIf="items.length === 0">Keine Sammlungen im Entleihkorb.</p>
 
   <div class="form-section" *ngIf="items.length > 0">

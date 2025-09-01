@@ -31,31 +31,31 @@
       </mat-menu>
     </div>
 
-    <div mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
+    <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
       <ng-container matColumnDef="cover">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let element" class="cover-cell">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let element" class="cover-cell">
           <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
-        </div>
+        </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="title">
-        <div mat-header-cell *matHeaderCellDef mat-sort-header>Titel</div>
-        <div mat-cell *matCellDef="let element">
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Titel</mat-header-cell>
+        <mat-cell *matCellDef="let element">
           <div class="composer-hint" *ngIf="getCollectionComposer(element.collection) as composer">{{ composer }}</div>
           <div class="title">{{ element.collection?.title }}</div>
           <div class="subtitle-hint" *ngIf="getCollectionHint(element.collection) as hint">{{ hint }}</div>
-        </div>
+        </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="copies">
-        <div mat-header-cell *matHeaderCellDef mat-sort-header>Exemplare</div>
-        <div mat-cell *matCellDef="let element">{{element.copies}}</div>
+        <mat-header-cell *matHeaderCellDef mat-sort-header>Exemplare</mat-header-cell>
+        <mat-cell *matCellDef="let element">{{element.copies}}</mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <div mat-header-cell *matHeaderCellDef></div>
-        <div mat-cell *matCellDef="let element">
+        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+        <mat-cell *matCellDef="let element">
           <button mat-icon-button color="primary" *ngIf="element.status === 'available'" (click)="addToCart(element, $event)">
             <mat-icon>add_shopping_cart</mat-icon>
           </button>
@@ -67,11 +67,11 @@
             <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
             <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
           </mat-menu>
-        </div>
+        </mat-cell>
       </ng-container>
 
       <ng-container matColumnDef="expandedDetail">
-        <div mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+        <mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
           <div *ngIf="expandedItem === element">
             <mat-nav-list>
               <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
@@ -84,13 +84,13 @@
             </mat-nav-list>
             <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
           </div>
-        </div>
+        </mat-cell>
       </ng-container>
 
-      <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-      <div mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></div>
-      <div mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></div>
-    </div>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></mat-row>
+      <mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></mat-row>
+    </mat-table>
     <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
   </mat-tab>
 

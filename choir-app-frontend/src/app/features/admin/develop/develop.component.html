@@ -1,35 +1,35 @@
 <h2>Primäre Palette</h2>
-<div mat-table [dataSource]="primaryColors" class="mat-elevation-z8">
+<mat-table [dataSource]="primaryColors" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Farbname</div>
-    <div mat-cell *matCellDef="let c">{{ c.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Farbname</mat-header-cell>
+    <mat-cell *matCellDef="let c">{{ c.name }}</mat-cell>
   </ng-container>
   <ng-container matColumnDef="preview">
-    <div mat-header-cell *matHeaderCellDef>Farbe</div>
-    <div mat-cell *matCellDef="let c"><span class="color-box" [style.background]="c.hex"></span> {{ c.hex }}</div>
+    <mat-header-cell *matHeaderCellDef>Farbe</mat-header-cell>
+    <mat-cell *matCellDef="let c"><span class="color-box" [style.background]="c.hex"></span> {{ c.hex }}</mat-cell>
   </ng-container>
   <ng-container matColumnDef="scss">
-    <div mat-header-cell *matHeaderCellDef>SCSS</div>
-    <div mat-cell *matCellDef="let c"><code>{{ c.scss }}</code></div>
+    <mat-header-cell *matHeaderCellDef>SCSS</mat-header-cell>
+    <mat-cell *matCellDef="let c"><code>{{ c.scss }}</code></mat-cell>
   </ng-container>
-  <div mat-header-row *matHeaderRowDef="['name','preview','scss']"></div>
-  <div mat-row *matRowDef="let row; columns: ['name','preview','scss']"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="['name','preview','scss']"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: ['name','preview','scss']"></mat-row>
+</mat-table>
 
 <h2>Akzent-Palette</h2>
-<div mat-table [dataSource]="accentColors" class="mat-elevation-z8">
+<mat-table [dataSource]="accentColors" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Farbname</div>
-    <div mat-cell *matCellDef="let c">{{ c.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Farbname</mat-header-cell>
+    <mat-cell *matCellDef="let c">{{ c.name }}</mat-cell>
   </ng-container>
   <ng-container matColumnDef="preview">
-    <div mat-header-cell *matHeaderCellDef>Farbe</div>
-    <div mat-cell *matCellDef="let c"><span class="color-box" [style.background]="c.hex"></span> {{ c.hex }}</div>
+    <mat-header-cell *matHeaderCellDef>Farbe</mat-header-cell>
+    <mat-cell *matCellDef="let c"><span class="color-box" [style.background]="c.hex"></span> {{ c.hex }}</mat-cell>
   </ng-container>
   <ng-container matColumnDef="scss">
-    <div mat-header-cell *matHeaderCellDef>SCSS</div>
-    <div mat-cell *matCellDef="let c"><code>{{ c.scss }}</code></div>
+    <mat-header-cell *matHeaderCellDef>SCSS</mat-header-cell>
+    <mat-cell *matCellDef="let c"><code>{{ c.scss }}</code></mat-cell>
   </ng-container>
-  <div mat-header-row *matHeaderRowDef="['name','preview','scss']"></div>
-  <div mat-row *matRowDef="let row; columns: ['name','preview','scss']"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="['name','preview','scss']"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: ['name','preview','scss']"></mat-row>
+</mat-table>

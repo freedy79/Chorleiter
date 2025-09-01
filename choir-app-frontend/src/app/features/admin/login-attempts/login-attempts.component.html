@@ -8,39 +8,39 @@
   </button>
 </div>
 
-<div mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="email">
-    <div mat-header-cell *matHeaderCellDef>E-Mail</div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <a href="#" (click)="openUser(element.email); $event.preventDefault()">{{ element.email }}</a>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="success">
-    <div mat-header-cell *matHeaderCellDef>Erfolg</div>
-    <div mat-cell *matCellDef="let element">{{ element.success ? '✔' : '✖' }}</div>
+    <mat-header-cell *matHeaderCellDef>Erfolg</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.success ? '✔' : '✖' }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="reason">
-    <div mat-header-cell *matHeaderCellDef>Grund</div>
-    <div mat-cell *matCellDef="let element">{{ element.reason }}</div>
+    <mat-header-cell *matHeaderCellDef>Grund</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.reason }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="ipAddress">
-    <div mat-header-cell *matHeaderCellDef>IP</div>
-    <div mat-cell *matCellDef="let element">{{ element.ipAddress }}</div>
+    <mat-header-cell *matHeaderCellDef>IP</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.ipAddress }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="userAgent">
-    <div mat-header-cell *matHeaderCellDef>Browser</div>
-    <div mat-cell *matCellDef="let element">{{ element.userAgent }}</div>
+    <mat-header-cell *matHeaderCellDef>Browser</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.userAgent }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="createdAt">
-    <div mat-header-cell *matHeaderCellDef>Datum</div>
-    <div mat-cell *matCellDef="let element">{{ element.createdAt | date:'short' }}</div>
+    <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.createdAt | date:'short' }}</mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

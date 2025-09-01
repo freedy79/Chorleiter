@@ -7,25 +7,24 @@
   </mat-form-field>
 </div>
 
-<div
-  mat-table
+<mat-table
   [dataSource]="dataSource"
   class="mat-elevation-z8"
   *ngIf="!(isHandset$ | async)"
 >
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Name</div>
-    <div mat-cell *matCellDef="let element">{{ element.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="email">
-    <div mat-header-cell *matHeaderCellDef>E-Mail</div>
-    <div mat-cell *matCellDef="let element">{{ element.email }}</div>
+    <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.email }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="roles">
-    <div mat-header-cell *matHeaderCellDef>Rollen</div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef>Rollen</mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <mat-form-field appearance="outline" class="roles-select">
         <mat-select
           [ngModel]="element.roles"
@@ -39,22 +38,22 @@
           <mat-option value="librarian">Bibliothekar</mat-option>
         </mat-select>
       </mat-form-field>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="choirs">
-    <div mat-header-cell *matHeaderCellDef>Chöre</div>
-    <div mat-cell *matCellDef="let element">{{ choirList(element) }}</div>
+    <mat-header-cell *matHeaderCellDef>Chöre</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ choirList(element) }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="lastLogin">
-    <div mat-header-cell *matHeaderCellDef>Letzter Login</div>
-    <div mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</div>
+    <mat-header-cell *matHeaderCellDef>Letzter Login</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <div mat-header-cell *matHeaderCellDef></div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="editUser(element)">
         <mat-icon>edit</mat-icon>
       </button>
@@ -67,12 +66,12 @@
       <button mat-icon-button color="warn" (click)="deleteUser(element)">
         <mat-icon>delete</mat-icon>
       </button>
-    </div>
+    </mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>
 
 <mat-accordion *ngIf="isHandset$ | async">
   <mat-expansion-panel *ngFor="let element of dataSource.filteredData">

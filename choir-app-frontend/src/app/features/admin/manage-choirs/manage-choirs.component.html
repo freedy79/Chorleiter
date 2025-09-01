@@ -2,44 +2,44 @@
   <button mat-flat-button color="primary" (click)="addChoir()">Chor hinzufügen</button>
 </div>
 
-<div mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
-    <div mat-header-cell *matHeaderCellDef>Name</div>
-    <div mat-cell *matCellDef="let element">{{ element.name }}</div>
+    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="location">
-    <div mat-header-cell *matHeaderCellDef>Ort</div>
-    <div mat-cell *matCellDef="let element">{{ element.location }}</div>
+    <mat-header-cell *matHeaderCellDef>Ort</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.location }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="memberCount">
-    <div mat-header-cell *matHeaderCellDef>Mitglieder</div>
-    <div mat-cell *matCellDef="let element">{{ element.memberCount }}</div>
+    <mat-header-cell *matHeaderCellDef>Mitglieder</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.memberCount }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="eventCount">
-    <div mat-header-cell *matHeaderCellDef>Ereignisse</div>
-    <div mat-cell *matCellDef="let element">{{ element.eventCount }}</div>
+    <mat-header-cell *matHeaderCellDef>Ereignisse</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.eventCount }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="pieceCount">
-    <div mat-header-cell *matHeaderCellDef>Repertoire</div>
-    <div mat-cell *matCellDef="let element">{{ element.pieceCount }}</div>
+    <mat-header-cell *matHeaderCellDef>Repertoire</mat-header-cell>
+    <mat-cell *matCellDef="let element">{{ element.pieceCount }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <div mat-header-cell *matHeaderCellDef></div>
-    <div mat-cell *matCellDef="let element">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="editChoir(element)">
         <mat-icon>edit</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="deleteChoir(element)">
         <mat-icon>delete</mat-icon>
       </button>
-    </div>
+    </mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

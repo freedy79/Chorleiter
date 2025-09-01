@@ -1,39 +1,39 @@
 <div class="table-container mat-elevation-z4">
-  <div mat-table [dataSource]="dataSource">
+  <mat-table [dataSource]="dataSource">
     <ng-container matColumnDef="name">
-      <div mat-header-cell *matHeaderCellDef>Name</div>
-      <div mat-cell *matCellDef="let m">{{ m.name }}</div>
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ m.name }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="voice">
-      <div mat-header-cell *matHeaderCellDef>Stimme</div>
-      <div mat-cell *matCellDef="let m">{{ m.voice || '-' }}</div>
+      <mat-header-cell *matHeaderCellDef>Stimme</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ m.voice || '-' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="email">
-      <div mat-header-cell *matHeaderCellDef>E-Mail</div>
-      <div mat-cell *matCellDef="let m">{{ m.email }}</div>
+      <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ m.email }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="street">
-      <div mat-header-cell *matHeaderCellDef>Straße</div>
-      <div mat-cell *matCellDef="let m">{{ mask(m.street, m.shareWithChoir) }}</div>
+      <mat-header-cell *matHeaderCellDef>Straße</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ mask(m.street, m.shareWithChoir) }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="postalCode">
-      <div mat-header-cell *matHeaderCellDef>PLZ</div>
-      <div mat-cell *matCellDef="let m">{{ mask(m.postalCode, m.shareWithChoir) }}</div>
+      <mat-header-cell *matHeaderCellDef>PLZ</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ mask(m.postalCode, m.shareWithChoir) }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="city">
-      <div mat-header-cell *matHeaderCellDef>Ort</div>
-      <div mat-cell *matCellDef="let m">{{ mask(m.city, m.shareWithChoir) }}</div>
+      <mat-header-cell *matHeaderCellDef>Ort</mat-header-cell>
+      <mat-cell *matCellDef="let m">{{ mask(m.city, m.shareWithChoir) }}</mat-cell>
     </ng-container>
 
-    <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-    <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-    <div class="mat-row" *matNoDataRow>
-      <div class="mat-cell" [attr.colspan]="displayedColumns.length">Keine Mitglieder gefunden.</div>
-    </div>
-  </div>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matNoDataRow>
+      <mat-cell [attr.colspan]="displayedColumns.length">Keine Mitglieder gefunden.</mat-cell>
+    </mat-row>
+  </mat-table>
 </div>

@@ -1,21 +1,21 @@
-<div mat-table [dataSource]="availabilities" class="mat-elevation-z2">
+<mat-table [dataSource]="availabilities" class="mat-elevation-z2">
   <ng-container matColumnDef="date">
-    <div mat-header-cell *matHeaderCellDef>Datum</div>
-    <div mat-cell *matCellDef="let a">
+    <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
+    <mat-cell *matCellDef="let a">
       {{ a.date | date:'EEE dd.MM.yyyy' }}
       <span class="holiday" *ngIf="a.holidayHint"> ({{ a.holidayHint }})</span>
-    </div>
+    </mat-cell>
   </ng-container>
   <ng-container matColumnDef="status">
-    <div mat-header-cell *matHeaderCellDef>Status</div>
-    <div mat-cell *matCellDef="let a" [ngClass]="cellClass(a.status)">
+    <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+    <mat-cell *matCellDef="let a" [ngClass]="cellClass(a.status)">
       <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))">
         <mat-option value="AVAILABLE">verfügbar</mat-option>
         <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
         <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
       </mat-select>
-    </div>
+    </mat-cell>
   </ng-container>
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns;"></div>
-</div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

@@ -22,26 +22,26 @@
     <mat-divider *ngIf="previewData.length > 0"></mat-divider>
     <div *ngIf="previewData.length > 0" class="preview-area">
     <p>Bitte prüfe, ob die Daten korrekt eingelesen werden.</p>
-    <div mat-table [dataSource]="previewData">
+    <mat-table [dataSource]="previewData">
       <ng-container matColumnDef="nummer">
-        <div mat-header-cell *matHeaderCellDef> Nummer </div>
-        <div mat-cell *matCellDef="let row"> {{ row.nummer || row.number }} </div>
+        <mat-header-cell *matHeaderCellDef> Nummer </mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{ row.nummer || row.number }} </mat-cell>
       </ng-container>
       <ng-container matColumnDef="titel">
-        <div mat-header-cell *matHeaderCellDef> Titel </div>
-        <div mat-cell *matCellDef="let row"> {{ row.titel || row.title }} </div>
+        <mat-header-cell *matHeaderCellDef> Titel </mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{ row.titel || row.title }} </mat-cell>
       </ng-container>
       <ng-container matColumnDef="komponist">
-        <div mat-header-cell *matHeaderCellDef> Komponist </div>
-        <div mat-cell *matCellDef="let row"> {{ row.komponist || row.composer }} </div>
+        <mat-header-cell *matHeaderCellDef> Komponist </mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{ row.komponist || row.composer }} </mat-cell>
       </ng-container>
       <ng-container matColumnDef="kategorie">
-        <div mat-header-cell *matHeaderCellDef> Kategorie </div>
-        <div mat-cell *matCellDef="let row"> {{ row.kategorie || row.rubrik || row.category }} </div>
+        <mat-header-cell *matHeaderCellDef> Kategorie </mat-header-cell>
+        <mat-cell *matCellDef="let row"> {{ row.kategorie || row.rubrik || row.category }} </mat-cell>
       </ng-container>
-      <div mat-header-row *matHeaderRowDef="previewColumns"></div>
-      <div mat-row *matRowDef="let row; columns: previewColumns;"></div>
-    </div>
+      <mat-header-row *matHeaderRowDef="previewColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: previewColumns;"></mat-row>
+    </mat-table>
   </div>
   </ng-container>
 

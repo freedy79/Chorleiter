@@ -13,16 +13,15 @@
 </div>
 
 <div *ngIf="items.length" class="table-container">
-  <div
-    mat-table
+  <mat-table
     [dataSource]="items"
     class="program-table"
     cdkDropList
     (cdkDropListDropped)="drop($event)"
   >
   <ng-container matColumnDef="move">
-    <div mat-header-cell *matHeaderCellDef></div>
-    <div mat-cell *matCellDef="let item; let i = index">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let item; let i = index">
       <button
         mat-icon-button
         (click)="moveUp(i)"
@@ -42,68 +41,68 @@
       <span class="drag-handle" cdkDragHandle aria-label="Greifen">
         <mat-icon>drag_indicator</mat-icon>
       </span>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="title">
-    <div mat-header-cell *matHeaderCellDef> Titel </div>
-    <div mat-cell *matCellDef="let item">
+    <mat-header-cell *matHeaderCellDef> Titel </mat-header-cell>
+    <mat-cell *matCellDef="let item">
       <ng-container [ngSwitch]="item.type">
         <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
         <span *ngSwitchCase="'speech'">{{ item.speechTitle }}</span>
         <span *ngSwitchCase="'break'">{{ item.breakTitle || 'Pause' }}</span>
         <span *ngSwitchCase="'slot'">{{ item.slotLabel }}</span>
       </ng-container>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="composer">
-    <div mat-header-cell *matHeaderCellDef> Komponist / Sprecher </div>
-    <div mat-cell *matCellDef="let item">
+    <mat-header-cell *matHeaderCellDef> Komponist / Sprecher </mat-header-cell>
+    <mat-cell *matCellDef="let item">
       <ng-container [ngSwitch]="item.type">
         <span *ngSwitchCase="'piece'">{{ item.pieceComposerSnapshot }}</span>
         <span *ngSwitchCase="'speech'">{{ item.speechSpeaker }}</span>
         <span *ngSwitchCase="'slot'"></span>
       </ng-container>
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="duration">
-    <div mat-header-cell *matHeaderCellDef> Dauer (mm:ss) </div>
-    <div mat-cell *matCellDef="let item">
+    <mat-header-cell *matHeaderCellDef> Dauer (mm:ss) </mat-header-cell>
+    <mat-cell *matCellDef="let item">
       <input
         matInput
         [(ngModel)]="item.durationStr"
         (ngModelChange)="onDurationChange(item)"
         placeholder="mm:ss"
       />
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="note">
-    <div mat-header-cell *matHeaderCellDef> Notiz </div>
-    <div mat-cell *matCellDef="let item">
+    <mat-header-cell *matHeaderCellDef> Notiz </mat-header-cell>
+    <mat-cell *matCellDef="let item">
       <input matInput [(ngModel)]="item.note" (blur)="onNoteChange(item)" />
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="time">
-    <div mat-header-cell *matHeaderCellDef> Uhrzeit </div>
-    <div mat-cell *matCellDef="let item; let i = index">
+    <mat-header-cell *matHeaderCellDef> Uhrzeit </mat-header-cell>
+    <mat-cell *matCellDef="let item; let i = index">
       {{ getPlannedTime(i) }}
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="sum">
-    <div mat-header-cell *matHeaderCellDef> Summe </div>
-    <div mat-cell *matCellDef="let item; let i = index">
+    <mat-header-cell *matHeaderCellDef> Summe </mat-header-cell>
+    <mat-cell *matCellDef="let item; let i = index">
       {{ getCumulativeDuration(i) }}
-    </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-    <div mat-header-cell *matHeaderCellDef> Aktionen </div>
-    <div mat-cell *matCellDef="let item">
+    <mat-header-cell *matHeaderCellDef> Aktionen </mat-header-cell>
+    <mat-cell *matCellDef="let item">
 
       <ng-container [ngSwitch]="item.type">
         <a *ngSwitchCase="'piece'" [routerLink]="['/pieces', item.pieceId]" target="_blank">Details</a>
@@ -118,12 +117,12 @@
       <button mat-icon-button color="warn" (click)="deleteItem(item)" aria-label="Löschen">
         <mat-icon>delete</mat-icon>
       </button>
-    </div>
+    </mat-cell>
   </ng-container>
 
-  <div mat-header-row *matHeaderRowDef="displayedColumns"></div>
-  <div mat-row *matRowDef="let row; columns: displayedColumns" cdkDrag></div>
-  </div>
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns" cdkDrag></mat-row>
+  </mat-table>
 </div>
 
 <div *ngIf="items.length" class="total-duration">
