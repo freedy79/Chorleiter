@@ -26,10 +26,11 @@ if (process.env.NODE_ENV != "production") {
     });
 }
 
-// Set up rate limiter: maximum of twenty requests per minute
+// Set up rate limiter: maximum of RATE_LIMIT_MAX requests per minute (default 200)
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX, 10) || 200;
 const limiter = RateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
-    max: 100, // Erhöhen Sie das Limit auf einen vernünftigeren Wert
+    max: RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
     handler: (req, res, _next) => {

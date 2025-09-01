@@ -50,6 +50,16 @@ the database and can later be changed through the admin endpoint
 After saving new settings you can send yourself a test email from that page to verify the configuration.
 Any errors during mail delivery are written to `logs/error.log` for troubleshooting.
 
+### Rate Limiting
+
+Configure the number of requests allowed per minute with the `RATE_LIMIT_MAX`
+environment variable in `choir-app-backend/.env` or via the environment. The
+default is 200 requests per minute:
+
+```ini
+RATE_LIMIT_MAX=200
+```
+
 ### Mail Templates
 
 Invitation, password reset, monthly plan and availability request mails are based on templates
