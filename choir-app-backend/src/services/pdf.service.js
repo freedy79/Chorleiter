@@ -55,7 +55,7 @@ function monthlyPlanPdf(plan) {
   }
 
   // Title
-  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Dienstplan ' + plan.month + '/' + plan.year)}) Tj ET`);
+  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Musikplan ' + plan.month + '/' + plan.year)}) Tj ET`);
   y -= 20;
 
   // Choir name sub heading
