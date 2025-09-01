@@ -1,23 +1,23 @@
 <h2>Programme</h2>
 <button mat-raised-button color="primary" routerLink="/programs/create">Neues Programm</button>
 
-<table mat-table [dataSource]="programs" *ngIf="programs.length > 0">
+<div mat-table [dataSource]="programs" *ngIf="programs.length > 0">
   <ng-container matColumnDef="title">
-    <th mat-header-cell *matHeaderCellDef>Titel</th>
-    <td mat-cell *matCellDef="let program">{{ program.title }}</td>
+    <div mat-header-cell *matHeaderCellDef>Titel</div>
+    <div mat-cell *matCellDef="let program">{{ program.title }}</div>
   </ng-container>
 
   <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Aktionen</th>
-    <td mat-cell *matCellDef="let program">
+        <div mat-header-cell *matHeaderCellDef>Aktionen</div>
+    <div mat-cell *matCellDef="let program">
       <button mat-button [routerLink]="['/programs', program.id]">Bearbeiten</button>
       <button mat-button color="warn" (click)="delete(program)">Löschen</button>
-    </td>
+    </div>
   </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="['title', 'actions']"></tr>
-  <tr mat-row *matRowDef="let row; columns: ['title', 'actions']"></tr>
-</table>
+  <div mat-header-row *matHeaderRowDef="['title', 'actions']"></div>
+  <div mat-row *matRowDef="let row; columns: ['title', 'actions']"></div>
+</div>
 
 <p *ngIf="programs.length === 0">Keine Programme vorhanden.</p>
 

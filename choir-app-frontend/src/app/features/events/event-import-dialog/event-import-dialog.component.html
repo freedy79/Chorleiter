@@ -26,22 +26,22 @@
     <mat-divider *ngIf="previewData.length > 0"></mat-divider>
     <div *ngIf="previewData.length > 0" class="preview-area">
       <p>Bitte prüfe, ob die Daten korrekt eingelesen werden.</p>
-      <table mat-table [dataSource]="previewData">
+      <div mat-table [dataSource]="previewData">
         <ng-container matColumnDef="reference">
-          <th mat-header-cell *matHeaderCellDef>Referenz</th>
-          <td mat-cell *matCellDef="let row">{{ row.referenz || row.reference }}</td>
+          <div mat-header-cell *matHeaderCellDef>Referenz</div>
+          <div mat-cell *matCellDef="let row">{{ row.referenz || row.reference }}</div>
         </ng-container>
         <ng-container matColumnDef="title">
-          <th mat-header-cell *matHeaderCellDef>Titel</th>
-          <td mat-cell *matCellDef="let row">{{ row.titel || row.title }}</td>
+          <div mat-header-cell *matHeaderCellDef>Titel</div>
+          <div mat-cell *matCellDef="let row">{{ row.titel || row.title }}</div>
         </ng-container>
         <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef>Datum</th>
-          <td mat-cell *matCellDef="let row">{{ row.datum || row.date }}</td>
+          <div mat-header-cell *matHeaderCellDef>Datum</div>
+          <div mat-cell *matCellDef="let row">{{ row.datum || row.date }}</div>
         </ng-container>
-        <tr mat-header-row *matHeaderRowDef="previewColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: previewColumns;"></tr>
-      </table>
+        <div mat-header-row *matHeaderRowDef="previewColumns"></div>
+        <div mat-row *matRowDef="let row; columns: previewColumns;"></div>
+      </div>
     </div>
   </ng-container>
 

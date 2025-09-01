@@ -68,32 +68,32 @@
     </div>
 
     <!-- Display Selected Pieces in a Table -->
-    <table mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
+    <div mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
       <ng-container matColumnDef="reference">
-        <th mat-header-cell *matHeaderCellDef>Ref</th>
-        <td mat-cell *matCellDef="let piece">{{ piece.reference }}</td>
+        <div mat-header-cell *matHeaderCellDef>Ref</div>
+        <div mat-cell *matCellDef="let piece">{{ piece.reference }}</div>
       </ng-container>
 
       <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef>Titel</th>
-        <td mat-cell *matCellDef="let piece">{{ piece.title }}</td>
+        <div mat-header-cell *matHeaderCellDef>Titel</div>
+        <div mat-cell *matCellDef="let piece">{{ piece.title }}</div>
       </ng-container>
 
       <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let piece">
+        <div mat-header-cell *matHeaderCellDef></div>
+        <div mat-cell *matCellDef="let piece">
           <button mat-icon-button color="warn" (click)="remove(piece)">
             <mat-icon>delete</mat-icon>
           </button>
-        </td>
+        </div>
       </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="pieceColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: pieceColumns;"></tr>
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</td>
-      </tr>
-    </table>
+      <div mat-header-row *matHeaderRowDef="pieceColumns"></div>
+      <div mat-row *matRowDef="let row; columns: pieceColumns;"></div>
+      <div class="mat-row" *matNoDataRow>
+        <div class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</div>
+      </div>
+    </div>
 
   </form>
 </div>
