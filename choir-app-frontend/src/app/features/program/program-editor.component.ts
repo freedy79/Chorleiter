@@ -12,6 +12,9 @@ import { ProgramPieceDialogComponent } from './program-piece-dialog.component';
 import { ProgramSpeechDialogComponent } from './program-speech-dialog.component';
 import { ProgramBreakDialogComponent } from './program-break-dialog.component';
 import { ProgramFreePieceDialogComponent } from './program-free-piece-dialog.component';
+import { PieceService } from '@core/services/piece.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-program-editor',
@@ -33,7 +36,9 @@ export class ProgramEditorComponent implements OnInit {
   constructor(
     private dialog: MatDialog,
     private programService: ProgramService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pieceService: PieceService,
+    private snack: MatSnackBar
   ) {}
 
   ngOnInit(): void {
@@ -227,10 +232,35 @@ export class ProgramEditorComponent implements OnInit {
   onDurationChange(item: ProgramItem) {
     item.durationSec = this.parseDuration(item.durationStr);
     if (item.durationStr === '' || item.durationSec !== null) {
+      const shouldOfferSave =
+        item.type === 'piece' &&
+        !!item.pieceId &&
+        !item.pieceDurationSecSnapshot &&
+        typeof item.durationSec === 'number';
       this.programService
         .updateItem(this.programId, item.id, { durationSec: item.durationSec ?? null })
         .subscribe(updated => {
           Object.assign(item, this.enhanceItem(updated));
+          if (shouldOfferSave && item.durationSec) {
+            const dialogData: ConfirmDialogData = {
+              title: 'Dauer speichern?',
+              message:
+                'Die eingegebene Dauer ist beim Stück noch nicht hinterlegt. Soll sie dort gespeichert werden?',
+              confirmButtonText: 'Ja',
+              cancelButtonText: 'Nein',
+            };
+            const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+            ref.afterClosed().subscribe(confirmed => {
+              if (confirmed) {
+                this.pieceService
+                  .updateGlobalPiece(Number(item.pieceId), { durationSec: item.durationSec })
+                  .subscribe(() => {
+                    item.pieceDurationSecSnapshot = item.durationSec ?? null;
+                    this.snack.open('Dauer beim Stück gespeichert', undefined, { duration: 2000 });
+                  });
+              }
+            });
+          }
         });
     }
   }
