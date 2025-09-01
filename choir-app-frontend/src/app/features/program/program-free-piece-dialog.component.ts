@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { Composer } from '@core/models/composer';
@@ -23,7 +23,15 @@ export class ProgramFreePieceDialogComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<ProgramFreePieceDialogComponent>,
-    private api: ApiService
+    private api: ApiService,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      title?: string;
+      composer?: string;
+      instrument?: string | null;
+      performerNames?: string | null;
+      duration?: string | null;
+    } | null
   ) {
     this.form = this.fb.group({
       title: ['', Validators.required],
@@ -43,6 +51,15 @@ export class ProgramFreePieceDialogComponent implements OnInit {
         map(name => this.allComposers.filter(c => c.name.toLowerCase().includes(name)))
       );
     });
+    if (this.data) {
+      this.form.patchValue({
+        title: this.data.title ?? '',
+        instrument: this.data.instrument ?? '',
+        performerNames: this.data.performerNames ?? '',
+        duration: this.data.duration ?? '',
+      });
+      this.composerCtrl.setValue(this.data.composer ?? '');
+    }
   }
 
   save() {

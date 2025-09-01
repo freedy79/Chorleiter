@@ -1,7 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 
 @Component({
@@ -11,14 +11,28 @@ import { MaterialModule } from '@modules/material.module';
   templateUrl: './program-break-dialog.component.html',
   styleUrls: ['./program-break-dialog.component.scss'],
 })
-export class ProgramBreakDialogComponent {
+export class ProgramBreakDialogComponent implements OnInit {
   breakForm: FormGroup;
 
-  constructor(private fb: FormBuilder, private dialogRef: MatDialogRef<ProgramBreakDialogComponent>) {
+  constructor(
+    private fb: FormBuilder,
+    private dialogRef: MatDialogRef<ProgramBreakDialogComponent>,
+    @Inject(MAT_DIALOG_DATA)
+    public data: { duration?: string | null; note?: string | null } | null
+  ) {
     this.breakForm = this.fb.group({
       duration: ['', Validators.required],
       note: [''],
     });
+  }
+
+  ngOnInit(): void {
+    if (this.data) {
+      this.breakForm.patchValue({
+        duration: this.data.duration ?? '',
+        note: this.data.note ?? '',
+      });
+    }
   }
 
   save() {

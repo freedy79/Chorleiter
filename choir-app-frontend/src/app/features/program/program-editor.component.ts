@@ -101,6 +101,100 @@ export class ProgramEditorComponent implements OnInit {
     });
   }
 
+  editItem(item: ProgramItem) {
+    if (item.type === 'piece') {
+      if (item.pieceId) {
+        this.editPiece(item);
+      } else {
+        this.editFreePiece(item);
+      }
+    } else if (item.type === 'speech') {
+      this.editSpeech(item);
+    } else if (item.type === 'break') {
+      this.editBreak(item);
+    }
+  }
+
+  private editPiece(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramPieceDialogComponent, {
+      width: '600px',
+      data: { title: item.pieceTitleSnapshot, composer: item.pieceComposerSnapshot },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addPieceItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          });
+      }
+    });
+  }
+
+  private editFreePiece(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramFreePieceDialogComponent, {
+      width: '600px',
+      data: {
+        title: item.pieceTitleSnapshot,
+        composer: item.pieceComposerSnapshot,
+        instrument: item.instrument,
+        performerNames: item.performerNames,
+        duration: item.durationStr,
+      },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addFreePieceItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          });
+      }
+    });
+  }
+
+  private editSpeech(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, {
+      width: '600px',
+      data: {
+        title: item.speechTitle,
+        source: item.speechSource,
+        speaker: item.speechSpeaker,
+        text: item.speechText,
+        duration: item.durationStr,
+      },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addSpeechItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          });
+      }
+    });
+  }
+
+  private editBreak(item: ProgramItem) {
+    const dialogRef = this.dialog.open(ProgramBreakDialogComponent, {
+      width: '400px',
+      data: { duration: item.durationStr, note: item.note ?? '' },
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.programService
+          .addBreakItem(this.programId, { ...result, slotId: item.id })
+          .subscribe(updated => {
+            const enh = this.enhanceItem(updated);
+            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          });
+      }
+    });
+  }
+
   editBasics() {
     const dialogRef = this.dialog.open(ProgramBasicsDialogComponent, {
       width: '600px',

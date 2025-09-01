@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, FormControl } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { SearchService } from '@core/services/search.service';
@@ -35,7 +35,9 @@ export class ProgramPieceDialogComponent implements OnInit {
     private fb: FormBuilder,
     private api: ApiService,
     private search: SearchService,
-    private dialogRef: MatDialogRef<ProgramPieceDialogComponent>
+    private dialogRef: MatDialogRef<ProgramPieceDialogComponent>,
+    @Inject(MAT_DIALOG_DATA)
+    public data: { title?: string; composer?: string } | null
   ) {
     this.searchForm = this.fb.group({
       title: [''],
@@ -53,7 +55,13 @@ export class ProgramPieceDialogComponent implements OnInit {
         map(value => (value || '').toLowerCase()),
         map(name => this.allComposers.filter(c => c.name.toLowerCase().includes(name)))
       );
+      if (this.data) {
+        this.composerCtrl.setValue(this.data.composer ?? '');
+      }
     });
+    if (this.data) {
+      this.searchForm.patchValue({ title: this.data.title ?? '' });
+    }
     this.loadPieces();
   }
 
