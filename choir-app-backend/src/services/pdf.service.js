@@ -1,4 +1,4 @@
-const { isoDateString, germanDateString } = require('../utils/date.utils');
+const { shortWeekdayDateString, isoDateString, germanDateString } = require('../utils/date.utils');
 
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
@@ -91,7 +91,7 @@ function monthlyPlanPdf(plan) {
 
   for (const e of plan.entries) {
     const cells = [
-      wrapText(isoDateString(new Date(e.date)), 12, colWidths[0]),
+      wrapText(shortWeekdayDateString(new Date(e.date)), 12, colWidths[0]),
       wrapText(e.director?.name || '', 12, colWidths[1]),
       wrapText(e.organist?.name || '', 12, colWidths[2]),
       wrapText(e.notes || '', 12, colWidths[3])

@@ -5,6 +5,12 @@ function isoDateString(date) {
     return `${year}-${month}-${day}`;
 }
 
+
+function shortWeekdayDateString(date) {
+    const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    return `${weekdays[date.getDay()]}, ${date.getDate()}.`;
+}
+
 function germanDateString(date) {
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -27,4 +33,4 @@ function datesForRule(year, month, rule) {
     return dates;
 }
 
-module.exports = { isoDateString, datesForRule, germanDateString };
+module.exports = { isoDateString, shortWeekdayDateString, datesForRule,  };
