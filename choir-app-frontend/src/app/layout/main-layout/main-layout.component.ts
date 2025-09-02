@@ -128,7 +128,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     );
 
     this.dienstplanEnabled$ = this.authService.activeChoir$.pipe(
-      map(c => !!c?.modules?.dienstplan)
+      map(c => c?.modules?.dienstplan !== false)
     );
 
     this.isLoggedIn$.pipe(
