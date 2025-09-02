@@ -9,6 +9,7 @@ import { Choir } from '../models/choir';
 import { SwitchChoirResponse } from '../models/auth';
 import { ThemeService } from './theme.service';
 import { UserPreferencesService } from './user-preferences.service';
+import { DebugLogService } from './debug-log.service';
 
 const TOKEN_KEY = 'auth-token';
 const USER_KEY = 'user';
@@ -35,7 +36,8 @@ export class AuthService {
   constructor(private http: HttpClient,
               private router: Router,
               private theme: ThemeService,
-              private prefs: UserPreferencesService) {
+              private prefs: UserPreferencesService,
+              private logger: DebugLogService) {
     this.migrateStorage();
     this.loggedIn.next(this.hasToken());
 
@@ -208,12 +210,12 @@ export class AuthService {
   }
 
   setCurrentUser(user: User): void {
-    console.debug('AuthService.setCurrentUser called', user);
+    this.logger.log('AuthService.setCurrentUser called', user);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
     this.activeChoir$.next(user.activeChoir || null);
     const choirs = user.availableChoirs || [];
-    console.debug('AuthService.setCurrentUser updated choirs', {
+    this.logger.log('AuthService.setCurrentUser updated choirs', {
       active: user.activeChoir,
       available: choirs
     });

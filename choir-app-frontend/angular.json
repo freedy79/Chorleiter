@@ -62,6 +62,12 @@
                   "inlineCritical": false
                 },
                 "fonts": true
+              },
+              "sourceMap": {
+                "scripts": true,
+                "styles": false,
+                "vendor": false,
+                "hidden": true
               }
             },
             "localdata": {
@@ -91,6 +97,12 @@
                   "inlineCritical": false
                 },
                 "fonts": true
+              },
+              "sourceMap": {
+                "scripts": true,
+                "styles": false,
+                "vendor": false,
+                "hidden": true
               }
             },
             "development": {
