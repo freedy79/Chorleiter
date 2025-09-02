@@ -21,7 +21,12 @@
   >
   <ng-container matColumnDef="move">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index" class="move-cell">
+
+    <mat-cell *matCellDef="let item; let i = index">
+      <span class="drag-handle" cdkDragHandle aria-label="Greifen">
+        <mat-icon>drag_indicator</mat-icon>
+      </span>
+
       <button
         mat-icon-button
         (click)="moveUp(i)"
@@ -38,9 +43,6 @@
       >
         <mat-icon>arrow_downward</mat-icon>
       </button>
-      <span class="drag-handle" cdkDragHandle aria-label="Greifen">
-        <mat-icon>drag_indicator</mat-icon>
-      </span>
     </mat-cell>
   </ng-container>
 
