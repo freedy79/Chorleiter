@@ -10,8 +10,9 @@
   margin-bottom: 8px;
 }
 
-.program-table .mat-column-duration {
-  width: 5em;
+
+.program-table .mat-column-time {
+  width: 4em;
 }
 
 .table-container {
@@ -26,6 +27,40 @@
   cursor: move;
   vertical-align: middle;
   margin-left: 4px;
+}
+
+.move-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.program-block {
+  text-align: center;
+}
+
+.program-block .title {
+  font-weight: bold;
+}
+
+.program-block .subtitle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.separator {
+  margin: 0 4px;
+}
+
+.note-input {
+  text-align: center;
+}
+
+.duration input {
+  width: 5em;
+  text-align: center;
 }
 
 .total-duration {

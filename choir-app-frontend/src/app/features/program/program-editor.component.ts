@@ -30,8 +30,7 @@ export class ProgramEditorComponent implements OnInit {
   programDescription = '';
   items: ProgramItem[] = [];
 
-  private readonly baseColumns = ['move', 'title', 'composer', 'duration', 'note', 'sum', 'actions'];
-  private readonly columnsWithTime = ['move', 'title', 'composer', 'duration', 'note', 'time', 'sum', 'actions'];
+  displayedColumns: string[] = ['move', 'details', 'time', 'actions'];
 
   constructor(
     private dialog: MatDialog,
@@ -53,9 +52,6 @@ export class ProgramEditorComponent implements OnInit {
     }
   }
 
-  get displayedColumns(): string[] {
-    return this.startTime ? this.columnsWithTime : this.baseColumns;
-  }
 
   addPiece() {
     const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
@@ -311,13 +307,6 @@ export class ProgramEditorComponent implements OnInit {
 
   }
 
-  getCumulativeDuration(index: number): string {
-    const total = this.items
-      .slice(0, index + 1)
-      .reduce((sum, item) => sum + (item.durationSec || 0), 0);
-    return this.formatDuration(total);
-  }
-
   getTotalDuration(): string {
     const total = this.items.reduce((sum, item) => sum + (item.durationSec || 0), 0);
     return this.formatDuration(total);
@@ -371,6 +360,28 @@ export class ProgramEditorComponent implements OnInit {
     this.programService.deleteItem(this.programId, item.id).subscribe(() => {
       this.items = this.items.filter(i => i.id !== item.id);
     });
+  }
+
+  getComposer(item: ProgramItem): string | null {
+    switch (item.type) {
+      case 'piece':
+        return item.pieceComposerSnapshot ?? null;
+      case 'speech':
+        return item.speechSpeaker ?? null;
+      default:
+        return null;
+    }
+  }
+
+  getSubtitle(item: ProgramItem): string | null {
+    switch (item.type) {
+      case 'piece':
+        return item.instrument || item.performerNames || null;
+      case 'speech':
+        return item.speechSource || null;
+      default:
+        return null;
+    }
   }
 
   private enhanceItem(item: ProgramItem): ProgramItem {

@@ -21,7 +21,7 @@
   >
   <ng-container matColumnDef="move">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index">
+    <mat-cell *matCellDef="let item; let i = index" class="move-cell">
       <button
         mat-icon-button
         (click)="moveUp(i)"
@@ -44,60 +44,45 @@
     </mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="title">
-    <mat-header-cell *matHeaderCellDef> Titel </mat-header-cell>
-    <mat-cell *matCellDef="let item">
-      <ng-container [ngSwitch]="item.type">
-        <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
-        <span *ngSwitchCase="'speech'">{{ item.speechTitle }}</span>
-        <span *ngSwitchCase="'break'">{{ item.breakTitle || 'Pause' }}</span>
-        <span *ngSwitchCase="'slot'">{{ item.slotLabel }}</span>
-      </ng-container>
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="composer">
-    <mat-header-cell *matHeaderCellDef> Komponist / Sprecher </mat-header-cell>
-    <mat-cell *matCellDef="let item">
-      <ng-container [ngSwitch]="item.type">
-        <span *ngSwitchCase="'piece'">{{ item.pieceComposerSnapshot }}</span>
-        <span *ngSwitchCase="'speech'">{{ item.speechSpeaker }}</span>
-        <span *ngSwitchCase="'slot'"></span>
-      </ng-container>
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="duration">
-    <mat-header-cell *matHeaderCellDef> Dauer (mm:ss) </mat-header-cell>
-    <mat-cell *matCellDef="let item">
-      <input
-        matInput
-        [(ngModel)]="item.durationStr"
-        (blur)="onDurationChange(item)"
-        placeholder="mm:ss"
-      />
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="note">
-    <mat-header-cell *matHeaderCellDef> Notiz </mat-header-cell>
-    <mat-cell *matCellDef="let item">
-      <input matInput [(ngModel)]="item.note" (blur)="onNoteChange(item)" />
+  <ng-container matColumnDef="details">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let item" class="details-cell">
+      <div class="program-block">
+        <div class="composer" *ngIf="getComposer(item)">{{ getComposer(item) }}</div>
+        <div class="title">
+          <ng-container [ngSwitch]="item.type">
+            <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
+            <span *ngSwitchCase="'speech'">{{ item.speechTitle }}</span>
+            <span *ngSwitchCase="'break'">{{ item.breakTitle || 'Pause' }}</span>
+            <span *ngSwitchCase="'slot'">{{ item.slotLabel }}</span>
+          </ng-container>
+        </div>
+        <div class="subtitle">
+          <span *ngIf="getSubtitle(item)">{{ getSubtitle(item) }}</span>
+          <span *ngIf="getSubtitle(item)" class="separator">|</span>
+          <input
+            matInput
+            class="note-input"
+            [(ngModel)]="item.note"
+            (blur)="onNoteChange(item)"
+            placeholder="Notiz"
+          />
+        </div>
+        <div class="duration">
+          <input
+            matInput
+            [(ngModel)]="item.durationStr"
+            (blur)="onDurationChange(item)"
+            placeholder="mm:ss"
+          />
+        </div>
+      </div>
     </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="time">
-    <mat-header-cell *matHeaderCellDef> Uhrzeit </mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index">
-      {{ getPlannedTime(i) }}
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="sum">
-    <mat-header-cell *matHeaderCellDef> Summe </mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index">
-      {{ getCumulativeDuration(i) }}
-    </mat-cell>
+    <mat-header-cell *matHeaderCellDef>Uhrzeit</mat-header-cell>
+    <mat-cell *matCellDef="let item; let i = index">{{ getPlannedTime(i) }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
