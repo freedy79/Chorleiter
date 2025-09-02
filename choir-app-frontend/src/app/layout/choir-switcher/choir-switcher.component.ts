@@ -5,6 +5,7 @@ import { tap } from 'rxjs/operators';
 import { MaterialModule } from '@modules/material.module';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Choir } from 'src/app/core/models/choir';
+import { DebugLogService } from '@core/services/debug-log.service';
 
 @Component({
   selector: 'app-choir-switcher',
@@ -17,12 +18,12 @@ export class ChoirSwitcherComponent {
   availableChoirs$: Observable<Choir[]>;
   activeChoir$: Observable<Choir | null>;
 
-  constructor(private authService: AuthService) {
+  constructor(private authService: AuthService, private logger: DebugLogService) {
     this.availableChoirs$ = this.authService.availableChoirs$.pipe(
-      tap(choirs => console.debug('ChoirSwitcher available choirs', choirs))
+      tap(choirs => this.logger.log('ChoirSwitcher available choirs', choirs))
     );
     this.activeChoir$ = this.authService.activeChoir$.pipe(
-      tap(choir => console.debug('ChoirSwitcher active choir', choir))
+      tap(choir => this.logger.log('ChoirSwitcher active choir', choir))
     );
   }
 

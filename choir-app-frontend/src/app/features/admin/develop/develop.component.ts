@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
+import { DebugLogService } from '@core/services/debug-log.service';
 
 interface PaletteColor {
   name: string;
@@ -11,15 +13,19 @@ interface PaletteColor {
 @Component({
   selector: 'app-develop',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, FormsModule],
   templateUrl: './develop.component.html',
   styleUrls: ['./develop.component.scss']
 })
 export class DevelopComponent implements OnInit {
   primaryColors: PaletteColor[] = [];
   accentColors: PaletteColor[] = [];
+  debugLogs = false;
+
+  constructor(private logger: DebugLogService) {}
 
   ngOnInit(): void {
+    this.debugLogs = this.logger.isEnabled();
     this.primaryColors = [
       { name: '50', hex: '#e0f1fa', scss: 'mat.m2-get-color-from-palette(nak.$choir-app-primary, 50)' },
       { name: '100', hex: '#b3dff4', scss: 'mat.m2-get-color-from-palette(nak.$choir-app-primary, 100)' },
@@ -55,5 +61,10 @@ export class DevelopComponent implements OnInit {
       { name: 'A700', hex: '#ffe3d3', scss: 'mat.m2-get-color-from-palette(nak.$choir-app-accent, A700)' },
       { name: 'default-contrast', hex: '#000000', scss: 'mat.m2-get-contrast-color-from-palette(nak.$choir-app-accent, default)' }
     ];
+  }
+
+  onToggleDebugLogs(): void {
+    this.logger.setEnabled(this.debugLogs);
+    this.logger.log('Debug logging', this.debugLogs ? 'enabled' : 'disabled');
   }
 }

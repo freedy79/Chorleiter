@@ -1,3 +1,7 @@
+<mat-slide-toggle [(ngModel)]="debugLogs" (change)="onToggleDebugLogs()">
+  Zusätzliche Konsolenlogs
+</mat-slide-toggle>
+
 <h2>Primäre Palette</h2>
 <mat-table [dataSource]="primaryColors" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
