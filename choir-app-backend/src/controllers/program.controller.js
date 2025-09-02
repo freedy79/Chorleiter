@@ -70,6 +70,20 @@ exports.findAll = async (req, res) => {
   }
 };
 
+// Retrieve the most recently published program for the active choir
+exports.findLastPublished = async (req, res) => {
+  try {
+    const program = await Program.findOne({
+      where: { choirId: req.activeChoirId, status: 'published' },
+      order: [['publishedAt', 'DESC']],
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+    res.status(200).send(program);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 // Retrieve a single program with its items
 exports.findOne = async (req, res) => {
   const { id } = req.params;

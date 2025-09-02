@@ -10,8 +10,17 @@
 </div>
 
 <div class="dashboard-grid">
-  <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
-  </app-event-card>
+  <ng-container *ngIf="lastProgram$ | async as program; else lastService">
+    <mat-card class="program-card">
+      <h2>Letzter Gottesdienst</h2>
+      <h3>{{ program.title }}</h3>
+      <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
+    </mat-card>
+  </ng-container>
+  <ng-template #lastService>
+    <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
+    </app-event-card>
+  </ng-template>
 
   <!-- Verwenden Sie die neue Komponente für die Probe -->
   <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async">

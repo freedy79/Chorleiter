@@ -10,6 +10,7 @@ import { MaterialModule } from '@modules/material.module';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { CreateEventResponse, Event } from '@core/models/event';
+import { Program } from '@core/models/program';
 import { EventDialogComponent } from '../../events/event-dialog/event-dialog.component';
 import { Piece } from '@core/models/piece';
 import { EventCardComponent } from '../event-card/event-card.component';
@@ -41,6 +42,7 @@ export class DashboardComponent implements OnInit {
 
   lastService$!: Observable<Event | null>;
   lastRehearsal$!: Observable<Event | null>;
+  lastProgram$!: Observable<Program | null>;
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
   nextEvents$!: Observable<Event[]>;
@@ -74,6 +76,10 @@ export class DashboardComponent implements OnInit {
     // Diese Streams werden jedes Mal neu ausgeführt, wenn `refresh$` einen neuen Wert ausgibt.
     this.lastService$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLastEvent('SERVICE'))
+    );
+
+    this.lastProgram$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLastProgram())
     );
 
     this.lastRehearsal$ = this.refresh$.pipe(

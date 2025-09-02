@@ -31,6 +31,14 @@ export class ProgramService {
     return this.http.delete<void>(`${this.apiUrl}/programs/${id}`);
   }
 
+  publishProgram(id: string): Observable<Program> {
+    return this.http.post<Program>(`${this.apiUrl}/programs/${id}/publish`, {});
+  }
+
+  getLastPublishedProgram(): Observable<Program | null> {
+    return this.http.get<Program | null>(`${this.apiUrl}/programs/last`);
+  }
+
   addPieceItem(
     programId: string,
     data: { pieceId: string; title: string; composer?: string; durationSec?: number; note?: string; slotId?: string }

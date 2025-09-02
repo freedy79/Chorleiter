@@ -26,5 +26,12 @@ export class ProgramListComponent implements OnInit {
     });
   }
 
+  publish(program: Program): void {
+    this.programService.publishProgram(program.id).subscribe(updated => {
+      const index = this.programs.findIndex(p => p.id === program.id);
+      if (index !== -1) this.programs[index] = updated;
+    });
+  }
+
 }
 
