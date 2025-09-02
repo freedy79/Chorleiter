@@ -293,7 +293,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       },
       {
         key: 'programs',
-        displayName: 'Programm',
+        displayName: 'Programme',
         route: '/programs',
         visibleSubject: this.canCreateProgram$,
       },

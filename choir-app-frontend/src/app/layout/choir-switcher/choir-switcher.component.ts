@@ -27,7 +27,7 @@ export class ChoirSwitcherComponent {
   }
 
   onChoirChange(choirId: number): void {
-    console.debug('ChoirSwitcher onChoirChange', choirId);
+    //console.debug('ChoirSwitcher onChoirChange', choirId);
     this.authService.switchChoir(choirId).subscribe();
   }
 }
