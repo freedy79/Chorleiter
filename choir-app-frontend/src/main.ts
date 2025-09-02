@@ -3,7 +3,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
-import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
+import { importProvidersFrom } from '@angular/core';
+import { MAT_SNACK_BAR_DEFAULT_OPTIONS, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { AppComponent } from './app/app.component';
 import { AppRoutingModule } from './app/app-routing.module';
@@ -25,6 +26,7 @@ registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 // This is the modern way to provide routes
 bootstrapApplication(AppComponent, {
   providers: [
+    importProvidersFrom(MatSnackBarModule),
     provideRouter(AppRoutingModule.routes), // Provide routes from your routing file
     provideAnimations(), // Provides BrowserAnimationsModule
     provideHttpClient(withInterceptorsFromDi()), // Provides HttpClient and interceptor logic
