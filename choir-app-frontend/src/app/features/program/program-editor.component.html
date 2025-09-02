@@ -73,7 +73,7 @@
       <input
         matInput
         [(ngModel)]="item.durationStr"
-        (ngModelChange)="onDurationChange(item)"
+        (blur)="onDurationChange(item)"
         placeholder="mm:ss"
       />
     </mat-cell>
