@@ -141,6 +141,12 @@ const controller = require('../src/controllers/program.controller');
       assert.strictEqual(publishRes.data.status, 'published');
       assert.ok(publishRes.data.publishedAt);
 
+      const lastReq = { activeChoirId: choir.id };
+      const lastRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+      await controller.findLastPublished(lastReq, lastRes);
+      assert.strictEqual(lastRes.statusCode, 200);
+      assert.strictEqual(lastRes.data.id, publishRes.data.id);
+
       // modifying after publish should create a revision
       const afterReq = {
         params: { id: publishRes.data.id },

@@ -18,6 +18,7 @@ const router = require('express').Router();
 
 router.use(authJwt.verifyToken);
 
+router.get('/last', wrap(controller.findLastPublished));
 router.get('/', role.requireDirector, wrap(controller.findAll));
 router.get('/:id', role.requireDirector, wrap(controller.findOne));
 router.delete('/:id', role.requireDirector, wrap(controller.delete));

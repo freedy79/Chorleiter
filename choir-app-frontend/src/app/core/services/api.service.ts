@@ -793,6 +793,10 @@ export class ApiService {
     return this.programService.createProgram(data);
   }
 
+  getLastProgram(): Observable<Program | null> {
+    return this.programService.getLastPublishedProgram();
+  }
+
   // --- Filter Preset Methods ---
   getRepertoireFilters(): Observable<RepertoireFilter[]> {
     return this.filterPresetService.getPresets();
