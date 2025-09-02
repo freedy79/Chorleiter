@@ -77,6 +77,18 @@ const controller = require('../src/controllers/piece.controller');
   const unchanged = await db.piece.findByPk(created.id);
   assert.strictEqual(unchanged.title, 'Test Piece');
 
+  // non-admin duration update should modify the record
+  statusCode = undefined;
+  await controller.update({
+    params: { id: created.id },
+    body: { durationSec: 123 },
+    userRoles: ['user'],
+    userId: user.id
+  }, res);
+  assert.strictEqual(statusCode, 200, 'non-admin duration update returns 200');
+  const durationUpdated = await db.piece.findByPk(created.id);
+  assert.strictEqual(durationUpdated.durationSec, 123);
+
   // admin update should modify the record
   statusCode = undefined;
   await controller.update({
