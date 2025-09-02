@@ -69,6 +69,12 @@ describe('MainLayoutComponent', () => {
     expect(homeVisible).toBeTrue();
   });
 
+  it('shows dienstplan by default when module setting is missing', async () => {
+    const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
+    const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
+    expect(visible).toBeTrue();
+  });
+
   it('shows dienstplan for organists even if singers cannot see it', async () => {
     authServiceMock.currentUser$.next({ roles: ['singer', 'organist'] });
     authServiceMock.activeChoir$.next({ modules: { dienstplan: true, singerMenu: { dienstplan: false } } });
