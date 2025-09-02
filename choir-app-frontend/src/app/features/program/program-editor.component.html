@@ -113,6 +113,14 @@
           <button mat-button (click)="fillSlotWithBreak(item)">Pause</button>
         </ng-container>
       </ng-container>
+      <button
+        *ngIf="item.type !== 'slot'"
+        mat-icon-button
+        (click)="editItem(item)"
+        aria-label="Bearbeiten"
+      >
+        <mat-icon>edit</mat-icon>
+      </button>
 
       <button mat-icon-button color="warn" (click)="deleteItem(item)" aria-label="Löschen">
         <mat-icon>delete</mat-icon>

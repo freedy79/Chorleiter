@@ -153,9 +153,9 @@ exports.addPieceItem = async (req, res) => {
     if (!piece) return res.status(404).send({ message: 'piece not found' });
 
     if (slotId) {
-      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
-      if (!slot) return res.status(404).send({ message: 'slot not found' });
-      const updated = await slot.update({
+      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      if (!existing) return res.status(404).send({ message: 'item not found' });
+      const updated = await existing.update({
         type: 'piece',
         durationSec: typeof durationSec === 'number' ? durationSec : null,
         note: note || null,
@@ -197,9 +197,9 @@ exports.addFreePieceItem = async (req, res) => {
     id = program.id;
 
     if (slotId) {
-      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
-      if (!slot) return res.status(404).send({ message: 'slot not found' });
-      const updated = await slot.update({
+      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      if (!existing) return res.status(404).send({ message: 'item not found' });
+      const updated = await existing.update({
         type: 'piece',
         durationSec: typeof durationSec === 'number' ? durationSec : null,
         note: note || null,
@@ -244,9 +244,9 @@ exports.addSpeechItem = async (req, res) => {
     id = program.id;
 
     if (slotId) {
-      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
-      if (!slot) return res.status(404).send({ message: 'slot not found' });
-      const updated = await slot.update({
+      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      if (!existing) return res.status(404).send({ message: 'item not found' });
+      const updated = await existing.update({
         type: 'speech',
         durationSec: typeof durationSec === 'number' ? durationSec : null,
         note: note || null,
@@ -291,9 +291,9 @@ exports.addBreakItem = async (req, res) => {
     id = program.id;
 
     if (slotId) {
-      const slot = await db.program_item.findOne({ where: { id: slotId, programId: id, type: 'slot' } });
-      if (!slot) return res.status(404).send({ message: 'slot not found' });
-      const updated = await slot.update({
+      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      if (!existing) return res.status(404).send({ message: 'item not found' });
+      const updated = await existing.update({
         type: 'break',
         durationSec: typeof durationSec === 'number' ? durationSec : null,
         note: note || null,
