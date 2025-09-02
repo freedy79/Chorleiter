@@ -192,11 +192,13 @@
                 (mouseleave)="onRowMouseLeave()"></mat-row>
 
             <!-- Row shown when there is no matching data. -->
-            <mat-row class="mat-row" *matNoDataRow>
-              <mat-cell class="mat-cell" [attr.colspan]="displayedColumns.length">
-                Keine Stücken passend zu den Filtern gefunden.
-              </mat-cell>
-            </mat-row>
+            <ng-container matNoDataRow>
+              <mat-row class="mat-row">
+                <mat-cell class="mat-cell" [attr.colspan]="displayedColumns.length">
+                  Keine Stücken passend zu den Filtern gefunden.
+                </mat-cell>
+              </mat-row>
+            </ng-container>
           </mat-table>
         </div>
 
