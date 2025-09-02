@@ -90,9 +90,11 @@
 
       <mat-header-row *matHeaderRowDef="pieceColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: pieceColumns;"></mat-row>
-      <mat-row class="mat-row" *matNoDataRow>
-        <mat-cell class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</mat-cell>
-      </mat-row>
+      <ng-container matNoDataRow>
+        <mat-row class="mat-row">
+          <mat-cell class="mat-cell" [attr.colspan]="pieceColumns.length">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</mat-cell>
+        </mat-row>
+      </ng-container>
     </mat-table>
 
   </form>

@@ -92,11 +92,13 @@
 
     <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)" [class.selected]="selectedCollection?.id === row.id"></mat-row>
-    <mat-row *matNoDataRow>
-      <mat-cell [attr.colspan]="displayedColumns.length">
-        Es wurden noch keine Sammlungen erstellt.
-      </mat-cell>
-    </mat-row>
+    <ng-container matNoDataRow>
+      <mat-row>
+        <mat-cell [attr.colspan]="displayedColumns.length">
+          Es wurden noch keine Sammlungen erstellt.
+        </mat-cell>
+      </mat-row>
+    </ng-container>
   </mat-table>
   </div>
   <mat-paginator [pageSizeOptions]="pageSizeOptions"
