@@ -33,4 +33,9 @@ function datesForRule(year, month, rule) {
     return dates;
 }
 
-module.exports = { isoDateString, shortWeekdayDateString, datesForRule,  };
+module.exports = {
+    isoDateString,
+    shortWeekdayDateString,
+    germanDateString,
+    datesForRule,
+};
