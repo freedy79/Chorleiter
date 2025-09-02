@@ -158,7 +158,12 @@ exports.findOne = async (req, res) => {
 exports.update = async (req, res) => {
     const id = req.params.id;
 
-    if (!req.userRoles.includes('admin')) {
+    const nonAdmin = !req.userRoles.includes('admin');
+    const allowedNonAdminFields = ['durationSec'];
+    if (nonAdmin) {
+        const keys = Object.keys(req.body || {});
+        const hasOnlyAllowed = keys.length > 0 && keys.every(k => allowedNonAdminFields.includes(k));
+        if (!hasOnlyAllowed) {
             await db.piece_change.create({ pieceId: id, userId: req.userId, data: req.body });
             const piece = await Piece.findByPk(id);
             const proposer = await db.user.findByPk(req.userId);
@@ -176,6 +181,7 @@ exports.update = async (req, res) => {
                 )
             );
             return res.status(202).send({ message: 'Change proposal created.' });
+        }
     }
 
     const { links, composers, ...pieceData } = req.body;
