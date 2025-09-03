@@ -70,9 +70,11 @@
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectEvent(row)"></mat-row>
     <ng-container matNoDataRow>
-      <mat-row>
-        <mat-cell [attr.colspan]="displayedColumns.length">Keine Events gefunden.</mat-cell>
-      </mat-row>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          Keine Ereignisse gefunden.
+        </td>
+      </tr>
     </ng-container>
   </mat-table>
 

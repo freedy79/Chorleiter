@@ -91,7 +91,7 @@
                 }
               ],
               "optimization": {
-                "scripts": true,
+                "scripts": false,
                 "styles": {
                   "minify": true,
                   "inlineCritical": false
@@ -102,7 +102,7 @@
                 "scripts": true,
                 "styles": false,
                 "vendor": false,
-                "hidden": true
+                "hidden": false
               }
             },
             "development": {

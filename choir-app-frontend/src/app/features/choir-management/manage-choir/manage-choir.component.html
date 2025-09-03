@@ -173,11 +173,11 @@
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
           <ng-container matNoDataRow>
-            <mat-row class="mat-row">
-              <mat-cell class="mat-cell" [attr.colspan]="displayedColumns.length">
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" [attr.colspan]="displayedColumns.length">
                 Keine Mitglieder gefunden.
-              </mat-cell>
-            </mat-row>
+              </td>
+            </tr>
           </ng-container>
         </mat-table>
       </div>
@@ -210,11 +210,11 @@
           <mat-header-row *matHeaderRowDef="displayedCollectionColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedCollectionColumns;"></mat-row>
           <ng-container matNoDataRow>
-            <mat-row class="mat-row">
-              <mat-cell class="mat-cell" [attr.colspan]="displayedCollectionColumns.length">
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" [attr.colspan]="displayedColumns.length">
                 Keine Sammlungen vorhanden.
-              </mat-cell>
-            </mat-row>
+              </td>
+            </tr>
           </ng-container>
         </mat-table>
       </div>

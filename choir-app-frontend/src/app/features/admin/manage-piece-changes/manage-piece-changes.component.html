@@ -21,8 +21,10 @@
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
     <ng-container matNoDataRow>
-        <mat-row>
-            <mat-cell colspan="3">Keine Vorschläge vorhanden.</mat-cell>
-        </mat-row>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+            Keine Vorschläge vorhanden.
+          </td>
+        </tr>
     </ng-container>
 </mat-table>

@@ -20,6 +20,7 @@ import { MAT_DATE_LOCALE, DateAdapter } from '@angular/material/core';
 import { MondayFirstDateAdapter } from '@core/adapters/monday-first-date-adapter';
 import { GlobalErrorHandler } from '@core/handlers/global-error.handler';
 import { CustomDateAdapter } from '@shared/util/custom.date.adapter';
+import { CdkColumnDef } from '@angular/cdk/table';
 
 registerLocaleData(localeDe, 'de-DE', localeDeExtra);
 
@@ -39,6 +40,7 @@ bootstrapApplication(AppComponent, {
     { provide: MAT_DATE_LOCALE, useValue: 'de-DE' },
     { provide: DateAdapter, useClass: MondayFirstDateAdapter },
     { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: { verticalPosition: 'top' } },
-    { provide: DateAdapter, useClass: CustomDateAdapter }
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    CdkColumnDef
   ]
 }).catch(err => console.error(err));

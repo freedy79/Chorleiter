@@ -98,60 +98,60 @@
           <mat-table [dataSource]="dataSource" matSort>
 
             <!-- Title Column -->
-            <ng-container matColumnDef="title">
+            <ng-container cdkColumnDef="title">
               <!-- mat-sort-header tells the table this column is sortable. 'title' must match the column name. -->
-              <mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
-              <mat-cell *matCellDef="let piece">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece">
                 <a [routerLink]="['/pieces', piece.id]" class="title-link">{{ piece.title }}</a>
               </mat-cell>
             </ng-container>
 
             <!-- Composer Column -->
-            <ng-container matColumnDef="composer">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="composer"> Komponist/Ursprung </mat-header-cell>
-              <mat-cell *matCellDef="let piece">
+            <ng-container cdkColumnDef="composer">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="composer"> Komponist/Ursprung </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece">
                 {{piece.composer?.name || piece.origin}}
               </mat-cell>
             </ng-container>
 
             <!-- Reference Column -->
-            <ng-container matColumnDef="reference">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="reference"> Nr. </mat-header-cell>
-              <mat-cell *matCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </mat-cell>
+            <ng-container cdkColumnDef="reference">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="reference"> Nr. </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="category">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="category"> Rubrik </mat-header-cell>
-              <mat-cell *matCellDef="let piece">
+            <ng-container cdkColumnDef="category">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="category"> Rubrik </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece">
                 {{piece.category?.name}}
               </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="lastSung">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="lastSung"> Zuletzt gesungen </mat-header-cell>
-              <mat-cell *matCellDef="let piece"> {{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }} </mat-cell>
+            <ng-container cdkColumnDef="lastSung">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="lastSung"> Zuletzt gesungen </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }} </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="lastRehearsed">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="lastRehearsed"> Zuletzt geprobt </mat-header-cell>
-              <mat-cell *matCellDef="let piece"> {{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }} </mat-cell>
+            <ng-container cdkColumnDef="lastRehearsed">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="lastRehearsed"> Zuletzt geprobt </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }} </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="timesSung">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="timesSung"> Anzahl gesungen </mat-header-cell>
-              <mat-cell *matCellDef="let piece"> {{ piece.timesSung || 0 }} </mat-cell>
+            <ng-container cdkColumnDef="timesSung">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="timesSung"> Anzahl gesungen </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ piece.timesSung || 0 }} </mat-cell>
             </ng-container>
 
-            <ng-container matColumnDef="timesRehearsed">
-              <mat-header-cell *matHeaderCellDef mat-sort-header="timesRehearsed"> Anzahl geprobt </mat-header-cell>
-              <mat-cell *matCellDef="let piece"> {{ piece.timesRehearsed || 0 }} </mat-cell>
+            <ng-container cdkColumnDef="timesRehearsed">
+              <mat-header-cell *cdkHeaderCellDef mat-sort-header="timesRehearsed"> Anzahl geprobt </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ piece.timesRehearsed || 0 }} </mat-cell>
             </ng-container>
 
             <!-- Status Column (Not sortable in this example) -->
             <!-- Rating Column -->
-            <ng-container matColumnDef="rating">
-              <mat-header-cell *matHeaderCellDef> Bewertung </mat-header-cell>
-              <mat-cell *matCellDef="let piece">
+            <ng-container cdkColumnDef="rating">
+              <mat-header-cell *cdkHeaderCellDef> Bewertung </mat-header-cell>
+              <mat-cell *cdkCellDef="let piece">
                 <mat-select [value]="piece.choir_repertoire?.rating"
                             (selectionChange)="onRatingChange($event.value, piece.id)"
                             (click)="$event.stopPropagation()" [disabled]="!canRate">
@@ -162,7 +162,7 @@
             </ng-container>
 
             <!-- Status Column (Not sortable in this example) -->
-            <ng-container matColumnDef="status">
+            <ng-container cdkColumnDef="status">
               <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
               <mat-cell *matCellDef="let piece">
                 <mat-select [value]="piece.choir_repertoire?.status"
@@ -175,9 +175,9 @@
             </ng-container>
 
             <!-- Actions Column (Not sortable) -->
-            <ng-container matColumnDef="actions">
-              <mat-header-cell *matHeaderCellDef></mat-header-cell>
-              <mat-cell *matCellDef="let piece" class="actions-cell">
+            <ng-container cdkColumnDef="actions">
+              <mat-header-cell *cdkHeaderCellDef></mat-header-cell>
+              <mat-cell *cdkCellDef="let piece" class="actions-cell">
                 <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
                   <mat-icon>edit</mat-icon>
                 </button>
@@ -185,19 +185,19 @@
             </ng-container>
 
             <!-- Define the header and data rows -->
-            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: displayedColumns;"
+            <mat-header-row *cdkHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *cdkRowDef="let row; columns: displayedColumns;"
                 (mouseenter)="onRowMouseEnter($event, row)"
                 (mousemove)="onRowMouseMove($event)"
                 (mouseleave)="onRowMouseLeave()"></mat-row>
 
             <!-- Row shown when there is no matching data. -->
             <ng-container matNoDataRow>
-              <mat-row class="mat-row">
-                <mat-cell class="mat-cell" [attr.colspan]="displayedColumns.length">
-                  Keine Stücken passend zu den Filtern gefunden.
-                </mat-cell>
-              </mat-row>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+                  Keine Stücke passend zu den Filtern gefunden.
+                </td>
+              </tr>
             </ng-container>
           </mat-table>
         </div>
