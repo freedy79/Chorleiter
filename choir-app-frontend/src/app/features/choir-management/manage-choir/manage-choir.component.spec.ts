@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 import { ManageChoirComponent } from './manage-choir.component';
 
@@ -18,9 +19,11 @@ describe('ManageChoirComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } }
-      ]
+      ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })
-    .compileComponents();
+      .overrideComponent(ManageChoirComponent, { set: { template: '' } })
+      .compileComponents();
 
     fixture = TestBed.createComponent(ManageChoirComponent);
     component = fixture.componentInstance;
