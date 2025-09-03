@@ -47,10 +47,12 @@
     <ng-container matColumnDef="title">
       <mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
       <mat-cell *matCellDef="let collection" class="title-cell">
-        <strong>{{ collection.title }}</strong>
-        <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
-        <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
-        <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+        <div class="collection_title_block">
+          <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+          <div class="title">{{ collection.title }}</div>
+          <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
+          <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
+        </div>
       </mat-cell>
     </ng-container>
 
@@ -91,7 +93,7 @@
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)" [class.selected]="selectedCollection?.id === row.id"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)" [class.selected]="selectedCollection?.id === row.id" class="highlight-on-hover"></mat-row>
     <ng-container ataRow>
       <tr class="mat-row" *matNoDataRow>
         <td class="mat-cell" [attr.colspan]="displayedColumns.length">
@@ -103,7 +105,7 @@
   </div>
   <mat-paginator [pageSizeOptions]="pageSizeOptions"
                  [pageSize]="pageSize"
-                 showFirstLastButtons></mat-paginator>
+                 showFirstLastButtons class="mat-paginator-sticky"></mat-paginator>
 </div>
 </ng-container>
 
@@ -111,10 +113,13 @@
   <div class="mobile-list">
     <div class="mobile-item" *ngFor="let collection of dataSource.data" (click)="toggleSelection(collection)">
       <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" class="cover-img" loading="lazy" />
-      <div><strong>{{ collection.title }}</strong></div>
-      <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
-      <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
-      <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+      <div class="collection_title_block">
+          <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+          <div class="title">{{ collection.title }}</div>
+          <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
+          <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
+      </div>
+
       <div class="detail">Status:
         <mat-icon [color]="collection.isAdded ? 'primary' : 'disabled'">{{ collection.isAdded ? 'check_circle' : 'do_not_disturb_on' }}</mat-icon>
       </div>

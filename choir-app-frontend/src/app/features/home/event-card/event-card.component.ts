@@ -42,8 +42,8 @@ export class EventCardComponent {
       // Die Datenstruktur hängt davon ab, wie Sequelize sie zurückgibt
       const num = (ref as any).collection_piece?.numberInCollection;
 
-      if (num) {
-        const prefix = ref.singleEdition ? piece.composer?.name || piece.origin || '' : ref.prefix || '';
+      if (num && !ref.singleEdition) {
+        const prefix = ref.prefix || '';
         return `${prefix}${num}`;
       }
     }

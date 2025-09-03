@@ -5,11 +5,6 @@
     margin-bottom: 2rem;
 }
 
-.subtitle-hint {
-    font-size: 0.9rem;
-    color: #555;
-}
-
 .header-actions {
     display: flex;
     justify-content: space-between;
@@ -60,6 +55,95 @@ mat-card-actions button mat-icon {
 }
 
 // ADD THIS NEW STYLE
+.title-cell {
+    min-width: 200px;
+}
+
+.mat-column-cover {
+  word-wrap: break-word !important;
+  white-space: unset !important;
+  max-width: 80px !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  word-break: break-word;
+
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.mat-column-status {
+  word-wrap: break-word !important;
+  white-space: unset !important;
+  max-width: 120px !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  word-break: break-word;
+
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.mat-column-title {
+  word-wrap: break-word !important;
+  white-space: unset !important;
+  min-width: 35% !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  word-break: break-word;
+
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+.mat-column-titles {
+  word-wrap: break-word !important;
+  white-space: unset !important;
+  max-width: 120px !important;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  word-break: break-word;
+
+  -ms-hyphens: auto;
+  -moz-hyphens: auto;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
+
+
+
+.collection_title_block {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+
+    .title {
+        font-weight: bold;
+    }
+
+    .subtitle-hint {
+        font-size: 0.8rem;
+        color: #555;
+    }
+    .prefix-hint {
+        font-size: 0.8rem;
+        color: #555;
+    }
+}
+
 .titles-cell {
     text-align: center;
     font-weight: 500;
@@ -111,6 +195,12 @@ mat-paginator {
     border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
+.mat-paginator-sticky {
+  bottom: 0px;
+  position: sticky;
+  z-index: 10;
+}
+
 .mobile-list {
     display: flex;
     flex-direction: column;
@@ -142,4 +232,9 @@ mat-paginator {
 .mobile-actions {
     margin-top: 4px;
     text-align: right;
+}
+
+.highlight-on-hover:hover {
+    transition: transform 0.6s;
+    background-color: rgba(150, 150, 150, 0.04);
 }
