@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: false
     },
-    pieceId: {
-      type: DataTypes.INTEGER,
-      allowNull: true
-    },
     expiresAt: {
       type: DataTypes.DATE,
       allowNull: true

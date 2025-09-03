@@ -1,14 +1,11 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Post } from '@core/models/post';
-import { ApiService } from '@core/services/api.service';
-import { LookupPiece } from '@core/models/lookup-piece';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 
 @Component({
   selector: 'app-post-dialog',
@@ -19,60 +16,68 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 export class PostDialogComponent {
   form: FormGroup;
   isEdit = false;
-  pieceCtrl = new FormControl<string | LookupPiece | null>('');
-  filteredPieces$!: Observable<LookupPiece[]>;
-  allPieces: LookupPiece[] = [];
+  private placeholderStart: number | null = null;
   constructor(
     private fb: FormBuilder,
+    private dialog: MatDialog,
     public dialogRef: MatDialogRef<PostDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { post?: Post } | null,
-    private api: ApiService
   ) {
     this.form = this.fb.group({
       title: ['', Validators.required],
       text: ['', Validators.required],
-      pieceId: [null],
       expiresAt: [null]
     });
     if (data?.post) {
       this.isEdit = true;
-      this.form.patchValue({ title: data.post.title, text: data.post.text, pieceId: data.post.piece?.id, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null });
-      if (data.post.piece) this.pieceCtrl.setValue({
-        id: data.post.piece.id,
-        title: data.post.piece.title,
-        composerName: '',
-        collectionTitle: null,
-        reference: null
-      });
+      this.form.patchValue({ title: data.post.title, text: data.post.text, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null });
     }
-
-    this.api.getRepertoireForLookup().subscribe(pieces => {
-      this.allPieces = pieces;
-      this.filteredPieces$ = this.pieceCtrl.valueChanges.pipe(
-        startWith(''),
-        map(value => {
-          const title = typeof value === 'string' ? value : value?.title;
-          return title ? this._filter(title) : this.allPieces.slice();
-        })
-      );
-    });
   }
 
-  private _filter(value: string): LookupPiece[] {
-    const filterValue = value.toLowerCase();
-    return this.allPieces.filter(p => p.title.toLowerCase().includes(filterValue));
-  }
-
-  displayPiece(piece: LookupPiece): string {
-    return piece && piece.title ? piece.title : '';
+  onTextKeyDown(event: KeyboardEvent): void {
+    if (event.key === '{') {
+      const textarea = event.target as HTMLTextAreaElement;
+      const pos = textarea.selectionStart || 0;
+      if (textarea.value[pos - 1] === '{') {
+        event.preventDefault();
+        const before = textarea.value.slice(0, pos - 1);
+        const after = textarea.value.slice(pos);
+        this.placeholderStart = before.length;
+        textarea.value = before + '{{}}' + after;
+        textarea.selectionStart = textarea.selectionEnd = this.placeholderStart + 2;
+        this.form.get('text')!.setValue(textarea.value);
+        const ref = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
+        ref.afterClosed().subscribe(result => {
+          const ctrl = this.form.get('text')!;
+          const value = ctrl.value as string;
+          if (result?.pieceId) {
+            const before = value.slice(0, this.placeholderStart! + 2);
+            const after = value.slice(this.placeholderStart! + 2);
+            ctrl.setValue(before + result.pieceId + after);
+            setTimeout(() => {
+              textarea.focus();
+              const cursor = this.placeholderStart! + 2 + String(result.pieceId).length;
+              textarea.selectionStart = textarea.selectionEnd = cursor;
+            });
+          } else {
+            const before = value.slice(0, this.placeholderStart!);
+            const after = value.slice(this.placeholderStart! + 4);
+            ctrl.setValue(before + after);
+            setTimeout(() => {
+              textarea.focus();
+              textarea.selectionStart = textarea.selectionEnd = before.length;
+            });
+          }
+          this.placeholderStart = null;
+        });
+      }
+    }
   }
 
   save(): void {
     if (this.form.valid) {
-      const piece = this.pieceCtrl.value;
-      const pieceId = piece && typeof piece === 'object' ? piece.id : null;
       const expiresAt = this.form.value.expiresAt ? this.form.value.expiresAt.toISOString() : null;
-      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, pieceId, expiresAt });
+      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt });
     }
   }
 
