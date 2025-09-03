@@ -17,11 +17,11 @@ export class PostService {
     return this.http.get<Post | null>(`${this.apiUrl}/posts/latest`);
   }
 
-  createPost(data: { title: string; text: string; pieceId?: number | null; expiresAt?: string | null }): Observable<Post> {
+  createPost(data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
     return this.http.post<Post>(`${this.apiUrl}/posts`, data);
   }
 
-  updatePost(id: number, data: { title: string; text: string; pieceId?: number | null; expiresAt?: string | null }): Observable<Post> {
+  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
     return this.http.put<Post>(`${this.apiUrl}/posts/${id}`, data);
   }
 

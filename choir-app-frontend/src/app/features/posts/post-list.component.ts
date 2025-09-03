@@ -10,6 +10,7 @@ import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-post-list',
@@ -45,10 +46,28 @@ export class PostListComponent implements OnInit {
   loadPosts(): void {
     this.api.getPosts().subscribe(p => {
       this.posts = p;
+      this.replacePieceReferences();
       const fragment = this.route.snapshot.fragment;
       if (fragment) {
         setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth' }), 0);
       }
+    });
+  }
+
+  private replacePieceReferences(): void {
+    const ids = Array.from(new Set(this.posts.flatMap(post =>
+      Array.from(post.text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])
+    )));
+    if (!ids.length) return;
+    forkJoin(ids.map(id => this.api.getPieceById(id))).subscribe(pieces => {
+      const map = new Map(pieces.map(p => [p.id, p.title]));
+      this.posts = this.posts.map(post => ({
+        ...post,
+        text: post.text.replace(/\{\{(\d+)\}\}/g, (match, id) => {
+          const title = map.get(+id);
+          return title ? `[${title}](\/pieces\/${id})` : match;
+        })
+      }));
     });
   }
 

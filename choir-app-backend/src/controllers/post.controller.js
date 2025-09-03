@@ -14,7 +14,7 @@ async function isChoirAdmin(req) {
 }
 
 exports.create = async (req, res) => {
-  const { title, text, pieceId, expiresAt } = req.body;
+  const { title, text, expiresAt } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const sanitizedTitle = stripHtml(title);
@@ -23,14 +23,12 @@ exports.create = async (req, res) => {
     const post = await Post.create({
       title: sanitizedTitle,
       text: sanitizedText,
-      pieceId: pieceId || null,
       expiresAt: expDate,
       choirId: req.activeChoirId,
       userId: req.userId
     });
     const full = await Post.findByPk(post.id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] },
-      { model: db.piece, as: 'piece', attributes: ['id','title'] }
+      { model: db.user, as: 'author', attributes: ['id','name'] }
     ] });
 
     const members = await db.user.findAll({
@@ -61,8 +59,7 @@ exports.findAll = async (req, res) => {
     const posts = await Post.findAll({
       where,
       include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] },
-        { model: db.piece, as: 'piece', attributes: ['id','title'] }
+        { model: db.user, as: 'author', attributes: ['id','name'] }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -86,8 +83,7 @@ exports.findLatest = async (req, res) => {
     const post = await Post.findOne({
       where,
       include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] },
-        { model: db.piece, as: 'piece', attributes: ['id','title'] }
+        { model: db.user, as: 'author', attributes: ['id','name'] }
       ],
       order: [['createdAt', 'DESC']]
     });
@@ -99,7 +95,7 @@ exports.findLatest = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { title, text, pieceId, expiresAt } = req.body;
+  const { title, text, expiresAt } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const post = await Post.findByPk(id);
@@ -109,10 +105,9 @@ exports.update = async (req, res) => {
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
     const expDate = expiresAt ? new Date(expiresAt) : null;
-    await post.update({ title: sanitizedTitle, text: sanitizedText, pieceId: pieceId || null, expiresAt: expDate });
+    await post.update({ title: sanitizedTitle, text: sanitizedText, expiresAt: expDate });
     const full = await Post.findByPk(id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] },
-      { model: db.piece, as: 'piece', attributes: ['id','title'] }
+      { model: db.user, as: 'author', attributes: ['id','name'] }
     ] });
     res.status(200).send(full);
   } catch (err) {

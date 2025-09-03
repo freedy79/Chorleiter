@@ -11,9 +11,6 @@
       </mat-card-header>
       <mat-card-content>
         <div [innerHTML]="p.text | markdown"></div>
-        <div *ngIf="p.piece" class="piece-link">
-          <a [routerLink]="['/pieces', p.piece.id]">Zum Stück "{{ p.piece.title }}"</a>
-        </div>
         <div *ngIf="p.expiresAt" class="expires">Sichtbar bis {{ p.expiresAt | date:'shortDate' }}</div>
       </mat-card-content>
       <mat-card-actions *ngIf="canEdit(p)" class="actions">
