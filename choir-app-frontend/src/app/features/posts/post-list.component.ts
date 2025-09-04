@@ -99,6 +99,13 @@ export class PostListComponent implements OnInit {
     });
   }
 
+  publishPost(post: Post): void {
+    this.api.publishPost(post.id).subscribe({
+      next: () => { this.snackBar.open('Beitrag veröffentlicht', 'OK', { duration: 3000 }); this.loadPosts(); },
+      error: () => this.snackBar.open('Fehler beim Veröffentlichen', 'Schließen', { duration: 4000 })
+    });
+  }
+
   deletePost(post: Post): void {
     const data: ConfirmDialogData = { title: 'Beitrag löschen?', message: 'Möchten Sie diesen Beitrag wirklich löschen?' };
     const ref = this.dialog.open(ConfirmDialogComponent, { data });

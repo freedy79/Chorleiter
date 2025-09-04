@@ -7,13 +7,14 @@
     <mat-card *ngFor="let p of posts" class="post" id="post-{{ p.id }}">
       <mat-card-header>
         <mat-card-title>{{ p.title }}</mat-card-title>
-        <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</mat-card-subtitle>
+        <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }} <span *ngIf="!p.published">(Entwurf)</span></mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <div [innerHTML]="p.text | markdown"></div>
         <div *ngIf="p.expiresAt" class="expires">Sichtbar bis {{ p.expiresAt | date:'shortDate' }}</div>
       </mat-card-content>
       <mat-card-actions *ngIf="canEdit(p)" class="actions">
+        <button mat-button color="accent" (click)="publishPost(p)" *ngIf="!p.published">Veröffentlichen</button>
         <button mat-icon-button (click)="editPost(p)" matTooltip="Bearbeiten"><mat-icon>edit</mat-icon></button>
         <button mat-icon-button (click)="deletePost(p)" matTooltip="Löschen"><mat-icon>delete</mat-icon></button>
       </mat-card-actions>
