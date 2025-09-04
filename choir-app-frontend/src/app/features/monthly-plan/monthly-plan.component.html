@@ -37,7 +37,7 @@
     <ng-container matColumnDef="date">
       <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
       <mat-cell *matCellDef="let ev" [matTooltip]="timestamp(ev.date)">
-        {{ ev.date | date:'shortDate' }}
+        {{ ev.date | pureDate | date:'shortDate':'Europe/Berlin':'de-DE' }}
         <span class="holiday" *ngIf="ev.holidayHint"> ({{ ev.holidayHint }})</span>
       </mat-cell>
     </ng-container>
@@ -103,7 +103,7 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">{{ d | date:'dd.MM.' }}</th>
+            <th *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">{{ d | date:'dd.MM.':'Europe/Berlin':'de-DE' }}</th>
           </tr>
         </thead>
         <tbody>
@@ -125,7 +125,7 @@
       <div *ngIf="isChoirAdmin" class="member-availabilities">
         <h3>Verfügbarkeiten aller Mitglieder</h3>
         <div *ngFor="let ev of entries">
-          <h4>{{ ev.date | date:'EEE dd.MM.yyyy' }}</h4>
+          <h4>{{ ev.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</h4>
           <p><strong>verfügbar:</strong> {{ memberNamesByAvailability(ev.date, 'AVAILABLE') }}</p>
           <p><strong>nach Absprache:</strong> {{ memberNamesByAvailability(ev.date, 'MAYBE') }}</p>
           <p><strong>nicht verfügbar:</strong> {{ memberNamesByAvailability(ev.date, 'UNAVAILABLE') }}</p>
