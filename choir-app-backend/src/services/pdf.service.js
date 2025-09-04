@@ -1,4 +1,4 @@
-const { shortWeekdayDateString, isoDateString, germanDateString } = require('../utils/date.utils');
+const { shortWeekdayDateString, germanDateString } = require('../utils/date.utils');
 
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
@@ -151,7 +151,19 @@ function programPdf(program) {
   const width = right - left;
   const size = 12;
 
-  for (const item of program.items || []) {
+  // Optional description
+  if (program.description) {
+    const descLines = wrapText(program.description, size, width);
+    for (const line of descLines) {
+      const x = left + (width - textWidth(line, size)) / 2;
+      lines.push(`BT /F1 ${size} Tf ${x} ${y} Td (${escape(line)}) Tj ET`);
+      y -= 16;
+    }
+    y -= 20;
+  }
+
+  const items = program.items || [];
+  items.forEach((item, index) => {
     let text = '';
     if (item.type === 'piece') {
       const composer = item.pieceComposerSnapshot ? item.pieceComposerSnapshot + ': ' : '';
@@ -169,11 +181,18 @@ function programPdf(program) {
 
     const wrapped = wrapText(text, size, width);
     for (const line of wrapped) {
-      lines.push(`BT /F1 ${size} Tf ${left} ${y} Td (${escape(line)}) Tj ET`);
+      const x = left + (width - textWidth(line, size)) / 2;
+      lines.push(`BT /F1 ${size} Tf ${x} ${y} Td (${escape(line)}) Tj ET`);
       y -= 16;
     }
-    y -= 4;
-  }
+
+    if (index < items.length - 1) {
+      y -= 4;
+      const center = left + width / 2;
+      lines.push(`${center - 4} ${y} m ${center + 4} ${y} l S`);
+      y -= 16;
+    }
+  });
 
   const content = lines.join('\n');
   const objects = [];
