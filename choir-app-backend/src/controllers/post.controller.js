@@ -45,7 +45,8 @@ exports.create = async (req, res) => {
     } else if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       if (author?.email) {
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText. choir.name);
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name);
       }
     }
 
