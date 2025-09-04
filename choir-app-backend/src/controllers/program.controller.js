@@ -4,11 +4,13 @@ const { programPdf } = require('../services/pdf.service');
 
 // Create a draft revision of a published program so that further changes
 // do not modify the published version. Copies all existing items to the new
-// revision and returns it.
-async function ensureEditableProgram(id, userId) {
+// revision and returns it. If an itemId is provided, the returned object will
+// also contain the id of the cloned item so that subsequent operations can
+// target the newly created item.
+async function ensureEditableProgram(id, userId, itemId) {
   const program = await Program.findByPk(id);
-  if (!program) return null;
-  if (program.status !== 'published') return program;
+  if (!program) return { program: null, itemId: null };
+  if (program.status !== 'published') return { program, itemId };
 
   const revision = await Program.create({
     choirId: program.choirId,
@@ -22,18 +24,21 @@ async function ensureEditableProgram(id, userId) {
   });
 
   const items = await db.program_item.findAll({ where: { programId: id } });
+  let mappedItemId = null;
   await Promise.all(
-    items.map(item => {
+    items.map(async item => {
       const data = item.get({ plain: true });
+      const oldId = data.id;
       delete data.id;
       delete data.createdAt;
       delete data.updatedAt;
       delete data.deletedAt;
       data.programId = revision.id;
-      return db.program_item.create(data);
+      const created = await db.program_item.create(data);
+      if (oldId === itemId) mappedItemId = created.id;
     })
   );
-  return revision;
+  return { program: revision, itemId: mappedItemId };
 }
 
 exports.create = async (req, res) => {
@@ -133,7 +138,7 @@ exports.update = async (req, res) => {
   let { id } = req.params;
   const { title, description, startTime } = req.body;
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -174,7 +179,7 @@ exports.addPieceItem = async (req, res) => {
   const { pieceId, title, composer, durationSec, note, slotId } = req.body;
 
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -223,7 +228,7 @@ exports.addFreePieceItem = async (req, res) => {
   let { id } = req.params;
   const { title, composer, instrument, performerNames, durationSec, note, slotId } = req.body;
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -270,7 +275,7 @@ exports.addSpeechItem = async (req, res) => {
   let { id } = req.params;
   const { title, source, speaker, text, durationSec, note, slotId } = req.body;
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -317,7 +322,7 @@ exports.addBreakItem = async (req, res) => {
   const { durationSec, note, slotId } = req.body;
 
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -377,7 +382,7 @@ exports.reorderItems = async (req, res) => {
   let { id } = req.params;
   const { order } = req.body; // array of item IDs in new order
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -408,9 +413,10 @@ exports.updateItem = async (req, res) => {
   let { id, itemId } = req.params;
   const { durationSec, note } = req.body;
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedItemId } = await ensureEditableProgram(id, req.userId, itemId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
+    itemId = mappedItemId || itemId;
 
     const item = await db.program_item.findOne({ where: { id: itemId, programId: id } });
     if (!item) return res.status(404).send({ message: 'item not found' });
@@ -430,9 +436,10 @@ exports.updateItem = async (req, res) => {
 exports.deleteItem = async (req, res) => {
   let { id, itemId } = req.params;
   try {
-    const program = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedItemId } = await ensureEditableProgram(id, req.userId, itemId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
+    itemId = mappedItemId || itemId;
 
     const item = await db.program_item.findOne({ where: { id: itemId, programId: id } });
     if (!item) return res.status(404).send({ message: 'item not found' });
