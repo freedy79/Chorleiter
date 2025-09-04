@@ -37,9 +37,10 @@ exports.getMe = async (req, res) => {
  * @description Update the profile of the currently logged-in user.
  */
  exports.updateMe = async (req, res) => {
-     const { name, email, street, postalCode, city, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
+    const { name, email, street, postalCode, city, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
 
     try {
+        const VOICE_OPTIONS = User.rawAttributes.voice.values;
         const user = await User.findByPk(req.userId);
         if (!user) {
             return res.status(404).send({ message: "User not found." });
@@ -73,7 +74,11 @@ exports.getMe = async (req, res) => {
             updateData.city = city;
         }
         if (voice !== undefined) {
-            updateData.voice = voice;
+            const normalizedVoice = voice === '' ? null : voice;
+            if (normalizedVoice && !VOICE_OPTIONS.includes(normalizedVoice)) {
+                return res.status(400).send({ message: 'Invalid voice value.' });
+            }
+            updateData.voice = normalizedVoice;
         }
         if (shareWithChoir !== undefined) {
             updateData.shareWithChoir = !!shareWithChoir;
