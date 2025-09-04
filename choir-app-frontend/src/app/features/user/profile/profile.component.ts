@@ -43,6 +43,7 @@ export class ProfileComponent implements OnInit {
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.profileForm = this.fb.group({
+      firstName: ['', Validators.required],
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       street: [''],
@@ -65,6 +66,7 @@ export class ProfileComponent implements OnInit {
         this.currentUser = user;
         // Populate the form with the user's current data
         this.profileForm.patchValue({
+          firstName: user.firstName || '',
           name: user.name,
           email: user.email,
           street: user.street || '',
@@ -93,7 +95,8 @@ export class ProfileComponent implements OnInit {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const updatePayload: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+      firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
       street: formValue.street,

@@ -9,7 +9,7 @@ const emailService = require('../services/email.service');
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'name', 'email', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'helpShown'],
+            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'helpShown'],
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
@@ -37,7 +37,7 @@ exports.getMe = async (req, res) => {
  * @description Update the profile of the currently logged-in user.
  */
  exports.updateMe = async (req, res) => {
-    const { name, email, street, postalCode, city, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
+    const { firstName, name, email, street, postalCode, city, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
 
     try {
         const VOICE_OPTIONS = User.rawAttributes.voice.values;
@@ -50,6 +50,9 @@ exports.getMe = async (req, res) => {
         const updateData = {};
         if (name) {
             updateData.name = name;
+        }
+        if (firstName) {
+            updateData.firstName = firstName;
         }
         let emailMessage = null;
         if (email && email !== user.email) {

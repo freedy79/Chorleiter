@@ -96,8 +96,8 @@ exports.create = async (req, res) => {
     // Event inklusive Director neu laden, um den Namen zurückzugeben
     const fullEvent = await Event.findByPk(event.id, {
             include: [
-                { model: User, as: 'director', attributes: ['id', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
@@ -158,7 +158,7 @@ exports.findLast = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: User, as: 'organist', attributes: ['id', 'name'], required: false }]
+            }, { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] }, { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }]
         });
 
     if (!lastEvent) {
@@ -182,8 +182,8 @@ exports.findAll = async (req, res) => {
             where,
             order: [['date', 'DESC']],
             include: [
-                { model: User, as: 'director', attributes: ['id', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
@@ -267,8 +267,8 @@ exports.findNext = async (req, res) => {
             order: [['date', 'ASC']],
             limit,
             include: [
-                { model: User, as: 'director', attributes: ['id', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
@@ -301,7 +301,7 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['id', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
+            }, { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
         });
 
     if (!event) {
@@ -337,7 +337,7 @@ exports.update = async (req, res) => {
             const full = await Event.findByPk(id, {
                 include: [
                     { model: Piece, as: 'pieces', through: { attributes: [] } },
-                    { model: User, as: 'director', attributes: ['id', 'name'] }
+                    { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] }
                 ]
             });
             return res.status(200).send(full);
@@ -353,8 +353,8 @@ exports.update = async (req, res) => {
     const updated = await Event.findByPk(id, {
             include: [
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
-                { model: User, as: 'director', attributes: ['id', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'name'], required: false },
+                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });

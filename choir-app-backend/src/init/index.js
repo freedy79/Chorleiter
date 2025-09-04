@@ -4,9 +4,11 @@ const { seedDatabase } = require('../seed');
 const { migrateRoles } = require('./migrateRoles');
 const { assignAdminRole } = require('./assignAdminRole');
 const { fixProgramPublishedFromIdColumn } = require('./fixProgramPublishedFromIdColumn');
+const { migrateUserNames } = require('./migrateUserNames');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = { alter: true } } = options;
+    await migrateUserNames();
     await migrateRoles();
     await fixProgramPublishedFromIdColumn();
     await syncDatabase(syncOptions);
@@ -20,6 +22,7 @@ module.exports = {
     syncDatabase,
     ensureJoinHashes,
     migrateRoles,
+    migrateUserNames,
     assignAdminRole,
     fixProgramPublishedFromIdColumn,
 };

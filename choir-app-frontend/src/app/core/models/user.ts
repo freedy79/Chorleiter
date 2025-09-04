@@ -11,9 +11,14 @@ export interface User {
   id: number;
 
   /**
-   * The user's full name.
+   * The user's last name.
    */
   name: string;
+
+  /**
+   * The user's first name.
+   */
+  firstName?: string;
 
   /**
    * The user's login email address.

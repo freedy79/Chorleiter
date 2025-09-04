@@ -10,8 +10,8 @@ exports.create = async (req, res) => {
     const entry = await PlanEntry.create({ monthlyPlanId, date, notes, directorId, organistId });
     const full = await PlanEntry.findByPk(entry.id, {
         include: [
-            { model: User, as: 'director', attributes: ['id', 'name'] },
-            { model: User, as: 'organist', attributes: ['id', 'name'], required: false }
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
         ]
     });
     res.status(201).send(full);
@@ -24,8 +24,8 @@ exports.update = async (req, res) => {
     await entry.update(req.body);
     const full = await PlanEntry.findByPk(id, {
         include: [
-            { model: User, as: 'director', attributes: ['id', 'name'] },
-            { model: User, as: 'organist', attributes: ['id', 'name'], required: false }
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
         ]
     });
     res.status(200).send(full);
