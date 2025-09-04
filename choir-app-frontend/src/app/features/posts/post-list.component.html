@@ -10,7 +10,7 @@
         <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }} <span *ngIf="!p.published">(Entwurf)</span></mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div [innerHTML]="p.text | markdown"></div>
+        <div [innerHTML]="p.text | markdown | async"></div>
         <div *ngIf="p.expiresAt" class="expires">Sichtbar bis {{ p.expiresAt | date:'shortDate' }}</div>
       </mat-card-content>
       <mat-card-actions *ngIf="canEdit(p)" class="actions">

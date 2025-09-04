@@ -53,7 +53,7 @@
   role="link">
   <h2>Neuster Beitrag</h2>
   <h3>{{ post.title }}</h3>
-  <div [innerHTML]="post.text | markdown"></div>
+  <div [innerHTML]="post.text | markdown | async"></div>
   <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
 </div>
 
