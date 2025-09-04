@@ -184,11 +184,13 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
   }
 };
 
-exports.sendPostNotificationMail = async (recipients, title, text, choirName) => {
+exports.sendPostNotificationMail = async (recipients, title, text, choirName, from) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const { html, text: plainText } = await buildPostEmail(text, choirName);
-    await sendMail({ to: recipients, subject: title, text: plainText, html });
+    const { html, text: plainText } = buildPostEmail(text, choirName);
+    const options = { to: recipients, subject: title, text: plainText, html };
+    if (from) options.from = from;
+    await sendMail(options);
   } catch (err) {
     logger.error(`Error sending post mail: ${err.message}`);
     logger.error(err.stack);
