@@ -120,7 +120,8 @@ export class ParticipationComponent implements OnInit {
       const va = this.voiceOrder.indexOf(this.voiceOf(a).toUpperCase());
       const vb = this.voiceOrder.indexOf(this.voiceOf(b).toUpperCase());
       if (va !== vb) return va - vb;
-      return a.name.localeCompare(b.name);
+      const ln = a.name.localeCompare(b.name);
+      return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
     });
   }
 

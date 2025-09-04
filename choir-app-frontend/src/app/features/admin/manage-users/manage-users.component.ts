@@ -43,6 +43,7 @@ export class ManageUsersComponent implements OnInit {
       const term = filter.trim().toLowerCase();
       return (
         (data.name && data.name.toLowerCase().includes(term)) ||
+        (data.firstName && data.firstName.toLowerCase().includes(term)) ||
         data.email.toLowerCase().includes(term)
       );
     };

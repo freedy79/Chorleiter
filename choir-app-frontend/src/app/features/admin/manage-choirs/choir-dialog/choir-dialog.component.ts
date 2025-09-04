@@ -72,7 +72,7 @@ export class ChoirDialogComponent implements OnInit {
     if (!this.data?.id) return;
     const data: ConfirmDialogData = {
       title: 'Mitglied entfernen?',
-      message: `Soll ${user.name} (${user.email}) aus diesem Chor entfernt werden?`
+      message: `Soll ${user.name}, ${user.firstName} (${user.email}) aus diesem Chor entfernt werden?`
     };
     const ref = this.dialog.open(ConfirmDialogComponent, { data });
     ref.afterClosed().subscribe(conf => {
