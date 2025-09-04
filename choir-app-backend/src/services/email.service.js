@@ -187,7 +187,7 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
 exports.sendPostNotificationMail = async (recipients, title, text, choirName, from) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const { html, text: plainText } = buildPostEmail(text, choirName);
+    const { html, text: plainText } = await buildPostEmail(text, choirName);
     const options = { to: recipients, subject: title, text: plainText, html };
     if (from) options.from = from;
     await sendMail(options);
