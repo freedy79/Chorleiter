@@ -9,5 +9,6 @@ exports.postValidation = [
   body('text').isString().notEmpty().custom(noHtml).withMessage('HTML not allowed'),
   body('expiresAt').optional().isISO8601(),
   body('sendTest').optional().isBoolean(),
-  body('publish').optional().isBoolean()
+  body('publish').optional().isBoolean(),
+  body('sendAsUser').optional().isBoolean()
 ];

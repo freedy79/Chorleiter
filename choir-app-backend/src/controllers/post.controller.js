@@ -14,7 +14,7 @@ async function isChoirAdmin(req) {
 }
 
 exports.create = async (req, res) => {
-  const { title, text, expiresAt, sendTest, publish } = req.body;
+  const { title, text, expiresAt, sendTest, publish, sendAsUser } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const sanitizedTitle = stripHtml(title);
@@ -26,27 +26,27 @@ exports.create = async (req, res) => {
       expiresAt: expDate,
       choirId: req.activeChoirId,
       userId: req.userId,
-      published: !!publish
+      published: !!publish,
+      sendAsUser: !!sendAsUser
     });
     const full = await Post.findByPk(post.id, { include: [
       { model: db.user, as: 'author', attributes: ['id','name'] }
     ] });
 
+    const author = await db.user.findByPk(req.userId);
+    const choir = await db.choir.findByPk(req.activeChoirId);
+    const from = sendAsUser && author?.email ? author.email : undefined;
 
     if (publish) {
       const members = await db.user.findAll({
         include: [{ model: db.choir, where: { id: req.activeChoirId } }]
       });
-      const choir = await db.choir.findByPk(req.activeChoirId);
       const emails = members.map(u => u.email).filter(e => e);
       if (emails.length > 0 && choir) {
-        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name);
+        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, from);
       }
-    } else if (sendTest) {
-      const author = await db.user.findByPk(req.userId);
-      if (author?.email) {
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText. choir.name);
-      }
+    } else if (sendTest && author?.email) {
+      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
     }
 
     res.status(201).send(full);
@@ -125,7 +125,7 @@ exports.findLatest = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { title, text, expiresAt, sendTest } = req.body;
+  const { title, text, expiresAt, sendTest, sendAsUser } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const post = await Post.findByPk(id);
@@ -135,14 +135,18 @@ exports.update = async (req, res) => {
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
     const expDate = expiresAt ? new Date(expiresAt) : null;
-    await post.update({ title: sanitizedTitle, text: sanitizedText, expiresAt: expDate });
+    const updateData = { title: sanitizedTitle, text: sanitizedText, expiresAt: expDate };
+    if (sendAsUser !== undefined) updateData.sendAsUser = !!sendAsUser;
+    await post.update(updateData);
     const full = await Post.findByPk(id, { include: [
       { model: db.user, as: 'author', attributes: ['id','name'] }
     ] });
     if (sendTest) {
       const author = await db.user.findByPk(req.userId);
+      const choir = await db.choir.findByPk(req.activeChoirId);
+      const from = post.sendAsUser && author?.email ? author.email : undefined;
       if (author?.email) {
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText);
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
       }
     }
     res.status(200).send(full);
@@ -167,7 +171,10 @@ exports.publish = async (req, res) => {
     });
     const emails = members.map(u => u.email).filter(e => e);
     if (emails.length > 0) {
-      await emailService.sendPostNotificationMail(emails, full.title, full.text);
+      const author = await db.user.findByPk(post.userId);
+      const choir = await db.choir.findByPk(req.activeChoirId);
+      const from = post.sendAsUser && author?.email ? author.email : undefined;
+      await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, from);
     }
     res.status(200).send(full);
   } catch (err) {

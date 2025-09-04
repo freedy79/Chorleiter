@@ -9,4 +9,5 @@ export interface Post {
   expiresAt?: string | null;
   published: boolean;
   author?: { id: number; name: string };
+  sendAsUser?: boolean;
 }

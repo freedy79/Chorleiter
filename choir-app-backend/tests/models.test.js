@@ -32,7 +32,7 @@ const db = require('../src/models');
     checkFields(db.repertoire_filter, ['name', 'data', 'visibility']);
     checkFields(db.mail_setting, ['host', 'port', 'user', 'pass', 'secure', 'starttls', 'fromAddress']);
     checkFields(db.plan_rule, ['dayOfWeek', 'weeks', 'notes']);
-    checkFields(db.post, ['title', 'text', 'expiresAt']);
+    checkFields(db.post, ['title', 'text', 'expiresAt', 'sendAsUser']);
     checkFields(db.program, ['title', 'description', 'status', 'startTime']);
     checkFields(db.program_element, ['type', 'position', 'duration']);
     checkFields(db.program_item, ['type', 'sortIndex']);
