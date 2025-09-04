@@ -107,6 +107,12 @@ const bcrypt = require('bcryptjs');
 exports.createUser = async (req, res) => {
     const { name, email, password, roles, street, postalCode, city, voice, shareWithChoir } = req.body;
     try {
+        const VOICE_OPTIONS = db.user.rawAttributes.voice.values;
+        const normalizedVoice = voice === '' ? null : voice;
+        if (normalizedVoice && !VOICE_OPTIONS.includes(normalizedVoice)) {
+            return res.status(400).send({ message: 'Invalid voice value.' });
+        }
+
         const user = await db.user.create({
             name,
             email,
@@ -115,7 +121,7 @@ exports.createUser = async (req, res) => {
             street,
             postalCode,
             city,
-            voice,
+            voice: normalizedVoice,
             shareWithChoir: !!shareWithChoir
         });
         res.status(201).send(user);
@@ -132,19 +138,30 @@ exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, password, roles, street, postalCode, city, voice, shareWithChoir } = req.body;
     try {
+        const VOICE_OPTIONS = db.user.rawAttributes.voice.values;
         const user = await db.user.findByPk(id);
         if (!user) return res.status(404).send({ message: 'Not found' });
-        await user.update({
+
+        const updates = {
             name: name ?? user.name,
             email: email ?? user.email,
             roles: roles ?? user.roles,
             street: street ?? user.street,
             postalCode: postalCode ?? user.postalCode,
             city: city ?? user.city,
-            voice: voice ?? user.voice,
             shareWithChoir: shareWithChoir !== undefined ? !!shareWithChoir : user.shareWithChoir,
             ...(password ? { password: bcrypt.hashSync(password, 8) } : {})
-        });
+        };
+
+        if (voice !== undefined) {
+            const normalizedVoice = voice === '' ? null : voice;
+            if (normalizedVoice && !VOICE_OPTIONS.includes(normalizedVoice)) {
+                return res.status(400).send({ message: 'Invalid voice value.' });
+            }
+            updates.voice = normalizedVoice;
+        }
+
+        await user.update(updates);
         res.status(200).send(user);
     } catch (err) {
         res.status(500).send({ message: err.message });
