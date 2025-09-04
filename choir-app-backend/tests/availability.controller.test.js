@@ -25,6 +25,11 @@ const controller = require('../src/controllers/availability.controller');
     const mayDates = res.data.map(a => a.date);
     assert.ok(!mayDates.includes('2025-05-29'));
 
+    await db.event.create({ choirId: choir.id, date: new Date('2025-05-17'), type: 'SERVICE' });
+    await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 5 } }, res);
+    const mayWithEvent = res.data.map(a => a.date);
+    assert.ok(mayWithEvent.includes('2025-05-17'));
+
   await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 12 } }, res);
   const decDates = res.data.map(a => a.date);
   assert.ok(!decDates.includes('2025-12-25'));

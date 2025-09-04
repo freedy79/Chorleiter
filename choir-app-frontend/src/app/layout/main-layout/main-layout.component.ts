@@ -286,6 +286,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         visibleSubject: this.visibleFor('availability', this.isLoggedIn$),
       },
       {
+        key: 'participation',
+        displayName: 'Beteiligung',
+        route: '/participation',
+        visibleSubject: this.visibleFor('participation', this.isLoggedIn$),
+      },
+      {
         key: 'posts',
         displayName: 'Beiträge',
         route: '/posts',
