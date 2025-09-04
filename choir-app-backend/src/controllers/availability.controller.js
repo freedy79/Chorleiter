@@ -29,13 +29,25 @@ exports.findByMonth = async (req, res) => {
             dateSet.delete(isoDateString(dec26));
         }
     }
-    const dates = Array.from(dateSet).sort();
     const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const firstDate = `${year}-${String(month).padStart(2,'0')}-01`;
+    const lastDate = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+    const events = await db.event.findAll({
+        where: {
+            choirId: req.activeChoirId,
+            date: { [Op.between]: [firstDate, lastDate] }
+        },
+        attributes: ['date']
+    });
+    for (const ev of events) {
+        dateSet.add(isoDateString(ev.date));
+    }
+    const dates = Array.from(dateSet).sort();
     const avail = await db.user_availability.findAll({
         where: {
             userId: req.userId,
             choirId: req.activeChoirId,
-            date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
+            date: { [Op.between]: [ firstDate, lastDate ] }
         }
     });
     const map = Object.fromEntries(avail.map(a => [a.date, a]));
