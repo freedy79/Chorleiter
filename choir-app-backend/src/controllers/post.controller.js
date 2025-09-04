@@ -34,9 +34,10 @@ exports.create = async (req, res) => {
     const members = await db.user.findAll({
       include: [{ model: db.choir, where: { id: req.activeChoirId } }]
     });
+    const choir = await db.choir.findByPk(req.activeChoirId);
     const emails = members.map(u => u.email).filter(e => e);
-    if (emails.length > 0) {
-      await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText);
+    if (emails.length > 0 && choir) {
+      await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name);
     }
 
     res.status(201).send(full);

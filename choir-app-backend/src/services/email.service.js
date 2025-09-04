@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const { getFrontendUrl } = require('../utils/frontend-url');
 const { buildTemplate } = require('./emailTemplateManager');
 const { sendMail, emailDisabled } = require('./emailTransporter');
+const { marked } = require('marked');
 
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   if (emailDisabled()) return;
@@ -12,6 +13,17 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   const { subject, html, text } = buildTemplate(template, type, final);
   await sendMail({ to, subject, html, text }, overrideSettings);
 }
+
+function buildPostEmail(text, choirName) {
+  const body = marked.parse(text);
+  const signatureHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a></p>`;
+  const html = `${body}${signatureHtml}`;
+  const textSignature = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
+  const plainText = `${text}${textSignature}`;
+  return { html, text: plainText };
+}
+
+exports.buildPostEmail = buildPostEmail;
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
   const linkBase = await getFrontendUrl();
@@ -161,11 +173,11 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
   }
 };
 
-exports.sendPostNotificationMail = async (recipients, title, text) => {
+exports.sendPostNotificationMail = async (recipients, title, text, choirName) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const html = `<p>${text.replace(/\n/g, '<br>')}</p>`;
-    await sendMail({ to: recipients, subject: title, text, html });
+    const { html, text: plainText } = buildPostEmail(text, choirName);
+    await sendMail({ to: recipients, subject: title, text: plainText, html });
   } catch (err) {
     logger.error(`Error sending post mail: ${err.message}`);
     logger.error(err.stack);
