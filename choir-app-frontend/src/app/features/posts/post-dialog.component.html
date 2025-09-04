@@ -21,7 +21,7 @@
       <p><code>- Liste</code></p>
     </mat-expansion-panel>
     <h3>Vorschau</h3>
-    <div class="preview" [innerHTML]="form.get('text')?.value | markdown"></div>
+    <div class="preview" [innerHTML]="form.get('text')?.value | markdown | async"></div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="expiresAt">
