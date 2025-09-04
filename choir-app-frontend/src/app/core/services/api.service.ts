@@ -43,6 +43,7 @@ import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
+import { MailLog } from '../models/mail-log';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -694,6 +695,14 @@ export class ApiService {
 
   deleteLog(filename: string): Observable<any> {
     return this.adminService.deleteLog(filename);
+  }
+
+  getMailLogs(): Observable<MailLog[]> {
+    return this.adminService.getMailLogs();
+  }
+
+  clearMailLogs(): Observable<any> {
+    return this.adminService.clearMailLogs();
   }
 
   listUploadFiles(): Observable<UploadOverview> {

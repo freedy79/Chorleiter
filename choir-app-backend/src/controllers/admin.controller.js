@@ -238,6 +238,24 @@ exports.getLoginAttempts = async (req, res) => {
     }
 };
 
+exports.getMailLogs = async (req, res) => {
+    try {
+        const logs = await db.mail_log.findAll({ order: [['createdAt', 'DESC']] });
+        res.status(200).send(logs);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.clearMailLogs = async (req, res) => {
+    try {
+        await db.mail_log.destroy({ where: {} });
+        res.status(200).send({ message: 'Deleted' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 // Recalculate repertoire statuses for all choirs based on past events
 exports.recalculatePieceStatuses = async (req, res) => {
     try {
