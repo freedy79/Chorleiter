@@ -11,7 +11,10 @@ async function fixProgramPublishedFromIdColumn() {
         await db.sequelize.query('ALTER TABLE "programs" ALTER COLUMN "published_from_id" DROP NOT NULL', { transaction });
         await db.sequelize.query('ALTER TABLE "programs" ALTER COLUMN "published_from_id" DROP DEFAULT', { transaction });
         await db.sequelize.query('UPDATE "programs" SET "published_from_id" = NULL', { transaction });
-        await db.sequelize.query('ALTER TABLE "programs" ALTER COLUMN "published_from_id" TYPE UUID USING "published_from_id"::uuid', { transaction });
+        await db.sequelize.query(
+          'ALTER TABLE "programs" ALTER COLUMN "published_from_id" TYPE UUID USING CAST(NULL AS UUID)',
+          { transaction }
+        );
       });
     }
   } catch (error) {
