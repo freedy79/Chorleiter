@@ -7,5 +7,6 @@ export interface Post {
   createdAt: string;
   updatedAt: string;
   expiresAt?: string | null;
+  published: boolean;
   author?: { id: number; name: string };
 }

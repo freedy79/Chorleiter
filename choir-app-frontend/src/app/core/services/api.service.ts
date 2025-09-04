@@ -777,12 +777,16 @@ export class ApiService {
     return this.postService.getLatestPost();
   }
 
-  createPost(data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
+  createPost(data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean }): Observable<Post> {
     return this.postService.createPost(data);
   }
 
-  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
+  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean }): Observable<Post> {
     return this.postService.updatePost(id, data);
+  }
+
+  publishPost(id: number): Observable<Post> {
+    return this.postService.publishPost(id);
   }
 
   deletePost(id: number): Observable<any> {

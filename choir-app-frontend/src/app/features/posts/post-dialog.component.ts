@@ -26,7 +26,8 @@ export class PostDialogComponent {
     this.form = this.fb.group({
       title: ['', Validators.required],
       text: ['', Validators.required],
-      expiresAt: [null]
+      expiresAt: [null],
+      sendTest: [false]
     });
     if (data?.post) {
       this.isEdit = true;
@@ -77,7 +78,7 @@ export class PostDialogComponent {
   save(): void {
     if (this.form.valid) {
       const expiresAt = this.form.value.expiresAt ? this.form.value.expiresAt.toISOString() : null;
-      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt });
+      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt, sendTest: this.form.value.sendTest });
     }
   }
 
