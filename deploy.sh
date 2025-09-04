@@ -30,7 +30,7 @@ fi
 
 echo "Build finished."
 
-# Verify backend can start by syntax checking server.js
+# Verify backend can start by syntax checking server.ts
 npm --prefix choir-app-backend run check
 
 # Check for sshpass before proceeding
