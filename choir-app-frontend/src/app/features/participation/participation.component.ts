@@ -109,23 +109,85 @@ export class ParticipationComponent implements OnInit {
     }
   }
 
+  private readonly voiceMap: Record<string, string> = {
+    'SOPRAN I': 'Sopran I',
+    'SOPRAN 1': 'Sopran I',
+    'SOPRAN II': 'Sopran II',
+    'SOPRAN 2': 'Sopran II',
+    SOPRAN: 'Sopran',
+    SOPRANO: 'Sopran',
+    'ALT I': 'Alt I',
+    'ALT 1': 'Alt I',
+    'ALT II': 'Alt II',
+    'ALT 2': 'Alt II',
+    ALT: 'Alt',
+    ALTO: 'Alt',
+    'TENOR I': 'Tenor I',
+    'TENOR 1': 'Tenor I',
+    'TENOR II': 'Tenor II',
+    'TENOR 2': 'Tenor II',
+    TENOR: 'Tenor',
+    'BASS I': 'Bass I',
+    'BASS 1': 'Bass I',
+    'BASS II': 'Bass II',
+    'BASS 2': 'Bass II',
+    BASS: 'Bass',
+  };
+
+  private readonly baseVoiceMap: Record<string, string> = {
+    'SOPRAN I': 'SOPRAN',
+    'SOPRAN 1': 'SOPRAN',
+    'SOPRAN II': 'SOPRAN',
+    'SOPRAN 2': 'SOPRAN',
+    SOPRAN: 'SOPRAN',
+    SOPRANO: 'SOPRAN',
+    'ALT I': 'ALT',
+    'ALT 1': 'ALT',
+    'ALT II': 'ALT',
+    'ALT 2': 'ALT',
+    ALT: 'ALT',
+    ALTO: 'ALT',
+    'TENOR I': 'TENOR',
+    'TENOR 1': 'TENOR',
+    'TENOR II': 'TENOR',
+    'TENOR 2': 'TENOR',
+    TENOR: 'TENOR',
+    'BASS I': 'BASS',
+    'BASS 1': 'BASS',
+    'BASS II': 'BASS',
+    'BASS 2': 'BASS',
+    BASS: 'BASS',
+  };
+
   voiceOf(member: UserInChoir): string {
-    const roles = member.membership?.rolesInChoir || [];
-    const voice = roles.find(r => this.voiceOrder.includes(r.toUpperCase()));
-    return voice || '';
+    const rawVoice = member.voice?.toUpperCase() ||
+      (member.membership?.rolesInChoir || [])
+        .map(r => r.toUpperCase())
+        .find(r => this.voiceMap[r]);
+    return rawVoice ? this.voiceMap[rawVoice] : '';
+  }
+
+  private baseVoice(voice: string): string {
+    return this.baseVoiceMap[voice] || voice;
   }
 
   private sortByVoice(members: UserInChoir[]): UserInChoir[] {
     return members.sort((a, b) => {
-      const va = this.voiceOrder.indexOf(this.voiceOf(a).toUpperCase());
-      const vb = this.voiceOrder.indexOf(this.voiceOf(b).toUpperCase());
+      const va = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(a).toUpperCase()));
+      const vb = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(b).toUpperCase()));
+      if (va === -1 && vb === -1) {
+        const ln = a.name.localeCompare(b.name);
+        return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
+      }
+      if (va === -1) return 1;
+      if (vb === -1) return -1;
       if (va !== vb) return va - vb;
       const ln = a.name.localeCompare(b.name);
       return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
     });
   }
 
-  private readonly voiceOrder = ['SOPRANO', 'ALTO', 'TENOR', 'BASS', 'SOPRAN', 'ALT'];
+  private readonly voiceOrder = ['SOPRAN', 'ALT', 'TENOR', 'BASS'];
 
   private dateKey(date: string | Date): string {
     const d = new Date(date);
