@@ -32,7 +32,14 @@ module.exports = (sequelize, DataTypes) => {
       field: 'published_at',
     },
     publishedFromId: {
-      type: DataTypes.INTEGER,
+      // Link to the original program this draft was created from.
+      // The program ids use UUIDs, therefore this reference must also
+      // be stored as a UUID. Using an integer here caused runtime errors
+      // when attempting to create a revision of a published program
+      // (for example when deleting an item) because the UUID could not
+      // be persisted in an integer column. Changing the type fixes the
+      // issue and allows revisions to be created correctly.
+      type: DataTypes.UUID,
       field: 'published_from_id',
     },
     createdBy: {
