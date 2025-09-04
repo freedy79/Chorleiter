@@ -137,7 +137,7 @@ The generated `.gz` or `.br` files can then be served by a web server that
 supports content negotiation for pre-compressed assets.
 
 Before packaging the files for upload, the deployment scripts run a syntax check
-on `choir-app-backend/server.ts` using `node --check`. This catches backend
+on `choir-app-backend/server.js` using `node --check`. This catches backend
 syntax errors locally so you don't discover them only after uploading.
 
 ## Error Handling
