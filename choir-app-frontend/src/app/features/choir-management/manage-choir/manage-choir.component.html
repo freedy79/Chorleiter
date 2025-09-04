@@ -117,7 +117,7 @@
           <!-- Name Column -->
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
-            <mat-cell *matCellDef="let user"> {{user.name}} </mat-cell>
+            <mat-cell *matCellDef="let user"> {{user.name}}, {{ user.firstName }} </mat-cell>
           </ng-container>
           <!-- Email Column -->
           <ng-container matColumnDef="email">

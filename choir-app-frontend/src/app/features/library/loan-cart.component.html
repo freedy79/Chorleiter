@@ -54,7 +54,7 @@
   <mat-card *ngIf="(user$ | async) as user">
     <mat-card-title>Kontakt</mat-card-title>
     <mat-card-content>
-      <p>{{user.name}}</p>
+      <p>{{user.name}}, {{user.firstName}}</p>
       <p>{{user.email}}</p>
     </mat-card-content>
   </mat-card>

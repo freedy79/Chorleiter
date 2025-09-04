@@ -47,12 +47,12 @@
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorText">
           <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
-            <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
+            <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">{{ m.name }}, {{ m.firstName }}</mat-option>
           </mat-select>
           <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-container>
         <ng-template #directorText>
-          {{ ev.director?.name }}
+          {{ ev.director?.name }}, {{ ev.director?.firstName }}
           <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-template>
       </mat-cell>
@@ -63,12 +63,12 @@
         <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistText">
           <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
             <mat-option [value]="null">--</mat-option>
-            <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">{{ m.name }}</mat-option>
+            <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">{{ m.name }}, {{ m.firstName }}</mat-option>
           </mat-select>
           <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-container>
         <ng-template #organistText>
-          {{ ev.organist?.name }}
+          {{ ev.organist?.name }}, {{ ev.organist?.firstName }}
           <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn" matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
         </ng-template>
       </mat-cell>
@@ -108,7 +108,7 @@
         </thead>
         <tbody>
           <tr *ngFor="let row of counterPlanRows">
-            <td>{{ row.user.name }}</td>
+            <td>{{ row.user.name }}, {{ row.user.firstName }}</td>
             <td *ngFor="let key of counterPlanDateKeys">{{ row.assignments[key] }}</td>
           </tr>
         </tbody>

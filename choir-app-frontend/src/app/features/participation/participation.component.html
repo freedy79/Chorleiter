@@ -2,7 +2,7 @@
   <mat-table [dataSource]="members">
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-      <mat-cell *matCellDef="let m">{{ m.name }}</mat-cell>
+      <mat-cell *matCellDef="let m">{{ m.name }}, {{ m.firstName }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="voice">

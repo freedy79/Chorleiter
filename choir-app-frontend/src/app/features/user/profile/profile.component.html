@@ -13,17 +13,19 @@
           <mat-card-title>Persönliche Daten</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-          <mat-form-field appearance="outline">
-            <mat-label>Vorname</mat-label>
-            <input matInput formControlName="firstName">
-            <mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">Vorname ist erforderlich.</mat-error>
-          </mat-form-field>
+          <div class="name-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Vorname</mat-label>
+              <input matInput formControlName="firstName">
+              <mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">Vorname ist erforderlich.</mat-error>
+            </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Nachname</mat-label>
-            <input matInput formControlName="name">
-            <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Nachname ist erforderlich.</mat-error>
-          </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Nachname</mat-label>
+              <input matInput formControlName="name">
+              <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Nachname ist erforderlich.</mat-error>
+            </mat-form-field>
+          </div>
 
           <mat-form-field appearance="outline">
             <mat-label>E-Mail-Adresse</mat-label>

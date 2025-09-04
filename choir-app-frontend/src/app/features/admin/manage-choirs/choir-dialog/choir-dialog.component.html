@@ -24,7 +24,7 @@
     <mat-table [dataSource]="dataSource" class="member-table">
       <ng-container matColumnDef="name">
         <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-        <mat-cell *matCellDef="let user">{{user.name}}</mat-cell>
+        <mat-cell *matCellDef="let user">{{user.name}}, {{ user.firstName }}</mat-cell>
       </ng-container>
       <ng-container matColumnDef="email">
         <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>

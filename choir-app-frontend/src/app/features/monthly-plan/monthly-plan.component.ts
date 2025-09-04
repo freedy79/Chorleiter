@@ -108,7 +108,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   memberNamesByAvailability(date: string, status: string): string {
-    return this.membersByAvailability(date, status).map(m => m.name).join(', ') || '—';
+    return this.membersByAvailability(date, status).map(m => `${m.name}, ${m.firstName}`).join(', ') || '—';
   }
 
   private updateCounterPlan(): void {

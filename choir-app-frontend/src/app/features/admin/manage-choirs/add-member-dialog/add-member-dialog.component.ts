@@ -43,14 +43,15 @@ export class AddMemberDialogComponent implements OnInit {
   }
 
   displayFn(user: User): string {
-    return user ? `${user.name} (${user.email})` : '';
+    return user ? `${user.name}, ${user.firstName} (${user.email})` : '';
   }
 
   private filterUsers(value: string | undefined): User[] {
     const filterValue = (value || '').toLowerCase();
     return this.users.filter(u =>
       u.email.toLowerCase().includes(filterValue) ||
-      (u.name && u.name.toLowerCase().includes(filterValue))
+      (u.name && u.name.toLowerCase().includes(filterValue)) ||
+      (u.firstName && u.firstName.toLowerCase().includes(filterValue))
     );
   }
 

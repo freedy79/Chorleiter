@@ -14,7 +14,7 @@
 >
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element.name }}</mat-cell>
+    <mat-cell *matCellDef="let element">{{ element.name }}, {{ element.firstName }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="email">
@@ -76,7 +76,7 @@
 <mat-accordion *ngIf="isHandset$ | async">
   <mat-expansion-panel *ngFor="let element of dataSource.filteredData">
     <mat-expansion-panel-header>
-      <mat-panel-title>{{ element.name }}</mat-panel-title>
+      <mat-panel-title>{{ element.name }}, {{ element.firstName }}</mat-panel-title>
       <mat-panel-description>{{ element.email }}</mat-panel-description>
     </mat-expansion-panel-header>
     <div class="mobile-user-row">
