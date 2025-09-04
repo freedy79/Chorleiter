@@ -1,5 +1,6 @@
 const db = require('../models');
 const Program = db.program;
+const { programPdf } = require('../services/pdf.service');
 
 // Create a draft revision of a published program so that further changes
 // do not modify the published version. Copies all existing items to the new
@@ -95,6 +96,22 @@ exports.findOne = async (req, res) => {
     res.status(200).send(program);
   } catch (err) {
     res.status(500).send({ message: err.message });
+  }
+};
+
+exports.downloadPdf = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findByPk(id, {
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+    if (!program) return res.status(404).send({ message: 'program not found' });
+    const buffer = programPdf(program.toJSON());
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="programm-${program.id}.pdf"`);
+    res.status(200).send(buffer);
+  } catch (err) {
+    res.status(500).send({ message: err.message || 'Could not generate PDF.' });
   }
 };
 

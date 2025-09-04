@@ -105,4 +105,8 @@ export class ProgramService {
     deleteItem(programId: string, itemId: string): Observable<void> {
       return this.http.delete<void>(`${this.apiUrl}/programs/${programId}/items/${itemId}`);
     }
+
+  downloadProgramPdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/programs/${id}/pdf`, { responseType: 'blob' });
   }
+}

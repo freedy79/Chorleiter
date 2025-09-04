@@ -133,6 +133,12 @@ const controller = require('../src/controllers/program.controller');
       assert.strictEqual(speechRes.data.speechSpeaker, 'Bob');
       assert.strictEqual(speechRes.data.durationSec, 30);
 
+      // download pdf
+      const pdfRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; }, setHeader() {} };
+      await controller.downloadPdf({ params: { id: res.data.id } }, pdfRes);
+      assert.strictEqual(pdfRes.statusCode, 200);
+      assert.ok(Buffer.isBuffer(pdfRes.data));
+
       // publish program
       const publishReq = { params: { id: res.data.id }, userId: user.id };
       const publishRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };

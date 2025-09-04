@@ -20,6 +20,7 @@ router.use(authJwt.verifyToken);
 
 router.get('/last', wrap(controller.findLastPublished));
 router.get('/', role.requireDirector, wrap(controller.findAll));
+router.get('/:id/pdf', role.requireDirector, wrap(controller.downloadPdf));
 router.get('/:id', role.requireDirector, wrap(controller.findOne));
 router.delete('/:id', role.requireDirector, wrap(controller.delete));
 router.post('/', role.requireDirector, programValidation, validate, wrap(controller.create));

@@ -362,6 +362,17 @@ export class ProgramEditorComponent implements OnInit {
     });
   }
 
+  downloadPdf() {
+    this.programService.downloadProgramPdf(this.programId).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `programm-${this.programId}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
   getComposer(item: ProgramItem): string | null {
     switch (item.type) {
       case 'piece':
