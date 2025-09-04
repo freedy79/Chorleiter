@@ -19,11 +19,13 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { parseDateOnly } from '@shared/util/date';
 
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss']
 })
@@ -48,7 +50,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private userSub?: Subscription;
 
   timestamp(date: string | Date): string {
-    return new Date(date).getTime().toString();
+    return parseDateOnly(date).getTime().toString();
   }
 
   private updateDisplayedColumns(): void {
@@ -57,7 +59,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private sortEntries(): void {
-    this.entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    this.entries.sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   }
 
 
@@ -77,10 +79,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   private dateKey(date: string): string {
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = d.getMonth() + 1;
-    const day = d.getDate();
+    const d = parseDateOnly(date);
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth() + 1;
+    const day = d.getUTCDate();
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
   }
 
@@ -117,7 +119,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     }
     const dateKeys = Array.from(dateMap.keys()).sort();
     this.counterPlanDateKeys = dateKeys;
-    this.counterPlanDates = dateKeys.map(k => new Date(dateMap.get(k)!));
+    this.counterPlanDates = dateKeys.map(k => parseDateOnly(dateMap.get(k)!));
 
     const persons: UserInChoir[] = [];
     [...this.directors, ...this.organists].forEach(u => {
@@ -194,7 +196,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.plan = plan;
         this.entries = (plan?.entries || []).map(e => ({
           ...e,
-          holidayHint: getHolidayName(new Date(e.date)) || undefined
+          holidayHint: getHolidayName(parseDateOnly(e.date)) || undefined
         }));
         this.sortEntries();
         this.updateDisplayedColumns();

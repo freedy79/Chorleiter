@@ -4,11 +4,13 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { UserAvailability } from '@core/models/user-availability';
 import { getHolidayName } from '@shared/util/holiday';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { parseDateOnly } from '@shared/util/date';
 
 @Component({
   selector: 'app-availability-table',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, PureDatePipe],
   templateUrl: './availability-table.component.html',
   styleUrls: ['./availability-table.component.scss']
 })
@@ -28,7 +30,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
     this.api.getAvailabilities(this.year, this.month)
       .subscribe(a => this.availabilities = a.map(v => ({
         ...v,
-        holidayHint: getHolidayName(new Date(v.date)) || undefined
+        holidayHint: getHolidayName(parseDateOnly(v.date)) || undefined
       })));
   }
 
@@ -37,11 +39,11 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
     if (i >= 0) this.availabilities[i].status = status;
 
     this.api.setAvailability(date, status).subscribe(updated => {
-      if (i >= 0) this.availabilities[i] = {
-        ...updated,
-        holidayHint: getHolidayName(new Date(updated.date)) || undefined
-      };
-    });
+        if (i >= 0) this.availabilities[i] = {
+          ...updated,
+          holidayHint: getHolidayName(parseDateOnly(updated.date)) || undefined
+        };
+      });
   }
 
   cellClass(status: string): string {

@@ -2,7 +2,7 @@
   <ng-container matColumnDef="date">
     <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
     <mat-cell *matCellDef="let a">
-      {{ a.date | date:'EEE dd.MM.yyyy' }}
+      {{ a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}
       <span class="holiday" *ngIf="a.holidayHint"> ({{ a.holidayHint }})</span>
     </mat-cell>
   </ng-container>
