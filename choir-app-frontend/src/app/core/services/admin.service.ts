@@ -11,6 +11,7 @@ import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
+import { MailLog } from '../models/mail-log';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -94,6 +95,14 @@ export class AdminService {
 
   deleteLog(filename: string): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/logs/${encodeURIComponent(filename)}`);
+  }
+
+  getMailLogs(): Observable<MailLog[]> {
+    return this.http.get<MailLog[]>(`${this.apiUrl}/admin/mail-logs`);
+  }
+
+  clearMailLogs(): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/mail-logs`);
   }
 
   listUploadFiles(): Observable<UploadOverview> {

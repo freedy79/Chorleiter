@@ -14,12 +14,23 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   await sendMail({ to, subject, html, text }, overrideSettings);
 }
 
-function buildPostEmail(text, choirName) {
-  const body = marked.parse(text);
+async function buildPostEmail(text, choirName) {
+  const linkBase = await getFrontendUrl();
+  const ids = Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
+  let replaced = text;
+  if (ids.length) {
+    const pieces = await db.piece.findAll({ where: { id: ids } });
+    const titles = new Map(pieces.map(p => [p.id, p.title]));
+    replaced = text.replace(/\{\{(\d+)\}\}/g, (match, id) => {
+      const title = titles.get(+id);
+      return title ? `[${title}](${linkBase}/pieces/${id})` : match;
+    });
+  }
+  const body = marked.parse(replaced);
   const signatureHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a></p>`;
   const html = `${body}${signatureHtml}`;
   const textSignature = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
-  const plainText = `${text}${textSignature}`;
+  const plainText = `${replaced}${textSignature}`;
   return { html, text: plainText };
 }
 

@@ -45,6 +45,12 @@ exports.create = async (req, res) => {
       if (emails.length > 0 && choir) {
         await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, from);
       }
+    } else if (sendTest) {
+      const author = await db.user.findByPk(req.userId);
+      if (author?.email) {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
+      }
     } else if (sendTest && author?.email) {
       await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
     }

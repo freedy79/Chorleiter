@@ -44,7 +44,22 @@ async function sendMail(options, overrideSettings) {
     mailOptions.to = 'no-reply@nak-chorleiter.de';
   }
 
-  return transporter.sendMail(mailOptions);
+  const result = await transporter.sendMail(mailOptions);
+
+  try {
+    const db = require('../models');
+    if (db && db.mail_log) {
+      await db.mail_log.create({
+        recipients: recipients.join(', '),
+        subject: mailOptions.subject,
+        body: mailOptions.text || mailOptions.html || ''
+      }).catch(() => {});
+    }
+  } catch (err) {
+    // Ignore logging errors
+  }
+
+  return result;
 }
 
 module.exports = { emailDisabled, createTransporter, getFromAddress, sendMail };
