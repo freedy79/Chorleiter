@@ -16,7 +16,14 @@ exports.search = async (req, res) => {
         { origin: like }
       ]
     },
-    include: [{ model: db.composer, as: 'composer', attributes: ['name'] }],
+    include: [
+      { model: db.composer, as: 'composer', attributes: ['name'] },
+      {
+        model: db.collection,
+        attributes: ['id', 'prefix', 'singleEdition', 'title'],
+        through: { attributes: ['numberInCollection'] }
+      }
+    ],
     limit: 10
   });
 
