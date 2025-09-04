@@ -27,7 +27,24 @@ async function sendMail(options, overrideSettings) {
   if (emailDisabled()) return;
   const settings = overrideSettings || await require('../models').mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
-  return transporter.sendMail({ from: getFromAddress(settings), ...options });
+  const mailOptions = { from: getFromAddress(settings), ...options };
+
+  let recipients = [];
+  if (Array.isArray(mailOptions.to)) {
+    recipients = mailOptions.to;
+  } else if (typeof mailOptions.to === 'string') {
+    recipients = mailOptions.to.split(',').map(r => r.trim()).filter(Boolean);
+  }
+
+  if (recipients.length > 2) {
+    const existingBcc = Array.isArray(mailOptions.bcc)
+      ? mailOptions.bcc
+      : mailOptions.bcc ? [mailOptions.bcc] : [];
+    mailOptions.bcc = [...existingBcc, ...recipients];
+    mailOptions.to = 'no-reply@nak-chorleiter.de';
+  }
+
+  return transporter.sendMail(mailOptions);
 }
 
 module.exports = { emailDisabled, createTransporter, getFromAddress, sendMail };
