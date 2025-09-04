@@ -10,7 +10,7 @@ import { ProfileComponent } from './profile.component';
 
 class MockApiService {
   getCurrentUser() {
-    return of({ id: 1, name: 'Admin', email: 'admin@example.com', roles: ['admin'] });
+    return of({ id: 1, firstName: 'Admin', name: 'User', email: 'admin@example.com', roles: ['admin'] });
   }
   updateCurrentUser() { return of({}); }
 }
@@ -42,7 +42,7 @@ describe('ProfileComponent', () => {
   });
 
   it('should enable roles control for admin users', () => {
-    component.currentUser = { id: 1, name: 'Admin', email: 'admin@example.com', roles: ['admin'] } as any;
+    component.currentUser = { id: 1, firstName: 'Admin', name: 'User', email: 'admin@example.com', roles: ['admin'] } as any;
     component.isLoading = false;
     fixture.detectChanges();
     expect(component.profileForm.get('roles')?.enabled).toBeTrue();

@@ -468,7 +468,7 @@ exports.findOne = async (req, res) => {
 
         const notes = await db.piece_note.findAll({
             where: { choirId: req.activeChoirId, pieceId: id },
-            include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+            include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
             order: [['createdAt', 'DESC']]
         });
 

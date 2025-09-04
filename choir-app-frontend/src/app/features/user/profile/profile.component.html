@@ -14,9 +14,15 @@
         </mat-card-header>
         <mat-card-content>
           <mat-form-field appearance="outline">
-            <mat-label>Vollständiger Name</mat-label>
+            <mat-label>Vorname</mat-label>
+            <input matInput formControlName="firstName">
+            <mat-error *ngIf="profileForm.get('firstName')?.hasError('required')">Vorname ist erforderlich.</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Nachname</mat-label>
             <input matInput formControlName="name">
-            <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Name ist erforderlich.</mat-error>
+            <mat-error *ngIf="profileForm.get('name')?.hasError('required')">Nachname ist erforderlich.</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">

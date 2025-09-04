@@ -6,7 +6,7 @@ exports.findForPiece = async (req, res) => {
     try {
         const notes = await PieceNote.findAll({
             where: { pieceId, choirId: req.activeChoirId },
-            include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+            include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
             order: [['createdAt', 'DESC']]
         });
         res.status(200).send(notes);
@@ -26,7 +26,7 @@ exports.createForPiece = async (req, res) => {
             choirId: req.activeChoirId,
             userId: req.userId
         });
-        const full = await PieceNote.findByPk(note.id, { include: [{ model: db.user, as: 'author', attributes: ['id','name'] }] });
+        const full = await PieceNote.findByPk(note.id, { include: [{ model: db.user, as: 'author', attributes: ['id','firstName','name'] }] });
         res.status(201).send(full);
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -43,7 +43,7 @@ exports.update = async (req, res) => {
             return res.status(403).send({ message: 'Not allowed' });
         }
         await note.update({ text });
-        const full = await PieceNote.findByPk(noteId, { include: [{ model: db.user, as: 'author', attributes: ['id','name'] }] });
+        const full = await PieceNote.findByPk(noteId, { include: [{ model: db.user, as: 'author', attributes: ['id','firstName','name'] }] });
         res.status(200).send(full);
     } catch (err) {
         res.status(500).send({ message: err.message });
