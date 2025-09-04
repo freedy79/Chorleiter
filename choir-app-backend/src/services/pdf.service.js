@@ -138,4 +138,63 @@ function monthlyPlanPdf(plan) {
   return Buffer.from(pdf, 'binary');
 }
 
-module.exports = { monthlyPlanPdf };
+function programPdf(program) {
+  const left = 50;
+  const right = 545;
+  const lines = [];
+  let y = 800;
+
+  // Title
+  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape(program.title || 'Programm')}) Tj ET`);
+  y -= 30;
+
+  const width = right - left;
+  const size = 12;
+
+  for (const item of program.items || []) {
+    let text = '';
+    if (item.type === 'piece') {
+      const composer = item.pieceComposerSnapshot ? item.pieceComposerSnapshot + ': ' : '';
+      text = composer + (item.pieceTitleSnapshot || '');
+      if (item.instrument) text += ` (${item.instrument})`;
+      if (item.performerNames) text += ` — ${item.performerNames}`;
+    } else if (item.type === 'speech') {
+      text = item.speechTitle || '';
+      if (item.speechSpeaker) text += ` – ${item.speechSpeaker}`;
+    } else if (item.type === 'break') {
+      text = item.breakTitle || 'Pause';
+    } else if (item.type === 'slot') {
+      text = item.slotLabel || '';
+    }
+
+    const wrapped = wrapText(text, size, width);
+    for (const line of wrapped) {
+      lines.push(`BT /F1 ${size} Tf ${left} ${y} Td (${escape(line)}) Tj ET`);
+      y -= 16;
+    }
+    y -= 4;
+  }
+
+  const content = lines.join('\n');
+  const objects = [];
+  objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
+  objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); //2
+  objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>'); //3
+  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'); //4
+  objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); //5
+  const offsets = [];
+  let pdf = '%PDF-1.4\n';
+  for (let i = 0; i < objects.length; i++) {
+    offsets[i] = pdf.length;
+    pdf += `${i+1} 0 obj\n${objects[i]}\nendobj\n`;
+  }
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 0; i < offsets.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
+  }
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return Buffer.from(pdf, 'binary');
+}
+
+module.exports = { monthlyPlanPdf, programPdf };

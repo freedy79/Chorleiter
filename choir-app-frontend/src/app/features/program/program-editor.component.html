@@ -1,6 +1,9 @@
 <div class="program-header">
   <span>Startzeit: {{ startTime ? (startTime | date:'short') : '-' }}</span>
   <button mat-button (click)="editBasics()">Stammdaten bearbeiten</button>
+  <button mat-raised-button color="accent" (click)="downloadPdf()" matTooltip="Als PDF herunterladen">
+    <mat-icon>picture_as_pdf</mat-icon>
+  </button>
 </div>
 
 <button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
