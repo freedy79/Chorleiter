@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const { getFrontendUrl } = require('../utils/frontend-url');
 const { buildTemplate } = require('./emailTemplateManager');
 const { sendMail, emailDisabled } = require('./emailTransporter');
+const { marked } = require('marked');
 
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   if (emailDisabled()) return;
@@ -12,6 +13,28 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   const { subject, html, text } = buildTemplate(template, type, final);
   await sendMail({ to, subject, html, text }, overrideSettings);
 }
+
+async function buildPostEmail(text, choirName) {
+  const linkBase = await getFrontendUrl();
+  const ids = Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
+  let replaced = text;
+  if (ids.length) {
+    const pieces = await db.piece.findAll({ where: { id: ids } });
+    const titles = new Map(pieces.map(p => [p.id, p.title]));
+    replaced = text.replace(/\{\{(\d+)\}\}/g, (match, id) => {
+      const title = titles.get(+id);
+      return title ? `[${title}](${linkBase}/pieces/${id})` : match;
+    });
+  }
+  const body = marked.parse(replaced);
+  const signatureHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a></p>`;
+  const html = `${body}${signatureHtml}`;
+  const textSignature = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
+  const plainText = `${replaced}${textSignature}`;
+  return { html, text: plainText };
+}
+
+exports.buildPostEmail = buildPostEmail;
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
   const linkBase = await getFrontendUrl();
@@ -161,11 +184,13 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
   }
 };
 
-exports.sendPostNotificationMail = async (recipients, title, text) => {
+exports.sendPostNotificationMail = async (recipients, title, text, choirName, from) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const html = `<p>${text.replace(/\n/g, '<br>')}</p>`;
-    await sendMail({ to: recipients, subject: title, text, html });
+    const { html, text: plainText } = await buildPostEmail(text, choirName);
+    const options = { to: recipients, subject: title, text: plainText, html };
+    if (from) options.from = from;
+    await sendMail(options);
   } catch (err) {
     logger.error(`Error sending post mail: ${err.message}`);
     logger.error(err.stack);

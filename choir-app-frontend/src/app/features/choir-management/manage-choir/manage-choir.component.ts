@@ -229,7 +229,7 @@ export class ManageChoirComponent implements OnInit {
     }
     const dialogData: ConfirmDialogData = {
       title: 'Mitglied entfernen?',
-      message: `Soll ${user.name} (${user.email}) aus diesem Chor entfernt werden? Dies kann nicht rückgängig gemacht werden.`
+      message: `Soll ${user.name}, ${user.firstName} (${user.email}) aus diesem Chor entfernt werden? Dies kann nicht rückgängig gemacht werden.`
     };
 
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
@@ -241,7 +241,7 @@ export class ManageChoirComponent implements OnInit {
         const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
         this.apiService.removeUserFromChoir(user.id, opts).subscribe({
           next: () => {
-            this.snackBar.open(`${user.name} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
+            this.snackBar.open(`${user.name}, ${user.firstName} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
           error: (err) => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')

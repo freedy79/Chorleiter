@@ -21,13 +21,15 @@
       <p><code>- Liste</code></p>
     </mat-expansion-panel>
     <h3>Vorschau</h3>
-    <div class="preview" [innerHTML]="form.get('text')?.value | markdown"></div>
+    <div class="preview" [innerHTML]="form.get('text')?.value | markdown | async"></div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="expiresAt">
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
+    <mat-checkbox formControlName="sendTest">Test-E-Mail an mich senden</mat-checkbox>
+    <mat-checkbox formControlName="sendAsUser">Eigene Adresse als Absender verwenden</mat-checkbox>
   </form>
 </div>
 <div mat-dialog-actions>

@@ -29,4 +29,12 @@ export class SearchResultsComponent implements OnInit {
       }
     });
   }
+
+  getCollectionRef(piece: Piece): string | null {
+    const ref = piece.collections?.find(c => !c.singleEdition);
+    if (ref) {
+      return `${ref.prefix || ''}${ref.collection_piece.numberInCollection}`;
+    }
+    return null;
+  }
 }

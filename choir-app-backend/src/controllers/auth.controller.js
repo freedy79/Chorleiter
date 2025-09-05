@@ -14,7 +14,8 @@ async function ensureDemoAccount() {
     const [demoUser] = await User.findOrCreate({
         where: { email: "demo@nak-chorleiter.de" },
         defaults: {
-            name: "Demo User",
+            firstName: "Demo",
+            name: "User",
             email: "demo@nak-chorleiter.de",
             password: bcrypt.hashSync("demo", 8),
             roles: ["demo"]
@@ -49,6 +50,7 @@ exports.signup = async (req, res) => {
     try {
     const [choir] = await db.choir.findOrCreate({ where: { name: req.body.choirName }, defaults: { name: req.body.choirName }});
     const user = await db.user.create({
+      firstName: req.body.firstName,
       name: req.body.name,
       email: req.body.email?.toLowerCase(),
       password: bcrypt.hashSync(req.body.password, 8)
@@ -120,6 +122,7 @@ exports.signin = async (req, res) => {
     await LoginAttempt.create({ email, success: true, ipAddress, userAgent });
     res.status(200).send({
       id: user.id,
+      firstName: user.firstName,
       name: user.name,
       email: user.email,
       voice: user.voice,

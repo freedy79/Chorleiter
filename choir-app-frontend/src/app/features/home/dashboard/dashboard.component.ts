@@ -14,6 +14,7 @@ import { Program, ProgramItem } from '@core/models/program';
 import { EventDialogComponent } from '../../events/event-dialog/event-dialog.component';
 import { Piece } from '@core/models/piece';
 import { EventCardComponent } from '../event-card/event-card.component';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
@@ -31,7 +32,8 @@ import { LibraryItem } from '@core/models/library-item';
     RouterModule,
     MaterialModule,
     FormsModule,
-    EventCardComponent
+    EventCardComponent,
+    MarkdownPipe
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

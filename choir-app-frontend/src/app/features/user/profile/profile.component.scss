@@ -9,6 +9,15 @@
     gap: 1.5rem;
 }
 
+.name-row {
+    display: flex;
+    gap: 1rem;
+
+    mat-form-field {
+        flex: 1;
+    }
+}
+
 .admin-info {
     margin-bottom: 1rem;
     font-weight: 500;

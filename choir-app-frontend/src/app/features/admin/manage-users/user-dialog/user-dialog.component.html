@@ -1,10 +1,16 @@
 <h1 mat-dialog-title>{{ title }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="form" id="user-form" (ngSubmit)="onSave()">
-    <mat-form-field appearance="outline">
-      <mat-label>Name</mat-label>
-      <input matInput formControlName="name" cdkFocusInitial>
-    </mat-form-field>
+    <div class="name-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Vorname</mat-label>
+        <input matInput formControlName="firstName" cdkFocusInitial>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Name</mat-label>
+        <input matInput formControlName="name">
+      </mat-form-field>
+    </div>
     <mat-form-field appearance="outline">
       <mat-label>E-Mail</mat-label>
       <input matInput formControlName="email">

@@ -1,0 +1,24 @@
+<div class="mail-logs">
+  <button mat-raised-button color="warn" (click)="clearLogs()" *ngIf="logs.length">Logs löschen</button>
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+    <ng-container matColumnDef="createdAt">
+      <th mat-header-cell *matHeaderCellDef>Datum</th>
+      <td mat-cell *matCellDef="let log">{{ log.createdAt | date:'short' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="recipients">
+      <th mat-header-cell *matHeaderCellDef>Empfänger</th>
+      <td mat-cell *matCellDef="let log">{{ log.recipients }}</td>
+    </ng-container>
+    <ng-container matColumnDef="subject">
+      <th mat-header-cell *matHeaderCellDef>Betreff</th>
+      <td mat-cell *matCellDef="let log">{{ log.subject }}</td>
+    </ng-container>
+    <ng-container matColumnDef="body">
+      <th mat-header-cell *matHeaderCellDef>Inhalt</th>
+      <td mat-cell *matCellDef="let log">{{ log.body }}</td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</div>

@@ -43,6 +43,7 @@ import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
+import { MailLog } from '../models/mail-log';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -467,7 +468,7 @@ export class ApiService {
     return this.userService.getCurrentUser();
   }
 
-  updateCurrentUser(profileData: { name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
+  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
     return this.userService.updateCurrentUser(profileData);
   }
 
@@ -696,6 +697,14 @@ export class ApiService {
     return this.adminService.deleteLog(filename);
   }
 
+  getMailLogs(): Observable<MailLog[]> {
+    return this.adminService.getMailLogs();
+  }
+
+  clearMailLogs(): Observable<any> {
+    return this.adminService.clearMailLogs();
+  }
+
   listUploadFiles(): Observable<UploadOverview> {
     return this.adminService.listUploadFiles();
   }
@@ -777,12 +786,16 @@ export class ApiService {
     return this.postService.getLatestPost();
   }
 
-  createPost(data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
+  createPost(data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
     return this.postService.createPost(data);
   }
 
-  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null }): Observable<Post> {
+  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
     return this.postService.updatePost(id, data);
+  }
+
+  publishPost(id: number): Observable<Post> {
+    return this.postService.publishPost(id);
   }
 
   deletePost(id: number): Observable<any> {

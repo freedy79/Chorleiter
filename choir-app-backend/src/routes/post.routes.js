@@ -13,5 +13,6 @@ router.get('/', wrap(controller.findAll));
 router.post('/', role.requireDirector, postValidation, validate, wrap(controller.create));
 router.put('/:id', postValidation, validate, wrap(controller.update));
 router.delete('/:id', wrap(controller.remove));
+router.post('/:id/publish', wrap(controller.publish));
 
 module.exports = router;

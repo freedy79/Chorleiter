@@ -26,11 +26,13 @@ export class PostDialogComponent {
     this.form = this.fb.group({
       title: ['', Validators.required],
       text: ['', Validators.required],
-      expiresAt: [null]
+      expiresAt: [null],
+      sendTest: [false],
+      sendAsUser: [false]
     });
     if (data?.post) {
       this.isEdit = true;
-      this.form.patchValue({ title: data.post.title, text: data.post.text, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null });
+      this.form.patchValue({ title: data.post.title, text: data.post.text, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null, sendAsUser: data.post.sendAsUser });
     }
   }
 
@@ -77,7 +79,7 @@ export class PostDialogComponent {
   save(): void {
     if (this.form.valid) {
       const expiresAt = this.form.value.expiresAt ? this.form.value.expiresAt.toISOString() : null;
-      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt });
+      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt, sendTest: this.form.value.sendTest, sendAsUser: this.form.value.sendAsUser });
     }
   }
 

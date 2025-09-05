@@ -6,6 +6,9 @@
     <li *ngFor="let p of results.pieces">
       <a [routerLink]="['/pieces', p.id]">{{ p.title }}</a>
       <span *ngIf="p.choir_repertoire?.rating"> (Bewertung: {{ p.choir_repertoire?.rating }})</span>
+      <div>
+        {{ p.composer?.name || p.origin }}<span *ngIf="getCollectionRef(p) as ref">, {{ ref }}</span>
+      </div>
     </li>
   </ul>
 </section>

@@ -94,7 +94,7 @@ exports.getChoirMembers = async (req, res, next) => {
             include: [{
                 model: db.user,
                 as: 'users',
-                attributes: ['id', 'name', 'email', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir'],
+                attributes: ['id', 'firstName', 'name', 'email', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir'],
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
@@ -113,6 +113,7 @@ exports.getChoirMembers = async (req, res, next) => {
         const members = choir.users.map(user => {
             const base = {
                 id: user.id,
+                firstName: user.firstName,
                 name: user.name,
                 email: user.email,
                 voice: user.voice,

@@ -11,6 +11,16 @@ module.exports = (sequelize, DataTypes) => {
     expiresAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    published: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
+    },
+    sendAsUser: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   });
   return Post;

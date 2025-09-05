@@ -40,8 +40,8 @@ exports.findByMonth = async (req, res) => {
                 model: db.plan_entry,
                 as: 'entries',
                 include: [
-                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
+                    { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -110,8 +110,8 @@ exports.downloadPdf = async (req, res) => {
                 model: db.plan_entry,
                 as: 'entries',
                 include: [
-                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
+                    { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -140,8 +140,8 @@ exports.emailPdf = async (req, res) => {
                 model: db.plan_entry,
                 as: 'entries',
                 include: [
-                    { model: db.user, as: 'director', attributes: ['id', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'name'], required: false }
+                    { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]

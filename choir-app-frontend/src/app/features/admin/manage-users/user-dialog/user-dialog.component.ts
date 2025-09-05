@@ -23,6 +23,7 @@ export class UserDialogComponent {
   ) {
     this.title = data ? 'Benutzer bearbeiten' : 'Benutzer hinzufügen';
     this.form = this.fb.group({
+      firstName: [data?.firstName || '', Validators.required],
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
       street: [data?.street || ''],

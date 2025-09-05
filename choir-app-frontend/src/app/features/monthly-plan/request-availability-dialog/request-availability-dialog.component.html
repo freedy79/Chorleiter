@@ -3,7 +3,7 @@
   <p>Empfänger auswählen:</p>
   <mat-selection-list (selectionChange)="toggle($event.options[0].value, $event.options[0].selected)">
     <mat-list-option *ngFor="let m of data.members" [value]="m.id">
-      {{ m.name }} ({{ m.email }})
+      {{ m.name }}, {{ m.firstName }} ({{ m.email }})
     </mat-list-option>
   </mat-selection-list>
 </div>

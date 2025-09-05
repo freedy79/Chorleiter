@@ -6,7 +6,7 @@
       <input type="text" matInput formControlName="user" [matAutocomplete]="auto" cdkFocusInitial>
       <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayFn.bind(this)">
         <mat-option *ngFor="let u of filteredUsers | async" [value]="u">
-          {{u.name}} ({{u.email}})
+          {{u.name}}, {{u.firstName}} ({{u.email}})
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
