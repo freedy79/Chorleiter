@@ -17,18 +17,20 @@
       <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
       <mat-list>
         <ng-container *ngFor="let item of program.items">
-          <a *ngIf="item.pieceId; else noPiece"
-             mat-list-item
-             [routerLink]="['/pieces', item.pieceId]">
-            <div matLine *ngIf="getItemComposer(item)">{{ getItemComposer(item) }}</div>
-            <div matLine>{{ getItemTitle(item) }}</div>
-            <div matLine *ngIf="getItemSubtitle(item)">{{ getItemSubtitle(item) }}</div>
-          </a>
+          <div class="item-container">
+            <a *ngIf="item.pieceId; else noPiece"
+              mat-list-item class="clickable"
+              [routerLink]="['/pieces', item.pieceId]">
+              <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+              <div matLine class="title">{{ getItemTitle(item) }}</div>
+              <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+            </a>
+          </div>
           <ng-template #noPiece>
             <mat-list-item>
-              <div matLine *ngIf="getItemComposer(item)">{{ getItemComposer(item) }}</div>
-              <div matLine>{{ getItemTitle(item) }}</div>
-              <div matLine *ngIf="getItemSubtitle(item)">{{ getItemSubtitle(item) }}</div>
+              <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+              <div matLine class="title">{{ getItemTitle(item) }}</div>
+              <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
             </mat-list-item>
           </ng-template>
         </ng-container>
