@@ -24,9 +24,8 @@ function sameDate(a: Date, b: Date): boolean {
 
 function previousSunday(date: Date): Date {
   const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  while (d.getUTCDay() !== 0) {
-    d.setUTCDate(d.getUTCDate() - 1);
-  }
+  const diff = d.getUTCDay();
+  d.setUTCDate(d.getUTCDate() - diff);
   return d;
 }
 
