@@ -114,12 +114,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private updateCounterPlan(): void {
     const dateMap = new Map<string, string>();
     for (const e of this.entries) {
+      if (isNaN(parseDateOnly(e.date).getTime())) continue;
       const key = this.dateKey(e.date);
       if (!dateMap.has(key)) dateMap.set(key, e.date);
     }
     const dateKeys = Array.from(dateMap.keys()).sort();
     this.counterPlanDateKeys = dateKeys;
-    this.counterPlanDates = dateKeys.map(k => parseDateOnly(dateMap.get(k)!));
+    this.counterPlanDates = dateKeys.map(k => parseDateOnly(dateMap.get(k)!)).filter(d => !isNaN(d.getTime()));
 
     const persons: UserInChoir[] = [];
     [...this.directors, ...this.organists].forEach(u => {
@@ -194,7 +195,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
       next: plan => {
         this.plan = plan;
-        this.entries = (plan?.entries || []).map(e => ({
+        const valid = (plan?.entries || []).filter(e => !isNaN(parseDateOnly(e.date).getTime()));
+        this.entries = valid.map(e => ({
           ...e,
           holidayHint: getHolidayName(parseDateOnly(e.date)) || undefined
         }));
