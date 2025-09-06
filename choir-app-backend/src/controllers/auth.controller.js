@@ -5,6 +5,8 @@ const LoginAttempt = db.login_attempt;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
+const crypto = require("crypto");
+const emailService = require("../services/email.service");
 
 async function ensureDemoAccount() {
     const [choir] = await Choir.findOrCreate({
@@ -46,6 +48,10 @@ async function resetDemoEvents(user, choir) {
     }
 }
 
+function friendlyResetMessage() {
+    return "Du hast dein Passwort dreimal falsch eingegeben. Wir haben dir eine E-Mail zum Zurücksetzen deines Passworts geschickt. Bis dahin ist kein Login möglich.";
+}
+
 exports.signup = async (req, res) => {
     try {
     const [choir] = await db.choir.findOrCreate({ where: { name: req.body.choirName }, defaults: { name: req.body.choirName }});
@@ -84,6 +90,13 @@ exports.signin = async (req, res) => {
       return res.status(404).send({ message: reason });
     }
 
+    if (user.resetToken) {
+      const reason = "Password reset required";
+      logger.warn(`Login blocked for ${email}: ${reason}`);
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
+      return res.status(403).send({ message: friendlyResetMessage(), resetMailSent: true });
+    }
+
     if (!user.password) {
       const reason = "Registration not completed.";
       logger.warn(`Login failed for ${email}: ${reason}`);
@@ -96,6 +109,26 @@ exports.signin = async (req, res) => {
       const reason = "Invalid password";
       logger.warn(`Login failed for ${email}: ${reason}`);
       await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
+
+      const attempts = await LoginAttempt.findAll({
+        where: { email },
+        order: [['createdAt', 'DESC']],
+        limit: 3
+      });
+
+      const threeFails = attempts.length === 3 && attempts.every(a => a.success === false);
+      if (threeFails && !user.resetToken) {
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiry = new Date(Date.now() + 60 * 60 * 1000);
+        await user.update({ resetToken: token, resetTokenExpiry: expiry });
+        try {
+          await emailService.sendPasswordResetMail(user.email, token, user.name);
+        } catch (err) {
+          logger.error(`Could not send password reset mail to ${email}: ${err.message}`);
+        }
+        return res.status(403).send({ message: friendlyResetMessage(), resetMailSent: true });
+      }
+
       return res.status(401).send({ message: "Invalid Password!" });
     }
 
