@@ -75,6 +75,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   public navItems: NavItem[] = [];
   dienstplanEnabled$: Observable<boolean>;
+  programsEnabled$: Observable<boolean>;
 
   isHandset$: Observable<boolean>;
   isTablet$: Observable<boolean> | undefined;
@@ -129,6 +130,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.dienstplanEnabled$ = this.authService.activeChoir$.pipe(
       map(c => c?.modules?.dienstplan !== false)
+    );
+
+    this.programsEnabled$ = this.authService.activeChoir$.pipe(
+      map(c => c?.modules?.programs !== false)
     );
 
     this.isLoggedIn$.pipe(
@@ -253,6 +258,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     const dienstplanVisible$ = combineLatest([this.isLoggedIn$, this.dienstplanEnabled$]).pipe(
       map(([loggedIn, enabled]) => loggedIn && enabled)
     );
+    const programsVisible$ = combineLatest([this.canCreateProgram$, this.programsEnabled$]).pipe(
+      map(([canCreate, enabled]) => canCreate && enabled)
+    );
 
     this.navItems = [
       {
@@ -295,7 +303,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'programs',
         displayName: 'Programme',
         route: '/programs',
-        visibleSubject: this.canCreateProgram$,
+        visibleSubject: this.visibleFor('programs', programsVisible$),
       },
       {
         key: 'stats',

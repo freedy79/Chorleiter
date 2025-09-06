@@ -8,6 +8,7 @@ export interface Choir {
     pieceCount?: number;
     modules?: {
         dienstplan?: boolean;
+        programs?: boolean;
         joinByLink?: boolean;
         /**
          * Visibility configuration for main navigation items for singers.
