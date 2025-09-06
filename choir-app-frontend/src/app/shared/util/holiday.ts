@@ -22,22 +22,22 @@ function sameDate(a: Date, b: Date): boolean {
          a.getUTCDate() === b.getUTCDate();
 }
 
-function previousSunday(date: Date): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1));
-  let counter = 0;
-  while ((d.getUTCDay() !== 0) && (counter < 365)) {
-    d.setUTCDate(d.getUTCDate() - 1);
-    counter++;
-    console.log("DAte: ", d.toUTCString(), " counter ", counter);
-  }
+function previousWeekday(date: Date, weekday: number): Date {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  let diff = (d.getUTCDay() - weekday + 7) % 7;
+  if (diff === 0) diff = 7;
+  d.setUTCDate(d.getUTCDate() - diff);
   return d;
+}
+
+function previousSunday(date: Date): Date {
+  return previousWeekday(date, 0);
 }
 
 function firstSundayOfMonth(year: number, month: number): Date {
   const d = new Date(Date.UTC(year, month, 1));
-  while (d.getUTCDay() !== 0) {
-    d.setUTCDate(d.getUTCDate() + 1);
-  }
+  const diff = (7 - d.getUTCDay()) % 7;
+  d.setUTCDate(1 + diff);
   return d;
 }
 
@@ -77,14 +77,7 @@ export function getHolidayName(date: Date): string | null {
   if (sameDate(date, advent3)) return '3. Advent';
   if (sameDate(date, advent4)) return '4. Advent';
 
-  console.log("Penance");
-  const penance = new Date(Date.UTC(year, 10, 23 + 1));
-  let counter = 0;
-  while ((penance.getUTCDay() !== 3) && (counter < 365)) {
-    penance.setUTCDate(penance.getUTCDate() - 1);
-    counter++
-    console.log("Penance date: ", penance.toUTCString());
-  }
+  const penance = previousWeekday(new Date(Date.UTC(year, 10, 23)), 3);
   if (sameDate(date, penance)) return 'Bu\u00df- und Bettag';
 
   return null;
