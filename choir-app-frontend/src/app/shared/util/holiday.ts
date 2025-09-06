@@ -23,9 +23,13 @@ function sameDate(a: Date, b: Date): boolean {
 }
 
 function previousSunday(date: Date): Date {
-  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const diff = d.getUTCDay();
-  d.setUTCDate(d.getUTCDate() - diff);
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate() + 1));
+  let counter = 0;
+  while ((d.getUTCDay() !== 0) && (counter < 365)) {
+    d.setUTCDate(d.getUTCDate() - 1);
+    counter++;
+    console.log("DAte: ", d.toUTCString(), " counter ", counter);
+  }
   return d;
 }
 
@@ -73,9 +77,13 @@ export function getHolidayName(date: Date): string | null {
   if (sameDate(date, advent3)) return '3. Advent';
   if (sameDate(date, advent4)) return '4. Advent';
 
-  const penance = new Date(Date.UTC(year, 10, 23));
-  while (penance.getUTCDay() !== 3) {
+  console.log("Penance");
+  const penance = new Date(Date.UTC(year, 10, 23 + 1));
+  let counter = 0;
+  while ((penance.getUTCDay() !== 3) && (counter < 365)) {
     penance.setUTCDate(penance.getUTCDate() - 1);
+    counter++
+    console.log("Penance date: ", penance.toUTCString());
   }
   if (sameDate(date, penance)) return 'Bu\u00df- und Bettag';
 
