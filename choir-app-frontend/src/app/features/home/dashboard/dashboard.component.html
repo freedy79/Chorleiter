@@ -56,7 +56,7 @@
         Nur meine Termine
       </mat-slide-toggle>
       <mat-list>
-        <mat-list-item *ngFor="let ev of nextEvents$ | async" [ngStyle]="{ 'border-left': '4px solid ' + (choirColors[ev.choirId] || 'transparent'), 'padding-left': '8px' }">
+        <mat-list-item *ngFor="let ev of nextEvents$ | async" [ngStyle]="{ 'border-left': '4px solid ' + ((ev.choirId != null ? choirColors[ev.choirId] : undefined) || 'transparent'), 'padding-left': '8px' }">
           <a href="#" (click)="openEvent(ev); $event.preventDefault()">
             {{ ev.date | date:'shortDate' }} - {{ ev.choir?.name }} -
             {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}

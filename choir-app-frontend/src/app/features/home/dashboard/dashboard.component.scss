@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;
@@ -79,7 +81,7 @@ mat-card-content h3 {
  .clickable {
     cursor: pointer;
     &:hover {
-      background-color: darken(#eee, 5%);
+      background-color: color.adjust(#eee, $lightness: -5%);
     }
   }
 
