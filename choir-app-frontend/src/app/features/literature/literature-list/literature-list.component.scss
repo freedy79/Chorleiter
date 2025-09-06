@@ -72,10 +72,9 @@
   display: flex;
   flex-direction: column;
   position: relative; // Wichtig für den Lade-Spinner
-  // DIES IST DER SCHLÜSSEL: Dieser Container wächst, um den gesamten verbleibenden Platz einzunehmen.
-  flex-grow: 1;
-  // Verhindert, dass der Container selbst scrollt.
   overflow: hidden;
+  max-height: calc(100vh - 320px); // Adjust based on your layout
+  flex-grow: 1;
 }
 
 // Der Container, der tatsächlich scrollt

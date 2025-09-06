@@ -1,6 +1,10 @@
 <div class="stats-page">
 
   <div class="date-controls">
+    <div class="mode-toggle" *ngIf="stats?.globalAvailable">
+      <mat-slide-toggle [(ngModel)]="globalMode" (change)="onModeChange()">Alle Chöre</mat-slide-toggle>
+    </div>
+
     <mat-form-field appearance="fill">
       <mat-label>Von</mat-label>
       <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
@@ -23,25 +27,21 @@
     <button mat-raised-button color="primary" (click)="loadStats()">Statistik laden</button>
   </div>
 
-  <div class="mode-toggle" *ngIf="stats?.globalAvailable">
-    <mat-slide-toggle [(ngModel)]="globalMode" (change)="onModeChange()">Global</mat-slide-toggle>
-  </div>
-
   <ng-container *ngIf="stats">
     <mat-card>
-      <h3>Top 3 Gottesdienst-Stücke{{ globalMode ? ' (global)' : '' }}</h3>
+      <h3>Top 3 Gottesdienst-Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</h3>
       <ol>
         <li *ngFor="let item of stats.topServicePieces">
-          <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
+          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
         </li>
       </ol>
     </mat-card>
 
     <mat-card>
-      <h3>Meist geprobte Stücke{{ globalMode ? ' (global)' : '' }}</h3>
+      <h3>Meist geprobte Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</h3>
       <ol>
         <li *ngFor="let item of stats.topRehearsalPieces">
-          <a [routerLink]="['/pieces', item.id]">{{ item.title }}</a> ({{ item.count }}x)
+          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
         </li>
       </ol>
     </mat-card>
@@ -50,7 +50,7 @@
       <h3>Lange nicht verwendet</h3>
       <ol>
         <li *ngFor="let item of leastUsedPieces">
-          <a [routerLink]="['/pieces', item.id]">{{item.title}}</a> ({{item.count}} Monate)
+          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{item.title}}</a> ({{item.count}} Monate)
         </li>
       </ol>
     </mat-card>

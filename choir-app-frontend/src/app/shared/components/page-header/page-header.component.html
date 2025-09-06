@@ -1,4 +1,4 @@
-<div class="page-header">
+<div class="page-header" *ngIf="title && title !== 'Home'">
   <h1>{{ title }}</h1>
   <ng-content></ng-content>
 </div>
