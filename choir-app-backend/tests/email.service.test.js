@@ -2,13 +2,14 @@ const assert = require('assert');
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 const db = require('../src/models');
-const { buildPostEmail } = require('../src/services/email.service');
 
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
     await db.piece.create({ id: 1, title: 'Teststück' });
-    const { html, text } = await buildPostEmail('**Hallo** {{1}}', 'Testchor');
+
+    const emailService1 = require('../src/services/email.service');
+    const { html, text } = await emailService1.buildPostEmail('**Hallo** {{1}}', 'Testchor');
     assert.ok(html.includes('<strong>Hallo</strong>'), 'Markdown not converted');
     assert.ok(html.includes('Testchor'), 'Choir name missing in html');
     assert.ok(html.includes('https://nak-chorleiter.de'), 'Link missing in html');
@@ -16,6 +17,17 @@ const { buildPostEmail } = require('../src/services/email.service');
     assert.ok(text.includes('Testchor'), 'Choir name missing in text');
     assert.ok(text.includes('https://nak-chorleiter.de'), 'Link missing in text');
     assert.ok(text.includes('[Teststück](https://nak-chorleiter.de/pieces/1)'), 'Piece link missing in text');
+
+    const emailTransporter = require('../src/services/emailTransporter');
+    const originalSendMail = emailTransporter.sendMail;
+    let capturedOptions;
+    emailTransporter.sendMail = async (opts) => { capturedOptions = opts; };
+    delete require.cache[require.resolve('../src/services/email.service')];
+    const emailService2 = require('../src/services/email.service');
+    await emailService2.sendPostNotificationMail(['user@example.com'], 'Titel', 'Text', 'Testchor', 'author@example.com');
+    assert.strictEqual(capturedOptions.replyTo, 'author@example.com', 'Reply-To not set correctly');
+    emailTransporter.sendMail = originalSendMail;
+
     console.log('email.service tests passed');
     await db.sequelize.close();
   } catch (err) {
@@ -24,4 +36,3 @@ const { buildPostEmail } = require('../src/services/email.service');
     process.exit(1);
   }
 })();
-

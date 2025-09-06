@@ -35,7 +35,7 @@ exports.create = async (req, res) => {
 
     const author = await db.user.findByPk(req.userId);
     const choir = await db.choir.findByPk(req.activeChoirId);
-    const from = sendAsUser && author?.email ? author.email : undefined;
+    const replyTo = sendAsUser && author?.email ? author.email : undefined;
 
     if (publish) {
       const members = await db.user.findAll({
@@ -43,16 +43,16 @@ exports.create = async (req, res) => {
       });
       const emails = members.map(u => u.email).filter(e => e);
       if (emails.length > 0 && choir) {
-        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, from);
+        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, replyTo);
       }
     } else if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       if (author?.email) {
         const choir = await db.choir.findByPk(req.activeChoirId);
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
       }
     } else if (sendTest && author?.email) {
-      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
+      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
     }
 
     res.status(201).send(full);
@@ -150,9 +150,9 @@ exports.update = async (req, res) => {
     if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       const choir = await db.choir.findByPk(req.activeChoirId);
-      const from = post.sendAsUser && author?.email ? author.email : undefined;
+      const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
       if (author?.email) {
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, from);
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
       }
     }
     res.status(200).send(full);
@@ -179,8 +179,8 @@ exports.publish = async (req, res) => {
     if (emails.length > 0) {
       const author = await db.user.findByPk(post.userId);
       const choir = await db.choir.findByPk(req.activeChoirId);
-      const from = post.sendAsUser && author?.email ? author.email : undefined;
-      await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, from);
+      const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
+      await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, replyTo);
     }
     res.status(200).send(full);
   } catch (err) {
