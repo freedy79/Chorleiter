@@ -38,7 +38,6 @@ export class ManageChoirComponent implements OnInit {
   singerMenu: Record<string, boolean> = {
     events: true,
     dienstplan: true,
-    termine: true,
     availability: true,
     posts: true,
     stats: true,
@@ -50,7 +49,6 @@ export class ManageChoirComponent implements OnInit {
   menuOptions = [
     { key: 'events', label: 'Ereignisse' },
     { key: 'dienstplan', label: 'Dienstplan' },
-    { key: 'termine', label: 'Meine Termine' },
     { key: 'availability', label: 'Verfügbarkeiten' },
     { key: 'posts', label: 'Beiträge' },
     { key: 'stats', label: 'Statistik' },

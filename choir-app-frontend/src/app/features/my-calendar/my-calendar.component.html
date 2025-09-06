@@ -13,6 +13,7 @@
     <h3>{{ selectedDate | date:'longDate' }}</h3>
     <mat-list>
       <mat-list-item *ngFor="let ev of eventsForSelectedDate">
+        <span class="choir-dot" *ngIf="$any(ev).choirId" [style.background]="choirColors[$any(ev).choirId]"></span>
         <ng-container [ngSwitch]="$any(ev).entryType">
           <ng-container *ngSwitchCase="'PLAN'">
             <div matLine>
@@ -29,6 +30,7 @@
           <ng-container *ngSwitchDefault>
             <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel">
               <a [routerLink]="['/events']" [queryParams]="{ eventId: $any(ev).id }" class="event-link">
+                {{ $any(ev).choir?.name }} -
                 {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' : $any(ev).name) }}
               </a>
             </div>

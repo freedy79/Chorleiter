@@ -24,7 +24,6 @@ import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.compon
 import { AvailabilityComponent } from '@features/availability/availability.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { StatisticsComponent } from '@features/home/stats/statistics.component';
-import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { EmailConfirmComponent } from '@features/user/email-confirm/email-confirm.component';
@@ -126,12 +125,6 @@ export const routes: Routes = [
                 component: MonthlyPlanComponent,
                 canActivate: [AuthGuard],
                 data: { title: 'Dienstplan' }
-            },
-            {
-                path: 'termine',
-                component: MyCalendarComponent,
-                canActivate: [AuthGuard],
-                data: { title: 'Meine Termine' }
             },
             {
                 path: 'availability',

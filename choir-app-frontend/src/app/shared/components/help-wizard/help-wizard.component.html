@@ -28,7 +28,6 @@
         <ul>
           <li *ngIf="menuVisible('dashboard') | async">Dashboard</li>
           <li *ngIf="menuVisible('dienstplan') | async">Dienstplan</li>
-          <li *ngIf="menuVisible('termine') | async">Meine Termine</li>
           <li *ngIf="menuVisible('posts') | async">Beiträge</li>
           <li *ngIf="menuVisible('repertoire') | async">Repertoire</li>
           <li *ngIf="menuVisible('collections') | async">Sammlungen</li>
@@ -44,9 +43,9 @@
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>
       </div>
     </mat-step>
-    <mat-step *ngIf="(isSingerOnly$ | async) && (menuVisible('termine') | async)">
+    <mat-step *ngIf="isSingerOnly$ | async">
       <ng-template matStepLabel>Kalender</ng-template>
-      <p>Unter &bdquo;Meine Termine&ldquo; kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
+      <p>Auf dem Dashboard findest du einen Kalender. Dort kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
       <div>
         <button mat-button matStepperPrevious>Zur&uuml;ck</button>
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>
@@ -54,7 +53,7 @@
     </mat-step>
     <mat-step *ngIf="!(isSingerOnly$ | async)">
       <ng-template matStepLabel>Kalender</ng-template>
-      <p>Unter &bdquo;Meine Termine&ldquo; kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
+      <p>Auf dem Dashboard findest du einen Kalender. Dort kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
       <div>
         <button mat-button matStepperPrevious>Zur&uuml;ck</button>
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>

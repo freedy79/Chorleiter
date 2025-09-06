@@ -23,6 +23,7 @@ import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserService } from '@core/services/user.service';
 import { LibraryItem } from '@core/models/library-item';
+import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -33,7 +34,8 @@ import { LibraryItem } from '@core/models/library-item';
     MaterialModule,
     FormsModule,
     EventCardComponent,
-    MarkdownPipe
+    MarkdownPipe,
+    MyCalendarComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -53,6 +55,8 @@ export class DashboardComponent implements OnInit {
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$: Observable<boolean>;
+  choirColors: Record<number, string> = {};
+  private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
 
   constructor(
     private apiService: ApiService,
@@ -72,6 +76,11 @@ export class DashboardComponent implements OnInit {
           !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
       })
     );
+    this.authService.availableChoirs$.subscribe(choirs => {
+      choirs.forEach((c, idx) => {
+        this.choirColors[c.id] = this.colorPalette[idx % this.colorPalette.length];
+      });
+    });
   }
 
   ngOnInit(): void {

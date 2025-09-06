@@ -12,6 +12,10 @@ const controller = require('../src/controllers/event.controller');
     const choir = await db.choir.create({ name: 'Test Choir' });
     const user = await db.user.create({ email: 't@example.com', roles: ['USER'] });
     const organist = await db.user.create({ email: 'o@example.com', roles: ['USER'] });
+    await db.user_choir.bulkCreate([
+      { userId: user.id, choirId: choir.id },
+      { userId: organist.id, choirId: choir.id }
+    ]);
     const plan = await db.monthly_plan.create({ choirId: choir.id, year: 2024, month: 1 });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
@@ -62,6 +66,7 @@ const controller = require('../src/controllers/event.controller');
 
     // --- Next events tests ---
     const otherUser = await db.user.create({ email: 'other@example.com', roles: ['USER'] });
+    await db.user_choir.create({ userId: otherUser.id, choirId: choir.id });
     await controller.create({ ...baseReq, body: { date: '2099-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
     const futureId = res.data.event.id;
     await controller.create({ ...baseReq, body: { date: '2099-01-02T10:00:00Z', type: 'REHEARSAL', pieceIds: [], directorId: otherUser.id } }, res);
