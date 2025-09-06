@@ -31,6 +31,7 @@ export class ManageChoirComponent implements OnInit {
 
   isChoirAdmin = false;
   dienstplanEnabled = false;
+  programsEnabled = false;
   joinByLinkEnabled = false;
   isDirector = false;
   isAdmin = false;
@@ -122,6 +123,7 @@ export class ManageChoirComponent implements OnInit {
         this.isChoirAdmin = pageData.isChoirAdmin;
         this.updateCanManageMenu();
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
+        this.programsEnabled = !!pageData.choirDetails.modules?.programs;
         this.joinByLinkEnabled = !!pageData.choirDetails.modules?.joinByLink;
         const menu = pageData.choirDetails.modules?.singerMenu || {};
         this.menuOptions.forEach(opt => {
@@ -275,7 +277,7 @@ export class ManageChoirComponent implements OnInit {
       return;
     }
 
-    const modules = { dienstplan: this.dienstplanEnabled, joinByLink: this.joinByLinkEnabled, singerMenu: this.singerMenu };
+    const modules = { dienstplan: this.dienstplanEnabled, programs: this.programsEnabled, joinByLink: this.joinByLinkEnabled, singerMenu: this.singerMenu };
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {

@@ -43,6 +43,10 @@
         Dienstplan anzeigen
       </mat-checkbox>
 
+      <mat-checkbox [(ngModel)]="programsEnabled" (change)="onModulesChange()">
+        Programme verwenden
+      </mat-checkbox>
+
       <mat-checkbox [(ngModel)]="joinByLinkEnabled" (change)="onModulesChange()">
         Beitritt als Sänger per Link erlauben
       </mat-checkbox>
