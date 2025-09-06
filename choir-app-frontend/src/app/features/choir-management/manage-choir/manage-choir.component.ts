@@ -75,6 +75,7 @@ export class ManageChoirComponent implements OnInit {
 
   choirInfoExpanded = true;
   membersExpanded = true;
+  choirSettingsExpanded = false;
   joinLink = '';
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
@@ -181,6 +182,10 @@ export class ManageChoirComponent implements OnInit {
 
   toggleChoirInfo(): void {
     this.choirInfoExpanded = !this.choirInfoExpanded;
+  }
+
+  toggleChoirSetting(): void {
+    this.choirSettingsExpanded = !this.choirSettingsExpanded;
   }
 
   toggleMembers(): void {

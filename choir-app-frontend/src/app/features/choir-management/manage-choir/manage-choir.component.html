@@ -34,7 +34,7 @@
   </mat-card>
 
   <!-- Einstellungen Card -->
-  <mat-card class="form-card" *ngIf="isChoirAdmin">
+  <mat-card class="form-card" *ngIf="isChoirAdmin" class="collapsible-header" (click)="toggleChoirSetting()">
     <mat-card-header>
       <mat-card-title>Einstellungen</mat-card-title>
     </mat-card-header>
