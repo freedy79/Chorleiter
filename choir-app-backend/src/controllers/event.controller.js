@@ -172,21 +172,31 @@ exports.findLast = async (req, res) => {
  * Get all events for the active choir. Optionally filter by type.
  */
 exports.findAll = async (req, res) => {
-    const { type } = req.query;
-    const where = { choirId: req.activeChoirId };
+    const { type, allChoirs } = req.query;
+    const where = {};
+    if (allChoirs === 'true') {
+        const choirIds = (await db.user_choir.findAll({
+            where: { userId: req.userId },
+            attributes: ['choirId']
+        })).map((r) => r.choirId);
+        where.choirId = { [Op.in]: choirIds };
+    } else {
+        where.choirId = req.activeChoirId;
+    }
     if (type) {
         where.type = type.toUpperCase();
     }
 
     const events = await Event.findAll({
-            where,
-            order: [['date', 'DESC']],
-            include: [
-                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
-            ]
-        });
+        where,
+        order: [['date', 'DESC']],
+        include: [
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+            { model: db.choir, as: 'choir', attributes: ['id', 'name'] },
+            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+        ]
+    });
     res.status(200).send(events);
 };
 
@@ -252,8 +262,13 @@ exports.findNext = async (req, res) => {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
 
+    const choirIds = (await db.user_choir.findAll({
+        where: { userId: req.userId },
+        attributes: ['choirId']
+    })).map((r) => r.choirId);
+
     const where = {
-        choirId: req.activeChoirId,
+        choirId: { [Op.in]: choirIds },
         date: { [Op.gte]: startOfToday }
     };
     if (mine) {
@@ -263,15 +278,16 @@ exports.findNext = async (req, res) => {
         ];
     }
     const events = await Event.findAll({
-            where,
-            order: [['date', 'ASC']],
-            limit,
-            include: [
-                { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
-            ]
-        });
+        where,
+        order: [['date', 'ASC']],
+        limit,
+        include: [
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+            { model: db.choir, as: 'choir', attributes: ['id', 'name'] },
+            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+        ]
+    });
     res.status(200).send(events);
 };
 

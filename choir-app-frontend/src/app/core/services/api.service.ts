@@ -355,8 +355,8 @@ export class ApiService {
     return this.eventService.createEvent(eventData);
   }
 
-  getEvents(type?: 'SERVICE' | 'REHEARSAL'): Observable<Event[]> {
-    return this.eventService.getEvents(type);
+  getEvents(type?: 'SERVICE' | 'REHEARSAL', allChoirs: boolean = false): Observable<Event[]> {
+    return this.eventService.getEvents(type, allChoirs);
   }
 
   getNextEvents(limit?: number, mine?: boolean): Observable<Event[]> {

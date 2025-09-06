@@ -48,6 +48,8 @@ export class MyCalendarComponent implements OnInit {
     private loadedPlanMonths = new Set<string>();
     allPlanEntries: PlanEntry[] = [];
     isAdmin = false;
+    choirColors: Record<number, string> = {};
+    private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
 
     @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
     @ViewChild(MatCalendar) calendar?: MatCalendar<Date>;
@@ -64,6 +66,11 @@ export class MyCalendarComponent implements OnInit {
 
     ngOnInit(): void {
         this.auth.isAdmin$.subscribe((v) => (this.isAdmin = v));
+        this.auth.availableChoirs$.subscribe((choirs) => {
+            choirs.forEach((c, idx) => {
+                this.choirColors[c.id] = this.colorPalette[idx % this.colorPalette.length];
+            });
+        });
         this.loadEvents();
         const year = this.selectedDate.getFullYear();
         [year - 1, year, year + 1].forEach((y) => {
@@ -92,7 +99,7 @@ export class MyCalendarComponent implements OnInit {
     }
 
     private loadEvents(): void {
-        this.api.getEvents().subscribe((events) => {
+        this.api.getEvents(undefined, true).subscribe((events) => {
             this.events = events;
             this.eventMap = {};
             for (const ev of events) {

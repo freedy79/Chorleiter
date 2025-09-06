@@ -20,9 +20,10 @@ export class EventService {
     return this.http.post<CreateEventResponse>(`${this.apiUrl}/events`, eventData);
   }
 
-  getEvents(type?: 'SERVICE' | 'REHEARSAL'): Observable<Event[]> {
+  getEvents(type?: 'SERVICE' | 'REHEARSAL', allChoirs: boolean = false): Observable<Event[]> {
     let params = new HttpParams();
     if (type) params = params.set('type', type);
+    if (allChoirs) params = params.set('allChoirs', 'true');
     return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
   }
 

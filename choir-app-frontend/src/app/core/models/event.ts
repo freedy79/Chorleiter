@@ -51,6 +51,8 @@ export interface Event {
   finalized?: boolean;
   version?: number;
   monthlyPlan?: { year: number; month: number; finalized: boolean; version: number } | null;
+  choirId?: number;
+  choir?: { id: number; name: string };
   pieces: EventPiece[];
 }
 
