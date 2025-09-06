@@ -5,6 +5,8 @@ import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 import { AuthService } from 'src/app/core/services/auth.service';
 import { MaterialModule } from '@modules/material.module';
+import { MatDialog } from '@angular/material/dialog';
+import { PasswordResetDialogComponent } from './password-reset-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -29,7 +31,8 @@ export class LoginComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router, // Injizieren Sie den Angular Router
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private dialog: MatDialog
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -72,7 +75,9 @@ export class LoginComponent implements OnInit {
       error: (err) => {
         this.isLoading = false;
         const status = err.status;
-        if (status === 401 || status === 404 || status === 403) {
+        if (status === 403 && err.error?.resetMailSent) {
+          this.dialog.open(PasswordResetDialogComponent);
+        } else if (status === 401 || status === 404 || status === 403) {
           this.loginError = 'Benutzer oder Passwort ungültig';
         } else {
           this.loginError = err.error?.message || 'Anmeldung fehlgeschlagen';
