@@ -3,6 +3,8 @@ const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
+const { exec, spawn } = require('child_process');
+const path = require('path');
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
 exports.getAll = (model) => async (req, res) => {
@@ -598,5 +600,39 @@ exports.updateSystemAdminEmail = async (req, res) => {
         res.status(200).send({ value: setting.value });
     } catch (err) {
         res.status(500).send({ message: err.message });
+    }
+};
+
+/**
+ * Lädt das aktuelle Git-Repository und startet optional das Deploy-Skript.
+ * Übergabe von `deploy=true` im Body oder Query startet das Skript nach dem Pull.
+ */
+exports.pullAndDeploy = async (req, res) => {
+    const repoPath = path.resolve(__dirname, '../../../');
+    try {
+        const { stdout } = await new Promise((resolve, reject) => {
+            exec('git pull', { cwd: repoPath }, (error, stdout, stderr) => {
+                if (error) {
+                    reject(stderr || error.message);
+                } else {
+                    resolve({ stdout });
+                }
+            });
+        });
+
+        const shouldDeploy = req.body?.deploy === true || req.query.deploy === 'true';
+        if (shouldDeploy) {
+            const child = spawn('sh', ['deploy.sh'], {
+                cwd: repoPath,
+                detached: true,
+                stdio: 'ignore'
+            });
+            child.unref();
+        }
+
+        res.status(200).send({ message: stdout.trim(), deployed: shouldDeploy });
+    } catch (err) {
+        logger.error('Deployment failed', err);
+        res.status(500).send({ message: err.toString() });
     }
 };
