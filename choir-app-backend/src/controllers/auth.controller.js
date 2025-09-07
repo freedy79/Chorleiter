@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const logger = require("../config/logger");
 const crypto = require("crypto");
 const emailService = require("../services/email.service");
+const { Op } = require("sequelize");
 
 async function ensureDemoAccount() {
     const [choir] = await Choir.findOrCreate({
@@ -110,14 +111,20 @@ exports.signin = async (req, res) => {
       logger.warn(`Login failed for ${email}: ${reason}`);
       await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
 
-      const attempts = await LoginAttempt.findAll({
-        where: { email },
-        order: [['createdAt', 'DESC']],
-        limit: 3
+      const lastSuccess = await LoginAttempt.findOne({
+        where: { email, success: true },
+        order: [['createdAt', 'DESC']]
       });
 
-      const threeFails = attempts.length === 3 && attempts.every(a => a.success === false);
-      if (threeFails && !user.resetToken) {
+      const failedAttempts = await LoginAttempt.count({
+        where: {
+          email,
+          success: false,
+          ...(lastSuccess ? { createdAt: { [Op.gt]: lastSuccess.createdAt } } : {})
+        }
+      });
+
+      if (failedAttempts >= 3 && !user.resetToken) {
         const token = crypto.randomBytes(32).toString('hex');
         const expiry = new Date(Date.now() + 60 * 60 * 1000);
         await user.update({ resetToken: token, resetTokenExpiry: expiry });
