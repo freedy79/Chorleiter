@@ -8,8 +8,15 @@ const { marked } = require('marked');
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   if (emailDisabled()) return;
   const template = await db.mail_template.findOne({ where: { type } });
-  const name = replacements.surname || replacements.name || to.split('@')[0];
-  const final = { surname: name, date: new Date().toLocaleString('de-DE'), ...replacements };
+
+  // merge defaults first to avoid undefined values overriding fallbacks
+  const final = { date: new Date().toLocaleString('de-DE'), ...replacements };
+
+  // prefer a provided first name over a surname and fall back to email prefix
+  if (!final.surname) {
+    final.surname = final.name || to.split('@')[0];
+  }
+
   const { subject, html, text } = buildTemplate(template, type, final);
   await sendMail({ to, subject, html, text }, overrideSettings);
 }

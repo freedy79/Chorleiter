@@ -24,12 +24,19 @@ const db = require('../src/models');
     emailTransporter.sendMail = async (opts) => { capturedOptions = opts; };
     delete require.cache[require.resolve('../src/services/email.service')];
     const emailService2 = require('../src/services/email.service');
-    await emailService2.sendPostNotificationMail(['user@example.com'], 'Titel', 'Text', 'Testchor', 'author@example.com');
-    assert.strictEqual(capturedOptions.replyTo, 'author@example.com', 'Reply-To not set correctly');
-    emailTransporter.sendMail = originalSendMail;
+      await emailService2.sendPostNotificationMail(['user@example.com'], 'Titel', 'Text', 'Testchor', 'author@example.com');
+      assert.strictEqual(capturedOptions.replyTo, 'author@example.com', 'Reply-To not set correctly');
 
-    console.log('email.service tests passed');
-    await db.sequelize.close();
+      // Test placeholder fallback when no name is provided
+      capturedOptions = undefined;
+      await db.mail_template.create({ type: 'invite', subject: '', body: 'Hallo {{surname}}' });
+      await emailService2.sendInvitationMail('tester@example.com', 'tok', 'Choir', new Date(), undefined, 'Invitor');
+      assert.ok(capturedOptions.html.includes('tester'), 'Fallback to email prefix failed');
+
+      emailTransporter.sendMail = originalSendMail;
+
+      console.log('email.service tests passed');
+      await db.sequelize.close();
   } catch (err) {
     console.error(err);
     await db.sequelize.close();
