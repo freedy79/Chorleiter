@@ -14,7 +14,12 @@
             (change)="toggleInviteHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="inviteHtmlMode" #inviteEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="inviteHtmlMode"
+          formControlName="inviteBody"
+        ></editor>
         <textarea
           *ngIf="inviteHtmlMode"
           class="html-editor"
@@ -44,7 +49,12 @@
             (change)="toggleResetHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="resetHtmlMode" #resetEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="resetHtmlMode"
+          formControlName="resetBody"
+        ></editor>
         <textarea
           *ngIf="resetHtmlMode"
           class="html-editor"
@@ -73,7 +83,12 @@
             (change)="toggleEmailChangeHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="emailChangeHtmlMode" #emailChangeEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="emailChangeHtmlMode"
+          formControlName="emailChangeBody"
+        ></editor>
         <textarea *ngIf="emailChangeHtmlMode" class="html-editor" formControlName="emailChangeBody"></textarea>
         <p class="hint">Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}</p>
       </div>
@@ -96,7 +111,12 @@
             (change)="toggleAvailabilityHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="availabilityHtmlMode" #availabilityEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="availabilityHtmlMode"
+          formControlName="availabilityBody"
+        ></editor>
         <textarea
           *ngIf="availabilityHtmlMode"
           class="html-editor"
@@ -125,7 +145,12 @@
             (change)="toggleChangeHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="changeHtmlMode" #changeEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="changeHtmlMode"
+          formControlName="changeBody"
+        ></editor>
         <textarea
           *ngIf="changeHtmlMode"
           class="html-editor"
@@ -154,7 +179,12 @@
             (change)="toggleMonthlyHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <div [hidden]="monthlyHtmlMode" #monthlyEditor class="quill-editor"></div>
+        <editor
+          apiKey="no-api-key"
+          [init]="editorConfig"
+          [hidden]="monthlyHtmlMode"
+          formControlName="monthlyBody"
+        ></editor>
         <textarea
           *ngIf="monthlyHtmlMode"
           class="html-editor"
