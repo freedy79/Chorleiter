@@ -1,14 +1,26 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Clipboard } from '@angular/cdk/clipboard';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { EventCardComponent } from './event-card.component';
 
 describe('EventCardComponent', () => {
   let component: EventCardComponent;
   let fixture: ComponentFixture<EventCardComponent>;
+  let clipboardSpy: jasmine.SpyObj<Clipboard>;
+  let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
 
   beforeEach(async () => {
+    clipboardSpy = jasmine.createSpyObj('Clipboard', ['copy']);
+    clipboardSpy.copy.and.returnValue(true);
+    snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+
     await TestBed.configureTestingModule({
-      imports: [EventCardComponent]
+      imports: [EventCardComponent],
+      providers: [
+        { provide: Clipboard, useValue: clipboardSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy }
+      ]
     })
     .compileComponents();
 
@@ -49,5 +61,20 @@ describe('EventCardComponent', () => {
     fixture.detectChanges();
     const noteEl = fixture.nativeElement.querySelector('.event-note');
     expect(noteEl.textContent).toContain('General rehearsal');
+  });
+
+  it('should copy formatted piece list to clipboard', () => {
+    component.event = {
+      id: 3,
+      date: '2023-01-03',
+      type: 'REHEARSAL',
+      createdAt: '2023-01-03',
+      updatedAt: '2023-01-03',
+      pieces: [
+        { id: 1, title: 'Song', composer: { name: 'Comp' }, collections: [] }
+      ]
+    } as any;
+    component.copyPieceList();
+    expect(clipboardSpy.copy).toHaveBeenCalledWith('- Song – Comp');
   });
 });

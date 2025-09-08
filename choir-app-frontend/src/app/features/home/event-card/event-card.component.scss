@@ -5,6 +5,12 @@ mat-card {
     flex-direction: column;
 }
 
+mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 mat-card-content {
     flex-grow: 1; // Lässt den Inhalt wachsen, um den Platz zu füllen
     display: flex;
