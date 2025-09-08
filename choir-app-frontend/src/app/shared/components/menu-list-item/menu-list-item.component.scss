@@ -31,22 +31,41 @@
       border-radius: 0px;
     }
 
+  &:hover {
+    > a:not(.expanded) {
+      background-color: mat.m2-get-color-from-palette(
+        nak.$choir-app-primary,
+        100
+      ) !important;
+      color: mat.m2-get-contrast-color-from-palette(
+        nak.$choir-app-primary,
+        100
+      ) !important;
+      border: none;
+    }
+  }
+
   &:active,
-  &:hover,
   &:focus {
     > a:not(.expanded) {
         background-color: mat.m2-get-color-from-palette(
           nak.$choir-app-primary,
           600
         ) !important;
-        color: mat.m2-get-contrast-color-from-palette(
+        color: mat.m2-get-color-from-palette(
           nak.$choir-app-primary,
-          600
+          A100
         ) !important;
         border: none;
       }
     }
 
+}
+
+.menu-item-content {
+  margin-left: 0.5rem;
+  display: flex;
+  flex-direction: row;
 }
 
 // .nav-text {

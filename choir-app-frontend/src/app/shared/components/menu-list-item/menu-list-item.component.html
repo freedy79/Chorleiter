@@ -3,10 +3,13 @@
   [routerLink]="item.route || null" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
   [ngClass]="{'expanded': expanded}">
 
-  <div *ngIf="item.iconName" class="nav-text"><mat-icon class="routeIcon">{{item.iconName}}</mat-icon></div>
-  <div *ngIf="item.svgIconName" class="nav-text"><mat-icon class="routeIconSVG"
-      svgIcon="{{item.svgIconName}}"></mat-icon></div>
-  {{item.displayName}}
+  <div class="menu-item-content">
+    <div *ngIf="item.iconName" class="nav-text"><mat-icon class="routeIcon">{{item.iconName}}</mat-icon></div>
+    <div *ngIf="item.svgIconName" class="nav-text"><mat-icon class="routeIconSVG"
+        svgIcon="{{item.svgIconName}}"></mat-icon></div>
+
+    {{item.displayName}}
+  </div>
 
   <span fxFlex *ngIf="item?.children && item?.children?.length" class="expandIcon">
     <mat-icon [@indicatorRotate]="expanded ? 'expanded': 'collapsed'">
