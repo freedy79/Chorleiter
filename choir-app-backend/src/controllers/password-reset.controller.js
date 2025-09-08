@@ -5,7 +5,8 @@ const crypto = require('crypto');
 const emailService = require('../services/email.service');
 
 exports.requestPasswordReset = async (req, res) => {
-  const { email } = req.body;
+  const rawEmail = req.body.email;
+  const email = rawEmail?.toLowerCase().trim();
   if (!email) {
     return res.status(400).send({ message: 'Email is required.' });
   }
@@ -13,12 +14,14 @@ exports.requestPasswordReset = async (req, res) => {
     if (email === 'demo@nak-chorleiter.de') {
       return res.status(403).send({ message: 'Demo user cannot reset password.' });
     }
-    const user = await db.user.findOne({ where: { email } });
+    const user = await db.user.findOne({
+      where: db.Sequelize.where(db.Sequelize.fn('lower', db.Sequelize.col('email')), email)
+    });
     if (user) {
       const token = crypto.randomBytes(32).toString('hex');
       const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
       await user.update({ resetToken: token, resetTokenExpiry: expiry });
-      await emailService.sendPasswordResetMail(email, token, user.name);
+      await emailService.sendPasswordResetMail(user.email, token, user.name);
     }
     res.status(200).send({ message: 'If registered, you will receive an email with a reset link.' });
   } catch (err) {
