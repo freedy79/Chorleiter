@@ -79,6 +79,7 @@ can also be prefixed with the template type, e.g. `{{invite-link}}` or
 {{month}}
 {{year}}
 {{list}}
+{{first_name}}
 {{surname}}
 {{date}}
 ```

@@ -21,7 +21,7 @@ exports.requestPasswordReset = async (req, res) => {
       const token = crypto.randomBytes(32).toString('hex');
       const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
       await user.update({ resetToken: token, resetTokenExpiry: expiry });
-      await emailService.sendPasswordResetMail(user.email, token, user.name);
+      await emailService.sendPasswordResetMail(user.email, token, user.name, user.firstName);
     }
     res.status(200).send({ message: 'If registered, you will receive an email with a reset link.' });
   } catch (err) {

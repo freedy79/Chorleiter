@@ -27,7 +27,7 @@
         ></textarea>
         <p class="hint">
           Folgende Platzhalter werden ersetzt:
-          {{'{{link}}'}}, {{'{{choir}}'}}, {{'{{invitor}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+          {{'{{link}}'}}, {{'{{choir}}'}}, {{'{{invitor}}'}}, {{'{{expiry}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
         </p>
       </div>
       <div class="actions">
@@ -61,7 +61,7 @@
           formControlName="resetBody"
         ></textarea>
         <p class="hint">
-          Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+          Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
         </p>
       </div>
       <div class="actions">
@@ -90,7 +90,7 @@
           formControlName="emailChangeBody"
         ></editor>
         <textarea *ngIf="emailChangeHtmlMode" class="html-editor" formControlName="emailChangeBody"></textarea>
-        <p class="hint">Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{expiry}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}</p>
+        <p class="hint">Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{expiry}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}</p>
       </div>
       <div class="actions">
         <button mat-raised-button color="accent" type="button" (click)="sendTest('email-change')">Testmail</button>
@@ -123,7 +123,7 @@
           formControlName="availabilityBody"
         ></textarea>
         <p class="hint">
-          Folgende Platzhalter werden ersetzt: {{'{{month}}'}}, {{'{{year}}'}}, {{'{{list}}'}}, {{'{{link}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+          Folgende Platzhalter werden ersetzt: {{'{{month}}'}}, {{'{{year}}'}}, {{'{{list}}'}}, {{'{{link}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
         </p>
       </div>
       <div class="actions">
