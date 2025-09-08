@@ -163,7 +163,7 @@ exports.inviteUserToChoir = async (req, res, next) => {
             await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
 
             const invitor = await db.user.findByPk(req.userId);
-            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name);
+            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name, user.firstName);
 
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }

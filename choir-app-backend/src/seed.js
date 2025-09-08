@@ -88,7 +88,7 @@ async function seedDatabase(options = {}) {
                 where: { type: 'email-change' },
                 defaults: {
                     subject: 'Bestätige deine neue E-Mail-Adresse',
-                    body: '<p>Hallo {{surname}},</p><p>bitte bestätige deine neue E-Mail-Adresse über <a href="{{link}}">diesen Link</a>.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
+                    body: '<p>Hallo {{first_name}} {{surname}},</p><p>bitte bestätige deine neue E-Mail-Adresse über <a href="{{link}}">diesen Link</a>.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
                 }
             });
 

@@ -215,7 +215,7 @@ exports.sendPasswordReset = async (req, res) => {
             const token = crypto.randomBytes(32).toString('hex');
             const expiry = new Date(Date.now() + 60 * 60 * 1000);
             await user.update({ resetToken: token, resetTokenExpiry: expiry });
-            await emailService.sendPasswordResetMail(user.email, token, user.name);
+            await emailService.sendPasswordResetMail(user.email, token, user.name, user.firstName);
         }
         res.status(200).send({ message: 'Reset email sent if user exists.' });
     } catch (err) {
@@ -348,7 +348,7 @@ exports.addUserToChoir = async (req, res) => {
             await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'PENDING', inviteToken: token, inviteExpiry: expiry } });
 
              const invitor = await db.user.findByPk(req.userId);
-            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name);
+            await emailService.sendInvitationMail(email, token, choir.name, expiry, user.name, invitor?.name, user.firstName);
 
             res.status(200).send({ message: `An invitation has been sent to ${email}. Valid until ${expiry.toLocaleDateString()}.` });
         }
@@ -510,7 +510,7 @@ exports.sendTestMail = async (req, res) => {
     try {
         const user = await db.user.findByPk(req.userId);
         if (user) {
-            await emailService.sendTestMail(user.email, req.body, user.name);
+            await emailService.sendTestMail(user.email, req.body, user.name, user.firstName);
         }
         res.status(200).send({ message: 'Test mail sent if user exists.' });
     } catch (err) {
@@ -523,7 +523,7 @@ exports.sendMailTemplateTest = async (req, res) => {
         const { type } = req.params;
         const user = await db.user.findByPk(req.userId);
         if (user) {
-            await emailService.sendTemplatePreviewMail(user.email, type, user.name);
+            await emailService.sendTemplatePreviewMail(user.email, type, user.name, user.firstName);
         }
         res.status(200).send({ message: 'Test mail sent if user exists.' });
     } catch (err) {

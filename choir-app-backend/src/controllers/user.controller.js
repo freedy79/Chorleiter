@@ -109,7 +109,7 @@ exports.getMe = async (req, res) => {
 
         if (email && email !== user.email) {
             try {
-                await emailService.sendEmailChangeMail(email, updateData.emailChangeToken, user.name);
+                await emailService.sendEmailChangeMail(email, updateData.emailChangeToken, user.name, user.firstName);
             } catch (e) {
                 return res.status(500).send({ message: e.message });
             }

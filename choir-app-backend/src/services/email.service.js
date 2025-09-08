@@ -16,6 +16,9 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   if (!final.surname) {
     final.surname = final.name || to.split('@')[0];
   }
+  if (!final.first_name) {
+    final.first_name = final.firstName || final.name || to.split('@')[0];
+  }
 
   const { subject, html, text } = buildTemplate(template, type, final);
   await sendMail({ to, subject, html, text }, overrideSettings);
@@ -43,7 +46,7 @@ async function buildPostEmail(text, choirName) {
 
 exports.buildPostEmail = buildPostEmail;
 
-exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorName) => {
+exports.sendInvitationMail = async (to, token, choirName, expiry, surname, invitorName, firstName) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/register/${token}`;
   try {
@@ -53,7 +56,8 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
       invitor: invitorName,
       link,
       expiry: expiry.toLocaleString('de-DE'),
-      surname: name
+      surname,
+      first_name: firstName
     });
   } catch (err) {
     logger.error(`Error sending invitation mail to ${to}: ${err.message}`);
@@ -62,11 +66,11 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, name, invitorN
   }
 };
 
-exports.sendPasswordResetMail = async (to, token, name) => {
+exports.sendPasswordResetMail = async (to, token, surname, firstName) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/reset-password/${token}`;
   try {
-    await sendTemplateMail('reset', to, { link, surname: name });
+    await sendTemplateMail('reset', to, { link, surname, first_name: firstName });
   } catch (err) {
     logger.error(`Error sending password reset mail to ${to}: ${err.message}`);
     logger.error(err.stack);
@@ -74,12 +78,12 @@ exports.sendPasswordResetMail = async (to, token, name) => {
   }
 };
 
-exports.sendEmailChangeMail = async (to, token, name) => {
+exports.sendEmailChangeMail = async (to, token, surname, firstName) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/confirm-email/${token}`;
   const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString('de-DE');
   try {
-    await sendTemplateMail('email-change', to, { link, expiry, surname: name });
+    await sendTemplateMail('email-change', to, { link, expiry, surname, first_name: firstName });
   } catch (err) {
     logger.error(`Error sending email change mail to ${to}: ${err.message}`);
     logger.error(err.stack);
@@ -87,11 +91,12 @@ exports.sendEmailChangeMail = async (to, token, name) => {
   }
 };
 
-exports.sendTestMail = async (to, override, name) => {
+exports.sendTestMail = async (to, override, surname, firstName) => {
   try {
-    const userName = name || to.split('@')[0];
+    const fallback = to.split('@')[0];
     const replacements = {
-      surname: userName,
+      surname: surname || fallback,
+      first_name: firstName || surname || fallback,
       date: new Date().toLocaleString('de-DE')
     };
     const { html, text } = buildTemplate({ body: '<p>Dies ist eine Testmail.</p>' }, 'test', replacements);
@@ -103,7 +108,7 @@ exports.sendTestMail = async (to, override, name) => {
   }
 };
 
-exports.sendTemplatePreviewMail = async (to, type, name) => {
+exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
   try {
     const placeholders = {
       choir: 'Beispielchor',
@@ -111,7 +116,8 @@ exports.sendTemplatePreviewMail = async (to, type, name) => {
       invitor: 'Max Mustermann',
       link: 'https://nak-chorleiter.de',
       expiry: new Date(Date.now() + 86400000).toLocaleString('de-DE'),
-      surname: name
+      surname,
+      first_name: firstName
     };
     await sendTemplateMail(type, to, placeholders);
   } catch (err) {
@@ -162,7 +168,7 @@ function statusText(status) {
   }
 }
 
-exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
+exports.sendAvailabilityRequestMail = async (to, surname, firstName, year, month, dates) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}&tab=avail`;
   try {
@@ -172,7 +178,8 @@ exports.sendAvailabilityRequestMail = async (to, name, year, month, dates) => {
       year: String(year),
       list,
       link,
-      surname: name
+      surname,
+      first_name: firstName
     });
   } catch (err) {
     logger.error(`Error sending availability request mail to ${to}: ${err.message}`);

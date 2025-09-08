@@ -29,9 +29,9 @@ const db = require('../src/models');
 
       // Test placeholder fallback when no name is provided
       capturedOptions = undefined;
-      await db.mail_template.create({ type: 'invite', subject: '', body: 'Hallo {{surname}}' });
-      await emailService2.sendInvitationMail('tester@example.com', 'tok', 'Choir', new Date(), undefined, 'Invitor');
-      assert.ok(capturedOptions.html.includes('tester'), 'Fallback to email prefix failed');
+      await db.mail_template.create({ type: 'invite', subject: '', body: 'Hallo {{first_name}} {{surname}}' });
+      await emailService2.sendInvitationMail('tester@example.com', 'tok', 'Choir', new Date(), undefined, 'Invitor', undefined);
+      assert.ok(capturedOptions.html.includes('tester tester'), 'Fallback to email prefix failed');
 
       emailTransporter.sendMail = originalSendMail;
 

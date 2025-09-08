@@ -211,7 +211,7 @@ exports.requestAvailability = async (req, res) => {
             });
             const map = Object.fromEntries(avail.map(a => [a.date, a.status]));
             const list = dates.map(d => ({ date: d, status: map[d] || 'AVAILABLE' }));
-            await emailService.sendAvailabilityRequestMail(user.email, user.name, plan.year, plan.month, list);
+            await emailService.sendAvailabilityRequestMail(user.email, user.name, user.firstName, plan.year, plan.month, list);
         }
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {

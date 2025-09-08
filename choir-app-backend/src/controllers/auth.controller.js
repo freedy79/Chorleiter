@@ -129,7 +129,7 @@ exports.signin = async (req, res) => {
         const expiry = new Date(Date.now() + 60 * 60 * 1000);
         await user.update({ resetToken: token, resetTokenExpiry: expiry });
         try {
-          await emailService.sendPasswordResetMail(user.email, token, user.name);
+          await emailService.sendPasswordResetMail(user.email, token, user.name, user.firstName);
         } catch (err) {
           logger.error(`Could not send password reset mail to ${email}: ${err.message}`);
         }
