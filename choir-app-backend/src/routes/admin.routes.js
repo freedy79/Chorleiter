@@ -54,7 +54,7 @@ router.get('/system-admin-email', wrap(controller.getSystemAdminEmail));
 router.put('/system-admin-email', wrap(controller.updateSystemAdminEmail));
 
 // Entwicklertools
-router.post('/develop/deploy', wrap(controller.pullAndDeploy));
+router.get('/develop/deploy', wrap(controller.pullAndDeploy));
 
 module.exports = router;
 

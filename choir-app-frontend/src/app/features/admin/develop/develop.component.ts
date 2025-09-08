@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { DebugLogService } from '@core/services/debug-log.service';
+import { environment } from '@env/environment';
 
 interface PaletteColor {
   name: string;
@@ -66,5 +67,38 @@ export class DevelopComponent implements OnInit {
   onToggleDebugLogs(): void {
     this.logger.setEnabled(this.debugLogs);
     this.logger.log('Debug logging', this.debugLogs ? 'enabled' : 'disabled');
+  }
+
+  openDeployConsole(deploy: boolean): void {
+    const token = localStorage.getItem('auth-token');
+    const url = `${environment.apiUrl}/admin/develop/deploy${deploy ? '?deploy=true' : ''}`;
+    const win = window.open('', '_blank', 'noopener=yes,width=800,height=600');
+    if (!win) {
+      return;
+    }
+    win.document.title = 'Deploy';
+    const pre = win.document.createElement('pre');
+    pre.style.whiteSpace = 'pre-wrap';
+    win.document.body.appendChild(pre);
+    fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+      .then(async res => {
+        const reader = res.body?.getReader();
+        if (!reader) {
+          pre.textContent = 'No output';
+          return;
+        }
+        const decoder = new TextDecoder();
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          pre.textContent += decoder.decode(value, { stream: true });
+          win.scrollTo(0, win.document.body.scrollHeight);
+        }
+      })
+      .catch(err => {
+        pre.textContent += `\nError: ${err}`;
+      });
   }
 }

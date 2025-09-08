@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
-const { exec, spawn } = require('child_process');
+const { spawn } = require('child_process');
 const path = require('path');
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
@@ -607,32 +607,44 @@ exports.updateSystemAdminEmail = async (req, res) => {
  * Lädt das aktuelle Git-Repository und startet optional das Deploy-Skript.
  * Übergabe von `deploy=true` im Body oder Query startet das Skript nach dem Pull.
  */
-exports.pullAndDeploy = async (req, res) => {
+exports.pullAndDeploy = (req, res) => {
     const repoPath = path.resolve(__dirname, '../../../');
-    try {
-        const { stdout } = await new Promise((resolve, reject) => {
-            exec('git pull', { cwd: repoPath }, (error, stdout, stderr) => {
-                if (error) {
-                    reject(stderr || error.message);
-                } else {
-                    resolve({ stdout });
-                }
-            });
-        });
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
-        const shouldDeploy = req.body?.deploy === true || req.query.deploy === 'true';
-        if (shouldDeploy) {
-            const child = spawn('sh', ['deploy.sh'], {
-                cwd: repoPath,
-                detached: true,
-                stdio: 'ignore'
-            });
-            child.unref();
+    const send = data => {
+        res.write(data.toString());
+    };
+
+    const pull = spawn('git', ['pull'], { cwd: repoPath });
+    pull.stdout.on('data', send);
+    pull.stderr.on('data', send);
+
+    pull.on('close', code => {
+        if (code !== 0) {
+            res.statusCode = 500;
+            return res.end(`git pull failed with code ${code}\n`);
         }
 
-        res.status(200).send({ message: stdout.trim(), deployed: shouldDeploy });
-    } catch (err) {
-        logger.error('Deployment failed', err);
-        res.status(500).send({ message: err.toString() });
-    }
+        const shouldDeploy = req.body?.deploy === true || req.query.deploy === 'true';
+        if (!shouldDeploy) {
+            return res.end('Pull completed without deployment.\n');
+        }
+
+        const child = spawn('sh', ['deploy-server.sh'], { cwd: repoPath });
+        child.stdout.on('data', send);
+        child.stderr.on('data', send);
+        child.on('close', deployCode => {
+            if (deployCode !== 0) {
+                res.statusCode = 500;
+                res.end(`Deployment failed with code ${deployCode}\n`);
+            } else {
+                res.end('Deployment completed.\n');
+            }
+        });
+    });
+
+    pull.on('error', err => {
+        logger.error('git pull failed', err);
+        res.status(500).end(`git pull failed: ${err.message}\n`);
+    });
 };
