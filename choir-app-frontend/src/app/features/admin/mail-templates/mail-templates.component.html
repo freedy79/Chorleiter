@@ -14,12 +14,12 @@
             (change)="toggleInviteHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="inviteHtmlMode"
           formControlName="inviteBody"
-        ></editor>
+        ></ckeditor>
         <textarea
           *ngIf="inviteHtmlMode"
           class="html-editor"
@@ -49,12 +49,12 @@
             (change)="toggleResetHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="resetHtmlMode"
           formControlName="resetBody"
-        ></editor>
+        ></ckeditor>
         <textarea
           *ngIf="resetHtmlMode"
           class="html-editor"
@@ -83,12 +83,12 @@
             (change)="toggleEmailChangeHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="emailChangeHtmlMode"
           formControlName="emailChangeBody"
-        ></editor>
+        ></ckeditor>
         <textarea *ngIf="emailChangeHtmlMode" class="html-editor" formControlName="emailChangeBody"></textarea>
         <p class="hint">Folgende Platzhalter werden ersetzt: {{'{{link}}'}}, {{'{{expiry}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}</p>
       </div>
@@ -111,12 +111,12 @@
             (change)="toggleAvailabilityHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="availabilityHtmlMode"
           formControlName="availabilityBody"
-        ></editor>
+        ></ckeditor>
         <textarea
           *ngIf="availabilityHtmlMode"
           class="html-editor"
@@ -145,12 +145,12 @@
             (change)="toggleChangeHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="changeHtmlMode"
           formControlName="changeBody"
-        ></editor>
+        ></ckeditor>
         <textarea
           *ngIf="changeHtmlMode"
           class="html-editor"
@@ -179,12 +179,12 @@
             (change)="toggleMonthlyHtml()"
             >HTML bearbeiten</mat-slide-toggle>
         </div>
-        <editor
-          apiKey="yg7ki8fidlweat8ztpe4exkehwid3ewwzof9uj595sbb0h1g"
-          [init]="editorConfig"
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
           [hidden]="monthlyHtmlMode"
           formControlName="monthlyBody"
-        ></editor>
+        ></ckeditor>
         <textarea
           *ngIf="monthlyHtmlMode"
           class="html-editor"
