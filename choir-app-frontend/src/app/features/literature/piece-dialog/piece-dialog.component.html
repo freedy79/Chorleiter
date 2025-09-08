@@ -56,6 +56,10 @@
                 <mat-label>Komponist</mat-label>
                 <input type="text" matInput [formControl]="composerCtrl" [matAutocomplete]="autoComposer">
                 <input type="hidden" formControlName="composerId" />
+                <button mat-icon-button matSuffix type="button" aria-label="Komponist bearbeiten"
+                        *ngIf="pieceForm.get('composerId')?.value" (click)="openEditComposerDialog()">
+                  <mat-icon>edit</mat-icon>
+                </button>
                 <mat-autocomplete #autoComposer="matAutocomplete" [displayWith]="displayComposer" (optionSelected)="onComposerSelected($event)">
                   <mat-option *ngFor="let composer of filteredComposers$ | async" [value]="composer">
                     <ng-container *ngIf="!composer.isNew; else addNew">
@@ -123,6 +127,10 @@
                 <mat-label>Dichter</mat-label>
                 <input type="text" matInput [formControl]="authorCtrl" [matAutocomplete]="autoAuthor" />
                 <input type="hidden" formControlName="authorId" />
+                <button mat-icon-button matSuffix type="button" aria-label="Dichter bearbeiten"
+                        *ngIf="pieceForm.get('authorId')?.value" (click)="openEditAuthorDialog()">
+                  <mat-icon>edit</mat-icon>
+                </button>
                 <mat-autocomplete #autoAuthor="matAutocomplete" [displayWith]="displayAuthor" (optionSelected)="onAuthorSelected($event)">
                   <mat-option *ngFor="let author of filteredAuthors$ | async" [value]="author">
                     <ng-container *ngIf="!author.isNew; else addNewAuthorTpl">

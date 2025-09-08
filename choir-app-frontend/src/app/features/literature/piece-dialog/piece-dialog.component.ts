@@ -248,6 +248,76 @@ export class PieceDialogComponent implements OnInit {
         });
     }
 
+    openEditComposerDialog(): void {
+        const composer = this.composerCtrl.value;
+        if (!composer || typeof composer === 'string') return;
+
+        const ref = this.dialog.open(ComposerDialogComponent, {
+            width: '500px',
+            data: { role: 'composer', record: composer }
+        });
+
+        ref.afterClosed().subscribe(result => {
+            if (result) {
+                this.apiService.updateComposer(composer.id, result).subscribe({
+                    next: updated => {
+                        this.refreshComposers$.next();
+                        const idx = this.allComposers.findIndex(c => c.id === updated.id);
+                        if (idx !== -1) this.allComposers[idx] = updated;
+                        this.composerCtrl.setValue(updated);
+                        this.pieceForm.get('composerId')?.setValue(updated.id);
+                    },
+                    error: err => {
+                        if (err.status === 409 && confirm('Komponist existiert bereits. Trotzdem speichern?')) {
+                            this.apiService.updateComposer(composer.id, result, true).subscribe(updated => {
+                                this.refreshComposers$.next();
+                                const idx = this.allComposers.findIndex(c => c.id === updated.id);
+                                if (idx !== -1) this.allComposers[idx] = updated;
+                                this.composerCtrl.setValue(updated);
+                                this.pieceForm.get('composerId')?.setValue(updated.id);
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    openEditAuthorDialog(): void {
+        const author = this.authorCtrl.value;
+        if (!author || typeof author === 'string') return;
+
+        const ref = this.dialog.open(ComposerDialogComponent, {
+            width: '500px',
+            data: { role: 'author', record: author }
+        });
+
+        ref.afterClosed().subscribe(result => {
+            if (result) {
+                this.apiService.updateAuthor(author.id, result).subscribe({
+                    next: updated => {
+                        this.refreshAuthors$.next();
+                        const idx = this.allAuthors.findIndex(a => a.id === updated.id);
+                        if (idx !== -1) this.allAuthors[idx] = updated;
+                        this.authorCtrl.setValue(updated);
+                        this.pieceForm.get('authorId')?.setValue(updated.id);
+                    },
+                    error: err => {
+                        if (err.status === 409 && confirm('Dichter existiert bereits. Trotzdem speichern?')) {
+                            this.apiService.updateAuthor(author.id, result, true).subscribe(updated => {
+                                this.refreshAuthors$.next();
+                                const idx = this.allAuthors.findIndex(a => a.id === updated.id);
+                                if (idx !== -1) this.allAuthors[idx] = updated;
+                                this.authorCtrl.setValue(updated);
+                                this.pieceForm.get('authorId')?.setValue(updated.id);
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
     openAddCategoryDialog(): void {
         const dialogRef = this.dialog.open(CategoryDialogComponent, {
             width: '400px',
