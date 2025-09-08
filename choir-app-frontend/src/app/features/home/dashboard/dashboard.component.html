@@ -2,7 +2,8 @@
   <h1 *ngIf="(activeChoir$ | async)?.name as name">
     Willkommen bei {{ name }}
   </h1>
-  <button *ngIf="!(isSingerOnly$ | async)" mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neues Ereignis erstellen">
+  <button *ngIf="!(isSingerOnly$ | async)" mat-icon-button color="primary" (click)="openAddEventDialog()"
+    matTooltip="Neues Ereignis erstellen">
     <mat-icon>add</mat-icon>
   </button>
   <button mat-icon-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
@@ -12,69 +13,66 @@
 
 <div class="dashboard-container">
   <div class="main-content">
-<div class="dashboard-grid">
-  <ng-container *ngIf="lastProgram$ | async as program; else lastService">
-    <mat-card class="program-card">
-      <h2>Letzter Gottesdienst</h2>
-      <h3>{{ program.title }}</h3>
-      <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
-      <mat-list>
-        <ng-container *ngFor="let item of program.items">
-          <div class="item-container">
-            <a *ngIf="item.pieceId; else noPiece"
-              mat-list-item class="clickable"
-              [routerLink]="['/pieces', item.pieceId]">
-              <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-              <div matLine class="title">{{ getItemTitle(item) }}</div>
-              <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-            </a>
-          </div>
-          <ng-template #noPiece>
-            <mat-list-item>
-              <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-              <div matLine class="title">{{ getItemTitle(item) }}</div>
-              <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-            </mat-list-item>
-          </ng-template>
-        </ng-container>
-      </mat-list>
-    </mat-card>
-  </ng-container>
-  <ng-template #lastService>
-    <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
-    </app-event-card>
-  </ng-template>
+    <div class="dashboard-grid">
+      <ng-container *ngIf="lastProgram$ | async as program; else lastService">
+        <mat-card class="program-card">
+          <h2>Letzter Gottesdienst</h2>
+          <h3>{{ program.title }}</h3>
+          <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
+          <mat-list>
+            <ng-container *ngFor="let item of program.items">
+              <div class="item-container">
+                <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
+                  [routerLink]="['/pieces', item.pieceId]">
+                  <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                  <div matLine class="title">{{ getItemTitle(item) }}</div>
+                  <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                </a>
+              </div>
+              <ng-template #noPiece>
+                <mat-list-item>
+                  <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                  <div matLine class="title">{{ getItemTitle(item) }}</div>
+                  <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                </mat-list-item>
+              </ng-template>
+            </ng-container>
+          </mat-list>
+        </mat-card>
+      </ng-container>
+      <ng-template #lastService>
+        <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
+        </app-event-card>
+      </ng-template>
 
-  <!-- Verwenden Sie die neue Komponente für die Probe -->
-  <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async">
-  </app-event-card>
-  </div>
-  <aside class="calendar-block">
-    <div class="upcoming-section">
-      <h2>Nächste Termine</h2>
-      <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
-        Nur meine Termine
-      </mat-slide-toggle>
-      <mat-list>
-        <mat-list-item *ngFor="let ev of nextEvents$ | async" [ngStyle]="{ 'border-left': '4px solid ' + ((ev.choirId != null ? choirColors[ev.choirId] : undefined) || 'transparent'), 'padding-left': '8px' }">
-          <a href="#" (click)="openEvent(ev); $event.preventDefault()">
-            {{ ev.date | date:'shortDate' }} - {{ ev.choir?.name }} -
-            {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
-          </a>
-        </mat-list-item>
-      </mat-list>
+      <!-- Verwenden Sie die neue Komponente für die Probe -->
+      <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async">
+      </app-event-card>
     </div>
-    <app-my-calendar></app-my-calendar>
-  </aside>
-</div>
+
+
+    <aside class="calendar-block">
+      <app-my-calendar></app-my-calendar>
+      <div class="upcoming-section">
+        <h2>Nächste Termine</h2>
+        <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
+          Nur meine Termine
+        </mat-slide-toggle>
+        <mat-list>
+          <mat-list-item *ngFor="let ev of nextEvents$ | async"
+            [ngStyle]="{ 'border-left': '4px solid ' + ((ev.choirId != null ? choirColors[ev.choirId] : undefined) || 'transparent'), 'padding-left': '8px' }">
+            <a href="#" (click)="openEvent(ev); $event.preventDefault()">
+              {{ ev.date | date:'shortDate' }} - {{ ev.choir?.name }} -
+              {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
+            </a>
+          </mat-list-item>
+        </mat-list>
+      </div>
+    </aside>
+  </div>
 </div>
 
-<div
-  class="latest-post"
-  *ngIf="latestPost$ | async as post"
-  (click)="openLatestPost(post)"
-  tabindex="0"
-  role="link">
+<div class="latest-post" *ngIf="latestPost$ | async as post" (click)="openLatestPost(post)" tabindex="0" role="link">
   <h2>Neuster Beitrag</h2>
   <h3>{{ post.title }}</h3>
   <div [innerHTML]="post.text | markdown | async"></div>
