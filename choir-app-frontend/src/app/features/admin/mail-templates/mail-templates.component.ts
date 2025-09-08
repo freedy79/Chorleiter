@@ -6,12 +6,13 @@ import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
-import { EditorModule } from '@tinymce/tinymce-angular';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 @Component({
   selector: 'app-mail-templates',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, EditorModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, CKEditorModule],
   templateUrl: './mail-templates.component.html',
   styleUrls: ['./mail-templates.component.scss']
 })
@@ -23,13 +24,10 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   changeHtmlMode = false;
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
+  public Editor = ClassicEditor;
   editorConfig = {
-    base_url: '/tinymce',
-    suffix: '.min',
-    height: 200,
-    menubar: false,
-    toolbar: 'bold italic underline | forecolor backcolor | link | removeformat'
-  };
+    toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
+  } as const;
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
