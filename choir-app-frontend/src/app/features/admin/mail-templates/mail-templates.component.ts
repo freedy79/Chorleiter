@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -6,37 +6,30 @@ import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
-
-declare var Quill: any;
+import { EditorModule } from '@tinymce/tinymce-angular';
 
 @Component({
   selector: 'app-mail-templates',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, EditorModule],
   templateUrl: './mail-templates.component.html',
   styleUrls: ['./mail-templates.component.scss']
 })
-export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingChanges {
+export class MailTemplatesComponent implements OnInit, PendingChanges {
   form!: FormGroup;
-  @ViewChild('inviteEditor') inviteEditor!: ElementRef<HTMLDivElement>;
-  @ViewChild('resetEditor') resetEditor!: ElementRef<HTMLDivElement>;
-  @ViewChild('availabilityEditor') availabilityEditor!: ElementRef<HTMLDivElement>;
-  @ViewChild('changeEditor') changeEditor!: ElementRef<HTMLDivElement>;
-  @ViewChild('monthlyEditor') monthlyEditor!: ElementRef<HTMLDivElement>;
-  @ViewChild('emailChangeEditor') emailChangeEditor!: ElementRef<HTMLDivElement>;
-  private inviteQuill: any;
-  private resetQuill: any;
-  private availabilityQuill: any;
-  private changeQuill: any;
-  private monthlyQuill: any;
-  private emailChangeQuill: any;
   inviteHtmlMode = false;
   resetHtmlMode = false;
   availabilityHtmlMode = false;
   changeHtmlMode = false;
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
-  private initializing = true;
+  editorConfig = {
+    base_url: '/tinymce',
+    suffix: '.min',
+    height: 200,
+    menubar: false,
+    toolbar: 'bold italic underline | forecolor backcolor | link | removeformat'
+  };
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
@@ -57,15 +50,7 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
 
   ngOnInit(): void {
     this.load();
-  }
-
-  ngAfterViewInit(): void {
-    this.initEditors();
-    this.setEditorContents();
-    setTimeout(() => {
-      this.form.markAsPristine();
-      this.initializing = false;
-    });
+    setTimeout(() => this.form.markAsPristine());
   }
 
   load(): void {
@@ -95,7 +80,6 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
         this.form.patchValue({ emailChangeSubject: emailChange.subject, emailChangeBody: emailChange.body });
       }
       this.form.markAsPristine();
-      this.setEditorContents();
     });
   }
 
@@ -127,152 +111,28 @@ export class MailTemplatesComponent implements OnInit, AfterViewInit, PendingCha
     });
   }
 
-  private initEditors(): void {
-    const options = {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline'],
-          [{ color: [] }, { background: [] }],
-          ['link', 'clean']
-        ]
-      }
-    };
-    if ((window as any).Quill && this.inviteEditor && !this.inviteQuill) {
-      this.inviteQuill = new (window as any).Quill(this.inviteEditor.nativeElement, options);
-      this.inviteQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('inviteBody')?.markAsDirty();
-        }
-      });
-    }
-    if ((window as any).Quill && this.resetEditor && !this.resetQuill) {
-      this.resetQuill = new (window as any).Quill(this.resetEditor.nativeElement, options);
-      this.resetQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('resetBody')?.markAsDirty();
-        }
-      });
-    }
-    if ((window as any).Quill && this.availabilityEditor && !this.availabilityQuill) {
-      this.availabilityQuill = new (window as any).Quill(this.availabilityEditor.nativeElement, options);
-      this.availabilityQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('availabilityBody')?.markAsDirty();
-        }
-      });
-    }
-    if ((window as any).Quill && this.changeEditor && !this.changeQuill) {
-      this.changeQuill = new (window as any).Quill(this.changeEditor.nativeElement, options);
-      this.changeQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('changeBody')?.markAsDirty();
-        }
-      });
-    }
-    if ((window as any).Quill && this.monthlyEditor && !this.monthlyQuill) {
-      this.monthlyQuill = new (window as any).Quill(this.monthlyEditor.nativeElement, options);
-      this.monthlyQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('monthlyBody')?.markAsDirty();
-        }
-      });
-    }
-    if ((window as any).Quill && this.emailChangeEditor && !this.emailChangeQuill) {
-      this.emailChangeQuill = new (window as any).Quill(this.emailChangeEditor.nativeElement, options);
-      this.emailChangeQuill.on('text-change', (_: any, __: any, source: string) => {
-        this.form.patchValue({ emailChangeBody: this.emailChangeQuill.root.innerHTML }, { emitEvent: false });
-        if (!this.initializing && source === 'user') {
-          this.form.get('emailChangeBody')?.markAsDirty();
-        }
-      });
-    }
-  }
-
-  private setEditorContents(): void {
-    if (this.inviteQuill) {
-      this.inviteQuill.root.innerHTML = this.form.value.inviteBody || '';
-    }
-    if (this.resetQuill) {
-      this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
-    }
-    if (this.availabilityQuill) {
-      this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
-    }
-    if (this.changeQuill) {
-      this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
-    }
-    if (this.monthlyQuill) {
-      this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
-    }
-    if (this.emailChangeQuill) {
-      this.emailChangeQuill.root.innerHTML = this.form.value.emailChangeBody || '';
-    }
-  }
-
   toggleInviteHtml(): void {
     this.inviteHtmlMode = !this.inviteHtmlMode;
-    if (this.inviteHtmlMode && this.inviteQuill) {
-      this.form.patchValue({ inviteBody: this.inviteQuill.root.innerHTML });
-    }
-    if (!this.inviteHtmlMode && this.inviteQuill) {
-      this.inviteQuill.root.innerHTML = this.form.value.inviteBody || '';
-    }
   }
 
   toggleResetHtml(): void {
     this.resetHtmlMode = !this.resetHtmlMode;
-    if (this.resetHtmlMode && this.resetQuill) {
-      this.form.patchValue({ resetBody: this.resetQuill.root.innerHTML });
-    }
-    if (!this.resetHtmlMode && this.resetQuill) {
-      this.resetQuill.root.innerHTML = this.form.value.resetBody || '';
-    }
   }
 
   toggleAvailabilityHtml(): void {
     this.availabilityHtmlMode = !this.availabilityHtmlMode;
-    if (this.availabilityHtmlMode && this.availabilityQuill) {
-      this.form.patchValue({ availabilityBody: this.availabilityQuill.root.innerHTML });
-    }
-    if (!this.availabilityHtmlMode && this.availabilityQuill) {
-      this.availabilityQuill.root.innerHTML = this.form.value.availabilityBody || '';
-    }
   }
 
   toggleChangeHtml(): void {
     this.changeHtmlMode = !this.changeHtmlMode;
-    if (this.changeHtmlMode && this.changeQuill) {
-      this.form.patchValue({ changeBody: this.changeQuill.root.innerHTML });
-    }
-    if (!this.changeHtmlMode && this.changeQuill) {
-      this.changeQuill.root.innerHTML = this.form.value.changeBody || '';
-    }
   }
 
   toggleMonthlyHtml(): void {
     this.monthlyHtmlMode = !this.monthlyHtmlMode;
-    if (this.monthlyHtmlMode && this.monthlyQuill) {
-      this.form.patchValue({ monthlyBody: this.monthlyQuill.root.innerHTML });
-    }
-    if (!this.monthlyHtmlMode && this.monthlyQuill) {
-      this.monthlyQuill.root.innerHTML = this.form.value.monthlyBody || '';
-    }
   }
 
   toggleEmailChangeHtml(): void {
     this.emailChangeHtmlMode = !this.emailChangeHtmlMode;
-    if (this.emailChangeHtmlMode && this.emailChangeQuill) {
-      this.form.patchValue({ emailChangeBody: this.emailChangeQuill.root.innerHTML });
-    }
-    if (!this.emailChangeHtmlMode && this.emailChangeQuill) {
-      this.emailChangeQuill.root.innerHTML = this.form.value.emailChangeBody || '';
-    }
   }
 
   sendTest(type: string): void {
