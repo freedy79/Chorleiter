@@ -5,12 +5,18 @@ const { buildTemplate } = require('./emailTemplateManager');
 const { sendMail, emailDisabled } = require('./emailTransporter');
 const { marked } = require('marked');
 
+const TIME_ZONE = process.env.TZ || 'Europe/Berlin';
+
+function formatDate(date = new Date()) {
+  return date.toLocaleString('de-DE', { timeZone: TIME_ZONE });
+}
+
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   if (emailDisabled()) return;
   const template = await db.mail_template.findOne({ where: { type } });
 
   // merge defaults first to avoid undefined values overriding fallbacks
-  const final = { date: new Date().toLocaleString('de-DE'), ...replacements };
+  const final = { date: formatDate(), ...replacements };
 
   // prefer a provided first name over a surname and fall back to email prefix
   if (!final.surname) {
@@ -55,7 +61,7 @@ exports.sendInvitationMail = async (to, token, choirName, expiry, surname, invit
       choirname: choirName,
       invitor: invitorName,
       link,
-      expiry: expiry.toLocaleString('de-DE'),
+      expiry: formatDate(expiry),
       surname,
       first_name: firstName
     });
@@ -81,7 +87,7 @@ exports.sendPasswordResetMail = async (to, token, surname, firstName) => {
 exports.sendEmailChangeMail = async (to, token, surname, firstName) => {
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/confirm-email/${token}`;
-  const expiry = new Date(Date.now() + 2 * 60 * 60 * 1000).toLocaleString('de-DE');
+  const expiry = formatDate(new Date(Date.now() + 2 * 60 * 60 * 1000));
   try {
     await sendTemplateMail('email-change', to, { link, expiry, surname, first_name: firstName });
   } catch (err) {
@@ -97,7 +103,7 @@ exports.sendTestMail = async (to, override, surname, firstName) => {
     const replacements = {
       surname: surname || fallback,
       first_name: firstName || surname || fallback,
-      date: new Date().toLocaleString('de-DE')
+      date: formatDate()
     };
     const { html, text } = buildTemplate({ body: '<p>Dies ist eine Testmail.</p>' }, 'test', replacements);
     await sendMail({ to, subject: 'Testmail', html, text }, override);
@@ -115,7 +121,7 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
       choirname: 'Beispielchor',
       invitor: 'Max Mustermann',
       link: 'https://nak-chorleiter.de',
-      expiry: new Date(Date.now() + 86400000).toLocaleString('de-DE'),
+      expiry: formatDate(new Date(Date.now() + 86400000)),
       surname,
       first_name: firstName
     };
