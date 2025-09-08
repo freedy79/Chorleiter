@@ -1,3 +1,12 @@
+<div class="deploy-actions">
+  <button mat-raised-button color="primary" (click)="openDeployConsole(true)">
+    Pull &amp; Deploy
+  </button>
+  <button mat-button (click)="openDeployConsole(false)">
+    Nur Pull
+  </button>
+</div>
+
 <mat-slide-toggle [(ngModel)]="debugLogs" (change)="onToggleDebugLogs()">
   Zusätzliche Konsolenlogs
 </mat-slide-toggle>
