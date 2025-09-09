@@ -7,6 +7,55 @@
   margin-bottom: 2rem;
 }
 
+
+.hero {
+  margin-bottom: 2rem;
+}
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.kpi-item {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  text-align: center;
+
+  .label {
+    font-size: 0.85rem;
+    color: #555;
+  }
+
+  .value {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi {
+    grid-template-columns: repeat(2, 1fr);
+
+
+.quick-actions {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  align-items: center;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -42,35 +91,23 @@ mat-card-content h3 {
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  grid-template-areas:
-    'nav hero'
-    'nav grid';
+  grid-template-columns: 1fr 400px;
   gap: 2rem;
 }
 
-.nav {
-  grid-area: nav;
-}
-
-.hero {
-  grid-area: hero;
-}
-
-.grid {
-  grid-area: grid;
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 @media (max-width: 1024px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      'hero'
-      'grid';
   }
 
-  .nav {
-    display: none;
+  .content-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -117,18 +154,43 @@ mat-card-content h3 {
     font-size: 0.875rem;
   }
 }
+    
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--dot-color, #1976d2);
+}
 
 .item-container {
   width: 95%;
   text-align: center;
   padding: 0.5rem;
   border-bottom: 1px solid #eee;
+
   &:last-child {
     border-bottom: none;
   }
 
- .clickable {
+  .clickable {
     cursor: pointer;
+
     &:hover {
       background-color: color.adjust(#eee, $lightness: -5%);
     }
@@ -138,12 +200,15 @@ mat-card-content h3 {
     font-weight: bold;
     font-size: 1.1rem;
   }
+
   .composer {
     font-size: 0.9rem;
     color: #999;
   }
+
   .subtitle {
     font-size: 0.9rem;
     color: #666;
   }
 }
+

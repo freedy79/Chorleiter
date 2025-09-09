@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, switchMap, tap, take } from 'rxjs/operators';
+
+import { map, switchMap, tap, take, shareReplay } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -24,6 +25,7 @@ import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.
 import { UserService } from '@core/services/user.service';
 import { LibraryItem } from '@core/models/library-item';
 import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -49,7 +51,12 @@ export class DashboardComponent implements OnInit {
   lastProgram$!: Observable<Program | null>;
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
+
   upcomingEvents$!: Observable<Event[]>;
+  nextEvents$!: Observable<Event[]>;
+  nextRehearsal$!: Observable<Event | null>;
+  memberCount$!: Observable<number>;
+  openTasksCount$!: Observable<number>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
@@ -97,8 +104,23 @@ export class DashboardComponent implements OnInit {
       switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
     );
 
+
     this.upcomingEvents$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
+    );
+
+    this.nextEvents$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine)),
+      shareReplay(1)
+    );
+
+    this.nextRehearsal$ = this.nextEvents$.pipe(
+      map(events => events.find(ev => ev.type === 'REHEARSAL') || null)
+    );
+
+    this.memberCount$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getChoirMembers()),
+      map(members => members.length)
     );
 
     this.latestPost$ = this.refresh$.pipe(
@@ -112,6 +134,10 @@ export class DashboardComponent implements OnInit {
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(
       switchMap(isAdmin => isAdmin ? this.apiService.getPieceChangeRequests() : of([]))
+    );
+
+    this.openTasksCount$ = this.pieceChanges$.pipe(
+      map(changes => changes.length)
     );
 
     // Willkommenstext ggf. anzeigen
@@ -162,6 +188,20 @@ export class DashboardComponent implements OnInit {
         });
       }
     });
+  }
+
+  downloadIcs(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const url = `${environment.apiUrl}/events/ics?token=${token}`;
+    window.open(url, '_blank');
+  }
+
+  connectGoogleCalendar(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
+    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
   }
 
   openEvent(ev: Event): void {
@@ -238,6 +278,22 @@ export class DashboardComponent implements OnInit {
 
   openLatestPost(post: Post): void {
     this.router.navigate(['/posts'], { fragment: `post-${post.id}` });
+  }
+
+  timeAgo(date: string | Date | undefined): string {
+    if (!date) {
+      return '—';
+    }
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const diffMs = Date.now() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) {
+      return 'heute';
+    }
+    if (diffDays === 1) {
+      return 'vor 1 Tag';
+    }
+    return `vor ${diffDays} Tagen`;
   }
 
   getItemComposer(item: ProgramItem): string | null {
