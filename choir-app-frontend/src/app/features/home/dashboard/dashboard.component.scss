@@ -40,27 +40,37 @@ mat-card-content h3 {
   }
 }
 
-.dashboard-container {
-  display: flex;
-  flex-direction: column;
+.dashboard-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  grid-template-areas:
+    'nav hero'
+    'nav grid';
+  gap: 2rem;
 }
 
-.calendar-block {
-  margin-top: 2rem;
+.nav {
+  grid-area: nav;
 }
 
-@media (min-width: 1024px) {
-  .dashboard-container {
-    flex-direction: row;
-    align-items: flex-start;
+.hero {
+  grid-area: hero;
+}
+
+.grid {
+  grid-area: grid;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'hero'
+      'grid';
   }
-  .main-content {
-    flex: 1;
-    margin-right: 2rem;
-  }
-  .calendar-block {
-    width: 320px;
-    margin-top: 0;
+
+  .nav {
+    display: none;
   }
 }
 
