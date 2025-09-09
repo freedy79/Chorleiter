@@ -1,4 +1,36 @@
 <div class="dashboard-layout">
+
+  <aside class="nav">
+    <app-my-calendar></app-my-calendar>
+    <div class="upcoming-section">
+      <h2>Nächste Termine</h2>
+      <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
+        Nur meine Termine
+      </mat-slide-toggle>
+      <mat-list>
+        <mat-list-item *ngFor="let ev of nextEvents$ | async"
+          [ngStyle]="{ 'border-left': '4px solid ' + ((ev.choirId != null ? choirColors[ev.choirId] : undefined) || 'transparent'), 'padding-left': '8px' }">
+          <a href="#" (click)="openEvent(ev); $event.preventDefault()">
+            {{ ev.date | date:'shortDate' }} - {{ ev.choir?.name }} -
+            {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
+          </a>
+        </mat-list-item>
+      </mat-list>
+    </div>
+  </aside>
+
+
+<div class="quick-actions">
+  <button mat-flat-button color="primary" (click)="downloadIcs()">ICS exportieren</button>
+  <button mat-stroked-button (click)="connectGoogleCalendar()">Mit Google Kalender verbinden</button>
+  <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neu">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+
+<div class="dashboard-container">
+  <div class="main-content">
+
   <div class="hero">
     <div class="dashboard-header">
       <h1 *ngIf="(activeChoir$ | async)?.name as name">

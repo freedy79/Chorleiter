@@ -25,6 +25,7 @@ import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/buil
 import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
+import { Choir } from '@core/models/choir';
 
 @Component({
   selector: 'app-main-layout',
@@ -81,9 +82,15 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isTablet$: Observable<boolean> | undefined;
   isMedium$: Observable<boolean> | undefined;
 
-  pageTitle$: Observable<string | null>;
-  cartCount$: Observable<number>;
-  canCreateProgram$: Observable<boolean>;
+    pageTitle$: Observable<string | null>;
+    cartCount$: Observable<number>;
+    canCreateProgram$: Observable<boolean>;
+
+    availableChoirs$: Observable<Choir[]>;
+    activeChoir$: Observable<Choir | null>;
+    userInitials$: Observable<string>;
+    isSmallScreen$: Observable<boolean>;
+    searchOpen = false;
 
 
   constructor(private authService: AuthService,
@@ -118,6 +125,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       })
     );
 
+    this.availableChoirs$ = this.authService.availableChoirs$;
+    this.activeChoir$ = this.authService.activeChoir$;
+    this.userInitials$ = this.authService.currentUser$.pipe(
+      map(u => (u?.firstName?.[0] || '') + (u?.name?.[0] || ''))
+    );
+
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
       map(result => result.matches),
       tap(match => {
@@ -126,6 +139,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         this.evaluateDrawerWidth();
       }),
       shareReplay({ bufferSize: 1, refCount: true })
+    );
+
+    this.isSmallScreen$ = this.breakpointObserver.observe('(max-width: 480px)').pipe(
+      map(result => result.matches)
     );
 
     this.dienstplanEnabled$ = this.authService.activeChoir$.pipe(
@@ -207,6 +224,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   toggleDrawer() {
     this._appDrawer?.toggle();
+  }
+
+  switchChoir(id: number): void {
+    this.authService.switchChoir(id).subscribe();
   }
 
   private singerMenuVisible(key: string): Observable<boolean> {
