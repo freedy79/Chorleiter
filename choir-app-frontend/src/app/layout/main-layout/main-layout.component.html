@@ -1,6 +1,6 @@
 <mat-toolbar color="primary" class="main-toolbar">
   <ng-container *ngIf="(isLoggedIn$ | async) && !(isSmallScreen$ | async && searchOpen)">
-    <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="toggleDrawer()">
+    <button type="button" aria-label="Menü umschalten" class="sidenav-toggle" mat-icon-button (click)="toggleDrawer()">
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
   </ng-container>
@@ -109,4 +109,28 @@
 
   </mat-sidenav-content>
 </mat-sidenav-container>
+
+<nav class="bottom-nav" *ngIf="(isLoggedIn$ | async)">
+  <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+    <mat-icon>home</mat-icon>
+    <span>Home</span>
+  </a>
+  <a mat-button routerLink="/events" routerLinkActive="active">
+    <mat-icon>event</mat-icon>
+    <span>Termine</span>
+  </a>
+  <a mat-button routerLink="/dienstplan" routerLinkActive="active">
+    <mat-icon>assignment</mat-icon>
+    <span>Dienstplan</span>
+  </a>
+  <a mat-button routerLink="/repertoire" routerLinkActive="active">
+    <mat-icon>library_music</mat-icon>
+    <span>Chor</span>
+  </a>
+  <a mat-button routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin$ | async">
+    <mat-icon>settings</mat-icon>
+    <span>Admin</span>
+  </a>
+</nav>
+
 <app-footer></app-footer>
