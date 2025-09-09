@@ -18,6 +18,18 @@
     </div>
   </aside>
 
+
+<div class="quick-actions">
+  <button mat-flat-button color="primary" (click)="downloadIcs()">ICS exportieren</button>
+  <button mat-stroked-button (click)="connectGoogleCalendar()">Mit Google Kalender verbinden</button>
+  <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neu">
+    <mat-icon>add</mat-icon>
+  </button>
+</div>
+
+<div class="dashboard-container">
+  <div class="main-content">
+
   <div class="hero">
     <div class="dashboard-header">
       <h1 *ngIf="(activeChoir$ | async)?.name as name">
