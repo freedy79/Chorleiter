@@ -11,6 +11,27 @@
   </button>
 </div>
 
+<div class="hero">
+  <div class="kpi">
+    <div class="kpi-item">
+      <div class="label">Nächste Probe</div>
+      <div class="value">{{ (nextRehearsal$ | async)?.date | date:'shortDate' }}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="label">Angemeldete Sänger:innen</div>
+      <div class="value">{{ memberCount$ | async }}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="label">Offene Aufgaben</div>
+      <div class="value">{{ openTasksCount$ | async }}</div>
+    </div>
+    <div class="kpi-item">
+      <div class="label">Letzter Beitrag</div>
+      <div class="value">{{ timeAgo((latestPost$ | async)?.updatedAt) }}</div>
+    </div>
+  </div>
+</div>
+
 <div class="dashboard-container">
   <div class="main-content">
     <div class="dashboard-grid">
