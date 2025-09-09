@@ -7,6 +7,13 @@
   margin-bottom: 2rem;
 }
 
+.grid {
+  grid-area: grid;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 2fr 1.2fr;
+  grid-auto-rows: minmax(120px, auto);
+}
 
 .hero {
   margin-bottom: 2rem;
@@ -157,7 +164,7 @@
     font-size: 0.875rem;
   }
 }
-    
+
 .timeline {
   list-style: none;
   margin: 0;
