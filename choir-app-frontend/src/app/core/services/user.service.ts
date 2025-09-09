@@ -38,7 +38,7 @@ export class UserService {
     return this.http.get(`${this.apiUrl}/email-change/confirm/${token}`);
   }
 
-  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
+  completeRegistration(token: string, data: { firstName: string; name: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/invitations/${token}`, data);
   }
 
@@ -46,7 +46,7 @@ export class UserService {
     return this.http.get(`${this.apiUrl}/join/${token}`);
   }
 
-  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+  joinChoir(token: string, data: { firstName: string; name: string; email: string; password: string }): Observable<any> {
     return this.http.post(`${this.apiUrl}/join/${token}`, data);
   }
 

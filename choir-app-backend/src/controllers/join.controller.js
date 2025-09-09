@@ -14,9 +14,9 @@ exports.getJoinInfo = async (req, res) => {
 };
 
 exports.joinChoir = async (req, res) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).send({ message: 'Name, email and password are required.' });
+  const { firstName, name, email, password } = req.body;
+  if (!firstName || !name || !email || !password) {
+    return res.status(400).send({ message: 'First name, last name, email and password are required.' });
   }
   try {
     const choir = await db.choir.findOne({ where: { joinHash: req.params.token } });
@@ -25,7 +25,7 @@ exports.joinChoir = async (req, res) => {
     }
     const existing = await db.user.findOne({ where: { email } });
     if (existing) return res.status(409).send({ message: 'User already exists.' });
-    const user = await db.user.create({ name, email, password: bcrypt.hashSync(password, 8), roles: ['singer'] });
+    const user = await db.user.create({ firstName, name, email, password: bcrypt.hashSync(password, 8), roles: ['singer'] });
     await choir.addUser(user, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
     res.status(201).send({ message: 'Registration completed.' });
   } catch (err) {
