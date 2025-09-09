@@ -24,6 +24,7 @@ interface MonthColumn extends EventColumn {
 })
 export class ParticipationComponent implements OnInit {
   members: UserInChoir[] = [];
+  sortMode: 'voice' | 'name' = 'voice';
   displayMode: 'events' | 'months' = 'events';
   eventColumns: EventColumn[] = [];
   monthColumns: MonthColumn[] = [];
@@ -40,7 +41,7 @@ export class ParticipationComponent implements OnInit {
 
   private loadMembers(): void {
     this.api.getChoirMembers().subscribe(m => {
-      this.members = this.sortByVoice(m);
+      this.members = this.sortMembers(m);
     });
   }
 
@@ -104,7 +105,17 @@ export class ParticipationComponent implements OnInit {
   iconFor(status?: string): string {
     switch (status) {
       case 'AVAILABLE': return 'check';
+      case 'MAYBE': return 'help';
       case 'UNAVAILABLE': return 'close';
+      default: return '';
+    }
+  }
+
+  classFor(status?: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'available';
+      case 'MAYBE': return 'maybe';
+      case 'UNAVAILABLE': return 'unavailable';
       default: return '';
     }
   }
@@ -171,6 +182,15 @@ export class ParticipationComponent implements OnInit {
     return this.baseVoiceMap[voice] || voice;
   }
 
+  private sortMembers(members: UserInChoir[]): UserInChoir[] {
+    return this.sortMode === 'name' ? this.sortByName(members) : this.sortByVoice(members);
+  }
+
+  onSortModeChange(mode: 'voice' | 'name'): void {
+    this.sortMode = mode;
+    this.members = this.sortMembers([...this.members]);
+  }
+
   private sortByVoice(members: UserInChoir[]): UserInChoir[] {
     return members.sort((a, b) => {
       const va = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(a).toUpperCase()));
@@ -188,6 +208,13 @@ export class ParticipationComponent implements OnInit {
       if (va !== vb) return va - vb;
       const ln = aName.localeCompare(bName);
       return ln !== 0 ? ln : aFirst.localeCompare(bFirst);
+    });
+  }
+
+  private sortByName(members: UserInChoir[]): UserInChoir[] {
+    return members.sort((a, b) => {
+      const ln = a.name.localeCompare(b.name);
+      return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
     });
   }
 

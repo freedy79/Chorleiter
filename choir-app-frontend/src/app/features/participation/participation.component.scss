@@ -2,8 +2,24 @@
   overflow-x: auto;
 }
 
+.controls {
+  margin-bottom: 1em;
+}
+
 .status-icon {
   font-size: 16px;
   vertical-align: middle;
   margin-right: 2px;
+}
+
+.available {
+  color: #388e3c;
+}
+
+.maybe {
+  color: #fbc02d;
+}
+
+.unavailable {
+  color: #d32f2f;
 }
