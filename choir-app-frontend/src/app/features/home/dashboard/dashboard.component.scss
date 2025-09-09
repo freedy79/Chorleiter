@@ -7,6 +7,7 @@
   margin-bottom: 2rem;
 }
 
+
 .quick-actions {
   display: flex;
   gap: 1rem;
@@ -58,41 +59,47 @@ mat-card-content h3 {
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  grid-template-areas:
-    'nav hero'
-    'nav grid';
+  grid-template-columns: 1fr 400px;
   gap: 2rem;
 }
 
-.nav {
-  grid-area: nav;
-}
-
-.hero {
-  grid-area: hero;
-}
-
-.grid {
-  grid-area: grid;
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 @media (max-width: 1024px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
-    grid-template-areas:
-      'hero'
-      'grid';
   }
 
-  .nav {
-    display: none;
+  .content-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-.upcoming-section mat-list-item {
-  border-left: 4px solid transparent;
-  margin-bottom: 4px;
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: var(--dot-color, #1976d2);
 }
 
 .item-container {
@@ -100,12 +107,14 @@ mat-card-content h3 {
   text-align: center;
   padding: 0.5rem;
   border-bottom: 1px solid #eee;
+
   &:last-child {
     border-bottom: none;
   }
 
- .clickable {
+  .clickable {
     cursor: pointer;
+
     &:hover {
       background-color: color.adjust(#eee, $lightness: -5%);
     }
@@ -115,12 +124,15 @@ mat-card-content h3 {
     font-weight: bold;
     font-size: 1.1rem;
   }
+
   .composer {
     font-size: 0.9rem;
     color: #999;
   }
+
   .subtitle {
     font-size: 0.9rem;
     color: #666;
   }
 }
+
