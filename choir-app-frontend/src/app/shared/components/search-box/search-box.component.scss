@@ -2,14 +2,18 @@
 @use "../../../../themes/_nak-theme" as nak;
 
 .search-box {
-  width: 200px;
+  width: 100%;
   margin: 0 1rem;
 }
 
 :host {
-  position: relative;
-  top: 0.6rem;
-  right: 1rem;
+  flex: 1;
+}
+
+@media (max-width: 480px) {
+  .search-box {
+    margin: 0;
+  }
 }
 
 :root {
