@@ -18,6 +18,7 @@ export const adminRoutes: Routes = [
       { path: 'publishers', loadComponent: () => import('./manage-publishers/manage-publishers.component').then(m => m.ManagePublishersComponent), data: { title: 'Admin – Verlage' } },
       { path: 'choirs', loadComponent: () => import('./manage-choirs/manage-choirs.component').then(m => m.ManageChoirsComponent), data: { title: 'Admin – Chöre' } },
       { path: 'users', loadComponent: () => import('./manage-users/manage-users.component').then(m => m.ManageUsersComponent), data: { title: 'Admin – Benutzer' } },
+      { path: 'districts', loadComponent: () => import('./manage-districts/manage-districts.component').then(m => m.ManageDistrictsComponent), data: { title: 'Admin – Bezirke' } },
       { path: 'piece-changes', loadComponent: () => import('./manage-piece-changes/manage-piece-changes.component').then(m => m.ManagePieceChangesComponent), data: { title: 'Admin – Änderungen' } },
       { path: 'protocols', loadComponent: () => import('./protocols/protocols.component').then(m => m.ProtocolsComponent), data: { title: 'Admin – Protokolle' } },
       { path: 'develop', loadComponent: () => import('./develop/develop.component').then(m => m.DevelopComponent), data: { title: 'Admin – Develop' } },

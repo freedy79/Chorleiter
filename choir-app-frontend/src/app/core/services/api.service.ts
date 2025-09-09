@@ -53,6 +53,8 @@ import { MonthlyPlanService } from './monthly-plan.service';
 import { PostService } from './post.service';
 import { LibraryService } from './library.service';
 import { ProgramService } from './program.service';
+import { District } from '../models/district';
+import { DistrictService } from './district.service';
 
 @Injectable({
   providedIn: 'root'
@@ -80,7 +82,8 @@ export class ApiService {
               private monthlyPlanService: MonthlyPlanService,
               private postService: PostService,
               private libraryService: LibraryService,
-              private programService: ProgramService) {
+              private programService: ProgramService,
+              private districtService: DistrictService) {
 
   }
 
@@ -166,6 +169,20 @@ export class ApiService {
   }
   reportPiece(pieceId: number, category: string, reason: string) {
     return this.pieceService.reportPiece(pieceId, category, reason);
+  }
+
+  // --- Districts ---
+
+  getDistricts(): Observable<District[]> {
+    return this.districtService.getDistricts();
+  }
+
+  createDistrict(name: string): Observable<District> {
+    return this.districtService.createDistrict({ name });
+  }
+
+  deleteDistrict(id: number): Observable<any> {
+    return this.districtService.deleteDistrict(id);
   }
 
   // --- Global Piece Methods ---

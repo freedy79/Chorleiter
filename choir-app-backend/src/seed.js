@@ -100,6 +100,10 @@ async function seedDatabase(options = {}) {
                 where: { key: 'SYSTEM_ADMIN_EMAIL' },
                 defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
             });
+            const districts = ['Braunschweig', 'Göttingen', 'Hannover-Nordost', 'Hannover-Südwest', 'Hildesheim', 'Lübeck-Schwerin', 'Lüneburg', 'Wolfenbüttel'];
+            for (const name of districts) {
+                await db.district.findOrCreate({ where: { name }, defaults: { name } });
+            }
             logger.info("Initial seeding completed successfully.");
         } else {
             logger.info("Database already seeded. Skipping initial setup.");

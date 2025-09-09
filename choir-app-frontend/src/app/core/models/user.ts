@@ -28,6 +28,8 @@ export interface User {
   street?: string;
   postalCode?: string;
   city?: string;
+  parish?: string;
+  district?: string;
   voice?: string;
   shareWithChoir?: boolean;
 
