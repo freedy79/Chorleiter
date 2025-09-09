@@ -37,19 +37,27 @@
 
 
       <section class="grid">
-        <article>
-          <mat-card class="latest-post-card" *ngIf="latestPost$ | async as post">
-            <mat-card-title>Neuester Beitrag</mat-card-title>
-            <mat-card-content>
-              <h3>{{ post.title }}</h3>
-              <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
-              <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
-            </mat-card-content>
-            <mat-card-actions>
-              <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
-            </mat-card-actions>
-          </mat-card>
-        </article>
+        <ng-container *ngIf="latestPost$ | async as post; else lastServiceTile">
+          <article>
+            <mat-card class="latest-post-card">
+              <mat-card-title>Neuester Beitrag</mat-card-title>
+              <mat-card-content>
+                <h3>{{ post.title }}</h3>
+                <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+                <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
+                <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
+              </mat-card-actions>
+            </mat-card>
+          </article>
+        </ng-container>
+        <ng-template #lastServiceTile>
+          <article>
+            <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async"></app-event-card>
+          </article>
+        </ng-template>
 
         <article>
           <mat-card class="next-events-card">
@@ -114,6 +122,8 @@
             <app-my-calendar></app-my-calendar>
           </mat-card-content>
         </mat-card>
+
+        <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async"></app-event-card>
       </section>
     </div>
   </div>
