@@ -49,7 +49,7 @@ export class DashboardComponent implements OnInit {
   lastProgram$!: Observable<Program | null>;
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
-  nextEvents$!: Observable<Event[]>;
+  upcomingEvents$!: Observable<Event[]>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
@@ -97,7 +97,7 @@ export class DashboardComponent implements OnInit {
       switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
     );
 
-    this.nextEvents$ = this.refresh$.pipe(
+    this.upcomingEvents$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
     );
 
