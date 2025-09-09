@@ -14,8 +14,18 @@
   overflow: auto;
 }
 
-.post {
-  margin-bottom: 1rem;
+
+mat-divider {
+  margin: 1rem 0;
+}
+
+.load-more {
+  text-align: center;
+  margin: 1rem 0;
+
+  a {
+    cursor: pointer;
+  }
 }
 
 .no-posts {

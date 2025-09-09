@@ -19,6 +19,7 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 })
 export class PostListComponent implements OnInit {
   posts: Post[] = [];
+  displayCount = 5;
   currentUserId: number | null = null;
   isChoirAdmin = false;
   isSingerOnly = false;
@@ -45,11 +46,16 @@ export class PostListComponent implements OnInit {
   loadPosts(): void {
     this.api.getPosts().subscribe(p => {
       this.posts = p;
+      this.displayCount = Math.min(5, this.posts.length);
       const fragment = this.route.snapshot.fragment;
       if (fragment) {
         setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth' }), 0);
       }
     });
+  }
+
+  showMore(): void {
+    this.displayCount = Math.min(this.displayCount + 5, this.posts.length);
   }
 
   canEdit(post: Post): boolean {

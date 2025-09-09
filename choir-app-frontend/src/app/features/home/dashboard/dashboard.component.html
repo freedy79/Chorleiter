@@ -53,11 +53,11 @@
         <article>
           <mat-card class="latest-post-card" *ngIf="latestPost$ | async as post">
             <mat-card-title>Neuester Beitrag</mat-card-title>
-            <mat-card-content>
-              <h3>{{ post.title }}</h3>
-              <div [innerHTML]="post.text | markdown | async"></div>
-              <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
-            </mat-card-content>
+              <mat-card-content>
+                <h3>{{ post.title }}</h3>
+                <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+                <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+              </mat-card-content>
             <mat-card-actions>
               <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
               <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
