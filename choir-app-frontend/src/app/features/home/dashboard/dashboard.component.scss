@@ -188,11 +188,11 @@
   background-color: var(--dot-color, #1976d2);
 }
 
-.item-container {
-  width: 95%;
-  text-align: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
+  .item-container {
+    width: 95%;
+    text-align: center;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
 
   &:last-child {
     border-bottom: none;
@@ -204,20 +204,33 @@
     &:hover {
       background-color: color.adjust(#eee, $lightness: -5%);
     }
-  }
+    }
 
-  .title {
-    font-weight: bold;
-    font-size: 1.1rem;
-  }
+    .title {
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
 
   .composer {
     font-size: 0.9rem;
     color: #999;
   }
 
-  .subtitle {
-    font-size: 0.9rem;
-    color: #666;
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+    }
   }
+
+.latest-post-card {
+  max-height: 350px;
 }
+
+.latest-post-card .post-excerpt {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
