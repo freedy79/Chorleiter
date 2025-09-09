@@ -7,7 +7,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import * as ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { EditorConfig } from '@ckeditor/ckeditor5-core';
 
 @Component({
   selector: 'app-mail-templates',
@@ -25,9 +26,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
   public Editor = ClassicEditor;
-  editorConfig = {
+  public editorConfig: EditorConfig = {
     toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
-  } as const;
+  };
 
   constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
     this.form = this.fb.group({
