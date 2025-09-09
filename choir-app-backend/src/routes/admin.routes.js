@@ -33,6 +33,7 @@ router.post("/users", wrap(controller.createUser));
 router.put("/users/:id", wrap(controller.updateUser));
 router.delete("/users/:id", wrap(controller.deleteUser));
 router.post("/users/:id/send-password-reset", wrap(controller.sendPasswordReset));
+router.delete("/users/:id/reset-token", wrap(controller.clearResetToken));
 router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/mail-logs', wrap(controller.getMailLogs));
 router.delete('/mail-logs', wrap(controller.clearMailLogs));

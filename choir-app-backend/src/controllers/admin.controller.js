@@ -90,7 +90,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await db.user.findAll({
             order: [['name', 'ASC']],
-            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin'],
+            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin', 'resetToken', 'resetTokenExpiry'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -218,6 +218,18 @@ exports.sendPasswordReset = async (req, res) => {
             await emailService.sendPasswordResetMail(user.email, token, user.name, user.firstName);
         }
         res.status(200).send({ message: 'Reset email sent if user exists.' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.clearResetToken = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await db.user.findByPk(id);
+        if (!user) return res.status(404).send({ message: 'Not found' });
+        await user.update({ resetToken: null, resetTokenExpiry: null });
+        res.status(200).send({ message: 'Reset token cleared.' });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

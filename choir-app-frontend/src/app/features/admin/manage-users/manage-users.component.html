@@ -51,6 +51,15 @@
     <mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</mat-cell>
   </ng-container>
 
+  <ng-container matColumnDef="resetToken">
+    <mat-header-cell *matHeaderCellDef>Reset-Token</mat-header-cell>
+    <mat-cell *matCellDef="let element">
+      <ng-container *ngIf="element.resetToken">
+        {{ element.resetTokenExpiry | date:'short' }}
+      </ng-container>
+    </mat-cell>
+  </ng-container>
+
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
     <mat-cell *matCellDef="let element">
@@ -62,6 +71,9 @@
       </button>
       <button mat-icon-button (click)="sendReset(element)">
         <mat-icon>mail</mat-icon>
+      </button>
+      <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
+        <mat-icon>clear</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="deleteUser(element)">
         <mat-icon>delete</mat-icon>
@@ -99,6 +111,7 @@
       </div>
       <div><strong>Chöre:</strong> {{ choirList(element) }}</div>
       <div><strong>Letzter Login:</strong> {{ element.lastLogin | date:'short' }}</div>
+      <div *ngIf="element.resetToken"><strong>Reset-Token:</strong> {{ element.resetTokenExpiry | date:'short' }}</div>
     </div>
     <div class="mobile-actions">
       <button mat-icon-button color="primary" (click)="editUser(element)">
@@ -109,6 +122,9 @@
       </button>
       <button mat-icon-button (click)="sendReset(element)">
         <mat-icon>mail</mat-icon>
+      </button>
+      <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
+        <mat-icon>clear</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="deleteUser(element)">
         <mat-icon>delete</mat-icon>

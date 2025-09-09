@@ -76,6 +76,10 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/admin/users/${id}/send-password-reset`, {});
   }
 
+  clearResetToken(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/admin/users/${id}/reset-token`);
+  }
+
   getLoginAttempts(year?: number, month?: number): Observable<LoginAttempt[]> {
     const params: any = {};
     if (year !== undefined && month !== undefined) {
