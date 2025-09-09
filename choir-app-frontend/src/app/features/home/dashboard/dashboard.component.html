@@ -28,22 +28,9 @@
             <div class="value">{{ memberCount$ | async }}</div>
           </div>
           <div class="kpi-item">
-            <div class="label">Offene Aufgaben</div>
-            <div class="value">{{ openTasksCount$ | async }}</div>
-          </div>
-          <div class="kpi-item">
             <div class="label">Letzter Beitrag</div>
             <div class="value">{{ timeAgo((latestPost$ | async)?.updatedAt) }}</div>
           </div>
-        </div>
-
-
-        <div class="quick-actions">
-          <button mat-flat-button color="primary" (click)="downloadIcs()">ICS exportieren</button>
-          <button mat-stroked-button (click)="connectGoogleCalendar()">Mit Google Kalender verbinden</button>
-          <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neu">
-            <mat-icon>add</mat-icon>
-          </button>
         </div>
       </div>
 
@@ -53,14 +40,13 @@
         <article>
           <mat-card class="latest-post-card" *ngIf="latestPost$ | async as post">
             <mat-card-title>Neuester Beitrag</mat-card-title>
-              <mat-card-content>
-                <h3>{{ post.title }}</h3>
-                <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
-                <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
-              </mat-card-content>
+            <mat-card-content>
+              <h3>{{ post.title }}</h3>
+              <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+              <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+            </mat-card-content>
             <mat-card-actions>
               <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
-              <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
             </mat-card-actions>
           </mat-card>
         </article>
@@ -81,6 +67,13 @@
               </ul>
             </mat-card-content>
           </mat-card>
+          <div class="quick-actions">
+            <button mat-flat-button color="primary" (click)="downloadIcs()">ICS exportieren</button>
+            <button mat-stroked-button (click)="connectGoogleCalendar()">Mit Google Kalender verbinden</button>
+            <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neu">
+              <mat-icon>add</mat-icon>
+            </button>
+          </div>
         </article>
 
         <ng-container *ngIf="lastProgram$ | async as program; else lastService">
