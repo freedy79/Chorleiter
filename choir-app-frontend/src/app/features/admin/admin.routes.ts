@@ -21,6 +21,7 @@ export const adminRoutes: Routes = [
       { path: 'districts', loadComponent: () => import('./manage-districts/manage-districts.component').then(m => m.ManageDistrictsComponent), data: { title: 'Admin – Bezirke' } },
       { path: 'piece-changes', loadComponent: () => import('./manage-piece-changes/manage-piece-changes.component').then(m => m.ManagePieceChangesComponent), data: { title: 'Admin – Änderungen' } },
       { path: 'protocols', loadComponent: () => import('./protocols/protocols.component').then(m => m.ProtocolsComponent), data: { title: 'Admin – Protokolle' } },
+      { path: 'donations', loadComponent: () => import('./donations/donations.component').then(m => m.DonationsComponent), data: { title: 'Admin – Spenden' } },
       { path: 'develop', loadComponent: () => import('./develop/develop.component').then(m => m.DevelopComponent), data: { title: 'Admin – Develop' } },
       { path: 'files', loadComponent: () => import('./manage-files/manage-files.component').then(m => m.ManageFilesComponent), data: { title: 'Admin – Dateien' } },
     ],

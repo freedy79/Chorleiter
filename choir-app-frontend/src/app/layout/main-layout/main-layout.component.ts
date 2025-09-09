@@ -380,6 +380,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
           { displayName: 'Verlage', route: '/admin/publishers' },
           { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
           { displayName: 'Protokolle', route: '/admin/protocols' },
+          { displayName: 'Spenden', route: '/admin/donations' },
           { displayName: 'Dateien', route: '/admin/files' },
           { displayName: 'Develop', route: '/admin/develop' }
         ]

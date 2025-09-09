@@ -274,6 +274,18 @@ exports.clearMailLogs = async (req, res) => {
     }
 };
 
+exports.getDonations = async (req, res) => {
+    try {
+        const donations = await db.donation.findAll({
+            include: [{ model: db.user, as: 'user', attributes: ['id', 'firstName', 'name', 'email'] }],
+            order: [['donatedAt', 'DESC']]
+        });
+        res.status(200).send(donations);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 // Recalculate repertoire statuses for all choirs based on past events
 exports.recalculatePieceStatuses = async (req, res) => {
     try {

@@ -50,7 +50,7 @@ export class UserService {
     return this.http.post(`${this.apiUrl}/join/${token}`, data);
   }
 
-  registerDonation(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/users/me/donate`, {});
+  registerDonation(amount: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/users/me/donate`, { amount });
   }
 }
