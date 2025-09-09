@@ -214,8 +214,8 @@ exports.sendPasswordReset = async (req, res) => {
         if (user) {
             const token = crypto.randomBytes(32).toString('hex');
             const expiry = new Date(Date.now() + 60 * 60 * 1000);
-            await user.update({ resetToken: token, resetTokenExpiry: expiry });
             await emailService.sendPasswordResetMail(user.email, token, user.name, user.firstName);
+            await user.update({ resetToken: token, resetTokenExpiry: expiry });
         }
         res.status(200).send({ message: 'Reset email sent if user exists.' });
     } catch (err) {

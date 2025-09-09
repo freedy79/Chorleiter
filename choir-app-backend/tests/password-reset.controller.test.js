@@ -10,18 +10,28 @@ const emailService = require('../src/services/email.service');
     await db.sequelize.sync({ force: true });
     await db.user.create({ name: 'User', email: 'user@example.com' });
 
-    let called = false;
-    emailService.sendPasswordResetMail = async () => { called = true; };
+    let called = 0;
+    emailService.sendPasswordResetMail = async () => { called++; };
 
     const req = { body: { email: 'User@Example.com' } };
     const res = {
       status(code) { this.statusCode = code; return this; },
       send(data) { this.data = data; }
     };
+
     await controller.requestPasswordReset(req, res);
+    const user1 = await db.user.findOne({ where: { email: 'user@example.com' } });
+    const token1 = user1.resetToken;
+
+    await controller.requestPasswordReset(req, res);
+    const user2 = await db.user.findOne({ where: { email: 'user@example.com' } });
+    const token2 = user2.resetToken;
 
     assert.strictEqual(res.statusCode, 200);
-    assert.strictEqual(called, true, 'Mail not sent for mixed-case email');
+    assert.strictEqual(called, 2, 'Mail not sent for mixed-case email');
+    assert.ok(token1, 'Token not set after first request');
+    assert.ok(token2, 'Token not set after second request');
+    assert.notStrictEqual(token1, token2, 'Token not refreshed on second request');
 
     console.log('password-reset.controller tests passed');
     await db.sequelize.close();
