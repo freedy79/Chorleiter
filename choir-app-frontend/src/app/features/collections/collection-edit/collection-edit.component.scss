@@ -20,22 +20,39 @@
   font-style: italic;
 }
 
-.piece-link-table .piece-composer {
-  color: #666;
-  font-size: 0.9em;
-}
 
-.piece-link-table .number-cell mat-form-field {
-  width: 4rem;
+.piece-link-table {
+  width: 100%;
 
-  // Hide outline by default and only show on hover or focus
-  .mat-form-field-outline {
-    display: none;
+  .mat-column-number {
+    width: 20%;
   }
 
-  &:hover .mat-form-field-outline,
-  &.mat-focused .mat-form-field-outline {
-    display: block;
+  .mat-column-title {
+    width: auto;
+  }
+
+  .mat-column-actions {
+    width: 30%;
+  }
+
+  .piece-composer {
+    color: #666;
+    font-size: 0.9em;
+  }
+
+  .number-cell mat-form-field {
+    width: 4rem;
+
+    // Hide outline by default and only show on hover or focus
+    .mat-form-field-outline {
+      display: none;
+    }
+
+    &:hover .mat-form-field-outline,
+    &.mat-focused .mat-form-field-outline {
+      display: block;
+    }
   }
 }
 
