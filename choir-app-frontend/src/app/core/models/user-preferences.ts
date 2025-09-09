@@ -7,4 +7,6 @@ export interface UserPreferences {
     timesSung?: boolean;
     timesRehearsed?: boolean;
   };
+  /** Default availability status for new events */
+  defaultAvailability?: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
 }

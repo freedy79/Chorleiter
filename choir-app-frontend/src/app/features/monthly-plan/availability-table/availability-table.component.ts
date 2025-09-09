@@ -34,7 +34,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
       })));
   }
 
-  setStatus(date: string, status: UserAvailability['status']): void {
+  setStatus(date: string, status: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'): void {
     const i = this.availabilities.findIndex(v => v.date === date);
     if (i >= 0) this.availabilities[i].status = status;
 
@@ -46,7 +46,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
       });
   }
 
-  cellClass(status: string): string {
+  cellClass(status?: string): string {
     switch (status) {
       case 'AVAILABLE': return 'available';
       case 'MAYBE': return 'maybe';

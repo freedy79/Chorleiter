@@ -20,6 +20,7 @@ const controller = require('../src/controllers/availability.controller');
     assert.strictEqual(res.statusCode, 200);
     const aprilDates = res.data.map(a => a.date);
     assert.ok(!aprilDates.includes('2025-04-18'));
+    assert.ok(res.data.every(a => a.status === undefined));
 
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 5 } }, res);
     const mayDates = res.data.map(a => a.date);
@@ -29,6 +30,10 @@ const controller = require('../src/controllers/availability.controller');
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 5 } }, res);
     const mayWithEvent = res.data.map(a => a.date);
     assert.ok(mayWithEvent.includes('2025-05-17'));
+
+    await user.update({ preferences: { defaultAvailability: 'MAYBE' } });
+    await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 6 } }, res);
+    assert.ok(res.data.every(a => a.status === 'MAYBE'));
 
   await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 12 } }, res);
   const decDates = res.data.map(a => a.date);
