@@ -8,7 +8,6 @@ import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
-import { EditorConfig } from '@ckeditor/ckeditor5-core';
 
 @Component({
   selector: 'app-mail-templates',
@@ -25,8 +24,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   changeHtmlMode = false;
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
-  public Editor = ClassicEditor;
-  public editorConfig: EditorConfig = {
+  public Editor = ClassicEditor as any;
+  public editorConfig: any = {
     toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
   };
 
