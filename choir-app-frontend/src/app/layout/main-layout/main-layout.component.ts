@@ -37,7 +37,6 @@ import { Choir } from '@core/models/choir';
     RouterModule, // Für router-outlet und routerLink
     MaterialModule,
     FooterComponent,
-    ChoirSwitcherComponent,
     ErrorDisplayComponent,
     LoadingIndicatorComponent,
     MenuListItemComponent,
