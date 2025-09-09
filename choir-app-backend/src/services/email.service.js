@@ -18,12 +18,12 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   // merge defaults first to avoid undefined values overriding fallbacks
   const final = { date: formatDate(), ...replacements };
 
-  // prefer a provided first name over a surname and fall back to email prefix
+  // prefer provided names and fall back to the email prefix
   if (!final.surname) {
     final.surname = final.name || to.split('@')[0];
   }
   if (!final.first_name) {
-    final.first_name = final.firstName || final.name || to.split('@')[0];
+    final.first_name = final.firstName || to.split('@')[0];
   }
 
   const { subject, html, text } = buildTemplate(template, type, final);
