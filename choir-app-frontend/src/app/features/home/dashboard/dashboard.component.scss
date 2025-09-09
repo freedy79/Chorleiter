@@ -8,6 +8,38 @@
 }
 
 
+.hero {
+  margin-bottom: 2rem;
+}
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.kpi-item {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  background-color: #f5f5f5;
+  text-align: center;
+
+  .label {
+    font-size: 0.85rem;
+    color: #555;
+  }
+
+  .value {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi {
+    grid-template-columns: repeat(2, 1fr);
+
+
 .quick-actions {
   display: flex;
   gap: 1rem;

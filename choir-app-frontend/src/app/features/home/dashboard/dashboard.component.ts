@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, switchMap, take } from 'rxjs/operators';
+
+import { map, switchMap, tap, take, shareReplay } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -51,6 +52,9 @@ export class DashboardComponent implements OnInit {
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
   nextEvents$!: Observable<Event[]>;
+  nextRehearsal$!: Observable<Event | null>;
+  memberCount$!: Observable<number>;
+  openTasksCount$!: Observable<number>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
@@ -99,7 +103,17 @@ export class DashboardComponent implements OnInit {
     );
 
     this.nextEvents$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine)),
+      shareReplay(1)
+    );
+
+    this.nextRehearsal$ = this.nextEvents$.pipe(
+      map(events => events.find(ev => ev.type === 'REHEARSAL') || null)
+    );
+
+    this.memberCount$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getChoirMembers()),
+      map(members => members.length)
     );
 
     this.latestPost$ = this.refresh$.pipe(
@@ -113,6 +127,10 @@ export class DashboardComponent implements OnInit {
 
     this.pieceChanges$ = this.authService.isAdmin$.pipe(
       switchMap(isAdmin => isAdmin ? this.apiService.getPieceChangeRequests() : of([]))
+    );
+
+    this.openTasksCount$ = this.pieceChanges$.pipe(
+      map(changes => changes.length)
     );
 
     // Willkommenstext ggf. anzeigen
@@ -253,6 +271,22 @@ export class DashboardComponent implements OnInit {
 
   openLatestPost(post: Post): void {
     this.router.navigate(['/posts'], { fragment: `post-${post.id}` });
+  }
+
+  timeAgo(date: string | Date | undefined): string {
+    if (!date) {
+      return '—';
+    }
+    const d = typeof date === 'string' ? new Date(date) : date;
+    const diffMs = Date.now() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) {
+      return 'heute';
+    }
+    if (diffDays === 1) {
+      return 'vor 1 Tag';
+    }
+    return `vor ${diffDays} Tagen`;
   }
 
   getItemComposer(item: ProgramItem): string | null {
