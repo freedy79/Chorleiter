@@ -53,7 +53,7 @@
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
           <mat-icon>filter_list</mat-icon>
         </button>
-        <mat-form-field appearance="outline" class="preset-select">
+        <mat-form-field appearance="outline" class="preset-select dense">
           <mat-select placeholder="Filter" [value]="selectedPresetId" (selectionChange)="onPresetSelect($event.value)">
             <mat-option *ngFor="let p of presets" [value]="p.id">{{p.name}}</mat-option>
           </mat-select>
