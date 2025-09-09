@@ -8,26 +8,30 @@
 
   <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
+  <!-- Search bar -->
   <ng-container *ngIf="isLoggedIn$ | async">
-    <ng-container *ngIf="(isSmallScreen$ | async) as small">
-      <ng-container *ngIf="small">
-        <ng-container *ngIf="searchOpen; else searchIcon">
-          <app-search-box></app-search-box>
-          <button mat-icon-button (click)="searchOpen = false">
-            <mat-icon>close</mat-icon>
-          </button>
-        </ng-container>
-        <ng-template #searchIcon>
-          <button mat-icon-button (click)="searchOpen = true">
-            <mat-icon>search</mat-icon>
-          </button>
-        </ng-template>
-      </ng-container>
-      <ng-container *ngIf="!small">
+    <!-- Small -->
+    <ng-container *ngIf="isSmallScreen$ | async; else largeTpl">
+      <ng-container *ngIf="searchOpen; else searchIcon">
         <app-search-box></app-search-box>
+        <button mat-icon-button (click)="searchOpen = false">
+          <mat-icon>close</mat-icon>
+        </button>
       </ng-container>
+      <ng-template #searchIcon>
+        <button mat-icon-button (click)="searchOpen = true">
+          <mat-icon>search</mat-icon>
+        </button>
+      </ng-template>
     </ng-container>
+
+    <!-- Not small -->
+    <ng-template #largeTpl>
+      <app-search-box class="search"></app-search-box>
+    </ng-template>
   </ng-container>
+
+  <!-- SWITCH CHOIR -->
 
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu"
     *ngIf="(availableChoirs$ | async)?.length && !((isSmallScreen$ | async) && searchOpen)">

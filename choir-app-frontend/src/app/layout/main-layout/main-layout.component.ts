@@ -140,7 +140,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.isSmallScreen$ = this.breakpointObserver.observe('(max-width: 480px)').pipe(
+    this.isSmallScreen$ = this.breakpointObserver.observe('(max-width: 600px)').pipe(
       map(result => result.matches)
     );
 
