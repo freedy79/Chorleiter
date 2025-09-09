@@ -616,7 +616,7 @@ export class ApiService {
     return this.userService.confirmEmailChange(token);
   }
 
-  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
+  completeRegistration(token: string, data: { firstName: string; name: string; password: string }): Observable<any> {
     return this.userService.completeRegistration(token, data);
   }
 
@@ -624,7 +624,7 @@ export class ApiService {
     return this.userService.getJoinInfo(token);
   }
 
-  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+  joinChoir(token: string, data: { firstName: string; name: string; email: string; password: string }): Observable<any> {
     return this.userService.joinChoir(token, data);
   }
 

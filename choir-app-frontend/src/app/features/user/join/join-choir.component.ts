@@ -21,6 +21,7 @@ export class JoinChoirComponent implements OnInit {
               private api: ApiService, private snack: MatSnackBar,
               private router: Router) {
     this.form = this.fb.group({
+      firstName: ['', Validators.required],
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
