@@ -49,6 +49,7 @@ db.program = require("./program.model.js")(sequelize, Sequelize);
 db.program_element = require("./program_element.model.js")(sequelize, Sequelize);
 db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
 db.district = require("./district.model.js")(sequelize, Sequelize);
+db.donation = require("./donation.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -152,6 +153,10 @@ db.choir.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
+
+// Donations
+db.user.hasMany(db.donation, { as: 'donations' });
+db.donation.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 // Library items referencing collections
 db.collection.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'collectionId' });

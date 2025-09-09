@@ -38,6 +38,7 @@ import { SystemService } from './system.service';
 import { PlanRuleService } from './plan-rule.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
+import { Donation } from '../models/donation';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
@@ -794,9 +795,13 @@ export class ApiService {
         return this.systemService.pingBackend();
     }
 
-  registerDonation(): Observable<any> {
-        return this.userService.registerDonation();
-    }
+  registerDonation(amount: number): Observable<any> {
+        return this.userService.registerDonation(amount);
+  }
+
+  getDonations(): Observable<Donation[]> {
+        return this.adminService.getDonations();
+  }
 
   // --- Post Methods ---
   getPosts(): Observable<Post[]> {
