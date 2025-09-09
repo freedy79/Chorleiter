@@ -23,13 +23,13 @@ describe('MainLayoutComponent', () => {
       isLoggedIn$: of(true),
       isAdmin$: of(false),
       currentUser$: new BehaviorSubject<any>({ roles: ['singer'] }),
-      activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false } } }),
+      activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false, participation: false } } }),
       availableChoirs$: of([]),
       setCurrentUser: () => {},
       logout: () => {}
     };
     const apiServiceMock = {
-      getMyChoirDetails: () => of({ modules: { singerMenu: { events: false } } })
+      getMyChoirDetails: () => of({ modules: { singerMenu: { events: false, participation: false } } })
     };
     const breakpointMock = { observe: () => of({ matches: false }) };
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
@@ -62,10 +62,13 @@ describe('MainLayoutComponent', () => {
 
   it('hides menu items for singers based on settings', async () => {
     const eventsItem = component.navItems.find(i => i.key === 'events');
+    const participationItem = component.navItems.find(i => i.key === 'participation');
     const homeItem = component.navItems.find(i => i.key === 'dashboard');
     const eventsVisible = await firstValueFrom(eventsItem!.visibleSubject!);
+    const participationVisible = await firstValueFrom(participationItem!.visibleSubject!);
     const homeVisible = await firstValueFrom(homeItem!.visibleSubject!);
     expect(eventsVisible).toBeFalse();
+    expect(participationVisible).toBeFalse();
     expect(homeVisible).toBeTrue();
   });
 
