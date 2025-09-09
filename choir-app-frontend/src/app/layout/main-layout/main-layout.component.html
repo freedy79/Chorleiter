@@ -1,69 +1,82 @@
 <mat-toolbar color="primary" class="main-toolbar">
-  <ng-container *ngIf="(isLoggedIn$ | async)">
-  <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="toggleDrawer()">
-    <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-  </button>
+  <ng-container *ngIf="(isLoggedIn$ | async) && !(isSmallScreen$ | async && searchOpen)">
+    <button type="button" aria-label="Menü umschalten" mat-icon-button (click)="toggleDrawer()">
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
   </ng-container>
 
-  <span class="title"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
-
-  <span class="spacer"></span>
-  <app-search-box *ngIf="(isLoggedIn$ | async) && !(isHandset$ | async)"></app-search-box>
-
-  <ng-container *ngIf="(isLoggedIn$ | async) && !(donatedRecently$ | async)">
-    <button mat-button color="accent" routerLink="/donate">Spenden</button>
-  </ng-container>
-
-  <ng-container *ngIf="donatedRecently$ | async">
-    <mat-icon color="accent">favorite</mat-icon>
-  </ng-container>
+  <span class="logo-badge" *ngIf="!(isSmallScreen$ | async && searchOpen)"><a href="/" class="page-title-link">NAK Chorleiter</a></span>
 
   <ng-container *ngIf="isLoggedIn$ | async">
-    <button *ngIf="((cartCount$ | async) ?? 0) > 0" mat-icon-button routerLink="/library/request" [matBadge]="(cartCount$ | async) ?? 0" matBadgeColor="accent" matTooltip="Entleihkorb">
-      <mat-icon>shopping_cart</mat-icon>
-    </button>
-    <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}">{{ userName$ | async }}</span>
-    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
-      <mat-icon ><div class="svg_icon_white"><img src="./../../assets/icons/user-filled.svg" loading="lazy"></div></mat-icon>
-    </button>
-    <mat-menu #userMenu="matMenu">
-      <a mat-menu-item routerLink="/profile">
-          <mat-icon><img src="./../../assets/icons/user-filled.svg" class="own_icon_size" loading="lazy"></mat-icon>
-        <span>Profil</span>
-      </a>
-      <button mat-menu-item [matMenuTriggerFor]="themeMenu">
-        <mat-icon>contrast</mat-icon>
-        <span>Theme</span>
-      </button>
-      <button *ngIf="isAdmin$ | async" mat-menu-item (click)="openBuildInfo()">
-        <mat-icon>info</mat-icon>
-        <span>Build Info</span>
-      </button>
-      <button mat-menu-item (click)="openHelp()">
-        <mat-icon>help_outline</mat-icon>
-        <span>Hilfe</span>
-      </button>
-      <button mat-menu-item (click)="logout()">
-          <mat-icon><img src="./../../assets/icons/logout.svg" class="own_icon_size" loading="lazy"></mat-icon>
-        <span>Abmelden</span>
-      </button>
-    </mat-menu>
-
-    <mat-menu #themeMenu="matMenu">
-      <button mat-menu-item (click)="setTheme('light')">
-        <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
-        <span>Light</span>
-      </button>
-      <button mat-menu-item (click)="setTheme('dark')">
-        <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
-        <span>Dark</span>
-      </button>
-      <button mat-menu-item (click)="setTheme('system')">
-        <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
-        <span>System</span>
-      </button>
-    </mat-menu>
+    <ng-container *ngIf="(isSmallScreen$ | async) as small">
+      <ng-container *ngIf="small">
+        <ng-container *ngIf="searchOpen; else searchIcon">
+          <app-search-box></app-search-box>
+          <button mat-icon-button (click)="searchOpen = false">
+            <mat-icon>close</mat-icon>
+          </button>
+        </ng-container>
+        <ng-template #searchIcon>
+          <button mat-icon-button (click)="searchOpen = true">
+            <mat-icon>search</mat-icon>
+          </button>
+        </ng-template>
+      </ng-container>
+      <ng-container *ngIf="!small">
+        <app-search-box></app-search-box>
+      </ng-container>
+    </ng-container>
   </ng-container>
+
+  <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" *ngIf="(availableChoirs$ | async)?.length && !(isSmallScreen$ | async && searchOpen)">
+    {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
+  </button>
+  <mat-menu #choirMenu="matMenu">
+    <button mat-menu-item *ngFor="let c of (availableChoirs$ | async)" (click)="switchChoir(c.id)">{{ c.name }}</button>
+  </mat-menu>
+
+  <span class="user-name" *ngIf="(isLoggedIn$ | async) && !(isSmallScreen$ | async && searchOpen)">{{ userName$ | async }}</span>
+  <button mat-icon-button class="avatar-btn" [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil" *ngIf="(isLoggedIn$ | async) && !(isSmallScreen$ | async && searchOpen)">
+    <span class="avatar">{{ userInitials$ | async }}</span>
+  </button>
+
+  <mat-menu #userMenu="matMenu">
+    <a mat-menu-item routerLink="/profile">
+        <mat-icon><img src="./../../assets/icons/user-filled.svg" class="own_icon_size" loading="lazy"></mat-icon>
+      <span>Profil</span>
+    </a>
+    <button mat-menu-item [matMenuTriggerFor]="themeMenu">
+      <mat-icon>contrast</mat-icon>
+      <span>Theme</span>
+    </button>
+    <button *ngIf="isAdmin$ | async" mat-menu-item (click)="openBuildInfo()">
+      <mat-icon>info</mat-icon>
+      <span>Build Info</span>
+    </button>
+    <button mat-menu-item (click)="openHelp()">
+      <mat-icon>help_outline</mat-icon>
+      <span>Hilfe</span>
+    </button>
+    <button mat-menu-item (click)="logout()">
+        <mat-icon><img src="./../../assets/icons/logout.svg" class="own_icon_size" loading="lazy"></mat-icon>
+      <span>Abmelden</span>
+    </button>
+  </mat-menu>
+
+  <mat-menu #themeMenu="matMenu">
+    <button mat-menu-item (click)="setTheme('light')">
+      <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
+      <span>Light</span>
+    </button>
+    <button mat-menu-item (click)="setTheme('dark')">
+      <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
+      <span>Dark</span>
+    </button>
+    <button mat-menu-item (click)="setTheme('system')">
+      <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
+      <span>System</span>
+    </button>
+  </mat-menu>
 </mat-toolbar>
 
 <mat-sidenav-container class="site-container">

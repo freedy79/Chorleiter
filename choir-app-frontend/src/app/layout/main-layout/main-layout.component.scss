@@ -23,6 +23,45 @@
   }
 }
 
+.logo-badge {
+  font-weight: 600;
+  padding: 0 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  margin-right: 1rem;
+}
+
+.choir-badge {
+  margin: 0 1rem;
+  text-transform: none;
+}
+
+app-search-box {
+  flex: 1;
+}
+
+.avatar {
+  background: #fff;
+  color: var(--primary-color, #1976d2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.avatar-btn {
+  padding: 0;
+}
+
+@media (max-width: 480px) {
+  app-search-box {
+    margin: 0;
+  }
+}
+
 .spacer {
   flex: 1 1 auto;
 }
