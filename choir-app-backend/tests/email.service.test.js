@@ -33,6 +33,12 @@ const db = require('../src/models');
       await emailService2.sendInvitationMail('tester@example.com', 'tok', 'Choir', new Date(), undefined, 'Invitor', undefined);
       assert.ok(capturedOptions.html.includes('tester tester'), 'Fallback to email prefix failed');
 
+      // Test that first_name does not fall back to surname when only surname is provided
+      capturedOptions = undefined;
+      await db.mail_template.create({ type: 'reset', subject: '', body: 'Hallo {{first_name}} {{surname}}' });
+      await emailService2.sendPasswordResetMail('tester@example.com', 'tok', 'Nachname', undefined);
+      assert.ok(capturedOptions.html.includes('tester Nachname'), 'First name should fall back to email prefix, not surname');
+
       emailTransporter.sendMail = originalSendMail;
 
       console.log('email.service tests passed');
