@@ -1,7 +1,11 @@
 <h2>Dem Chor "{{choirName}}" beitreten</h2>
 <form [formGroup]="form" (ngSubmit)="submit()">
   <mat-form-field appearance="outline">
-    <mat-label>Name</mat-label>
+    <mat-label>Vorname</mat-label>
+    <input matInput formControlName="firstName">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Nachname</mat-label>
     <input matInput formControlName="name">
   </mat-form-field>
   <mat-form-field appearance="outline">

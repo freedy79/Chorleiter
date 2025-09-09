@@ -134,11 +134,14 @@ exports.getMe = async (req, res) => {
 
 exports.registerDonation = async (req, res) => {
     try {
+        const { amount } = req.body;
         const user = await User.findByPk(req.userId);
         if (!user) {
             return res.status(404).send({ message: "User not found." });
         }
-        user.lastDonation = new Date();
+        const donatedAt = new Date();
+        await db.donation.create({ userId: req.userId, amount: parseFloat(amount) || 0, donatedAt });
+        user.lastDonation = donatedAt;
         await user.save();
         res.status(200).send({ message: "Donation recorded." });
     } catch (err) {

@@ -12,6 +12,7 @@ import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 import { MailLog } from '../models/mail-log';
+import { Donation } from '../models/donation';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -186,5 +187,9 @@ export class AdminService {
 
   updateSystemAdminEmail(data: SystemAdminEmail): Observable<SystemAdminEmail> {
     return this.http.put<SystemAdminEmail>(`${this.apiUrl}/admin/system-admin-email`, data);
+  }
+
+  getDonations(): Observable<Donation[]> {
+    return this.http.get<Donation[]>(`${this.apiUrl}/admin/donations`);
   }
 }

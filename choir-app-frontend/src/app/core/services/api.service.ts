@@ -38,6 +38,7 @@ import { SystemService } from './system.service';
 import { PlanRuleService } from './plan-rule.service';
 import { StatsSummary } from '../models/stats-summary';
 import { RepertoireFilter } from '../models/repertoire-filter';
+import { Donation } from '../models/donation';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
 import { FrontendUrl } from '../models/frontend-url';
@@ -616,7 +617,7 @@ export class ApiService {
     return this.userService.confirmEmailChange(token);
   }
 
-  completeRegistration(token: string, data: { name: string; password: string }): Observable<any> {
+  completeRegistration(token: string, data: { firstName: string; name: string; password: string }): Observable<any> {
     return this.userService.completeRegistration(token, data);
   }
 
@@ -624,7 +625,7 @@ export class ApiService {
     return this.userService.getJoinInfo(token);
   }
 
-  joinChoir(token: string, data: { name: string; email: string; password: string }): Observable<any> {
+  joinChoir(token: string, data: { firstName: string; name: string; email: string; password: string }): Observable<any> {
     return this.userService.joinChoir(token, data);
   }
 
@@ -794,9 +795,13 @@ export class ApiService {
         return this.systemService.pingBackend();
     }
 
-  registerDonation(): Observable<any> {
-        return this.userService.registerDonation();
-    }
+  registerDonation(amount: number): Observable<any> {
+        return this.userService.registerDonation(amount);
+  }
+
+  getDonations(): Observable<Donation[]> {
+        return this.adminService.getDonations();
+  }
 
   // --- Post Methods ---
   getPosts(): Observable<Post[]> {
