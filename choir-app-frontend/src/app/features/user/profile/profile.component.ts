@@ -9,6 +9,7 @@ import { User } from '@core/models/user';
 import { Choir } from '@core/models/choir';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
+import { District } from '@core/models/district';
 
 export function passwordsMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -34,6 +35,7 @@ export class ProfileComponent implements OnInit {
   currentUser: User | null = null;
   isLoading = true;
   availableChoirs$: Observable<Choir[]>;
+  districts: District[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -49,6 +51,8 @@ export class ProfileComponent implements OnInit {
       street: [''],
       postalCode: [''],
       city: [''],
+      parish: [''],
+      district: [''],
       voice: [''],
       shareWithChoir: [false],
       roles: [{ value: [], disabled: true }],
@@ -61,6 +65,7 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.apiService.getDistricts().subscribe(ds => this.districts = ds);
     this.apiService.getCurrentUser().subscribe({
       next: (user) => {
         this.currentUser = user;
@@ -72,12 +77,17 @@ export class ProfileComponent implements OnInit {
           street: user.street || '',
           postalCode: user.postalCode || '',
           city: user.city || '',
+          parish: user.parish || '',
+          district: user.district || '',
           voice: user.voice || '',
           shareWithChoir: !!user.shareWithChoir,
           roles: user.roles || []
         });
         if (user.roles?.includes('admin')) {
           this.profileForm.get('roles')?.enable();
+        }
+        if (!user.parish || !user.district) {
+          this.snackBar.open('Bitte ergänze dein Profil um Gemeinde und Bezirk.', 'OK', { duration: 10000, verticalPosition: 'top' });
         }
         this.isLoading = false;
       },
@@ -95,13 +105,15 @@ export class ProfileComponent implements OnInit {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; parish?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
       firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
       street: formValue.street,
       postalCode: formValue.postalCode,
       city: formValue.city,
+      parish: formValue.parish,
+      district: formValue.district,
       voice: formValue.voice,
       shareWithChoir: formValue.shareWithChoir
     };

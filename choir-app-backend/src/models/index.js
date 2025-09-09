@@ -48,6 +48,7 @@ db.loan_request_item = require("./loan_request_item.model.js")(sequelize, Sequel
 db.program = require("./program.model.js")(sequelize, Sequelize);
 db.program_element = require("./program_element.model.js")(sequelize, Sequelize);
 db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
+db.district = require("./district.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---

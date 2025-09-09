@@ -13,6 +13,7 @@ class MockApiService {
     return of({ id: 1, firstName: 'Admin', name: 'User', email: 'admin@example.com', roles: ['admin'] });
   }
   updateCurrentUser() { return of({}); }
+  getDistricts() { return of([]); }
 }
 
 describe('ProfileComponent', () => {

@@ -50,6 +50,19 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
+            <mat-label>Bezirk</mat-label>
+            <input type="text" matInput formControlName="district" [matAutocomplete]="districtAuto">
+            <mat-autocomplete #districtAuto="matAutocomplete">
+              <mat-option *ngFor="let d of districts" [value]="d.name">{{ d.name }}</mat-option>
+            </mat-autocomplete>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Gemeinde</mat-label>
+            <input matInput formControlName="parish">
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
             <mat-label>Stimmlage</mat-label>
             <mat-select formControlName="voice">
               <mat-option value="">-</mat-option>
