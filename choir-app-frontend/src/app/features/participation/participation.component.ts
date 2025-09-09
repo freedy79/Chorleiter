@@ -175,15 +175,19 @@ export class ParticipationComponent implements OnInit {
     return members.sort((a, b) => {
       const va = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(a).toUpperCase()));
       const vb = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(b).toUpperCase()));
+      const aName = a.name ?? '';
+      const bName = b.name ?? '';
+      const aFirst = a.firstName ?? '';
+      const bFirst = b.firstName ?? '';
       if (va === -1 && vb === -1) {
-        const ln = a.name.localeCompare(b.name);
-        return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
+        const ln = aName.localeCompare(bName);
+        return ln !== 0 ? ln : aFirst.localeCompare(bFirst);
       }
       if (va === -1) return 1;
       if (vb === -1) return -1;
       if (va !== vb) return va - vb;
-      const ln = a.name.localeCompare(b.name);
-      return ln !== 0 ? ln : (a.firstName || '').localeCompare(b.firstName || '');
+      const ln = aName.localeCompare(bName);
+      return ln !== 0 ? ln : aFirst.localeCompare(bFirst);
     });
   }
 
