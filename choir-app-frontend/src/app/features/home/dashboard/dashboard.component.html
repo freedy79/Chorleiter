@@ -1,4 +1,5 @@
 <div class="dashboard-layout">
+
   <aside class="nav">
     <app-my-calendar></app-my-calendar>
     <div class="upcoming-section">
@@ -46,74 +47,73 @@
   </div>
 
   <div class="grid">
-    <div class="dashboard-grid">
+    <div class="content-grid">
+      <mat-card class="next-events-card">
+        <mat-card-title>Nächste Termine</mat-card-title>
+        <mat-card-content>
+          <ul class="timeline">
+            <li *ngFor="let ev of nextEvents$ | async"
+                [style.--dot-color]="(ev.choirId != null ? choirColors[ev.choirId] : undefined) || '#1976d2'">
+              <a href="#" (click)="openEvent(ev); $event.preventDefault()">
+                <span class="date">{{ ev.date | date:'dd.MM.y' }}</span>
+                <span class="info">{{ ev.choir?.name }} – {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}</span>
+              </a>
+            </li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="latest-post-card" *ngIf="latestPost$ | async as post">
+        <mat-card-title>Neuester Beitrag</mat-card-title>
+        <mat-card-content>
+          <h3>{{ post.title }}</h3>
+          <div [innerHTML]="post.text | markdown | async"></div>
+          <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
+          <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
+        </mat-card-actions>
+      </mat-card>
+
       <ng-container *ngIf="lastProgram$ | async as program; else lastService">
-        <mat-card class="program-card">
-          <h2>Letzter Gottesdienst</h2>
-          <h3>{{ program.title }}</h3>
-          <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
-          <mat-list>
-            <ng-container *ngFor="let item of program.items">
-              <div class="item-container">
-                <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable" [routerLink]="['/pieces', item.pieceId]">
-                  <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-                  <div matLine class="title">{{ getItemTitle(item) }}</div>
-                  <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                </a>
-              </div>
-              <ng-template #noPiece>
-                <mat-list-item>
-                  <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-                  <div matLine class="title">{{ getItemTitle(item) }}</div>
-                  <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                </mat-list-item>
-              </ng-template>
-            </ng-container>
-          </mat-list>
+        <mat-card class="last-service-card">
+          <mat-card-title>Letzter Gottesdienst</mat-card-title>
+          <mat-card-content>
+            <h3>{{ program.title }}</h3>
+            <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
+            <mat-list>
+              <ng-container *ngFor="let item of program.items">
+                <div class="item-container">
+                  <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable" [routerLink]="['/pieces', item.pieceId]">
+                    <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                    <div matLine class="title">{{ getItemTitle(item) }}</div>
+                    <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                  </a>
+                </div>
+                <ng-template #noPiece>
+                  <mat-list-item>
+                    <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                    <div matLine class="title">{{ getItemTitle(item) }}</div>
+                    <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                  </mat-list-item>
+                </ng-template>
+              </ng-container>
+            </mat-list>
+          </mat-card-content>
         </mat-card>
       </ng-container>
       <ng-template #lastService>
-        <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async">
-        </app-event-card>
+        <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async"></app-event-card>
       </ng-template>
 
-      <!-- Verwenden Sie die neue Komponente für die Probe -->
-      <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async">
-      </app-event-card>
-    </div>
-
-    <div class="latest-post" *ngIf="latestPost$ | async as post" (click)="openLatestPost(post)" tabindex="0" role="link">
-      <h2>Neuster Beitrag</h2>
-      <h3>{{ post.title }}</h3>
-      <div [innerHTML]="post.text | markdown | async"></div>
-      <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
-    </div>
-
-    <ng-container *ngIf="borrowedItems$ | async as borrowed">
-      <div class="borrowed-section" *ngIf="borrowed.length > 0">
-        <h2>Entliehene Sammlungen</h2>
-        <mat-list>
-          <mat-list-item *ngFor="let item of borrowed">
-            {{ item.collection?.title || ('Sammlung ' + item.collectionId) }}
-            (Ablauf: {{ item.availableAt | date:'shortDate' }})
-          </mat-list-item>
-        </mat-list>
-      </div>
-    </ng-container>
-
-    <div *ngIf="isAdmin$ | async">
-      <ng-container *ngIf="pieceChanges$ | async as changes">
-        <div *ngIf="changes.length > 0">
-          <h2>Änderungsvorschläge</h2>
-          <mat-list>
-            <mat-list-item *ngFor="let c of changes">
-              <div matLine>{{ c.piece?.title || 'Piece ' + c.pieceId }}</div>
-              <button mat-button color="primary" (click)="approvePieceChange(c)">Übernehmen</button>
-              <button mat-button color="warn" (click)="declinePieceChange(c)">Ablehnen</button>
-            </mat-list-item>
-          </mat-list>
-        </div>
-      </ng-container>
+      <mat-card class="calendar-card">
+        <mat-card-title>Meine Termine</mat-card-title>
+        <mat-card-content>
+          <app-my-calendar></app-my-calendar>
+        </mat-card-content>
+      </mat-card>
     </div>
   </div>
 </div>
+
