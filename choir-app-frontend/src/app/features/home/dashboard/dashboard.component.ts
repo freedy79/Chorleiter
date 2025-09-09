@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of } from 'rxjs';
+
 import { map, switchMap, tap, take, shareReplay } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -24,6 +25,7 @@ import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.
 import { UserService } from '@core/services/user.service';
 import { LibraryItem } from '@core/models/library-item';
 import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -179,6 +181,20 @@ export class DashboardComponent implements OnInit {
         });
       }
     });
+  }
+
+  downloadIcs(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const url = `${environment.apiUrl}/events/ics?token=${token}`;
+    window.open(url, '_blank');
+  }
+
+  connectGoogleCalendar(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
+    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
   }
 
   openEvent(ev: Event): void {
