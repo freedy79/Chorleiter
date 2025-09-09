@@ -29,6 +29,8 @@ export class UserDialogComponent {
       street: [data?.street || ''],
       postalCode: [data?.postalCode || ''],
       city: [data?.city || ''],
+      district: [data?.district || ''],
+      congregation: [data?.congregation || ''],
       voice: [data?.voice || ''],
       shareWithChoir: [data?.shareWithChoir || false],
       roles: [data?.roles || ['director'], Validators.required],

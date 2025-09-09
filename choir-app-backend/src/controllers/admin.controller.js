@@ -90,7 +90,7 @@ exports.getAllUsers = async (req, res) => {
     try {
         const users = await db.user.findAll({
             order: [['name', 'ASC']],
-            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin', 'resetToken', 'resetTokenExpiry'],
+            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin', 'resetToken', 'resetTokenExpiry'],
             include: [{
                 model: db.choir,
                 as: 'choirs',
@@ -107,7 +107,7 @@ exports.getAllUsers = async (req, res) => {
 const bcrypt = require('bcryptjs');
 
 exports.createUser = async (req, res) => {
-    const { firstName, name, email, password, roles, street, postalCode, city, voice, shareWithChoir } = req.body;
+    const { firstName, name, email, password, roles, street, postalCode, city, congregation, district, voice, shareWithChoir } = req.body;
     try {
         const VOICE_OPTIONS = db.user.rawAttributes.voice.values;
         const normalizedVoice = voice === '' ? null : voice;
@@ -124,6 +124,8 @@ exports.createUser = async (req, res) => {
             street,
             postalCode,
             city,
+            congregation,
+            district,
             voice: normalizedVoice,
             shareWithChoir: !!shareWithChoir
         });
@@ -139,7 +141,7 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { firstName, name, email, password, roles, street, postalCode, city, voice, shareWithChoir } = req.body;
+    const { firstName, name, email, password, roles, street, postalCode, city, congregation, district, voice, shareWithChoir } = req.body;
     try {
         const VOICE_OPTIONS = db.user.rawAttributes.voice.values;
         const user = await db.user.findByPk(id);
@@ -153,6 +155,8 @@ exports.updateUser = async (req, res) => {
             street: street ?? user.street,
             postalCode: postalCode ?? user.postalCode,
             city: city ?? user.city,
+            congregation: congregation ?? user.congregation,
+            district: district ?? user.district,
             shareWithChoir: shareWithChoir !== undefined ? !!shareWithChoir : user.shareWithChoir,
             ...(password ? { password: bcrypt.hashSync(password, 8) } : {})
         };
@@ -191,7 +195,7 @@ exports.getUserByEmail = async (req, res) => {
     try {
         const user = await db.user.findOne({
             where: { email },
-            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin'],
+            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'lastDonation', 'lastLogin'],
             include: [{
                 model: db.choir,
                 as: 'choirs',

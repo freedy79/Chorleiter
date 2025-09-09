@@ -51,7 +51,7 @@ export class ProfileComponent implements OnInit {
       street: [''],
       postalCode: [''],
       city: [''],
-      parish: [''],
+      congregation: [''],
       district: [''],
       voice: [''],
       shareWithChoir: [false],
@@ -77,7 +77,7 @@ export class ProfileComponent implements OnInit {
           street: user.street || '',
           postalCode: user.postalCode || '',
           city: user.city || '',
-          parish: user.parish || '',
+          congregation: user.congregation || '',
           district: user.district || '',
           voice: user.voice || '',
           shareWithChoir: !!user.shareWithChoir,
@@ -86,7 +86,7 @@ export class ProfileComponent implements OnInit {
         if (user.roles?.includes('admin')) {
           this.profileForm.get('roles')?.enable();
         }
-        if (!user.parish || !user.district) {
+        if (!user.congregation || !user.district) {
           this.snackBar.open('Bitte ergänze dein Profil um Gemeinde und Bezirk.', 'OK', { duration: 10000, verticalPosition: 'top' });
         }
         this.isLoading = false;
@@ -105,14 +105,14 @@ export class ProfileComponent implements OnInit {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; parish?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
       firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
       street: formValue.street,
       postalCode: formValue.postalCode,
       city: formValue.city,
-      parish: formValue.parish,
+      congregation: formValue.congregation,
       district: formValue.district,
       voice: formValue.voice,
       shareWithChoir: formValue.shareWithChoir

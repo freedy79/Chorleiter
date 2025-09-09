@@ -61,7 +61,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     },
-    parish: {
+    congregation: {
       type: DataTypes.STRING,
       allowNull: true,
     },
