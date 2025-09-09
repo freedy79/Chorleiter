@@ -114,6 +114,50 @@
   }
 }
 
+.upcoming-timeline {
+  padding: 1rem;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: #fff;
+
+  .timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    border-left: 2px solid #eee;
+    padding-left: 1rem;
+  }
+
+  .item {
+    position: relative;
+    margin-bottom: 1rem;
+    cursor: pointer;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .dot {
+    position: absolute;
+    left: -1.15rem;
+    top: 0.4rem;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #3f51b5;
+  }
+
+  .muted {
+    color: #666;
+    font-size: 0.875rem;
+  }
+}
+    
 .timeline {
   list-style: none;
   margin: 0;

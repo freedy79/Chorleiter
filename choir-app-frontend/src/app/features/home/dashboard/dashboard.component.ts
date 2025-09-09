@@ -51,6 +51,8 @@ export class DashboardComponent implements OnInit {
   lastProgram$!: Observable<Program | null>;
   activeChoir$: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
+
+  upcomingEvents$!: Observable<Event[]>;
   nextEvents$!: Observable<Event[]>;
   nextRehearsal$!: Observable<Event | null>;
   memberCount$!: Observable<number>;
@@ -100,6 +102,11 @@ export class DashboardComponent implements OnInit {
 
     this.lastRehearsal$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
+    );
+
+
+    this.upcomingEvents$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
     );
 
     this.nextEvents$ = this.refresh$.pipe(

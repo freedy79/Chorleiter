@@ -2,21 +2,25 @@
 
   <aside class="nav">
     <app-my-calendar></app-my-calendar>
-    <div class="upcoming-section">
-      <h2>Nächste Termine</h2>
-      <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
-        Nur meine Termine
-      </mat-slide-toggle>
-      <mat-list>
-        <mat-list-item *ngFor="let ev of nextEvents$ | async"
-          [ngStyle]="{ 'border-left': '4px solid ' + ((ev.choirId != null ? choirColors[ev.choirId] : undefined) || 'transparent'), 'padding-left': '8px' }">
-          <a href="#" (click)="openEvent(ev); $event.preventDefault()">
-            {{ ev.date | date:'shortDate' }} - {{ ev.choir?.name }} -
-            {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
-          </a>
-        </mat-list-item>
-      </mat-list>
-    </div>
+    <article class="card upcoming-timeline">
+      <div class="timeline-header">
+        <h3>Nächste Termine</h3>
+        <mat-slide-toggle [(ngModel)]="showOnlyMine" (change)="onToggleMine()">
+          Nur meine Termine
+        </mat-slide-toggle>
+      </div>
+      <div class="timeline">
+        <ng-container *ngFor="let ev of upcomingEvents$ | async">
+          <div class="item" (click)="openEvent(ev)" tabindex="0" role="button">
+            <div class="dot" aria-hidden="true"></div>
+            <div>
+              <div><strong>{{ ev.date | date:'dd.MM.yy' }}</strong> · {{ ev.title }}</div>
+              <div class="muted">{{ ev.timeRange }}<ng-container *ngIf="ev.location">, {{ ev.location }}</ng-container></div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </article>
   </aside>
 
 
