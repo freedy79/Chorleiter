@@ -51,7 +51,12 @@ exports.findByMonth = async (req, res) => {
         }
     });
     const map = Object.fromEntries(avail.map(a => [a.date, a]));
-    const result = dates.map(d => map[d] ? map[d] : { date: d, status: 'AVAILABLE' });
+    const user = await db.user.findByPk(req.userId);
+    const defaultStatus = user?.preferences?.defaultAvailability;
+    const result = dates.map(d => {
+        if (map[d]) return map[d];
+        return defaultStatus ? { date: d, status: defaultStatus } : { date: d };
+    });
     res.status(200).send(result);
 };
 

@@ -6,8 +6,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         status: {
             type: DataTypes.ENUM('AVAILABLE', 'MAYBE', 'UNAVAILABLE'),
-            allowNull: false,
-            defaultValue: 'AVAILABLE'
+            allowNull: false
         }
     });
     return UserAvailability;
