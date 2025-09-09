@@ -99,7 +99,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
-    this.userName$ = this.authService.currentUser$.pipe(map(u => u?.name));
+    this.userName$ = this.authService.currentUser$.pipe(map(u => u?.firstName + ' ' + u?.name));
     this.donatedRecently$ = this.authService.currentUser$.pipe(
       map(u => {
         if (!u?.lastDonation) return false;
