@@ -50,6 +50,8 @@ export interface User {
   availableChoirs?: Choir[];
   lastDonation?: string;
   lastLogin?: string;
+  resetToken?: string | null;
+  resetTokenExpiry?: string | null;
 }
 
 export interface UserInChoir extends User {

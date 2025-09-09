@@ -22,7 +22,7 @@ import { map } from 'rxjs/operators';
 })
 export class ManageUsersComponent implements OnInit {
   users: User[] = [];
-  displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'actions'];
+  displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'resetToken', 'actions'];
   dataSource = new MatTableDataSource<User>();
   filterValue = '';
   isHandset$: Observable<boolean>;
@@ -94,6 +94,16 @@ export class ManageUsersComponent implements OnInit {
     if (confirm('Passwort-Reset-E-Mail senden?')) {
       this.api.sendPasswordReset(user.id).subscribe(() => {
         this.snack.open('E-Mail gesendet, falls der Benutzer existiert.', 'OK', { duration: 3000 });
+      });
+    }
+  }
+
+  clearReset(user: User): void {
+    if (confirm('Reset-Token löschen?')) {
+      this.api.clearResetToken(user.id).subscribe(() => {
+        user.resetToken = null;
+        user.resetTokenExpiry = null;
+        this.snack.open('Reset-Token gelöscht', 'OK', { duration: 3000 });
       });
     }
   }

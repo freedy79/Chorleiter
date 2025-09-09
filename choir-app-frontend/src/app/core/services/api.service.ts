@@ -681,6 +681,10 @@ export class ApiService {
     return this.adminService.sendPasswordReset(id);
   }
 
+  clearResetToken(id: number): Observable<any> {
+    return this.adminService.clearResetToken(id);
+  }
+
   getLoginAttempts(year?: number, month?: number): Observable<LoginAttempt[]> {
     return this.adminService.getLoginAttempts(year, month);
   }
