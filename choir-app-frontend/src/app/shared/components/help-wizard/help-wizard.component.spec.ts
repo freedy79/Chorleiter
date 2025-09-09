@@ -12,7 +12,7 @@ describe('HelpWizardComponent', () => {
   beforeEach(async () => {
     const authServiceMock = {
       currentUser$: new BehaviorSubject<any>({ roles: ['singer'] }),
-      activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false } } })
+      activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false, participation: false } } })
     };
 
     await TestBed.configureTestingModule({
@@ -32,7 +32,10 @@ describe('HelpWizardComponent', () => {
   it('hides menu items disabled for singers', (done) => {
     component.menuVisible('events').subscribe(visible => {
       expect(visible).toBeFalse();
-      done();
+      component.menuVisible('participation').subscribe(pVisible => {
+        expect(pVisible).toBeFalse();
+        done();
+      });
     });
   });
 });
