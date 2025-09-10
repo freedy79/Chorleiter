@@ -86,9 +86,8 @@
 
         <ng-container *ngIf="lastProgram$ | async as program; else lastService">
           <mat-card class="last-service-card">
-            <mat-card-title>Letzter Gottesdienst</mat-card-title>
+            <mat-card-title>{{ program.title }}</mat-card-title>
             <mat-card-content>
-              <h3>{{ program.title }}</h3>
               <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
               <mat-list>
                 <ng-container *ngFor="let item of program.items">
