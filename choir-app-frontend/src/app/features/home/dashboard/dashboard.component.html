@@ -37,29 +37,22 @@
 
 
       <section class="grid">
-        <ng-container *ngIf="latestPost$ | async as post; else lastServiceTile">
-          <article>
-            <mat-card class="latest-post-card">
-              <mat-card-title>Neuester Beitrag</mat-card-title>
-              <mat-card-content>
-                <h3>{{ post.title }}</h3>
-                <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
-                <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
-              </mat-card-content>
-              <mat-card-actions>
-                <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
-                <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
-              </mat-card-actions>
-            </mat-card>
-          </article>
-        </ng-container>
-        <ng-template #lastServiceTile>
-          <article>
-            <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async"></app-event-card>
-          </article>
-        </ng-template>
+        <article *ngIf="latestPost$ | async as post" class="left-tile">
+          <mat-card class="latest-post-card">
+            <mat-card-title>Neuester Beitrag</mat-card-title>
+            <mat-card-content>
+              <h3>{{ post.title }}</h3>
+              <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+              <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+            </mat-card-content>
+            <mat-card-actions>
+              <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
+              <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
+            </mat-card-actions>
+          </mat-card>
+        </article>
 
-        <article>
+        <article class="right-tile">
           <mat-card class="next-events-card">
             <mat-card-title>Nächste Termine</mat-card-title>
             <mat-card-content>
@@ -84,45 +77,42 @@
           </div>
         </article>
 
-        <ng-container *ngIf="lastProgram$ | async as program; else lastService">
-          <mat-card class="last-service-card">
-            <mat-card-title>{{ program.title }}</mat-card-title>
-            <mat-card-content>
-              <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
-              <mat-list>
-                <ng-container *ngFor="let item of program.items">
-                  <div class="item-container">
-                    <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
-                      [routerLink]="['/pieces', item.pieceId]">
-                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-                      <div matLine class="title">{{ getItemTitle(item) }}</div>
-                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                    </a>
-                  </div>
-                  <ng-template #noPiece>
-                    <mat-list-item>
-                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-                      <div matLine class="title">{{ getItemTitle(item) }}</div>
-                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                    </mat-list-item>
-                  </ng-template>
-                </ng-container>
-              </mat-list>
-            </mat-card-content>
-          </mat-card>
-        </ng-container>
-        <ng-template #lastService>
-          <app-event-card cardTitle="Letzter Gottesdienst" [event]="lastService$ | async"></app-event-card>
-        </ng-template>
+        <mat-card *ngIf="lastProgram$ | async as program" class="last-service-card left-tile">
+          <mat-card-title>{{ program.title }}</mat-card-title>
+          <mat-card-content>
+            <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
+            <mat-list>
+              <ng-container *ngFor="let item of program.items">
+                <div class="item-container">
+                  <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
+                    [routerLink]="['/pieces', item.pieceId]">
+                    <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                    <div matLine class="title">{{ getItemTitle(item) }}</div>
+                    <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                  </a>
+                </div>
+                <ng-template #noPiece>
+                  <mat-list-item>
+                    <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                    <div matLine class="title">{{ getItemTitle(item) }}</div>
+                    <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                  </mat-list-item>
+                </ng-template>
+              </ng-container>
+            </mat-list>
+          </mat-card-content>
+        </mat-card>
 
-        <mat-card class="calendar-card">
+        <app-event-card *ngIf="lastService$ | async as lastService" class="left-tile" cardTitle="Letzter Gottesdienst" [event]="lastService"></app-event-card>
+
+        <mat-card class="calendar-card right-tile">
           <mat-card-title>Meine Termine</mat-card-title>
           <mat-card-content>
             <app-my-calendar></app-my-calendar>
           </mat-card-content>
         </mat-card>
 
-        <app-event-card cardTitle="Letzte Probe" [event]="lastRehearsal$ | async"></app-event-card>
+        <app-event-card *ngIf="lastRehearsal$ | async as lastRehearsal" class="left-tile" cardTitle="Letzte Probe" [event]="lastRehearsal"></app-event-card>
       </section>
     </div>
   </div>
