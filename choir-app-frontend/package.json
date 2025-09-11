@@ -57,6 +57,7 @@
     "rimraf": "3.0.2",
     "npmlog": "^7.0.1",
     "gauge": "^5.0.2",
-    "are-we-there-yet": "^4.0.2"
+    "are-we-there-yet": "^4.0.2",
+    "jsdom": "^26.1.0"
   }
 }
