@@ -194,6 +194,22 @@ export class ManageChoirComponent implements OnInit {
     this.membersExpanded = !this.membersExpanded;
   }
 
+  copyEmailsToClipboard(): void {
+    const emails = this.dataSource.data
+      .map(u => u.email)
+      .filter(email => !!email)
+      .join(';');
+
+    if (!emails) {
+      this.snackBar.open('Keine E-Mailadressen vorhanden.', 'OK', { duration: 3000 });
+      return;
+    }
+
+    navigator.clipboard.writeText(emails)
+      .then(() => this.snackBar.open('E-Mailadressen kopiert.', 'OK', { duration: 3000 }))
+      .catch(() => this.snackBar.open('Fehler beim Kopieren der E-Mailadressen.', 'Schließen'));
+  }
+
   onSaveChoirDetails(): void {
     if (this.choirForm.invalid) {
       return;
