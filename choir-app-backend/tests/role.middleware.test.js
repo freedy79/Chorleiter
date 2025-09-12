@@ -6,7 +6,7 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
-const { requireNonDemo, requireAdmin, requireChoirAdmin } = require('../src/middleware/role.middleware');
+const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirectorOrHigher } = require('../src/middleware/role.middleware');
 
 async function sendRequest(middleware, context) {
   const app = express();
@@ -31,8 +31,10 @@ async function sendRequest(middleware, context) {
     const choir = await db.choir.create({ name: 'Test Choir' });
     const admin = await db.user.create({ email: 'a@example.com', roles: ['admin'] });
     const choirAdmin = await db.user.create({ email: 'c@example.com', roles: ['singer'] });
+    const choirDirector = await db.user.create({ email: 'd@example.com', roles: ['singer'] });
     const normal = await db.user.create({ email: 'n@example.com', roles: ['singer'] });
     await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
+    await db.user_choir.create({ userId: choirDirector.id, choirId: choir.id, rolesInChoir: ['director'] });
 
     // requireNonDemo success
     let res = await sendRequest(requireNonDemo, { userRoles: ['admin'] });
@@ -68,6 +70,22 @@ async function sendRequest(middleware, context) {
     res = await sendRequest(requireChoirAdmin, { userRoles: ['singer'], userId: normal.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 500, 'db error should return 500');
     db.user_choir.findOne = originalFindOne;
+
+    // requireDirectorOrHigher success as global director
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['director'] });
+    assert.strictEqual(res.status, 200, 'director should pass');
+
+    // requireDirectorOrHigher success as choir admin via association
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['singer'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass');
+
+    // requireDirectorOrHigher success as choir director via association
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['singer'], userId: choirDirector.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir director should pass');
+
+    // requireDirectorOrHigher failure
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['singer'], userId: normal.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'non-director should be blocked');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
