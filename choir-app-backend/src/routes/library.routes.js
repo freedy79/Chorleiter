@@ -1,6 +1,7 @@
 const authJwt = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
 const controller = require("../controllers/library.controller");
+const lendingController = require("../controllers/lending.controller");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
 const { memoryUpload } = require('../utils/upload');
@@ -21,5 +22,8 @@ router.delete('/:id', role.requireLibrarian, wrap(controller.remove));
 router.post('/:id/borrow', role.requireDirector, wrap(controller.borrow));
 router.post('/:id/return', role.requireDirector, wrap(controller.returnItem));
 router.post('/request', role.requireDirector, loanRequestValidation, validate, wrap(controller.requestLoan));
+router.get('/:id/copies', role.requireLibrarian, wrap(lendingController.list));
+router.put('/copies/:id', role.requireLibrarian, wrap(lendingController.update));
+router.get('/:id/copies/pdf', role.requireLibrarian, wrap(lendingController.downloadPdf));
 
 module.exports = router;
