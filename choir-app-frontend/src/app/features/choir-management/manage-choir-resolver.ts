@@ -31,12 +31,14 @@ export class ManageChoirResolver implements Resolve<any> {
         const choirDetails$ = this.apiService.getMyChoirDetails(opts);
         const collections$ = this.apiService.getChoirCollections(opts);
         const planRules$ = this.apiService.getPlanRules(opts);
+        const logs$ = this.apiService.getChoirLogs(opts);
         if (isAdmin) {
           return forkJoin({
             choirDetails: choirDetails$,
             members: this.apiService.getChoirMembers(opts),
             collections: collections$,
             planRules: planRules$,
+            logs: logs$,
             isChoirAdmin: of(true)
           });
         }
@@ -48,6 +50,7 @@ export class ManageChoirResolver implements Resolve<any> {
                 members: this.apiService.getChoirMembers(),
                 collections: collections$,
                 planRules: planRules$,
+                logs: logs$,
                 isChoirAdmin: of(true)
               });
             } else {
@@ -56,6 +59,7 @@ export class ManageChoirResolver implements Resolve<any> {
                 members: of([]),
                 collections: collections$,
                 planRules: planRules$,
+                logs: logs$,
                 isChoirAdmin: of(false)
               });
             }

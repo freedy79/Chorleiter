@@ -17,6 +17,7 @@ import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dia
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
+import { ChoirLog } from 'src/app/core/models/choir-log';
 
 
 @Component({
@@ -81,6 +82,9 @@ export class ManageChoirComponent implements OnInit {
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
+
+  displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
+  logDataSource = new MatTableDataSource<ChoirLog>();
 
 
   // Für die Mitglieder-Tabelle
@@ -160,6 +164,7 @@ export class ManageChoirComponent implements OnInit {
         }
         this.dataSource.data = pageData.members;
         this.collectionDataSource.data = pageData.collections;
+        this.logDataSource.data = pageData.logs;
       }
     });
   }
@@ -178,6 +183,9 @@ export class ManageChoirComponent implements OnInit {
       });
       this.apiService.getChoirCollections(opts).subscribe(cols => {
         this.collectionDataSource.data = cols;
+      });
+      this.apiService.getChoirLogs(opts).subscribe(logs => {
+        this.logDataSource.data = logs;
       });
     }
   }
@@ -208,6 +216,31 @@ export class ManageChoirComponent implements OnInit {
     navigator.clipboard.writeText(emails)
       .then(() => this.snackBar.open('E-Mailadressen kopiert.', 'OK', { duration: 3000 }))
       .catch(() => this.snackBar.open('Fehler beim Kopieren der E-Mailadressen.', 'Schließen'));
+  }
+
+  formatAction(log: ChoirLog): string {
+    switch (log.action) {
+      case 'member_join':
+        return 'Beitritt';
+      case 'member_leave':
+        return 'Abmeldung';
+      case 'repertoire_add_piece':
+        return `Repertoire: Stück ${log.details?.pieceTitle || log.details?.pieceId} hinzugefügt`;
+      case 'repertoire_update_status':
+        return `Repertoire: Status geändert (${log.details?.pieceTitle || log.details?.pieceId})`;
+      case 'repertoire_update_notes':
+        return `Repertoire: Notizen geändert (${log.details?.pieceTitle || log.details?.pieceId})`;
+      case 'repertoire_update_rating':
+        return `Repertoire: Bewertung geändert (${log.details?.pieceTitle || log.details?.pieceId})`;
+      case 'event_created':
+        return `Termin erstellt (${log.details?.type})`;
+      case 'event_updated':
+        return `Termin geändert (${log.details?.type})`;
+      case 'event_deleted':
+        return 'Termin gelöscht';
+      default:
+        return log.action;
+    }
   }
 
   onSaveChoirDetails(): void {

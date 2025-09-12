@@ -5,6 +5,7 @@ import { environment } from 'src/environments/environment';
 import { Choir } from '../models/choir';
 import { UserInChoir } from '../models/user';
 import { Collection } from '../models/collection';
+import { ChoirLog } from '../models/choir-log';
 
 @Injectable({ providedIn: 'root' })
 export class ChoirService {
@@ -51,5 +52,10 @@ export class ChoirService {
   removeCollectionFromChoir(collectionId: number, choirId?: number): Observable<any> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
     return this.http.delete(`${this.apiUrl}/choir-management/collections/${collectionId}`, { params });
+  }
+
+  getChoirLogs(choirId?: number): Observable<ChoirLog[]> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<ChoirLog[]>(`${this.apiUrl}/choir-management/logs`, { params });
   }
 }

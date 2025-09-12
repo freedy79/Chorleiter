@@ -397,6 +397,8 @@ exports.updateStatus = async (req, res) => {
             { status: status },
             { where: { choirId: req.activeChoirId, pieceId: pieceId } }
         );
+        const piece = await db.piece.findByPk(pieceId, { attributes: ['title'] });
+        await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'repertoire_update_status', details: { pieceId, pieceTitle: piece?.title, status } });
         res.status(200).send({ message: "Status updated successfully." });
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -410,6 +412,8 @@ exports.updateNotes = async (req, res) => {
             { notes: notes },
             { where: { choirId: req.activeChoirId, pieceId: pieceId } }
         );
+        const piece = await db.piece.findByPk(pieceId, { attributes: ['title'] });
+        await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'repertoire_update_notes', details: { pieceId, pieceTitle: piece?.title } });
         res.status(200).send({ message: "Notes updated successfully." });
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -423,6 +427,8 @@ exports.updateRating = async (req, res) => {
             { rating: rating },
             { where: { choirId: req.activeChoirId, pieceId: pieceId } }
         );
+        const piece = await db.piece.findByPk(pieceId, { attributes: ['title'] });
+        await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'repertoire_update_rating', details: { pieceId, pieceTitle: piece?.title, rating } });
         res.status(200).send({ message: "Rating updated successfully." });
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -490,6 +496,8 @@ exports.addPieceToRepertoire = async (req, res) => {
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);
         await choir.addPiece(pieceId); // This creates the link in choir_repertoire
+        const piece = await db.piece.findByPk(pieceId, { attributes: ['title'] });
+        await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'repertoire_add_piece', details: { pieceId, pieceTitle: piece?.title } });
         res.status(200).send({ message: "Piece added to repertoire." });
     } catch (err) {
         res.status(500).send({ message: err.message });

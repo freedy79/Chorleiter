@@ -154,6 +154,7 @@ exports.inviteUserToChoir = async (req, res, next) => {
 
         if (user) {
             await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'REGISTERED' } });
+            await db.choir_log.create({ choirId, userId: user.id, action: 'member_join' });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
@@ -201,6 +202,7 @@ exports.removeUserFromChoir = async (req, res, next) => {
         const result = await choir.removeUser(userId);
 
         if (result > 0) {
+            await db.choir_log.create({ choirId, userId, action: 'member_leave', details: { removedBy: req.userId } });
             res.status(200).send({ message: "User removed from choir." });
         } else {
             res.status(404).send({ message: "User is not a member of this choir." });
@@ -313,6 +315,21 @@ exports.removeCollectionFromChoir = async (req, res, next) => {
         res.status(200).send({ message: `Collection '${collection.title}' removed from choir.` });
     } catch (err) {
         err.message = `Error removing collection from choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+// Logs for the active choir
+exports.getChoirLogs = async (req, res, next) => {
+    try {
+        const logs = await db.choir_log.findAll({
+            where: { choirId: req.activeChoirId },
+            include: [{ model: db.user, as: 'user', attributes: ['id', 'firstName', 'name'] }],
+            order: [['createdAt', 'DESC']]
+        });
+        res.status(200).send(logs);
+    } catch (err) {
+        err.message = `Error fetching logs for choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
     }
 };
