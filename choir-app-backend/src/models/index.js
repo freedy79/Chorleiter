@@ -43,6 +43,7 @@ db.mail_log = require("./mail_log.model.js")(sequelize, Sequelize);
 db.system_setting = require("./system_setting.model.js")(sequelize, Sequelize);
 db.post = require("./post.model.js")(sequelize, Sequelize);
 db.library_item = require("./library_item.model.js")(sequelize, Sequelize);
+db.lending = require("./lending.model.js")(sequelize, Sequelize);
 db.loan_request = require("./loan_request.model.js")(sequelize, Sequelize);
 db.loan_request_item = require("./loan_request_item.model.js")(sequelize, Sequelize);
 db.program = require("./program.model.js")(sequelize, Sequelize);
@@ -162,6 +163,12 @@ db.donation.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 // Library items referencing collections
 db.collection.hasMany(db.library_item, { as: 'libraryItems', foreignKey: 'collectionId' });
 db.library_item.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
+
+// Individual copies of library items
+db.library_item.hasMany(db.lending, { as: 'booklets', foreignKey: 'libraryItemId' });
+db.lending.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
+db.user.hasMany(db.lending, { as: 'borrowedCopies', foreignKey: 'borrowerId' });
+db.lending.belongsTo(db.user, { foreignKey: 'borrowerId', as: 'borrower' });
 
 // Loan requests
 db.loan_request.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
