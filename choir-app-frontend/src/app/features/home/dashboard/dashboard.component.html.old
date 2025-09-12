@@ -1,0 +1,162 @@
+<ng-container *ngIf="vm$ | async as vm">
+<div class="dashboard-layout">
+
+  <div class="dashboard-container">
+    <div class="main-content">
+
+
+        <div class="hero">
+          <div class="dashboard-header">
+            <h1 *ngIf="(activeChoir$ | async)?.name as name">
+              Willkommen bei {{ name }}
+            </h1>
+            <button *ngIf="!(isSingerOnly$ | async)" mat-icon-button color="primary" (click)="openAddEventDialog()"
+              matTooltip="Neues Ereignis erstellen">
+              <mat-icon>add</mat-icon>
+            </button>
+            <button mat-icon-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
+              <mat-icon>list</mat-icon>
+            </button>
+          </div>
+
+          <app-kpi-widget [items]="[
+              { label: 'Nächste Probe', value: (vm.nextRehearsal?.date | date:'dd.MM.') || '–' },
+              { label: 'Angemeldete Sänger:innen', value: (memberCount$ | async) || '-' },
+              { label: 'Letzter Beitrag', value: timeAgo(vm.latestPost?.updatedAt || '') || '-' }
+            ]">
+          </app-kpi-widget>
+
+          <app-status-chips-widget
+            [chips]="[
+              { label: 'Audio-Technik OK', status: 'ok' },
+              { label: 'Liedabgleich offen', status: 'warn' },
+              { label: '2 fehlende Noten', status: 'bad' }
+            ]">
+          </app-status-chips-widget>
+
+          <app-quick-actions-widget
+            (exportIcs)="downloadIcs()"
+            (connectGoogle)="connectGoogleCalendar()"
+            (createEvent)="openAddEventDialog()">
+          </app-quick-actions-widget>
+        </div>
+
+
+        <!-- GRID (links/rechts) -->
+        <section class="content-grid" role="region" aria-labelledby="next-events">
+          <h2 id="next-events" class="visually-hidden">Nächste Termine</h2>
+
+          <app-upcoming-events-widget
+            [events]="vm.upcomingEvents"
+            (open)="openEvent($event)">
+          </app-upcoming-events-widget>
+
+          <app-latest-post-widget
+            [post]="vm.latestPost">
+          </app-latest-post-widget>
+
+          <app-event-card *ngIf="vm.lastService as lastService"
+                          cardTitle="Letzter Gottesdienst" [event]="lastService">
+          </app-event-card>
+
+          <mat-card class="calendar-card right-tile" role="region" aria-labelledby="my-dates">
+            <mat-card-title id="my-dates">Meine Termine</mat-card-title>
+            <mat-card-content>
+              <app-my-calendar></app-my-calendar>
+            </mat-card-content>
+          </mat-card>
+
+          <app-event-card *ngIf="vm.lastRehearsal as lastRehearsal"
+                          cardTitle="Letzte Probe" [event]="lastRehearsal">
+          </app-event-card>
+
+        </section>
+
+        <!-- <section class="grid">
+          <article *ngIf="latestPost$ | async as post" class="left-tile">
+            <mat-card class="latest-post-card">
+              <mat-card-title>Neuester Beitrag</mat-card-title>
+              <mat-card-content>
+                <h3>{{ post.title }}</h3>
+                <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+                <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
+                <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
+              </mat-card-actions>
+            </mat-card>
+          </article>
+
+          <article class="right-tile">
+            <mat-card class="next-events-card">
+              <mat-card-title>Nächste Termine</mat-card-title>
+              <mat-card-content>
+                <ul class="timeline">
+                  <li *ngFor="let ev of nextEvents$ | async"
+                    [style.--dot-color]="(ev.choirId != null ? choirColors[ev.choirId] : undefined) || '#1976d2'">
+                    <a href="#" (click)="openEvent(ev); $event.preventDefault()">
+                      <span class="date">{{ ev.date | date:'dd.MM.y' }}</span>
+                      <span class="info">{{ ev.choir?.name }} – {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe'
+                        }}</span>
+                    </a>
+                  </li>
+                </ul>
+              </mat-card-content>
+            </mat-card>
+            <div class="quick-actions">
+              <button mat-flat-button color="primary" (click)="downloadIcs()">ICS exportieren</button>
+              <button mat-stroked-button (click)="connectGoogleCalendar()">Mit Google Kalender verbinden</button>
+              <button mat-icon-button color="primary" (click)="openAddEventDialog()" matTooltip="Neu">
+                <mat-icon>add</mat-icon>
+              </button>
+            </div>
+          </article>
+
+          <mat-card *ngIf="lastProgram$ | async as program" class="last-service-card left-tile">
+            <mat-card-title>{{ program.title }}</mat-card-title>
+            <mat-card-content>
+              <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
+              <mat-list>
+                <ng-container *ngFor="let item of program.items">
+                  <div class="item-container">
+                    <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
+                      [routerLink]="['/pieces', item.pieceId]">
+                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                      <div matLine class="title">{{ getItemTitle(item) }}</div>
+                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                    </a>
+                  </div>
+                  <ng-template #noPiece>
+                    <mat-list-item>
+                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                      <div matLine class="title">{{ getItemTitle(item) }}</div>
+                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+                    </mat-list-item>
+                  </ng-template>
+                </ng-container>
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+
+          <app-event-card *ngIf="lastService$ | async as lastService" class="left-tile" cardTitle="Letzter Gottesdienst"
+            [event]="lastService"></app-event-card>
+
+          <mat-card class="calendar-card right-tile">
+            <mat-card-title>Meine Termine</mat-card-title>
+            <mat-card-content>
+              <app-my-calendar></app-my-calendar>
+            </mat-card-content>
+          </mat-card>
+
+          <app-event-card *ngIf="lastRehearsal$ | async as lastRehearsal" class="left-tile" cardTitle="Letzte Probe"
+            [event]="lastRehearsal"></app-event-card>
+        </section>-->
+
+
+        <!-- Bottom Navigation (nur mobil sichtbar via CSS) -->
+
+    </div>
+  </div>
+</div>
+</ng-container>

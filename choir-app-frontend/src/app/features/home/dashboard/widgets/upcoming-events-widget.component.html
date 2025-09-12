@@ -1,21 +1,18 @@
 <mat-card class="timeline-card">
-  <mat-card-title>Nächste Termine</mat-card-title>
+  <mat-card-header>
+    <mat-card-title>Meine nächsten Termine</mat-card-title>
+  </mat-card-header>
   <mat-card-content>
-    <div class="timeline">
-      <div class="t-item" *ngFor="let ev of events; trackBy: trackById" (click)="open.emit(ev)"
-           tabindex="0" role="button" aria-label="Termin öffnen">
-        <span class="t-dot" aria-hidden="true"></span>
+    <ul class="timeline">
+      <li *ngFor="let ev of events; trackBy: trackById"
+        [style.--dot-color]="(ev.choirId != null ? choirColors[ev.choirId] : undefined) || '#1976d2'">
+        <div click="open.emit(ev)">
         <div>
-          <div>
-            <strong>{{ ev?.date | date:'dd.MM.yy' }}</strong>
-            · {{ ev?.title || 'Unbenannter Termin' }}
-          </div>
-          <div class="muted">
-            <ng-container *ngIf="ev?.timeRange as tr">{{ tr }}</ng-container>
-            <ng-container *ngIf="ev?.location as loc">, {{ loc }}</ng-container>
+            <strong>{{ (ev?.date) | date:'dd.MM.yy' }}</strong>
+            · {{ ev.choir?.name }} – {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
           </div>
         </div>
-      </div>
-    </div>
+      </li>
+    </ul>
   </mat-card-content>
 </mat-card>

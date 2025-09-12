@@ -31,9 +31,8 @@ import { environment } from 'src/environments/environment';
 import { UpcomingEventsWidgetComponent } from './widgets/upcoming-events-widget.component';
 import { KpiWidgetComponent, KpiItem } from './widgets/kpi-widget.component';
 import { StatusChipsWidgetComponent, StatusChip } from './widgets/status-chips-widget.component';
-import { LatestPostWidgetComponent, UiPost } from './widgets/latest-post-widget.component';
+import { LatestPostWidgetComponent } from './widgets/latest-post-widget.component';
 import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
-import { BottomNavComponent } from './widgets/bottom-nav.component';
 
 type VM = {
   activeChoir: any | null;
@@ -62,7 +61,7 @@ type VM = {
     UpcomingEventsWidgetComponent,
     StatusChipsWidgetComponent,
     QuickActionsWidgetComponent,
-    /*, LatestPostWidgetComponent,  BottomNavComponent*/
+    LatestPostWidgetComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -119,52 +118,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+
   ngOnInit(): void {
-    this.vm$ = combineLatest({
-      activeChoir: this.activeChoir$ ?? of(null),
-      isSingerOnly: this.isSingerOnly$ ?? of(false),
-      nextRehearsal: this.nextRehearsal$ ?? of(null),
-      lastRehearsal: this.lastRehearsal$ ?? of(null),
-      lastService: this.lastService$ ?? of(null),
-      latestPost: this.latestPost$ ?? of(null),
-      upcomingEvents: this.upcomingEvents$ ?? of([])
-    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
-
-
-    // Diese Streams werden jedes Mal neu ausgeführt, wenn `refresh$` einen neuen Wert ausgibt.
-    this.lastService$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLastEvent('SERVICE'))
-    );
-
-    this.lastProgram$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLastProgram())
-    );
-
-    this.lastRehearsal$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
-    );
-
-
-    this.upcomingEvents$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
-    );
-
-    this.nextEvents$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine)),
-      shareReplay(1)
-    );
-
-    this.nextRehearsal$ = this.nextEvents$.pipe(
-      map(events => events.find(ev => ev.type === 'REHEARSAL') || null)
-    );
-
     this.memberCount$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getChoirMembers()),
       map(members => members.length)
-    );
-
-    this.latestPost$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLatestPost())
     );
 
     this.borrowedItems$ = this.refresh$.pipe(
@@ -180,7 +138,35 @@ export class DashboardComponent implements OnInit {
       map(changes => changes.length)
     );
 
-    // Willkommenstext ggf. anzeigen
+    this.lastService$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLastEvent('SERVICE'))
+    );
+
+    this.lastProgram$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLastProgram())
+    );
+
+    this.lastRehearsal$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
+    );
+
+    this.upcomingEvents$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine))
+    );
+
+    this.nextEvents$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getNextEvents(5, this.showOnlyMine)),
+      shareReplay(1)
+    );
+
+    this.nextRehearsal$ = this.nextEvents$.pipe(
+      map(events => events.find(ev => ev.type === 'REHEARSAL') || null)
+    );
+
+    this.latestPost$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getLatestPost())
+    );
+
     this.userService.getCurrentUser().pipe(take(1)).subscribe(user => {
       this.authService.setCurrentUser(user);
       if (this.help.shouldShowHelp(user)) {
@@ -188,6 +174,16 @@ export class DashboardComponent implements OnInit {
         ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
       }
     });
+
+    this.vm$ = combineLatest({
+      activeChoir: this.activeChoir$,
+      isSingerOnly: this.isSingerOnly$,
+      nextRehearsal: this.nextRehearsal$,
+      lastRehearsal: this.lastRehearsal$,
+      lastService: this.lastService$,
+      latestPost: this.latestPost$,
+      upcomingEvents: this.upcomingEvents$
+    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
   /**

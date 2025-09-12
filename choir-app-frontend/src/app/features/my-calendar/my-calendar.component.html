@@ -1,13 +1,14 @@
 <div class="calendar-wrapper">
-  <h2>Meine Termine</h2>
+  <div *ngIf="showTitle">
+    <h2>Meine Termine</h2>
+  </div>
   <div class="calendar-actions">
     <button mat-stroked-button (click)="downloadIcs()">ICS herunterladen</button>
-    <a mat-stroked-button *ngIf="googleCalendarUrl" [href]="googleCalendarUrl" target="_blank" rel="noopener">Google Kalender</a>
+    <a mat-stroked-button *ngIf="googleCalendarUrl" [href]="googleCalendarUrl" target="_blank" rel="noopener">Google
+      Kalender</a>
   </div>
-  <mat-calendar class="compact"
-                [selected]="selectedDate"
-                (selectedChange)="onSelectedChange($event)"
-                [dateClass]="dateClass"></mat-calendar>
+  <mat-calendar class="compact" [selected]="selectedDate" (selectedChange)="onSelectedChange($event)"
+    [dateClass]="dateClass"></mat-calendar>
 
   <div #eventList class="event-list" *ngIf="eventsForSelectedDate.length > 0">
     <h3>{{ selectedDate | date:'longDate' }}</h3>
@@ -19,10 +20,12 @@
             <div matLine>
               Dienst:
               <span *ngIf="$any(ev).director">
-                <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung {{ $any(ev).director.name }}</span>
+                <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung {{ $any(ev).director.name
+                  }}</span>
               </span>
               <span *ngIf="$any(ev).organist">
-                {{ $any(ev).director ? ', ' : '' }}<span [class.me]="$any(ev).organist?.id === currentUserId">Orgel {{ $any(ev).organist.name }}</span>
+                {{ $any(ev).director ? ', ' : '' }}<span [class.me]="$any(ev).organist?.id === currentUserId">Orgel {{
+                  $any(ev).organist.name }}</span>
               </span>
             </div>
             <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
@@ -31,7 +34,8 @@
             <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel">
               <a [routerLink]="['/events']" [queryParams]="{ eventId: $any(ev).id }" class="event-link">
                 {{ $any(ev).choir?.name }} -
-                {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' : $any(ev).name) }}
+                {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' :
+                $any(ev).name) }}
               </a>
             </div>
             <ng-template #holidayLabel>

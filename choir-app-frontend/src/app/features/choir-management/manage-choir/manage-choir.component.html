@@ -106,6 +106,10 @@
     <mat-card-header class="collapsible-header" (click)="toggleMembers()">
       <mat-card-title>Chorleiter</mat-card-title>
       <span class="header-controls">
+        <button mat-flat-button color="primary" (click)="copyEmailsToClipboard(); $event.stopPropagation()">
+          <mat-icon>content_copy</mat-icon>
+          <span>E-Mailadressen kopieren</span>
+        </button>
         <button mat-flat-button color="accent" (click)="openInviteDialog(); $event.stopPropagation()">
           <mat-icon>add</mat-icon>
           <span>Neues Mitglied einladen</span>

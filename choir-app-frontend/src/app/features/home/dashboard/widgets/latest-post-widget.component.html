@@ -1,10 +1,11 @@
 <mat-card class="latest-post-card">
+  <mat-card-header>
   <mat-card-title>Neuster Beitrag</mat-card-title>
+  </mat-card-header>
   <mat-card-content>
-    <!-- Alias vermeidet NG8107 -->
     <div class="post" *ngIf="post as p; else empty">
       <div class="title">{{ p.title }}</div>
-      <div class="post-excerpt muted">{{ p.excerpt }}</div>
+      <div class="post-excerpt muted">{{ p.expiresAt }}</div>
       <div class="post-actions">
         <a class="btn btn-secondary" [routerLink]="['/posts', p.id]">Zum Beitrag</a>
         <a class="btn btn-secondary" routerLink="/repertoire">Chor-Stücke öffnen</a>

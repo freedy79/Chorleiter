@@ -4,3 +4,8 @@
 .btn.btn-secondary{background:#f8fafc;color:#0b1526;border-color:#e5e7eb}
 .btn.btn-icon{padding:8px 10px}
 @media (max-width:480px){ .btn{ width:100%; justify-content:center } .quick-actions{ flex-direction:column } }
+mat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

@@ -2,15 +2,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 
-/** UI-Minimalmodell, unabhängig vom Projekt-Event-Typ */
-export interface UiEvent {
-  id?: string | number;
-  _id?: string | number;
-  date?: string | Date;
-  title?: string;
-  timeRange?: string;
-  location?: string;
-}
+import { Event } from '@core/models/event';
 
 @Component({
   selector: 'app-upcoming-events-widget',
@@ -22,7 +14,10 @@ export interface UiEvent {
 })
 export class UpcomingEventsWidgetComponent {
   /** Parent kann per map() sein Domain-Event in UiEvent transformieren */
-  @Input({ required: true }) events: ReadonlyArray<UiEvent> = [];
-  @Output() open = new EventEmitter<UiEvent>();
-  trackById = (_: number, ev: UiEvent) => ev?.id ?? ev?._id ?? _;
+  @Input({ required: true }) events: ReadonlyArray<Event> = [];
+  @Input() choirColors: Record<number, string> = {};
+  @Output() open = new EventEmitter<Event>();
+  trackById = (_: number, ev: Event) => ev?.id ?? _;
+
+  private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
 }

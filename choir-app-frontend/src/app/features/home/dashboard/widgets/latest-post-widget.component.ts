@@ -2,14 +2,7 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
-
-export interface UiPost {
-  id?: string|number;
-  title?: string;
-  excerpt?: string;
-  age?: string;
-  openTasks?: number;
-}
+import { Post } from '@core/models/post';
 
 @Component({
   selector: 'app-latest-post-widget',
@@ -20,5 +13,5 @@ export interface UiPost {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LatestPostWidgetComponent {
-  @Input() post: UiPost | null = null;
+  @Input() post: Post | null = null;
 }
