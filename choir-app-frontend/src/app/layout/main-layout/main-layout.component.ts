@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy } 
 import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ApiService } from 'src/app/core/services/api.service';
+import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 
 // Angular Material Imports
 import { MaterialModule } from '@modules/material.module';
@@ -101,7 +102,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private api: ApiService,
     private router: Router,
     private route: ActivatedRoute,
-    private cart: LoanCartService
+    private cart: LoanCartService,
+    private menu: MenuVisibilityService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -229,23 +231,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.authService.switchChoir(id).subscribe();
   }
 
-  private singerMenuVisible(key: string): Observable<boolean> {
-    return combineLatest([this.authService.currentUser$, this.authService.activeChoir$]).pipe(
-      map(([user, choir]) => {
-        const roles = Array.isArray(user?.roles) ? user!.roles : [];
-        const isSingerOnly = roles.includes('singer') &&
-          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian', 'organist'].includes(r));
-        if (!isSingerOnly) {
-          return true;
-        }
-        const menu = choir?.modules?.singerMenu || {};
-        return menu[key] !== false;
-      })
-    );
-  }
-
-  private visibleFor(key: string, base$: Observable<boolean>): Observable<boolean> {
-    return combineLatest([base$, this.singerMenuVisible(key)]).pipe(
+  private visible(key: string, base$: Observable<boolean>): Observable<boolean> {
+    return combineLatest([base$, this.menu.isVisible(key)]).pipe(
       map(([base, allowed]) => base && allowed)
     );
   }
@@ -294,77 +281,77 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'events',
         displayName: 'Ereignisse',
         route: '/events',
-        visibleSubject: this.visibleFor('events', this.isLoggedIn$),
+        visibleSubject: this.visible('events', this.isLoggedIn$),
         iconName: 'event',
       },
       {
         key: 'dienstplan',
         displayName: 'Dienstplan',
         route: '/dienstplan',
-        visibleSubject: this.visibleFor('dienstplan', dienstplanVisible$),
+        visibleSubject: this.visible('dienstplan', dienstplanVisible$),
         iconName: 'calendar_today',
       },
       {
         key: 'availability',
         displayName: 'Verfügbarkeiten',
         route: '/availability',
-        visibleSubject: this.visibleFor('availability', this.isLoggedIn$),
+        visibleSubject: this.visible('availability', this.isLoggedIn$),
         iconName: 'event_available',
       },
       {
         key: 'participation',
         displayName: 'Beteiligung',
         route: '/participation',
-        visibleSubject: this.visibleFor('participation', this.isLoggedIn$),
+        visibleSubject: this.visible('participation', this.isLoggedIn$),
         iconName: 'group',
       },
       {
         key: 'posts',
         displayName: 'Beiträge',
         route: '/posts',
-        visibleSubject: this.visibleFor('posts', this.isLoggedIn$),
+        visibleSubject: this.visible('posts', this.isLoggedIn$),
         iconName: 'article',
       },
       {
         key: 'programs',
         displayName: 'Programme',
         route: '/programs',
-        visibleSubject: this.visibleFor('programs', programsVisible$),
+        visibleSubject: this.visible('programs', programsVisible$),
         iconName: 'queue_music',
       },
       {
         key: 'stats',
         displayName: 'Statistik',
         route: '/stats',
-        visibleSubject: this.visibleFor('stats', this.isLoggedIn$),
+        visibleSubject: this.visible('stats', this.isLoggedIn$),
         iconName: 'bar_chart',
       },
       {
         key: 'manageChoir',
         displayName: 'Mein Chor',
         route: '/manage-choir',
-        visibleSubject: this.visibleFor('manageChoir', this.isLoggedIn$),
+        visibleSubject: this.visible('manageChoir', this.isLoggedIn$),
         iconName: 'settings',
       },
       {
         key: 'repertoire',
         displayName: 'Repertoire',
         route: '/repertoire',
-        visibleSubject: this.visibleFor('repertoire', this.isLoggedIn$),
+        visibleSubject: this.visible('repertoire', this.isLoggedIn$),
         iconName: 'library_music',
       },
       {
         key: 'collections',
         displayName: 'Sammlungen',
         route: '/collections',
-        visibleSubject: this.visibleFor('collections', this.isLoggedIn$),
+        visibleSubject: this.visible('collections', this.isLoggedIn$),
         iconName: 'folder',
       },
       {
         key: 'library',
         displayName: 'Bibliothek',
         route: '/library',
-        visibleSubject: this.visibleFor('library', this.isLoggedIn$),
+        visibleSubject: this.visible('library', this.isLoggedIn$),
         iconName: 'menu_book',
       },
       {

@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HelpWizardComponent } from './help-wizard.component';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from '@core/services/auth.service';
+import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 import { BehaviorSubject } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -20,7 +21,8 @@ describe('HelpWizardComponent', () => {
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
-        { provide: AuthService, useValue: authServiceMock }
+        { provide: AuthService, useValue: authServiceMock },
+        MenuVisibilityService
       ]
     }).compileComponents();
 
