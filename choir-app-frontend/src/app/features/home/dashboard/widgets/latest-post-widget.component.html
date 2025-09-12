@@ -6,13 +6,15 @@
     <div class="post" *ngIf="post as p; else empty">
       <div class="title">{{ p.title }}</div>
       <div class="post-excerpt muted">{{ p.expiresAt }}</div>
-      <div class="post-actions">
-        <a class="btn btn-secondary" [routerLink]="['/posts', p.id]">Zum Beitrag</a>
-        <a class="btn btn-secondary" routerLink="/repertoire">Chor-Stücke öffnen</a>
-      </div>
+          <div class="post-excerpt" [innerHTML]="p.text | markdown | async"></div>
+          <small>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</small>
     </div>
     <ng-template #empty>
       <div class="muted">Keine Beiträge vorhanden.</div>
     </ng-template>
   </mat-card-content>
+  <mat-card-actions *ngIf="post">
+    <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
+    <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
+  </mat-card-actions>
 </mat-card>
