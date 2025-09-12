@@ -53,10 +53,20 @@ function requireLibrarian(req, res, next) {
     }
     return res.status(403).send({ message: 'Require Librarian Role!' });
 }
-function requireDirectorOrHigher(req, res, next) {
+async function requireDirectorOrHigher(req, res, next) {
     if (['director', 'choir_admin', 'admin'].some(r => req.userRoles.includes(r))) {
         return next();
     }
-    return res.status(403).send({ message: 'Require Director Role!' });
+    try {
+        const association = await db.user_choir.findOne({
+            where: { userId: req.userId, choirId: req.activeChoirId }
+        });
+        if (association && Array.isArray(association.rolesInChoir) && association.rolesInChoir.includes('choir_admin')) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Require Director Role!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
 }
 module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher };

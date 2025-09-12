@@ -6,7 +6,7 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
-const { requireNonDemo, requireAdmin, requireChoirAdmin } = require('../src/middleware/role.middleware');
+const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirectorOrHigher } = require('../src/middleware/role.middleware');
 
 async function sendRequest(middleware, context) {
   const app = express();
@@ -68,6 +68,18 @@ async function sendRequest(middleware, context) {
     res = await sendRequest(requireChoirAdmin, { userRoles: ['singer'], userId: normal.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 500, 'db error should return 500');
     db.user_choir.findOne = originalFindOne;
+
+    // requireDirectorOrHigher success as director
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['director'] });
+    assert.strictEqual(res.status, 200, 'director should pass');
+
+    // requireDirectorOrHigher success as choir admin via association
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['singer'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass');
+
+    // requireDirectorOrHigher failure
+    res = await sendRequest(requireDirectorOrHigher, { userRoles: ['singer'], userId: normal.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'non-director should be blocked');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

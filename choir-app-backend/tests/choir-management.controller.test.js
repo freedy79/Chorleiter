@@ -26,6 +26,18 @@ const controller = require('../src/controllers/choir-management.controller');
 
     await controller.updateMyChoir({ activeChoirId: choir.id, userId: adminUser.id, userRoles: ['admin'], body: { modules: { dienstplan: false } } }, res);
     assert.strictEqual(res.statusCode, 200, 'admin should change modules');
+
+    const hidden = await db.user.create({ email: 'h@example.com', roles: ['singer'], firstName: 'H', name: 'Hidden', street: 's', postalCode: '1', city: 'c', shareWithChoir: false });
+    const shared = await db.user.create({ email: 's@example.com', roles: ['singer'], firstName: 'S', name: 'Shared', street: 's', postalCode: '1', city: 'c', shareWithChoir: true });
+    await choir.addUser(hidden, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
+    await choir.addUser(shared, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
+
+    await controller.getChoirMembers({ activeChoirId: choir.id, userRoles: ['director'] }, res);
+    assert.strictEqual(res.statusCode, 200, 'director should fetch members');
+    const hiddenMember = res.data.find(m => m.email === 'h@example.com');
+    const sharedMember = res.data.find(m => m.email === 's@example.com');
+    assert.strictEqual(hiddenMember.street, undefined, 'hidden address should not be visible');
+    assert.strictEqual(sharedMember.street, 's', 'shared address should be visible');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);
