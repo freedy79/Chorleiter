@@ -5,6 +5,7 @@ import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dial
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HelpService } from '@core/services/help.service';
 import { AuthService } from '@core/services/auth.service';
+import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 import { ApiService } from '@core/services/api.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
@@ -46,7 +47,8 @@ describe('MainLayoutComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: BreakpointObserver, useValue: breakpointMock },
         { provide: ThemeService, useValue: themeMock },
-        { provide: LoanCartService, useValue: cartMock }
+        { provide: LoanCartService, useValue: cartMock },
+        MenuVisibilityService
       ]
     })
     .compileComponents();

@@ -6,6 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { Observable, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
+import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 
 @Component({
   selector: 'app-help-wizard',
@@ -26,7 +27,8 @@ export class HelpWizardComponent {
 
   constructor(
     public dialogRef: MatDialogRef<HelpWizardComponent>,
-    private auth: AuthService
+    private auth: AuthService,
+    private menu: MenuVisibilityService
   ) {
     this.isSingerOnly$ = combineLatest([
       this.auth.currentUser$,
@@ -46,15 +48,7 @@ export class HelpWizardComponent {
    * Returns whether a specific menu item is visible for singers based on choir configuration.
    */
   menuVisible(key: string): Observable<boolean> {
-    return combineLatest([this.isSingerOnly$, this.auth.activeChoir$]).pipe(
-      map(([isSingerOnly, choir]) => {
-        if (!isSingerOnly) {
-          return true;
-        }
-        const menu = choir?.modules?.singerMenu || {};
-        return menu[key] !== false;
-      })
-    );
+    return this.menu.isVisible(key);
   }
 
   close(): void {
