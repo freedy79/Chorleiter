@@ -1,0 +1,5 @@
+<div class="chips">
+  <span class="chip" *ngFor="let c of chips" [class.ok]="c.status==='ok'" [class.warn]="c.status==='warn'" [class.bad]="c.status==='bad'">
+    <span class="dot" aria-hidden="true"></span>{{ c.label }}
+  </span>
+</div>

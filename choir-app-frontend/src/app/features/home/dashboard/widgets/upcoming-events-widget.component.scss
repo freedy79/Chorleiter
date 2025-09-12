@@ -1,0 +1,4 @@
+.timeline{border-inline-start:2px solid #e5e7eb;padding-inline-start:16px;display:grid;gap:14px}
+.t-dot{width:10px;height:10px;border:2px solid #fff;background:#0b79d0;border-radius:999px;position:relative;left:-23px;top:15px;box-shadow:0 0 0 2px #e5e7eb}
+.t-item{display:flex;gap:12px;cursor:pointer;padding:6px 2px;border-radius:8px}
+.t-item:hover{background:#f8fafc}

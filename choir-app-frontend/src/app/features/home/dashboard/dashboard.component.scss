@@ -15,6 +15,9 @@
   grid-auto-rows: minmax(120px, auto);
 }
 
+/* Grid rechts (Content) */
+.content-grid{ display:grid; gap:16px; grid-template-columns: 2fr 1.2fr; grid-auto-rows:minmax(120px,auto); }
+
 .left-tile {
   grid-column: 1;
 }
@@ -241,4 +244,3 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-

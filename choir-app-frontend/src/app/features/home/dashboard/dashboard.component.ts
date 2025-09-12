@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Observable, BehaviorSubject, of } from 'rxjs';
+import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 
 import { map, switchMap, tap, take, shareReplay } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
@@ -27,6 +27,24 @@ import { LibraryItem } from '@core/models/library-item';
 import { MyCalendarComponent } from '@features/my-calendar/my-calendar.component';
 import { environment } from 'src/environments/environment';
 
+// WIDGETS (standalone)
+import { UpcomingEventsWidgetComponent } from './widgets/upcoming-events-widget.component';
+import { KpiWidgetComponent, KpiItem } from './widgets/kpi-widget.component';
+import { StatusChipsWidgetComponent, StatusChip } from './widgets/status-chips-widget.component';
+import { LatestPostWidgetComponent, UiPost } from './widgets/latest-post-widget.component';
+import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
+import { BottomNavComponent } from './widgets/bottom-nav.component';
+
+type VM = {
+  activeChoir: any | null;
+  isSingerOnly: boolean;
+  nextRehearsal: any | null;
+  lastRehearsal: any | null;
+  lastService: any | null;
+  latestPost: any | null;
+  upcomingEvents: any[];
+};
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -37,7 +55,14 @@ import { environment } from 'src/environments/environment';
     FormsModule,
     EventCardComponent,
     MarkdownPipe,
-    MyCalendarComponent
+    MyCalendarComponent,
+
+    // Widgets
+    KpiWidgetComponent,
+    UpcomingEventsWidgetComponent,
+    StatusChipsWidgetComponent,
+    QuickActionsWidgetComponent,
+    /*, LatestPostWidgetComponent,  BottomNavComponent*/
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -46,10 +71,11 @@ export class DashboardComponent implements OnInit {
   // Ein BehaviorSubject, das als manueller Auslöser für das Neuladen von Daten dient.
   public refresh$ = new BehaviorSubject<void>(undefined);
 
+
   lastService$!: Observable<Event | null>;
   lastRehearsal$!: Observable<Event | null>;
   lastProgram$!: Observable<Program | null>;
-  activeChoir$: Observable<Choir | null>;
+  activeChoir$!: Observable<Choir | null>;
   pieceChanges$!: Observable<PieceChange[]>;
 
   upcomingEvents$!: Observable<Event[]>;
@@ -61,9 +87,12 @@ export class DashboardComponent implements OnInit {
   borrowedItems$!: Observable<LibraryItem[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
-  isSingerOnly$: Observable<boolean>;
+  isSingerOnly$!: Observable<boolean>;
   choirColors: Record<number, string> = {};
   private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
+
+  // ViewModel: ein async im Template
+  vm$!: Observable<VM>;
 
   constructor(
     private apiService: ApiService,
@@ -91,6 +120,17 @@ export class DashboardComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.vm$ = combineLatest({
+      activeChoir: this.activeChoir$ ?? of(null),
+      isSingerOnly: this.isSingerOnly$ ?? of(false),
+      nextRehearsal: this.nextRehearsal$ ?? of(null),
+      lastRehearsal: this.lastRehearsal$ ?? of(null),
+      lastService: this.lastService$ ?? of(null),
+      latestPost: this.latestPost$ ?? of(null),
+      upcomingEvents: this.upcomingEvents$ ?? of([])
+    }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+
+
     // Diese Streams werden jedes Mal neu ausgeführt, wenn `refresh$` einen neuen Wert ausgibt.
     this.lastService$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLastEvent('SERVICE'))

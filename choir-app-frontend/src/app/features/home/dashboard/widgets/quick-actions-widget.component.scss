@@ -1,0 +1,6 @@
+.quick-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.btn{display:inline-flex;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;font-weight:600;border:1px solid transparent}
+.btn.btn-primary{background:#0b79d0;color:#fff;border-color:#0966ae}
+.btn.btn-secondary{background:#f8fafc;color:#0b1526;border-color:#e5e7eb}
+.btn.btn-icon{padding:8px 10px}
+@media (max-width:480px){ .btn{ width:100%; justify-content:center } .quick-actions{ flex-direction:column } }
