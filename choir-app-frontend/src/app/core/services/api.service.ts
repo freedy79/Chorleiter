@@ -23,6 +23,7 @@ import { Program } from '../models/program';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
 import { Loan } from '../models/loan';
+import { Lending } from '../models/lending';
 import { PieceService } from './piece.service';
 import { ComposerService } from './composer.service';
 import { AuthorService } from './author.service';
@@ -568,6 +569,18 @@ export class ApiService {
 
   endLibraryLoan(id: number): Observable<any> {
     return this.libraryService.endLoan(id);
+  }
+
+  getLibraryItemCopies(id: number): Observable<Lending[]> {
+    return this.libraryService.getCopies(id);
+  }
+
+  updateLibraryCopy(id: number, data: Partial<Lending>): Observable<Lending> {
+    return this.libraryService.updateCopy(id, data);
+  }
+
+  downloadLibraryCopiesPdf(id: number): Observable<Blob> {
+    return this.libraryService.downloadCopiesPdf(id);
   }
 
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {

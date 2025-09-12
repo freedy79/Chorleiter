@@ -63,6 +63,7 @@
             <mat-icon>more_vert</mat-icon>
           </button>
           <mat-menu #itemMenu="matMenu">
+            <button mat-menu-item (click)="manageCopies(element, $event)">Exemplare verwalten</button>
             <button mat-menu-item (click)="editCopies(element, $event)">Bestand ändern</button>
             <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
             <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
