@@ -53,6 +53,9 @@
     "ts-prune": "^0.10.3",
     "typescript": "~5.8.2"
   },
+  "optionalDependencies": {
+    "@esbuild/win32-x64": "0.25.5"
+  },
   "overrides": {
     "glob": "^7.1.7",
     "rimraf": "3.0.2",
