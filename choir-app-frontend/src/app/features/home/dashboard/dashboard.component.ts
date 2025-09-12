@@ -33,6 +33,7 @@ import { KpiWidgetComponent, KpiItem } from './widgets/kpi-widget.component';
 import { StatusChipsWidgetComponent, StatusChip } from './widgets/status-chips-widget.component';
 import { LatestPostWidgetComponent } from './widgets/latest-post-widget.component';
 import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
+import { CurrentProgramWidgetComponent } from './widgets/current-program.component';
 
 type VM = {
   activeChoir: any | null;
@@ -41,6 +42,7 @@ type VM = {
   lastRehearsal: any | null;
   lastService: any | null;
   latestPost: any | null;
+  lastProgram: Program | null;
   upcomingEvents: any[];
 };
 
@@ -62,6 +64,7 @@ type VM = {
     StatusChipsWidgetComponent,
     QuickActionsWidgetComponent,
     LatestPostWidgetComponent,
+    CurrentProgramWidgetComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
@@ -182,6 +185,7 @@ export class DashboardComponent implements OnInit {
       lastRehearsal: this.lastRehearsal$,
       lastService: this.lastService$,
       latestPost: this.latestPost$,
+      lastProgram: this.lastProgram$,
       upcomingEvents: this.upcomingEvents$
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }

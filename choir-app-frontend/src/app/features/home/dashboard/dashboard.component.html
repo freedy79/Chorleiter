@@ -62,6 +62,10 @@
                           cardTitle="Letzter Gottesdienst" [event]="lastService">
           </app-event-card>
 
+          <app-current-program-widget  [program]="vm.lastProgram">
+          </app-current-program-widget>
+
+
           <mat-card class="calendar-card right-tile" role="region" aria-labelledby="my-dates">
             <mat-card-header>
               <mat-card-title id="my-dates">Meine Termine</mat-card-title>
