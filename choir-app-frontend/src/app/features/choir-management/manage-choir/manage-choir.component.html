@@ -237,6 +237,19 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let col" class="actions-cell">
+              <mat-icon
+                *ngIf="libraryItemIds.has(col.id)"
+                class="library-icon"
+                matTooltip="In Notenbibliothek vorhanden">
+                library_music
+              </mat-icon>
+              <button
+                *ngIf="(isChoirAdmin || isAdmin) && libraryItemIds.has(col.id)"
+                mat-icon-button
+                (click)="manageCopies(col, $event)"
+                matTooltip="Exemplare verwalten">
+                <mat-icon>list</mat-icon>
+              </button>
               <button *ngIf="isChoirAdmin" mat-icon-button color="warn" (click)="removeCollection(col)" matTooltip="Sammlung entfernen">
                 <mat-icon>delete</mat-icon>
               </button>

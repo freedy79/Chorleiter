@@ -15,8 +15,6 @@ import { PaginatorService } from '@core/services/paginator.service';
 import { LibraryItem } from '@core/models/library-item';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
-import { MatDialog } from '@angular/material/dialog';
-import { CollectionCopiesDialogComponent } from '../collection-copies-dialog.component';
 
 @Component({
   selector: 'app-collection-list',
@@ -49,7 +47,6 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
   public libraryItemIds = new Set<number>();
-  private libraryItemsByCollection = new Map<number, LibraryItem>();
   public isHandset$: Observable<boolean>;
   public selectedCollection: Collection | null = null;
   private readonly stateKey = 'collection-list';
@@ -68,8 +65,7 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     private authService: AuthService,
     private paginatorService: PaginatorService,
     private breakpointObserver: BreakpointObserver,
-    private navState: NavigationStateService,
-    private dialog: MatDialog
+    private navState: NavigationStateService
   ) {
     this.pageSize = this.paginatorService.getPageSize('collection-list', this.pageSizeOptions[0]);
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
@@ -82,12 +78,10 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     this.loadCollections();
     this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
       this.libraryItemIds.clear();
-      this.libraryItemsByCollection.clear();
       items.forEach(i => {
         const id = i.collectionId || i.collection?.id;
         if (id != null) {
           this.libraryItemIds.add(id);
-          this.libraryItemsByCollection.set(id, i);
         }
       });
     });
@@ -110,14 +104,6 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
 
   toggleSelection(collection: Collection): void {
     this.selectedCollection = this.selectedCollection === collection ? null : collection;
-  }
-
-  manageCopies(collection: Collection, event: Event): void {
-    event.stopPropagation();
-    const item = this.libraryItemsByCollection.get(collection.id);
-    if (item) {
-      this.dialog.open(CollectionCopiesDialogComponent, { data: { item } });
-    }
   }
 
   loadCollections(): void {
