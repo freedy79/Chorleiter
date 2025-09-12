@@ -50,6 +50,7 @@ db.program_element = require("./program_element.model.js")(sequelize, Sequelize)
 db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
 db.district = require("./district.model.js")(sequelize, Sequelize);
 db.donation = require("./donation.model.js")(sequelize, Sequelize);
+db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -189,6 +190,12 @@ db.program_element.belongsTo(db.program, { foreignKey: 'programId', as: 'program
 
 db.piece.hasMany(db.program_element, { as: 'programElements', foreignKey: 'pieceId' });
 db.program_element.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
+
+// Choir logs
+db.choir.hasMany(db.choir_log, { as: 'logs' });
+db.choir_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.user.hasMany(db.choir_log, { as: 'choirLogs' });
+db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 
 module.exports = db;

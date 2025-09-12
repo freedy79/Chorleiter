@@ -192,6 +192,33 @@
     </mat-card-content>
   </mat-card>
 
+  <!-- Log Card -->
+  <mat-card class="table-card" *ngIf="isChoirAdmin">
+    <mat-card-header>
+      <mat-card-title>Log</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-wrapper mat-elevation-z4">
+        <mat-table [dataSource]="logDataSource">
+          <ng-container matColumnDef="timestamp">
+            <mat-header-cell *matHeaderCellDef>Wann</mat-header-cell>
+            <mat-cell *matCellDef="let log">{{ log.createdAt | date:'short' }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="user">
+            <mat-header-cell *matHeaderCellDef>Wer</mat-header-cell>
+            <mat-cell *matCellDef="let log">{{ log.user?.name }}, {{ log.user?.firstName }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="action">
+            <mat-header-cell *matHeaderCellDef>Was</mat-header-cell>
+            <mat-cell *matCellDef="let log">{{ formatAction(log) }}</mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedLogColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedLogColumns;"></mat-row>
+        </mat-table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
   <mat-card class="table-card">
     <mat-card-header>
       <mat-card-title>Sammlungen im Chor</mat-card-title>

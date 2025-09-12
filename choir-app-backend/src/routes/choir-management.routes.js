@@ -16,6 +16,7 @@ router.get("/members", role.requireChoirAdmin, wrap(controller.getChoirMembers))
 router.post("/members", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.inviteUserToChoir));
 router.put("/members/:userId", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.updateMember));
 router.delete("/members", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.removeUserFromChoir));
+router.get("/logs", role.requireChoirAdmin, wrap(controller.getChoirLogs));
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", wrap(controller.getChoirCollections));
 router.delete("/collections/:id", role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));

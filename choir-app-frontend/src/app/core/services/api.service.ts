@@ -15,6 +15,7 @@ import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Publisher } from '@core/models/publisher';
 import { Choir } from '@core/models/choir';
+import { ChoirLog } from '../models/choir-log';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
@@ -635,6 +636,10 @@ export class ApiService {
 
   getChoirCollections(options?: { choirId?: number }): Observable<Collection[]> {
     return this.choirService.getChoirCollections(options?.choirId);
+  }
+
+  getChoirLogs(options?: { choirId?: number }): Observable<ChoirLog[]> {
+    return this.choirService.getChoirLogs(options?.choirId);
   }
 
   removeCollectionFromChoir(collectionId: number, options?: { choirId?: number }): Observable<any> {

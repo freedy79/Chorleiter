@@ -103,6 +103,7 @@ exports.create = async (req, res) => {
         });
 
     // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
+    await db.choir_log.create({ choirId, userId: req.userId, action: 'event_created', details: { eventId: event.id, type, date } });
     res.status(201).send({
         message: "Event successfully created.",
         wasUpdated: false,
@@ -374,6 +375,7 @@ exports.update = async (req, res) => {
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
+    await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_updated', details: { eventId: id, type, date } });
     res.status(200).send(updated);
 };
 
@@ -382,6 +384,7 @@ exports.delete = async (req, res) => {
 
     const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
         if (num === 1) {
+            await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_deleted', details: { eventId: id } });
             res.send({ message: 'Event deleted successfully!' });
         } else {
             res.status(404).send({ message: 'Event not found.' });
