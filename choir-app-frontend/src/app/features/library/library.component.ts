@@ -20,7 +20,6 @@ import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
 import { map } from 'rxjs/operators';
 import { LoanListComponent } from './loan-list.component';
-import { LibraryCopiesDialogComponent } from './library-copies-dialog.component';
 
 
 @Component({
@@ -153,11 +152,6 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     event.stopPropagation();
     this.cart.addItem(item);
     this.snack.open('Zur Anfrage hinzugefügt', undefined, { duration: 2000 });
-  }
-
-  manageCopies(item: LibraryItem, event: Event): void {
-    event.stopPropagation();
-    this.dialog.open(LibraryCopiesDialogComponent, { data: { item } });
   }
 
   editCopies(item: LibraryItem, event: Event): void {

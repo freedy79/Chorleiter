@@ -9,17 +9,17 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { LibraryItem } from '@core/models/library-item';
 
 @Component({
-  selector: 'app-library-copies-dialog',
+  selector: 'app-collection-copies-dialog',
   standalone: true,
   imports: [CommonModule, MatDialogModule, MaterialModule, FormsModule],
-  templateUrl: './library-copies-dialog.component.html'
+  templateUrl: './collection-copies-dialog.component.html'
 })
-export class LibraryCopiesDialogComponent implements OnInit {
+export class CollectionCopiesDialogComponent implements OnInit {
   copies: Lending[] = [];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { item: LibraryItem },
-    private dialogRef: MatDialogRef<LibraryCopiesDialogComponent>,
+    private dialogRef: MatDialogRef<CollectionCopiesDialogComponent>,
     private api: ApiService,
     private snack: MatSnackBar
   ) {}

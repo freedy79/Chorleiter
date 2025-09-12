@@ -88,6 +88,13 @@
               matTooltip="In Notenbibliothek vorhanden">
               library_music
             </mat-icon>
+            <button
+              *ngIf="(isChoirAdmin || isAdmin) && libraryItemIds.has(collection.id)"
+              mat-icon-button
+              (click)="manageCopies(collection, $event)"
+              matTooltip="Exemplare verwalten">
+              <mat-icon>list</mat-icon>
+            </button>
             <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
             </button>
@@ -141,6 +148,13 @@
           matTooltip="In Notenbibliothek vorhanden">
           library_music
         </mat-icon>
+        <button
+          *ngIf="(isChoirAdmin || isAdmin) && libraryItemIds.has(collection.id)"
+          mat-icon-button
+          (click)="manageCopies(collection, $event)"
+          matTooltip="Exemplare verwalten">
+          <mat-icon>list</mat-icon>
+        </button>
         <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button [routerLink]="['/collections/edit', collection.id]" matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
             <mat-icon>edit</mat-icon>
         </button>
