@@ -77,8 +77,11 @@ export class DevelopComponent implements OnInit {
       return;
     }
     win.document.title = 'Deploy';
+    win.document.body.style.background = '#000';
+    win.document.body.style.color = '#fff';
     const pre = win.document.createElement('pre');
     pre.style.whiteSpace = 'pre-wrap';
+    pre.style.margin = '0';
     win.document.body.appendChild(pre);
     fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
