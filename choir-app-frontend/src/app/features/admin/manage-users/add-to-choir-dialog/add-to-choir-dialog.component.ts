@@ -25,7 +25,6 @@ export class AddToChoirDialogComponent implements OnInit {
     this.form = this.fb.group({
       choir: [null, Validators.required],
       roles: [['singer'], Validators.required],
-      isOrganist: [false],
     });
   }
 
@@ -43,11 +42,7 @@ export class AddToChoirDialogComponent implements OnInit {
     if (this.form.valid) {
       const choirId = this.form.value.choir;
       const roles = this.form.value.roles as string[];
-      const isOrg = this.form.value.isOrganist;
-      const finalRoles = isOrg && !roles.includes('organist')
-        ? [...roles, 'organist']
-        : (!isOrg ? roles.filter(r => r !== 'organist') : roles);
-      this.dialogRef.close({ choirId, roles: finalRoles });
+      this.dialogRef.close({ choirId, roles });
     }
   }
 }
