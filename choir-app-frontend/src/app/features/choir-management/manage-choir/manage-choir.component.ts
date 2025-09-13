@@ -173,17 +173,18 @@ export class ManageChoirComponent implements OnInit {
         this.dataSource.data = pageData.members;
         this.collectionDataSource.data = pageData.collections;
         this.logDataSource.data = pageData.logs;
-      }
-    });
 
-    this.collectionCopyIds.clear();
-    pageData.collections.forEach(col => {
-      this.apiService.getCollectionCopies(col.id).subscribe(copies => {
-        if (copies.length > 0) {
-          this.collectionCopyIds.add(col.id);
-        }
-      });
-      this.libraryItemsLoaded = true;
+
+        this.collectionCopyIds.clear();
+        pageData.collections.forEach((col: Collection) => {
+          this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+            if (copies.length > 0) {
+              this.collectionCopyIds.add(col.id);
+            }
+          });
+        });
+        this.libraryItemsLoaded = true;
+      }
     });
   }
 
