@@ -338,11 +338,25 @@ exports.getChoirLogs = async (req, res, next) => {
 // Generate participation PDF for all choir members and upcoming events
 exports.downloadParticipationPdf = async (req, res, next) => {
     try {
-        const members = await db.user.findAll({
-            include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
-            attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
-            order: [['name', 'ASC']]
-        });
+        let members;
+        try {
+            members = await db.user.findAll({
+                include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
+                attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
+                order: [['name', 'ASC']]
+            });
+        } catch (e) {
+            if (e.name === 'SequelizeDatabaseError') {
+                // Fallback for databases that do not yet contain district/congregation columns
+                members = await db.user.findAll({
+                    include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
+                    order: [['name', 'ASC']]
+                });
+            } else {
+                throw e;
+            }
+        }
+
         const events = await db.event.findAll({
             where: { choirId: req.activeChoirId, date: { [Op.gte]: new Date() } },
             order: [['date', 'ASC']]
