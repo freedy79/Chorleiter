@@ -244,5 +244,16 @@ export class ParticipationComponent implements OnInit {
     const { year, month } = this.parseMonthKey(key);
     return new Date(year, month - 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
   }
+
+  downloadPdf(): void {
+    this.api.downloadParticipationPdf().subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'beteiligung.pdf';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
 }
 
