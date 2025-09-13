@@ -86,6 +86,17 @@ exports.updateMyChoir = async (req, res, next) => {
     }
 };
 
+// Anzahl der Mitglieder des aktiven Chors abrufen
+exports.getChoirMemberCount = async (req, res, next) => {
+    try {
+        const count = await db.user_choir.count({ where: { choirId: req.activeChoirId } });
+        res.status(200).send({ count });
+    } catch (err) {
+        err.message = `Error fetching member count for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res, next) => {
     try {

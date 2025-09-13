@@ -610,6 +610,10 @@ export class ApiService {
     return this.choirService.getChoirMembers(options?.choirId);
   }
 
+  getChoirMemberCount(options?: { choirId?: number }): Observable<number> {
+    return this.choirService.getChoirMemberCount(options?.choirId);
+  }
+
   inviteUserToChoir(
     email: string,
     rolesInChoir: string[],

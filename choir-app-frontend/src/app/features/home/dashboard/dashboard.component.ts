@@ -122,8 +122,7 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.memberCount$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getChoirMembers()),
-      map(members => members.length)
+      switchMap(() => this.apiService.getChoirMemberCount())
     );
 
     this.borrowedItems$ = this.refresh$.pipe(
