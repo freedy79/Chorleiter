@@ -86,6 +86,7 @@ export class ManageChoirComponent implements OnInit {
   collectionDataSource = new MatTableDataSource<Collection>();
   libraryItemIds = new Set<number>();
   private libraryItemsByCollection = new Map<number, LibraryItem>();
+  libraryItemsLoaded = false;
 
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
   logDataSource = new MatTableDataSource<ChoirLog>();
@@ -182,6 +183,7 @@ export class ManageChoirComponent implements OnInit {
           this.libraryItemsByCollection.set(id, i);
         }
       });
+      this.libraryItemsLoaded = true;
     });
   }
 
@@ -412,6 +414,9 @@ export class ManageChoirComponent implements OnInit {
 
   manageCopies(collection: Collection, event: Event): void {
     event.stopPropagation();
+    if (!this.libraryItemsLoaded) {
+      return;
+    }
     const existing = this.libraryItemsByCollection.get(collection.id);
     if (existing) {
       this.dialog.open(CollectionCopiesDialogComponent, { data: { item: existing } });
