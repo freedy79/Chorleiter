@@ -8,6 +8,7 @@ router.use(auth.verifyToken);
 
 router.get("/:year/:month/all", role.requireChoirAdmin, wrap(controller.findAllByMonth));
 router.get("/:year/:month", wrap(controller.findByMonth));
+router.put("/:userId", role.requireChoirAdmin, wrap(controller.setUserAvailability));
 router.put("/", wrap(controller.setAvailability));
 
 module.exports = router;

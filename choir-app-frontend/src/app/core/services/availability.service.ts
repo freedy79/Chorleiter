@@ -21,4 +21,8 @@ export class AvailabilityService {
   getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
     return this.http.get<MemberAvailability[]>(`${this.apiUrl}/availabilities/${year}/${month}/all`);
   }
+
+  setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
+    return this.http.put<UserAvailability>(`${this.apiUrl}/availabilities/${userId}`, { date, status });
+  }
 }
