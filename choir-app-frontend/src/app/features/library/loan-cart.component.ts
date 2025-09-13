@@ -24,11 +24,19 @@ export class LoanCartComponent {
   reason = '';
   choir$!: Observable<any>;
   user$!: Observable<any>;
+  isSingerOnly = false;
 
   constructor(private cart: LoanCartService, private api: ApiService, private auth: AuthService, private snack: MatSnackBar, private router: Router) {
     this.items$ = this.cart.items$;
     this.choir$ = this.api.getMyChoirDetails();
     this.user$ = this.auth.currentUser$;
+    this.auth.currentUser$.subscribe(user => {
+      const roles = Array.isArray(user?.roles) ? user.roles : [];
+      this.isSingerOnly = roles.includes('singer') && !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+      if (this.isSingerOnly) {
+        this.router.navigate(['/library']);
+      }
+    });
   }
 
   remove(id: number): void {
