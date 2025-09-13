@@ -8,6 +8,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: true
     },
+    borrowedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    returnedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
     status: {
       type: DataTypes.ENUM('available', 'borrowed'),
       defaultValue: 'available'

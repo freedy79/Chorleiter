@@ -218,8 +218,10 @@ function programPdf(program) {
 
 function lendingListPdf(title, copies) {
   const left = 50;
+  const col2 = left + 50;
+  const col3 = col2 + 250;
+  const col4 = col3 + 100;
   const right = 545;
-  const col2 = left + 80;
   const lines = [];
   let y = 800;
 
@@ -229,19 +231,31 @@ function lendingListPdf(title, copies) {
     return `BT /F1 ${size} Tf ${x} ${yPos - 2} Td (${escape(text)}) Tj ET`;
   }
 
+  function formatDate(d) {
+    if (!d) return '';
+    const date = new Date(d);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${day}.${month}.${date.getFullYear()}`;
+  }
+
   lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Ausleihliste ' + title)}) Tj ET`);
   y -= 30;
   const topLine = y + 8;
   lines.push('0.5 w 0 0 0 RG');
   lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
   lines.push(cellCenter(left, col2, 'Nr.', y));
-  lines.push(cellCenter(col2, right, 'Name', y));
+  lines.push(cellCenter(col2, col3, 'Name', y));
+  lines.push(cellCenter(col3, col4, 'Ausleihe', y));
+  lines.push(cellCenter(col4, right, 'Rückgabe', y));
   y -= 20;
   lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
 
   for (const copy of copies) {
     lines.push(cellCenter(left, col2, String(copy.copyNumber), y));
-    lines.push(cellCenter(col2, right, copy.borrowerName || '', y));
+    lines.push(cellCenter(col2, col3, copy.borrowerName || '', y));
+    lines.push(cellCenter(col3, col4, formatDate(copy.borrowedAt), y));
+    lines.push(cellCenter(col4, right, formatDate(copy.returnedAt), y));
     y -= 20;
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
   }
@@ -249,6 +263,8 @@ function lendingListPdf(title, copies) {
   const bottomLine = y + 8;
   lines.push(`${left} ${topLine} m ${left} ${bottomLine} l S`);
   lines.push(`${col2} ${topLine} m ${col2} ${bottomLine} l S`);
+  lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
+  lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
   lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
 
   const content = lines.join('\n');
