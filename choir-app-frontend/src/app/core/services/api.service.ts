@@ -655,6 +655,10 @@ export class ApiService {
     return this.choirService.getChoirLogs(options?.choirId);
   }
 
+  downloadParticipationPdf(options?: { choirId?: number }): Observable<Blob> {
+    return this.choirService.downloadParticipationPdf(options?.choirId);
+  }
+
   removeCollectionFromChoir(collectionId: number, options?: { choirId?: number }): Observable<any> {
     return this.choirService.removeCollectionFromChoir(collectionId, options?.choirId);
   }

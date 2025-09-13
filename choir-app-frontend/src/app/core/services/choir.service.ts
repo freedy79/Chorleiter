@@ -58,4 +58,9 @@ export class ChoirService {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
     return this.http.get<ChoirLog[]>(`${this.apiUrl}/choir-management/logs`, { params });
   }
+
+  downloadParticipationPdf(choirId?: number): Observable<Blob> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get(`${this.apiUrl}/choir-management/participation/pdf`, { params, responseType: 'blob' });
+  }
 }

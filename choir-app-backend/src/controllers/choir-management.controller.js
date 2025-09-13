@@ -3,6 +3,7 @@ const logger = require("../config/logger");
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
+const { participationPdf } = require('../services/pdf.service');
 
 async function cleanupExpiredInvitations() {
     const expired = await db.user_choir.findAll({
@@ -330,6 +331,27 @@ exports.getChoirLogs = async (req, res, next) => {
         res.status(200).send(logs);
     } catch (err) {
         err.message = `Error fetching logs for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
+// Generate participation PDF for all choir members and upcoming events
+exports.downloadParticipationPdf = async (req, res, next) => {
+    try {
+        const members = await db.user.findAll({
+            include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
+            attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
+            order: [['name', 'ASC']]
+        });
+        const events = await db.event.findAll({
+            where: { choirId: req.activeChoirId, date: { [Op.gte]: new Date() } },
+            order: [['date', 'ASC']]
+        });
+        const pdf = participationPdf(members, events);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.status(200).send(pdf);
+    } catch (err) {
+        err.message = `Error generating participation PDF for choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
     }
 };
