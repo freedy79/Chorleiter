@@ -88,4 +88,20 @@ describe('MainLayoutComponent', () => {
     const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
     expect(visible).toBeTrue();
   });
+
+  it('only shows participation for privileged roles', async () => {
+    authServiceMock.currentUser$.next({ roles: ['director'] });
+    authServiceMock.activeChoir$.next({ modules: {} });
+    fixture.detectChanges();
+    let item = component.navItems.find(i => i.key === 'participation');
+    let visible = await firstValueFrom(item!.visibleSubject!);
+    expect(visible).toBeTrue();
+
+    authServiceMock.currentUser$.next({ roles: ['singer'] });
+    authServiceMock.activeChoir$.next({ modules: {} });
+    fixture.detectChanges();
+    item = component.navItems.find(i => i.key === 'participation');
+    visible = await firstValueFrom(item!.visibleSubject!);
+    expect(visible).toBeFalse();
+  });
 });

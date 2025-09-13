@@ -34,14 +34,17 @@ export class MenuVisibilityService {
       keys.forEach(k => visibility[k] = false);
       if (choir) {
         const modules = choir.modules || {};
+        const roles = Array.isArray(user?.roles) ? user.roles : [];
+        const privilegedRoles = ['director', 'choir_admin', 'admin'];
+        const hasPrivilegedRole = roles.some(r => privilegedRoles.includes(r));
         const base: MenuVisibility = {
           dashboard: true,
           events: true,
           dienstplan: modules.dienstplan !== false,
           availability: true,
-          participation: true,
+          participation: hasPrivilegedRole,
           posts: true,
-          programs: modules.programs !== false,
+          programs: modules.programs !== false && hasPrivilegedRole,
           stats: true,
           manageChoir: true,
           repertoire: true,
@@ -49,11 +52,9 @@ export class MenuVisibilityService {
           library: true
         };
         Object.assign(visibility, base);
-        const roles = Array.isArray(user?.roles) ? user.roles : [];
         const isSingerOnly = roles.includes('singer') &&
           !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian', 'organist'].includes(r));
         if (isSingerOnly) {
-          visibility['participation'] = false;
           const singerMenu = modules.singerMenu || {};
           for (const key of Object.keys(base)) {
             if (singerMenu[key] === false) {
