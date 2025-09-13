@@ -292,17 +292,26 @@ function lendingListPdf(title, copies) {
 
 function participationPdf(members, events) {
   logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
-  const left = 50;
-  const right = 545;
-  const top = 800;
-  const rowHeight = 20;
+  const left = 40;
+  const right = 802;
+  const top = 550;
+  const rowHeight = 18;
   const bottomMargin = 60;
   const dateLabels = events.map(e => {
     const d = new Date(e.date);
     return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   });
   const columns = ['Sängername', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
-  const colWidth = (right - left) / columns.length;
+  const nameWidth = 170;
+  const emailWidth = 200;
+  const voiceWidth = 40;
+  const districtWidth = 50;
+  const congregationWidth = 60;
+  const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
+  const remainingWidth = (right - left) - fixedWidth;
+  const eventWidth = events.length ? remainingWidth / events.length : 0;
+  const columnWidths = [nameWidth, emailWidth, voiceWidth, districtWidth, congregationWidth,
+    ...Array(events.length).fill(eventWidth)];
 
   function newPage() {
     const lines = [];
@@ -310,25 +319,26 @@ function participationPdf(members, events) {
     const topLine = y + 8;
     lines.push('0.5 w 0 0 0 RG');
     lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
+    let x = left;
     columns.forEach((col, i) => {
-      const x = left + i * colWidth + 2;
-      lines.push(`BT /F1 12 Tf ${x} ${y} Td (${escape(col)}) Tj ET`);
+      lines.push(`BT /F2 11 Tf ${x + 2} ${y} Td (${escape(col)}) Tj ET`);
+      x += columnWidths[i];
     });
     y -= rowHeight;
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
     return { lines, y, topLine };
   }
 
-  function finishPage(page, isLast) {
+  function finishPage(page) {
     const bottomLine = page.y + 8;
-    for (let i = 0; i <= columns.length; i++) {
-      const x = left + i * colWidth;
+    let x = left;
+    page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
+    columnWidths.forEach(w => {
+      x += w;
       page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
-    }
-    if (isLast) {
-      page.lines.push(`BT /F1 10 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-      page.lines.push(`BT /F1 10 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,GÖ,H-NO,H-SW,HI,WF')}) Tj ET`);
-    }
+    });
+    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
+    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,GÖ,H-NO,H-SW,HI,WF')}) Tj ET`);
     pages.push(page.lines.join('\n'));
   }
 
@@ -350,7 +360,7 @@ function participationPdf(members, events) {
   let page = newPage();
   for (const m of members) {
     if (page.y - rowHeight < bottomMargin) {
-      finishPage(page, false);
+      finishPage(page);
       page = newPage();
     }
     const row = [
@@ -361,25 +371,27 @@ function participationPdf(members, events) {
       m.congregation || ''
     ];
     for (let i = 0; i < events.length; i++) row.push('');
+    let x = left;
     row.forEach((cell, i) => {
-      const x = left + i * colWidth + 2;
-      page.lines.push(`BT /F1 12 Tf ${x} ${page.y} Td (${escape(cell)}) Tj ET`);
+      page.lines.push(`BT /F1 10 Tf ${x + 2} ${page.y} Td (${escape(cell)}) Tj ET`);
+      x += columnWidths[i];
     });
     page.y -= rowHeight;
     page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
   }
-  finishPage(page, true);
+  finishPage(page);
 
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
   objects.push(null); // placeholder for pages root
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
+  objects.push('<< /Type /Font /Subtype /Type1 /Name /F2 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
   const pageKids = [];
   for (const content of pages) {
     const contentObjNum = objects.length + 2;
     const pageObjNum = objects.length + 1;
     pageKids.push(`${pageObjNum} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R >> >> >>`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`);
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   }
   objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
