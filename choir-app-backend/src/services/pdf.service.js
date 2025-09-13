@@ -301,12 +301,12 @@ function participationPdf(members, events) {
     const d = new Date(e.date);
     return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   });
-  const columns = ['Sängername', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
+  const columns = ['Name', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
   const nameWidth = 170;
   const emailWidth = 200;
   const voiceWidth = 40;
-  const districtWidth = 50;
-  const congregationWidth = 60;
+  const districtWidth = 100;
+  const congregationWidth = 80;
   const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
   const remainingWidth = (right - left) - fixedWidth;
   const eventWidth = events.length ? remainingWidth / events.length : 0;
@@ -321,7 +321,7 @@ function participationPdf(members, events) {
     lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
     let x = left;
     columns.forEach((col, i) => {
-      lines.push(`BT /F2 11 Tf ${x + 2} ${y} Td (${escape(col)}) Tj ET`);
+      lines.push(`BT /F2 11 Tf ${x + 2} ${y - 4} Td (${escape(col)}) Tj ET`);
       x += columnWidths[i];
     });
     y -= rowHeight;
@@ -373,7 +373,7 @@ function participationPdf(members, events) {
     for (let i = 0; i < events.length; i++) row.push('');
     let x = left;
     row.forEach((cell, i) => {
-      page.lines.push(`BT /F1 10 Tf ${x + 2} ${page.y} Td (${escape(cell)}) Tj ET`);
+      page.lines.push(`BT /F1 10 Tf ${x + 2} ${page.y - 4} Td (${escape(cell)}) Tj ET`);
       x += columnWidths[i];
     });
     page.y -= rowHeight;

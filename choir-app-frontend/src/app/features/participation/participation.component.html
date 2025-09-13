@@ -24,7 +24,7 @@
     <ng-container *ngFor="let col of eventColumns" [matColumnDef]="col.key">
       <mat-header-cell *matHeaderCellDef>{{ col.label }}</mat-header-cell>
       <mat-cell *matCellDef="let m" (click)="changeStatus(m.id, col.key)">
-        <mat-icon class="status-icon" *ngIf="iconFor(status(m.id, col.key)) as icon" [ngClass]="classFor(status(m.id, col.key))">{{ icon }}</mat-icon>
+        <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, col.key))">{{ iconFor(status(m.id, col.key)) }}</mat-icon>
       </mat-cell>
     </ng-container>
 
@@ -32,7 +32,12 @@
       <mat-header-cell *matHeaderCellDef>{{ col.label }}</mat-header-cell>
       <mat-cell *matCellDef="let m">
         <ng-container *ngFor="let ev of col.events">
-          <mat-icon class="status-icon" *ngIf="iconFor(status(m.id, ev.date)) as icon" [ngClass]="classFor(status(m.id, ev.date))" (click)="changeStatus(m.id, ev.date)">{{ icon }}</mat-icon>
+          <span class="event-item">
+            <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, ev.date))" (click)="changeStatus(m.id, ev.date)">
+              {{ iconFor(status(m.id, ev.date)) }}
+            </mat-icon>
+            <span class="event-date">{{ formatDate(ev.date) }}</span>
+          </span>
         </ng-container>
       </mat-cell>
     </ng-container>

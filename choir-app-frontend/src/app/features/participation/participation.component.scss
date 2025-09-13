@@ -23,3 +23,18 @@
 .unavailable {
   color: #d32f2f;
 }
+
+.unknown {
+  color: #9e9e9e;
+}
+
+.event-item {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.event-date {
+  font-size: 12px;
+  margin-left: 2px;
+}

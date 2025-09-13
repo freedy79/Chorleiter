@@ -36,6 +36,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   collections$!: Observable<Collection[]>;
   isAdmin = false;
   isLibrarian = false;
+  isSingerOnly = false;
   displayedColumns: string[] = ['cover', 'title', 'copies', 'actions'];
 
   dataSource = new MatTableDataSource<LibraryItem>();
@@ -56,6 +57,10 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     this.collections$ = this.apiService.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
     this.auth.isLibrarian$.subscribe(l => this.isLibrarian = l);
+    this.auth.currentUser$.subscribe(user => {
+      const roles = Array.isArray(user?.roles) ? user.roles : [];
+      this.isSingerOnly = roles.includes('singer') && !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+    });
   }
 
   ngAfterViewInit(): void {
