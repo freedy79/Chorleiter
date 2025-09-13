@@ -19,6 +19,7 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
 import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
+import { LibraryItem } from '@core/models/library-item';
 
 
 @Component({
