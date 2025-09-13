@@ -29,9 +29,7 @@ import { environment } from 'src/environments/environment';
 // WIDGETS (standalone)
 import { UpcomingEventsWidgetComponent } from './widgets/upcoming-events-widget.component';
 import { KpiWidgetComponent, KpiItem } from './widgets/kpi-widget.component';
-import { StatusChipsWidgetComponent, StatusChip } from './widgets/status-chips-widget.component';
 import { LatestPostWidgetComponent } from './widgets/latest-post-widget.component';
-import { QuickActionsWidgetComponent } from './widgets/quick-actions-widget.component';
 import { CurrentProgramWidgetComponent } from './widgets/current-program.component';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
@@ -60,8 +58,6 @@ type VM = {
     // Widgets
     KpiWidgetComponent,
     UpcomingEventsWidgetComponent,
-    StatusChipsWidgetComponent,
-    QuickActionsWidgetComponent,
     LatestPostWidgetComponent,
     CurrentProgramWidgetComponent,
     PureDatePipe,
