@@ -13,10 +13,18 @@
           matInput
           [(ngModel)]="c.borrowerName"
           [matAutocomplete]="auto"
-          (optionSelected)="onNameSelected(c, $event.option.value)"
           (blur)="onNameBlur(c)"
           [readonly]="!!c.borrowerName"
         />
+
+        <mat-autocomplete
+          #auto="matAutocomplete"
+          (optionSelected)="onNameSelected(c, $event)"
+        >
+          <mat-option *ngFor="let m of members" [value]="fullName(m)">
+            {{ fullName(m) }}
+          </mat-option>
+        </mat-autocomplete>
       </td>
     </ng-container>
 

@@ -7,6 +7,7 @@ import { ApiService } from '@core/services/api.service';
 import { Lending } from '@core/models/lending';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { UserInChoir } from '@core/models/user';
+import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-collection-copies-dialog',
@@ -48,7 +49,8 @@ export class CollectionCopiesDialogComponent implements OnInit {
     return u.firstName ? `${u.name}, ${u.firstName}` : u.name;
   }
 
-  onNameSelected(copy: Lending, value: string): void {
+  onNameSelected(copy: Lending, event: MatAutocompleteSelectedEvent): void {
+    const value = event.option.value as string;
     const member = this.members.find(m => this.fullName(m) === value);
     copy.borrowerId = member?.id;
     copy.borrowerName = value;
