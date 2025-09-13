@@ -63,7 +63,12 @@ export class ParticipationComponent implements OnInit {
         this.displayMode = 'events';
         this.eventColumns = future.map(ev => ({
           key: this.dateKey(ev.date),
-          label: parseDateOnly(ev.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
+          label: parseDateOnly(ev.date).toLocaleDateString('de-DE', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'Europe/Berlin',
+          })
         }));
         this.displayedColumns = ['name', 'voice', ...this.eventColumns.map(c => c.key)];
         const months = Array.from(new Set(future.map(e => this.monthKey(e.date))));
@@ -112,9 +117,9 @@ export class ParticipationComponent implements OnInit {
   iconFor(status?: string): string {
     switch (status) {
       case 'AVAILABLE': return 'check';
-      case 'MAYBE': return 'help';
+      case 'MAYBE': return 'check';
       case 'UNAVAILABLE': return 'close';
-      default: return '';
+      default: return 'help';
     }
   }
 
@@ -123,8 +128,16 @@ export class ParticipationComponent implements OnInit {
       case 'AVAILABLE': return 'available';
       case 'MAYBE': return 'maybe';
       case 'UNAVAILABLE': return 'unavailable';
-      default: return '';
+      default: return 'unknown';
     }
+  }
+
+  formatDate(date: string | Date): string {
+    return parseDateOnly(date).toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      timeZone: 'Europe/Berlin',
+    });
   }
 
   private nextStatus(current?: string): string {
