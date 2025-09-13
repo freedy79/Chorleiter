@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { Lending } from '@core/models/lending';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { UserInChoir } from '@core/models/user';
 
 @Component({
   selector: 'app-collection-copies-dialog',
@@ -15,6 +16,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 })
 export class CollectionCopiesDialogComponent implements OnInit {
   copies: Lending[] = [];
+  members: UserInChoir[] = [];
+  displayedColumns = ['number', 'name', 'borrowed', 'returned', 'actions'];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { collectionId: number },
@@ -25,6 +28,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    this.api.getChoirMembers().subscribe(m => (this.members = m));
   }
 
   load(): void {
@@ -32,8 +36,34 @@ export class CollectionCopiesDialogComponent implements OnInit {
   }
 
   save(copy: Lending): void {
-    const { borrowerName, status } = copy;
-    this.api.updateCollectionCopy(copy.id, { borrowerName, status }).subscribe(() => {
+    const data: any = { borrowerName: copy.borrowerName };
+    if (copy.borrowerId) data.borrowerId = copy.borrowerId;
+    this.api.updateCollectionCopy(copy.id, data).subscribe(() => {
+      this.snack.open('Gespeichert', undefined, { duration: 2000 });
+      this.load();
+    });
+  }
+
+  fullName(u: UserInChoir): string {
+    return u.firstName ? `${u.name}, ${u.firstName}` : u.name;
+  }
+
+  onNameSelected(copy: Lending, value: string): void {
+    const member = this.members.find(m => this.fullName(m) === value);
+    copy.borrowerId = member?.id;
+    copy.borrowerName = value;
+    this.save(copy);
+  }
+
+  onNameBlur(copy: Lending): void {
+    if (!copy.borrowerName) return;
+    const member = this.members.find(m => this.fullName(m) === copy.borrowerName);
+    copy.borrowerId = member?.id;
+    this.save(copy);
+  }
+
+  returnCopy(copy: Lending): void {
+    this.api.updateCollectionCopy(copy.id, { borrowerName: null, borrowerId: null }).subscribe(() => {
       this.snack.open('Gespeichert', undefined, { duration: 2000 });
       this.load();
     });

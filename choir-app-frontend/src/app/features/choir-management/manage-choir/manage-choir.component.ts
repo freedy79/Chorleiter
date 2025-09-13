@@ -13,6 +13,7 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
+import { LibraryItem } from 'src/app/core/models/library-item';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -174,7 +175,6 @@ export class ManageChoirComponent implements OnInit {
         this.collectionDataSource.data = pageData.collections;
         this.logDataSource.data = pageData.logs;
 
-
         this.collectionCopyIds.clear();
         pageData.collections.forEach((col: Collection) => {
           this.apiService.getCollectionCopies(col.id).subscribe(copies => {
@@ -182,8 +182,8 @@ export class ManageChoirComponent implements OnInit {
               this.collectionCopyIds.add(col.id);
             }
           });
+          this.libraryItemsLoaded = true;
         });
-        this.libraryItemsLoaded = true;
       }
     });
   }

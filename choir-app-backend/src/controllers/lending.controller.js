@@ -16,16 +16,27 @@ exports.list = async (req, res) => {
   res.status(200).send(copies);
 };
 
-// Update borrower or status of a copy
+// Update borrower of a copy
 exports.update = async (req, res) => {
   const { id } = req.params;
   const copy = await Lending.findByPk(id);
   if (!copy) return res.status(404).send({ message: 'Copy not found.' });
-  const { borrowerName, borrowerId, status } = req.body;
+  const { borrowerName, borrowerId } = req.body;
   const data = {};
-  if (borrowerName !== undefined) data.borrowerName = borrowerName;
-  if (borrowerId !== undefined) data.borrowerId = borrowerId;
-  if (status) data.status = status;
+  if (borrowerName !== undefined) {
+    data.borrowerName = borrowerName;
+    data.status = borrowerName ? 'borrowed' : 'available';
+    if (borrowerName) {
+      data.borrowedAt = new Date();
+      data.returnedAt = null;
+      if (borrowerId !== undefined) data.borrowerId = borrowerId;
+    } else {
+      data.returnedAt = new Date();
+      data.borrowerId = null;
+    }
+  } else if (borrowerId !== undefined) {
+    data.borrowerId = borrowerId;
+  }
   await copy.update(data);
   res.status(200).send(copy);
 };
