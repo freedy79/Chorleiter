@@ -342,7 +342,12 @@ exports.downloadParticipationPdf = async (req, res, next) => {
         let members;
         try {
             members = await db.user.findAll({
-                include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
+                include: [{
+                    model: db.choir,
+                    where: { id: req.activeChoirId },
+                    attributes: [],
+                    through: { attributes: [] }
+                }],
                 attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
                 order: [['name', 'ASC']]
             });
@@ -351,7 +356,12 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             if (e.name === 'SequelizeDatabaseError') {
                 // Fallback for databases that do not yet contain district/congregation columns
                 members = await db.user.findAll({
-                    include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
+                    include: [{
+                        model: db.choir,
+                        where: { id: req.activeChoirId },
+                        attributes: [],
+                        through: { attributes: [] }
+                    }],
                     order: [['name', 'ASC']]
                 });
                 logger.debug(`Fetched ${members.length} members for choirId ${req.activeChoirId} using fallback`);
