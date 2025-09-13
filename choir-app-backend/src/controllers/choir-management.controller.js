@@ -338,6 +338,7 @@ exports.getChoirLogs = async (req, res, next) => {
 // Generate participation PDF for all choir members and upcoming events
 exports.downloadParticipationPdf = async (req, res, next) => {
     try {
+        logger.debug(`Generating participation PDF for choirId ${req.activeChoirId}`);
         let members;
         try {
             members = await db.user.findAll({
@@ -345,6 +346,7 @@ exports.downloadParticipationPdf = async (req, res, next) => {
                 attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
                 order: [['name', 'ASC']]
             });
+            logger.debug(`Fetched ${members.length} members for choirId ${req.activeChoirId}`);
         } catch (e) {
             if (e.name === 'SequelizeDatabaseError') {
                 // Fallback for databases that do not yet contain district/congregation columns
@@ -352,6 +354,7 @@ exports.downloadParticipationPdf = async (req, res, next) => {
                     include: [{ model: db.user_choir, where: { choirId: req.activeChoirId }, attributes: [] }],
                     order: [['name', 'ASC']]
                 });
+                logger.debug(`Fetched ${members.length} members for choirId ${req.activeChoirId} using fallback`);
             } else {
                 throw e;
             }
@@ -361,11 +364,15 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             where: { choirId: req.activeChoirId, date: { [Op.gte]: new Date() } },
             order: [['date', 'ASC']]
         });
+        logger.debug(`Fetched ${events.length} upcoming events for choirId ${req.activeChoirId}`);
         const pdf = participationPdf(members, events);
+        logger.debug(`Generated participation PDF with ${pdf.length} bytes for choirId ${req.activeChoirId}`);
         res.setHeader('Content-Type', 'application/pdf');
         res.status(200).send(pdf);
     } catch (err) {
         err.message = `Error generating participation PDF for choirId ${req.activeChoirId}: ${err.message}`;
+        logger.error(err.message);
+        logger.error(err.stack);
         next(err);
     }
 };
