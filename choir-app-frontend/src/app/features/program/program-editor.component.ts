@@ -58,6 +58,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addPieceItem(this.programId, result).subscribe(item => {
+          this.updateProgramId(item.programId);
           this.items = [...this.items, this.enhanceItem(item)];
         });
       }
@@ -69,6 +70,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addFreePieceItem(this.programId, result).subscribe(item => {
+          this.updateProgramId(item.programId);
           this.items = [...this.items, this.enhanceItem(item)];
         });
       }
@@ -80,6 +82,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addSpeechItem(this.programId, result).subscribe(item => {
+          this.updateProgramId(item.programId);
           this.items = [...this.items, this.enhanceItem(item)];
         });
       }
@@ -91,6 +94,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.addBreakItem(this.programId, result).subscribe(item => {
+          this.updateProgramId(item.programId);
           this.items = [...this.items, this.enhanceItem(item)];
         });
       }
@@ -121,6 +125,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -144,6 +149,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addFreePieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -167,6 +173,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addSpeechItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -184,6 +191,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addBreakItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -203,6 +211,7 @@ export class ProgramEditorComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         this.programService.updateProgram(this.programId, result).subscribe(updated => {
+          this.updateProgramId(updated.id);
           this.programTitle = updated.title;
           this.programDescription = updated.description ?? '';
           this.startTime = updated.startTime ?? null;
@@ -219,6 +228,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -233,6 +243,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addFreePieceItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -247,6 +258,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addSpeechItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -261,6 +273,7 @@ export class ProgramEditorComponent implements OnInit {
         this.programService
           .addBreakItem(this.programId, { ...result, slotId: item.id })
           .subscribe(updated => {
+            this.updateProgramId(updated.programId);
             const enh = this.enhanceItem(updated);
             this.items = this.items.map(i => (i.id === item.id ? enh : i));
           });
@@ -288,6 +301,9 @@ export class ProgramEditorComponent implements OnInit {
 
   saveOrder() {
     this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe(items => {
+      if (items.length) {
+        this.updateProgramId(items[0].programId);
+      }
       this.items = items.map(i => this.enhanceItem(i));
     });
   }
@@ -323,6 +339,7 @@ export class ProgramEditorComponent implements OnInit {
       this.programService
         .updateItem(this.programId, item.id, { durationSec: item.durationSec ?? null })
         .subscribe(updated => {
+          this.updateProgramId(updated.programId);
           Object.assign(item, this.enhanceItem(updated));
           if (shouldOfferSave && item.durationSec) {
             const dialogData: ConfirmDialogData = {
@@ -352,6 +369,7 @@ export class ProgramEditorComponent implements OnInit {
     this.programService
       .updateItem(this.programId, item.id, { note: item.note ?? null })
       .subscribe(updated => {
+        this.updateProgramId(updated.programId);
         Object.assign(item, this.enhanceItem(updated));
       });
   }
@@ -371,6 +389,12 @@ export class ProgramEditorComponent implements OnInit {
       a.click();
       window.URL.revokeObjectURL(url);
     });
+  }
+
+  private updateProgramId(id: string | undefined) {
+    if (id && id !== this.programId) {
+      this.programId = id;
+    }
   }
 
   getComposer(item: ProgramItem): string | null {
