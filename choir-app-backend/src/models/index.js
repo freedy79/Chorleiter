@@ -170,6 +170,10 @@ db.lending.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'librar
 db.user.hasMany(db.lending, { as: 'borrowedCopies', foreignKey: 'borrowerId' });
 db.lending.belongsTo(db.user, { foreignKey: 'borrowerId', as: 'borrower' });
 
+// Internal choir copies linked directly to collections
+db.collection.hasMany(db.lending, { as: 'copies', foreignKey: 'collectionId' });
+db.lending.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
+
 // Loan requests
 db.loan_request.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.loan_request.belongsTo(db.user, { foreignKey: 'userId', as: 'requester' });

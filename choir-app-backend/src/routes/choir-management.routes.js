@@ -1,6 +1,7 @@
 const { verifyToken } = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
 const controller = require("../controllers/choir-management.controller");
+const lendingController = require("../controllers/choir-lending.controller");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
 
@@ -21,5 +22,8 @@ router.get("/participation/pdf", role.requireChoirAdmin, wrap(controller.downloa
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", wrap(controller.getChoirCollections));
 router.delete("/collections/:id", role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));
+router.get("/collections/:id/copies", role.requireChoirAdmin, wrap(lendingController.list));
+router.post("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.init));
+router.put("/collections/copies/:id", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.update));
 
 module.exports = router;

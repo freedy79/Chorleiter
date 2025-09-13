@@ -13,7 +13,6 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
-import { LibraryItem } from 'src/app/core/models/library-item';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -84,8 +83,7 @@ export class ManageChoirComponent implements OnInit {
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
-  libraryItemIds = new Set<number>();
-  private libraryItemsByCollection = new Map<number, LibraryItem>();
+  collectionCopyIds = new Set<number>();
 
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
   logDataSource = new MatTableDataSource<ChoirLog>();
@@ -172,14 +170,11 @@ export class ManageChoirComponent implements OnInit {
       }
     });
 
-    this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
-      this.libraryItemIds.clear();
-      this.libraryItemsByCollection.clear();
-      items.forEach(i => {
-        const id = i.collectionId || i.collection?.id;
-        if (id != null) {
-          this.libraryItemIds.add(id);
-          this.libraryItemsByCollection.set(id, i);
+    this.collectionCopyIds.clear();
+    pageData.collections.forEach(col => {
+      this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+        if (copies.length > 0) {
+          this.collectionCopyIds.add(col.id);
         }
       });
     });
@@ -199,20 +194,17 @@ export class ManageChoirComponent implements OnInit {
       });
       this.apiService.getChoirCollections(opts).subscribe(cols => {
         this.collectionDataSource.data = cols;
+        this.collectionCopyIds.clear();
+        cols.forEach(col => {
+          this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+            if (copies.length > 0) {
+              this.collectionCopyIds.add(col.id);
+            }
+          });
+        });
       });
       this.apiService.getChoirLogs(opts).subscribe(logs => {
         this.logDataSource.data = logs;
-      });
-      this.apiService.getLibraryItems().subscribe(items => {
-        this.libraryItemIds.clear();
-        this.libraryItemsByCollection.clear();
-        items.forEach(i => {
-          const id = i.collectionId || i.collection?.id;
-          if (id != null) {
-            this.libraryItemIds.add(id);
-            this.libraryItemsByCollection.set(id, i);
-          }
-        });
       });
     }
   }
@@ -412,17 +404,15 @@ export class ManageChoirComponent implements OnInit {
 
   manageCopies(collection: Collection, event: Event): void {
     event.stopPropagation();
-    const existing = this.libraryItemsByCollection.get(collection.id);
-    if (existing) {
-      this.dialog.open(CollectionCopiesDialogComponent, { data: { item: existing } });
+    if (this.collectionCopyIds.has(collection.id)) {
+      this.dialog.open(CollectionCopiesDialogComponent, { data: { collectionId: collection.id } });
     } else {
       const copiesStr = prompt('Anzahl der Exemplare eingeben:');
       const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
       if (!isNaN(copies) && copies > 0) {
-        this.apiService.addLibraryItem({ collectionId: collection.id, copies }).subscribe(newItem => {
-          this.libraryItemsByCollection.set(collection.id, newItem);
-          this.libraryItemIds.add(collection.id);
-          this.dialog.open(CollectionCopiesDialogComponent, { data: { item: newItem } });
+        this.apiService.initCollectionCopies(collection.id, copies).subscribe(() => {
+          this.collectionCopyIds.add(collection.id);
+          this.dialog.open(CollectionCopiesDialogComponent, { data: { collectionId: collection.id } });
         });
       }
     }
