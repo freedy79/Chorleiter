@@ -278,23 +278,41 @@ function participationPdf(members, events) {
   const right = 545;
   const top = 800;
   const rowHeight = 20;
+  const bottomMargin = 60;
   const dateLabels = events.map(e => {
     const d = new Date(e.date);
     return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
   });
   const columns = ['Sängername', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
   const colWidth = (right - left) / columns.length;
-  const lines = [];
-  let y = top;
-  const topLine = y + 8;
-  lines.push('0.5 w 0 0 0 RG');
-  lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-  columns.forEach((col, i) => {
-    const x = left + i * colWidth + 2;
-    lines.push(`BT /F1 12 Tf ${x} ${y} Td (${escape(col)}) Tj ET`);
-  });
-  y -= rowHeight;
-  lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
+
+  function newPage() {
+    const lines = [];
+    let y = top;
+    const topLine = y + 8;
+    lines.push('0.5 w 0 0 0 RG');
+    lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
+    columns.forEach((col, i) => {
+      const x = left + i * colWidth + 2;
+      lines.push(`BT /F1 12 Tf ${x} ${y} Td (${escape(col)}) Tj ET`);
+    });
+    y -= rowHeight;
+    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
+    return { lines, y, topLine };
+  }
+
+  function finishPage(page, isLast) {
+    const bottomLine = page.y + 8;
+    for (let i = 0; i <= columns.length; i++) {
+      const x = left + i * colWidth;
+      page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
+    }
+    if (isLast) {
+      page.lines.push(`BT /F1 10 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
+      page.lines.push(`BT /F1 10 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,GÖ,H-NO,H-SW,HI,WF')}) Tj ET`);
+    }
+    pages.push(page.lines.join('\n'));
+  }
 
   function voiceCode(v) {
     const map = {
@@ -310,7 +328,13 @@ function participationPdf(members, events) {
     return v ? (map[v] || v) : '';
   }
 
+  const pages = [];
+  let page = newPage();
   for (const m of members) {
+    if (page.y - rowHeight < bottomMargin) {
+      finishPage(page, false);
+      page = newPage();
+    }
     const row = [
       `${m.name || ''}${m.firstName ? ', ' + m.firstName : ''}`,
       m.email || '',
@@ -321,27 +345,27 @@ function participationPdf(members, events) {
     for (let i = 0; i < events.length; i++) row.push('');
     row.forEach((cell, i) => {
       const x = left + i * colWidth + 2;
-      lines.push(`BT /F1 12 Tf ${x} ${y} Td (${escape(cell)}) Tj ET`);
+      page.lines.push(`BT /F1 12 Tf ${x} ${page.y} Td (${escape(cell)}) Tj ET`);
     });
-    y -= rowHeight;
-    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
+    page.y -= rowHeight;
+    page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
   }
+  finishPage(page, true);
 
-  const bottomLine = y + 8;
-  for (let i = 0; i <= columns.length; i++) {
-    const x = left + i * colWidth;
-    lines.push(`${x} ${topLine} m ${x} ${bottomLine} l S`);
-  }
-  lines.push(`BT /F1 10 Tf ${left} ${y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-  lines.push(`BT /F1 10 Tf ${left} ${y - 24} Td (${escape('Bezirke: BS,GÖ,H-NO,H-SW,HI,WF')}) Tj ET`);
-
-  const content = lines.join('\n');
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
-  objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-  objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>');
+  objects.push(null); // placeholder for pages root
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
-  objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  const pageKids = [];
+  for (const content of pages) {
+    const contentObjNum = objects.length + 2;
+    const pageObjNum = objects.length + 1;
+    pageKids.push(`${pageObjNum} 0 R`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R >> >> >>`);
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  }
+  objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
+
   const offsets = [];
   let pdf = '%PDF-1.4\n';
   for (let i = 0; i < objects.length; i++) {
