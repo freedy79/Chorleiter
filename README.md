@@ -127,12 +127,9 @@ The backend enables gzip compression by including the
 [`compression`](https://www.npmjs.com/package/compression) middleware. Running
 `npm install` inside `choir-app-backend` installs this dependency automatically.
 
-For the Angular frontend you can pre-compress build artifacts using
-`compression-webpack-plugin` together with a custom webpack configuration:
-
-```bash
-npm install --save-dev compression-webpack-plugin @angular-builders/custom-webpack
-```
+For the Angular frontend you can optionally pre-compress build artifacts using
+`compression-webpack-plugin` together with a custom webpack configuration.
+Install these packages separately if you want to enable pre-compression.
 
 The generated `.gz` or `.br` files can then be served by a web server that
 supports content negotiation for pre-compressed assets.

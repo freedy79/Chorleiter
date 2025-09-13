@@ -3,18 +3,14 @@
   <mat-card-title>Neuster Beitrag</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <div class="post" *ngIf="post as p; else empty">
+    <div class="post clickable" (click)="openLatestPost(post)" *ngIf="post as p; else empty">
       <div class="title">{{ p.title }}</div>
-      <div class="post-excerpt muted">{{ p.expiresAt }}</div>
-          <div class="post-excerpt" [innerHTML]="p.text | markdown | async"></div>
-          <small>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }}</small>
+      <div class="post-excerpt" [innerHTML]="post.text | markdown | async"></div>
+        <small>{{ post.updatedAt | date:'short' }} – {{ post.author?.name }}</small>
     </div>
+
     <ng-template #empty>
       <div class="muted">Keine Beiträge vorhanden.</div>
     </ng-template>
   </mat-card-content>
-  <mat-card-actions *ngIf="post">
-    <button mat-button color="primary" (click)="openLatestPost(post)">Zum Beitrag</button>
-    <button mat-button color="accent" routerLink="/pieces">Chor-Stücke öffnen</button>
-  </mat-card-actions>
 </mat-card>

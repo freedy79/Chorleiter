@@ -26,6 +26,10 @@
   grid-auto-rows: minmax(120px, auto);
 }
 
+.first-col-element {
+  grid-column: 1 / 2;
+}
+
 /* Utilities */
 .visually-hidden {
   position:absolute!important; height:1px; width:1px; overflow:hidden;
@@ -38,7 +42,9 @@
 
 /* Optionale Kartenpositionierung */
 .left-tile { }
-.right-tile { }
+.right-tile {
+  grid-column: 2 / 3;
+}
 
 /* Tablet: 1 Spalte */
 @media (max-width: 1024px) {

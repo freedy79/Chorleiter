@@ -1,4 +1,4 @@
-<mat-card *ngIf="lastProgram$ | async as program" class="last-service-card left-tile">
+<mat-card *ngIf="program" class="last-service-card left-tile">
             <mat-card-title>{{ program.title }}</mat-card-title>
             <mat-card-content>
               <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
@@ -22,4 +22,4 @@
                 </ng-container>
               </mat-list>
             </mat-card-content>
-          </mat-card>
+</mat-card>

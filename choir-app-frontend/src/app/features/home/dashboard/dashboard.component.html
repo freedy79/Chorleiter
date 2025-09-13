@@ -47,22 +47,21 @@
 
         <!-- GRID (links/rechts) -->
         <section class="content-grid" role="region" aria-labelledby="next-events">
-          <h2 id="next-events" class="visually-hidden">Meine nächsten Termine</h2>
-
           <app-upcoming-events-widget
             [events]="vm.upcomingEvents" [choirColors]="choirColors"
-            (open)="openEvent($event)">
+            (open)="openEvent($event)" class="left-tile">
           </app-upcoming-events-widget>
 
           <app-latest-post-widget
-            [post]="vm.latestPost">
+            [post]="vm.latestPost" class="right-tile">
           </app-latest-post-widget>
 
           <app-event-card *ngIf="vm.lastService as lastService"
-                          cardTitle="Letzter Gottesdienst" [event]="lastService">
+                          cardTitle="Letzter Gottesdienst" [event]="lastService" class="left-tile">
           </app-event-card>
 
-          <app-current-program-widget  [program]="vm.lastProgram">
+          <app-current-program-widget *ngIf="vm.lastProgram as lastProgram" [program]="lastProgram"
+              cardTitle="Aktuelles Programm" class="left-tile">
           </app-current-program-widget>
 
 
@@ -76,7 +75,7 @@
           </mat-card>
 
           <app-event-card *ngIf="vm.lastRehearsal as lastRehearsal"
-                          cardTitle="Letzte Probe" [event]="lastRehearsal">
+                          cardTitle="Letzte Probe" [event]="lastRehearsal" class="left-tile">
           </app-event-card>
 
         </section>

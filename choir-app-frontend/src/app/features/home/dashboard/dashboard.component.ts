@@ -13,9 +13,8 @@ import { ApiService } from '@core/services/api.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { Program, ProgramItem } from '@core/models/program';
 import { EventDialogComponent } from '../../events/event-dialog/event-dialog.component';
-import { Piece } from '@core/models/piece';
+
 import { EventCardComponent } from '../event-card/event-card.component';
-import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
@@ -55,7 +54,6 @@ type VM = {
     MaterialModule,
     FormsModule,
     EventCardComponent,
-    MarkdownPipe,
     MyCalendarComponent,
 
     // Widgets
@@ -336,41 +334,6 @@ export class DashboardComponent implements OnInit {
     return `vor ${diffDays} Tagen`;
   }
 
-  getItemComposer(item: ProgramItem): string | null {
-    switch (item.type) {
-      case 'piece':
-        return item.pieceComposerSnapshot ?? null;
-      case 'speech':
-        return item.speechSpeaker ?? null;
-      default:
-        return null;
-    }
-  }
 
-  getItemTitle(item: ProgramItem): string {
-    switch (item.type) {
-      case 'piece':
-        return item.pieceTitleSnapshot || '';
-      case 'speech':
-        return item.speechTitle || '';
-      case 'break':
-        return item.breakTitle || 'Pause';
-      case 'slot':
-        return item.slotLabel || '';
-      default:
-        return '';
-    }
-  }
-
-  getItemSubtitle(item: ProgramItem): string | null {
-    switch (item.type) {
-      case 'piece':
-        return item.instrument || item.performerNames || null;
-      case 'speech':
-        return item.speechSource || null;
-      default:
-        return null;
-    }
-  }
 
 }
