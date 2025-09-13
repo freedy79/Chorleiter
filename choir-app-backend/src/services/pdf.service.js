@@ -1,4 +1,5 @@
 const { shortWeekdayDateString, germanDateString } = require('../utils/date.utils');
+const logger = require('../config/logger');
 
 function escape(text) {
   return text.replace(/[\\()]/g, c => '\\' + c);
@@ -258,22 +259,23 @@ function lendingListPdf(title, copies) {
   objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>');
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
   objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
-  const offsets = [];
-  let pdf = '%PDF-1.4\n';
-  for (let i = 0; i < objects.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xrefStart = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 0; i < offsets.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  return Buffer.from(pdf, 'binary');
+    const offsets = [];
+    let pdf = '%PDF-1.4\n';
+    for (let i = 0; i < objects.length; i++) {
+      offsets[i] = pdf.length;
+      pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
+    }
+    const xrefStart = pdf.length;
+    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+    for (let i = 0; i < offsets.length; i++) {
+      pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+    }
+    pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+    return Buffer.from(pdf, 'binary');
 }
 
 function participationPdf(members, events) {
+  logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
   const left = 50;
   const right = 545;
   const top = 800;
@@ -378,7 +380,9 @@ function participationPdf(members, events) {
     pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
   }
   pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  return Buffer.from(pdf, 'binary');
+  const pdfBuffer = Buffer.from(pdf, 'binary');
+  logger.debug(`Participation PDF generated with ${pdfBuffer.length} bytes`);
+  return pdfBuffer;
 }
 
 module.exports = { monthlyPlanPdf, programPdf, lendingListPdf, participationPdf };
