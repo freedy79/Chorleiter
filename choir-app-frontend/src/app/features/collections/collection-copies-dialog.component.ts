@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { Lending } from '@core/models/lending';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { LibraryItem } from '@core/models/library-item';
 
 @Component({
   selector: 'app-collection-copies-dialog',
@@ -18,7 +17,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
   copies: Lending[] = [];
 
   constructor(
-    @Inject(MAT_DIALOG_DATA) public data: { item: LibraryItem },
+    @Inject(MAT_DIALOG_DATA) public data: { collectionId: number },
     private dialogRef: MatDialogRef<CollectionCopiesDialogComponent>,
     private api: ApiService,
     private snack: MatSnackBar
@@ -29,25 +28,14 @@ export class CollectionCopiesDialogComponent implements OnInit {
   }
 
   load(): void {
-    this.api.getLibraryItemCopies(this.data.item.id).subscribe(copies => (this.copies = copies));
+    this.api.getCollectionCopies(this.data.collectionId).subscribe(copies => (this.copies = copies));
   }
 
   save(copy: Lending): void {
     const { borrowerName, status } = copy;
-    this.api.updateLibraryCopy(copy.id, { borrowerName, status }).subscribe(() => {
+    this.api.updateCollectionCopy(copy.id, { borrowerName, status }).subscribe(() => {
       this.snack.open('Gespeichert', undefined, { duration: 2000 });
       this.load();
-    });
-  }
-
-  download(): void {
-    this.api.downloadLibraryCopiesPdf(this.data.item.id).subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `leihliste-${this.data.item.id}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
     });
   }
 

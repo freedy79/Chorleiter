@@ -238,9 +238,9 @@
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let col" class="actions-cell">
               <mat-icon
-                *ngIf="libraryItemIds.has(col.id)"
+                *ngIf="collectionCopyIds.has(col.id)"
                 class="library-icon"
-                matTooltip="In Notenbibliothek vorhanden">
+                matTooltip="Exemplare vorhanden">
                 library_music
               </mat-icon>
               <button

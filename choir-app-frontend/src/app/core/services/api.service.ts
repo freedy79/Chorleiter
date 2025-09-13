@@ -55,6 +55,7 @@ import { SearchService } from './search.service';
 import { MonthlyPlanService } from './monthly-plan.service';
 import { PostService } from './post.service';
 import { LibraryService } from './library.service';
+import { ChoirLendingService } from './choir-lending.service';
 import { ProgramService } from './program.service';
 import { District } from '../models/district';
 import { DistrictService } from './district.service';
@@ -84,6 +85,7 @@ export class ApiService {
               private searchService: SearchService,
               private monthlyPlanService: MonthlyPlanService,
               private postService: PostService,
+              private choirLendingService: ChoirLendingService,
               private libraryService: LibraryService,
               private programService: ProgramService,
               private districtService: DistrictService) {
@@ -581,6 +583,19 @@ export class ApiService {
 
   downloadLibraryCopiesPdf(id: number): Observable<Blob> {
     return this.libraryService.downloadCopiesPdf(id);
+  }
+
+  // --- Choir internal lending ---
+  getCollectionCopies(id: number): Observable<Lending[]> {
+    return this.choirLendingService.getCopies(id);
+  }
+
+  initCollectionCopies(id: number, copies: number): Observable<Lending[]> {
+    return this.choirLendingService.initCopies(id, copies);
+  }
+
+  updateCollectionCopy(id: number, data: Partial<Lending>): Observable<Lending> {
+    return this.choirLendingService.updateCopy(id, data);
   }
 
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
