@@ -244,7 +244,7 @@
                 library_music
               </mat-icon>
               <button
-                *ngIf="(isChoirAdmin || isAdmin) && libraryItemIds.has(col.id)"
+                *ngIf="(isChoirAdmin || isAdmin)"
                 mat-icon-button
                 (click)="manageCopies(col, $event)"
                 matTooltip="Exemplare verwalten">

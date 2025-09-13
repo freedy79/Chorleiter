@@ -412,9 +412,19 @@ export class ManageChoirComponent implements OnInit {
 
   manageCopies(collection: Collection, event: Event): void {
     event.stopPropagation();
-    const item = this.libraryItemsByCollection.get(collection.id);
-    if (item) {
-      this.dialog.open(CollectionCopiesDialogComponent, { data: { item } });
+    const existing = this.libraryItemsByCollection.get(collection.id);
+    if (existing) {
+      this.dialog.open(CollectionCopiesDialogComponent, { data: { item: existing } });
+    } else {
+      const copiesStr = prompt('Anzahl der Exemplare eingeben:');
+      const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
+      if (!isNaN(copies) && copies > 0) {
+        this.apiService.addLibraryItem({ collectionId: collection.id, copies }).subscribe(newItem => {
+          this.libraryItemsByCollection.set(collection.id, newItem);
+          this.libraryItemIds.add(collection.id);
+          this.dialog.open(CollectionCopiesDialogComponent, { data: { item: newItem } });
+        });
+      }
     }
   }
 
