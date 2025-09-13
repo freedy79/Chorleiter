@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 
 import { Event } from '@core/models/event';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
 @Component({
   selector: 'app-upcoming-events-widget',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, PureDatePipe],
   templateUrl: './upcoming-events-widget.component.html',
   styleUrls: ['./upcoming-events-widget.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -19,6 +19,7 @@ import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
 @Component({
   selector: 'app-event-list',
@@ -28,7 +29,8 @@ import { ListDataSource } from '@shared/util/list-data-source';
     ReactiveFormsModule,
     MaterialModule,
     EventCardComponent,
-    EventTypeLabelPipe
+    EventTypeLabelPipe,
+    PureDatePipe
   ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']

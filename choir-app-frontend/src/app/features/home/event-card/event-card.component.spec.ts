@@ -1,8 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { registerLocaleData } from '@angular/common';
+import localeDe from '@angular/common/locales/de';
+import localeDeExtra from '@angular/common/locales/extra/de';
 
 import { EventCardComponent } from './event-card.component';
+
+beforeAll(() => {
+  registerLocaleData(localeDe, 'de-DE', localeDeExtra);
+});
 
 describe('EventCardComponent', () => {
   let component: EventCardComponent;

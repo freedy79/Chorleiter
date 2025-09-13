@@ -7,11 +7,12 @@ import { ApiService } from '@core/services/api.service';
 import { Piece } from '@core/models/piece';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
 @Component({
   selector: 'app-piece-detail-dialog',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, EventTypeLabelPipe, PieceStatusLabelPipe],
+  imports: [CommonModule, RouterModule, MaterialModule, EventTypeLabelPipe, PieceStatusLabelPipe, PureDatePipe],
   templateUrl: './piece-detail-dialog.component.html',
   styleUrls: ['./piece-detail-dialog.component.scss']
 })

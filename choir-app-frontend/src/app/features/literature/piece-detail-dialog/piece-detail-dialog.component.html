@@ -19,7 +19,7 @@
     <mat-list-item *ngFor="let ev of piece.events">
       <div matLine>
         <a [routerLink]="['/events']" [queryParams]="{ eventId: ev.id }">
-          {{ ev.date | date:'mediumDate' }}
+          {{ ev.date | pureDate | date:'mediumDate':'Europe/Berlin':'de-DE' }}
         </a>
         - {{ ev.type | eventTypeLabel }}
       </div>
