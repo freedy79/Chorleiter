@@ -83,7 +83,12 @@ export class ManageChoirComponent implements OnInit {
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
+
   collectionCopyIds = new Set<number>();
+  libraryItemIds = new Set<number>();
+  private libraryItemsByCollection = new Map<number, LibraryItem>();
+  libraryItemsLoaded = false;
+
 
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
   logDataSource = new MatTableDataSource<ChoirLog>();
@@ -177,6 +182,7 @@ export class ManageChoirComponent implements OnInit {
           this.collectionCopyIds.add(col.id);
         }
       });
+      this.libraryItemsLoaded = true;
     });
   }
 
@@ -404,8 +410,13 @@ export class ManageChoirComponent implements OnInit {
 
   manageCopies(collection: Collection, event: Event): void {
     event.stopPropagation();
-    if (this.collectionCopyIds.has(collection.id)) {
+
+    if (!this.libraryItemsLoaded) {
+      return;
+    }
+      if (this.collectionCopyIds.has(collection.id)) {
       this.dialog.open(CollectionCopiesDialogComponent, { data: { collectionId: collection.id } });
+
     } else {
       const copiesStr = prompt('Anzahl der Exemplare eingeben:');
       const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;

@@ -247,6 +247,7 @@
                 *ngIf="(isChoirAdmin || isAdmin)"
                 mat-icon-button
                 (click)="manageCopies(col, $event)"
+                [disabled]="!libraryItemsLoaded"
                 matTooltip="Exemplare verwalten">
                 <mat-icon>list</mat-icon>
               </button>

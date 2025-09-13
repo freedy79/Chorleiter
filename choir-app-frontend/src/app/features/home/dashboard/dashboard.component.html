@@ -19,14 +19,13 @@
             </button>
           </div>
 
-          <!--
           <app-kpi-widget [items]="[
               { label: 'Nächste Probe', value: (vm.nextRehearsal?.date | date:'dd.MM.') || '–' },
               { label: 'Angemeldete Sänger:innen', value: (memberCount$ | async) || '-' },
               { label: 'Letzter Beitrag', value: timeAgo(vm.latestPost?.updatedAt || '') || '-' }
             ]">
           </app-kpi-widget>
-
+<!--
           <app-status-chips-widget
             [chips]="[
               { label: 'Audio-Technik OK', status: 'ok' },
