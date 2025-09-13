@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
 import { Event, EventPiece } from 'src/app/core/models/event';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
 @Component({
   selector: 'app-event-card',
@@ -13,7 +14,8 @@ import { Event, EventPiece } from 'src/app/core/models/event';
   imports: [
     CommonModule,
     MaterialModule,
-    RouterModule
+    RouterModule,
+    PureDatePipe
   ],
   templateUrl: './event-card.component.html',
   styleUrls: ['./event-card.component.scss']

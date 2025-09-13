@@ -5,6 +5,7 @@ import { ApiService } from '@core/services/api.service';
 import { UserInChoir } from '@core/models/user';
 import { Event } from '@core/models/event';
 import { MemberAvailability } from '@core/models/member-availability';
+import { parseDateOnly } from '@shared/util/date';
 
 interface EventColumn {
   key: string;
@@ -56,7 +57,7 @@ export class ParticipationComponent implements OnInit {
         this.displayMode = 'events';
         this.eventColumns = future.map(ev => ({
           key: this.dateKey(ev.date),
-          label: new Date(ev.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+          label: parseDateOnly(ev.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: 'Europe/Berlin' })
         }));
         this.displayedColumns = ['name', 'voice', ...this.eventColumns.map(c => c.key)];
         const months = Array.from(new Set(future.map(e => this.monthKey(e.date))));
@@ -221,17 +222,17 @@ export class ParticipationComponent implements OnInit {
   private readonly voiceOrder = ['SOPRAN', 'ALT', 'TENOR', 'BASS'];
 
   private dateKey(date: string | Date): string {
-    const d = new Date(date);
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
-    const day = d.getDate();
+    const d = parseDateOnly(date);
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
+    const day = d.getUTCDate();
     return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    }
+  }
 
   private monthKey(date: string | Date): string {
-    const d = new Date(date);
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
+    const d = parseDateOnly(date);
+    const y = d.getUTCFullYear();
+    const m = d.getUTCMonth() + 1;
     return `${y}-${String(m).padStart(2, '0')}`;
   }
 
@@ -242,7 +243,7 @@ export class ParticipationComponent implements OnInit {
 
   private formatMonthLabel(key: string): string {
     const { year, month } = this.parseMonthKey(key);
-    return new Date(year, month - 1, 1).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+    return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('de-DE', { month: 'long', year: 'numeric', timeZone: 'Europe/Berlin' });
   }
 
   downloadPdf(): void {

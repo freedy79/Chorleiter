@@ -34,6 +34,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
    import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
+import { parseDateOnly } from '@shared/util/date';
 
 @Component({
     selector: 'app-event-dialog',
@@ -218,7 +219,7 @@ export class EventDialogComponent implements OnInit {
 
     private populateFromEvent(event: Event): void {
         this.eventForm.patchValue({
-            date: new Date(event.date),
+            date: parseDateOnly(event.date),
             type: event.type,
             notes: event.notes || '',
         });
@@ -251,8 +252,12 @@ export class EventDialogComponent implements OnInit {
     onSave(): void {
         if (this.eventForm.valid) {
             const formValue = this.eventForm.value;
+            const dateStr = formValue.date
+                ? formValue.date.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+                : undefined;
             const payload = {
-                ...this.eventForm.value,
+                ...formValue,
+                date: dateStr,
                 pieceIds: this.selectedPieces.map((p) => p.id), // Senden Sie nur die IDs
             };
             if (this.isEditMode && this.editEventId) {

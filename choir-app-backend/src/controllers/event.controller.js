@@ -7,7 +7,7 @@ const CollectionPiece = db.collection_piece;
 const User = db.user;
 const logger = require("../config/logger");
 const { Op, fn, col, where } = require("sequelize");
-const { isoDateString } = require('../utils/date.utils');
+const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const jwt = require("jsonwebtoken");
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
@@ -47,7 +47,7 @@ exports.create = async (req, res) => {
         return res.status(400).send({ message: "Date and Type are required." });
     }
 
-    const targetDate = new Date(date);
+    const targetDate = parseDateOnly(date);
         const dateOnly = isoDateString(targetDate);
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
@@ -76,7 +76,7 @@ exports.create = async (req, res) => {
         // --- NEUES EVENT ERSTELLEN ---
         logger.info("Creating new event ...");
         const event = await db.event.create({
-            date: date,
+            date: targetDate,
             type: type,
             notes: notes,
             choirId: choirId,
@@ -103,7 +103,7 @@ exports.create = async (req, res) => {
         });
 
     // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
-    await db.choir_log.create({ choirId, userId: req.userId, action: 'event_created', details: { eventId: event.id, type, date } });
+    await db.choir_log.create({ choirId, userId: req.userId, action: 'event_created', details: { eventId: event.id, type, date: targetDate } });
     res.status(201).send({
         message: "Event successfully created.",
         wasUpdated: false,
@@ -342,7 +342,8 @@ exports.update = async (req, res) => {
 
 
         // Determine if anything has changed
-        const dateChanged = new Date(date).getTime() !== new Date(event.date).getTime();
+        const targetDate = parseDateOnly(date);
+        const dateChanged = targetDate.getTime() !== new Date(event.date).getTime();
         const typeChanged = type !== event.type;
         const notesChanged = (notes || '') !== (event.notes || '');
 
@@ -360,7 +361,7 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId });
+        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -375,7 +376,7 @@ exports.update = async (req, res) => {
                 { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
             ]
         });
-    await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_updated', details: { eventId: id, type, date } });
+    await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_updated', details: { eventId: id, type, date: targetDate } });
     res.status(200).send(updated);
 };
 

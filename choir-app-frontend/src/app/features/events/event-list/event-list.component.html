@@ -37,7 +37,7 @@
     </ng-container>
     <ng-container matColumnDef="date">
       <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
-      <mat-cell *matCellDef="let ev">{{ ev.date | date:'shortDate' }}</mat-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.date | pureDate | date:'shortDate':'Europe/Berlin':'de-DE' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="type">
@@ -47,7 +47,7 @@
 
     <ng-container matColumnDef="updatedAt">
       <mat-header-cell *matHeaderCellDef>Geändert</mat-header-cell>
-      <mat-cell *matCellDef="let ev">{{ ev.updatedAt | date:'short' }}</mat-cell>
+      <mat-cell *matCellDef="let ev">{{ ev.updatedAt | date:'short':'Europe/Berlin':'de-DE' }}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="director">

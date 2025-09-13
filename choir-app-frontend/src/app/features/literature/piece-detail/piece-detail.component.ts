@@ -17,6 +17,7 @@ import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { LibraryItem } from '@core/models/library-item';
 import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-dialog.component';
+import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 
 @Component({
   selector: 'app-piece-detail',
@@ -26,7 +27,8 @@ import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-
     FormsModule,
     MaterialModule,
     RouterModule,
-    EventTypeLabelPipe
+    EventTypeLabelPipe,
+    PureDatePipe
   ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']

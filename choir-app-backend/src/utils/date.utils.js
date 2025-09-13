@@ -18,6 +18,15 @@ function germanDateString(date) {
     return `${day}.${month}.${year}`;
 }
 
+function parseDateOnly(input) {
+    const d = new Date(input);
+    return new Date(Date.UTC(
+        d.getUTCFullYear(),
+        d.getUTCMonth(),
+        d.getUTCDate()
+    ));
+}
+
 function datesForRule(year, month, rule) {
     const dates = [];
     const d = new Date(Date.UTC(year, month - 1, 1));
@@ -37,5 +46,6 @@ module.exports = {
     isoDateString,
     shortWeekdayDateString,
     germanDateString,
+    parseDateOnly,
     datesForRule,
 };
