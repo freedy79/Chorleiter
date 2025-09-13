@@ -80,7 +80,9 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
       this.libraryItemIds.clear();
       items.forEach(i => {
         const id = i.collectionId || i.collection?.id;
-        if (id != null) this.libraryItemIds.add(id);
+        if (id != null) {
+          this.libraryItemIds.add(id);
+        }
       });
     });
     this.apiService.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
 import { Loan } from '../models/loan';
+import { Lending } from '../models/lending';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -56,5 +57,17 @@ export class LibraryService {
 
   endLoan(id: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/loans/${id}/end`, {});
+  }
+
+  getCopies(itemId: number): Observable<Lending[]> {
+    return this.http.get<Lending[]>(`${this.apiUrl}/${itemId}/copies`);
+  }
+
+  updateCopy(id: number, data: Partial<Lending>): Observable<Lending> {
+    return this.http.put<Lending>(`${this.apiUrl}/copies/${id}`, data);
+  }
+
+  downloadCopiesPdf(itemId: number): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${itemId}/copies/pdf`, { responseType: 'blob' });
   }
 }

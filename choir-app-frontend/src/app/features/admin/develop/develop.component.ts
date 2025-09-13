@@ -77,16 +77,25 @@ export class DevelopComponent implements OnInit {
       return;
     }
     win.document.title = 'Deploy';
+    win.document.body.style.background = '#000';
+    win.document.body.style.color = '#fff';
     const pre = win.document.createElement('pre');
     pre.style.whiteSpace = 'pre-wrap';
+    pre.style.margin = '0';
+    pre.textContent = 'Connecting...\n';
     win.document.body.appendChild(pre);
     fetch(url, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
       .then(async res => {
+        if (!res.ok) {
+          pre.textContent += `Request failed: ${res.status} ${res.statusText}\n`;
+          pre.textContent += await res.text();
+          return;
+        }
         const reader = res.body?.getReader();
         if (!reader) {
-          pre.textContent = 'No output';
+          pre.textContent += await res.text();
           return;
         }
         const decoder = new TextDecoder();

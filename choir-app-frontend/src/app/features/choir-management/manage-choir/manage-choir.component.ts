@@ -13,11 +13,13 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
+import { LibraryItem } from 'src/app/core/models/library-item';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
+import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
 
 
 @Component({
@@ -82,6 +84,8 @@ export class ManageChoirComponent implements OnInit {
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
   collectionDataSource = new MatTableDataSource<Collection>();
+  libraryItemIds = new Set<number>();
+  private libraryItemsByCollection = new Map<number, LibraryItem>();
 
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
   logDataSource = new MatTableDataSource<ChoirLog>();
@@ -167,6 +171,18 @@ export class ManageChoirComponent implements OnInit {
         this.logDataSource.data = pageData.logs;
       }
     });
+
+    this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
+      this.libraryItemIds.clear();
+      this.libraryItemsByCollection.clear();
+      items.forEach(i => {
+        const id = i.collectionId || i.collection?.id;
+        if (id != null) {
+          this.libraryItemIds.add(id);
+          this.libraryItemsByCollection.set(id, i);
+        }
+      });
+    });
   }
 
   private updateCanManageMenu(): void {
@@ -186,6 +202,17 @@ export class ManageChoirComponent implements OnInit {
       });
       this.apiService.getChoirLogs(opts).subscribe(logs => {
         this.logDataSource.data = logs;
+      });
+      this.apiService.getLibraryItems().subscribe(items => {
+        this.libraryItemIds.clear();
+        this.libraryItemsByCollection.clear();
+        items.forEach(i => {
+          const id = i.collectionId || i.collection?.id;
+          if (id != null) {
+            this.libraryItemIds.add(id);
+            this.libraryItemsByCollection.set(id, i);
+          }
+        });
       });
     }
   }
@@ -381,6 +408,14 @@ export class ManageChoirComponent implements OnInit {
       next: () => this.snackBar.open('Einstellungen aktualisiert.', 'OK', { duration: 3000 }),
       error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
     });
+  }
+
+  manageCopies(collection: Collection, event: Event): void {
+    event.stopPropagation();
+    const item = this.libraryItemsByCollection.get(collection.id);
+    if (item) {
+      this.dialog.open(CollectionCopiesDialogComponent, { data: { item } });
+    }
   }
 
   removeCollection(collection: Collection): void {
