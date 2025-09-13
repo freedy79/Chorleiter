@@ -40,15 +40,15 @@ export class MenuVisibilityService {
         const base: MenuVisibility = {
           dashboard: true,
           events: true,
-          dienstplan: modules.dienstplan !== false,
+          dienstplan: modules.dienstplan === true && hasPrivilegedRole,
           availability: true,
           participation: hasPrivilegedRole,
           posts: true,
-          programs: modules.programs !== false && hasPrivilegedRole,
-          stats: true,
+          programs: modules.programs === true && hasPrivilegedRole,
+          stats: hasPrivilegedRole,
           manageChoir: true,
           repertoire: true,
-          collections: true,
+          collections:true,
           library: true
         };
         Object.assign(visibility, base);
@@ -71,4 +71,3 @@ export class MenuVisibilityService {
     return this.visibility$.pipe(map(v => v[key] !== false));
   }
 }
-
