@@ -71,6 +71,18 @@ exports.setAvailability = async (req, res) => {
     res.status(200).send(avail);
 };
 
+exports.setUserAvailability = async (req, res) => {
+    const { date, status } = req.body;
+    const { userId } = req.params;
+    if (!date || !status) return res.status(400).send({ message: 'date and status required' });
+    const [avail] = await db.user_availability.findOrCreate({
+        where: { userId, choirId: req.activeChoirId, date },
+        defaults: { status }
+    });
+    if (avail.status !== status) await avail.update({ status });
+    res.status(200).send(avail);
+};
+
 exports.findAllByMonth = async (req, res) => {
     const { year, month } = req.params;
     const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();

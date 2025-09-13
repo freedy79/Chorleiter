@@ -480,6 +480,10 @@ export class ApiService {
     return this.availabilityService.getMemberAvailabilities(year, month);
   }
 
+  setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
+    return this.availabilityService.setMemberAvailability(userId, date, status);
+  }
+
 
   // --- User Methods ---
 

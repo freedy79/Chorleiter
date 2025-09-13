@@ -53,6 +53,7 @@ export class MenuVisibilityService {
         const isSingerOnly = roles.includes('singer') &&
           !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian', 'organist'].includes(r));
         if (isSingerOnly) {
+          visibility['participation'] = false;
           const singerMenu = modules.singerMenu || {};
           for (const key of Object.keys(base)) {
             if (singerMenu[key] === false) {

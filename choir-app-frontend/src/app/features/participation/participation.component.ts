@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { AuthService } from '@core/services/auth.service';
 import { UserInChoir } from '@core/models/user';
 import { Event } from '@core/models/event';
 import { MemberAvailability } from '@core/models/member-availability';
@@ -30,12 +31,17 @@ export class ParticipationComponent implements OnInit {
   eventColumns: EventColumn[] = [];
   monthColumns: MonthColumn[] = [];
   displayedColumns: string[] = ['name', 'voice'];
+  isChoirAdmin = false;
 
   private availabilityMap: { [userId: number]: { [date: string]: string } } = {};
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
+    this.auth.currentUser$.subscribe(user => {
+      const roles = Array.isArray(user?.roles) ? user.roles : user?.roles ? [user.roles] : [];
+      this.isChoirAdmin = roles.some(r => ['choir_admin', 'director', 'admin'].includes(r));
+    });
     this.loadMembers();
     this.loadEvents();
   }
@@ -119,6 +125,25 @@ export class ParticipationComponent implements OnInit {
       case 'UNAVAILABLE': return 'unavailable';
       default: return '';
     }
+  }
+
+  private nextStatus(current?: string): string {
+    switch (current) {
+      case 'UNAVAILABLE': return 'AVAILABLE';
+      case 'AVAILABLE': return 'MAYBE';
+      case 'MAYBE': return 'UNAVAILABLE';
+      default: return 'UNAVAILABLE';
+    }
+  }
+
+  changeStatus(userId: number, date: string): void {
+    if (!this.isChoirAdmin) return;
+    const key = this.dateKey(date);
+    const next = this.nextStatus(this.status(userId, key));
+    this.api.setMemberAvailability(userId, key, next).subscribe(avail => {
+      if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
+      this.availabilityMap[userId][key] = avail.status!;
+    });
   }
 
   private readonly voiceMap: Record<string, string> = {
