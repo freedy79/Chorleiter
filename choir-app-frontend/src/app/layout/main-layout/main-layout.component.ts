@@ -75,8 +75,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   footerHeight = 56;
 
   public navItems: NavItem[] = [];
-  dienstplanEnabled$: Observable<boolean>;
-  programsEnabled$: Observable<boolean>;
 
   isHandset$: Observable<boolean>;
   isTablet$: Observable<boolean> | undefined;
@@ -84,7 +82,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     pageTitle$: Observable<string | null>;
     cartCount$: Observable<number>;
-    canCreateProgram$: Observable<boolean>;
 
     availableChoirs$: Observable<Choir[]>;
     activeChoir$: Observable<Choir | null>;
@@ -119,12 +116,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     );
     this.currentTheme = this.themeService.getCurrentTheme();
     this.cartCount$ = this.cart.items$.pipe(map(items => items.length));
-    this.canCreateProgram$ = this.authService.currentUser$.pipe(
-      map(user => {
-        const roles = Array.isArray(user?.roles) ? user!.roles : [];
-        return roles.some(r => ['director', 'choir_admin', 'admin'].includes(r));
-      })
-    );
 
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.activeChoir$ = this.authService.activeChoir$;
@@ -144,14 +135,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.isSmallScreen$ = this.breakpointObserver.observe('(max-width: 600px)').pipe(
       map(result => result.matches)
-    );
-
-    this.dienstplanEnabled$ = this.authService.activeChoir$.pipe(
-      map(c => c?.modules?.dienstplan !== false)
-    );
-
-    this.programsEnabled$ = this.authService.activeChoir$.pipe(
-      map(c => c?.modules?.programs !== false)
     );
 
     this.isLoggedIn$.pipe(
@@ -231,12 +214,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.authService.switchChoir(id).subscribe();
   }
 
-  private visible(key: string, base$: Observable<boolean>): Observable<boolean> {
-    return combineLatest([base$, this.menu.isVisible(key)]).pipe(
-      map(([base, allowed]) => base && allowed)
-    );
-  }
-
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
     let child = route.firstChild;
     let data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
@@ -262,96 +239,89 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   private setupNavItems(): void {
-    const dienstplanVisible$ = combineLatest([this.isLoggedIn$, this.dienstplanEnabled$]).pipe(
-      map(([loggedIn, enabled]) => loggedIn && enabled)
-    );
-    const programsVisible$ = combineLatest([this.canCreateProgram$, this.programsEnabled$]).pipe(
-      map(([canCreate, enabled]) => canCreate && enabled)
-    );
-
     this.navItems = [
       {
         key: 'dashboard',
         displayName: 'Home',
         route: '/dashboard',
-        visibleSubject: this.isLoggedIn$,
+        visibleSubject: this.menu.isVisible('dashboard'),
         iconName: 'home',
       },
       {
         key: 'events',
         displayName: 'Ereignisse',
         route: '/events',
-        visibleSubject: this.visible('events', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('events'),
         iconName: 'event',
       },
       {
         key: 'dienstplan',
         displayName: 'Dienstplan',
         route: '/dienstplan',
-        visibleSubject: this.visible('dienstplan', dienstplanVisible$),
+        visibleSubject: this.menu.isVisible('dienstplan'),
         iconName: 'calendar_today',
       },
       {
         key: 'availability',
         displayName: 'Verfügbarkeiten',
         route: '/availability',
-        visibleSubject: this.visible('availability', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('availability'),
         iconName: 'event_available',
       },
       {
         key: 'participation',
         displayName: 'Beteiligung',
         route: '/participation',
-        visibleSubject: this.visible('participation', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('participation'),
         iconName: 'group',
       },
       {
         key: 'posts',
         displayName: 'Beiträge',
         route: '/posts',
-        visibleSubject: this.visible('posts', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('posts'),
         iconName: 'article',
       },
       {
         key: 'programs',
         displayName: 'Programme',
         route: '/programs',
-        visibleSubject: this.visible('programs', programsVisible$),
+        visibleSubject: this.menu.isVisible('programs'),
         iconName: 'queue_music',
       },
       {
         key: 'stats',
         displayName: 'Statistik',
         route: '/stats',
-        visibleSubject: this.visible('stats', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('stats'),
         iconName: 'bar_chart',
       },
       {
         key: 'manageChoir',
         displayName: 'Mein Chor',
         route: '/manage-choir',
-        visibleSubject: this.visible('manageChoir', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('manageChoir'),
         iconName: 'settings',
       },
       {
         key: 'repertoire',
         displayName: 'Repertoire',
         route: '/repertoire',
-        visibleSubject: this.visible('repertoire', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('repertoire'),
         iconName: 'library_music',
       },
       {
         key: 'collections',
         displayName: 'Sammlungen',
         route: '/collections',
-        visibleSubject: this.visible('collections', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('collections'),
         iconName: 'folder',
       },
       {
         key: 'library',
         displayName: 'Bibliothek',
         route: '/library',
-        visibleSubject: this.visible('library', this.isLoggedIn$),
+        visibleSubject: this.menu.isVisible('library'),
         iconName: 'menu_book',
       },
       {
