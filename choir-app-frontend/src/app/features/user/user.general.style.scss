@@ -61,11 +61,13 @@
 
   :host-context(.light-theme) .card {
     background-color: #eeeeee;
+    color: #000;
     border: 1px solid #dddddd;
   }
 
   :host-context(.dark-theme) .card {
     color: #666666;
+    background-color: #222222;
     border: 1px solid #777777;
   }
 
