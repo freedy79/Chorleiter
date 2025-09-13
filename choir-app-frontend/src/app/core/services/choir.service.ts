@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Choir } from '../models/choir';
 import { UserInChoir } from '../models/user';
@@ -26,6 +27,13 @@ export class ChoirService {
   getChoirMembers(choirId?: number): Observable<UserInChoir[]> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
     return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params });
+  }
+
+  getChoirMemberCount(choirId?: number): Observable<number> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http
+      .get<{ count: number }>(`${this.apiUrl}/choir-management/members/count`, { params })
+      .pipe(map(res => res.count));
   }
 
   inviteUserToChoir(email: string, rolesInChoir: string[], choirId?: number): Observable<{ message: string }> {
