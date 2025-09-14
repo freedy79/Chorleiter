@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const db = require("../models");
+const { getRequestContext } = require("../config/request-context");
 
 const optionalAuth = (req, res, next) => {
   let token = req.headers["authorization"];
@@ -14,6 +15,11 @@ const optionalAuth = (req, res, next) => {
         req.userRoles.includes('admin') && !isNaN(choirParam)
           ? choirParam
           : decoded.activeChoirId;
+      const ctx = getRequestContext();
+      if (ctx) {
+        ctx.userId = req.userId;
+        ctx.roles = req.userRoles;
+      }
     }
     next();
   });
@@ -40,6 +46,11 @@ const verifyToken = (req, res, next) => {
       req.userRoles.includes('admin') && !isNaN(choirParam)
         ? choirParam
         : decoded.activeChoirId;
+    const ctx = getRequestContext();
+    if (ctx) {
+      ctx.userId = req.userId;
+      ctx.roles = req.userRoles;
+    }
     next();
   });
 };

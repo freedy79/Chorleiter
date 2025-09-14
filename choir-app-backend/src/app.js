@@ -8,8 +8,12 @@ const path = require('path');
 
 const logger = require("./config/logger");
 const emailService = require('./services/email.service');
+const { runWithRequestContext } = require('./config/request-context');
 
 app.set("trust proxy", 1);
+
+// Initialize request-scoped context storage
+app.use(runWithRequestContext);
 
 app.use(cors());
 app.use(helmet());
