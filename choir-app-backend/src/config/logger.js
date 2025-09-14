@@ -1,6 +1,7 @@
 const winston = require('winston');
 const fs = require('fs');
 const path = require('path');
+const { getRequestContext } = require('./request-context');
 
 // Destrukturieren der benötigten Formatierungs-Funktionen von winston
 const { combine, timestamp, printf, colorize, align, splat } = winston.format;
@@ -15,18 +16,27 @@ function buildLogger() {
     fs.mkdirSync(logsDir, { recursive: true });
   }
 
+  const withUser = (base) => {
+    const { userId, roles } = getRequestContext();
+    if (userId) {
+      const roleStr = Array.isArray(roles) && roles.length ? ` roles=${roles.join(',')}` : '';
+      return `${base} [user=${userId}${roleStr}]`;
+    }
+    return base;
+  };
+
   const consoleLogFormat = combine(
     colorize(),
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
     align(),
     splat(),
-    printf((info) => `[${info.timestamp}] ${info.level}: ${info.message}`)
+    printf((info) => withUser(`[${info.timestamp}] ${info.level}: ${info.message}`))
   );
 
   const fileLogFormat = combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
     splat(),
-    printf((info) => `${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`)
+    printf((info) => withUser(`${info.timestamp} [${info.level.toUpperCase()}]: ${info.message}`))
   );
 
   const loggerInstance = winston.createLogger({
