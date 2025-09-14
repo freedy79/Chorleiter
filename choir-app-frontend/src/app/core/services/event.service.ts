@@ -20,10 +20,21 @@ export class EventService {
     return this.http.post<CreateEventResponse>(`${this.apiUrl}/events`, eventData);
   }
 
-  getEvents(type?: 'SERVICE' | 'REHEARSAL', allChoirs: boolean = false): Observable<Event[]> {
+  getEvents(
+    type?: 'SERVICE' | 'REHEARSAL',
+    allChoirs: boolean = false,
+    startDate?: Date | string,
+    endDate?: Date | string
+  ): Observable<Event[]> {
     let params = new HttpParams();
     if (type) params = params.set('type', type);
     if (allChoirs) params = params.set('allChoirs', 'true');
+    if (startDate) {
+      params = params.set('startDate', startDate instanceof Date ? startDate.toISOString() : startDate);
+    }
+    if (endDate) {
+      params = params.set('endDate', endDate instanceof Date ? endDate.toISOString() : endDate);
+    }
     return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
   }
 

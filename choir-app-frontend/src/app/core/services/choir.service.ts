@@ -67,8 +67,15 @@ export class ChoirService {
     return this.http.get<ChoirLog[]>(`${this.apiUrl}/choir-management/logs`, { params });
   }
 
-  downloadParticipationPdf(choirId?: number): Observable<Blob> {
-    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+  downloadParticipationPdf(choirId?: number, startDate?: Date | string, endDate?: Date | string): Observable<Blob> {
+    let params = new HttpParams();
+    if (choirId) params = params.set('choirId', choirId.toString());
+    if (startDate) {
+      params = params.set('startDate', startDate instanceof Date ? startDate.toISOString() : startDate);
+    }
+    if (endDate) {
+      params = params.set('endDate', endDate instanceof Date ? endDate.toISOString() : endDate);
+    }
     return this.http.get(`${this.apiUrl}/choir-management/participation/pdf`, { params, responseType: 'blob' });
   }
 }

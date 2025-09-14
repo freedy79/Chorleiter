@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
@@ -20,7 +21,7 @@ interface MonthColumn extends EventColumn {
 @Component({
   selector: 'app-participation',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule],
   templateUrl: './participation.component.html',
   styleUrls: ['./participation.component.scss']
 })
@@ -32,6 +33,8 @@ export class ParticipationComponent implements OnInit {
   monthColumns: MonthColumn[] = [];
   displayedColumns: string[] = ['name', 'voice'];
   isChoirAdmin = false;
+  startDate?: Date;
+  endDate?: Date;
 
   private availabilityMap: { [userId: number]: { [date: string]: string } } = {};
 
@@ -52,16 +55,17 @@ export class ParticipationComponent implements OnInit {
     });
   }
 
-  private loadEvents(): void {
-    this.api.getEvents().subscribe(events => {
-      const now = new Date();
-      const future = events
-        .filter(e => new Date(e.date) >= now)
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  loadEvents(): void {
+    this.api.getEvents(undefined, false, this.startDate, this.endDate).subscribe(events => {
+      let filtered = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      if (!this.startDate && !this.endDate) {
+        const now = new Date();
+        filtered = filtered.filter(e => new Date(e.date) >= now);
+      }
 
-      if (future.length <= 5) {
+      if (filtered.length <= 5) {
         this.displayMode = 'events';
-        this.eventColumns = future.map(ev => ({
+        this.eventColumns = filtered.map(ev => ({
           key: this.dateKey(ev.date),
           label: parseDateOnly(ev.date).toLocaleDateString('de-DE', {
             day: '2-digit',
@@ -71,12 +75,12 @@ export class ParticipationComponent implements OnInit {
           })
         }));
         this.displayedColumns = ['name', 'voice', ...this.eventColumns.map(c => c.key)];
-        const months = Array.from(new Set(future.map(e => this.monthKey(e.date))));
+        const months = Array.from(new Set(filtered.map(e => this.monthKey(e.date))));
         this.loadAvailabilities(months.map(m => this.parseMonthKey(m)));
       } else {
         this.displayMode = 'months';
         const monthMap = new Map<string, Event[]>();
-        for (const ev of future) {
+        for (const ev of filtered) {
           const key = this.monthKey(ev.date);
           if (!monthMap.has(key)) monthMap.set(key, []);
           monthMap.get(key)!.push(ev);
@@ -285,7 +289,7 @@ export class ParticipationComponent implements OnInit {
   }
 
   downloadPdf(): void {
-    this.api.downloadParticipationPdf().subscribe(blob => {
+    this.api.downloadParticipationPdf({ startDate: this.startDate, endDate: this.endDate }).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

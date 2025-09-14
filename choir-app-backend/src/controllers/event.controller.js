@@ -173,7 +173,7 @@ exports.findLast = async (req, res) => {
  * Get all events for the active choir. Optionally filter by type.
  */
 exports.findAll = async (req, res) => {
-    const { type, allChoirs } = req.query;
+    const { type, allChoirs, startDate, endDate } = req.query;
     const where = {};
     if (allChoirs === 'true') {
         const choirIds = (await db.user_choir.findAll({
@@ -186,6 +186,15 @@ exports.findAll = async (req, res) => {
     }
     if (type) {
         where.type = type.toUpperCase();
+    }
+    if (startDate || endDate) {
+        where.date = {};
+        if (startDate) {
+            where.date[Op.gte] = new Date(startDate);
+        }
+        if (endDate) {
+            where.date[Op.lte] = new Date(endDate);
+        }
     }
 
     const events = await Event.findAll({
