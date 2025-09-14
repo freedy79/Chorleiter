@@ -57,7 +57,18 @@ exports.downloadPdf = async (req, res) => {
       }
     }
   }
-  const copies = await Lending.findAll({ where: { libraryItemId: item.id }, order: [['copyNumber', 'ASC']] });
+  const rawCopies = await Lending.findAll({
+    where: { libraryItemId: item.id },
+    include: [{ model: db.user, as: 'borrower', attributes: ['name'] }],
+    order: [['copyNumber', 'ASC']]
+  });
+
+  const copies = rawCopies.map(c => ({
+    copyNumber: c.copyNumber,
+    borrowerName: c.borrowerName || (c.borrower ? c.borrower.name : ''),
+    borrowedAt: c.borrowedAt,
+    returnedAt: c.returnedAt
+  }));
 
   const pdf = lendingListPdf(item.collection ? item.collection.title : 'Ausleihe', copies);
   res.setHeader('Content-Type', 'application/pdf');
