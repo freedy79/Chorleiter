@@ -398,6 +398,7 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             where: eventWhere,
             order: [['date', 'ASC']]
         });
+
         logger.debug(`Fetched ${events.length} events for choirId ${req.activeChoirId}`);
 
         const dates = events.map(e => e.date);
