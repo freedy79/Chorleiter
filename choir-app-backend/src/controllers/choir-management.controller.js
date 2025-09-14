@@ -359,7 +359,7 @@ exports.downloadParticipationPdf = async (req, res, next) => {
                     attributes: [],
                     through: { attributes: [] }
                 }],
-                attributes: ['firstName', 'name', 'email', 'voice', 'district', 'congregation'],
+                attributes: ['id', 'firstName', 'name', 'email', 'voice', 'district', 'congregation'],
                 order: [['name', 'ASC']]
             });
             logger.debug(`Fetched ${members.length} members for choirId ${req.activeChoirId}`);
@@ -399,7 +399,17 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             order: [['date', 'ASC']]
         });
         logger.debug(`Fetched ${events.length} events for choirId ${req.activeChoirId}`);
-        const pdf = participationPdf(members, events);
+
+        const dates = events.map(e => e.date);
+        const availabilities = await db.user_availability.findAll({
+            where: {
+                choirId: req.activeChoirId,
+                date: { [Op.in]: dates }
+            },
+            attributes: ['userId', 'date', 'status']
+        });
+
+        const pdf = participationPdf(members, events, availabilities);
         logger.debug(`Generated participation PDF with ${pdf.length} bytes for choirId ${req.activeChoirId}`);
         res.setHeader('Content-Type', 'application/pdf');
         res.status(200).send(pdf);
