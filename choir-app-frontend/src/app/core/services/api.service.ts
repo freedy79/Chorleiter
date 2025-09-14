@@ -607,6 +607,10 @@ export class ApiService {
     return this.choirLendingService.initCopies(id, copies);
   }
 
+  setCollectionCopies(id: number, copies: number): Observable<Lending[]> {
+    return this.choirLendingService.setCopies(id, copies);
+  }
+
   updateCollectionCopy(id: number, data: Partial<Lending>): Observable<Lending> {
     return this.choirLendingService.updateCopy(id, data);
   }
