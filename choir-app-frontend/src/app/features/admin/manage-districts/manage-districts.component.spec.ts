@@ -6,6 +6,7 @@ import { ApiService } from '@core/services/api.service';
 class MockApiService {
   getDistricts() { return of([]); }
   createDistrict() { return of({}); }
+  updateDistrict() { return of({}); }
   deleteDistrict() { return of({}); }
 }
 

@@ -182,8 +182,12 @@ export class ApiService {
     return this.districtService.getDistricts();
   }
 
-  createDistrict(name: string): Observable<District> {
-    return this.districtService.createDistrict({ name });
+  createDistrict(name: string, code: string): Observable<District> {
+    return this.districtService.createDistrict({ name, code });
+  }
+
+  updateDistrict(id: number, name: string, code: string): Observable<District> {
+    return this.districtService.updateDistrict(id, { name, code });
   }
 
   deleteDistrict(id: number): Observable<any> {

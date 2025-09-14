@@ -15,13 +15,14 @@ import { Subject, takeUntil } from 'rxjs';
   styleUrls: ['./manage-districts.component.scss']
 })
 export class ManageDistrictsComponent implements OnInit, OnDestroy {
-  displayedColumns = ['name', 'actions'];
+  displayedColumns = ['name', 'code', 'actions'];
   dataSource = new MatTableDataSource<District>([]);
   form: FormGroup;
+  editing: District | null = null;
   private destroy$ = new Subject<void>();
 
   constructor(private api: ApiService, private fb: FormBuilder) {
-    this.form = this.fb.group({ name: [''] });
+    this.form = this.fb.group({ name: [''], code: [''] });
   }
 
   ngOnInit(): void {
@@ -39,13 +40,32 @@ export class ManageDistrictsComponent implements OnInit, OnDestroy {
     });
   }
 
-  add(): void {
+  save(): void {
     const name = this.form.value.name?.trim();
-    if (!name) { return; }
-    this.api.createDistrict(name).pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.form.reset();
-      this.load();
-    });
+    const code = this.form.value.code?.trim();
+    if (!name || !code) { return; }
+    if (this.editing) {
+      this.api.updateDistrict(this.editing.id, name, code).pipe(takeUntil(this.destroy$)).subscribe(() => {
+        this.editing = null;
+        this.form.reset();
+        this.load();
+      });
+    } else {
+      this.api.createDistrict(name, code).pipe(takeUntil(this.destroy$)).subscribe(() => {
+        this.form.reset();
+        this.load();
+      });
+    }
+  }
+
+  edit(d: District): void {
+    this.editing = d;
+    this.form.setValue({ name: d.name, code: d.code });
+  }
+
+  cancel(): void {
+    this.editing = null;
+    this.form.reset();
   }
 
   delete(d: District): void {

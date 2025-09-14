@@ -5,6 +5,11 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true,
     },
+    code: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
   });
   return District;
 };

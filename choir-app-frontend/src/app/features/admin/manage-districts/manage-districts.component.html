@@ -1,11 +1,16 @@
 <h2>Bezirke verwalten</h2>
 
-<form [formGroup]="form" (ngSubmit)="add()" class="add-form">
+<form [formGroup]="form" (ngSubmit)="save()" class="add-form">
   <mat-form-field appearance="outline">
     <mat-label>Bezirk</mat-label>
     <input matInput formControlName="name">
   </mat-form-field>
-  <button mat-flat-button color="primary" type="submit">Hinzufügen</button>
+  <mat-form-field appearance="outline">
+    <mat-label>Abkürzung</mat-label>
+    <input matInput formControlName="code">
+  </mat-form-field>
+  <button mat-flat-button color="primary" type="submit">{{ editing ? 'Speichern' : 'Hinzufügen' }}</button>
+  <button *ngIf="editing" mat-button type="button" (click)="cancel()">Abbrechen</button>
 </form>
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
@@ -13,9 +18,14 @@
     <th mat-header-cell *matHeaderCellDef>Bezirk</th>
     <td mat-cell *matCellDef="let d">{{ d.name }}</td>
   </ng-container>
+  <ng-container matColumnDef="code">
+    <th mat-header-cell *matHeaderCellDef>Abkürzung</th>
+    <td mat-cell *matCellDef="let d">{{ d.code }}</td>
+  </ng-container>
   <ng-container matColumnDef="actions">
     <th mat-header-cell *matHeaderCellDef>Aktionen</th>
     <td mat-cell *matCellDef="let d">
+      <button mat-icon-button (click)="edit(d)"><mat-icon>edit</mat-icon></button>
       <button mat-icon-button color="warn" (click)="delete(d)"><mat-icon>delete</mat-icon></button>
     </td>
   </ng-container>

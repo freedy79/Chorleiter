@@ -1,9 +1,11 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { User } from 'src/app/core/models/user';
+import { ApiService } from '@core/services/api.service';
+import { District } from '@core/models/district';
 
 @Component({
   selector: 'app-user-dialog',
@@ -12,12 +14,14 @@ import { User } from 'src/app/core/models/user';
   templateUrl: './user-dialog.component.html',
   styleUrls: ['./user-dialog.component.scss']
 })
-export class UserDialogComponent {
+export class UserDialogComponent implements OnInit {
   form: FormGroup;
   title = 'Benutzer hinzufügen';
+  districts: District[] = [];
 
   constructor(
     private fb: FormBuilder,
+    private api: ApiService,
     public dialogRef: MatDialogRef<UserDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: User | null
   ) {
@@ -36,6 +40,10 @@ export class UserDialogComponent {
       roles: [data?.roles || ['director'], Validators.required],
       password: ['', data ? [] : [Validators.required]]
     });
+  }
+
+  ngOnInit(): void {
+    this.api.getDistricts().subscribe(ds => this.districts = ds);
   }
 
   onCancel(): void {

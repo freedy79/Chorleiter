@@ -290,20 +290,15 @@ function lendingListPdf(title, copies) {
     return Buffer.from(pdf, 'binary');
 }
 
-const districtCodes = {
-  'Braunschweig': 'BS',
-  'Göttingen': 'GÖ',
-  'Hannover-Nordost': 'H-NO',
-  'Hannover-Südwest': 'H-SW',
-  'Hildesheim': 'HI',
-  'Lübeck-Schwerin': 'L-S',
-  'Lüneburg': 'LG',
-  'Magdeburg': 'MD',
-  'Wolfenbüttel': 'WF'
-};
+const db = require('../models');
 
-function participationPdf(members, events, availabilities = []) {
+async function participationPdf(members, events, availabilities = []) {
   logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
+  const districtEntries = await db.district.findAll();
+  const districtCodes = {};
+  for (const d of districtEntries) {
+    districtCodes[d.name] = d.code;
+  }
   const left = 40;
   const right = 802;
   const top = 550;

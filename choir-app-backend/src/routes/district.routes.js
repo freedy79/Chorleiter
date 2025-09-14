@@ -8,6 +8,7 @@ router.use(authJwt.verifyToken);
 
 router.get("/", wrap(controller.getAll));
 router.post("/", role.requireAdmin, wrap(controller.create));
+router.put("/:id", role.requireAdmin, wrap(controller.update));
 router.delete("/:id", role.requireAdmin, wrap(controller.remove));
 
 module.exports = router;
