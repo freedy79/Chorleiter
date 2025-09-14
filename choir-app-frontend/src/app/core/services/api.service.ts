@@ -377,8 +377,13 @@ export class ApiService {
     return this.eventService.createEvent(eventData);
   }
 
-  getEvents(type?: 'SERVICE' | 'REHEARSAL', allChoirs: boolean = false): Observable<Event[]> {
-    return this.eventService.getEvents(type, allChoirs);
+  getEvents(
+    type?: 'SERVICE' | 'REHEARSAL',
+    allChoirs: boolean = false,
+    startDate?: Date,
+    endDate?: Date
+  ): Observable<Event[]> {
+    return this.eventService.getEvents(type, allChoirs, startDate, endDate);
   }
 
   getNextEvents(limit?: number, mine?: boolean): Observable<Event[]> {
@@ -678,8 +683,8 @@ export class ApiService {
     return this.choirService.getChoirLogs(options?.choirId);
   }
 
-  downloadParticipationPdf(options?: { choirId?: number }): Observable<Blob> {
-    return this.choirService.downloadParticipationPdf(options?.choirId);
+  downloadParticipationPdf(options?: { choirId?: number; startDate?: Date; endDate?: Date }): Observable<Blob> {
+    return this.choirService.downloadParticipationPdf(options?.choirId, options?.startDate, options?.endDate);
   }
 
   removeCollectionFromChoir(collectionId: number, options?: { choirId?: number }): Observable<any> {

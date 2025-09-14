@@ -381,11 +381,24 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             }
         }
 
+        const { startDate, endDate } = req.query;
+        const eventWhere = { choirId: req.activeChoirId };
+        if (startDate || endDate) {
+            eventWhere.date = {};
+            if (startDate) {
+                eventWhere.date[Op.gte] = new Date(startDate);
+            }
+            if (endDate) {
+                eventWhere.date[Op.lte] = new Date(endDate);
+            }
+        } else {
+            eventWhere.date = { [Op.gte]: new Date() };
+        }
         const events = await db.event.findAll({
-            where: { choirId: req.activeChoirId, date: { [Op.gte]: new Date() } },
+            where: eventWhere,
             order: [['date', 'ASC']]
         });
-        logger.debug(`Fetched ${events.length} upcoming events for choirId ${req.activeChoirId}`);
+        logger.debug(`Fetched ${events.length} events for choirId ${req.activeChoirId}`);
         const pdf = participationPdf(members, events);
         logger.debug(`Generated participation PDF with ${pdf.length} bytes for choirId ${req.activeChoirId}`);
         res.setHeader('Content-Type', 'application/pdf');
