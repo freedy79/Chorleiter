@@ -74,10 +74,10 @@ describe('MainLayoutComponent', () => {
     expect(homeVisible).toBeTrue();
   });
 
-  it('shows dienstplan by default when module setting is missing', async () => {
+  it('hides dienstplan by default when module setting is missing', async () => {
     const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
     const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
-    expect(visible).toBeTrue();
+    expect(visible).toBeFalse();
   });
 
   it('shows dienstplan for organists even if singers cannot see it', async () => {

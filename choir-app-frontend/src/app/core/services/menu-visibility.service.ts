@@ -35,7 +35,7 @@ export class MenuVisibilityService {
       if (choir) {
         const modules = choir.modules || {};
         const roles = Array.isArray(user?.roles) ? user.roles : [];
-        const privilegedRoles = ['director', 'choir_admin', 'admin'];
+        const privilegedRoles = ['director', 'choir_admin', 'admin', 'organist'];
         const hasPrivilegedRole = roles.some(r => privilegedRoles.includes(r));
         const base: MenuVisibility = {
           dashboard: true,
