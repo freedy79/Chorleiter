@@ -292,10 +292,12 @@ function lendingListPdf(title, copies) {
 
 const districtCodes = {
   'Braunschweig': 'BS',
-  'Hildesheim': 'HI',
   'Göttingen': 'GÖ',
-  'Hannover Süd-West': 'H-SW',
-  'Hannover Nord-Ost': 'H-NO',
+  'Hannover-Nordost': 'H-NO',
+  'Hannover-Südwest': 'H-SW',
+  'Hildesheim': 'HI',
+  'Lübeck-Schwerin': 'L-S',
+  'Lüneburg': 'LG',
   'Magdeburg': 'MD',
   'Wolfenbüttel': 'WF'
 };
@@ -313,7 +315,8 @@ function participationPdf(members, events, availabilities = []) {
   const nameWidth = 150;
   const emailWidth = 200;
   const voiceWidth = 25;
-  const districtWidth = 50;
+  const hasUnknownDistrict = members.some(m => !districtCodes[m.district]);
+  const districtWidth = hasUnknownDistrict ? 100 : 50;
   const congregationWidth = 80;
   const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
   const remainingWidth = (right - left) - fixedWidth;
@@ -353,7 +356,8 @@ function participationPdf(members, events, availabilities = []) {
       page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
     });
     page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,HI,GÖ,H-SW,H-NO,MD,WF')}) Tj ET`);
+    const districtLegend = Object.values(districtCodes).join(',');
+    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: ' + districtLegend)}) Tj ET`);
     pages.push(page.lines.join('\n'));
   }
 
