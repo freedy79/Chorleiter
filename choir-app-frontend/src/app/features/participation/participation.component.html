@@ -72,7 +72,20 @@
           </span>
         </ng-container>
       </mat-cell>
-      <mat-footer-cell *matFooterCellDef></mat-footer-cell>
+      <mat-footer-cell *matFooterCellDef>
+        <span class="summary-item">
+          <mat-icon class="status-icon available">check</mat-icon>{{ monthStatusCount(col, 'AVAILABLE') }}
+        </span>
+        <span class="summary-item">
+          <mat-icon class="status-icon maybe">check</mat-icon>{{ monthStatusCount(col, 'MAYBE') }}
+        </span>
+        <span class="summary-item">
+          <mat-icon class="status-icon unavailable">close</mat-icon>{{ monthStatusCount(col, 'UNAVAILABLE') }}
+        </span>
+        <span class="summary-item">
+          <mat-icon class="status-icon unknown">help</mat-icon>{{ monthStatusCount(col, 'UNKNOWN') }}
+        </span>
+      </mat-footer-cell>
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
