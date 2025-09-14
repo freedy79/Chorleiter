@@ -290,6 +290,16 @@ function lendingListPdf(title, copies) {
     return Buffer.from(pdf, 'binary');
 }
 
+const districtCodes = {
+  'Braunschweig': 'BS',
+  'Hildesheim': 'HI',
+  'Göttingen': 'GÖ',
+  'Hannover Süd-West': 'H-SW',
+  'Hannover Nord-Ost': 'H-NO',
+  'Magdeburg': 'MD',
+  'Wolfenbüttel': 'WF'
+};
+
 function participationPdf(members, events, availabilities = []) {
   logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
   const left = 40;
@@ -299,11 +309,11 @@ function participationPdf(members, events, availabilities = []) {
   const bottomMargin = 60;
   const eventDates = events.map(e => new Date(e.date));
   const dateLabels = eventDates.map(d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
-  const columns = ['Name', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
-  const nameWidth = 170;
+  const columns = ['Name', 'E-Mail', 'St', 'Bez.', 'Gemeinde', ...dateLabels];
+  const nameWidth = 150;
   const emailWidth = 200;
-  const voiceWidth = 40;
-  const districtWidth = 100;
+  const voiceWidth = 25;
+  const districtWidth = 50;
   const congregationWidth = 80;
   const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
   const remainingWidth = (right - left) - fixedWidth;
@@ -343,7 +353,7 @@ function participationPdf(members, events, availabilities = []) {
       page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
     });
     page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,GÖ,H-NO,H-SW,HI,WF')}) Tj ET`);
+    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: BS,HI,GÖ,H-SW,H-NO,MD,WF')}) Tj ET`);
     pages.push(page.lines.join('\n'));
   }
 
@@ -361,6 +371,10 @@ function participationPdf(members, events, availabilities = []) {
     return v ? (map[v] || v) : '';
   }
 
+  function districtCode(d) {
+    return d ? (districtCodes[d] || d) : '';
+  }
+
   const pages = [];
   let page = newPage();
   for (const m of members) {
@@ -372,7 +386,7 @@ function participationPdf(members, events, availabilities = []) {
       `${m.name || ''}${m.firstName ? ', ' + m.firstName : ''}`,
       m.email || '',
       voiceCode(m.voice),
-      m.district || '',
+      districtCode(m.district),
       m.congregation || ''
     ];
     const userAvail = availMap.get(m.id) || {};
