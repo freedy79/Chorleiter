@@ -42,6 +42,7 @@ exports.getMyChoirDetails = async (req, res, next) => {
 // Details des aktiven Chors aktualisieren
 exports.updateMyChoir = async (req, res, next) => {
     const { name, description, location, modules } = req.body;
+    const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
 
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);
@@ -50,7 +51,7 @@ exports.updateMyChoir = async (req, res, next) => {
             return res.status(404).send({ message: "Active choir not found." });
         }
 
-        if (!req.userRoles.includes('admin')) {
+        if (!roles.includes('admin')) {
             const association = await db.user_choir.findOne({
                 where: { userId: req.userId, choirId: req.activeChoirId }
             });
@@ -99,6 +100,7 @@ exports.getChoirMemberCount = async (req, res, next) => {
 
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res, next) => {
+    const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
     try {
         await cleanupExpiredInvitations();
         const choir = await db.choir.findByPk(req.activeChoirId, {
@@ -134,7 +136,7 @@ exports.getChoirMembers = async (req, res, next) => {
                     registrationStatus: user.user_choir.registrationStatus
                 }
             };
-            if (req.userRoles.includes('admin') || user.shareWithChoir) {
+            if (roles.includes('admin') || user.shareWithChoir) {
                 return Object.assign(base, {
                     street: user.street,
                     postalCode: user.postalCode,
