@@ -29,7 +29,10 @@
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Bezirk</mat-label>
-      <input matInput formControlName="district">
+      <mat-select formControlName="district">
+        <mat-option value="">-</mat-option>
+        <mat-option *ngFor="let d of districts" [value]="d.name">{{ d.name }}</mat-option>
+      </mat-select>
     </mat-form-field>
     <mat-form-field appearance="outline">
       <mat-label>Gemeinde</mat-label>

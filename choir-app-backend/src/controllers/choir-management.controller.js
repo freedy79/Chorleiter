@@ -410,7 +410,7 @@ exports.downloadParticipationPdf = async (req, res, next) => {
             attributes: ['userId', 'date', 'status']
         });
 
-        const pdf = participationPdf(members, events, availabilities);
+        const pdf = await participationPdf(members, events, availabilities);
         logger.debug(`Generated participation PDF with ${pdf.length} bytes for choirId ${req.activeChoirId}`);
         res.setHeader('Content-Type', 'application/pdf');
         res.status(200).send(pdf);

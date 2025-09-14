@@ -9,6 +9,7 @@ export class DistrictService extends CreatorService<District> {
   constructor(http: HttpClient) { super(http, 'districts'); }
 
   getDistricts(): Observable<District[]> { return this.getAll(); }
-  createDistrict(data: { name: string }): Observable<District> { return this.create(data); }
+  createDistrict(data: { name: string; code: string }): Observable<District> { return this.create(data); }
+  updateDistrict(id: number, data: { name: string; code: string }): Observable<District> { return this.update(id, data); }
   deleteDistrict(id: number): Observable<any> { return this.delete(id); }
 }
