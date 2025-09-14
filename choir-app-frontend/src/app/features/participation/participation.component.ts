@@ -136,6 +136,15 @@ export class ParticipationComponent implements OnInit {
     }
   }
 
+  statusCount(dateKey: string, type: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' | 'UNKNOWN'): number {
+    let count = 0;
+    for (const m of this.members) {
+      const s = this.status(m.id, dateKey);
+      if ((s ?? 'UNKNOWN') === type) count++;
+    }
+    return count;
+  }
+
   formatDate(date: string | Date): string {
     return parseDateOnly(date).toLocaleDateString('de-DE', {
       day: '2-digit',
