@@ -7,7 +7,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     code: {
       type: DataTypes.STRING,
-      allowNull: false,
+      // Allow null temporarily so existing installations can backfill codes
+      // before enforcing a NOT NULL constraint in a future migration
+      allowNull: true,
       unique: true,
     },
   });

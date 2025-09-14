@@ -112,7 +112,12 @@ async function seedDatabase(options = {}) {
                 { name: 'Wolfenbüttel', code: 'WF' }
             ];
             for (const d of districts) {
-                await db.district.findOrCreate({ where: { name: d.name }, defaults: d });
+                const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: d });
+                // Backfill missing codes for existing districts
+                if (!created && !district.code) {
+                    district.code = d.code;
+                    await district.save();
+                }
             }
             logger.info("Initial seeding completed successfully.");
         } else {
