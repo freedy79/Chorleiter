@@ -290,17 +290,15 @@ function lendingListPdf(title, copies) {
     return Buffer.from(pdf, 'binary');
 }
 
-function participationPdf(members, events) {
+function participationPdf(members, events, availabilities = []) {
   logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
   const left = 40;
   const right = 802;
   const top = 550;
   const rowHeight = 18;
   const bottomMargin = 60;
-  const dateLabels = events.map(e => {
-    const d = new Date(e.date);
-    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-  });
+  const eventDates = events.map(e => new Date(e.date));
+  const dateLabels = eventDates.map(d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
   const columns = ['Name', 'E-Mail', 'Stimme', 'Bezirk', 'Gemeinde', ...dateLabels];
   const nameWidth = 170;
   const emailWidth = 200;
@@ -312,6 +310,13 @@ function participationPdf(members, events) {
   const eventWidth = events.length ? remainingWidth / events.length : 0;
   const columnWidths = [nameWidth, emailWidth, voiceWidth, districtWidth, congregationWidth,
     ...Array(events.length).fill(eventWidth)];
+
+  const availMap = new Map();
+  for (const a of availabilities) {
+    const dateKey = (a.date instanceof Date ? a.date : new Date(a.date)).toISOString().slice(0,10);
+    if (!availMap.has(a.userId)) availMap.set(a.userId, {});
+    availMap.get(a.userId)[dateKey] = a.status;
+  }
 
   function newPage() {
     const lines = [];
@@ -370,7 +375,16 @@ function participationPdf(members, events) {
       m.district || '',
       m.congregation || ''
     ];
-    for (let i = 0; i < events.length; i++) row.push('');
+    const userAvail = availMap.get(m.id) || {};
+    for (const d of eventDates) {
+      const key = d.toISOString().slice(0,10);
+      const status = userAvail[key];
+      let mark = '';
+      if (status === 'AVAILABLE') mark = '✓';
+      else if (status === 'MAYBE') mark = '?';
+      else if (status === 'UNAVAILABLE') mark = '-';
+      row.push(mark);
+    }
     let x = left;
     row.forEach((cell, i) => {
       page.lines.push(`BT /F1 10 Tf ${x + 2} ${page.y - 4} Td (${escape(cell)}) Tj ET`);
