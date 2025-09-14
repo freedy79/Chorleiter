@@ -89,6 +89,7 @@ export class ManageChoirComponent implements OnInit {
   libraryItemIds = new Set<number>();
   private libraryItemsByCollection = new Map<number, LibraryItem>();
   libraryItemsLoaded = false;
+  borrowedCopies = new Map<number, number>();
 
 
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
@@ -175,14 +176,25 @@ export class ManageChoirComponent implements OnInit {
         this.logDataSource.data = pageData.logs;
 
         this.collectionCopyIds.clear();
-        pageData.collections.forEach((col: Collection) => {
-          this.apiService.getCollectionCopies(col.id).subscribe(copies => {
-            if (copies.length > 0) {
-              this.collectionCopyIds.add(col.id);
-            }
+        if (this.isChoirAdmin || this.isAdmin) {
+          pageData.collections.forEach((col: Collection) => {
+            this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+              if (copies.length > 0) {
+                this.collectionCopyIds.add(col.id);
+              }
+            });
+            this.libraryItemsLoaded = true;
           });
-          this.libraryItemsLoaded = true;
-        });
+        } else {
+          this.apiService.getMyBorrowings().subscribe(borrowings => {
+            borrowings.forEach(b => {
+              if (b.collectionId) {
+                this.borrowedCopies.set(b.collectionId, b.copyNumber);
+              }
+            });
+            this.libraryItemsLoaded = true;
+          });
+        }
       }
     });
   }

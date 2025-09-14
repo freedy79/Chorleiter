@@ -21,4 +21,8 @@ export class ChoirLendingService {
   updateCopy(id: number, data: Partial<Lending>): Observable<Lending> {
     return this.http.put<Lending>(`${environment.apiUrl}/choir-management/collections/copies/${id}`, data);
   }
+
+  getMyBorrowings(): Observable<Lending[]> {
+    return this.http.get<Lending[]>(`${environment.apiUrl}/choir-management/borrowings`);
+  }
 }

@@ -237,23 +237,27 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let col" class="actions-cell">
-              <mat-icon
-                *ngIf="collectionCopyIds.has(col.id)"
-                class="library-icon"
-                matTooltip="Exemplare vorhanden">
-                library_music
-              </mat-icon>
-              <button
-                *ngIf="(isChoirAdmin || isAdmin)"
-                mat-icon-button
-                (click)="manageCopies(col, $event)"
-                [disabled]="!libraryItemsLoaded"
-                matTooltip="Exemplare verwalten">
-                <mat-icon>list</mat-icon>
-              </button>
-              <button *ngIf="isChoirAdmin" mat-icon-button color="warn" (click)="removeCollection(col)" matTooltip="Sammlung entfernen">
-                <mat-icon>delete</mat-icon>
-              </button>
+              <ng-container *ngIf="isChoirAdmin || isAdmin; else singerBorrowing">
+                <mat-icon
+                  *ngIf="collectionCopyIds.has(col.id)"
+                  class="library-icon"
+                  matTooltip="Exemplare vorhanden">
+                  library_music
+                </mat-icon>
+                <button
+                  mat-icon-button
+                  (click)="manageCopies(col, $event)"
+                  [disabled]="!libraryItemsLoaded"
+                  matTooltip="Exemplare verwalten">
+                  <mat-icon>list</mat-icon>
+                </button>
+                <button *ngIf="isChoirAdmin" mat-icon-button color="warn" (click)="removeCollection(col)" matTooltip="Sammlung entfernen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </ng-container>
+              <ng-template #singerBorrowing>
+                <span *ngIf="borrowedCopies.has(col.id)">Nr. {{ borrowedCopies.get(col.id) }}</span>
+              </ng-template>
             </mat-cell>
           </ng-container>
           <mat-header-row *matHeaderRowDef="displayedCollectionColumns"></mat-header-row>

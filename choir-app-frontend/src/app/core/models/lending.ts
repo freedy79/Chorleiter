@@ -1,3 +1,5 @@
+import { Collection } from './collection';
+
 export interface Lending {
   id: number;
   copyNumber: number;
@@ -6,4 +8,6 @@ export interface Lending {
   status: 'available' | 'borrowed';
   borrowedAt?: string;
   returnedAt?: string;
+  collectionId?: number;
+  collection?: Collection;
 }
