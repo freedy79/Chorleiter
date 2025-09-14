@@ -12,6 +12,16 @@ exports.list = async (req, res) => {
   res.status(200).send(copies);
 };
 
+// List copies borrowed by current user
+exports.listForUser = async (req, res) => {
+  const copies = await Lending.findAll({
+    where: { borrowerId: req.userId },
+    include: [{ model: db.collection, as: 'collection', attributes: ['id', 'title'] }],
+    order: [['copyNumber', 'ASC']]
+  });
+  res.status(200).send(copies);
+};
+
 // Initialize copies for a collection
 exports.init = async (req, res) => {
   const { id } = req.params;

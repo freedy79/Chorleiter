@@ -607,6 +607,10 @@ export class ApiService {
     return this.choirLendingService.updateCopy(id, data);
   }
 
+  getMyBorrowings(): Observable<Lending[]> {
+    return this.choirLendingService.getMyBorrowings();
+  }
+
   getMyChoirDetails(options?: { choirId?: number }): Observable<Choir> {
     return this.choirService.getMyChoirDetails(options?.choirId);
   }
