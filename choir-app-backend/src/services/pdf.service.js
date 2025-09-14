@@ -400,8 +400,21 @@ async function participationPdf(members, events, availabilities = []) {
     }
     let x = left;
     row.forEach((cell, i) => {
-      page.lines.push(`BT /F1 10 Tf ${x + 2} ${page.y - 4} Td (${escape(cell)}) Tj ET`);
-      x += columnWidths[i];
+      const size = 10;
+      const width = columnWidths[i];
+      let text = cell;
+      let font = 'F1';
+      let xPos = x + 2;
+      if (i >= 5) {
+        // Event columns: center symbols
+        if (cell === '✓') {
+          font = 'F3';
+          text = '3';
+        }
+        xPos = x + (width - textWidth(text, size)) / 2;
+      }
+      page.lines.push(`BT /${font} ${size} Tf ${xPos} ${page.y - 4} Td (${escape(text)}) Tj ET`);
+      x += width;
     });
     page.y -= rowHeight;
     page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
@@ -413,12 +426,13 @@ async function participationPdf(members, events, availabilities = []) {
   objects.push(null); // placeholder for pages root
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F2 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+  objects.push('<< /Type /Font /Subtype /Type1 /Name /F3 /BaseFont /ZapfDingbats >>');
   const pageKids = [];
   for (const content of pages) {
     const contentObjNum = objects.length + 2;
     const pageObjNum = objects.length + 1;
     pageKids.push(`${pageObjNum} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> >>`);
     objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
   }
   objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
