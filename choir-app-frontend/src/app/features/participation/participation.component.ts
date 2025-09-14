@@ -145,6 +145,14 @@ export class ParticipationComponent implements OnInit {
     return count;
   }
 
+  monthStatusCount(col: MonthColumn, type: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' | 'UNKNOWN'): number {
+    let total = 0;
+    for (const ev of col.events) {
+      total += this.statusCount(this.dateKey(ev.date), type);
+    }
+    return total;
+  }
+
   formatDate(date: string | Date): string {
     return parseDateOnly(date).toLocaleDateString('de-DE', {
       day: '2-digit',

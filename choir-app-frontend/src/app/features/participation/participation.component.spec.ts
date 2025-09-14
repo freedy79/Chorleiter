@@ -1,5 +1,6 @@
 import { ParticipationComponent } from './participation.component';
 import { UserInChoir } from '@core/models/user';
+import { Event } from '@core/models/event';
 import { BehaviorSubject } from 'rxjs';
 
 describe('ParticipationComponent', () => {
@@ -33,5 +34,28 @@ describe('ParticipationComponent', () => {
     expect(component.statusCount(key, 'MAYBE')).toBe(1);
     expect(component.statusCount(key, 'UNAVAILABLE')).toBe(1);
     expect(component.statusCount(key, 'UNKNOWN')).toBe(1);
+  });
+
+  it('monthStatusCount aggregates events', () => {
+    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    component.members = [
+      { id: 1, name: 'A', email: '', voice: 'SOPRAN' },
+      { id: 2, name: 'B', email: '', voice: 'ALT' }
+    ];
+    (component as any).availabilityMap = {
+      1: { '2024-01-01': 'AVAILABLE', '2024-01-02': 'UNAVAILABLE' },
+      2: { '2024-01-01': 'MAYBE', '2024-01-02': 'AVAILABLE' }
+    };
+    const col = {
+      key: '2024-01',
+      label: 'Jan 2024',
+      events: [
+        { date: '2024-01-01' } as Event,
+        { date: '2024-01-02' } as Event
+      ]
+    };
+    expect(component.monthStatusCount(col, 'AVAILABLE')).toBe(2);
+    expect(component.monthStatusCount(col, 'MAYBE')).toBe(1);
+    expect(component.monthStatusCount(col, 'UNAVAILABLE')).toBe(1);
   });
 });
