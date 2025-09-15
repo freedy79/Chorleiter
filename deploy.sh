@@ -124,6 +124,15 @@ ssh_cmd "$REMOTE" "cd \"$BACKEND_DEST\" && npm install"
 # Restart backend
 ssh_cmd "$REMOTE" "pm2 restart chorleiter-api"
 
+# Verify backend started
+if ! ssh_cmd "$REMOTE" "pm2 describe chorleiter-api | grep -qi 'status.*online'" >/dev/null 2>&1; then
+    echo "Backend failed to start. Recent log output:"
+    ssh_cmd "$REMOTE" "tail -n 20 '$BACKEND_DEST/logs/exceptions.log' 2>/dev/null || echo 'No exceptions log found'"
+    # Remove local archives before exiting
+    rm -f "$BACKEND_ARCHIVE" "$FRONTEND_ARCHIVE"
+    exit 1
+fi
+
 # Remove local archives
 rm -f "$BACKEND_ARCHIVE" "$FRONTEND_ARCHIVE"
 
