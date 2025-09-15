@@ -1,72 +1,61 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { AvailabilityTableComponent } from '../monthly-plan/availability-table/availability-table.component';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MonthNavigationService, MonthYear } from '@shared/services/month-navigation.service';
 
 @Component({
   selector: 'app-availability',
   standalone: true,
   imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent],
   templateUrl: './availability.component.html',
-  styleUrls: ['./availability.component.scss']
+  styleUrls: ['./availability.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AvailabilityComponent implements OnInit {
-  selectedYear!: number;
-  selectedMonth!: number;
+  selected!: MonthYear;
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(private route: ActivatedRoute,
+              private router: Router,
+              private monthNav: MonthNavigationService) {
+    const now = new Date();
+    this.selected = { year: now.getFullYear(), month: now.getMonth() + 1 };
+  }
 
   ngOnInit(): void {
-    const now = new Date();
-    this.selectedYear = now.getFullYear();
-    this.selectedMonth = now.getMonth() + 1;
-
     this.route.queryParamMap.subscribe(params => {
       const y = Number(params.get('year'));
       const m = Number(params.get('month'));
-      if (y) { this.selectedYear = y; }
-      if (m) { this.selectedMonth = m; }
+      if (y && m) { this.selected = { year: y, month: m }; }
     });
   }
 
   monthChanged(): void {
     this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: { year: this.selectedYear, month: this.selectedMonth },
+      queryParams: { year: this.selected.year, month: this.selected.month },
       queryParamsHandling: 'merge'
     });
   }
 
   previousMonth(): void {
-    if (this.selectedMonth === 1) {
-      this.selectedMonth = 12;
-      this.selectedYear--;
-    } else {
-      this.selectedMonth--;
-    }
+    this.selected = this.monthNav.previous(this.selected);
     this.monthChanged();
   }
 
   nextMonth(): void {
-    if (this.selectedMonth === 12) {
-      this.selectedMonth = 1;
-      this.selectedYear++;
-    } else {
-      this.selectedMonth++;
-    }
+    this.selected = this.monthNav.next(this.selected);
     this.monthChanged();
   }
 
   get prevMonthLabel(): string {
-    return new Date(this.selectedYear, this.selectedMonth - 2, 1)
-      .toLocaleDateString('de-DE', { month: 'long' });
+    return this.monthNav.prevLabel(this.selected);
   }
 
   get nextMonthLabel(): string {
-    return new Date(this.selectedYear, this.selectedMonth, 1)
-      .toLocaleDateString('de-DE', { month: 'long' });
+    return this.monthNav.nextLabel(this.selected);
   }
 }
 

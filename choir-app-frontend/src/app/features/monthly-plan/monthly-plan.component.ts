@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -19,6 +19,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
+import { MonthNavigationService } from '@shared/services/month-navigation.service';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 
@@ -27,7 +28,8 @@ import { parseDateOnly } from '@shared/util/date';
   standalone: true,
   imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe],
   templateUrl: './monthly-plan.component.html',
-  styleUrls: ['./monthly-plan.component.scss']
+  styleUrls: ['./monthly-plan.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class MonthlyPlanComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
@@ -160,7 +162,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private dialog: MatDialog,
               private snackBar: MatSnackBar,
               private router: Router,
-              private route: ActivatedRoute) {}
+              private route: ActivatedRoute,
+              private monthNav: MonthNavigationService) {}
 
   ngOnInit(): void {
     const now = new Date();
@@ -244,32 +247,24 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   get prevMonthLabel(): string {
-    return new Date(this.selectedYear, this.selectedMonth - 2, 1)
-      .toLocaleDateString('de-DE', { month: 'long' });
+    return this.monthNav.prevLabel({ year: this.selectedYear, month: this.selectedMonth });
   }
 
   get nextMonthLabel(): string {
-    return new Date(this.selectedYear, this.selectedMonth, 1)
-      .toLocaleDateString('de-DE', { month: 'long' });
+    return this.monthNav.nextLabel({ year: this.selectedYear, month: this.selectedMonth });
   }
 
   previousMonth(): void {
-    if (this.selectedMonth === 1) {
-      this.selectedMonth = 12;
-      this.selectedYear--;
-    } else {
-      this.selectedMonth--;
-    }
+    const prev = this.monthNav.previous({ year: this.selectedYear, month: this.selectedMonth });
+    this.selectedYear = prev.year;
+    this.selectedMonth = prev.month;
     this.monthChanged();
   }
 
   nextMonth(): void {
-    if (this.selectedMonth === 12) {
-      this.selectedMonth = 1;
-      this.selectedYear++;
-    } else {
-      this.selectedMonth++;
-    }
+    const next = this.monthNav.next({ year: this.selectedYear, month: this.selectedMonth });
+    this.selectedYear = next.year;
+    this.selectedMonth = next.month;
     this.monthChanged();
   }
 

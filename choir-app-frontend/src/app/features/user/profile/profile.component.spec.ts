@@ -14,6 +14,7 @@ class MockApiService {
   }
   updateCurrentUser() { return of({}); }
   getDistricts() { return of([]); }
+  getCongregations() { return of([]); }
 }
 
 describe('ProfileComponent', () => {
