@@ -104,4 +104,15 @@ describe('MainLayoutComponent', () => {
     visible = await firstValueFrom(item!.visibleSubject!);
     expect(visible).toBeFalse();
   });
+
+  it('translates user roles and updates tooltip on changes', async () => {
+    let role = await firstValueFrom(component.userRole$);
+    expect(role).toBe('Sänger');
+
+    authServiceMock.currentUser$.next({ roles: ['director'] });
+    authServiceMock.activeChoir$.next({ modules: {} });
+    fixture.detectChanges();
+    role = await firstValueFrom(component.userRole$);
+    expect(role).toBe('Dirigent');
+  });
 });

@@ -51,6 +51,16 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isAdmin$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
   userName$: Observable<string | undefined>;
+  userRole$: Observable<string | undefined>;
+  private readonly roleTranslations: Record<string, string> = {
+    director: 'Dirigent',
+    choir_admin: 'Chor-Admin',
+    admin: 'Administrator',
+    demo: 'Demo',
+    singer: 'Sänger',
+    librarian: 'Bibliothekar',
+    organist: 'Organist'
+  };
   currentTheme: Theme;
   showAdminSubmenu: boolean = true;
   isExpanded = true;
@@ -105,6 +115,17 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.userName$ = this.authService.currentUser$.pipe(map(u => u?.firstName + ' ' + u?.name));
+    this.userRole$ = combineLatest([this.authService.currentUser$, this.authService.activeChoir$]).pipe(
+      map(([user]) => {
+        const roles = Array.isArray(user?.roles)
+          ? user.roles
+          : user?.roles ? [user.roles] : [];
+        if (roles.length === 0) {
+          return undefined;
+        }
+        return roles.map(r => this.roleTranslations[r] ?? r).join(', ');
+      })
+    );
     this.donatedRecently$ = this.authService.currentUser$.pipe(
       map(u => {
         if (!u?.lastDonation) return false;
