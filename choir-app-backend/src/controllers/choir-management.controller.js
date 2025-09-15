@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 const { participationPdf } = require('../services/pdf.service');
+const { parseDateOnly } = require('../utils/date.utils');
 
 async function cleanupExpiredInvitations() {
     const expired = await db.user_choir.findAll({
@@ -394,7 +395,8 @@ exports.downloadParticipationPdf = async (req, res, next) => {
                 eventWhere.date[Op.lte] = new Date(endDate);
             }
         } else {
-            eventWhere.date = { [Op.gte]: new Date() };
+            const today = parseDateOnly(new Date());
+            eventWhere.date = { [Op.gte]: today };
         }
         const events = await db.event.findAll({
             where: eventWhere,
