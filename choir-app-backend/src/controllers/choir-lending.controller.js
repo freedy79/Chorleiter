@@ -1,6 +1,7 @@
 const db = require('../models');
 const Lending = db.lending;
 const { lendingListPdf } = require('../services/pdf.service');
+const { Op } = require('sequelize');
 
 // List copies for a choir collection
 exports.list = async (req, res) => {
@@ -42,6 +43,32 @@ exports.init = async (req, res) => {
     order: [['copyNumber', 'ASC']]
   });
   res.status(201).send(result);
+};
+
+// Adjust number of copies for a collection
+exports.setCount = async (req, res) => {
+  const { id } = req.params;
+  const { copies } = req.body;
+  if (copies === undefined || copies < 1) {
+    return res.status(400).send({ message: 'copies must be >= 1' });
+  }
+  const existing = await Lending.count({ where: { collectionId: id } });
+  if (copies > existing) {
+    for (let i = existing + 1; i <= copies; i++) {
+      await Lending.create({ collectionId: id, copyNumber: i });
+    }
+  } else if (copies < existing) {
+    const borrowed = await Lending.count({ where: { collectionId: id, status: 'borrowed' } });
+    if (borrowed > 0) {
+      return res.status(400).send({ message: 'Cannot reduce copies while borrowed copies exist.' });
+    }
+    await Lending.destroy({ where: { collectionId: id, copyNumber: { [Op.gt]: copies } } });
+  }
+  const result = await Lending.findAll({
+    where: { collectionId: id },
+    order: [['copyNumber', 'ASC']]
+  });
+  res.status(200).send(result);
 };
 
 // Update borrower of a copy

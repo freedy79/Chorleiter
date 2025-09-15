@@ -297,7 +297,15 @@ async function participationPdf(members, events, availabilities = []) {
   const districtEntries = await db.district.findAll();
   const districtCodes = {};
   for (const d of districtEntries) {
-    districtCodes[d.name] = d.code;
+    if (!d.name) continue;
+    const nameKey = d.name.trim();
+    const codeVal = (d.code || '').trim();
+    if (codeVal) {
+      districtCodes[nameKey] = codeVal;
+      districtCodes[codeVal] = codeVal;
+    } else {
+      districtCodes[nameKey] = nameKey;
+    }
   }
   const left = 40;
   const right = 802;
@@ -310,8 +318,14 @@ async function participationPdf(members, events, availabilities = []) {
   const nameWidth = 150;
   const emailWidth = 200;
   const voiceWidth = 25;
-  const hasUnknownDistrict = members.some(m => !districtCodes[m.district]);
-  const districtWidth = hasUnknownDistrict ? 100 : 50;
+  const hasUnknownDistrict = members.some(m => {
+    if (!m.district) return true;
+    const key = typeof m.district === 'string'
+      ? m.district.trim()
+      : ((m.district.code || m.district.name || '').trim());
+    return !districtCodes[key];
+  });
+  const districtWidth = hasUnknownDistrict ? 80 : 40;
   const congregationWidth = 80;
   const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
   const remainingWidth = (right - left) - fixedWidth;
@@ -351,7 +365,7 @@ async function participationPdf(members, events, availabilities = []) {
       page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
     });
     page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-    const districtLegend = Object.values(districtCodes).join(',');
+    const districtLegend = Array.from(new Set(Object.values(districtCodes))).join(',');
     page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: ' + districtLegend)}) Tj ET`);
     pages.push(page.lines.join('\n'));
   }
@@ -371,7 +385,9 @@ async function participationPdf(members, events, availabilities = []) {
   }
 
   function districtCode(d) {
-    return d ? (districtCodes[d] || d) : '';
+    if (!d) return '';
+    const key = typeof d === 'string' ? d.trim() : ((d.code || d.name || '')).trim();
+    return districtCodes[key] || key;
   }
 
   const pages = [];

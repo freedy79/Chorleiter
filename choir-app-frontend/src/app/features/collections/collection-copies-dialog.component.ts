@@ -82,6 +82,27 @@ export class CollectionCopiesDialogComponent implements OnInit {
     });
   }
 
+  adjustCopies(): void {
+    const copiesStr = prompt('Neue Anzahl der Exemplare eingeben:');
+    const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
+    if (isNaN(copies) || copies < 1) {
+      return;
+    }
+    if (copies < this.copies.length && this.copies.some(c => c.status === 'borrowed')) {
+      this.snack.open('Reduzierung nicht möglich: Ausleihen vorhanden.', undefined, { duration: 3000 });
+      return;
+    }
+    this.api.setCollectionCopies(this.data.collectionId, copies).subscribe({
+      next: () => {
+        this.snack.open('Gespeichert', undefined, { duration: 2000 });
+        this.load();
+      },
+      error: err => {
+        this.snack.open(err.error?.message || 'Fehler beim Speichern', undefined, { duration: 3000 });
+      }
+    });
+  }
+
   close(): void {
     this.dialogRef.close();
   }

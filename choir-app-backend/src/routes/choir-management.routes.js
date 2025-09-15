@@ -27,6 +27,7 @@ router.delete("/collections/:id", role.requireChoirAdmin, wrap(controller.remove
 router.get("/collections/:id/copies", role.requireChoirAdmin, wrap(lendingController.list));
 router.get("/collections/:id/copies/pdf", role.requireChoirAdmin, wrap(lendingController.downloadPdf));
 router.post("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.init));
+router.put("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.setCount));
 router.put("/collections/copies/:id", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.update));
 
 module.exports = router;

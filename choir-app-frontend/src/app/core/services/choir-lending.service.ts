@@ -18,6 +18,10 @@ export class ChoirLendingService {
     return this.http.post<Lending[]>(`${this.baseUrl}/${collectionId}/copies`, { copies });
   }
 
+  setCopies(collectionId: number, copies: number): Observable<Lending[]> {
+    return this.http.put<Lending[]>(`${this.baseUrl}/${collectionId}/copies`, { copies });
+  }
+
   updateCopy(id: number, data: Partial<Lending>): Observable<Lending> {
     return this.http.put<Lending>(`${environment.apiUrl}/choir-management/collections/copies/${id}`, data);
   }

@@ -146,9 +146,10 @@ export class ParticipationComponent implements OnInit {
   }
 
   monthStatusCount(col: MonthColumn, type: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' | 'UNKNOWN'): number {
+    const uniqueDates = new Set(col.events.map(ev => this.dateKey(ev.date)));
     let total = 0;
-    for (const ev of col.events) {
-      total += this.statusCount(this.dateKey(ev.date), type);
+    for (const dateKey of uniqueDates) {
+      total += this.statusCount(dateKey, type);
     }
     return total;
   }
