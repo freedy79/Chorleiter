@@ -7,7 +7,20 @@
   padding: 1rem;
 }
 
+:host-context(.light-theme) .maintenance-container {
+  background-color: #ffffff;
+}
+
+:host-context(.dark-theme) .maintenance-container {
+  background-color: #222222;
+  color: #eeeeee;
+}
+
 mat-card {
   max-width: 400px;
   width: 100%;
+}
+
+:host-context(.dark-theme) mat-card {
+  color: #eeeeee;
 }
