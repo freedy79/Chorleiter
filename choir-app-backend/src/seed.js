@@ -100,28 +100,28 @@ async function seedDatabase(options = {}) {
                 where: { key: 'SYSTEM_ADMIN_EMAIL' },
                 defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
             });
-            const districts = [
-                { name: 'Braunschweig', code: 'BS' },
-                { name: 'Göttingen', code: 'GÖ' },
-                { name: 'Hannover-Nordost', code: 'H-NO' },
-                { name: 'Hannover-Südwest', code: 'H-SW' },
-                { name: 'Hildesheim', code: 'HI' },
-                { name: 'Lübeck-Schwerin', code: 'L-S' },
-                { name: 'Lüneburg', code: 'LG' },
-                { name: 'Magdeburg', code: 'MD' },
-                { name: 'Wolfenbüttel', code: 'WF' }
-            ];
-            for (const d of districts) {
-                const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: d });
-                // Backfill missing codes for existing districts
-                if (!created && !district.code) {
-                    district.code = d.code;
-                    await district.save();
-                }
-            }
             logger.info("Initial seeding completed successfully.");
         } else {
             logger.info("Database already seeded. Skipping initial setup.");
+        }
+        const districts = [
+            { name: 'Braunschweig', code: 'BS' },
+            { name: 'Göttingen', code: 'GÖ' },
+            { name: 'Hannover-Nordost', code: 'H-NO' },
+            { name: 'Hannover-Südwest', code: 'H-SW' },
+            { name: 'Hildesheim', code: 'HI' },
+            { name: 'Lübeck-Schwerin', code: 'L-S' },
+            { name: 'Lüneburg', code: 'LG' },
+            { name: 'Magdeburg', code: 'MD' },
+            { name: 'Wolfenbüttel', code: 'WF' }
+        ];
+        for (const d of districts) {
+            const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: d });
+            // Backfill missing codes for existing districts
+            if (!created && !district.code) {
+                district.code = d.code;
+                await district.save();
+            }
         }
     } catch (error) {
         logger.error("Error during initial seeding:", error);
