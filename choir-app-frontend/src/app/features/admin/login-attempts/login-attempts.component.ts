@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -26,7 +26,8 @@ export class LoginAttemptsComponent implements OnInit {
   constructor(private api: ApiService,
               private dialog: MatDialog,
               private snack: MatSnackBar,
-              private monthNav: MonthNavigationService) {
+              private monthNav: MonthNavigationService,
+              private cdr: ChangeDetectorRef) {
     const now = new Date();
     this.selected = { year: now.getFullYear(), month: now.getMonth() + 1 };
   }
@@ -44,6 +45,7 @@ export class LoginAttemptsComponent implements OnInit {
     this.api.getLoginAttempts(this.selected.year, this.selected.month).subscribe(data => {
       this.attempts = data;
       this.dataSource.data = data;
+      this.cdr.markForCheck();
     });
   }
 
