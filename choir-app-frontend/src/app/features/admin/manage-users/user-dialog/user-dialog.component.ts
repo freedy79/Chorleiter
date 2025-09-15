@@ -18,6 +18,7 @@ export class UserDialogComponent implements OnInit {
   form: FormGroup;
   title = 'Benutzer hinzufügen';
   districts: District[] = [];
+  congregations: Congregation[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -44,6 +45,7 @@ export class UserDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getDistricts().subscribe(ds => this.districts = ds);
+    this.api.getCongregations().subscribe(cs => this.congregations = cs);
   }
 
   onCancel(): void {

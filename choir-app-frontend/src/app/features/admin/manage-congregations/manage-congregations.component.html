@@ -1,0 +1,36 @@
+<h2>Gemeinden verwalten</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" class="add-form">
+  <mat-form-field appearance="outline">
+    <mat-label>Gemeinde</mat-label>
+    <input matInput formControlName="name">
+  </mat-form-field>
+  <mat-form-field appearance="outline">
+    <mat-label>Bezirk</mat-label>
+    <mat-select formControlName="districtId">
+      <mat-option *ngFor="let d of districts" [value]="d.id">{{ d.name }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-flat-button color="primary" type="submit">{{ editing ? 'Speichern' : 'Hinzufügen' }}</button>
+  <button *ngIf="editing" mat-button type="button" (click)="cancel()">Abbrechen</button>
+</form>
+
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+  <ng-container matColumnDef="name">
+    <th mat-header-cell *matHeaderCellDef>Gemeinde</th>
+    <td mat-cell *matCellDef="let c">{{ c.name }}</td>
+  </ng-container>
+  <ng-container matColumnDef="district">
+    <th mat-header-cell *matHeaderCellDef>Bezirk</th>
+    <td mat-cell *matCellDef="let c">{{ districtName(c.districtId) }}</td>
+  </ng-container>
+  <ng-container matColumnDef="actions">
+    <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+    <td mat-cell *matCellDef="let c">
+      <button mat-icon-button (click)="edit(c)"><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button color="warn" (click)="delete(c)"><mat-icon>delete</mat-icon></button>
+    </td>
+  </ng-container>
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>

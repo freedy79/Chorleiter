@@ -36,6 +36,7 @@ export class ProfileComponent implements OnInit {
   isLoading = true;
   availableChoirs$: Observable<Choir[]>;
   districts: District[] = [];
+  congregations: Congregation[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -66,6 +67,7 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.apiService.getDistricts().subscribe(ds => this.districts = ds);
+    this.apiService.getCongregations().subscribe(cs => this.congregations = cs);
     this.apiService.getCurrentUser().subscribe({
       next: (user) => {
         this.currentUser = user;

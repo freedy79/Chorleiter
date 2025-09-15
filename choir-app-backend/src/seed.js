@@ -101,22 +101,25 @@ async function seedDatabase(options = {}) {
                 defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
             });
             const districts = [
-                { name: 'Braunschweig', code: 'BS' },
-                { name: 'Göttingen', code: 'GÖ' },
-                { name: 'Hannover-Nordost', code: 'H-NO' },
-                { name: 'Hannover-Südwest', code: 'H-SW' },
-                { name: 'Hildesheim', code: 'HI' },
-                { name: 'Lübeck-Schwerin', code: 'L-S' },
-                { name: 'Lüneburg', code: 'LG' },
-                { name: 'Magdeburg', code: 'MD' },
-                { name: 'Wolfenbüttel', code: 'WF' }
+                { name: 'Braunschweig', code: 'BS', congregations: ['Braunschweig','Peine','Salzgitter'] },
+                { name: 'Göttingen', code: 'GÖ', congregations: ['Göttingen','Northeim','Einbeck'] },
+                { name: 'Hannover-Nordost', code: 'H-NO', congregations: ['Hannover-Mitte','Celle','Lehrte'] },
+                { name: 'Hannover-Südwest', code: 'H-SW', congregations: ['Hannover-Süd','Hameln','Stadthagen'] },
+                { name: 'Hildesheim', code: 'HI', congregations: ['Hildesheim','Alfeld','Sarstedt'] },
+                { name: 'Lübeck-Schwerin', code: 'L-S', congregations: ['Lübeck','Schwerin','Wismar'] },
+                { name: 'Lüneburg', code: 'LG', congregations: ['Lüneburg','Uelzen','Soltau'] },
+                { name: 'Magdeburg', code: 'MD', congregations: ['Magdeburg','Dessau','Halberstadt'] },
+                { name: 'Wolfenbüttel', code: 'WF', congregations: ['Wolfenbüttel','Helmstedt','Goslar'] }
             ];
             for (const d of districts) {
-                const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: d });
+                const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: { name: d.name, code: d.code } });
                 // Backfill missing codes for existing districts
                 if (!created && !district.code) {
                     district.code = d.code;
                     await district.save();
+                }
+                for (const cName of d.congregations || []) {
+                    await db.congregation.findOrCreate({ where: { name: cName }, defaults: { name: cName, districtId: district.id } });
                 }
             }
             logger.info("Initial seeding completed successfully.");
