@@ -158,6 +158,16 @@ Invoke-Ssh "cd '$BackendDest' && npm install"
 # Restart backend
 Invoke-Ssh "pm2 restart chorleiter-api"
 
+# Verify backend started
+$pm2Status = Invoke-Ssh "pm2 describe chorleiter-api | grep -i status" 2>$null
+if ($pm2Status -notmatch 'online') {
+    Write-Host "Backend failed to start. Recent log output:" -ForegroundColor Red
+    Invoke-Ssh "tail -n 20 '$BackendDest/logs/exceptions.log' 2>/dev/null || echo 'No exceptions log found'"
+    Remove-Item $BackendArchive
+    Remove-Item $FrontendArchive
+    exit 1
+}
+
 Remove-Item $BackendArchive
 Remove-Item $FrontendArchive
 
