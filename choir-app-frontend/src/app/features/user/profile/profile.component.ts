@@ -10,6 +10,7 @@ import { Choir } from '@core/models/choir';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { District } from '@core/models/district';
+import { Congregation } from '@core/models/congregation';
 
 export function passwordsMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {

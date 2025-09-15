@@ -6,6 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { User } from 'src/app/core/models/user';
 import { ApiService } from '@core/services/api.service';
 import { District } from '@core/models/district';
+import { Congregation } from '@core/models/congregation';
 
 @Component({
   selector: 'app-user-dialog',
