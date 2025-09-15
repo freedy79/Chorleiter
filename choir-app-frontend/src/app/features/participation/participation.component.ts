@@ -59,8 +59,8 @@ export class ParticipationComponent implements OnInit {
     this.api.getEvents(undefined, false, this.startDate, this.endDate).subscribe(events => {
       let filtered = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       if (!this.startDate && !this.endDate) {
-        const now = new Date();
-        filtered = filtered.filter(e => new Date(e.date) >= now);
+        const today = parseDateOnly(new Date());
+        filtered = filtered.filter(e => parseDateOnly(e.date) >= today);
       }
 
       if (filtered.length <= 5) {
