@@ -58,4 +58,26 @@ describe('ParticipationComponent', () => {
     expect(component.monthStatusCount(col, 'MAYBE')).toBe(1);
     expect(component.monthStatusCount(col, 'UNAVAILABLE')).toBe(1);
   });
+
+  it('monthStatusCount counts unique dates only once', () => {
+    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    component.members = [
+      { id: 1, name: 'A', email: '', voice: 'SOPRAN' },
+      { id: 2, name: 'B', email: '', voice: 'ALT' }
+    ];
+    (component as any).availabilityMap = {
+      1: { '2024-01-01': 'AVAILABLE' },
+      2: { '2024-01-01': 'MAYBE' }
+    };
+    const col = {
+      key: '2024-01',
+      label: 'Jan 2024',
+      events: [
+        { date: '2024-01-01' } as Event,
+        { date: '2024-01-01' } as Event
+      ]
+    };
+    expect(component.monthStatusCount(col, 'AVAILABLE')).toBe(1);
+    expect(component.monthStatusCount(col, 'MAYBE')).toBe(1);
+  });
 });
