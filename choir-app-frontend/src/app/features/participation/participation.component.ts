@@ -5,7 +5,6 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserInChoir } from '@core/models/user';
-import { Event } from '@core/models/event';
 import { MemberAvailability } from '@core/models/member-availability';
 import { parseDateOnly } from '@shared/util/date';
 
@@ -14,8 +13,12 @@ interface EventColumn {
   label: string;
 }
 
+interface DateColumn extends EventColumn {
+  monthKey: string;
+}
+
 interface MonthColumn extends EventColumn {
-  events: Event[];
+  dates: string[];
 }
 
 @Component({
@@ -31,6 +34,9 @@ export class ParticipationComponent implements OnInit {
   displayMode: 'events' | 'months' = 'events';
   eventColumns: EventColumn[] = [];
   monthColumns: MonthColumn[] = [];
+  dateColumns: DateColumn[] = [];
+  monthHeaderColumns: string[] = [];
+  dateHeaderColumns: string[] = [];
   displayedColumns: string[] = ['name', 'voice'];
   isChoirAdmin = false;
   startDate?: Date;
@@ -75,23 +81,36 @@ export class ParticipationComponent implements OnInit {
           })
         }));
         this.displayedColumns = ['name', 'voice', ...this.eventColumns.map(c => c.key)];
+        this.monthColumns = [];
+        this.dateColumns = [];
+        this.monthHeaderColumns = [];
+        this.dateHeaderColumns = [];
         const months = Array.from(new Set(filtered.map(e => this.monthKey(e.date))));
         this.loadAvailabilities(months.map(m => this.parseMonthKey(m)));
       } else {
         this.displayMode = 'months';
-        const monthMap = new Map<string, Event[]>();
+        const monthMap = new Map<string, string[]>();
+        const dateLabelMap = new Map<string, string>();
         for (const ev of filtered) {
-          const key = this.monthKey(ev.date);
-          if (!monthMap.has(key)) monthMap.set(key, []);
-          monthMap.get(key)!.push(ev);
-          if (monthMap.size === 5) break; // Limit to 5 months
+          const mKey = this.monthKey(ev.date);
+          const dKey = this.dateKey(ev.date);
+          if (!monthMap.has(mKey) && monthMap.size === 5) continue; // Limit to 5 months
+          if (!monthMap.has(mKey)) monthMap.set(mKey, []);
+          const arr = monthMap.get(mKey)!;
+          if (!arr.includes(dKey)) arr.push(dKey);
+          dateLabelMap.set(dKey, this.formatDay(ev.date));
         }
-        this.monthColumns = Array.from(monthMap.entries()).map(([key, evs]) => ({
+        this.monthColumns = Array.from(monthMap.entries()).map(([key, dates]) => ({
           key,
           label: this.formatMonthLabel(key),
-          events: evs
+          dates
         }));
-        this.displayedColumns = ['name', 'voice', ...this.monthColumns.map(c => c.key)];
+        this.dateColumns = this.monthColumns.flatMap(col =>
+          col.dates.map(d => ({ key: d, label: dateLabelMap.get(d)!, monthKey: col.key }))
+        );
+        this.monthHeaderColumns = ['name', 'voice', ...this.monthColumns.map(c => c.key)];
+        this.dateHeaderColumns = this.dateColumns.map(c => c.key);
+        this.displayedColumns = ['name', 'voice', ...this.dateHeaderColumns];
         this.loadAvailabilities(this.monthColumns.map(c => this.parseMonthKey(c.key)));
       }
     });
@@ -146,7 +165,7 @@ export class ParticipationComponent implements OnInit {
   }
 
   monthStatusCount(col: MonthColumn, type: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' | 'UNKNOWN'): number {
-    const uniqueDates = new Set(col.events.map(ev => this.dateKey(ev.date)));
+    const uniqueDates = new Set(col.dates);
     let total = 0;
     for (const dateKey of uniqueDates) {
       total += this.statusCount(dateKey, type);
@@ -154,12 +173,13 @@ export class ParticipationComponent implements OnInit {
     return total;
   }
 
-  formatDate(date: string | Date): string {
-    return parseDateOnly(date).toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      timeZone: 'Europe/Berlin',
-    });
+  formatDay(date: string | Date): string {
+    return (
+      parseDateOnly(date).toLocaleDateString('de-DE', {
+        day: '2-digit',
+        timeZone: 'Europe/Berlin',
+      }) + '.'
+    );
   }
 
   private nextStatus(current?: string): string {

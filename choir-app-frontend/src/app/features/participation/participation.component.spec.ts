@@ -1,6 +1,5 @@
 import { ParticipationComponent } from './participation.component';
 import { UserInChoir } from '@core/models/user';
-import { Event } from '@core/models/event';
 import { BehaviorSubject } from 'rxjs';
 
 describe('ParticipationComponent', () => {
@@ -49,11 +48,8 @@ describe('ParticipationComponent', () => {
     const col = {
       key: '2024-01',
       label: 'Jan 2024',
-      events: [
-        { date: '2024-01-01' } as Event,
-        { date: '2024-01-02' } as Event
-      ]
-    };
+      dates: ['2024-01-01', '2024-01-02']
+    } as any;
     expect(component.monthStatusCount(col, 'AVAILABLE')).toBe(2);
     expect(component.monthStatusCount(col, 'MAYBE')).toBe(1);
     expect(component.monthStatusCount(col, 'UNAVAILABLE')).toBe(1);
@@ -72,11 +68,8 @@ describe('ParticipationComponent', () => {
     const col = {
       key: '2024-01',
       label: 'Jan 2024',
-      events: [
-        { date: '2024-01-01' } as Event,
-        { date: '2024-01-01' } as Event
-      ]
-    };
+      dates: ['2024-01-01', '2024-01-01']
+    } as any;
     expect(component.monthStatusCount(col, 'AVAILABLE')).toBe(1);
     expect(component.monthStatusCount(col, 'MAYBE')).toBe(1);
   });
