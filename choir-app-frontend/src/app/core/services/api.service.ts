@@ -59,6 +59,8 @@ import { ChoirLendingService } from './choir-lending.service';
 import { ProgramService } from './program.service';
 import { District } from '../models/district';
 import { DistrictService } from './district.service';
+import { Congregation } from '../models/congregation';
+import { CongregationService } from './congregation.service';
 
 @Injectable({
   providedIn: 'root'
@@ -88,7 +90,8 @@ export class ApiService {
               private choirLendingService: ChoirLendingService,
               private libraryService: LibraryService,
               private programService: ProgramService,
-              private districtService: DistrictService) {
+              private districtService: DistrictService,
+              private congregationService: CongregationService) {
 
   }
 
@@ -192,6 +195,24 @@ export class ApiService {
 
   deleteDistrict(id: number): Observable<any> {
     return this.districtService.deleteDistrict(id);
+  }
+
+  // --- Congregations ---
+
+  getCongregations(): Observable<Congregation[]> {
+    return this.congregationService.getCongregations();
+  }
+
+  createCongregation(name: string, districtId: number): Observable<Congregation> {
+    return this.congregationService.createCongregation({ name, districtId });
+  }
+
+  updateCongregation(id: number, name: string, districtId: number): Observable<Congregation> {
+    return this.congregationService.updateCongregation(id, { name, districtId });
+  }
+
+  deleteCongregation(id: number): Observable<any> {
+    return this.congregationService.deleteCongregation(id);
   }
 
   // --- Global Piece Methods ---

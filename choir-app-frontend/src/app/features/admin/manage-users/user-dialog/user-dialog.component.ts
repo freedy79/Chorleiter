@@ -6,6 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { User } from 'src/app/core/models/user';
 import { ApiService } from '@core/services/api.service';
 import { District } from '@core/models/district';
+import { Congregation } from '@core/models/congregation';
 
 @Component({
   selector: 'app-user-dialog',
@@ -18,6 +19,7 @@ export class UserDialogComponent implements OnInit {
   form: FormGroup;
   title = 'Benutzer hinzufügen';
   districts: District[] = [];
+  congregations: Congregation[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -44,6 +46,7 @@ export class UserDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.getDistricts().subscribe(ds => this.districts = ds);
+    this.api.getCongregations().subscribe(cs => this.congregations = cs);
   }
 
   onCancel(): void {
