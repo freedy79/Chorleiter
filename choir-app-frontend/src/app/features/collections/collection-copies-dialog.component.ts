@@ -72,7 +72,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
   }
 
   print(): void {
-    this.api.downloadLibraryCopiesPdf(this.data.collectionId).subscribe(blob => {
+    this.api.downloadCollectionCopiesPdf(this.data.collectionId).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
