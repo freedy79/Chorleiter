@@ -26,6 +26,10 @@ export class ChoirLendingService {
     return this.http.put<Lending>(`${environment.apiUrl}/choir-management/collections/copies/${id}`, data);
   }
 
+  downloadCopiesPdf(collectionId: number): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${collectionId}/copies/pdf`, { responseType: 'blob' });
+  }
+
   getMyBorrowings(): Observable<Lending[]> {
     return this.http.get<Lending[]>(`${environment.apiUrl}/choir-management/borrowings`);
   }

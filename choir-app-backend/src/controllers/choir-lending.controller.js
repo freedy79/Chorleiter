@@ -1,5 +1,6 @@
 const db = require('../models');
 const Lending = db.lending;
+const { lendingListPdf } = require('../services/pdf.service');
 const { Op } = require('sequelize');
 
 // List copies for a choir collection
@@ -93,4 +94,28 @@ exports.update = async (req, res) => {
   }
   await copy.update(data);
   res.status(200).send(copy);
+};
+
+// Generate PDF list for copies of a choir collection
+exports.downloadPdf = async (req, res) => {
+  const { id } = req.params;
+  const collection = await db.collection.findByPk(id);
+  if (!collection) return res.status(404).send({ message: 'Collection not found.' });
+
+  const rawCopies = await Lending.findAll({
+    where: { collectionId: id },
+    include: [{ model: db.user, as: 'borrower', attributes: ['name'] }],
+    order: [['copyNumber', 'ASC']]
+  });
+
+  const copies = rawCopies.map(c => ({
+    copyNumber: c.copyNumber,
+    borrowerName: c.borrowerName || (c.borrower ? c.borrower.name : ''),
+    borrowedAt: c.borrowedAt,
+    returnedAt: c.returnedAt
+  }));
+
+  const pdf = lendingListPdf(collection.title, copies);
+  res.setHeader('Content-Type', 'application/pdf');
+  res.status(200).send(pdf);
 };

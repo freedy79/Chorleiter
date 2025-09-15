@@ -71,6 +71,17 @@ export class CollectionCopiesDialogComponent implements OnInit {
     });
   }
 
+  print(): void {
+    this.api.downloadCollectionCopiesPdf(this.data.collectionId).subscribe(blob => {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ausleihliste.pdf';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    });
+  }
+
   adjustCopies(): void {
     const copiesStr = prompt('Neue Anzahl der Exemplare eingeben:');
     const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;

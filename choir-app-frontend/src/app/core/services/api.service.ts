@@ -636,6 +636,10 @@ export class ApiService {
     return this.choirLendingService.updateCopy(id, data);
   }
 
+  downloadCollectionCopiesPdf(id: number): Observable<Blob> {
+    return this.choirLendingService.downloadCopiesPdf(id);
+  }
+
   getMyBorrowings(): Observable<Lending[]> {
     return this.choirLendingService.getMyBorrowings();
   }

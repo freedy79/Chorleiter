@@ -125,7 +125,6 @@ async function seedDatabase(options = {}) {
             logger.info("Initial seeding completed successfully.");
         } else {
             logger.info("Database already seeded. Skipping initial setup.");
-        
     } catch (error) {
         logger.error("Error during initial seeding:", error);
     }
