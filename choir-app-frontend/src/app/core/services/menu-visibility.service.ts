@@ -62,6 +62,8 @@ export class MenuVisibilityService {
             }
           }
         }
+
+        console.log('MenuVisibilityService', { user, choir, roles, visibility });
       }
       this.visibilitySubject.next(visibility);
     });

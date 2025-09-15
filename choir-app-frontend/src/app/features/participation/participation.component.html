@@ -1,4 +1,5 @@
 <div class="controls" *ngIf="members.length > 0">
+  <div class="date-controls">
   <mat-form-field appearance="fill">
     <mat-label>Von</mat-label>
     <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
@@ -14,6 +15,7 @@
   </mat-form-field>
 
   <button mat-raised-button color="primary" (click)="loadEvents()">Aktualisieren</button>
+  </div>
 
   <mat-form-field appearance="fill">
     <mat-label>Sortierung</mat-label>
