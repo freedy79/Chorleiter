@@ -10,7 +10,7 @@ const controller = require('../src/controllers/program.controller');
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const user = await db.user.create({ email: 'u@example.com', roles: ['USER'] });
+    const user = await db.user.create({ email: 'u@example.com', roles: ['user'] });
 
     const req = {
       body: { title: 'Concert', description: 'Desc', startTime: '2024-01-01T10:00:00Z' },

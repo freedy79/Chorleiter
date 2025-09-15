@@ -40,11 +40,22 @@ async function requireChoirAdmin(req, res, next) {
     }
 }
 
-function requireDirector(req, res, next) {
-    if (['director', 'choir_admin', 'admin', 'librarian'].some(r => req.userRoles.includes(r))) {
+async function requireDirector(req, res, next) {
+    if (['admin', 'librarian'].some(r => req.userRoles.includes(r))) {
         return next();
     }
-    return res.status(403).send({ message: 'Require Director Role!' });
+    try {
+        const association = await db.user_choir.findOne({
+            where: { userId: req.userId, choirId: req.activeChoirId }
+        });
+        if (association && Array.isArray(association.rolesInChoir) &&
+            (association.rolesInChoir.includes('choirleiter') || association.rolesInChoir.includes('choir_admin'))) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Require Choirleiter Role!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
 }
 
 function requireLibrarian(req, res, next) {
@@ -53,8 +64,9 @@ function requireLibrarian(req, res, next) {
     }
     return res.status(403).send({ message: 'Require Librarian Role!' });
 }
+
 async function requireDirectorOrHigher(req, res, next) {
-    if (['director', 'choir_admin', 'admin'].some(r => req.userRoles.includes(r))) {
+    if (req.userRoles.includes('admin')) {
         return next();
     }
     try {
@@ -64,13 +76,14 @@ async function requireDirectorOrHigher(req, res, next) {
         if (
             association &&
             Array.isArray(association.rolesInChoir) &&
-            (association.rolesInChoir.includes('choir_admin') || association.rolesInChoir.includes('director'))
+            (association.rolesInChoir.includes('choir_admin') || association.rolesInChoir.includes('choirleiter'))
         ) {
             return next();
         }
-        return res.status(403).send({ message: 'Require Director Role!' });
+        return res.status(403).send({ message: 'Require Choirleiter Role!' });
     } catch (err) {
         return res.status(500).send({ message: 'Error checking permissions.' });
     }
 }
+
 module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher };

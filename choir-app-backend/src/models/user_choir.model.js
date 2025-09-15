@@ -10,7 +10,15 @@ module.exports = (sequelize, DataTypes) => {
         rolesInChoir: {
             type: DataTypes.JSON,
             allowNull: false,
-            defaultValue: ['director']
+            defaultValue: ['singer'],
+            validate: {
+                isValidRole(value) {
+                    const allowed = ['choir_admin', 'choirleiter', 'organist', 'singer'];
+                    if (!Array.isArray(value) || !value.every(r => allowed.includes(r))) {
+                        throw new Error('Invalid choir role');
+                    }
+                }
+            }
         },
         registrationStatus: {
             type: DataTypes.ENUM('REGISTERED', 'PENDING'),

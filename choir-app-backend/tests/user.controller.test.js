@@ -11,7 +11,7 @@ const controller = require('../src/controllers/user.controller');
     await db.sequelize.sync({ force: true });
     const choir1 = await db.choir.create({ name: 'Choir A' });
     const choir2 = await db.choir.create({ name: 'Choir B' });
-    const user = await db.user.create({ email: 't@example.com', roles: ['director'] });
+    const user = await db.user.create({ email: 't@example.com', roles: ['user'] });
     await user.addChoir(choir1);
     await user.addChoir(choir2);
 

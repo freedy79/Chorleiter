@@ -13,14 +13,14 @@ async function migrateRoles() {
       await qi.addColumn('users', 'roles', {
         type: db.Sequelize.JSON,
         allowNull: false,
-        defaultValue: ['director'],
+        defaultValue: ['user'],
       });
     }
     const [users] = await db.sequelize.query('SELECT id, role, roles FROM users');
     for (const user of users) {
       let roles = user.roles;
       if (!Array.isArray(roles) || roles.length === 0) {
-        roles = user.role ? [user.role] : ['director'];
+        roles = user.role ? [user.role] : ['user'];
         await db.sequelize.query('UPDATE users SET roles = :roles WHERE id = :id', {
           replacements: { roles: JSON.stringify(roles), id: user.id },
         });

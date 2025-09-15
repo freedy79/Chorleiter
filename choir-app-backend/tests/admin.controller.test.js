@@ -9,7 +9,7 @@ const controller = require('../src/controllers/admin.controller');
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
-    const user = await db.user.create({ email: 'test@example.com', roles: ['director'] });
+    const user = await db.user.create({ email: 'test@example.com', roles: ['user'] });
 
     let res = { status(code){ this.statusCode = code; return this; }, send(data){ this.data = data; } };
     await controller.updateUser({ params: { id: user.id }, body: { voice: '' } }, res);
@@ -22,7 +22,7 @@ const controller = require('../src/controllers/admin.controller');
     assert.strictEqual(res.statusCode, 400, 'status 400 on invalid voice');
     assert.strictEqual(res.data.message, 'Invalid voice value.');
 
-    const resetUser = await db.user.create({ email: 'reset@example.com', roles: ['director'], resetToken: 'abc', resetTokenExpiry: new Date() });
+    const resetUser = await db.user.create({ email: 'reset@example.com', roles: ['user'], resetToken: 'abc', resetTokenExpiry: new Date() });
     res = { status(code){ this.statusCode = code; return this; }, send(data){ this.data = data; } };
     await controller.clearResetToken({ params: { id: resetUser.id } }, res);
     assert.strictEqual(res.statusCode, 200, 'status 200 on clear reset token');

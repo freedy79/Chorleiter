@@ -10,9 +10,9 @@ const controller = require('../src/controllers/post.controller');
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const user1 = await db.user.create({ email: 'u1@example.com', roles: ['USER'] });
-    const user2 = await db.user.create({ email: 'u2@example.com', roles: ['USER'] });
-    const user3 = await db.user.create({ email: 'u3@example.com', roles: ['USER'] });
+    const user1 = await db.user.create({ email: 'u1@example.com', roles: ['user'] });
+    const user2 = await db.user.create({ email: 'u2@example.com', roles: ['user'] });
+    const user3 = await db.user.create({ email: 'u3@example.com', roles: ['user'] });
 
     const now = new Date();
     const future = new Date(now.getTime() + 86400000);
