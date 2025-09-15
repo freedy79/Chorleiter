@@ -50,6 +50,7 @@ db.program = require("./program.model.js")(sequelize, Sequelize);
 db.program_element = require("./program_element.model.js")(sequelize, Sequelize);
 db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
 db.district = require("./district.model.js")(sequelize, Sequelize);
+ db.congregation = require("./congregation.model.js")(sequelize, Sequelize);
 db.donation = require("./donation.model.js")(sequelize, Sequelize);
 db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
 
@@ -209,4 +210,8 @@ db.user.hasMany(db.choir_log, { as: 'choirLogs' });
 db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 
+// Districts and congregations
+ db.district.hasMany(db.congregation, { as: "congregations" });
+ db.congregation.belongsTo(db.district, { foreignKey: "districtId", as: "district" });
 module.exports = db;
+
