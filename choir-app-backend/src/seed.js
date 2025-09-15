@@ -101,15 +101,15 @@ async function seedDatabase(options = {}) {
                 defaults: { value: process.env.SYSTEM_ADMIN_EMAIL || '' }
             });
             const districts = [
-                { name: 'Braunschweig', code: 'BS', congregations: ['Braunschweig','Peine','Salzgitter'] },
-                { name: 'Göttingen', code: 'GÖ', congregations: ['Göttingen','Northeim','Einbeck'] },
-                { name: 'Hannover-Nordost', code: 'H-NO', congregations: ['Hannover-Mitte','Celle','Lehrte'] },
-                { name: 'Hannover-Südwest', code: 'H-SW', congregations: ['Hannover-Süd','Hameln','Stadthagen'] },
-                { name: 'Hildesheim', code: 'HI', congregations: ['Hildesheim','Alfeld','Sarstedt'] },
-                { name: 'Lübeck-Schwerin', code: 'L-S', congregations: ['Lübeck','Schwerin','Wismar'] },
-                { name: 'Lüneburg', code: 'LG', congregations: ['Lüneburg','Uelzen','Soltau'] },
-                { name: 'Magdeburg', code: 'MD', congregations: ['Magdeburg','Dessau','Halberstadt'] },
-                { name: 'Wolfenbüttel', code: 'WF', congregations: ['Wolfenbüttel','Helmstedt','Goslar'] }
+                { name: 'Braunschweig', code: 'BS', congregations: ['Braunschweig','Gifhorn','Lehre','Oebisfelde','Peine','Salzgitter-Lebenstedt','Schöningen','Vechelde','Wendeburg-Neubrück','Wolfsburg','Wolfsburg-Fallersleben'] },
+                { name: 'Göttingen', code: 'GÖ', congregations: ['Göttingen','Northeim','Willershausen','Witzenhausen','Bad Lauterberg','Bad Sachsa','Hannoversch Münden'] },
+                { name: 'Hannover-Nordost', code: 'H-NO', congregations: ['Hannover-List','Hannover-Ostkreis','Burgweden','Celle','Hankensbüttel','Hermannsburg','Langenhagen','Schwarmstedt','Uetze','Wietze'] },
+                { name: 'Hannover-Südwest', code: 'H-SW', congregations: ['Hannover-Süd','Bad Nenndorf','Barsinghausen','Hannover-Badenstedt','Hannover-Herrenhausen','Hoya','Neustadt am Rübenberge','Nienburg','Pattensen','Springe','Wunstorf'] },
+                { name: 'Hildesheim', code: 'HI', congregations: ['Hildesheim','Alfeld','Hameln','Holzminden','Leinetal','Rinteln','Sarstedt'] },
+                { name: 'Lübeck-Schwerin', code: 'L-S', congregations: ['Lübeck','Bad Oldesloe','Bad Schwartau','Bad Segeberg','Crivitz','Gadebusch','Ludwigslust','Lübeck-Schlutup','Lübeck-Travemünde','Mölln-Ratzeburg','Schwerin','Wismar'] },
+                { name: 'Lüneburg', code: 'LG', congregations: ['Lüneburg','Adendorf','Dannenberg','Schneverdingen','Walsrode','Soltau','Bad Bevensen'] },
+                { name: 'Magdeburg', code: 'MD', congregations: ['Magdeburg-Süd','Aschersleben','Blankenburg','Burg','Eisleben','Hadmersleben','Halberstadt','Magdeburg-Neustadt','Oschersleben','Schönebeck','Werningerode','Wolmirstedt'] },
+                { name: 'Wolfenbüttel', code: 'WF', congregations: ['Wolfenbüttel','Seesen','Goslar','Bad Harzburg','Salzgitter-Bad','Seesen-Ildehausen'] }
             ];
             for (const d of districts) {
                 const [district, created] = await db.district.findOrCreate({ where: { name: d.name }, defaults: { name: d.name, code: d.code } });
@@ -125,7 +125,7 @@ async function seedDatabase(options = {}) {
             logger.info("Initial seeding completed successfully.");
         } else {
             logger.info("Database already seeded. Skipping initial setup.");
-        }
+        
     } catch (error) {
         logger.error("Error during initial seeding:", error);
     }
