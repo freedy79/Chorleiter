@@ -133,10 +133,6 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/backup/import`, formData);
   }
 
-  checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
-    return this.http.get<{ isChoirAdmin: boolean }>(`${this.apiUrl}/auth/check-choir-admin`);
-  }
-
   getStatistics(startDate?: Date | string, endDate?: Date | string, activeMonths?: number, global?: boolean): Observable<StatsSummary> {
     const params: any = {};
     if (startDate) {

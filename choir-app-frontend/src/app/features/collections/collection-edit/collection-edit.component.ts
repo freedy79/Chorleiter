@@ -138,9 +138,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnInit(): void {
-        combineLatest([this.authService.isAdmin$, this.apiService.checkChoirAdminStatus()]).subscribe(([isAdmin, s]) => {
+        combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).subscribe(([isAdmin, isChoirAdmin]) => {
             this.isAdmin = isAdmin;
-            this.isChoirAdmin = s.isChoirAdmin;
+            this.isChoirAdmin = isChoirAdmin;
             if (!this.isAdmin && !this.isChoirAdmin) {
                 this.router.navigate(['/collections']);
                 this.snackBar.open('Keine Berechtigung Sammlungen zu bearbeiten.', 'Schließen');

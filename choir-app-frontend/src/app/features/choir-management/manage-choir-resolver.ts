@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, Router } from '@angular/router';
-import { Observable, forkJoin, of } from 'rxjs';
-import { catchError, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, of, combineLatest } from 'rxjs';
+import { catchError, switchMap, take } from 'rxjs/operators';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ErrorService } from 'src/app/core/services/error.service';
 import { AuthService } from 'src/app/core/services/auth.service';
@@ -21,8 +21,9 @@ export class ManageChoirResolver implements Resolve<any> {
     // Leeren Sie alte Fehler, bevor Sie eine neue Seite laden
     this.errorService.clearError();
 
-    return this.authService.isAdmin$.pipe(
-      switchMap(isAdmin => {
+    return combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+      take(1),
+      switchMap(([isAdmin, isChoirAdmin]) => {
         const choirIdParam = route.queryParamMap.get('choirId');
         const choirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
 
@@ -42,30 +43,25 @@ export class ManageChoirResolver implements Resolve<any> {
             isChoirAdmin: of(true)
           });
         }
-        return this.apiService.checkChoirAdminStatus().pipe(
-          switchMap(status => {
-            if (status.isChoirAdmin) {
-              const logs$ = this.apiService.getChoirLogs();
-              return forkJoin({
-                choirDetails: choirDetails$,
-                members: this.apiService.getChoirMembers(),
-                collections: collections$,
-                planRules: planRules$,
-                logs: logs$,
-                isChoirAdmin: of(true)
-              });
-            } else {
-              return forkJoin({
-                choirDetails: choirDetails$,
-                members: of([]),
-                collections: collections$,
-                planRules: planRules$,
-                logs: of([]),
-                isChoirAdmin: of(false)
-              });
-            }
-          })
-        );
+        if (isChoirAdmin) {
+          const logs$ = this.apiService.getChoirLogs();
+          return forkJoin({
+            choirDetails: choirDetails$,
+            members: this.apiService.getChoirMembers(),
+            collections: collections$,
+            planRules: planRules$,
+            logs: logs$,
+            isChoirAdmin: of(true)
+          });
+        }
+        return forkJoin({
+          choirDetails: choirDetails$,
+          members: of([]),
+          collections: collections$,
+          planRules: planRules$,
+          logs: of([]),
+          isChoirAdmin: of(false)
+        });
       }),
       catchError((error) => {
         if (error.status === 0 && error.error === 'abort') {
