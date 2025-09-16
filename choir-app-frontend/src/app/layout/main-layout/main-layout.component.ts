@@ -53,8 +53,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   userName$: Observable<string | undefined>;
   userRole$: Observable<string | undefined>;
   private readonly roleTranslations: Record<string, string> = {
-    director: 'Dirigent',
-    choirleiter: 'Chorleiter',
+    director: 'Chorleiter',
     choir_admin: 'Chor-Admin',
     admin: 'Administrator',
     demo: 'Demo',
@@ -167,7 +166,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       takeUntil(this.destroy$)
     ).subscribe(([choir, user]) => {
       if (choir) {
-        this.authService.activeChoir$.next(choir);
+        this.authService.setActiveChoir(choir);
         if (user) {
           const updatedUser = { ...user, activeChoir: choir } as any;
           this.authService.setCurrentUser(updatedUser);

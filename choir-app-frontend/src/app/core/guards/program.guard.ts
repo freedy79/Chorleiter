@@ -13,7 +13,7 @@ export class ProgramGuard implements CanActivate {
       map(([isAdmin, choir]) => {
         const moduleEnabled = choir?.modules?.programs !== false;
         const roles = choir?.membership?.rolesInChoir ?? [];
-        const choirPrivilege = roles.some(role => ['choir_admin', 'choirleiter', 'director'].includes(role));
+        const choirPrivilege = roles.some(role => ['choir_admin', 'director'].includes(role));
         const allowed = moduleEnabled && (isAdmin || choirPrivilege);
         return allowed ? true : this.router.createUrlTree(['/dashboard']);
       })

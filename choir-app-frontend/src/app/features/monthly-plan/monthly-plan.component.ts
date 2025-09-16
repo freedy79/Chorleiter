@@ -188,7 +188,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
           this.members = m;
           this.directors = m.filter(u => {
             const roles = u.membership?.rolesInChoir || [];
-            return roles.includes('director') || roles.includes('choirleiter') || roles.includes('choir_admin');
+            return roles.includes('director') || roles.includes('choir_admin');
           });
           this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
           this.updateCounterPlan();
@@ -349,7 +349,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (!this.plan) return;
     const people = this.members.filter(m =>
       m.membership?.rolesInChoir?.includes('director') ||
-      m.membership?.rolesInChoir?.includes('choirleiter') ||
       m.membership?.rolesInChoir?.includes('choir_admin') ||
       m.membership?.rolesInChoir?.includes('organist'));
     const ref = this.dialog.open(RequestAvailabilityDialogComponent, { data: { members: people } });

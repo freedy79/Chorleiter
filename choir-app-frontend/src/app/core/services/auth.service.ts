@@ -5,7 +5,7 @@ import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { User, GlobalRole } from '../models/user';
-import { Choir, ChoirRole } from '../models/choir';
+import { Choir, ChoirRole, normalizeChoir, normalizeChoirs } from '../models/choir';
 import { SwitchChoirResponse } from '../models/auth';
 import { ThemeService } from './theme.service';
 import { UserPreferencesService } from './user-preferences.service';
@@ -49,9 +49,11 @@ export class AuthService {
 
     const storedUser = this.getUserFromStorage();
     if (storedUser) {
-      this.currentUserSubject.next(storedUser);
-      this.activeChoir$.next(storedUser.activeChoir || null);
-      this.availableChoirs$.next(storedUser.availableChoirs || []);
+      const normalizedUser = this.withNormalizedChoirData(storedUser);
+      localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+      this.currentUserSubject.next(normalizedUser);
+      this.setActiveChoir(normalizedUser.activeChoir || null);
+      this.availableChoirs$.next(normalizedUser.availableChoirs || []);
     }
 
     this.globalRoles$ = this.currentUser$.pipe(
@@ -84,7 +86,7 @@ export class AuthService {
         if (isAdmin) {
           return true;
         }
-        return choirRoles.some(role => role === 'director' || role === 'choirleiter');
+        return choirRoles.includes('director');
       }),
       distinctUntilChanged()
     );
@@ -135,11 +137,14 @@ export class AuthService {
         if (activeChoir) {
           activeChoir = { ...activeChoir, modules: activeChoir.modules ?? existingModules };
         }
-        const updatedUser = { ...freshUser, activeChoir } as User;
-        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
-        this.currentUserSubject.next(updatedUser);
-        this.activeChoir$.next(activeChoir);
-        this.availableChoirs$.next(updatedUser.availableChoirs || []);
+        const normalizedUser = this.withNormalizedChoirData({
+          ...freshUser,
+          activeChoir: activeChoir || undefined
+        } as User);
+        localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+        this.currentUserSubject.next(normalizedUser);
+        this.setActiveChoir(normalizedUser.activeChoir || null);
+        this.availableChoirs$.next(normalizedUser.availableChoirs || []);
       }),
       catchError(() => of(null))
     ).subscribe();
@@ -197,12 +202,13 @@ export class AuthService {
     return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials).pipe(
       tap((user: User) => {
         if (user.accessToken) {
+          const normalizedUser = this.withNormalizedChoirData(user);
           localStorage.setItem(TOKEN_KEY, user.accessToken);
-          localStorage.setItem(USER_KEY, JSON.stringify(user));
+          localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
           this.loggedIn.next(true);
-          this.currentUserSubject.next(user);
-          this.activeChoir$.next(user.activeChoir || null);
-          this.availableChoirs$.next(user.availableChoirs || []);
+          this.currentUserSubject.next(normalizedUser);
+          this.setActiveChoir(normalizedUser.activeChoir || null);
+          this.availableChoirs$.next(normalizedUser.availableChoirs || []);
 
           this.prefs.load().subscribe(p => {
             if (p.theme) {
@@ -221,7 +227,7 @@ export class AuthService {
     this.prefs.clear();
     this.loggedIn.next(false);
     this.currentUserSubject.next(null);
-    this.activeChoir$.next(null);
+    this.setActiveChoir(null);
     this.availableChoirs$.next([]);
     const queryParams = reason === 'sessionExpired' ? { sessionExpired: true } : undefined;
     this.router.navigate(['/login'], { queryParams });
@@ -233,10 +239,16 @@ export class AuthService {
         localStorage.setItem('auth-token', response.accessToken);
         const currentUser = this.currentUserSubject.value;
         if (currentUser) {
-          const updatedUser: User = { ...currentUser, activeChoir: response.activeChoir, accessToken: response.accessToken };
-          localStorage.setItem('user', JSON.stringify(updatedUser));
-          this.currentUserSubject.next(updatedUser);
-          this.activeChoir$.next(response.activeChoir);
+          const updatedUserBase: User = {
+            ...currentUser,
+            activeChoir: response.activeChoir || undefined,
+            accessToken: response.accessToken
+          };
+          const normalizedUser = this.withNormalizedChoirData(updatedUserBase);
+          localStorage.setItem('user', JSON.stringify(normalizedUser));
+          this.currentUserSubject.next(normalizedUser);
+          this.setActiveChoir(normalizedUser.activeChoir || null);
+          this.availableChoirs$.next(normalizedUser.availableChoirs || []);
         }
         window.location.reload();
       })
@@ -244,16 +256,32 @@ export class AuthService {
   }
 
   setCurrentUser(user: User): void {
-    this.logger.log('AuthService.setCurrentUser called', user);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-    this.currentUserSubject.next(user);
-    this.activeChoir$.next(user.activeChoir || null);
-    const choirs = user.availableChoirs || [];
+    const normalizedUser = this.withNormalizedChoirData(user);
+    this.logger.log('AuthService.setCurrentUser called', normalizedUser);
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+    this.currentUserSubject.next(normalizedUser);
+    this.setActiveChoir(normalizedUser.activeChoir || null);
+    const choirs = normalizedUser.availableChoirs || [];
     this.logger.log('AuthService.setCurrentUser updated choirs', {
-      active: user.activeChoir,
+      active: normalizedUser.activeChoir,
       available: choirs
     });
     this.availableChoirs$.next(choirs);
+  }
+
+  setActiveChoir(choir: Choir | null): void {
+    const normalized = normalizeChoir(choir);
+    this.activeChoir$.next(normalized);
+  }
+
+  private withNormalizedChoirData(user: User): User {
+    const normalizedActiveChoir = normalizeChoir(user.activeChoir ?? null);
+    const normalizedAvailableChoirs = normalizeChoirs(user.availableChoirs);
+    return {
+      ...user,
+      activeChoir: normalizedActiveChoir ?? undefined,
+      availableChoirs: normalizedAvailableChoirs
+    };
   }
 
   private extractGlobalRoles(user: User | null): GlobalRole[] {
@@ -295,7 +323,7 @@ export class AuthService {
       return false;
     }
     const hasChoirPrivilege = choirRoles.some(role =>
-      role === 'choir_admin' || role === 'director' || role === 'choirleiter' || role === 'organist');
+      role === 'choir_admin' || role === 'director' || role === 'organist');
     return !hasChoirPrivilege;
   }
 }

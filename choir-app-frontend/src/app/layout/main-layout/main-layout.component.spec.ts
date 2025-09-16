@@ -37,12 +37,12 @@ describe('MainLayoutComponent', () => {
       map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('choir_admin'))
     );
     const isDirector$ = combineLatest([isAdmin$, choirRolesSubject.asObservable()]).pipe(
-      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('director') || choirRoles.includes('choirleiter'))
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('director'))
     );
     const isSingerOnly$ = combineLatest([globalRolesSubject.asObservable(), choirRolesSubject.asObservable()]).pipe(
       map(([globalRoles, choirRoles]) => {
         const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
-        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'choirleiter', 'organist'].includes(role));
+        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist'].includes(role));
         return choirRoles.includes('singer') && !hasGlobalPrivilege && !hasChoirPrivilege;
       })
     );
@@ -59,6 +59,7 @@ describe('MainLayoutComponent', () => {
       currentUser$: currentUserSubject,
       activeChoir$: activeChoirSubject,
       availableChoirs$: of([]),
+      setActiveChoir: () => {},
       setCurrentUser: () => {},
       logout: () => {}
     };
@@ -129,9 +130,9 @@ describe('MainLayoutComponent', () => {
 
   it('only shows participation for privileged roles', async () => {
     globalRolesSubject.next(['user']);
-    choirRolesSubject.next(['choirleiter']);
+    choirRolesSubject.next(['director']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['choirleiter'] } });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['director'] } });
     fixture.detectChanges();
     let item = component.navItems.find(i => i.key === 'participation');
     let visible = await firstValueFrom(item!.visibleSubject!);
@@ -152,9 +153,9 @@ describe('MainLayoutComponent', () => {
     expect(role).toBe('Sänger');
 
     globalRolesSubject.next(['user']);
-    choirRolesSubject.next(['choirleiter']);
+    choirRolesSubject.next(['director']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['choirleiter'] } });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['director'] } });
     fixture.detectChanges();
     role = await firstValueFrom(component.userRole$);
     expect(role).toBe('Chorleiter');

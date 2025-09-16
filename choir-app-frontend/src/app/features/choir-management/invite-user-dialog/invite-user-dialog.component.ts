@@ -19,7 +19,7 @@ export class InviteUserDialogComponent {
   ) {
     this.inviteForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      roles: [['choirleiter'], Validators.required]
+      roles: [['director'], Validators.required]
     });
   }
 
