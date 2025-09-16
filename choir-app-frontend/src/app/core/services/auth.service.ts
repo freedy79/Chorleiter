@@ -204,18 +204,18 @@ export class AuthService {
       rolesInChoir: [],
       registrationStatus: 'REGISTERED'
     };
-    const roles = membership.rolesInChoir ?? [];
+    const roles: ChoirRole[] = membership.rolesInChoir ?? [];
     const hasRole = roles.includes('choir_admin');
 
     if (hasRole === isChoirAdmin) {
       return;
     }
 
-    const updatedRoles = isChoirAdmin
+    const updatedRoles: ChoirRole[] = isChoirAdmin
       ? [...roles, 'choir_admin']
       : roles.filter(role => role !== 'choir_admin');
 
-    const normalizedRoles = this.normalizeRoles(updatedRoles);
+    const normalizedRoles = this.normalizeRoles<ChoirRole>(updatedRoles);
 
     const updatedActiveChoir: Choir = {
       ...activeChoir,
