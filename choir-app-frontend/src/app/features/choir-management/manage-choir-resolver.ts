@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, Resolve, Router } from '@angular/router';
-import { Observable, forkJoin, of, combineLatest } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { catchError, switchMap, take } from 'rxjs/operators';
 import { ApiService } from 'src/app/core/services/api.service';
 import { ErrorService } from 'src/app/core/services/error.service';
@@ -21,9 +21,9 @@ export class ManageChoirResolver implements Resolve<any> {
     // Leeren Sie alte Fehler, bevor Sie eine neue Seite laden
     this.errorService.clearError();
 
-    return combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+    return this.authService.isAdmin$.pipe(
       take(1),
-      switchMap(([isAdmin, isChoirAdmin]) => {
+      switchMap((isAdmin) => {
         const choirIdParam = route.queryParamMap.get('choirId');
         const choirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
 
@@ -32,6 +32,7 @@ export class ManageChoirResolver implements Resolve<any> {
         const choirDetails$ = this.apiService.getMyChoirDetails(opts);
         const collections$ = this.apiService.getChoirCollections(opts);
         const planRules$ = this.apiService.getPlanRules(opts);
+
         if (isAdmin) {
           const logs$ = this.apiService.getChoirLogs(opts);
           return forkJoin({
@@ -43,25 +44,21 @@ export class ManageChoirResolver implements Resolve<any> {
             isChoirAdmin: of(true)
           });
         }
-        if (isChoirAdmin) {
-          const logs$ = this.apiService.getChoirLogs();
-          return forkJoin({
-            choirDetails: choirDetails$,
-            members: this.apiService.getChoirMembers(),
-            collections: collections$,
-            planRules: planRules$,
-            logs: logs$,
-            isChoirAdmin: of(true)
-          });
-        }
-        return forkJoin({
-          choirDetails: choirDetails$,
-          members: of([]),
-          collections: collections$,
-          planRules: planRules$,
-          logs: of([]),
-          isChoirAdmin: of(false)
-        });
+
+        return this.authService.verifyChoirAdminStatus().pipe(
+          switchMap((isChoirAdmin) => {
+            const logs$ = isChoirAdmin ? this.apiService.getChoirLogs() : of([]);
+            const members$ = isChoirAdmin ? this.apiService.getChoirMembers() : of([]);
+            return forkJoin({
+              choirDetails: choirDetails$,
+              members: members$,
+              collections: collections$,
+              planRules: planRules$,
+              logs: logs$,
+              isChoirAdmin: of(isChoirAdmin)
+            });
+          })
+        );
       }),
       catchError((error) => {
         if (error.status === 0 && error.error === 'abort') {
