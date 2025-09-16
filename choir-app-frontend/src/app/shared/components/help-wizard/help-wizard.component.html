@@ -51,7 +51,7 @@
         <button mat-flat-button color="primary" matStepperNext>Weiter</button>
       </div>
     </mat-step>
-    <mat-step *ngIf="!(isSingerOnly$ | async)">
+    <mat-step *ngIf="(isSingerOnly$ | async) !== true">
       <ng-template matStepLabel>Kalender</ng-template>
       <p>Auf dem Dashboard findest du einen Kalender. Dort kannst du deine Ereignisse als ICS-Datei herunterladen oder direkt in den Google Kalender &uuml;bernehmen.</p>
       <div>

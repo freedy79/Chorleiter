@@ -1,6 +1,6 @@
-import {EventEmitter, Injectable} from '@angular/core';
-import {Event, NavigationEnd, Router} from '@angular/router';
-import {BehaviorSubject} from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Event, NavigationEnd, Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class NavService {
@@ -26,6 +26,6 @@ export class NavService {
   }
 
   public getMode() {
-      return this.appDrawer.mode;
+    return this.appDrawer.mode;
   }
 }

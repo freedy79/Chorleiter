@@ -205,7 +205,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
             switch (property) {
                 case 'title':
                     return link.piece.title.toLowerCase();
-                case 'number':
+                case 'number': {
                     // Versuche die numerische und alphanumerische Komponente zu trennen
                     const match = link.numberInCollection.match(/^(\d+)([a-zA-Z]*)$/);
                     if (match) {
@@ -214,6 +214,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                         return base + suffix;
                     }
                     return link.numberInCollection;
+                }
                 default:
                     return (link as any)[property];
             }

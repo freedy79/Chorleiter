@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 
-import { map, switchMap, tap, take, shareReplay } from 'rxjs/operators';
+import { map, switchMap, take, shareReplay } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -11,7 +11,7 @@ import { MaterialModule } from '@modules/material.module';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { CreateEventResponse, Event } from '@core/models/event';
-import { Program, ProgramItem } from '@core/models/program';
+import { Program } from '@core/models/program';
 import { EventDialogComponent } from '../../events/event-dialog/event-dialog.component';
 
 import { EventCardComponent } from '../event-card/event-card.component';
@@ -28,7 +28,7 @@ import { environment } from 'src/environments/environment';
 
 // WIDGETS (standalone)
 import { UpcomingEventsWidgetComponent } from './widgets/upcoming-events-widget.component';
-import { KpiWidgetComponent, KpiItem } from './widgets/kpi-widget.component';
+import { KpiWidgetComponent } from './widgets/kpi-widget.component';
 import { LatestPostWidgetComponent } from './widgets/latest-post-widget.component';
 import { CurrentProgramWidgetComponent } from './widgets/current-program.component';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';

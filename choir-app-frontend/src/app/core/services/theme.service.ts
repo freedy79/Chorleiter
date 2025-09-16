@@ -30,7 +30,7 @@ export class ThemeService {
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
     // Dies ist nur relevant, wenn der Benutzer 'system' ausgewählt hat.
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
       if (this.currentTheme === 'system') {
         this.applySystemTheme();
       }

@@ -19,7 +19,7 @@
   </div>
 </div>
 
-<ng-container *ngIf="!(isHandset$ | async); else mobileView">
+<ng-container *ngIf="(isHandset$ | async) !== true; else mobileView">
 <div class="table-wrapper mat-elevation-z8">
   <div class="table-scroll-container">
   <mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">

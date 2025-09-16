@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Program, ProgramItem } from '@core/models/program';
-import { Piece } from '@core/models/piece';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
 
@@ -54,4 +53,4 @@ export class CurrentProgramWidgetComponent {
         return null;
     }
   }
-};
+}
