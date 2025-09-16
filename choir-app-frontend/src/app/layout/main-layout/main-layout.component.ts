@@ -122,7 +122,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         const globalExtras = globalRoles.filter(role => role !== 'user');
         const combined = [...globalExtras, ...choirRoles];
         if (!combined.length) {
-          return globalRoles.includes('user') ? this.roleTranslations.user : undefined;
+          return globalRoles.includes('user') ? this.roleTranslations['user'] : undefined;
         }
         combined.forEach(role => displayRoles.push(this.roleTranslations[role] ?? role));
         return displayRoles.join(', ');

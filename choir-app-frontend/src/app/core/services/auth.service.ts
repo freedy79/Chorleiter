@@ -252,8 +252,16 @@ export class AuthService {
   }
 
   private extractGlobalRoles(user: User | null): GlobalRole[] {
-    const roles = Array.isArray(user?.roles) ? user!.roles : [];
-    const normalized: GlobalRole[] = roles.length ? roles : ['user'];
+    const rawRoles = user?.roles as unknown;
+    let normalized: GlobalRole[];
+    if (Array.isArray(rawRoles)) {
+      const rolesArray = rawRoles as GlobalRole[];
+      normalized = rolesArray.length ? rolesArray : ['user'];
+    } else if (typeof rawRoles === 'string' && rawRoles.length > 0) {
+      normalized = [rawRoles as GlobalRole];
+    } else {
+      normalized = ['user'];
+    }
     return this.normalizeRoles(normalized);
   }
 
