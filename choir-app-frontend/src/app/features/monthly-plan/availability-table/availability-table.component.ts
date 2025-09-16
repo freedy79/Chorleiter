@@ -58,7 +58,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
   private setAvailabilities(data: UserAvailability[]): void {
     this.availabilities = data.map(v => ({
       ...v,
-      holidayHint: v.holidayHint ?? getHolidayName(parseDateOnly(v.date)) || undefined
+      holidayHint: (v.holidayHint ?? getHolidayName(parseDateOnly(v.date))) || undefined
     }));
   }
 

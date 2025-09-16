@@ -190,7 +190,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   private decorate(data: UserAvailability[]): UserAvailability[] {
     return data.map(v => ({
       ...v,
-      holidayHint: v.holidayHint ?? getHolidayName(parseDateOnly(v.date)) || undefined
+      holidayHint: (v.holidayHint ?? getHolidayName(parseDateOnly(v.date))) || undefined
     }));
   }
 
@@ -198,4 +198,3 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     return this.destroyed || loadId !== this.loadRequestId;
   }
 }
-
