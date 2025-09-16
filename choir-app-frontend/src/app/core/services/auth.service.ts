@@ -275,11 +275,36 @@ export class AuthService {
   }
 
   private withNormalizedChoirData(user: User): User {
+    const existingActiveChoir = this.activeChoir$.value;
+    const existingAvailableChoirs = this.availableChoirs$.value ?? [];
+
+    const normalizedAvailableChoirs = normalizeChoirs(user.availableChoirs).map(choir => {
+      const existing = existingAvailableChoirs.find(c => c.id === choir.id);
+      if (!existing) {
+        return choir;
+      }
+      return {
+        ...choir,
+        modules: choir.modules ?? existing.modules
+      };
+    });
+
     const normalizedActiveChoir = normalizeChoir(user.activeChoir ?? null);
-    const normalizedAvailableChoirs = normalizeChoirs(user.availableChoirs);
+    const fallbackModules = normalizedActiveChoir
+      ? normalizedAvailableChoirs.find(c => c.id === normalizedActiveChoir.id)?.modules
+      : undefined;
+    const activeChoirWithModules = normalizedActiveChoir
+      ? {
+          ...normalizedActiveChoir,
+          modules: normalizedActiveChoir.modules
+            ?? (normalizedActiveChoir.id === existingActiveChoir?.id ? existingActiveChoir.modules : undefined)
+            ?? fallbackModules
+        }
+      : null;
+
     return {
       ...user,
-      activeChoir: normalizedActiveChoir ?? undefined,
+      activeChoir: activeChoirWithModules ?? undefined,
       availableChoirs: normalizedAvailableChoirs
     };
   }
