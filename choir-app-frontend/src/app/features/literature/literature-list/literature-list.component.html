@@ -174,7 +174,7 @@
                 </mat-select>
                 </ng-container>
                 <ng-template #showonly>
-                  <span>{{ piece.choir_repertoire?.status }}</span>
+                  <span>{{ piece.choir_repertoire?.status | pieceStatusLabel }}</span>
                 </ng-template>
               </mat-cell>
             </ng-container>

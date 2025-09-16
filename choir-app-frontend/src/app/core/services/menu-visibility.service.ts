@@ -16,6 +16,7 @@ export class MenuVisibilityService {
 
   constructor(private auth: AuthService) {
     combineLatest([this.auth.globalRoles$, this.auth.choirRoles$, this.auth.activeChoir$]).subscribe(([globalRoles, choirRoles, choir]) => {
+      console.log("choir: ", JSON.stringify(choir));
       const visibility: MenuVisibility = {};
       const keys = [
         'dashboard',
@@ -34,6 +35,7 @@ export class MenuVisibilityService {
       keys.forEach(k => visibility[k] = false);
       if (choir) {
         const modules = choir.modules || {};
+        console.log("Choir modules: ", JSON.stringify(modules));
         const hasChoirPrivilege = choirRoles.some(role =>
           ['director', 'choir_admin', 'organist'].includes(role));
         const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');

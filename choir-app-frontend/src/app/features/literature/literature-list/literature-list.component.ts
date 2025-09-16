@@ -25,11 +25,12 @@ import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';
 import { Router, RouterModule } from '@angular/router';
+import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
