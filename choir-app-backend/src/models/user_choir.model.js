@@ -1,3 +1,32 @@
+const ALLOWED_CHOIR_ROLES = ['director', 'choir_admin', 'organist', 'singer'];
+
+function normalizeChoirRoles(value) {
+    if (!Array.isArray(value)) {
+        return value;
+    }
+
+    const normalized = value
+        .filter(role => role != null)
+        .map(role => {
+            if (typeof role !== 'string') {
+                return role;
+            }
+
+            const lower = role.toLowerCase();
+            if (lower === 'chorleiter' || lower === 'choirleiter') {
+                return 'director';
+            }
+
+            if (ALLOWED_CHOIR_ROLES.includes(lower)) {
+                return lower;
+            }
+
+            return role;
+        });
+
+    return Array.from(new Set(normalized));
+}
+
 module.exports = (sequelize, DataTypes) => {
     const UserChoir = sequelize.define("user_choir", {
         id: {
@@ -10,14 +39,22 @@ module.exports = (sequelize, DataTypes) => {
         rolesInChoir: {
             type: DataTypes.JSON,
             allowNull: false,
-            defaultValue: ['choirleiter'],
+            defaultValue: ['director'],
             validate: {
                 isValidRole(value) {
-                    const allowed = ['choir_admin', 'choirleiter', 'organist', 'singer'];
-                    if (!Array.isArray(value) || !value.every(r => allowed.includes(r))) {
+                    const normalized = normalizeChoirRoles(value);
+                    if (!Array.isArray(normalized) || !normalized.every(r => ALLOWED_CHOIR_ROLES.includes(r))) {
                         throw new Error('Invalid choir role');
                     }
                 }
+            },
+            set(value) {
+                const normalized = Array.isArray(value) ? normalizeChoirRoles(value) : value;
+                this.setDataValue('rolesInChoir', normalized);
+            },
+            get() {
+                const value = this.getDataValue('rolesInChoir');
+                return Array.isArray(value) ? normalizeChoirRoles(value) : value;
             }
         },
         registrationStatus: {
