@@ -870,10 +870,6 @@ export class ApiService {
     return this.adminService.updateSystemAdminEmail({ value });
   }
 
-  checkChoirAdminStatus(): Observable<{ isChoirAdmin: boolean }> {
-    return this.adminService.checkChoirAdminStatus();
-  }
-
   getStatistics(startDate?: Date, endDate?: Date, activeMonths?: number, global?: boolean): Observable<StatsSummary> {
     return this.adminService.getStatistics(startDate, endDate, activeMonths, global);
   }

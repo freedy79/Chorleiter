@@ -86,9 +86,6 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
         }
       });
     });
-    this.apiService.checkChoirAdminStatus().subscribe(r => {
-      this.isChoirAdmin = r.isChoirAdmin;
-    });
     this.authService.isChoirAdmin$.subscribe(v => this.isChoirAdmin = v);
     this.authService.isDirector$.subscribe(v => this.isDirector = v);
     this.authService.isAdmin$.subscribe(v => this.isAdmin = v);

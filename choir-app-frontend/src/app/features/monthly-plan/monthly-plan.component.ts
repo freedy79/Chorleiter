@@ -49,6 +49,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   counterPlanRows: { user: UserInChoir; assignments: Record<string, string>; }[] = [];
 
   private userSub?: Subscription;
+  private roleSub?: Subscription;
 
   timestamp(date: string | Date): string {
     return parseDateOnly(date).getTime().toString();
@@ -179,8 +180,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     });
 
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
-    this.api.checkChoirAdminStatus().subscribe(r => {
-      this.isChoirAdmin = r.isChoirAdmin;
+    this.roleSub = this.auth.isChoirAdmin$.subscribe(isChoirAdmin => {
+      this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
       if (this.isChoirAdmin) {
         this.api.getChoirMembers().subscribe(m => {
@@ -192,6 +193,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
           this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
           this.updateCounterPlan();
         });
+        this.loadAvailabilities(this.selectedYear, this.selectedMonth);
+      } else {
+        this.members = [];
+        this.directors = [];
+        this.organists = [];
+        this.availabilityMap = {};
+        this.updateCounterPlan();
       }
     });
   }
@@ -404,5 +412,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.userSub) this.userSub.unsubscribe();
+    if (this.roleSub) this.roleSub.unsubscribe();
   }
 }

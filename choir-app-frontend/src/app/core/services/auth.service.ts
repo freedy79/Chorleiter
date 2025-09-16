@@ -5,7 +5,7 @@ import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { User, GlobalRole } from '../models/user';
-import { Choir, ChoirRole, normalizeChoir, normalizeChoirs } from '../models/choir';
+import { Choir, ChoirMembership, ChoirRole, normalizeChoir, normalizeChoirs } from '../models/choir';
 import { SwitchChoirResponse } from '../models/auth';
 import { ThemeService } from './theme.service';
 import { UserPreferencesService } from './user-preferences.service';
@@ -183,6 +183,72 @@ export class AuthService {
       return of(false);
     }
     return of(true);
+  }
+
+  verifyChoirAdminStatus(): Observable<boolean> {
+    return this.http.get<{ isChoirAdmin: boolean }>(`${environment.apiUrl}/auth/check-choir-admin`).pipe(
+      map(response => !!response?.isChoirAdmin),
+      tap(isChoirAdmin => this.applyVerifiedChoirAdminStatus(isChoirAdmin)),
+      catchError(() => of(false))
+    );
+  }
+
+  private applyVerifiedChoirAdminStatus(isChoirAdmin: boolean): void {
+    const currentUser = this.currentUserSubject.value;
+    const activeChoir = currentUser?.activeChoir;
+    if (!currentUser || !activeChoir) {
+      return;
+    }
+
+    const membership: ChoirMembership = activeChoir.membership ?? {
+      rolesInChoir: [],
+      registrationStatus: 'REGISTERED'
+    };
+    const roles = membership.rolesInChoir ?? [];
+    const hasRole = roles.includes('choir_admin');
+
+    if (hasRole === isChoirAdmin) {
+      return;
+    }
+
+    const updatedRoles = isChoirAdmin
+      ? [...roles, 'choir_admin']
+      : roles.filter(role => role !== 'choir_admin');
+
+    const normalizedRoles = this.normalizeRoles(updatedRoles);
+
+    const updatedActiveChoir: Choir = {
+      ...activeChoir,
+      membership: {
+        ...membership,
+        rolesInChoir: normalizedRoles
+      }
+    };
+
+    const updatedAvailableChoirs = (currentUser.availableChoirs ?? []).map(choir => {
+      if (choir.id !== updatedActiveChoir.id) {
+        return choir;
+      }
+      const choirMembership: ChoirMembership = choir.membership ?? {
+        rolesInChoir: [],
+        registrationStatus: membership.registrationStatus
+      };
+      return {
+        ...choir,
+        membership: {
+          ...choirMembership,
+          rolesInChoir: normalizedRoles
+        }
+      };
+    });
+
+    const updatedUser: User = {
+      ...currentUser,
+      activeChoir: updatedActiveChoir,
+      availableChoirs: updatedAvailableChoirs
+    };
+
+    this.setCurrentUser(updatedUser);
   }
 
   private isTokenExpired(token: string): boolean {
