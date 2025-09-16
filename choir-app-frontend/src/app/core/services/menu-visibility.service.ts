@@ -15,7 +15,7 @@ export class MenuVisibilityService {
   visibility$ = this.visibilitySubject.asObservable();
 
   constructor(private auth: AuthService) {
-    combineLatest([this.auth.currentUser$, this.auth.activeChoir$]).subscribe(([user, choir]) => {
+    combineLatest([this.auth.globalRoles$, this.auth.choirRoles$, this.auth.activeChoir$]).subscribe(([globalRoles, choirRoles, choir]) => {
       const visibility: MenuVisibility = {};
       const keys = [
         'dashboard',
@@ -34,9 +34,9 @@ export class MenuVisibilityService {
       keys.forEach(k => visibility[k] = false);
       if (choir) {
         const modules = choir.modules || {};
-        const roles = Array.isArray(user?.roles) ? user.roles : [];
-        const privilegedRoles = ['director', 'choir_admin', 'admin', 'organist'];
-        const hasPrivilegedRole = roles.some(r => privilegedRoles.includes(r));
+        const hasChoirPrivilege = choirRoles.some(role => ['director', 'choir_admin', 'organist'].includes(role));
+        const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
+        const hasPrivilegedRole = hasChoirPrivilege || hasGlobalPrivilege;
         const base: MenuVisibility = {
           dashboard: true,
           events: true,
@@ -52,8 +52,7 @@ export class MenuVisibilityService {
           library: true
         };
         Object.assign(visibility, base);
-        const isSingerOnly = roles.includes('singer') &&
-          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian', 'organist'].includes(r));
+        const isSingerOnly = choirRoles.includes('singer') && !hasPrivilegedRole;
         if (isSingerOnly) {
           const singerMenu = modules.singerMenu || {};
           for (const key of Object.keys(base)) {
@@ -62,8 +61,6 @@ export class MenuVisibilityService {
             }
           }
         }
-
-        console.log('MenuVisibilityService', { user, choir, roles, visibility });
       }
       this.visibilitySubject.next(visibility);
     });

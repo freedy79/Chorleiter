@@ -34,13 +34,9 @@ export class PostListComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPosts();
-    this.auth.currentUser$.subscribe(u => {
-      this.currentUserId = u?.id || null;
-      const roles = Array.isArray(u?.roles) ? u!.roles : [];
-      this.isSingerOnly = roles.includes('singer') &&
-        !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
-    });
-    this.api.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
+    this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
+    this.auth.isSingerOnly$.subscribe(isSingerOnly => this.isSingerOnly = isSingerOnly);
+    this.auth.isChoirAdmin$.subscribe(isChoirAdmin => this.isChoirAdmin = isChoirAdmin);
   }
 
   loadPosts(): void {

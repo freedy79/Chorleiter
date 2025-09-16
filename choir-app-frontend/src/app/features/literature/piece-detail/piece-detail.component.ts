@@ -18,6 +18,7 @@ import { HttpClient } from '@angular/common/http';
 import { LibraryItem } from '@core/models/library-item';
 import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-dialog.component';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-piece-detail',
@@ -62,9 +63,8 @@ export class PieceDetailComponent implements OnInit {
     });
     this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
-    this.auth.currentUser$.subscribe(u => {
-      const roles = u?.roles || [];
-      this.canRate = roles.includes('director') || roles.includes('choir_admin') || roles.includes('admin');
+    combineLatest([this.auth.isChoirAdmin$, this.auth.isDirector$]).subscribe(([isChoirAdmin, isDirector]) => {
+      this.canRate = isChoirAdmin || isDirector;
     });
     this.loadLibraryItems();
   }

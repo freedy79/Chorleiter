@@ -71,18 +71,16 @@ export class EventListComponent implements OnInit, AfterViewInit {
       this.apiService.getEventById(eventId).subscribe(e => this.selectedEvent = e);
     }
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
-    this.apiService.checkChoirAdminStatus().subscribe(s => {
-      this.isChoirAdmin = s.isChoirAdmin;
+    this.authService.isChoirAdmin$.subscribe(isChoirAdmin => {
+      this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
     });
     this.authService.isAdmin$.subscribe(isAdmin => {
       this.isAdmin = isAdmin;
       this.updateDisplayedColumns();
     });
-    this.authService.currentUser$.subscribe(user => {
-      const roles = Array.isArray(user?.roles) ? user!.roles : [];
-      this.isSingerOnly = roles.includes('singer') &&
-        !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
+    this.authService.isSingerOnly$.subscribe(isSingerOnly => {
+      this.isSingerOnly = isSingerOnly;
       this.updateDisplayedColumns();
     });
   }

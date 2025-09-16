@@ -59,7 +59,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     demo: 'Demo',
     singer: 'Sänger',
     librarian: 'Bibliothekar',
-    organist: 'Organist'
+    organist: 'Organist',
+    user: 'Mitglied'
   };
   currentTheme: Theme;
   showAdminSubmenu: boolean = true;
@@ -115,15 +116,16 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.userName$ = this.authService.currentUser$.pipe(map(u => u?.firstName + ' ' + u?.name));
-    this.userRole$ = combineLatest([this.authService.currentUser$, this.authService.activeChoir$]).pipe(
-      map(([user]) => {
-        const roles = Array.isArray(user?.roles)
-          ? user.roles
-          : user?.roles ? [user.roles] : [];
-        if (roles.length === 0) {
-          return undefined;
+    this.userRole$ = combineLatest([this.authService.globalRoles$, this.authService.choirRoles$]).pipe(
+      map(([globalRoles, choirRoles]) => {
+        const displayRoles: string[] = [];
+        const globalExtras = globalRoles.filter(role => role !== 'user');
+        const combined = [...globalExtras, ...choirRoles];
+        if (!combined.length) {
+          return globalRoles.includes('user') ? this.roleTranslations['user'] : undefined;
         }
-        return roles.map(r => this.roleTranslations[r] ?? r).join(', ');
+        combined.forEach(role => displayRoles.push(this.roleTranslations[role] ?? role));
+        return displayRoles.join(', ');
       })
     );
     this.donatedRecently$ = this.authService.currentUser$.pipe(
