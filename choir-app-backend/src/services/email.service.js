@@ -262,6 +262,40 @@ exports.sendNewMemberNotification = async (choirId, member) => {
   }
 };
 
+exports.sendMemberLeftNotification = async (choirId, member, options = {}) => {
+  if (emailDisabled()) return;
+  try {
+    const associations = await db.user_choir.findAll({
+      where: { choirId },
+      include: [
+        { model: db.user, attributes: ['email'] },
+        { model: db.choir, attributes: ['name'] }
+      ]
+    });
+    const choirName = associations[0]?.choir?.name;
+    const recipients = associations
+      .filter(a => Array.isArray(a.rolesInChoir) && a.rolesInChoir.includes('choir_admin'))
+      .map(a => a.user?.email)
+      .filter(email => email && email !== member.email);
+    if (!choirName || recipients.length === 0) return;
+
+    const fullName = [member.firstName, member.name].filter(Boolean).join(' ') || member.email;
+    const subject = `Abmeldung aus dem Chor ${choirName}`;
+    const lines = [
+      `${fullName} (${member.email}) hat sich aus dem Chor ${choirName} abgemeldet.`
+    ];
+    if (options.accountDeleted) {
+      lines.push('Das Profil wurde vollständig gelöscht.');
+    }
+    const text = lines.join(' ');
+    const html = lines.map(line => `<p>${line}</p>`).join('');
+    await sendMail({ to: recipients, subject, text, html });
+  } catch (err) {
+    logger.error(`Error sending member left notification mail: ${err.message}`);
+    logger.error(err.stack);
+  }
+};
+
 exports.sendCrashReportMail = async (to, error) => {
   if (emailDisabled() || !to) return;
   try {

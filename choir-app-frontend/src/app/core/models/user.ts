@@ -62,3 +62,10 @@ export interface UserInChoir extends User {
         registrationStatus: 'REGISTERED' | 'PENDING';
     }
 }
+
+export interface LeaveChoirResponse {
+  message: string;
+  accessToken?: string;
+  activeChoir?: Choir | null;
+  accountDeleted?: boolean;
+}
