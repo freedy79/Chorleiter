@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
         rolesInChoir: {
             type: DataTypes.JSON,
             allowNull: false,
-            defaultValue: ['singer'],
+            defaultValue: ['choirleiter'],
             validate: {
                 isValidRole(value) {
                     const allowed = ['choir_admin', 'choirleiter', 'organist', 'singer'];
