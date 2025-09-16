@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HelpService } from '@core/services/help.service';
 import { AuthService } from '@core/services/auth.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
@@ -70,7 +71,7 @@ describe('MainLayoutComponent', () => {
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
     await TestBed.configureTestingModule({
-      imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule],
+      imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
