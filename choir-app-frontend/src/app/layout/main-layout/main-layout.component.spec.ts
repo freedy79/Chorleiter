@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { HelpService } from '@core/services/help.service';
 import { AuthService } from '@core/services/auth.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
@@ -70,7 +71,7 @@ describe('MainLayoutComponent', () => {
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
     await TestBed.configureTestingModule({
-      imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule],
+      imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
@@ -146,6 +147,17 @@ describe('MainLayoutComponent', () => {
     item = component.navItems.find(i => i.key === 'participation');
     visible = await firstValueFrom(item!.visibleSubject!);
     expect(visible).toBeFalse();
+  });
+
+  it('shows participation for global admins even when choir roles are singer only', async () => {
+    globalRolesSubject.next(['admin']);
+    choirRolesSubject.next(['singer']);
+    currentUserSubject.next({ roles: ['admin'] });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['singer'] } });
+    fixture.detectChanges();
+    const item = component.navItems.find(i => i.key === 'participation');
+    const visible = await firstValueFrom(item!.visibleSubject!);
+    expect(visible).toBeTrue();
   });
 
   it('translates user roles and updates tooltip on changes', async () => {

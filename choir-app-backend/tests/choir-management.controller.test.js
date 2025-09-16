@@ -4,14 +4,18 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
+const { createUserWithRoles } = require('./utils/userFactory');
 const controller = require('../src/controllers/choir-management.controller');
 
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const adminUser = await db.user.create({ email: 'a@example.com', roles: ['admin'] });
-    const member = await db.user.create({ email: 'u@example.com', roles: ['user'] });
+    const adminUser = await createUserWithRoles(db, { email: 'a@example.com', globalRoles: ['admin'] });
+    const member = await createUserWithRoles(db, {
+      email: 'u@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['choirleiter'] }]
+    });
     await choir.addUser(member, { through: { rolesInChoir: ['director'] } });
 
     const res = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
@@ -27,10 +31,26 @@ const controller = require('../src/controllers/choir-management.controller');
     await controller.updateMyChoir({ activeChoirId: choir.id, userId: adminUser.id, userRoles: ['admin'], body: { modules: { dienstplan: false } } }, res);
     assert.strictEqual(res.statusCode, 200, 'admin should change modules');
 
-    const hidden = await db.user.create({ email: 'h@example.com', roles: ['user'], firstName: 'H', name: 'Hidden', street: 's', postalCode: '1', city: 'c', shareWithChoir: false });
-    const shared = await db.user.create({ email: 's@example.com', roles: ['user'], firstName: 'S', name: 'Shared', street: 's', postalCode: '1', city: 'c', shareWithChoir: true });
-    await choir.addUser(hidden, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
-    await choir.addUser(shared, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
+    const hidden = await createUserWithRoles(db, {
+      email: 'h@example.com',
+      firstName: 'H',
+      name: 'Hidden',
+      street: 's',
+      postalCode: '1',
+      city: 'c',
+      shareWithChoir: false,
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' }]
+    });
+    const shared = await createUserWithRoles(db, {
+      email: 's@example.com',
+      firstName: 'S',
+      name: 'Shared',
+      street: 's',
+      postalCode: '1',
+      city: 'c',
+      shareWithChoir: true,
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' }]
+    });
 
     await controller.getChoirMembers({ activeChoirId: choir.id, userRoles: ['user'] }, res);
     assert.strictEqual(res.statusCode, 200, 'should fetch members');

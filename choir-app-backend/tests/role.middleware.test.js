@@ -6,6 +6,7 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
+const { createUserWithRoles } = require('./utils/userFactory');
 const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireDirectorOrHigher } = require('../src/middleware/role.middleware');
 
 async function sendRequest(middleware, context) {
@@ -30,11 +31,20 @@ async function sendRequest(middleware, context) {
     // Create test data for choir admin checks
     const choir = await db.choir.create({ name: 'Test Choir' });
     const otherChoir = await db.choir.create({ name: 'Second Choir' });
-    const admin = await db.user.create({ email: 'a@example.com', roles: ['admin'] });
-    const choirAdmin = await db.user.create({ email: 'c@example.com', roles: ['user'] });
-    const choirDirector = await db.user.create({ email: 'd@example.com', roles: ['user'] });
-    const normal = await db.user.create({ email: 'n@example.com', roles: ['user'] });
-    const otherChoirAdmin = await db.user.create({ email: 'oc@example.com', roles: ['user'] });
+    const admin = await createUserWithRoles(db, { email: 'a@example.com', globalRoles: ['admin'] });
+    const choirAdmin = await createUserWithRoles(db, {
+      email: 'c@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['choir_admin'] }]
+    });
+    const choirDirector = await createUserWithRoles(db, {
+      email: 'd@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['choirleiter'] }]
+    });
+    const normal = await createUserWithRoles(db, { email: 'n@example.com' });
+    const otherChoirAdmin = await createUserWithRoles(db, {
+      email: 'oc@example.com',
+      choirMemberships: [{ choirId: otherChoir.id, rolesInChoir: ['choir_admin'] }]
+    });
     await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
     await db.user_choir.create({ userId: choirDirector.id, choirId: choir.id, rolesInChoir: ['director'] });
     await db.user_choir.create({ userId: otherChoirAdmin.id, choirId: otherChoir.id, rolesInChoir: ['choir_admin'] });

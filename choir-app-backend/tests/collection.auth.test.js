@@ -6,6 +6,7 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
+const { createUserWithRoles } = require('./utils/userFactory');
 let currentContext = {};
 const authJwt = require('../src/middleware/auth.middleware');
 authJwt.verifyToken = (req, res, next) => { Object.assign(req, currentContext); next(); };
@@ -36,10 +37,14 @@ const router = require('../src/routes/collection.routes');
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
     const collection = await db.collection.create({ title: 'Coll' });
-    const choirAdmin = await db.user.create({ email: 'admin@example.com', roles: ['user'] });
-    await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
-    const singer = await db.user.create({ email: 'singer@example.com', roles: ['user'] });
-    await db.user_choir.create({ userId: singer.id, choirId: choir.id, rolesInChoir: ['singer'] });
+    const choirAdmin = await createUserWithRoles(db, {
+      email: 'admin@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['choir_admin'] }]
+    });
+    const singer = await createUserWithRoles(db, {
+      email: 'singer@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['singer'] }]
+    });
 
     let res = await send('PUT', `/api/collections/${collection.id}`, { title: 'Updated' }, {
       userRoles: ['user'],

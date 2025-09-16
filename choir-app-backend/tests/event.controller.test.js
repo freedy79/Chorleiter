@@ -4,18 +4,21 @@ process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
+const { createUserWithRoles } = require('./utils/userFactory');
 const controller = require('../src/controllers/event.controller');
 
 (async () => {
   try {
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const user = await db.user.create({ email: 't@example.com', roles: ['user'] });
-    const organist = await db.user.create({ email: 'o@example.com', roles: ['user'] });
-    await db.user_choir.bulkCreate([
-      { userId: user.id, choirId: choir.id },
-      { userId: organist.id, choirId: choir.id }
-    ]);
+    const user = await createUserWithRoles(db, {
+      email: 't@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['singer'] }]
+    });
+    const organist = await createUserWithRoles(db, {
+      email: 'o@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['organist'] }]
+    });
     const plan = await db.monthly_plan.create({ choirId: choir.id, year: 2024, month: 1 });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
@@ -65,8 +68,10 @@ const controller = require('../src/controllers/event.controller');
     assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
 
     // --- Next events tests ---
-    const otherUser = await db.user.create({ email: 'other@example.com', roles: ['user'] });
-    await db.user_choir.create({ userId: otherUser.id, choirId: choir.id });
+    const otherUser = await createUserWithRoles(db, {
+      email: 'other@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['choirleiter'] }]
+    });
     await controller.create({ ...baseReq, body: { date: '2099-01-01T10:00:00Z', type: 'SERVICE', pieceIds: [] } }, res);
     const futureId = res.data.event.id;
     await controller.create({ ...baseReq, body: { date: '2099-01-02T10:00:00Z', type: 'REHEARSAL', pieceIds: [], directorId: otherUser.id } }, res);
