@@ -290,7 +290,7 @@ export class ManageChoirComponent implements OnInit {
         this.snackBar.open('Choir details updated successfully!', 'OK', { duration: 3000 });
         this.choirForm.markAsPristine(); // Markiert das Formular als "unverändert"
       },
-      error: (err) => this.snackBar.open('Fehler beim Aktualisieren der Chordaten.', 'Schließen')
+      error: () => this.snackBar.open('Fehler beim Aktualisieren der Chordaten.', 'Schließen')
     });
   }
 
@@ -337,7 +337,7 @@ export class ManageChoirComponent implements OnInit {
             this.snackBar.open(`${user.name}, ${user.firstName} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
             this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
           },
-          error: (err) => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
+          error: () => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
         });
       }
     });

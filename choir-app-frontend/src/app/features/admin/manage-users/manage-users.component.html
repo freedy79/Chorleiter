@@ -10,7 +10,7 @@
 <mat-table
   [dataSource]="dataSource"
   class="mat-elevation-z8"
-  *ngIf="!(isHandset$ | async)"
+  *ngIf="(isHandset$ | async) !== true"
 >
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>

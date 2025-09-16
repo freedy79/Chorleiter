@@ -5,7 +5,7 @@
   <mat-card-content>
     <ul class="timeline">
       <li *ngFor="let ev of events; trackBy: trackById"
-        [style.--dot-color]="(ev.choirId != null ? choirColors[ev.choirId] : undefined) || '#1976d2'">
+        [style.--dot-color]="((ev.choirId !== null && ev.choirId !== undefined) ? choirColors[ev.choirId] : undefined) || '#1976d2'">
         <div click="open.emit(ev)">
         <div>
             <strong>{{ (ev?.date) | pureDate | date:'dd.MM.yy':'Europe/Berlin':'de-DE' }}</strong>

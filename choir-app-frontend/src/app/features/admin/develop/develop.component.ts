@@ -99,10 +99,14 @@ export class DevelopComponent implements OnInit {
           return;
         }
         const decoder = new TextDecoder();
-        while (true) {
+        let readerDone = false;
+        while (!readerDone) {
           const { value, done } = await reader.read();
-          if (done) break;
-          pre.textContent += decoder.decode(value, { stream: true });
+          readerDone = done;
+          if (!value || value.length === 0) {
+            continue;
+          }
+          pre.textContent += decoder.decode(value, { stream: !readerDone });
           win.scrollTo(0, win.document.body.scrollHeight);
         }
       })

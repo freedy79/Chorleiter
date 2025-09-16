@@ -4,6 +4,7 @@ module.exports = {
   overrides: [
     {
       files: ["choir-app-frontend/src/**/*.ts"],
+      excludedFiles: ["**/*.spec.ts"],
       parser: "@typescript-eslint/parser",
       parserOptions: {
         project: ["./choir-app-frontend/tsconfig.app.json"],
@@ -15,7 +16,30 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@angular-eslint/recommended"
-      ]
+      ],
+      rules: {
+        "@angular-eslint/prefer-inject": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
+    },
+    {
+      files: ["choir-app-frontend/src/**/*.spec.ts"],
+      parser: "@typescript-eslint/parser",
+      parserOptions: {
+        project: ["./choir-app-frontend/tsconfig.spec.json"],
+        tsconfigRootDir: __dirname,
+        sourceType: "module"
+      },
+      plugins: ["@typescript-eslint", "@angular-eslint"],
+      extends: [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@angular-eslint/recommended"
+      ],
+      rules: {
+        "@angular-eslint/prefer-inject": "off",
+        "@typescript-eslint/no-explicit-any": "off"
+      }
     },
     {
       files: ["choir-app-frontend/src/**/*.html"],

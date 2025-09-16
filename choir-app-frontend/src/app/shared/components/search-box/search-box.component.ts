@@ -1,5 +1,4 @@
-
-import { Component, EventEmitter, Output, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
@@ -8,10 +7,6 @@ import { of } from 'rxjs';
 import { SearchService } from '@core/services/search.service';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
-
-import { FormsModule } from '@angular/forms';
-
-
 
 @Component({
   selector: 'app-search-box',

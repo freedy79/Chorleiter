@@ -6,7 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { Subscription, timer } from 'rxjs';
-import { switchMap, takeWhile, tap } from 'rxjs/operators';
+import { switchMap, takeWhile } from 'rxjs/operators';
 
 @Component({
   selector: 'app-event-import-dialog',

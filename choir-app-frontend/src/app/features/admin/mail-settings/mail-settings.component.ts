@@ -44,6 +44,9 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
           ? 'starttls'
           : 'none';
         this.form.patchValue({ ...rest, encryption });
+        if (pass) {
+          this.form.get('pass')?.reset('');
+        }
         this.form.markAsPristine();
       }
     });

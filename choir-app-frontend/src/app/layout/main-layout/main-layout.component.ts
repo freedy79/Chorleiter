@@ -11,7 +11,6 @@ import { CommonModule } from '@angular/common';
 import { combineLatest, map, Observable, of, filter, startWith, Subject } from 'rxjs';
 import { switchMap, takeUntil, withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
-import { ChoirSwitcherComponent } from '../choir-switcher/choir-switcher.component';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
 import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/loading-indicator.component';
 import { NavItem } from '@shared/components/menu-list-item/nav-item';
@@ -239,7 +238,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
     let child = route.firstChild;
-    let data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
+    const data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
     while (child?.firstChild) {
       child = child.firstChild;
       if (child.snapshot?.data) {
