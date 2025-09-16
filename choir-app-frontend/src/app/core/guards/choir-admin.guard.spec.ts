@@ -9,12 +9,14 @@ import { ApiService } from '../services/api.service';
 describe('ChoirAdminGuard', () => {
   let guard: ChoirAdminGuard;
   let isAdminSubject: BehaviorSubject<boolean>;
+  let isChoirAdminSubject: BehaviorSubject<boolean>;
   let router: jasmine.SpyObj<Router>;
   let redirectTree: UrlTree;
   let apiService: { checkChoirAdminStatus: jasmine.Spy };
 
   beforeEach(() => {
     isAdminSubject = new BehaviorSubject<boolean>(false);
+    isChoirAdminSubject = new BehaviorSubject<boolean>(false);
     router = jasmine.createSpyObj('Router', ['createUrlTree']);
     redirectTree = {} as UrlTree;
     router.createUrlTree.and.returnValue(redirectTree);
@@ -25,7 +27,13 @@ describe('ChoirAdminGuard', () => {
     TestBed.configureTestingModule({
       providers: [
         ChoirAdminGuard,
-        { provide: AuthService, useValue: { isAdmin$: isAdminSubject.asObservable() } },
+        {
+          provide: AuthService,
+          useValue: {
+            isAdmin$: isAdminSubject.asObservable(),
+            isChoirAdmin$: isChoirAdminSubject.asObservable()
+          }
+        },
         { provide: ApiService, useValue: apiService },
         { provide: Router, useValue: router }
       ]
@@ -41,13 +49,13 @@ describe('ChoirAdminGuard', () => {
   });
 
   it('allows choir admins returned by the API', async () => {
-    apiService.checkChoirAdminStatus.and.returnValue(of({ isChoirAdmin: true }));
+    isChoirAdminSubject.next(true);
     const result = await firstValueFrom(guard.canActivate());
     expect(result).toBeTrue();
   });
 
   it('redirects users without sufficient privileges', async () => {
-    apiService.checkChoirAdminStatus.and.returnValue(of({ isChoirAdmin: false }));
+    isChoirAdminSubject.next(false);
     const result = await firstValueFrom(guard.canActivate());
     expect(router.createUrlTree).toHaveBeenCalledWith(['/collections']);
     expect(result).toEqual(redirectTree);
