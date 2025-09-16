@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -14,13 +14,15 @@ import { parseDateOnly } from '@shared/util/date';
   templateUrl: './availability-table.component.html',
   styleUrls: ['./availability-table.component.scss']
 })
-export class AvailabilityTableComponent implements OnInit, OnChanges {
+export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy {
   @Input() year!: number;
   @Input() month!: number;
   @Input() availabilitiesData?: UserAvailability[] | null;
   availabilities: UserAvailability[] = [];
   displayedColumns = ['date', 'status'];
   private useExternalData = false;
+  private loadRequestId = 0;
+  private destroyed = false;
 
   constructor(private api: ApiService) {}
 
@@ -39,6 +41,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
       const value = changes['availabilitiesData'].currentValue as UserAvailability[] | null | undefined;
       this.useExternalData = Array.isArray(value);
       if (this.useExternalData) {
+        this.loadRequestId++;
         this.setAvailabilities(value ?? []);
       } else {
         shouldLoad = true;
@@ -55,6 +58,11 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
     }
   }
 
+  ngOnDestroy(): void {
+    this.destroyed = true;
+    this.loadRequestId++;
+  }
+
   private setAvailabilities(data: UserAvailability[]): void {
     this.availabilities = data.map(v => ({
       ...v,
@@ -66,8 +74,23 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
     if (!this.year || !this.month || this.useExternalData) {
       return;
     }
+    const currentLoad = ++this.loadRequestId;
     this.api.getAvailabilities(this.year, this.month)
-      .subscribe(a => this.setAvailabilities(a));
+      .subscribe({
+        next: a => {
+          if (this.isStale(currentLoad)) {
+            return;
+          }
+          this.setAvailabilities(a);
+        },
+        error: error => {
+          if (this.isStale(currentLoad)) {
+            return;
+          }
+          console.error('Fehler beim Laden der Verfügbarkeiten', error);
+          this.availabilities = [];
+        }
+      });
   }
 
   setStatus(date: string, status: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'): void {
@@ -89,5 +112,9 @@ export class AvailabilityTableComponent implements OnInit, OnChanges {
       case 'UNAVAILABLE': return 'unavailable';
       default: return '';
     }
+  }
+
+  private isStale(loadId: number): boolean {
+    return this.destroyed || loadId !== this.loadRequestId;
   }
 }
