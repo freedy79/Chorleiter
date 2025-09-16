@@ -67,7 +67,7 @@ const jobs = require('../src/services/import-jobs.service');
     await db.sequelize.sync({ force: true });
 
     const choir = await db.choir.create({ name: 'Test Choir' });
-    const user = await db.user.create({ email: 't@example.com', roles: ['USER'] });
+    const user = await db.user.create({ email: 't@example.com', roles: ['user'] });
     const comp2 = await db.composer.create({ name: 'Composer' });
     const piece = await db.piece.create({ title: 'Piece', composerId: comp2.id });
     await choir.addPiece(piece); // create choir_repertoire link

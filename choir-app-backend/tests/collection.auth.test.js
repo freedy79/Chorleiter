@@ -36,20 +36,20 @@ const router = require('../src/routes/collection.routes');
     await db.sequelize.sync({ force: true });
     const choir = await db.choir.create({ name: 'Test Choir' });
     const collection = await db.collection.create({ title: 'Coll' });
-    const choirAdmin = await db.user.create({ email: 'admin@example.com', roles: ['singer'] });
+    const choirAdmin = await db.user.create({ email: 'admin@example.com', roles: ['user'] });
     await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
-    const singer = await db.user.create({ email: 'singer@example.com', roles: ['singer'] });
-    await db.user_choir.create({ userId: singer.id, choirId: choir.id, rolesInChoir: [] });
+    const singer = await db.user.create({ email: 'singer@example.com', roles: ['user'] });
+    await db.user_choir.create({ userId: singer.id, choirId: choir.id, rolesInChoir: ['singer'] });
 
     let res = await send('PUT', `/api/collections/${collection.id}`, { title: 'Updated' }, {
-      userRoles: ['singer'],
+      userRoles: ['user'],
       userId: choirAdmin.id,
       activeChoirId: choir.id
     });
     assert.strictEqual(res.status, 200, 'choir admin should update');
 
     res = await send('PUT', `/api/collections/${collection.id}`, { title: 'Again' }, {
-      userRoles: ['singer'],
+      userRoles: ['user'],
       userId: singer.id,
       activeChoirId: choir.id
     });

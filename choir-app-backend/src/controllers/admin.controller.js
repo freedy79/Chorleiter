@@ -119,7 +119,7 @@ exports.createUser = async (req, res) => {
             firstName,
             name,
             email,
-            roles: roles || ['director'],
+            roles: roles || ['user'],
             password: password ? bcrypt.hashSync(password, 8) : null,
             street,
             postalCode,

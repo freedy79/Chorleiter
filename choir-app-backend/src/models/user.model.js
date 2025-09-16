@@ -39,7 +39,15 @@ module.exports = (sequelize, DataTypes) => {
     roles: {
       type: DataTypes.JSON,
       allowNull: false,
-      defaultValue: ['director'],
+      defaultValue: ['user'],
+      validate: {
+        isValidRole(value) {
+          const allowed = ['admin', 'librarian', 'user', 'demo'];
+          if (!Array.isArray(value) || !value.every(r => allowed.includes(r))) {
+            throw new Error('Invalid role');
+          }
+        }
+      }
     },
     lastDonation: {
       type: DataTypes.DATE,
