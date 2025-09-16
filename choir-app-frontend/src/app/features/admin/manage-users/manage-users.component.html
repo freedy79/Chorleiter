@@ -29,9 +29,8 @@
         <mat-select
           [ngModel]="element.roles"
           (ngModelChange)="onRolesChange(element, $event)"
-          multiple
         >
-          <mat-option value="user" disabled>Standardnutzer</mat-option>
+          <mat-option value="user">Standardnutzer</mat-option>
           <mat-option value="admin">Administrator</mat-option>
           <mat-option value="librarian">Bibliothekar</mat-option>
           <mat-option value="demo">Demo</mat-option>
