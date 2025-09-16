@@ -35,6 +35,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   limitedToTen = false;
   private paramSub?: Subscription;
   private loadRequestId = 0;
+  private destroyed = false;
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -58,6 +59,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.paramSub?.unsubscribe();
+    this.destroyed = true;
   }
 
   monthChanged(): void {
@@ -96,6 +98,10 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   }
 
   private async loadAvailabilities(): Promise<void> {
+    if (this.destroyed) {
+      return;
+    }
+
     const currentLoad = ++this.loadRequestId;
     this.isLoading = true;
     this.loadError = false;
@@ -169,7 +175,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
         console.error('Fehler beim Laden der Verfügbarkeiten', error);
       }
     } finally {
-      if (currentLoad === this.loadRequestId) {
+      if (!this.destroyed && currentLoad === this.loadRequestId) {
         this.isLoading = false;
         this.cdr.markForCheck();
       }
@@ -189,7 +195,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   }
 
   private isStale(loadId: number): boolean {
-    return loadId !== this.loadRequestId;
+    return this.destroyed || loadId !== this.loadRequestId;
   }
 }
 
