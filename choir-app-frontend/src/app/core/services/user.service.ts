@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { User, GlobalRole } from '../models/user';
+import { LeaveChoirResponse, User, GlobalRole } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -52,5 +52,13 @@ export class UserService {
 
   registerDonation(amount: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/users/me/donate`, { amount });
+  }
+
+  leaveChoir(choirId: number): Observable<LeaveChoirResponse> {
+    return this.http.delete<LeaveChoirResponse>(`${this.apiUrl}/users/me/choirs/${choirId}`);
+  }
+
+  deleteAccount(): Observable<LeaveChoirResponse> {
+    return this.http.delete<LeaveChoirResponse>(`${this.apiUrl}/users/me`);
   }
 }

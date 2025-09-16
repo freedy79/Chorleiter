@@ -138,10 +138,36 @@
           <mat-card-title>Verknüpfte Chöre</mat-card-title>
         </mat-card-header>
         <mat-card-content>
-         <div class="choir-name" *ngFor="let choir of choirs">
-            {{ choir.name }}
+          <div *ngIf="choirs.length === 0" class="choir-empty">
+            Du bist derzeit mit keinem Chor verknüpft.
+          </div>
+          <div class="choir-entry" *ngFor="let choir of choirs">
+            <div class="choir-name">{{ choir.name }}</div>
+            <button
+              mat-stroked-button
+              color="warn"
+              type="button"
+              (click)="onLeaveChoir(choir)"
+              [disabled]="currentUser?.roles?.includes('demo')"
+            >
+              Aus Chor abmelden
+            </button>
+          </div>
+          <div class="choir-hint" *ngIf="choirs.length === 1">
+            Das Verlassen dieses Chors löscht dein Profil vollständig.
           </div>
         </mat-card-content>
+        <mat-card-actions *ngIf="choirs.length > 1">
+          <button
+            mat-flat-button
+            color="warn"
+            type="button"
+            (click)="onDeleteAccount()"
+            [disabled]="currentUser?.roles?.includes('demo')"
+          >
+            Vom gesamten System abmelden
+          </button>
+        </mat-card-actions>
       </mat-card>
 
       <div class="actions-footer" *ngIf="!(currentUser?.roles?.includes('demo'))">

@@ -1,16 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { User, GlobalRole } from '@core/models/user';
+import { LeaveChoirResponse, User, GlobalRole } from '@core/models/user';
 import { Choir } from '@core/models/choir';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
+import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 export function passwordsMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
@@ -26,24 +29,28 @@ export function passwordsMatchValidator(): ValidatorFn {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MaterialModule
+    MaterialModule,
+    ConfirmDialogComponent
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent implements OnInit, OnDestroy {
   profileForm: FormGroup;
   currentUser: User | null = null;
   isLoading = true;
   availableChoirs$: Observable<Choir[]>;
   districts: District[] = [];
   congregations: Congregation[] = [];
+  choirList: Choir[] = [];
+  private destroy$ = new Subject<void>();
 
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private dialog: MatDialog
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.profileForm = this.fb.group({
@@ -67,6 +74,9 @@ export class ProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.availableChoirs$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(choirs => this.choirList = Array.isArray(choirs) ? choirs : []);
     this.apiService.getDistricts().subscribe(ds => this.districts = ds);
     this.apiService.getCongregations().subscribe(cs => this.congregations = cs);
     this.apiService.getCurrentUser().subscribe({
@@ -99,6 +109,11 @@ export class ProfileComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   onSubmit(): void {
@@ -152,6 +167,78 @@ export class ProfileComponent implements OnInit {
       error: (err) => {
         const errorMessage = err.error?.message || 'Profilaktualisierung fehlgeschlagen.';
         this.snackBar.open(errorMessage, 'Schließen', { duration: 5000,  verticalPosition: 'top'  });
+      }
+    });
+  }
+
+  onLeaveChoir(choir: Choir): void {
+    const multipleChoirs = this.choirList.length > 1;
+    const dialogData: ConfirmDialogData = {
+      title: 'Abmeldung bestätigen',
+      message: multipleChoirs
+        ? `Möchtest du dich wirklich vom Chor "${choir.name}" abmelden?`
+        : `Wenn du dich vom Chor "${choir.name}" abmeldest, wird dein Profil vollständig gelöscht.`,
+      confirmButtonText: 'Abmelden',
+      cancelButtonText: 'Abbrechen'
+    };
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
+      this.apiService.leaveChoir(choir.id).subscribe({
+        next: (response) => this.handleMembershipChange(response, `Du hast den Chor ${choir.name} verlassen.`),
+        error: (err) => {
+          const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
+          this.snackBar.open(message, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+        }
+      });
+    });
+  }
+
+  onDeleteAccount(): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Vom System abmelden',
+        message: 'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird dauerhaft gelöscht.',
+        confirmButtonText: 'Profil löschen',
+        cancelButtonText: 'Abbrechen'
+      }
+    });
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
+      this.apiService.deleteMyAccount().subscribe({
+        next: (response) => this.handleMembershipChange(response, 'Dein Profil wurde gelöscht.'),
+        error: (err) => {
+          const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
+          this.snackBar.open(message, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+        }
+      });
+    });
+  }
+
+  private handleMembershipChange(response: LeaveChoirResponse, fallback: string): void {
+    const message = response?.message || fallback;
+    if (response?.accountDeleted) {
+      this.snackBar.open(message, 'OK', { duration: 5000, verticalPosition: 'top' });
+      this.authService.logout();
+      return;
+    }
+
+    if (response?.accessToken) {
+      localStorage.setItem('auth-token', response.accessToken);
+    }
+
+    this.apiService.getCurrentUser().subscribe({
+      next: (user) => {
+        this.authService.setCurrentUser(user);
+        this.currentUser = user;
+        this.snackBar.open(message, 'OK', { duration: 4000, verticalPosition: 'top' });
+      },
+      error: () => {
+        this.snackBar.open(message, 'OK', { duration: 4000, verticalPosition: 'top' });
       }
     });
   }

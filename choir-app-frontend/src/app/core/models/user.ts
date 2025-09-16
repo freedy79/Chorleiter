@@ -61,3 +61,10 @@ export type GlobalRole = 'admin' | 'librarian' | 'demo' | 'user';
 export interface UserInChoir extends User {
     membership?: ChoirMembership; // Daten aus der Junction-Tabelle
 }
+
+export interface LeaveChoirResponse {
+  message: string;
+  accessToken?: string;
+  activeChoir?: Choir | null;
+  accountDeleted?: boolean;
+}

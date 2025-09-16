@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { Piece } from '../models/piece';
 import { Composer } from '../models/composer';
 import { Category } from '../models/category';
-import { User, UserInChoir, GlobalRole } from '../models/user';
+import { LeaveChoirResponse, User, UserInChoir, GlobalRole } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
 import { MonthlyPlan } from '../models/monthly-plan';
@@ -883,7 +883,15 @@ export class ApiService {
     }
 
   registerDonation(amount: number): Observable<any> {
-        return this.userService.registerDonation(amount);
+    return this.userService.registerDonation(amount);
+  }
+
+  leaveChoir(choirId: number): Observable<LeaveChoirResponse> {
+    return this.userService.leaveChoir(choirId);
+  }
+
+  deleteMyAccount(): Observable<LeaveChoirResponse> {
+    return this.userService.deleteAccount();
   }
 
   getDonations(): Observable<Donation[]> {

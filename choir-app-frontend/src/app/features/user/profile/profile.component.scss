@@ -26,6 +26,31 @@
 .choir-name {
     font-size: 1.1rem;
     font-weight: 500;
+    flex: 1;
+}
+
+.choir-entry {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.choir-entry:last-child {
+    margin-bottom: 0;
+}
+
+.choir-empty {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.choir-hint {
+    margin-top: 0.75rem;
+    font-size: 0.85rem;
+    color: #555;
 }
 
 .actions-footer {
