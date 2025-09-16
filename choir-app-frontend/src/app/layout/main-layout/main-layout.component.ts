@@ -54,6 +54,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   userRole$: Observable<string | undefined>;
   private readonly roleTranslations: Record<string, string> = {
     director: 'Dirigent',
+    choirleiter: 'Chorleiter',
     choir_admin: 'Chor-Admin',
     admin: 'Administrator',
     demo: 'Demo',
@@ -116,16 +117,16 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.userName$ = this.authService.currentUser$.pipe(map(u => u?.firstName + ' ' + u?.name));
-    this.userRole$ = combineLatest([this.authService.globalRoles$, this.authService.choirRoles$]).pipe(
-      map(([globalRoles, choirRoles]) => {
-        const displayRoles: string[] = [];
-        const globalExtras = globalRoles.filter(role => role !== 'user');
-        const combined = [...globalExtras, ...choirRoles];
-        if (!combined.length) {
+    this.userRole$ = combineLatest([this.authService.globalRoles$, this.authService.activeChoir$]).pipe(
+      map(([globalRoles, choir]) => {
+        const membershipRoles = choir?.membership?.rolesInChoir ?? [];
+        const relevantGlobal = globalRoles.filter(role => role !== 'user');
+        const combined = [...relevantGlobal, ...membershipRoles];
+        const uniqueRoles = Array.from(new Set(combined));
+        if (!uniqueRoles.length) {
           return globalRoles.includes('user') ? this.roleTranslations['user'] : undefined;
         }
-        combined.forEach(role => displayRoles.push(this.roleTranslations[role] ?? role));
-        return displayRoles.join(', ');
+        return uniqueRoles.map(role => this.roleTranslations[role] ?? role).join(', ');
       })
     );
     this.donatedRecently$ = this.authService.currentUser$.pipe(

@@ -80,7 +80,12 @@ export class AuthService {
     );
 
     this.isDirector$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
-      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('director')),
+      map(([isAdmin, choirRoles]) => {
+        if (isAdmin) {
+          return true;
+        }
+        return choirRoles.some(role => role === 'director' || role === 'choirleiter');
+      }),
       distinctUntilChanged()
     );
 
@@ -289,7 +294,8 @@ export class AuthService {
     if (hasGlobalPrivilege) {
       return false;
     }
-    const hasChoirPrivilege = choirRoles.some(role => role === 'choir_admin' || role === 'director' || role === 'organist');
+    const hasChoirPrivilege = choirRoles.some(role =>
+      role === 'choir_admin' || role === 'director' || role === 'choirleiter' || role === 'organist');
     return !hasChoirPrivilege;
   }
 }

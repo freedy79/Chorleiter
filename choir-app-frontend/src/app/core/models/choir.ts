@@ -1,4 +1,4 @@
-export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer';
+export type ChoirRole = 'director' | 'choirleiter' | 'choir_admin' | 'organist' | 'singer';
 
 export interface ChoirMembership {
     rolesInChoir: ChoirRole[];

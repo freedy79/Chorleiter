@@ -344,7 +344,7 @@ export class ManageChoirComponent implements OnInit {
   }
 
 
-  onRolesChange(user: UserInChoir, roles: ('director' | 'choir_admin' | 'organist' | 'singer')[]): void {
+  onRolesChange(user: UserInChoir, roles: ('director' | 'choirleiter' | 'choir_admin' | 'organist' | 'singer')[]): void {
     if (!this.isChoirAdmin) return;
     const previous = [...(user.membership?.rolesInChoir || [])];
     user.membership!.rolesInChoir = roles;

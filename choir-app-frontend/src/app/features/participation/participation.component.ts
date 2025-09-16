@@ -48,8 +48,10 @@ export class ParticipationComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    combineLatest([this.auth.isChoirAdmin$, this.auth.isDirector$]).subscribe(([isChoirAdmin, isDirector]) => {
-      this.isChoirAdmin = isChoirAdmin || isDirector;
+    combineLatest([this.auth.isAdmin$, this.auth.activeChoir$]).subscribe(([isAdmin, choir]) => {
+      const roles = choir?.membership?.rolesInChoir ?? [];
+      const privilegedRoles = ['choir_admin', 'choirleiter', 'director'];
+      this.isChoirAdmin = isAdmin || roles.some(role => privilegedRoles.includes(role));
     });
     this.loadMembers();
     this.loadEvents();

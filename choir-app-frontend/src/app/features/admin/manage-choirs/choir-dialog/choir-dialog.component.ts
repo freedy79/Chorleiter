@@ -91,7 +91,7 @@ export class ChoirDialogComponent implements OnInit {
   toggleOrganist(user: UserInChoir, checked: boolean): void {
     if (!this.data?.id) return;
     const roles = user.membership?.rolesInChoir || [];
-    const updated = (checked ? [...new Set([...roles, 'organist'])] : roles.filter(r => r !== 'organist')) as ('director' | 'choir_admin' | 'organist' | 'singer')[];
+    const updated = (checked ? [...new Set([...roles, 'organist'])] : roles.filter(r => r !== 'organist')) as ('director' | 'choirleiter' | 'choir_admin' | 'organist' | 'singer')[];
     this.api.updateChoirMemberAdmin(this.data.id, user.id, { rolesInChoir: updated }).subscribe({
       next: () => user.membership!.rolesInChoir = updated,
       error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen')

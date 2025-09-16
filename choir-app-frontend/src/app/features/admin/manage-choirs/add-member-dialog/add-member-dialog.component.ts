@@ -26,7 +26,7 @@ export class AddMemberDialogComponent implements OnInit {
   ) {
     this.form = this.fb.group({
       user: ['', Validators.required],
-      roles: [['director'], Validators.required]
+      roles: [['choirleiter'], Validators.required]
     });
   }
 
