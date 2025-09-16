@@ -20,4 +20,44 @@
   </button>
 </div>
 
-<app-availability-table [year]="selected.year" [month]="selected.month"></app-availability-table>
+<div class="loading" *ngIf="isLoading">
+  <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+</div>
+
+<div class="error" *ngIf="!isLoading && loadError">
+  Beim Laden der Verfügbarkeiten ist ein Fehler aufgetreten.
+</div>
+
+<ng-container *ngIf="!isLoading && !loadError">
+  <ng-container *ngIf="viewMode === 'monthly'; else combinedView">
+    <app-availability-table
+      [year]="selected.year"
+      [month]="selected.month"
+      [availabilitiesData]="monthlyAvailabilities"
+    ></app-availability-table>
+  </ng-container>
+  <ng-template #combinedView>
+    <div class="combined-summary" *ngIf="combinedMonths.length > 0">
+      <p>
+        Es werden {{ combinedTotalEvents }} Ereignis{{ combinedTotalEvents === 1 ? '' : 'se' }}
+        aus {{ combinedMonths.length }} Monat{{ combinedMonths.length === 1 ? '' : 'en' }} angezeigt.
+      </p>
+      <p *ngIf="limitedToTen">
+        Die Liste ist auf maximal 10 Ereignisse begrenzt.
+      </p>
+    </div>
+    <div class="month-groups" *ngIf="combinedMonths.length > 0; else noEvents">
+      <section class="month-group" *ngFor="let group of combinedMonths; trackBy: trackByPeriod">
+        <h3>{{ formatMonthLabel(group.period) }}</h3>
+        <app-availability-table
+          [year]="group.period.year"
+          [month]="group.period.month"
+          [availabilitiesData]="group.availabilities"
+        ></app-availability-table>
+      </section>
+    </div>
+    <ng-template #noEvents>
+      <p class="no-events">Für die ausgewählten Monate liegen keine Ereignisse vor.</p>
+    </ng-template>
+  </ng-template>
+</ng-container>

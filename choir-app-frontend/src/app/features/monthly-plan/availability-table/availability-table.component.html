@@ -18,4 +18,11 @@
   </ng-container>
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
   <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  <ng-container matNoDataRow>
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+        Keine Ereignisse vorhanden.
+      </td>
+    </tr>
+  </ng-container>
 </mat-table>
