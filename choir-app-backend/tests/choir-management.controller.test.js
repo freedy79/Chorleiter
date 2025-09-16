@@ -12,12 +12,12 @@ const controller = require('../src/controllers/choir-management.controller');
     const choir = await db.choir.create({ name: 'Test Choir' });
     const adminUser = await db.user.create({ email: 'a@example.com', roles: ['admin'] });
     const member = await db.user.create({ email: 'u@example.com', roles: ['user'] });
-    await choir.addUser(member, { through: { rolesInChoir: ['choirleiter'] } });
+    await choir.addUser(member, { through: { rolesInChoir: ['director'] } });
 
     const res = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
 
     await controller.updateMyChoir({ activeChoirId: choir.id, userId: member.id, userRoles: ['user'], body: { modules: { dienstplan: true } } }, res);
-    assert.strictEqual(res.statusCode, 403, 'choirleiter should not change modules');
+    assert.strictEqual(res.statusCode, 403, 'director should not change modules');
 
     const assoc = await db.user_choir.findOne({ where: { userId: member.id, choirId: choir.id } });
     await assoc.update({ rolesInChoir: ['choir_admin'] });

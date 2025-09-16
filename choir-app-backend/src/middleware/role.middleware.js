@@ -1,6 +1,6 @@
 const db = require('../models');
 
-const DIRECTOR_ROLES = ['choirleiter', 'director'];
+const DIRECTOR_ROLES = ['director'];
 
 async function getActiveChoirMembership(req) {
     if (!req.userId || !req.activeChoirId) {
@@ -71,7 +71,7 @@ async function requireChoirAdmin(req, res, next) {
 }
 
 /**
- * Middleware that allows directors (choirleiter) or choir admins of the active
+ * Middleware that allows directors or choir admins of the active
  * choir as well as global librarians and admins.
  *
  * Global access is validated through {@link req.userRoles}; choir-specific
@@ -86,7 +86,7 @@ async function requireDirector(req, res, next) {
         if (hasDirectorRole) {
             return next();
         }
-        return res.status(403).send({ message: 'Require Choirleiter Role!' });
+        return res.status(403).send({ message: 'Require Director Role!' });
     } catch (err) {
         return res.status(500).send({ message: 'Error checking permissions.' });
     }
@@ -103,7 +103,7 @@ function requireLibrarian(req, res, next) {
 }
 
 /**
- * Middleware that allows directors (choirleiter) or choir admins of the active
+ * Middleware that allows directors or choir admins of the active
  * choir in addition to global admins.
  *
  * Global access is validated through {@link req.userRoles}; choir-specific
@@ -118,7 +118,7 @@ async function requireDirectorOrHigher(req, res, next) {
         if (hasDirectorRole) {
             return next();
         }
-        return res.status(403).send({ message: 'Require Choirleiter Role!' });
+        return res.status(403).send({ message: 'Require Director Role!' });
     } catch (err) {
         return res.status(500).send({ message: 'Error checking permissions.' });
     }
