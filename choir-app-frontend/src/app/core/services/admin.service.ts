@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { Choir } from '../models/choir';
+import { Choir, normalizeChoir, normalizeChoirs, normalizeMembers } from '../models/choir';
 import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { StatsSummary } from '../models/stats-summary';
@@ -21,15 +22,18 @@ export class AdminService {
   constructor(private http: HttpClient) {}
 
   getAdminChoirs(): Observable<Choir[]> {
-    return this.http.get<Choir[]>(`${this.apiUrl}/admin/choirs`);
+    return this.http.get<Choir[]>(`${this.apiUrl}/admin/choirs`)
+      .pipe(map(choirs => normalizeChoirs(choirs)));
   }
 
   createChoir(data: { name: string; description?: string; location?: string }): Observable<Choir> {
-    return this.http.post<Choir>(`${this.apiUrl}/admin/choirs`, data);
+    return this.http.post<Choir>(`${this.apiUrl}/admin/choirs`, data)
+      .pipe(map(choir => normalizeChoir(choir) ?? choir));
   }
 
   updateChoir(id: number, data: { name: string; description?: string; location?: string }): Observable<Choir> {
-    return this.http.put<Choir>(`${this.apiUrl}/admin/choirs/${id}`, data);
+    return this.http.put<Choir>(`${this.apiUrl}/admin/choirs/${id}`, data)
+      .pipe(map(choir => normalizeChoir(choir) ?? choir));
   }
 
   deleteChoir(id: number): Observable<any> {
@@ -37,7 +41,8 @@ export class AdminService {
   }
 
   getChoirMembersAdmin(id: number): Observable<UserInChoir[]> {
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`);
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/admin/choirs/${id}/members`)
+      .pipe(map(members => normalizeMembers(members)));
   }
 
   inviteUserToChoirAdmin(id: number, email: string, rolesInChoir: string[]): Observable<{ message: string }> {

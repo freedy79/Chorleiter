@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { Choir } from '../models/choir';
+import { Choir, normalizeChoir, normalizeMembers } from '../models/choir';
 import { UserInChoir } from '../models/user';
 import { Collection } from '../models/collection';
 import { ChoirLog } from '../models/choir-log';
@@ -16,7 +16,8 @@ export class ChoirService {
 
   getMyChoirDetails(choirId?: number): Observable<Choir> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
-    return this.http.get<Choir>(`${this.apiUrl}/choir-management`, { params });
+    return this.http.get<Choir>(`${this.apiUrl}/choir-management`, { params })
+      .pipe(map(choir => normalizeChoir(choir) ?? choir));
   }
 
   updateMyChoir(choirData: Partial<Choir>, choirId?: number): Observable<any> {
@@ -26,7 +27,8 @@ export class ChoirService {
 
   getChoirMembers(choirId?: number): Observable<UserInChoir[]> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params });
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params })
+      .pipe(map(members => normalizeMembers(members)));
   }
 
   getChoirMemberCount(choirId?: number): Observable<number> {

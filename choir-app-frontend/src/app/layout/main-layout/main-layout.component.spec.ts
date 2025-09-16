@@ -28,7 +28,10 @@ describe('MainLayoutComponent', () => {
     globalRolesSubject = new BehaviorSubject<string[]>(['user']);
     choirRolesSubject = new BehaviorSubject<string[]>(['singer']);
     currentUserSubject = new BehaviorSubject<any>({ roles: ['user'] });
-    activeChoirSubject = new BehaviorSubject<any>({ modules: { singerMenu: { events: false, participation: false } } });
+    activeChoirSubject = new BehaviorSubject<any>({
+      modules: { singerMenu: { events: false, participation: false } },
+      membership: { rolesInChoir: ['singer'] }
+    });
     const isAdmin$ = globalRolesSubject.asObservable().pipe(map(roles => roles.includes('admin')));
     const isChoirAdmin$ = combineLatest([isAdmin$, choirRolesSubject.asObservable()]).pipe(
       map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('choir_admin'))
@@ -56,6 +59,7 @@ describe('MainLayoutComponent', () => {
       currentUser$: currentUserSubject,
       activeChoir$: activeChoirSubject,
       availableChoirs$: of([]),
+      setActiveChoir: () => {},
       setCurrentUser: () => {},
       logout: () => {}
     };
@@ -114,7 +118,10 @@ describe('MainLayoutComponent', () => {
     globalRolesSubject.next(['user']);
     choirRolesSubject.next(['singer', 'organist']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: { dienstplan: true, singerMenu: { dienstplan: false } } });
+    activeChoirSubject.next({
+      modules: { dienstplan: true, singerMenu: { dienstplan: false } },
+      membership: { rolesInChoir: ['singer', 'organist'] }
+    });
     fixture.detectChanges();
     const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
     const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
@@ -125,7 +132,7 @@ describe('MainLayoutComponent', () => {
     globalRolesSubject.next(['user']);
     choirRolesSubject.next(['director']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: {} });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['director'] } });
     fixture.detectChanges();
     let item = component.navItems.find(i => i.key === 'participation');
     let visible = await firstValueFrom(item!.visibleSubject!);
@@ -134,7 +141,7 @@ describe('MainLayoutComponent', () => {
     globalRolesSubject.next(['user']);
     choirRolesSubject.next(['singer']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: {} });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['singer'] } });
     fixture.detectChanges();
     item = component.navItems.find(i => i.key === 'participation');
     visible = await firstValueFrom(item!.visibleSubject!);
@@ -148,9 +155,9 @@ describe('MainLayoutComponent', () => {
     globalRolesSubject.next(['user']);
     choirRolesSubject.next(['director']);
     currentUserSubject.next({ roles: ['user'] });
-    activeChoirSubject.next({ modules: {} });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['director'] } });
     fixture.detectChanges();
     role = await firstValueFrom(component.userRole$);
-    expect(role).toBe('Dirigent');
+    expect(role).toBe('Chorleiter');
   });
 });

@@ -156,7 +156,7 @@ export class ManageChoirComponent implements OnInit {
         const choir = this.authService.activeChoir$.value;
         if (choir) {
           const updated = { ...choir, modules: pageData.choirDetails.modules } as Choir;
-          this.authService.activeChoir$.next(updated);
+          this.authService.setActiveChoir(updated);
           this.authService.currentUser$.pipe(take(1)).subscribe(user => {
             if (user) {
               const updatedUser = { ...user, activeChoir: updated };
@@ -371,7 +371,7 @@ export class ManageChoirComponent implements OnInit {
         const choir = this.authService.activeChoir$.value;
         if (choir) {
           const updated = { ...choir, modules } as Choir;
-          this.authService.activeChoir$.next(updated);
+          this.authService.setActiveChoir(updated);
           this.authService.currentUser$.pipe(take(1)).subscribe(user => {
             if (user) {
               const updatedUser = { ...user, activeChoir: updated };

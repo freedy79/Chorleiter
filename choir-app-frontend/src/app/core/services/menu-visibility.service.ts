@@ -34,7 +34,8 @@ export class MenuVisibilityService {
       keys.forEach(k => visibility[k] = false);
       if (choir) {
         const modules = choir.modules || {};
-        const hasChoirPrivilege = choirRoles.some(role => ['director', 'choir_admin', 'organist'].includes(role));
+        const hasChoirPrivilege = choirRoles.some(role =>
+          ['director', 'choir_admin', 'organist'].includes(role));
         const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
         const hasPrivilegedRole = hasChoirPrivilege || hasGlobalPrivilege;
         const base: MenuVisibility = {
