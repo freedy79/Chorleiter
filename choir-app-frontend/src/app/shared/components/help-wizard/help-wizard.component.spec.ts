@@ -3,17 +3,20 @@ import { HelpWizardComponent } from './help-wizard.component';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from '@core/services/auth.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('HelpWizardComponent', () => {
   let component: HelpWizardComponent;
   let fixture: ComponentFixture<HelpWizardComponent>;
+  let globalRolesSubject: BehaviorSubject<string[]>;
+  let choirRolesSubject: BehaviorSubject<string[]>;
+  let activeChoirSubject: BehaviorSubject<any>;
 
   beforeEach(async () => {
-    const globalRolesSubject = new BehaviorSubject<string[]>(['user']);
-    const choirRolesSubject = new BehaviorSubject<string[]>(['singer']);
-    const activeChoirSubject = new BehaviorSubject<any>({
+    globalRolesSubject = new BehaviorSubject<string[]>(['user']);
+    choirRolesSubject = new BehaviorSubject<string[]>(['singer']);
+    activeChoirSubject = new BehaviorSubject<any>({
       modules: { singerMenu: { events: false, participation: false } },
       membership: { rolesInChoir: ['singer'] }
     });
@@ -51,5 +54,11 @@ describe('HelpWizardComponent', () => {
         done();
       });
     });
+  });
+
+  it('shows privileged entries when singer also has a global admin role', async () => {
+    globalRolesSubject.next(['admin']);
+    const participationVisible = await firstValueFrom(component.menuVisible('participation'));
+    expect(participationVisible).toBeTrue();
   });
 });

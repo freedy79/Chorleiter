@@ -148,6 +148,17 @@ describe('MainLayoutComponent', () => {
     expect(visible).toBeFalse();
   });
 
+  it('shows participation for global admins even when choir roles are singer only', async () => {
+    globalRolesSubject.next(['admin']);
+    choirRolesSubject.next(['singer']);
+    currentUserSubject.next({ roles: ['admin'] });
+    activeChoirSubject.next({ modules: {}, membership: { rolesInChoir: ['singer'] } });
+    fixture.detectChanges();
+    const item = component.navItems.find(i => i.key === 'participation');
+    const visible = await firstValueFrom(item!.visibleSubject!);
+    expect(visible).toBeTrue();
+  });
+
   it('translates user roles and updates tooltip on changes', async () => {
     let role = await firstValueFrom(component.userRole$);
     expect(role).toBe('Sänger');
