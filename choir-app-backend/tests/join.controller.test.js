@@ -2,6 +2,7 @@ const assert = require('assert');
 
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
+process.env.DISABLE_EMAIL = 'true';
 
 const db = require('../src/models');
 const controller = require('../src/controllers/join.controller');

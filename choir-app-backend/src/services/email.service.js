@@ -235,6 +235,33 @@ exports.sendPieceReportMail = async (recipients, piece, reporter, category, reas
   }
 };
 
+exports.sendNewMemberNotification = async (choirId, member) => {
+  if (emailDisabled()) return;
+  try {
+    const associations = await db.user_choir.findAll({
+      where: { choirId },
+      include: [
+        { model: db.user, attributes: ['email'] },
+        { model: db.choir, attributes: ['name'] }
+      ]
+    });
+    const choirName = associations[0]?.choir?.name;
+    const recipients = associations
+      .filter(a => Array.isArray(a.rolesInChoir) && (a.rolesInChoir.includes('choir_admin') || a.rolesInChoir.includes('director')))
+      .map(a => a.user?.email)
+      .filter(Boolean);
+    if (!choirName || recipients.length === 0) return;
+    const fullName = [member.firstName, member.name].filter(Boolean).join(' ');
+    const subject = `Neues Mitglied im Chor ${choirName}`;
+    const text = `${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.`;
+    const html = `<p>${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.</p>`;
+    await sendMail({ to: recipients, subject, text, html });
+  } catch (err) {
+    logger.error(`Error sending new member notification mail: ${err.message}`);
+    logger.error(err.stack);
+  }
+};
+
 exports.sendCrashReportMail = async (to, error) => {
   if (emailDisabled() || !to) return;
   try {
