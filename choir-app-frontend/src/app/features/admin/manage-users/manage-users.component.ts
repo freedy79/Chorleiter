@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
-import { User } from 'src/app/core/models/user';
+import { User, GlobalRole } from 'src/app/core/models/user';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -123,9 +123,13 @@ export class ManageUsersComponent implements OnInit {
     this.applyFilter(value);
   }
 
-  onRolesChange(user: User, roles: ('director' | 'choir_admin' | 'admin' | 'librarian' | 'singer')[]): void {
-    this.api.updateUser(user.id, { roles }).subscribe(() => {
-      user.roles = roles;
+  onRolesChange(user: User, roles: GlobalRole[]): void {
+    const normalized = Array.from(new Set<GlobalRole>(roles ?? []));
+    if (!normalized.includes('user')) {
+      normalized.push('user');
+    }
+    this.api.updateUser(user.id, { roles: normalized }).subscribe(() => {
+      user.roles = normalized;
       this.snack.open('Rollen aktualisiert', 'OK', { duration: 3000 });
     });
   }

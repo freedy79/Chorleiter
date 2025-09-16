@@ -118,9 +118,8 @@ export class ManageChoirComponent implements OnInit {
   ngOnInit(): void {
     const choirIdParam = this.route.snapshot.queryParamMap.get('choirId');
     this.adminChoirId = choirIdParam ? parseInt(choirIdParam, 10) : null;
-    this.authService.currentUser$.pipe(take(1)).subscribe(user => {
-      const roles = Array.isArray(user?.roles) ? user!.roles : [];
-      this.isDirector = roles.includes('director');
+    this.authService.isDirector$.pipe(take(1)).subscribe(isDirector => {
+      this.isDirector = isDirector;
       this.updateCanManageMenu();
     });
     this.authService.isAdmin$.pipe(take(1)).subscribe(isAdmin => {

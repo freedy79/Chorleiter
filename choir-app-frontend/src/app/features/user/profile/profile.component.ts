@@ -5,7 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { User } from '@core/models/user';
+import { User, GlobalRole } from '@core/models/user';
 import { Choir } from '@core/models/choir';
 import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
@@ -108,7 +108,7 @@ export class ProfileComponent implements OnInit {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] } = {
+    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] } = {
       firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
@@ -122,8 +122,15 @@ export class ProfileComponent implements OnInit {
     };
 
     if (this.profileForm.get('roles')?.enabled) {
-      const roles = formValue.roles as string[];
-      updatePayload.roles = roles?.includes('admin') ? roles : [...roles, 'admin'];
+      const roles = (formValue.roles as GlobalRole[] | undefined) ?? [];
+      const normalized = Array.from(new Set<GlobalRole>(roles));
+      if (!normalized.includes('user')) {
+        normalized.push('user');
+      }
+      if (this.currentUser?.roles?.includes('admin') && !normalized.includes('admin')) {
+        normalized.push('admin');
+      }
+      updatePayload.roles = normalized;
     }
 
     const passwordGroup = formValue.passwords;

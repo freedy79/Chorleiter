@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
 import { Piece } from '../models/piece';
 import { Composer } from '../models/composer';
 import { Category } from '../models/category';
-import { User, UserInChoir } from '../models/user';
+import { User, UserInChoir, GlobalRole } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
 import { MonthlyPlan } from '../models/monthly-plan';
@@ -524,7 +524,7 @@ export class ApiService {
     return this.userService.getCurrentUser();
   }
 
-  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
+  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] }): Observable<any> {
     return this.userService.updateCurrentUser(profileData);
   }
 

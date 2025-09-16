@@ -132,9 +132,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       switchMap(ids => this.apiService.getCategories(ids.length ? ids : undefined))
     );
     this.loadPresets();
-    this.apiService.checkChoirAdminStatus().subscribe(s => this.isChoirAdmin = s.isChoirAdmin);
+    this.authService.isChoirAdmin$.subscribe(isChoirAdmin => this.isChoirAdmin = isChoirAdmin);
     this.authService.isAdmin$.subscribe(a => this.isAdmin = a);
-    this.authService.currentUser$.subscribe(u => this.isDirector = u?.roles?.includes('director') || false);
+    this.authService.isDirector$.subscribe(isDirector => this.isDirector = isDirector);
 
     const saved = localStorage.getItem(this.FILTER_KEY);
     if (saved) {

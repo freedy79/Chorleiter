@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
-import { User } from 'src/app/core/models/user';
+import { User, GlobalRole } from 'src/app/core/models/user';
 import { ApiService } from '@core/services/api.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
@@ -39,7 +39,7 @@ export class UserDialogComponent implements OnInit {
       congregation: [data?.congregation || ''],
       voice: [data?.voice || ''],
       shareWithChoir: [data?.shareWithChoir || false],
-      roles: [data?.roles || ['director'], Validators.required],
+      roles: [data?.roles || ['user'], Validators.required],
       password: ['', data ? [] : [Validators.required]]
     });
   }
@@ -56,6 +56,13 @@ export class UserDialogComponent implements OnInit {
   onSave(): void {
     if (this.form.valid) {
       const value = { ...this.form.value };
+      if (Array.isArray(value.roles)) {
+        const normalized = Array.from(new Set<GlobalRole>(value.roles));
+        if (!normalized.includes('user')) {
+          normalized.push('user');
+        }
+        value.roles = normalized;
+      }
       if (!value.password) {
         delete value.password;
       }

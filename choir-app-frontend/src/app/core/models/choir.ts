@@ -1,3 +1,10 @@
+export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer';
+
+export interface ChoirMembership {
+    rolesInChoir: ChoirRole[];
+    registrationStatus: 'REGISTERED' | 'PENDING';
+}
+
 export interface Choir {
     id: number;
     name: string;
@@ -17,4 +24,5 @@ export interface Choir {
         singerMenu?: Record<string, boolean>;
     };
     joinHash?: string;
+    membership?: ChoirMembership;
 }

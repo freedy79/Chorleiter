@@ -103,13 +103,7 @@ export class DashboardComponent implements OnInit {
   ) {
     this.activeChoir$ = this.authService.activeChoir$;
     this.isAdmin$ = this.authService.isAdmin$;
-    this.isSingerOnly$ = this.authService.currentUser$.pipe(
-      map(user => {
-        const roles = Array.isArray(user?.roles) ? user.roles : [];
-        return roles.includes('singer') &&
-          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
-      })
-    );
+    this.isSingerOnly$ = this.authService.isSingerOnly$;
     this.authService.availableChoirs$.subscribe(choirs => {
       choirs.forEach((c, idx) => {
         this.choirColors[c.id] = this.colorPalette[idx % this.colorPalette.length];
