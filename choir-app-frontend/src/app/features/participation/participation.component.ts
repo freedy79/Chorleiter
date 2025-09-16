@@ -7,6 +7,7 @@ import { AuthService } from '@core/services/auth.service';
 import { UserInChoir } from '@core/models/user';
 import { MemberAvailability } from '@core/models/member-availability';
 import { parseDateOnly } from '@shared/util/date';
+import { combineLatest } from 'rxjs';
 
 interface EventColumn {
   key: string;
@@ -47,9 +48,8 @@ export class ParticipationComponent implements OnInit {
   constructor(private api: ApiService, private auth: AuthService) {}
 
   ngOnInit(): void {
-    this.auth.currentUser$.subscribe(user => {
-      const roles = Array.isArray(user?.roles) ? user.roles : user?.roles ? [user.roles] : [];
-      this.isChoirAdmin = roles.some(r => ['choir_admin', 'director', 'admin'].includes(r));
+    combineLatest([this.auth.isChoirAdmin$, this.auth.isDirector$]).subscribe(([isChoirAdmin, isDirector]) => {
+      this.isChoirAdmin = isChoirAdmin || isDirector;
     });
     this.loadMembers();
     this.loadEvents();

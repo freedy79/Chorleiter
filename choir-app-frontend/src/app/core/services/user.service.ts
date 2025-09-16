@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { User } from '../models/user';
+import { User, GlobalRole } from '../models/user';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -14,7 +14,7 @@ export class UserService {
     return this.http.get<User>(`${this.apiUrl}/users/me`);
   }
 
-  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; helpShown?: boolean; oldPassword?: string; newPassword?: string; roles?: string[] }): Observable<any> {
+  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; helpShown?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] }): Observable<any> {
     return this.http.put(`${this.apiUrl}/users/me`, profileData);
   }
 

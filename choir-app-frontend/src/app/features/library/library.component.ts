@@ -57,10 +57,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     this.collections$ = this.apiService.getCollections();
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
     this.auth.isLibrarian$.subscribe(l => this.isLibrarian = l);
-    this.auth.currentUser$.subscribe(user => {
-      const roles = Array.isArray(user?.roles) ? user.roles : [];
-      this.isSingerOnly = roles.includes('singer') && !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r));
-    });
+    this.auth.isSingerOnly$.subscribe(isSingerOnly => this.isSingerOnly = isSingerOnly);
   }
 
   ngAfterViewInit(): void {

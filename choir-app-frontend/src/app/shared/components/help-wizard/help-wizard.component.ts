@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatDialogRef, MatDialogContent } from '@angular/material/dialog';
 import { MatStepperModule, MatStepper } from '@angular/material/stepper';
 import { MaterialModule } from '@modules/material.module';
-import { Observable, combineLatest } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 
@@ -30,18 +29,7 @@ export class HelpWizardComponent {
     private auth: AuthService,
     private menu: MenuVisibilityService
   ) {
-    this.isSingerOnly$ = combineLatest([
-      this.auth.currentUser$,
-      this.auth.activeChoir$
-    ]).pipe(
-      map(([user]) => {
-        const roles = Array.isArray(user?.roles) ? user!.roles : [];
-        return (
-          roles.includes('singer') &&
-          !roles.some(r => ['choir_admin', 'director', 'admin', 'librarian'].includes(r))
-        );
-      })
-    );
+    this.isSingerOnly$ = this.auth.isSingerOnly$;
   }
 
   /**

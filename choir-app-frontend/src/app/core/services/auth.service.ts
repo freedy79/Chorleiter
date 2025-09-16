@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, combineLatest } from 'rxjs';
+import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
-import { User } from '../models/user';
-import { Choir } from '../models/choir';
+import { User, GlobalRole } from '../models/user';
+import { Choir, ChoirRole } from '../models/choir';
 import { SwitchChoirResponse } from '../models/auth';
 import { ThemeService } from './theme.service';
 import { UserPreferencesService } from './user-preferences.service';
@@ -30,8 +30,14 @@ export class AuthService {
   public availableChoirs$ = new BehaviorSubject<Choir[]>([]);
 
   // --- Wir leiten die Berechtigungen direkt vom currentUser$ ab ---
+  public globalRoles$: Observable<GlobalRole[]>;
+  public choirRoles$: Observable<ChoirRole[]>;
   public isAdmin$: Observable<boolean>;
   public isLibrarian$: Observable<boolean>;
+  public isChoirAdmin$: Observable<boolean>;
+  public isDirector$: Observable<boolean>;
+  public isSinger$: Observable<boolean>;
+  public isSingerOnly$: Observable<boolean>;
 
   constructor(private http: HttpClient,
               private router: Router,
@@ -48,21 +54,44 @@ export class AuthService {
       this.availableChoirs$.next(storedUser.availableChoirs || []);
     }
 
-    this.isAdmin$ = this.currentUser$.pipe(
-      map(user => {
-        const roles = Array.isArray(user?.roles)
-          ? user.roles
-          : user?.roles ? [user.roles] : [];
-        return roles.includes('admin');
-      })
+    this.globalRoles$ = this.currentUser$.pipe(
+      map(user => this.extractGlobalRoles(user)),
+      distinctUntilChanged((prev, curr) => this.rolesEqual(prev, curr))
     );
-    this.isLibrarian$ = this.currentUser$.pipe(
-      map(user => {
-        const roles = Array.isArray(user?.roles)
-          ? user.roles
-          : user?.roles ? [user.roles] : [];
-        return roles.includes('librarian');
-      })
+
+    this.choirRoles$ = this.activeChoir$.pipe(
+      map(choir => this.extractChoirRoles(choir)),
+      distinctUntilChanged((prev, curr) => this.rolesEqual(prev, curr))
+    );
+
+    this.isAdmin$ = this.globalRoles$.pipe(
+      map(roles => roles.includes('admin')),
+      distinctUntilChanged()
+    );
+
+    this.isLibrarian$ = this.globalRoles$.pipe(
+      map(roles => roles.includes('librarian')),
+      distinctUntilChanged()
+    );
+
+    this.isChoirAdmin$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('choir_admin')),
+      distinctUntilChanged()
+    );
+
+    this.isDirector$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('director')),
+      distinctUntilChanged()
+    );
+
+    this.isSinger$ = this.choirRoles$.pipe(
+      map(roles => roles.includes('singer')),
+      distinctUntilChanged()
+    );
+
+    this.isSingerOnly$ = combineLatest([this.globalRoles$, this.choirRoles$]).pipe(
+      map(([globalRoles, choirRoles]) => this.computeIsSingerOnly(globalRoles, choirRoles)),
+      distinctUntilChanged()
     );
 
     if (this.hasToken()) {
@@ -220,5 +249,47 @@ export class AuthService {
       available: choirs
     });
     this.availableChoirs$.next(choirs);
+  }
+
+  private extractGlobalRoles(user: User | null): GlobalRole[] {
+    const rawRoles = user?.roles as unknown;
+    let normalized: GlobalRole[];
+    if (Array.isArray(rawRoles)) {
+      const rolesArray = rawRoles as GlobalRole[];
+      normalized = rolesArray.length ? rolesArray : ['user'];
+    } else if (typeof rawRoles === 'string' && rawRoles.length > 0) {
+      normalized = [rawRoles as GlobalRole];
+    } else {
+      normalized = ['user'];
+    }
+    return this.normalizeRoles(normalized);
+  }
+
+  private extractChoirRoles(choir: Choir | null): ChoirRole[] {
+    const roles = choir?.membership?.rolesInChoir ?? [];
+    return this.normalizeRoles(roles);
+  }
+
+  private normalizeRoles<T extends string>(roles: T[]): T[] {
+    return Array.from(new Set(roles)).sort();
+  }
+
+  private rolesEqual<T extends string>(a: T[], b: T[]): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    return a.every((role, idx) => role === b[idx]);
+  }
+
+  private computeIsSingerOnly(globalRoles: GlobalRole[], choirRoles: ChoirRole[]): boolean {
+    if (!choirRoles.includes('singer')) {
+      return false;
+    }
+    const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
+    if (hasGlobalPrivilege) {
+      return false;
+    }
+    const hasChoirPrivilege = choirRoles.some(role => role === 'choir_admin' || role === 'director' || role === 'organist');
+    return !hasChoirPrivilege;
   }
 }

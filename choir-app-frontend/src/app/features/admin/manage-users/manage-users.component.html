@@ -31,11 +31,10 @@
           (ngModelChange)="onRolesChange(element, $event)"
           multiple
         >
-          <mat-option value="director">Dirigent</mat-option>
-          <mat-option value="choir_admin">Chor-Admin</mat-option>
-          <mat-option value="singer">Sänger</mat-option>
-          <mat-option value="admin">Admin</mat-option>
+          <mat-option value="user" disabled>Standardnutzer</mat-option>
+          <mat-option value="admin">Administrator</mat-option>
           <mat-option value="librarian">Bibliothekar</mat-option>
+          <mat-option value="demo">Demo</mat-option>
         </mat-select>
       </mat-form-field>
     </mat-cell>
@@ -101,11 +100,10 @@
             (ngModelChange)="onRolesChange(element, $event)"
             multiple
           >
-            <mat-option value="director">Dirigent</mat-option>
-            <mat-option value="choir_admin">Chor-Admin</mat-option>
-            <mat-option value="singer">Sänger</mat-option>
-            <mat-option value="admin">Admin</mat-option>
+            <mat-option value="user" disabled>Standardnutzer</mat-option>
+            <mat-option value="admin">Administrator</mat-option>
             <mat-option value="librarian">Bibliothekar</mat-option>
+            <mat-option value="demo">Demo</mat-option>
           </mat-select>
         </mat-form-field>
       </div>

@@ -10,7 +10,8 @@ import { ApiService } from '@core/services/api.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
 import { LoanCartService } from '@core/services/loan-cart.service';
-import { BehaviorSubject, of, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, of, firstValueFrom, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { MainLayoutComponent } from './main-layout.component';
 
@@ -18,13 +19,42 @@ describe('MainLayoutComponent', () => {
   let component: MainLayoutComponent;
   let fixture: ComponentFixture<MainLayoutComponent>;
   let authServiceMock: any;
+  let globalRolesSubject: BehaviorSubject<string[]>;
+  let choirRolesSubject: BehaviorSubject<string[]>;
+  let currentUserSubject: BehaviorSubject<any>;
+  let activeChoirSubject: BehaviorSubject<any>;
 
   beforeEach(async () => {
+    globalRolesSubject = new BehaviorSubject<string[]>(['user']);
+    choirRolesSubject = new BehaviorSubject<string[]>(['singer']);
+    currentUserSubject = new BehaviorSubject<any>({ roles: ['user'] });
+    activeChoirSubject = new BehaviorSubject<any>({ modules: { singerMenu: { events: false, participation: false } } });
+    const isAdmin$ = globalRolesSubject.asObservable().pipe(map(roles => roles.includes('admin')));
+    const isChoirAdmin$ = combineLatest([isAdmin$, choirRolesSubject.asObservable()]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('choir_admin'))
+    );
+    const isDirector$ = combineLatest([isAdmin$, choirRolesSubject.asObservable()]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('director'))
+    );
+    const isSingerOnly$ = combineLatest([globalRolesSubject.asObservable(), choirRolesSubject.asObservable()]).pipe(
+      map(([globalRoles, choirRoles]) => {
+        const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
+        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist'].includes(role));
+        return choirRoles.includes('singer') && !hasGlobalPrivilege && !hasChoirPrivilege;
+      })
+    );
+
     authServiceMock = {
       isLoggedIn$: of(true),
-      isAdmin$: of(false),
-      currentUser$: new BehaviorSubject<any>({ roles: ['singer'] }),
-      activeChoir$: new BehaviorSubject<any>({ modules: { singerMenu: { events: false, participation: false } } }),
+      isAdmin$,
+      isLibrarian$: of(false),
+      isChoirAdmin$,
+      isDirector$,
+      isSingerOnly$,
+      globalRoles$: globalRolesSubject.asObservable(),
+      choirRoles$: choirRolesSubject.asObservable(),
+      currentUser$: currentUserSubject,
+      activeChoir$: activeChoirSubject,
       availableChoirs$: of([]),
       setCurrentUser: () => {},
       logout: () => {}
@@ -81,8 +111,10 @@ describe('MainLayoutComponent', () => {
   });
 
   it('shows dienstplan for organists even if singers cannot see it', async () => {
-    authServiceMock.currentUser$.next({ roles: ['singer', 'organist'] });
-    authServiceMock.activeChoir$.next({ modules: { dienstplan: true, singerMenu: { dienstplan: false } } });
+    globalRolesSubject.next(['user']);
+    choirRolesSubject.next(['singer', 'organist']);
+    currentUserSubject.next({ roles: ['user'] });
+    activeChoirSubject.next({ modules: { dienstplan: true, singerMenu: { dienstplan: false } } });
     fixture.detectChanges();
     const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
     const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
@@ -90,15 +122,19 @@ describe('MainLayoutComponent', () => {
   });
 
   it('only shows participation for privileged roles', async () => {
-    authServiceMock.currentUser$.next({ roles: ['director'] });
-    authServiceMock.activeChoir$.next({ modules: {} });
+    globalRolesSubject.next(['user']);
+    choirRolesSubject.next(['director']);
+    currentUserSubject.next({ roles: ['user'] });
+    activeChoirSubject.next({ modules: {} });
     fixture.detectChanges();
     let item = component.navItems.find(i => i.key === 'participation');
     let visible = await firstValueFrom(item!.visibleSubject!);
     expect(visible).toBeTrue();
 
-    authServiceMock.currentUser$.next({ roles: ['singer'] });
-    authServiceMock.activeChoir$.next({ modules: {} });
+    globalRolesSubject.next(['user']);
+    choirRolesSubject.next(['singer']);
+    currentUserSubject.next({ roles: ['user'] });
+    activeChoirSubject.next({ modules: {} });
     fixture.detectChanges();
     item = component.navItems.find(i => i.key === 'participation');
     visible = await firstValueFrom(item!.visibleSubject!);
@@ -109,8 +145,10 @@ describe('MainLayoutComponent', () => {
     let role = await firstValueFrom(component.userRole$);
     expect(role).toBe('Sänger');
 
-    authServiceMock.currentUser$.next({ roles: ['director'] });
-    authServiceMock.activeChoir$.next({ modules: {} });
+    globalRolesSubject.next(['user']);
+    choirRolesSubject.next(['director']);
+    currentUserSubject.next({ roles: ['user'] });
+    activeChoirSubject.next({ modules: {} });
     fixture.detectChanges();
     role = await firstValueFrom(component.userRole$);
     expect(role).toBe('Dirigent');

@@ -1,4 +1,4 @@
-import { Choir } from './choir';
+import { Choir, ChoirMembership } from './choir';
 
 /**
  * Represents the structure of a User object, typically received after
@@ -34,7 +34,7 @@ export interface User {
   shareWithChoir?: boolean;
 
 
-  roles?: ('director' | 'choir_admin' | 'admin' | 'demo' | 'singer' | 'librarian')[];
+  roles?: GlobalRole[];
 
   /**
    * Indicates whether the help wizard has been displayed for this user.
@@ -56,9 +56,8 @@ export interface User {
   resetTokenExpiry?: string | null;
 }
 
+export type GlobalRole = 'admin' | 'librarian' | 'demo' | 'user';
+
 export interface UserInChoir extends User {
-    membership?: { // Daten aus der Junction-Tabelle
-        rolesInChoir: ('director' | 'choir_admin' | 'organist' | 'singer')[];
-        registrationStatus: 'REGISTERED' | 'PENDING';
-    }
+    membership?: ChoirMembership; // Daten aus der Junction-Tabelle
 }
