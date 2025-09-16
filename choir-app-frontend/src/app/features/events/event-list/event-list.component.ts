@@ -42,6 +42,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selectedEvent: Event | null = null;
   isChoirAdmin = false;
   isAdmin = false;
+  isDirector = false;
   isSingerOnly = false;
   selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
@@ -77,6 +78,10 @@ export class EventListComponent implements OnInit, AfterViewInit {
     });
     this.authService.isAdmin$.subscribe(isAdmin => {
       this.isAdmin = isAdmin;
+      this.updateDisplayedColumns();
+    });
+    this.authService.isDirector$.subscribe(isDirector => {
+      this.isDirector = isDirector;
       this.updateDisplayedColumns();
     });
     this.authService.isSingerOnly$.subscribe(isSingerOnly => {

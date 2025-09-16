@@ -22,7 +22,8 @@ export class PostListComponent implements OnInit {
   displayCount = 5;
   currentUserId: number | null = null;
   isChoirAdmin = false;
-  isSingerOnly = false;
+  isAdmin = false;
+  isDirector = false;
   constructor(
     private api: ApiService,
     private auth: AuthService,
@@ -35,8 +36,9 @@ export class PostListComponent implements OnInit {
   ngOnInit(): void {
     this.loadPosts();
     this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
-    this.auth.isSingerOnly$.subscribe(isSingerOnly => this.isSingerOnly = isSingerOnly);
+    this.auth.isAdmin$.subscribe(isAdmin => this.isAdmin = isAdmin);
     this.auth.isChoirAdmin$.subscribe(isChoirAdmin => this.isChoirAdmin = isChoirAdmin);
+    this.auth.isDirector$.subscribe(isDirector => this.isDirector = isDirector);
   }
 
   loadPosts(): void {

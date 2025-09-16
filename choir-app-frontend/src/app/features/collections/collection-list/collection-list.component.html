@@ -73,10 +73,12 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let collection" class="actions-cell">
+              <ng-container *ngIf="isChoirAdmin || isAdmin || isDirector">
               <button mat-icon-button color="primary" (click)="syncCollection(collection); $event.stopPropagation()"
                 [matTooltip]="collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen'">
                 <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
               </button>
+              </ng-container>
               <mat-icon *ngIf="libraryItemIds.has(collection.id)" class="library-icon"
                 matTooltip="In Notenbibliothek vorhanden">
                 library_music

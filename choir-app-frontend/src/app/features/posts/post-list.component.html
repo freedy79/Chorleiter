@@ -1,4 +1,4 @@
-<div class="actions" *ngIf="!isSingerOnly">
+<div class="actions" *ngIf="isChoirAdmin || isAdmin || isDirector">
   <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
 </div>
 
@@ -31,4 +31,3 @@
 <ng-template #noPosts>
   <div class="no-posts">Noch keine Beiträge angelegt.</div>
 </ng-template>
-

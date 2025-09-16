@@ -1,6 +1,6 @@
 <div class="header-row">
   <div class="filter-row">
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" class="dense">
       <mat-label>Typ</mat-label>
       <mat-select [formControl]="typeControl">
         <mat-option value="ALL">Alle</mat-option>
@@ -10,6 +10,7 @@
     </mat-form-field>
   </div>
   <span class="spacer"></span>
+  <ng-container *ngIf="isAdmin || isDirector || isChoirAdmin">
   <button *ngIf="!isSingerOnly" mat-flat-button color="primary" (click)="openAddEventDialog()">
     <mat-icon>add</mat-icon>
     <span>Neues Ereignis</span>
@@ -22,6 +23,7 @@
     <mat-icon>delete</mat-icon>
     <span>Löschen</span>
   </button>
+  </ng-container>
 </div>
 
 
