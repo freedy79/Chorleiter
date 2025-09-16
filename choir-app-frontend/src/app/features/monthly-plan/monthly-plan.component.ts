@@ -9,7 +9,6 @@ import { MonthlyPlanService } from '@core/services/monthly-plan.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
-import { MemberAvailability } from '@core/models/member-availability';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription } from 'rxjs';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';

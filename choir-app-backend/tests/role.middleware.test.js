@@ -45,6 +45,9 @@ async function sendRequest(middleware, context) {
       email: 'oc@example.com',
       choirMemberships: [{ choirId: otherChoir.id, rolesInChoir: ['choir_admin'] }]
     });
+    await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
+    await db.user_choir.create({ userId: choirDirector.id, choirId: choir.id, rolesInChoir: ['director'] });
+    await db.user_choir.create({ userId: otherChoirAdmin.id, choirId: otherChoir.id, rolesInChoir: ['choir_admin'] });
 
     // requireNonDemo success
     let res = await sendRequest(requireNonDemo, { userRoles: ['admin'] });

@@ -42,9 +42,13 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: ['user'],
       validate: {
         isValidRole(value) {
+          if (!Array.isArray(value)) {
+            throw new Error("Role must be provided as array.");
+          }
+
           const allowed = ['admin', 'librarian', 'user', 'demo'];
-          if (!Array.isArray(value) || !value.every(r => allowed.includes(r))) {
-            throw new Error('Invalid role');
+          if (!value.every(r => allowed.includes(r))) {
+            throw new Error('Invalid role: ' + JSON.stringify(value));
           }
         }
       }
@@ -99,4 +103,3 @@ module.exports = (sequelize, DataTypes) => {
   });
   return User;
 };
-

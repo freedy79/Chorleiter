@@ -82,7 +82,7 @@ export class ChoirDialogComponent implements OnInit {
             this.snackBar.open('Mitglied entfernt', 'OK', { duration: 3000 });
             this.loadMembers();
           },
-          error: err => this.snackBar.open('Fehler beim Entfernen des Mitglieds', 'Schließen')
+          error: () => this.snackBar.open('Fehler beim Entfernen des Mitglieds', 'Schließen')
         });
       }
     });

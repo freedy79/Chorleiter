@@ -170,7 +170,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
         ) {
           this.filtersExpanded = true;
         }
-      } catch { }
+      } catch {
+        this.filtersExpanded = false;
+      }
     }
 
     const load$: Observable<UserPreferences | null> =

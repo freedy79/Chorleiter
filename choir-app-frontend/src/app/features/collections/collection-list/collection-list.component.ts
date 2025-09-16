@@ -30,6 +30,7 @@ import { NavigationStateService, ListViewState } from '@core/services/navigation
 export class CollectionListComponent implements OnInit, AfterViewInit {
   public dataSource = new MatTableDataSource<Collection>();
   public isLoading = true;
+  public isDirector = false;
   public isChoirAdmin = false;
   public isAdmin = false;
   public viewMode: 'collections' | 'pieces' = 'collections';
@@ -85,7 +86,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
         }
       });
     });
-    this.apiService.checkChoirAdminStatus().subscribe(r => this.isChoirAdmin = r.isChoirAdmin);
+    this.apiService.checkChoirAdminStatus().subscribe(r => {
+      this.isChoirAdmin = r.isChoirAdmin;
+    });
+    this.authService.isChoirAdmin$.subscribe(v => this.isChoirAdmin = v);
+    this.authService.isDirector$.subscribe(v => this.isDirector = v);
     this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
   }
 

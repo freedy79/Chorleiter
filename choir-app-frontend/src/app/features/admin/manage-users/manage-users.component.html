@@ -10,7 +10,7 @@
 <mat-table
   [dataSource]="dataSource"
   class="mat-elevation-z8"
-  *ngIf="!(isHandset$ | async)"
+  *ngIf="(isHandset$ | async) !== true"
 >
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
@@ -31,7 +31,7 @@
           (ngModelChange)="onRolesChange(element, $event)"
           multiple
         >
-          <mat-option value="user" disabled>Standardnutzer</mat-option>
+          <mat-option value="user">Standardnutzer</mat-option>
           <mat-option value="admin">Administrator</mat-option>
           <mat-option value="librarian">Bibliothekar</mat-option>
           <mat-option value="demo">Demo</mat-option>

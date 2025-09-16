@@ -1,4 +1,4 @@
-import { BehaviorSubject, Observable, Subject, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
 export interface NavItem {
     /**
@@ -13,4 +13,4 @@ export interface NavItem {
     route?: string;
     page?: string;
     children?: NavItem[];
-  }
+}

@@ -122,15 +122,12 @@ export class ParticipationComponent implements OnInit {
     this.availabilityMap = {};
     const requests = months.map(m => this.api.getMemberAvailabilities(m.year, m.month));
     if (requests.length === 0) return;
-    // Combine all requests
-    let pending = requests.length;
     requests.forEach(req => {
       req.subscribe((data: MemberAvailability[]) => {
         for (const a of data) {
           if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
           this.availabilityMap[a.userId][a.date] = a.status;
         }
-        pending--;
       });
     });
   }
