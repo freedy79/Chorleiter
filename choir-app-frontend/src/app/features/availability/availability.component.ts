@@ -36,6 +36,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   private paramSub?: Subscription;
   private loadRequestId = 0;
   private destroyed = false;
+  private skipNextParamLoad = false;
 
   constructor(private route: ActivatedRoute,
               private router: Router,
@@ -53,6 +54,10 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
       if (!Number.isNaN(y) && !Number.isNaN(m) && y > 0 && m > 0) {
         this.selected = { year: y, month: m };
       }
+      if (this.skipNextParamLoad) {
+        this.skipNextParamLoad = false;
+        return;
+      }
       void this.loadAvailabilities();
     });
   }
@@ -63,10 +68,16 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   }
 
   monthChanged(): void {
-    this.router.navigate([], {
+    this.skipNextParamLoad = true;
+    void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { year: this.selected.year, month: this.selected.month },
       queryParamsHandling: 'merge'
+    }).finally(() => {
+      this.skipNextParamLoad = false;
+      if (!this.destroyed) {
+        void this.loadAvailabilities();
+      }
     });
   }
 
