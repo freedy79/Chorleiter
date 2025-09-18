@@ -50,6 +50,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private userSub?: Subscription;
   private roleSub?: Subscription;
+  private paramSub?: Subscription;
+  private skipNextParamLoad = false;
 
   timestamp(date: string | Date): string {
     return parseDateOnly(date).getTime().toString();
@@ -170,13 +172,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.selectedYear = now.getFullYear();
     this.selectedMonth = now.getMonth() + 1;
 
-    this.route.queryParamMap.subscribe(params => {
+    this.paramSub = this.route.queryParamMap.subscribe(params => {
       const y = Number(params.get('year'));
       const m = Number(params.get('month'));
-      if (y && m) { this.selectedYear = y; this.selectedMonth = m; }
+      if (!Number.isNaN(y) && y > 0) { this.selectedYear = y; }
+      if (!Number.isNaN(m) && m > 0) { this.selectedMonth = m; }
       this.selectedTab = params.get('tab') === 'avail' ? 1 : 0;
+      if (this.skipNextParamLoad) {
+        this.skipNextParamLoad = false;
+        return;
+      }
       this.loadPlan(this.selectedYear, this.selectedMonth);
-      this.loadAvailabilities(this.selectedYear, this.selectedMonth);
     });
 
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
@@ -229,7 +235,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   monthChanged(): void {
-    this.router.navigate([], {
+    this.skipNextParamLoad = true;
+    void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
         year: this.selectedYear,
@@ -237,17 +244,21 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         tab: this.selectedTab === 1 ? 'avail' : null
       },
       queryParamsHandling: 'merge'
+    }).finally(() => {
+      this.skipNextParamLoad = false;
+      this.loadPlan(this.selectedYear, this.selectedMonth);
     });
-    this.loadPlan(this.selectedYear, this.selectedMonth);
-    this.loadAvailabilities(this.selectedYear, this.selectedMonth);
   }
 
   tabChanged(index: number): void {
     this.selectedTab = index;
-    this.router.navigate([], {
+    this.skipNextParamLoad = true;
+    void this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { year: this.selectedYear, month: this.selectedMonth, tab: index === 1 ? 'avail' : null },
       queryParamsHandling: 'merge'
+    }).finally(() => {
+      this.skipNextParamLoad = false;
     });
   }
 
@@ -413,5 +424,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.userSub) this.userSub.unsubscribe();
     if (this.roleSub) this.roleSub.unsubscribe();
+    if (this.paramSub) this.paramSub.unsubscribe();
   }
 }
