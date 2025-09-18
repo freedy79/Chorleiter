@@ -16,7 +16,7 @@ describe('PieceDialogComponent', () => {
     await TestBed.configureTestingModule({
       imports: [PieceDialogComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
-        { provide: AuthService, useValue: { isAdmin$: of(true) } },
+        { provide: AuthService, useValue: { isAdmin$: of(true), isDemo$: of(false) } },
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: { pieceId: null, initialTitle: 'Test Title' } },
         { provide: MatDialog, useValue: {} },

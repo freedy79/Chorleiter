@@ -6,10 +6,10 @@ const { handler: wrap } = require('../utils/async');
 
 router.use(authJwt.verifyToken);
 
-router.post('/', wrap(controller.create));
+router.post('/', role.requireNonDemo, wrap(controller.create));
 router.get('/', role.requireAdmin, wrap(controller.findAll));
 router.get('/:id', role.requireAdmin, wrap(controller.findOne));
-router.post('/:id/approve', role.requireAdmin, wrap(controller.approve));
-router.delete('/:id', role.requireAdmin, wrap(controller.remove));
+router.post('/:id/approve', role.requireNonDemo, role.requireAdmin, wrap(controller.approve));
+router.delete('/:id', role.requireNonDemo, role.requireAdmin, wrap(controller.remove));
 
 module.exports = router;

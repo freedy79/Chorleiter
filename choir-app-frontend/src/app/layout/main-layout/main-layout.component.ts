@@ -48,6 +48,7 @@ import { Choir } from '@core/models/choir';
 export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isLoggedIn$: Observable<boolean>;
   isAdmin$: Observable<boolean>;
+  isDemo$: Observable<boolean>;
   donatedRecently$: Observable<boolean>;
   userName$: Observable<string | undefined>;
   userRole$: Observable<string | undefined>;
@@ -114,6 +115,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
+    this.isDemo$ = this.authService.isDemo$;
     this.userName$ = this.authService.currentUser$.pipe(map(u => u?.firstName + ' ' + u?.name));
     this.userRole$ = combineLatest([this.authService.globalRoles$, this.authService.activeChoir$]).pipe(
       map(([globalRoles, choir]) => {
@@ -260,6 +262,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       .subscribe(() => this.setupNavItems());
   }
 
+  private restrictForDemo(visibility$: Observable<boolean>): Observable<boolean> {
+    return combineLatest([visibility$, this.isDemo$]).pipe(
+      map(([visible, isDemo]) => visible && !isDemo)
+    );
+  }
+
   private setupNavItems(): void {
     this.navItems = [
       {
@@ -280,21 +288,21 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'dienstplan',
         displayName: 'Dienstplan',
         route: '/dienstplan',
-        visibleSubject: this.menu.isVisible('dienstplan'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('dienstplan')),
         iconName: 'calendar_today',
       },
       {
         key: 'availability',
         displayName: 'Verfügbarkeiten',
         route: '/availability',
-        visibleSubject: this.menu.isVisible('availability'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('availability')),
         iconName: 'event_available',
       },
       {
         key: 'participation',
         displayName: 'Beteiligung',
         route: '/participation',
-        visibleSubject: this.menu.isVisible('participation'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
         iconName: 'group',
       },
       {
@@ -308,7 +316,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'programs',
         displayName: 'Programme',
         route: '/programs',
-        visibleSubject: this.menu.isVisible('programs'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('programs')),
         iconName: 'queue_music',
       },
       {
@@ -322,7 +330,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'manageChoir',
         displayName: 'Mein Chor',
         route: '/manage-choir',
-        visibleSubject: this.menu.isVisible('manageChoir'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
         iconName: 'settings',
       },
       {
@@ -336,14 +344,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         key: 'collections',
         displayName: 'Sammlungen',
         route: '/collections',
-        visibleSubject: this.menu.isVisible('collections'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('collections')),
         iconName: 'folder',
       },
       {
         key: 'library',
         displayName: 'Bibliothek',
         route: '/library',
-        visibleSubject: this.menu.isVisible('library'),
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('library')),
         iconName: 'menu_book',
       },
       {

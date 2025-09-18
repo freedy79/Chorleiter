@@ -15,7 +15,7 @@ export class MenuVisibilityService {
   visibility$ = this.visibilitySubject.asObservable();
 
   constructor(private auth: AuthService) {
-    combineLatest([this.auth.globalRoles$, this.auth.choirRoles$, this.auth.activeChoir$]).subscribe(([globalRoles, choirRoles, choir]) => {
+    combineLatest([this.auth.globalRoles$, this.auth.choirRoles$, this.auth.activeChoir$, this.auth.isDemo$]).subscribe(([globalRoles, choirRoles, choir, isDemo]) => {
       console.log("choir: ", JSON.stringify(choir));
       const visibility: MenuVisibility = {};
       const keys = [
@@ -55,6 +55,12 @@ export class MenuVisibilityService {
           library: true
         };
         Object.assign(visibility, base);
+        if (isDemo) {
+          const demoRestrictedKeys = ['dienstplan', 'availability', 'participation', 'programs', 'manageChoir', 'collections', 'library'];
+          for (const key of demoRestrictedKeys) {
+            visibility[key] = false;
+          }
+        }
         const isSingerOnly = choirRoles.includes('singer') && !hasPrivilegedRole;
         if (isSingerOnly) {
           const singerMenu = modules.singerMenu || {};

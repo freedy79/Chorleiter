@@ -34,6 +34,7 @@ export class AuthService {
   public choirRoles$: Observable<ChoirRole[]>;
   public isAdmin$: Observable<boolean>;
   public isLibrarian$: Observable<boolean>;
+  public isDemo$: Observable<boolean>;
   public isChoirAdmin$: Observable<boolean>;
   public isDirector$: Observable<boolean>;
   public isSinger$: Observable<boolean>;
@@ -73,6 +74,11 @@ export class AuthService {
 
     this.isLibrarian$ = this.globalRoles$.pipe(
       map(roles => roles.includes('librarian')),
+      distinctUntilChanged()
+    );
+
+    this.isDemo$ = this.globalRoles$.pipe(
+      map(roles => roles.includes('demo')),
       distinctUntilChanged()
     );
 

@@ -21,7 +21,7 @@ describe('CollectionListComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } },
-        { provide: AuthService, useValue: { isAdmin$: of(false), isChoirAdmin$: of(false), isDirector$: of(false) } },
+        { provide: AuthService, useValue: { isAdmin$: of(false), isChoirAdmin$: of(false), isDirector$: of(false), isDemo$: of(false) } },
         {
           provide: ApiService,
           useValue: {

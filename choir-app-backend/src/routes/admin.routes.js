@@ -18,42 +18,42 @@ router.get("/authors", wrap(controller.getAll(db.author)));
 
 // Routen für Chöre
 router.get("/choirs", wrap(controller.getAllChoirs));
-router.post("/choirs", wrap(controller.create(db.choir)));
-router.put("/choirs/:id", wrap(controller.update(db.choir)));
-router.delete("/choirs/:id", wrap(controller.remove(db.choir)));
+router.post("/choirs", role.requireNonDemo, wrap(controller.create(db.choir)));
+router.put("/choirs/:id", role.requireNonDemo, wrap(controller.update(db.choir)));
+router.delete("/choirs/:id", role.requireNonDemo, wrap(controller.remove(db.choir)));
 router.get("/choirs/:id/members", wrap(controller.getChoirMembers));
-router.post("/choirs/:id/members", wrap(controller.addUserToChoir));
-router.put("/choirs/:id/members/:userId", wrap(controller.updateChoirMember));
-router.delete("/choirs/:id/members", wrap(controller.removeUserFromChoir));
+router.post("/choirs/:id/members", role.requireNonDemo, wrap(controller.addUserToChoir));
+router.put("/choirs/:id/members/:userId", role.requireNonDemo, wrap(controller.updateChoirMember));
+router.delete("/choirs/:id/members", role.requireNonDemo, wrap(controller.removeUserFromChoir));
 
 // Routen für Benutzer
 router.get("/users", wrap(controller.getAllUsers));
 router.get("/users/email/:email", wrap(controller.getUserByEmail));
-router.post("/users", wrap(controller.createUser));
-router.put("/users/:id", wrap(controller.updateUser));
-router.delete("/users/:id", wrap(controller.deleteUser));
-router.post("/users/:id/send-password-reset", wrap(controller.sendPasswordReset));
-router.delete("/users/:id/reset-token", wrap(controller.clearResetToken));
+router.post("/users", role.requireNonDemo, wrap(controller.createUser));
+router.put("/users/:id", role.requireNonDemo, wrap(controller.updateUser));
+router.delete("/users/:id", role.requireNonDemo, wrap(controller.deleteUser));
+router.post("/users/:id/send-password-reset", role.requireNonDemo, wrap(controller.sendPasswordReset));
+router.delete("/users/:id/reset-token", role.requireNonDemo, wrap(controller.clearResetToken));
 router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/mail-logs', wrap(controller.getMailLogs));
-router.delete('/mail-logs', wrap(controller.clearMailLogs));
+router.delete('/mail-logs', role.requireNonDemo, wrap(controller.clearMailLogs));
 router.get('/donations', wrap(controller.getDonations));
 
 router.get('/logs', wrap(controller.listLogs));
 router.get('/logs/:filename', wrap(controller.getLog));
-router.delete('/logs/:filename', wrap(controller.deleteLog));
+router.delete('/logs/:filename', role.requireNonDemo, wrap(controller.deleteLog));
 router.get('/uploads', wrap(controller.listUploads));
-router.delete('/uploads/:category/:filename', wrap(controller.deleteUpload));
+router.delete('/uploads/:category/:filename', role.requireNonDemo, wrap(controller.deleteUpload));
 router.get('/mail-settings', wrap(controller.getMailSettings));
-router.put('/mail-settings', wrap(controller.updateMailSettings));
-router.post('/mail-settings/test', wrap(controller.sendTestMail));
+router.put('/mail-settings', role.requireNonDemo, wrap(controller.updateMailSettings));
+router.post('/mail-settings/test', role.requireNonDemo, wrap(controller.sendTestMail));
 router.get('/mail-templates', wrap(controller.getMailTemplates));
-router.put('/mail-templates', wrap(controller.updateMailTemplates));
-router.post('/mail-templates/test/:type', wrap(controller.sendMailTemplateTest));
+router.put('/mail-templates', role.requireNonDemo, wrap(controller.updateMailTemplates));
+router.post('/mail-templates/test/:type', role.requireNonDemo, wrap(controller.sendMailTemplateTest));
 router.get('/frontend-url', wrap(controller.getFrontendUrl));
-router.put('/frontend-url', wrap(controller.updateFrontendUrl));
+router.put('/frontend-url', role.requireNonDemo, wrap(controller.updateFrontendUrl));
 router.get('/system-admin-email', wrap(controller.getSystemAdminEmail));
-router.put('/system-admin-email', wrap(controller.updateSystemAdminEmail));
+router.put('/system-admin-email', role.requireNonDemo, wrap(controller.updateSystemAdminEmail));
 
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));

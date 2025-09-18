@@ -33,7 +33,7 @@
 
   <!-- SWITCH CHOIR -->
 
-  <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu"
+  <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
     *ngIf="(availableChoirs$ | async)?.length && (((isSmallScreen$ | async) && searchOpen) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
@@ -146,7 +146,7 @@
     <mat-icon>event</mat-icon>
     <span>Termine</span>
   </a>
-  <a mat-button routerLink="/dienstplan" routerLinkActive="active">
+  <a mat-button routerLink="/dienstplan" routerLinkActive="active" *ngIf="!(isDemo$ | async)">
     <mat-icon>assignment</mat-icon>
     <span>Dienstplan</span>
   </a>
@@ -154,7 +154,7 @@
     <mat-icon>library_music</mat-icon>
     <span>Chor</span>
   </a>
-  <a mat-button routerLink="/admin" routerLinkActive="active" *ngIf="isAdmin$ | async">
+  <a mat-button routerLink="/admin" routerLinkActive="active" *ngIf="(isAdmin$ | async) && !(isDemo$ | async)">
     <mat-icon>settings</mat-icon>
     <span>Admin</span>
   </a>

@@ -16,7 +16,7 @@ describe('CollectionEditComponent', () => {
     await TestBed.configureTestingModule({
       imports: [CollectionEditComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
-        { provide: AuthService, useValue: { isAdmin$: of(true) } },
+        { provide: AuthService, useValue: { isAdmin$: of(true), isDemo$: of(false) } },
         { provide: MatDialogRef, useValue: {} },
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },

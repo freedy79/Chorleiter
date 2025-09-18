@@ -28,7 +28,8 @@ describe('HelpWizardComponent', () => {
       isAdmin$: of(false),
       isChoirAdmin$: of(false),
       isDirector$: of(false),
-      isLibrarian$: of(false)
+      isLibrarian$: of(false),
+      isDemo$: of(false)
     };
 
     await TestBed.configureTestingModule({

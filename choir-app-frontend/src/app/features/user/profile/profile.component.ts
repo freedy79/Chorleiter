@@ -40,10 +40,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
   currentUser: User | null = null;
   isLoading = true;
   availableChoirs$: Observable<Choir[]>;
+  isDemo$: Observable<boolean>;
   districts: District[] = [];
   congregations: Congregation[] = [];
   choirList: Choir[] = [];
   private destroy$ = new Subject<void>();
+  private isDemoUser = false;
 
   constructor(
     private fb: FormBuilder,
@@ -53,6 +55,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private dialog: MatDialog
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
+    this.isDemo$ = this.authService.isDemo$;
     this.profileForm = this.fb.group({
       firstName: ['', Validators.required],
       name: ['', Validators.required],
@@ -74,6 +77,13 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.isDemo$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isDemo => {
+        this.isDemoUser = isDemo;
+        this.updateFormAccess();
+      });
+
     this.availableChoirs$
       .pipe(takeUntil(this.destroy$))
       .subscribe(choirs => this.choirList = Array.isArray(choirs) ? choirs : []);
@@ -96,9 +106,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           shareWithChoir: !!user.shareWithChoir,
           roles: user.roles || []
         });
-        if (user.roles?.includes('admin')) {
-          this.profileForm.get('roles')?.enable();
-        }
+        this.updateFormAccess();
         if (!user.congregation || !user.district) {
           this.snackBar.open('Bitte ergänze dein Profil um Gemeinde und Bezirk.', 'OK', { duration: 10000, verticalPosition: 'top' });
         }
@@ -117,6 +125,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
+    if (this.isDemoUser) {
+      return;
+    }
     if (this.profileForm.invalid) {
       return;
     }
@@ -172,6 +183,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onLeaveChoir(choir: Choir): void {
+    if (this.isDemoUser) {
+      return;
+    }
     const multipleChoirs = this.choirList.length > 1;
     const dialogData: ConfirmDialogData = {
       title: 'Abmeldung bestätigen',
@@ -197,6 +211,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onDeleteAccount(): void {
+    if (this.isDemoUser) {
+      return;
+    }
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       data: {
         title: 'Vom System abmelden',
@@ -217,6 +234,24 @@ export class ProfileComponent implements OnInit, OnDestroy {
         }
       });
     });
+  }
+
+  private updateFormAccess(): void {
+    if (!this.profileForm) {
+      return;
+    }
+    if (this.isDemoUser) {
+      this.profileForm.disable({ emitEvent: false });
+      return;
+    }
+
+    this.profileForm.enable({ emitEvent: false });
+    const rolesControl = this.profileForm.get('roles');
+    if (this.currentUser?.roles?.includes('admin')) {
+      rolesControl?.enable({ emitEvent: false });
+    } else {
+      rolesControl?.disable({ emitEvent: false });
+    }
   }
 
   private handleMembershipChange(response: LeaveChoirResponse, fallback: string): void {

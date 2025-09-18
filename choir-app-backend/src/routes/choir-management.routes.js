@@ -23,7 +23,7 @@ router.get("/participation/pdf", role.requireChoirAdmin, wrap(controller.downloa
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", wrap(controller.getChoirCollections));
 router.get("/borrowings", wrap(lendingController.listForUser));
-router.delete("/collections/:id", role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));
+router.delete("/collections/:id", role.requireNonDemo, role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));
 router.get("/collections/:id/copies", role.requireChoirAdmin, wrap(lendingController.list));
 router.get("/collections/:id/copies/pdf", role.requireChoirAdmin, wrap(lendingController.downloadPdf));
 router.post("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.init));

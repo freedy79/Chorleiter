@@ -8,9 +8,9 @@ router.use(authJwt.verifyToken);
 
 router.get("/me", wrap(controller.getMe));
 router.put("/me", role.requireNonDemo, wrap(controller.updateMe));
-router.post("/me/donate", wrap(controller.registerDonation));
+router.post("/me/donate", role.requireNonDemo, wrap(controller.registerDonation));
 router.get("/me/preferences", wrap(controller.getPreferences));
-router.put("/me/preferences", wrap(controller.updatePreferences));
+router.put("/me/preferences", role.requireNonDemo, wrap(controller.updatePreferences));
 router.delete("/me/choirs/:choirId", role.requireNonDemo, wrap(controller.leaveChoir));
 router.delete("/me", role.requireNonDemo, wrap(controller.deleteMe));
 
