@@ -9,6 +9,6 @@ const { handler: wrap } = require("../utils/async");
 router.use(verifyToken, role.requireAdmin);
 
 router.get('/export', wrap(controller.exportData));
-router.post('/import', upload.single('backup'), wrap(controller.importData));
+router.post('/import', role.requireNonDemo, upload.single('backup'), wrap(controller.importData));
 
 module.exports = router;

@@ -24,6 +24,7 @@ describe('MainLayoutComponent', () => {
   let choirRolesSubject: BehaviorSubject<string[]>;
   let currentUserSubject: BehaviorSubject<any>;
   let activeChoirSubject: BehaviorSubject<any>;
+  let isDemoSubject: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
     globalRolesSubject = new BehaviorSubject<string[]>(['user']);
@@ -33,6 +34,7 @@ describe('MainLayoutComponent', () => {
       modules: { singerMenu: { events: false, participation: false } },
       membership: { rolesInChoir: ['singer'] }
     });
+    isDemoSubject = new BehaviorSubject<boolean>(false);
     const isAdmin$ = globalRolesSubject.asObservable().pipe(map(roles => roles.includes('admin')));
     const isChoirAdmin$ = combineLatest([isAdmin$, choirRolesSubject.asObservable()]).pipe(
       map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('choir_admin'))
@@ -60,6 +62,7 @@ describe('MainLayoutComponent', () => {
       currentUser$: currentUserSubject,
       activeChoir$: activeChoirSubject,
       availableChoirs$: of([]),
+      isDemo$: isDemoSubject.asObservable(),
       setActiveChoir: () => {},
       setCurrentUser: () => {},
       logout: () => {}
@@ -158,6 +161,17 @@ describe('MainLayoutComponent', () => {
     const item = component.navItems.find(i => i.key === 'participation');
     const visible = await firstValueFrom(item!.visibleSubject!);
     expect(visible).toBeTrue();
+  });
+
+  it('hides editing navigation entries for demo users', async () => {
+    isDemoSubject.next(true);
+    fixture.detectChanges();
+    const manageChoirItem = component.navItems.find(i => i.key === 'manageChoir');
+    const programsItem = component.navItems.find(i => i.key === 'programs');
+    const manageVisible = await firstValueFrom(manageChoirItem!.visibleSubject!);
+    const programsVisible = await firstValueFrom(programsItem!.visibleSubject!);
+    expect(manageVisible).toBeFalse();
+    expect(programsVisible).toBeFalse();
   });
 
   it('translates user roles and updates tooltip on changes', async () => {

@@ -9,8 +9,11 @@ export class ProgramGuard implements CanActivate {
   constructor(private auth: AuthService, private router: Router) {}
 
   canActivate(): Observable<boolean | UrlTree> {
-    return combineLatest([this.auth.isAdmin$, this.auth.activeChoir$]).pipe(
-      map(([isAdmin, choir]) => {
+    return combineLatest([this.auth.isAdmin$, this.auth.activeChoir$, this.auth.isDemo$]).pipe(
+      map(([isAdmin, choir, isDemo]) => {
+        if (isDemo) {
+          return this.router.createUrlTree(['/dashboard']);
+        }
         const moduleEnabled = choir?.modules?.programs !== false;
         const roles = choir?.membership?.rolesInChoir ?? [];
         const choirPrivilege = roles.some(role => ['choir_admin', 'director'].includes(role));

@@ -18,6 +18,6 @@ router.get("/status/:jobId", wrap(controller.getUpdateStatus));
 router.get("/:id", wrap(controller.findOne));
 router.put("/:id", role.requireNonDemo, role.requireChoirAdmin, updateCollectionValidation, validate, wrap(controller.update));
 router.post("/:id/cover", role.requireNonDemo, role.requireChoirAdmin, upload.single('cover'), wrap(controller.uploadCover));
-router.post("/:id/addToChoir", wrap(controller.addToChoir)); // Crucial endpoint
-router.post("/bulkAddToChoir", wrap(controller.bulkAddToChoir));
+router.post("/:id/addToChoir", role.requireNonDemo, wrap(controller.addToChoir)); // Crucial endpoint
+router.post("/bulkAddToChoir", role.requireNonDemo, wrap(controller.bulkAddToChoir));
 module.exports = router;

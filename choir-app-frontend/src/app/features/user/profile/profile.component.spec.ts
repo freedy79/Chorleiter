@@ -3,8 +3,9 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { of } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
+import { AuthService } from '@core/services/auth.service';
 
 import { ProfileComponent } from './profile.component';
 
@@ -20,8 +21,17 @@ class MockApiService {
 describe('ProfileComponent', () => {
   let component: ProfileComponent;
   let fixture: ComponentFixture<ProfileComponent>;
+  let demoSubject: BehaviorSubject<boolean>;
+  let authServiceMock: any;
 
   beforeEach(async () => {
+    demoSubject = new BehaviorSubject<boolean>(false);
+    authServiceMock = {
+      availableChoirs$: of([{ id: 1, name: 'Demo Choir' }]),
+      isDemo$: demoSubject.asObservable(),
+      logout: () => {},
+      setCurrentUser: () => {}
+    };
     await TestBed.configureTestingModule({
       imports: [ProfileComponent, HttpClientTestingModule, RouterTestingModule],
       providers: [
@@ -29,7 +39,8 @@ describe('ProfileComponent', () => {
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } },
-        { provide: ApiService, useClass: MockApiService }
+        { provide: ApiService, useClass: MockApiService },
+        { provide: AuthService, useValue: authServiceMock }
       ]
     })
     .compileComponents();
@@ -48,5 +59,14 @@ describe('ProfileComponent', () => {
     component.isLoading = false;
     fixture.detectChanges();
     expect(component.profileForm.get('roles')?.enabled).toBeTrue();
+  });
+
+  it('disables editing actions for demo users', () => {
+    demoSubject.next(true);
+    fixture.detectChanges();
+    const warnButtons = fixture.nativeElement.querySelectorAll('button[color="warn"]');
+    warnButtons.forEach((btn: HTMLButtonElement) => expect(btn.disabled).toBeTrue());
+    const saveButton = fixture.nativeElement.querySelector('.actions-footer button');
+    expect(saveButton).toBeNull();
   });
 });

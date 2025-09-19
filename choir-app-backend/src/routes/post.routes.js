@@ -10,9 +10,9 @@ router.use(authJwt.verifyToken);
 
 router.get('/latest', wrap(controller.findLatest));
 router.get('/', wrap(controller.findAll));
-router.post('/', role.requireDirector, postValidation, validate, wrap(controller.create));
-router.put('/:id', postValidation, validate, wrap(controller.update));
-router.delete('/:id', wrap(controller.remove));
-router.post('/:id/publish', wrap(controller.publish));
+router.post('/', role.requireNonDemo, role.requireDirector, postValidation, validate, wrap(controller.create));
+router.put('/:id', role.requireNonDemo, postValidation, validate, wrap(controller.update));
+router.delete('/:id', role.requireNonDemo, wrap(controller.remove));
+router.post('/:id/publish', role.requireNonDemo, wrap(controller.publish));
 
 module.exports = router;

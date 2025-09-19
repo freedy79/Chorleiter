@@ -13,17 +13,17 @@ router.use(authJwt.verifyToken);
 
 router.get('/', wrap(controller.findAll));
 router.get('/loans', role.requireLibrarian, wrap(controller.listLoans));
-router.put('/loans/:id', role.requireLibrarian, wrap(controller.updateLoan));
-router.post('/loans/:id/end', role.requireLibrarian, wrap(controller.endLoan));
-router.post('/', role.requireLibrarian, createLibraryItemValidation, validate, wrap(controller.create));
-router.post('/import', role.requireLibrarian, upload.single('csvfile'), wrap(controller.importCsv));
-router.put('/:id', role.requireLibrarian, updateLibraryItemValidation, validate, wrap(controller.update));
-router.delete('/:id', role.requireLibrarian, wrap(controller.remove));
-router.post('/:id/borrow', role.requireDirector, wrap(controller.borrow));
-router.post('/:id/return', role.requireDirector, wrap(controller.returnItem));
-router.post('/request', role.requireDirector, loanRequestValidation, validate, wrap(controller.requestLoan));
+router.put('/loans/:id', role.requireNonDemo, role.requireLibrarian, wrap(controller.updateLoan));
+router.post('/loans/:id/end', role.requireNonDemo, role.requireLibrarian, wrap(controller.endLoan));
+router.post('/', role.requireNonDemo, role.requireLibrarian, createLibraryItemValidation, validate, wrap(controller.create));
+router.post('/import', role.requireNonDemo, role.requireLibrarian, upload.single('csvfile'), wrap(controller.importCsv));
+router.put('/:id', role.requireNonDemo, role.requireLibrarian, updateLibraryItemValidation, validate, wrap(controller.update));
+router.delete('/:id', role.requireNonDemo, role.requireLibrarian, wrap(controller.remove));
+router.post('/:id/borrow', role.requireNonDemo, role.requireDirector, wrap(controller.borrow));
+router.post('/:id/return', role.requireNonDemo, role.requireDirector, wrap(controller.returnItem));
+router.post('/request', role.requireNonDemo, role.requireDirector, loanRequestValidation, validate, wrap(controller.requestLoan));
 router.get('/:id/copies', role.requireLibrarian, wrap(lendingController.list));
-router.put('/copies/:id', role.requireLibrarian, wrap(lendingController.update));
+router.put('/copies/:id', role.requireNonDemo, role.requireLibrarian, wrap(lendingController.update));
 router.get('/:id/copies/pdf', role.requireLibrarian, wrap(lendingController.downloadPdf));
 
 module.exports = router;

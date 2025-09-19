@@ -45,9 +45,18 @@ async function sendRequest(middleware, context) {
       email: 'oc@example.com',
       choirMemberships: [{ choirId: otherChoir.id, rolesInChoir: ['choir_admin'] }]
     });
-    await db.user_choir.create({ userId: choirAdmin.id, choirId: choir.id, rolesInChoir: ['choir_admin'] });
-    await db.user_choir.create({ userId: choirDirector.id, choirId: choir.id, rolesInChoir: ['director'] });
-    await db.user_choir.create({ userId: otherChoirAdmin.id, choirId: otherChoir.id, rolesInChoir: ['choir_admin'] });
+    await db.user_choir.findOrCreate({
+      where: { userId: choirAdmin.id, choirId: choir.id },
+      defaults: { rolesInChoir: ['choir_admin'] }
+    });
+    await db.user_choir.findOrCreate({
+      where: { userId: choirDirector.id, choirId: choir.id },
+      defaults: { rolesInChoir: ['director'] }
+    });
+    await db.user_choir.findOrCreate({
+      where: { userId: otherChoirAdmin.id, choirId: otherChoir.id },
+      defaults: { rolesInChoir: ['choir_admin'] }
+    });
 
     // requireNonDemo success
     let res = await sendRequest(requireNonDemo, { userRoles: ['admin'] });
@@ -56,6 +65,14 @@ async function sendRequest(middleware, context) {
     // requireNonDemo failure
     res = await sendRequest(requireNonDemo, { userRoles: ['demo'] });
     assert.strictEqual(res.status, 403, 'demo should be blocked');
+
+    // requireNonDemo failure with mixed roles
+    res = await sendRequest(requireNonDemo, { userRoles: ['user', 'demo'] });
+    assert.strictEqual(res.status, 403, 'demo role should block even with other roles');
+
+    // requireNonDemo allows requests without explicit roles (e.g. optional auth)
+    res = await sendRequest(requireNonDemo, {});
+    assert.strictEqual(res.status, 200, 'missing roles should default to pass');
 
     // requireAdmin success
     res = await sendRequest(requireAdmin, { userRoles: ['admin'] });

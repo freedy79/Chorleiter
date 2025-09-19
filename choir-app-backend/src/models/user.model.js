@@ -1,3 +1,6 @@
+const DEFAULT_ROLES = ['user'];
+const ALLOWED_GLOBAL_ROLES = ['admin', 'librarian', 'user', 'demo'];
+
 module.exports = (sequelize, DataTypes) => {
   const User = sequelize.define("user", {
     firstName: {
@@ -39,15 +42,14 @@ module.exports = (sequelize, DataTypes) => {
     roles: {
       type: DataTypes.JSON,
       allowNull: false,
-      defaultValue: ['user'],
+      defaultValue: DEFAULT_ROLES,
       validate: {
         isValidRole(value) {
           if (!Array.isArray(value)) {
             throw new Error("Role must be provided as array.");
           }
 
-          const allowed = ['admin', 'librarian', 'user', 'demo'];
-          if (!value.every(r => allowed.includes(r))) {
+          if (!value.every(r => ALLOWED_GLOBAL_ROLES.includes(r))) {
             throw new Error('Invalid role: ' + JSON.stringify(value));
           }
         }

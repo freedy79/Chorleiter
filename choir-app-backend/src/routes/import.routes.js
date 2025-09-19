@@ -8,7 +8,7 @@ const role = require("../middleware/role.middleware");
 
 router.use(authJwt.verifyToken);
 
-router.post("/collection/:id", upload.single('csvfile'), wrap(controller.startImportCsvToCollection));
-router.post("/events", role.requireDirector, upload.single('csvfile'), wrap(controller.startImportEvents));
+router.post("/collection/:id", role.requireNonDemo, upload.single('csvfile'), wrap(controller.startImportCsvToCollection));
+router.post("/events", role.requireNonDemo, role.requireDirector, upload.single('csvfile'), wrap(controller.startImportEvents));
 router.get("/status/:jobId", wrap(controller.getImportStatus));
 module.exports = router;

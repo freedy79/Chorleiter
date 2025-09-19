@@ -148,7 +148,7 @@
               color="warn"
               type="button"
               (click)="onLeaveChoir(choir)"
-              [disabled]="currentUser?.roles?.includes('demo')"
+              [disabled]="isDemo$ | async"
             >
               Aus Chor abmelden
             </button>
@@ -163,14 +163,14 @@
             color="warn"
             type="button"
             (click)="onDeleteAccount()"
-            [disabled]="currentUser?.roles?.includes('demo')"
+            [disabled]="isDemo$ | async"
           >
             Vom gesamten System abmelden
           </button>
         </mat-card-actions>
       </mat-card>
 
-      <div class="actions-footer" *ngIf="!(currentUser?.roles?.includes('demo'))">
+      <div class="actions-footer" *ngIf="!(isDemo$ | async)">
         <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileForm.pristine">
           Speichern
         </button>

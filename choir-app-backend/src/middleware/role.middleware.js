@@ -31,7 +31,8 @@ async function userHasChoirRole(req, choirRoles) {
  * Checks the global roles provided in {@link req.userRoles}.
  */
 function requireNonDemo(req, res, next) {
-    if (req.userRoles.includes('demo')) {
+    const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
+    if (roles.includes('demo')) {
         return res.status(403).send({ message: 'Demo user cannot perform this action.' });
     }
     next();

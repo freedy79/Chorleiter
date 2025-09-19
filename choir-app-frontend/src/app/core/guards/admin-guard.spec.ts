@@ -8,11 +8,13 @@ import { AuthService } from '../services/auth.service';
 describe('AdminGuard', () => {
   let guard: AdminGuard;
   let isAdminSubject: BehaviorSubject<boolean>;
+  let isDemoSubject: BehaviorSubject<boolean>;
   let router: jasmine.SpyObj<Router>;
   let redirectTree: UrlTree;
 
   beforeEach(() => {
     isAdminSubject = new BehaviorSubject<boolean>(false);
+    isDemoSubject = new BehaviorSubject<boolean>(false);
     router = jasmine.createSpyObj('Router', ['createUrlTree']);
     redirectTree = {} as UrlTree;
     router.createUrlTree.and.returnValue(redirectTree);
@@ -20,7 +22,7 @@ describe('AdminGuard', () => {
     TestBed.configureTestingModule({
       providers: [
         AdminGuard,
-        { provide: AuthService, useValue: { isAdmin$: isAdminSubject.asObservable() } },
+        { provide: AuthService, useValue: { isAdmin$: isAdminSubject.asObservable(), isDemo$: isDemoSubject.asObservable() } },
         { provide: Router, useValue: router }
       ]
     });
@@ -36,6 +38,14 @@ describe('AdminGuard', () => {
 
   it('redirects non-admin users to the dashboard', async () => {
     isAdminSubject.next(false);
+    const result = await firstValueFrom(guard.canActivate());
+    expect(router.createUrlTree).toHaveBeenCalledWith(['/dashboard']);
+    expect(result).toEqual(redirectTree);
+  });
+
+  it('redirects demo admins to the dashboard', async () => {
+    isAdminSubject.next(true);
+    isDemoSubject.next(true);
     const result = await firstValueFrom(guard.canActivate());
     expect(router.createUrlTree).toHaveBeenCalledWith(['/dashboard']);
     expect(result).toEqual(redirectTree);

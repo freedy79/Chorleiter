@@ -29,7 +29,7 @@ describe('PieceDetailComponent', () => {
         { provide: ApiService, useValue: { getRepertoirePiece: () => of(null), getLibraryItems: () => of([]) } },
         {
           provide: AuthService,
-          useValue: { currentUser$: of(null), isAdmin$: of(false) }
+          useValue: { currentUser$: of(null), isAdmin$: of(false), isDemo$: of(false) }
         },
         { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(false) }) } },
         { provide: MatSnackBar, useValue: { open: () => {} } }
