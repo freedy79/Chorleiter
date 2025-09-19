@@ -169,20 +169,48 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const now = new Date();
-    this.selectedYear = now.getFullYear();
-    this.selectedMonth = now.getMonth() + 1;
+    const initialParams = this.route.snapshot.queryParamMap;
+    const initialYear = Number(initialParams.get('year'));
+    const initialMonth = Number(initialParams.get('month'));
+
+    this.selectedYear = !Number.isNaN(initialYear) && initialYear > 0
+      ? initialYear
+      : now.getFullYear();
+    this.selectedMonth = !Number.isNaN(initialMonth) && initialMonth > 0
+      ? initialMonth
+      : now.getMonth() + 1;
+    this.selectedTab = initialParams.get('tab') === 'avail' ? 1 : 0;
+
+    this.loadPlan(this.selectedYear, this.selectedMonth);
 
     this.paramSub = this.route.queryParamMap.subscribe(params => {
-      const y = Number(params.get('year'));
-      const m = Number(params.get('month'));
-      if (!Number.isNaN(y) && y > 0) { this.selectedYear = y; }
-      if (!Number.isNaN(m) && m > 0) { this.selectedMonth = m; }
-      this.selectedTab = params.get('tab') === 'avail' ? 1 : 0;
+      const tabIndex = params.get('tab') === 'avail' ? 1 : 0;
+      if (this.selectedTab !== tabIndex) {
+        this.selectedTab = tabIndex;
+      }
+
       if (this.skipNextParamLoad) {
         this.skipNextParamLoad = false;
         return;
       }
-      this.loadPlan(this.selectedYear, this.selectedMonth);
+
+      const y = Number(params.get('year'));
+      const m = Number(params.get('month'));
+      let shouldReload = false;
+
+      if (!Number.isNaN(y) && y > 0 && y !== this.selectedYear) {
+        this.selectedYear = y;
+        shouldReload = true;
+      }
+
+      if (!Number.isNaN(m) && m > 0 && m !== this.selectedMonth) {
+        this.selectedMonth = m;
+        shouldReload = true;
+      }
+
+      if (shouldReload) {
+        this.loadPlan(this.selectedYear, this.selectedMonth);
+      }
     });
 
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
