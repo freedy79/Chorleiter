@@ -136,12 +136,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const trimmedPhone = typeof formValue.phone === 'string' ? formValue.phone.trim() : formValue.phone;
-    const updatePayload: { firstName?: string; name?: string; email?: string; phone?: string | null; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] } = {
+    const trimmedPhone = typeof formValue.phone === 'string' ? formValue.phone.trim() : undefined;
+    const updatePayload: { firstName?: string; name?: string; email?: string; phone?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] } = {
       firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
-      phone: trimmedPhone,
+      phone: trimmedPhone || undefined,
       street: formValue.street,
       postalCode: formValue.postalCode,
       city: formValue.city,
