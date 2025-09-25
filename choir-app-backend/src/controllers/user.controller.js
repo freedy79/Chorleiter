@@ -50,7 +50,7 @@ function createAccessToken(user, activeChoirId) {
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'firstName', 'name', 'email', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'helpShown'],
+            attributes: ['id', 'firstName', 'name', 'email', 'phone', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'helpShown'],
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
@@ -77,8 +77,8 @@ exports.getMe = async (req, res) => {
 /**
  * @description Update the profile of the currently logged-in user.
  */
- exports.updateMe = async (req, res) => {
-    const { firstName, name, email, street, postalCode, city, congregation, district, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
+exports.updateMe = async (req, res) => {
+    const { firstName, name, email, phone, street, postalCode, city, congregation, district, voice, shareWithChoir, helpShown, oldPassword, newPassword, roles } = req.body;
 
     try {
         const VOICE_OPTIONS = User.rawAttributes.voice.values;
@@ -107,6 +107,9 @@ exports.getMe = async (req, res) => {
             updateData.emailChangeToken = token;
             updateData.emailChangeTokenExpiry = expiry;
             emailMessage = 'Eine Bestätigungsmail wurde an die neue Adresse gesendet. Der Link ist 2 Stunden gültig.';
+        }
+        if (phone !== undefined) {
+            updateData.phone = phone === '' ? null : phone;
         }
         if (street !== undefined) {
             updateData.street = street;

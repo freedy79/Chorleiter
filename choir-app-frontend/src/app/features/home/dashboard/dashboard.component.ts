@@ -32,6 +32,8 @@ import { KpiWidgetComponent } from './widgets/kpi-widget.component';
 import { LatestPostWidgetComponent } from './widgets/latest-post-widget.component';
 import { CurrentProgramWidgetComponent } from './widgets/current-program.component';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { DashboardContactWidgetComponent } from './widgets/dashboard-contact-widget.component';
+import { DashboardContact } from '@core/models/dashboard-contact';
 
 type VM = {
   activeChoir: any | null;
@@ -42,6 +44,7 @@ type VM = {
   latestPost: any | null;
   lastProgram: Program | null;
   upcomingEvents: any[];
+  dashboardContact: DashboardContact | null;
 };
 
 @Component({
@@ -60,6 +63,7 @@ type VM = {
     UpcomingEventsWidgetComponent,
     LatestPostWidgetComponent,
     CurrentProgramWidgetComponent,
+    DashboardContactWidgetComponent,
     PureDatePipe,
   ],
   templateUrl: './dashboard.component.html',
@@ -83,6 +87,7 @@ export class DashboardComponent implements OnInit {
   openTasksCount$!: Observable<number>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
+  dashboardContact$!: Observable<DashboardContact | null>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
@@ -159,6 +164,11 @@ export class DashboardComponent implements OnInit {
       switchMap(() => this.apiService.getLatestPost())
     );
 
+    this.dashboardContact$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getDashboardContact()),
+      shareReplay(1)
+    );
+
     this.userService.getCurrentUser().pipe(take(1)).subscribe(user => {
       this.authService.setCurrentUser(user);
       if (this.help.shouldShowHelp(user)) {
@@ -175,7 +185,8 @@ export class DashboardComponent implements OnInit {
       lastService: this.lastService$,
       latestPost: this.latestPost$,
       lastProgram: this.lastProgram$,
-      upcomingEvents: this.upcomingEvents$
+      upcomingEvents: this.upcomingEvents$,
+      dashboardContact: this.dashboardContact$
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 

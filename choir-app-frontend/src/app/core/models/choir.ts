@@ -1,3 +1,5 @@
+import { DashboardContact } from './dashboard-contact';
+
 export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer';
 
 export interface ChoirMembership {
@@ -22,6 +24,14 @@ export interface Choir {
          * true means the item is visible, false hides it.
          */
         singerMenu?: Record<string, boolean>;
+        /**
+         * User id of the contact person that should be highlighted on the dashboard.
+         */
+        dashboardContactUserId?: number | null;
+        /**
+         * Optional cached details of the selected contact.
+         */
+        dashboardContact?: DashboardContact | null;
     };
     joinHash?: string;
     membership?: ChoirMembership;

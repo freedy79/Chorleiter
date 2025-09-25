@@ -99,6 +99,8 @@ export class ManageChoirComponent implements OnInit {
   // Für die Mitglieder-Tabelle
   displayedColumns: string[] = ['name', 'email', 'address', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
+  directorOptions: UserInChoir[] = [];
+  dashboardContactUserId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -137,6 +139,7 @@ export class ManageChoirComponent implements OnInit {
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
         this.programsEnabled = !!pageData.choirDetails.modules?.programs;
         this.joinByLinkEnabled = !!pageData.choirDetails.modules?.joinByLink;
+        this.dashboardContactUserId = pageData.choirDetails.modules?.dashboardContactUserId ?? null;
         const menu = pageData.choirDetails.modules?.singerMenu || {};
         this.menuOptions.forEach(opt => {
           this.singerMenu[opt.key] = menu[opt.key] !== false;
@@ -171,6 +174,7 @@ export class ManageChoirComponent implements OnInit {
           this.choirForm.disable();
         }
         this.dataSource.data = pageData.members;
+        this.updateDirectorOptions();
         this.collectionDataSource.data = pageData.collections;
         this.logDataSource.data = pageData.logs;
 
@@ -209,6 +213,7 @@ export class ManageChoirComponent implements OnInit {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
       this.apiService.getChoirMembers(opts).subscribe(members => {
         this.dataSource.data = members;
+        this.updateDirectorOptions();
       });
       this.apiService.getChoirCollections(opts).subscribe(cols => {
         this.collectionDataSource.data = cols;
@@ -363,7 +368,13 @@ export class ManageChoirComponent implements OnInit {
       return;
     }
 
-    const modules = { dienstplan: this.dienstplanEnabled, programs: this.programsEnabled, joinByLink: this.joinByLinkEnabled, singerMenu: this.singerMenu };
+    const modules = {
+      dienstplan: this.dienstplanEnabled,
+      programs: this.programsEnabled,
+      joinByLink: this.joinByLinkEnabled,
+      singerMenu: this.singerMenu,
+      dashboardContactUserId: this.dashboardContactUserId ?? null
+    };
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {
@@ -381,6 +392,44 @@ export class ManageChoirComponent implements OnInit {
         }
       },
       error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
+    });
+  }
+
+  onDashboardContactChange(value: number | null): void {
+    if (!this.canManageMenu) {
+      return;
+    }
+    this.dashboardContactUserId = value ?? null;
+    this.onModulesChange();
+  }
+
+  get selectedDashboardContact(): UserInChoir | undefined {
+    if (this.dashboardContactUserId == null) {
+      return undefined;
+    }
+    return this.dataSource.data.find(member => member.id === this.dashboardContactUserId);
+  }
+
+  private updateDirectorOptions(): void {
+    const members = this.dataSource.data ?? [];
+    const directors = members.filter(member => {
+      const roles = member.membership?.rolesInChoir ?? [];
+      return roles.includes('director');
+    });
+    if (this.dashboardContactUserId != null) {
+      const selected = members.find(member => member.id === this.dashboardContactUserId);
+      if (selected && !directors.some(member => member.id === selected.id)) {
+        directors.push(selected);
+      }
+    }
+    this.directorOptions = directors.sort((a, b) => {
+      const lastNameCompare = a.name.localeCompare(b.name);
+      if (lastNameCompare !== 0) {
+        return lastNameCompare;
+      }
+      const firstA = a.firstName ?? '';
+      const firstB = b.firstName ?? '';
+      return firstA.localeCompare(firstB);
     });
   }
 

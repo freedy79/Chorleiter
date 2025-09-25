@@ -25,6 +25,11 @@ export interface User {
    */
   email: string;
 
+  /**
+   * Optional phone number for direct contact.
+   */
+  phone?: string | null;
+
   street?: string;
   postalCode?: string;
   city?: string;

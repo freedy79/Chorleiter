@@ -15,6 +15,7 @@ import { LookupPiece } from '@core/models/lookup-piece';
 import { Author } from '@core/models/author';
 import { Publisher } from '@core/models/publisher';
 import { Choir } from '@core/models/choir';
+import { DashboardContact } from '../models/dashboard-contact';
 import { ChoirLog } from '../models/choir-log';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
@@ -524,7 +525,7 @@ export class ApiService {
     return this.userService.getCurrentUser();
   }
 
-  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] }): Observable<any> {
+  updateCurrentUser(profileData: { firstName?: string; name?: string; email?: string; phone?: string; street?: string; postalCode?: string; city?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] }): Observable<any> {
     return this.userService.updateCurrentUser(profileData);
   }
 
@@ -658,6 +659,10 @@ export class ApiService {
 
   getChoirMemberCount(options?: { choirId?: number }): Observable<number> {
     return this.choirService.getChoirMemberCount(options?.choirId);
+  }
+
+  getDashboardContact(options?: { choirId?: number }): Observable<DashboardContact | null> {
+    return this.choirService.getDashboardContact(options?.choirId);
   }
 
   inviteUserToChoir(

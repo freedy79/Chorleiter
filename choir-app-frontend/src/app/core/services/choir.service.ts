@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Choir, normalizeChoir, normalizeMembers } from '../models/choir';
+import { DashboardContact } from '../models/dashboard-contact';
 import { UserInChoir } from '../models/user';
 import { Collection } from '../models/collection';
 import { ChoirLog } from '../models/choir-log';
@@ -36,6 +37,11 @@ export class ChoirService {
     return this.http
       .get<{ count: number }>(`${this.apiUrl}/choir-management/members/count`, { params })
       .pipe(map(res => res.count));
+  }
+
+  getDashboardContact(choirId?: number): Observable<DashboardContact | null> {
+    const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+    return this.http.get<DashboardContact | null>(`${this.apiUrl}/choir-management/dashboard-contact`, { params });
   }
 
   inviteUserToChoir(email: string, rolesInChoir: string[], choirId?: number): Observable<{ message: string }> {

@@ -165,6 +165,7 @@ exports.signin = async (req, res) => {
       firstName: user.firstName,
       name: user.name,
       email: user.email,
+      phone: user.phone,
       voice: user.voice,
       roles: user.roles,
       helpShown: user.helpShown,
