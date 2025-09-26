@@ -67,7 +67,26 @@ exports.updateMyChoir = async (req, res, next) => {
         if (description !== undefined) updateData.description = description;
         if (location !== undefined) updateData.location = location;
         if (modules !== undefined) {
-            updateData.modules = modules;
+            const sanitizedModules = { ...modules };
+            if (Object.prototype.hasOwnProperty.call(modules, 'dashboardContactUserId')) {
+                const contactId = modules.dashboardContactUserId;
+                if (contactId === null || contactId === undefined || contactId === '') {
+                    sanitizedModules.dashboardContactUserId = null;
+                } else {
+                    const numericContactId = Number(contactId);
+                    if (!Number.isInteger(numericContactId) || numericContactId <= 0) {
+                        return res.status(400).send({ message: 'Ausgewählter Kontakt gehört nicht zu diesem Chor.' });
+                    }
+                    const membership = await db.user_choir.findOne({
+                        where: { userId: numericContactId, choirId: req.activeChoirId }
+                    });
+                    if (!membership) {
+                        return res.status(400).send({ message: 'Ausgewählter Kontakt gehört nicht zu diesem Chor.' });
+                    }
+                    sanitizedModules.dashboardContactUserId = numericContactId;
+                }
+            }
+            updateData.modules = sanitizedModules;
         }
 
         const [numberOfAffectedRows] = await db.choir.update(
@@ -99,6 +118,70 @@ exports.getChoirMemberCount = async (req, res, next) => {
     }
 };
 
+exports.getDashboardContact = async (req, res, next) => {
+    try {
+        const choir = await db.choir.findByPk(req.activeChoirId);
+        if (!choir) {
+            return res.status(404).send({ message: "Active choir not found." });
+        }
+
+        const modules = choir.modules || {};
+        const rawContactId = modules.dashboardContactUserId;
+        if (rawContactId === null || rawContactId === undefined || rawContactId === '') {
+            return res.status(200).send(null);
+        }
+
+        const contactId = Number(rawContactId);
+        if (!Number.isInteger(contactId) || contactId <= 0) {
+            return res.status(200).send(null);
+        }
+
+        const contact = await db.user.findByPk(contactId, {
+            attributes: ['id', 'firstName', 'name', 'email', 'phone', 'shareWithChoir']
+        });
+
+        if (!contact) {
+            return res.status(200).send(null);
+        }
+
+        const membership = await db.user_choir.findOne({
+            where: { userId: contactId, choirId: req.activeChoirId },
+            attributes: ['rolesInChoir']
+        });
+
+        if (!membership) {
+            return res.status(200).send(null);
+        }
+
+        const viewerRoles = Array.isArray(req.userRoles) ? req.userRoles : [];
+        const viewerMembership = await db.user_choir.findOne({
+            where: { userId: req.userId, choirId: req.activeChoirId },
+            attributes: ['rolesInChoir']
+        });
+        const viewerChoirRoles = Array.isArray(viewerMembership?.rolesInChoir) ? viewerMembership.rolesInChoir : [];
+        const canViewPrivateContact = viewerRoles.includes('admin')
+            || viewerChoirRoles.includes('choir_admin')
+            || viewerChoirRoles.includes('director')
+            || contact.id === req.userId;
+
+        const phone = contact.phone && (contact.shareWithChoir || canViewPrivateContact)
+            ? contact.phone
+            : null;
+
+        res.status(200).send({
+            id: contact.id,
+            firstName: contact.firstName,
+            name: contact.name,
+            email: contact.email,
+            phone,
+            rolesInChoir: membership.rolesInChoir || []
+        });
+    } catch (err) {
+        err.message = `Error fetching dashboard contact for choirId ${req.activeChoirId}: ${err.message}`;
+        next(err);
+    }
+};
+
 // Alle Mitglieder (Direktoren) des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res, next) => {
     const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
@@ -109,7 +192,7 @@ exports.getChoirMembers = async (req, res, next) => {
             include: [{
                 model: db.user,
                 as: 'users',
-                attributes: ['id', 'firstName', 'name', 'email', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir'],
+                attributes: ['id', 'firstName', 'name', 'email', 'phone', 'street', 'postalCode', 'city', 'voice', 'shareWithChoir'],
                 // Wichtig: Holen Sie die Daten aus der Zwischentabelle.
                 through: {
                     model: db.user_choir,
@@ -126,18 +209,20 @@ exports.getChoirMembers = async (req, res, next) => {
         // Sequelize fügt die 'through'-Daten in ein verschachteltes Objekt ein.
         // Wir formatieren die Antwort, um sie für das Frontend einfacher zu machen.
         const members = choir.users.map(user => {
+            const canShareContact = roles.includes('admin') || user.shareWithChoir;
             const base = {
                 id: user.id,
                 firstName: user.firstName,
                 name: user.name,
                 email: user.email,
+                phone: canShareContact ? user.phone : undefined,
                 voice: user.voice,
                 membership: {
                     rolesInChoir: user.user_choir.rolesInChoir,
                     registrationStatus: user.user_choir.registrationStatus
                 }
             };
-            if (roles.includes('admin') || user.shareWithChoir) {
+            if (canShareContact) {
                 return Object.assign(base, {
                     street: user.street,
                     postalCode: user.postalCode,

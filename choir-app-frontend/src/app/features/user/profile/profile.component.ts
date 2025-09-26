@@ -60,6 +60,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       firstName: ['', Validators.required],
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
+      phone: [''],
       street: [''],
       postalCode: [''],
       city: [''],
@@ -97,6 +98,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
           firstName: user.firstName || '',
           name: user.name,
           email: user.email,
+          phone: user.phone || '',
           street: user.street || '',
           postalCode: user.postalCode || '',
           city: user.city || '',
@@ -134,10 +136,12 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     const formValue = this.profileForm.value;
     const oldEmail = this.currentUser?.email;
-    const updatePayload: { firstName?: string; name?: string; email?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] } = {
+    const trimmedPhone = typeof formValue.phone === 'string' ? formValue.phone.trim() : undefined;
+    const updatePayload: { firstName?: string; name?: string; email?: string; phone?: string; street?: string; postalCode?: string; city?: string; congregation?: string; district?: string; voice?: string; shareWithChoir?: boolean; oldPassword?: string; newPassword?: string; roles?: GlobalRole[] } = {
       firstName: formValue.firstName,
       name: formValue.name,
       email: formValue.email,
+      phone: trimmedPhone || undefined,
       street: formValue.street,
       postalCode: formValue.postalCode,
       city: formValue.city,

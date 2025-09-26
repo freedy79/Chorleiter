@@ -32,6 +32,7 @@ export class UserDialogComponent implements OnInit {
       firstName: [data?.firstName || '', Validators.required],
       name: [data?.name || '', Validators.required],
       email: [data?.email || '', [Validators.required, Validators.email]],
+      phone: [data?.phone || ''],
       street: [data?.street || ''],
       postalCode: [data?.postalCode || ''],
       city: [data?.city || ''],
@@ -62,6 +63,9 @@ export class UserDialogComponent implements OnInit {
           normalized.push('user');
         }
         value.roles = normalized;
+      }
+      if (typeof value.phone === 'string') {
+        value.phone = value.phone.trim();
       }
       if (!value.password) {
         delete value.password;

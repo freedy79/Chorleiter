@@ -46,6 +46,11 @@
 
         <!-- GRID (links/rechts) -->
         <section class="content-grid" role="region" aria-labelledby="next-events">
+          <app-dashboard-contact-widget
+            class="right-tile"
+            [contact]="vm.dashboardContact">
+          </app-dashboard-contact-widget>
+
           <app-upcoming-events-widget
             [events]="vm.upcomingEvents" [choirColors]="choirColors"
             (open)="openEvent($event)" class="left-tile">

@@ -34,7 +34,7 @@
   </mat-card>
 
   <!-- Einstellungen Card -->
-  <mat-card class="form-card" *ngIf="isChoirAdmin" class="collapsible-header" (click)="toggleChoirSetting()">
+  <mat-card class="form-card collapsible-header" *ngIf="isChoirAdmin" (click)="toggleChoirSetting()">
     <mat-card-header>
       <mat-card-title>Einstellungen</mat-card-title>
     </mat-card-header>
@@ -51,6 +51,23 @@
         Beitritt als Sänger per Link erlauben
       </mat-checkbox>
       <p *ngIf="joinByLinkEnabled && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
+
+      <mat-form-field appearance="outline" class="dashboard-contact-field">
+        <mat-label>Kontakt auf dem Dashboard</mat-label>
+        <mat-select [(ngModel)]="dashboardContactUserId" (ngModelChange)="onDashboardContactChange($event)">
+          <mat-option [value]="null">Keinen Kontakt anzeigen</mat-option>
+          <mat-option *ngFor="let director of directorOptions" [value]="director.id">
+            {{ director.firstName ? director.firstName + ' ' : '' }}{{ director.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="contact-preview" *ngIf="selectedDashboardContact as contact">
+        <div>E-Mail: <a [href]="'mailto:' + contact.email">{{ contact.email }}</a></div>
+        <div *ngIf="contact.phone; else noPhone">Telefon: <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a></div>
+        <ng-template #noPhone>
+          <div class="muted">Keine Telefonnummer hinterlegt.</div>
+        </ng-template>
+      </div>
 
       <div class="service-settings" *ngIf="dienstplanEnabled">
         <h3>Gottesdienste</h3>
