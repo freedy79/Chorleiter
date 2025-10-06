@@ -1,10 +1,10 @@
-<mat-card class="contact-card" role="region" aria-labelledby="dashboard-contact-title">
+<mat-card *ngIf="hasContacts" class="contact-card" role="region" aria-labelledby="dashboard-contact-title">
   <mat-card-header>
     <mat-card-title id="dashboard-contact-title">Kontakt Chorleitung</mat-card-title>
   </mat-card-header>
-  <ng-container *ngIf="hasContact && contact; else noContact">
-    <mat-card-content>
-      <div class="contact-name">{{ displayName }}</div>
+  <mat-card-content>
+    <div class="contact-entry" *ngFor="let contact of contacts; trackBy: trackById">
+      <div class="contact-name">{{ displayName(contact) }}</div>
       <div class="contact-detail">
         <mat-icon aria-hidden="true">mail</mat-icon>
         <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
@@ -13,19 +13,12 @@
         <mat-icon aria-hidden="true">call</mat-icon>
         <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a>
       </div>
-    </mat-card-content>
-  </ng-container>
-</mat-card>
-
-<ng-template #noContact>
-  <mat-card-content class="empty-state">
-    <p>Es wurde noch kein Kontakt ausgewählt.</p>
+      <ng-template #noPhone>
+        <div class="contact-detail muted">
+          <mat-icon aria-hidden="true">call</mat-icon>
+          <span>Keine Telefonnummer hinterlegt.</span>
+        </div>
+      </ng-template>
+    </div>
   </mat-card-content>
-</ng-template>
-
-<ng-template #noPhone>
-  <div class="contact-detail muted">
-    <mat-icon aria-hidden="true">call</mat-icon>
-    <span>Keine Telefonnummer hinterlegt.</span>
-  </div>
-</ng-template>
+</mat-card>

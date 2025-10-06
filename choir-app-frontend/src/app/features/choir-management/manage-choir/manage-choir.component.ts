@@ -97,10 +97,9 @@ export class ManageChoirComponent implements OnInit {
 
 
   // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['name', 'email', 'address', 'role', 'status', 'actions'];
+  displayedColumns: string[] = ['dashboardContact', 'name', 'email', 'address', 'role', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
-  directorOptions: UserInChoir[] = [];
-  dashboardContactUserId: number | null = null;
+  dashboardContactUserIds: number[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -139,7 +138,22 @@ export class ManageChoirComponent implements OnInit {
         this.dienstplanEnabled = !!pageData.choirDetails.modules?.dienstplan;
         this.programsEnabled = !!pageData.choirDetails.modules?.programs;
         this.joinByLinkEnabled = !!pageData.choirDetails.modules?.joinByLink;
-        this.dashboardContactUserId = pageData.choirDetails.modules?.dashboardContactUserId ?? null;
+        const moduleContacts = pageData.choirDetails.modules?.dashboardContactUserIds;
+        if (Array.isArray(moduleContacts)) {
+          this.dashboardContactUserIds = moduleContacts
+            .map(id => Number(id))
+            .filter(id => Number.isInteger(id) && id > 0);
+        } else {
+          const fallback = pageData.choirDetails.modules?.dashboardContactUserId;
+          if (fallback != null) {
+            const numericFallback = Number(fallback);
+            this.dashboardContactUserIds = Number.isInteger(numericFallback) && numericFallback > 0
+              ? [numericFallback]
+              : [];
+          } else {
+            this.dashboardContactUserIds = [];
+          }
+        }
         const menu = pageData.choirDetails.modules?.singerMenu || {};
         this.menuOptions.forEach(opt => {
           this.singerMenu[opt.key] = menu[opt.key] !== false;
@@ -174,7 +188,7 @@ export class ManageChoirComponent implements OnInit {
           this.choirForm.disable();
         }
         this.dataSource.data = pageData.members;
-        this.updateDirectorOptions();
+        this.pruneDashboardContactIds();
         this.collectionDataSource.data = pageData.collections;
         this.logDataSource.data = pageData.logs;
 
@@ -213,7 +227,7 @@ export class ManageChoirComponent implements OnInit {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
       this.apiService.getChoirMembers(opts).subscribe(members => {
         this.dataSource.data = members;
-        this.updateDirectorOptions();
+        this.pruneDashboardContactIds();
       });
       this.apiService.getChoirCollections(opts).subscribe(cols => {
         this.collectionDataSource.data = cols;
@@ -368,12 +382,19 @@ export class ManageChoirComponent implements OnInit {
       return;
     }
 
+    const contactIds = Array.from(new Set(
+      (this.dashboardContactUserIds || [])
+        .map(id => Number(id))
+        .filter(id => Number.isInteger(id) && id > 0)
+    ));
+    this.dashboardContactUserIds = contactIds;
+
     const modules = {
       dienstplan: this.dienstplanEnabled,
       programs: this.programsEnabled,
       joinByLink: this.joinByLinkEnabled,
       singerMenu: this.singerMenu,
-      dashboardContactUserId: this.dashboardContactUserId ?? null
+      dashboardContactUserIds: contactIds
     };
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
@@ -395,42 +416,59 @@ export class ManageChoirComponent implements OnInit {
     });
   }
 
-  onDashboardContactChange(value: number | null): void {
-    if (!this.canManageMenu) {
+  onDashboardContactToggle(user: UserInChoir, checked: boolean): void {
+    if (!this.canManageMenu || !this.hasDirectorRole(user)) {
       return;
     }
-    this.dashboardContactUserId = value ?? null;
-    this.onModulesChange();
-  }
 
-  get selectedDashboardContact(): UserInChoir | undefined {
-    if (this.dashboardContactUserId == null) {
-      return undefined;
+    const alreadySelected = this.isDashboardContactSelected(user.id);
+
+    if (checked && !alreadySelected) {
+      this.dashboardContactUserIds = [...this.dashboardContactUserIds, user.id];
+      this.onModulesChange();
+    } else if (!checked && alreadySelected) {
+      this.dashboardContactUserIds = this.dashboardContactUserIds.filter(id => id !== user.id);
+      this.onModulesChange();
     }
-    return this.dataSource.data.find(member => member.id === this.dashboardContactUserId);
   }
 
-  private updateDirectorOptions(): void {
+  isDashboardContactSelected(userId: number): boolean {
+    return this.dashboardContactUserIds.includes(userId);
+  }
+
+  hasDirectorRole(user: UserInChoir): boolean {
+    const roles = user.membership?.rolesInChoir ?? [];
+    return roles.includes('director');
+  }
+
+  get selectedDashboardContacts(): UserInChoir[] {
     const members = this.dataSource.data ?? [];
-    const directors = members.filter(member => {
-      const roles = member.membership?.rolesInChoir ?? [];
-      return roles.includes('director');
-    });
-    if (this.dashboardContactUserId != null) {
-      const selected = members.find(member => member.id === this.dashboardContactUserId);
-      if (selected && !directors.some(member => member.id === selected.id)) {
-        directors.push(selected);
+    return this.dashboardContactUserIds
+      .map(id => members.find(member => member.id === id))
+      .filter((member): member is UserInChoir => !!member);
+  }
+
+  private pruneDashboardContactIds(): void {
+    const members = this.dataSource.data ?? [];
+    const memberMap = new Map(members.map(member => [member.id, member] as const));
+    const sanitized = this.dashboardContactUserIds
+      .map(id => Number(id))
+      .filter(id => {
+        if (!Number.isInteger(id) || id <= 0) {
+          return false;
+        }
+        const member = memberMap.get(id);
+        return !!member && this.hasDirectorRole(member);
+      });
+
+    if (sanitized.length !== this.dashboardContactUserIds.length) {
+      this.dashboardContactUserIds = sanitized;
+      if (this.canManageMenu) {
+        this.onModulesChange();
       }
+    } else {
+      this.dashboardContactUserIds = sanitized;
     }
-    this.directorOptions = directors.sort((a, b) => {
-      const lastNameCompare = a.name.localeCompare(b.name);
-      if (lastNameCompare !== 0) {
-        return lastNameCompare;
-      }
-      const firstA = a.firstName ?? '';
-      const firstB = b.firstName ?? '';
-      return firstA.localeCompare(firstB);
-    });
   }
 
   saveServiceRules(): void {

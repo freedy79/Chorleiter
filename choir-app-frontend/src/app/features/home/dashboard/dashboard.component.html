@@ -47,8 +47,9 @@
         <!-- GRID (links/rechts) -->
         <section class="content-grid" role="region" aria-labelledby="next-events">
           <app-dashboard-contact-widget
+            *ngIf="vm.dashboardContacts.length > 0"
             class="right-tile"
-            [contact]="vm.dashboardContact">
+            [contacts]="vm.dashboardContacts">
           </app-dashboard-contact-widget>
 
           <app-upcoming-events-widget

@@ -11,17 +11,18 @@ import { DashboardContact } from '@core/models/dashboard-contact';
   styleUrls: ['./dashboard-contact-widget.component.scss']
 })
 export class DashboardContactWidgetComponent {
-  @Input() contact: DashboardContact | null = null;
+  @Input() contacts: DashboardContact[] | null = [];
 
-  get hasContact(): boolean {
-    return !!this.contact;
+  get hasContacts(): boolean {
+    return Array.isArray(this.contacts) && this.contacts.length > 0;
   }
 
-  get displayName(): string {
-    if (!this.contact) {
-      return '';
-    }
-    const firstName = this.contact.firstName ? `${this.contact.firstName} ` : '';
-    return `${firstName}${this.contact.name}`.trim();
+  trackById(_: number, contact: DashboardContact): number {
+    return contact.id;
+  }
+
+  displayName(contact: DashboardContact): string {
+    const firstName = contact.firstName ? `${contact.firstName} ` : '';
+    return `${firstName}${contact.name}`.trim();
   }
 }

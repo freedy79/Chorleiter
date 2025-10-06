@@ -44,7 +44,7 @@ type VM = {
   latestPost: any | null;
   lastProgram: Program | null;
   upcomingEvents: any[];
-  dashboardContact: DashboardContact | null;
+  dashboardContacts: DashboardContact[];
 };
 
 @Component({
@@ -87,7 +87,7 @@ export class DashboardComponent implements OnInit {
   openTasksCount$!: Observable<number>;
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
-  dashboardContact$!: Observable<DashboardContact | null>;
+  dashboardContacts$!: Observable<DashboardContact[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
@@ -164,8 +164,8 @@ export class DashboardComponent implements OnInit {
       switchMap(() => this.apiService.getLatestPost())
     );
 
-    this.dashboardContact$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getDashboardContact()),
+    this.dashboardContacts$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getDashboardContacts()),
       shareReplay(1)
     );
 
@@ -186,7 +186,7 @@ export class DashboardComponent implements OnInit {
       latestPost: this.latestPost$,
       lastProgram: this.lastProgram$,
       upcomingEvents: this.upcomingEvents$,
-      dashboardContact: this.dashboardContact$
+      dashboardContacts: this.dashboardContacts$
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 

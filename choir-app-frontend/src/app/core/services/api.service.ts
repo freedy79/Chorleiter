@@ -661,8 +661,8 @@ export class ApiService {
     return this.choirService.getChoirMemberCount(options?.choirId);
   }
 
-  getDashboardContact(options?: { choirId?: number }): Observable<DashboardContact | null> {
-    return this.choirService.getDashboardContact(options?.choirId);
+  getDashboardContacts(options?: { choirId?: number }): Observable<DashboardContact[]> {
+    return this.choirService.getDashboardContacts(options?.choirId);
   }
 
   inviteUserToChoir(
