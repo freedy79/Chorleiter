@@ -25,13 +25,13 @@ export interface Choir {
          */
         singerMenu?: Record<string, boolean>;
         /**
-         * User id of the contact person that should be highlighted on the dashboard.
+         * User ids of the contact persons that should be highlighted on the dashboard.
          */
-        dashboardContactUserId?: number | null;
+        dashboardContactUserIds?: number[];
         /**
-         * Optional cached details of the selected contact.
+         * Optional cached details of the selected contacts.
          */
-        dashboardContact?: DashboardContact | null;
+        dashboardContacts?: DashboardContact[] | null;
     };
     joinHash?: string;
     membership?: ChoirMembership;

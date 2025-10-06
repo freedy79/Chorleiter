@@ -39,9 +39,9 @@ export class ChoirService {
       .pipe(map(res => res.count));
   }
 
-  getDashboardContact(choirId?: number): Observable<DashboardContact | null> {
+  getDashboardContacts(choirId?: number): Observable<DashboardContact[]> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
-    return this.http.get<DashboardContact | null>(`${this.apiUrl}/choir-management/dashboard-contact`, { params });
+    return this.http.get<DashboardContact[]>(`${this.apiUrl}/choir-management/dashboard-contact`, { params });
   }
 
   inviteUserToChoir(email: string, rolesInChoir: string[], choirId?: number): Observable<{ message: string }> {

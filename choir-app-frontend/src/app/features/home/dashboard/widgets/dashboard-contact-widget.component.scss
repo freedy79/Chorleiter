@@ -4,6 +4,14 @@
   min-height: 200px;
 }
 
+.contact-entry {
+  &:not(:last-child) {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
 .contact-name {
   font-size: 1.2rem;
   font-weight: 600;
@@ -26,21 +34,13 @@
   }
 }
 
-.empty-state {
-  font-size: 0.95rem;
-  color: rgba(0, 0, 0, 0.6);
-  min-height: 140px;
-  display: flex;
-  align-items: center;
-}
-
 .muted {
   color: rgba(0, 0, 0, 0.54);
 }
 
 @media (prefers-color-scheme: dark) {
-  .empty-state {
-    color: rgba(255, 255, 255, 0.7);
+  .contact-entry:not(:last-child) {
+    border-bottom-color: rgba(255, 255, 255, 0.12);
   }
 
   .muted {

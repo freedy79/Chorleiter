@@ -101,22 +101,84 @@ mat-card-content form {
   margin-left: 8px;
 }
 
-.dashboard-contact-field {
-  display: block;
-  margin-top: 1rem;
-  max-width: 320px;
+.dashboard-contact-settings {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-.contact-preview {
-  margin: 0.5rem 0 1rem;
+.contact-hint {
+  margin: 0;
   font-size: 0.9rem;
-  line-height: 1.4;
+}
+
+.contact-preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contact-preview-entry {
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+
+  &:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+.contact-preview-name {
+  font-weight: 600;
+}
+
+.contact-preview-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+
+  mat-icon {
+    font-size: 1.1rem;
+  }
 
   a {
     color: inherit;
+    text-decoration: none;
+  }
+}
+
+.contact-column-header,
+.contact-column-cell {
+  width: 90px;
+  text-align: center;
+}
+
+.contact-column-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.contact-preview-entry .muted,
+.contact-hint.muted {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.muted {
+  color: rgba(0, 0, 0, 0.54);
+}
+
+@media (prefers-color-scheme: dark) {
+  .contact-preview-entry {
+    border-top-color: rgba(255, 255, 255, 0.12);
   }
 
+  .contact-preview-entry .muted,
+  .contact-hint.muted,
   .muted {
-    color: rgba(0, 0, 0, 0.54);
+    color: rgba(255, 255, 255, 0.6);
   }
 }

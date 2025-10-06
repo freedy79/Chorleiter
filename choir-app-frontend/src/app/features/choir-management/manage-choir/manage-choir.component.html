@@ -52,22 +52,36 @@
       </mat-checkbox>
       <p *ngIf="joinByLinkEnabled && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
 
-      <mat-form-field appearance="outline" class="dashboard-contact-field">
-        <mat-label>Kontakt auf dem Dashboard</mat-label>
-        <mat-select [(ngModel)]="dashboardContactUserId" (ngModelChange)="onDashboardContactChange($event)">
-          <mat-option [value]="null">Keinen Kontakt anzeigen</mat-option>
-          <mat-option *ngFor="let director of directorOptions" [value]="director.id">
-            {{ director.firstName ? director.firstName + ' ' : '' }}{{ director.name }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
-      <div class="contact-preview" *ngIf="selectedDashboardContact as contact">
-        <div>E-Mail: <a [href]="'mailto:' + contact.email">{{ contact.email }}</a></div>
-        <div *ngIf="contact.phone; else noPhone">Telefon: <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a></div>
-        <ng-template #noPhone>
-          <div class="muted">Keine Telefonnummer hinterlegt.</div>
+      <section class="dashboard-contact-settings" aria-label="Kontaktpersonen auf dem Dashboard">
+        <h3>Kontaktpersonen auf dem Dashboard</h3>
+        <p class="muted contact-hint">
+          Markiere in der Chorleiterliste unten die Personen, die auf der Startseite sichtbar sein sollen.
+        </p>
+        <div *ngIf="selectedDashboardContacts.length; else noDashboardContacts" class="contact-preview-list">
+          <div *ngFor="let contact of selectedDashboardContacts" class="contact-preview-entry">
+            <div class="contact-preview-name">
+              {{ contact.firstName ? contact.firstName + ' ' : '' }}{{ contact.name }}
+            </div>
+            <div class="contact-preview-detail">
+              <mat-icon aria-hidden="true">mail</mat-icon>
+              <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
+            </div>
+            <div class="contact-preview-detail" *ngIf="contact.phone; else noPhonePreview">
+              <mat-icon aria-hidden="true">call</mat-icon>
+              <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a>
+            </div>
+            <ng-template #noPhonePreview>
+              <div class="contact-preview-detail muted">
+                <mat-icon aria-hidden="true">call</mat-icon>
+                <span>Keine Telefonnummer hinterlegt.</span>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+        <ng-template #noDashboardContacts>
+          <p class="muted">Es wurden noch keine Kontaktpersonen ausgewählt.</p>
         </ng-template>
-      </div>
+      </section>
 
       <div class="service-settings" *ngIf="dienstplanEnabled">
         <h3>Gottesdienste</h3>
@@ -140,6 +154,18 @@
       <div class="table-wrapper mat-elevation-z4">
         <mat-table [dataSource]="dataSource">
           <!-- Name Column -->
+          <ng-container matColumnDef="dashboardContact">
+            <mat-header-cell *matHeaderCellDef class="contact-column-header">Startseite</mat-header-cell>
+            <mat-cell *matCellDef="let user" class="contact-column-cell">
+              <mat-checkbox
+                [checked]="isDashboardContactSelected(user.id)"
+                [disabled]="!canManageMenu || !hasDirectorRole(user)"
+                (change)="onDashboardContactToggle(user, $event.checked)"
+                (click)="$event.stopPropagation()"
+                aria-label="Kontakt auf der Startseite anzeigen">
+              </mat-checkbox>
+            </mat-cell>
+          </ng-container>
           <ng-container matColumnDef="name">
             <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
             <mat-cell *matCellDef="let user"> {{user.name}}, {{ user.firstName }} </mat-cell>

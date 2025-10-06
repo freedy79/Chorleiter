@@ -10,7 +10,7 @@ router.use(verifyToken);
 
 // Chor-Informationen können von allen Mitgliedern gelesen werden
 router.get("/", wrap(controller.getMyChoirDetails));
-router.get("/dashboard-contact", wrap(controller.getDashboardContact));
+router.get("/dashboard-contact", wrap(controller.getDashboardContacts));
 
 // Ab hier: Member-Management und Einstellungen nur für Choir-Admins
 router.put("/", role.requireChoirAdmin, role.requireNonDemo, wrap(controller.updateMyChoir));

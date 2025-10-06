@@ -68,10 +68,42 @@ exports.updateMyChoir = async (req, res, next) => {
         if (location !== undefined) updateData.location = location;
         if (modules !== undefined) {
             const sanitizedModules = { ...modules };
-            if (Object.prototype.hasOwnProperty.call(modules, 'dashboardContactUserId')) {
+
+            if (Object.prototype.hasOwnProperty.call(modules, 'dashboardContactUserIds')) {
+                const inputIds = Array.isArray(modules.dashboardContactUserIds)
+                    ? modules.dashboardContactUserIds
+                    : [];
+
+                const uniqueIds = Array.from(new Set(inputIds));
+                const sanitizedIds = [];
+
+                for (const rawId of uniqueIds) {
+                    const numericContactId = Number(rawId);
+                    if (!Number.isInteger(numericContactId) || numericContactId <= 0) {
+                        return res.status(400).send({ message: 'Ausgewählte Kontaktpersonen gehören nicht zu diesem Chor.' });
+                    }
+
+                    const membership = await db.user_choir.findOne({
+                        where: { userId: numericContactId, choirId: req.activeChoirId }
+                    });
+
+                    if (!membership) {
+                        return res.status(400).send({ message: 'Ausgewählte Kontaktpersonen gehören nicht zu diesem Chor.' });
+                    }
+
+                    const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+                    if (!roles.includes('director')) {
+                        return res.status(400).send({ message: 'Ausgewählte Kontaktpersonen benötigen die Rolle Chorleiter:in.' });
+                    }
+
+                    sanitizedIds.push(numericContactId);
+                }
+
+                sanitizedModules.dashboardContactUserIds = sanitizedIds;
+            } else if (Object.prototype.hasOwnProperty.call(modules, 'dashboardContactUserId')) {
                 const contactId = modules.dashboardContactUserId;
                 if (contactId === null || contactId === undefined || contactId === '') {
-                    sanitizedModules.dashboardContactUserId = null;
+                    sanitizedModules.dashboardContactUserIds = [];
                 } else {
                     const numericContactId = Number(contactId);
                     if (!Number.isInteger(numericContactId) || numericContactId <= 0) {
@@ -83,9 +115,16 @@ exports.updateMyChoir = async (req, res, next) => {
                     if (!membership) {
                         return res.status(400).send({ message: 'Ausgewählter Kontakt gehört nicht zu diesem Chor.' });
                     }
-                    sanitizedModules.dashboardContactUserId = numericContactId;
+                    const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+                    if (!roles.includes('director')) {
+                        return res.status(400).send({ message: 'Ausgewählter Kontakt benötigt die Rolle Chorleiter:in.' });
+                    }
+                    sanitizedModules.dashboardContactUserIds = [numericContactId];
                 }
             }
+
+            delete sanitizedModules.dashboardContactUserId;
+
             updateData.modules = sanitizedModules;
         }
 
@@ -118,7 +157,7 @@ exports.getChoirMemberCount = async (req, res, next) => {
     }
 };
 
-exports.getDashboardContact = async (req, res, next) => {
+exports.getDashboardContacts = async (req, res, next) => {
     try {
         const choir = await db.choir.findByPk(req.activeChoirId);
         if (!choir) {
@@ -126,31 +165,22 @@ exports.getDashboardContact = async (req, res, next) => {
         }
 
         const modules = choir.modules || {};
-        const rawContactId = modules.dashboardContactUserId;
-        if (rawContactId === null || rawContactId === undefined || rawContactId === '') {
-            return res.status(200).send(null);
+        let contactIds = [];
+        if (Array.isArray(modules.dashboardContactUserIds)) {
+            contactIds = modules.dashboardContactUserIds.map(id => Number(id)).filter(id => Number.isInteger(id) && id > 0);
         }
 
-        const contactId = Number(rawContactId);
-        if (!Number.isInteger(contactId) || contactId <= 0) {
-            return res.status(200).send(null);
+        if (contactIds.length === 0 && modules.dashboardContactUserId) {
+            const legacyId = Number(modules.dashboardContactUserId);
+            if (Number.isInteger(legacyId) && legacyId > 0) {
+                contactIds = [legacyId];
+            }
         }
 
-        const contact = await db.user.findByPk(contactId, {
-            attributes: ['id', 'firstName', 'name', 'email', 'phone', 'shareWithChoir']
-        });
+        const uniqueContactIds = Array.from(new Set(contactIds));
 
-        if (!contact) {
-            return res.status(200).send(null);
-        }
-
-        const membership = await db.user_choir.findOne({
-            where: { userId: contactId, choirId: req.activeChoirId },
-            attributes: ['rolesInChoir']
-        });
-
-        if (!membership) {
-            return res.status(200).send(null);
+        if (uniqueContactIds.length === 0) {
+            return res.status(200).send([]);
         }
 
         const viewerRoles = Array.isArray(req.userRoles) ? req.userRoles : [];
@@ -162,22 +192,50 @@ exports.getDashboardContact = async (req, res, next) => {
         const canViewPrivateContact = viewerRoles.includes('admin')
             || viewerChoirRoles.includes('choir_admin')
             || viewerChoirRoles.includes('director')
-            || contact.id === req.userId;
+            || uniqueContactIds.includes(req.userId);
 
-        const phone = contact.phone && (contact.shareWithChoir || canViewPrivateContact)
-            ? contact.phone
-            : null;
+        const contacts = [];
 
-        res.status(200).send({
-            id: contact.id,
-            firstName: contact.firstName,
-            name: contact.name,
-            email: contact.email,
-            phone,
-            rolesInChoir: membership.rolesInChoir || []
-        });
+        for (const contactId of uniqueContactIds) {
+            const contact = await db.user.findByPk(contactId, {
+                attributes: ['id', 'firstName', 'name', 'email', 'phone', 'shareWithChoir']
+            });
+
+            if (!contact) {
+                continue;
+            }
+
+            const membership = await db.user_choir.findOne({
+                where: { userId: contactId, choirId: req.activeChoirId },
+                attributes: ['rolesInChoir']
+            });
+
+            if (!membership) {
+                continue;
+            }
+
+            const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+            if (!roles.includes('director')) {
+                continue;
+            }
+
+            const phone = contact.phone && (contact.shareWithChoir || canViewPrivateContact)
+                ? contact.phone
+                : null;
+
+            contacts.push({
+                id: contact.id,
+                firstName: contact.firstName,
+                name: contact.name,
+                email: contact.email,
+                phone,
+                rolesInChoir: membership.rolesInChoir || []
+            });
+        }
+
+        res.status(200).send(contacts);
     } catch (err) {
-        err.message = `Error fetching dashboard contact for choirId ${req.activeChoirId}: ${err.message}`;
+        err.message = `Error fetching dashboard contacts for choirId ${req.activeChoirId}: ${err.message}`;
         next(err);
     }
 };
