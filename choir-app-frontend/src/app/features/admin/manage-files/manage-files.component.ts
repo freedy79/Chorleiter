@@ -4,6 +4,7 @@ import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
 import { ApiService } from 'src/app/core/services/api.service';
 import { BackendFile, UploadOverview } from 'src/app/core/models/backend-file';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-manage-files',
@@ -18,6 +19,7 @@ export class ManageFilesComponent implements OnInit {
   files: BackendFile[] = [];
   displayedColumns = ['filename', 'linked', 'actions'];
   displayedFileColumns = ['filename', 'downloadName', 'linked', 'actions'];
+  private readonly apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
 
   constructor(private api: ApiService) {}
 
@@ -48,5 +50,9 @@ export class ManageFilesComponent implements OnInit {
 
   get unassignedFiles(): number {
     return this.files.filter((f) => !f.pieceId).length;
+  }
+
+  getImageUrl(filename: string): string {
+    return `${this.apiBase}/uploads/piece-images/${encodeURIComponent(filename)}`;
   }
 }
