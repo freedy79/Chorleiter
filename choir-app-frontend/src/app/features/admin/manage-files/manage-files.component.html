@@ -40,7 +40,11 @@
     <mat-table [dataSource]="images" class="mat-elevation-z1" *ngIf="images.length > 0">
       <ng-container matColumnDef="filename">
         <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
-        <mat-cell *matCellDef="let f">{{ f.filename }}</mat-cell>
+        <mat-cell *matCellDef="let f">
+          <a [href]="getImageUrl(f.filename)" target="_blank" rel="noopener">
+            {{ f.filename }}
+          </a>
+        </mat-cell>
       </ng-container>
       <ng-container matColumnDef="linked">
         <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
