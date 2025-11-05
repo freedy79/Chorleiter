@@ -51,6 +51,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private userSub?: Subscription;
   private roleSub?: Subscription;
   private paramSub?: Subscription;
+  private planSub?: Subscription;
+  private availabilitySub?: Subscription;
   private skipNextParamLoad = false;
 
   timestamp(date: string | Date): string {
@@ -69,10 +71,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   private loadAvailabilities(year: number, month: number): void {
     if (!this.isChoirAdmin) {
+      if (this.availabilitySub) {
+        this.availabilitySub.unsubscribe();
+        this.availabilitySub = undefined;
+      }
       this.availabilityMap = {};
       return;
     }
-    this.api.getMemberAvailabilities(year, month).subscribe(av => {
+    if (this.availabilitySub) {
+      this.availabilitySub.unsubscribe();
+    }
+    this.availabilitySub = this.api.getMemberAvailabilities(year, month).subscribe(av => {
       this.availabilityMap = {};
       for (const a of av) {
         if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
@@ -239,7 +248,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   loadPlan(year: number, month: number): void {
-    this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
+    if (this.planSub) {
+      this.planSub.unsubscribe();
+    }
+    this.planSub = this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
       next: plan => {
         this.plan = plan;
         const valid = (plan?.entries || []).filter(e => !isNaN(parseDateOnly(e.date).getTime()));
@@ -453,5 +465,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (this.userSub) this.userSub.unsubscribe();
     if (this.roleSub) this.roleSub.unsubscribe();
     if (this.paramSub) this.paramSub.unsubscribe();
+    if (this.planSub) this.planSub.unsubscribe();
+    if (this.availabilitySub) this.availabilitySub.unsubscribe();
   }
 }
