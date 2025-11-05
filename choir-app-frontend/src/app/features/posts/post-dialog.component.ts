@@ -6,6 +6,19 @@ import { MaterialModule } from '@modules/material.module';
 import { Post } from '@core/models/post';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
+import { ApiService } from '@core/services/api.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { finalize } from 'rxjs/operators';
+
+type PostDialogAction = 'created' | 'updated';
+
+type PostFormValue = {
+  title: string;
+  text: string;
+  expiresAt: Date | null;
+  sendTest: boolean;
+  sendAsUser: boolean;
+};
 
 @Component({
   selector: 'app-post-dialog',
@@ -16,10 +29,13 @@ import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.com
 export class PostDialogComponent {
   form: FormGroup;
   isEdit = false;
+  saving = false;
   private placeholderStart: number | null = null;
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
+    private api: ApiService,
+    private snackBar: MatSnackBar,
     public dialogRef: MatDialogRef<PostDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { post?: Post } | null,
   ) {
@@ -77,10 +93,38 @@ export class PostDialogComponent {
   }
 
   save(): void {
-    if (this.form.valid) {
-      const expiresAt = this.form.value.expiresAt ? this.form.value.expiresAt.toISOString() : null;
-      this.dialogRef.close({ title: this.form.value.title, text: this.form.value.text, expiresAt, sendTest: this.form.value.sendTest, sendAsUser: this.form.value.sendAsUser });
+    if (this.form.invalid || this.saving) {
+      return;
     }
+    const value = this.form.getRawValue() as PostFormValue;
+    const expiresAt = value.expiresAt ? value.expiresAt.toISOString() : null;
+    const payload = {
+      title: value.title,
+      text: value.text,
+      expiresAt,
+      sendTest: value.sendTest,
+      sendAsUser: value.sendAsUser
+    };
+    const request$ = this.isEdit && this.data?.post
+      ? this.api.updatePost(this.data.post.id, payload)
+      : this.api.createPost(payload);
+    const action: PostDialogAction = this.isEdit ? 'updated' : 'created';
+    const errorMessage = this.isEdit ? 'Fehler beim Aktualisieren' : 'Fehler beim Speichern';
+    this.saving = true;
+    this.dialogRef.disableClose = true;
+    request$
+      .pipe(finalize(() => {
+        this.saving = false;
+        this.dialogRef.disableClose = false;
+      }))
+      .subscribe({
+        next: () => {
+          this.dialogRef.close(action);
+        },
+        error: () => {
+          this.snackBar.open(errorMessage, 'Schließen', { duration: 4000 });
+        }
+      });
   }
 
   cancel(): void {

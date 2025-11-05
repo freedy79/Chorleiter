@@ -63,11 +63,9 @@ export class PostListComponent implements OnInit {
   addPost(): void {
     const ref = this.dialog.open(PostDialogComponent, { width: '600px' });
     ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.createPost(result).subscribe({
-          next: () => { this.snackBar.open('Beitrag erstellt', 'OK', { duration: 3000 }); this.loadPosts(); },
-          error: () => this.snackBar.open('Fehler beim Speichern', 'Schließen', { duration: 4000 })
-        });
+      if (result === 'created') {
+        this.snackBar.open('Beitrag erstellt', 'OK', { duration: 3000 });
+        this.loadPosts();
       }
     });
   }
@@ -75,11 +73,9 @@ export class PostListComponent implements OnInit {
   editPost(post: Post): void {
     const ref = this.dialog.open(PostDialogComponent, { width: '600px', data: { post } });
     ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.updatePost(post.id, result).subscribe({
-          next: () => { this.snackBar.open('Beitrag aktualisiert', 'OK', { duration: 3000 }); this.loadPosts(); },
-          error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen', { duration: 4000 })
-        });
+      if (result === 'updated') {
+        this.snackBar.open('Beitrag aktualisiert', 'OK', { duration: 3000 });
+        this.loadPosts();
       }
     });
   }

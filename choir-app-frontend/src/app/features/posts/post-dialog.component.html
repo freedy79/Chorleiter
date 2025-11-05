@@ -33,6 +33,9 @@
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+  <button mat-button (click)="cancel()" [disabled]="saving">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+    <ng-container *ngIf="!saving; else savingLabel">Speichern</ng-container>
+  </button>
+  <ng-template #savingLabel>Speichern…</ng-template>
 </div>
