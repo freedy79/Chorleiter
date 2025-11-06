@@ -58,6 +58,18 @@ mat-tab-group {
   }
 }
 
+.plan-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+
+  button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
 .spacer {
   height: 30px;
 }
@@ -103,4 +115,10 @@ mat-tab-group {
   .counter-plan table {
     min-width: 600px;
   }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
 }
