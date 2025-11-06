@@ -74,6 +74,42 @@ mat-tab-group {
   height: 30px;
 }
 
+.load-metrics {
+  margin: 1rem 0 2rem;
+
+  h3 {
+    margin-bottom: 0.5rem;
+  }
+
+  .load-total {
+    margin: 0 0 0.5rem;
+  }
+
+  .load-time {
+    font-weight: 600;
+  }
+
+  .load-error {
+    color: mat.m2-get-color-from-palette(nak.$choir-app-warn, 500);
+    margin-left: 0.5rem;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 4px 8px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      font-weight: 600;
+    }
+  }
+}
+
 .manual-inputs {
   margin-bottom: 1rem;
   display: flex;

@@ -27,6 +27,30 @@
   </button>
 </div>
 
+<div class="load-metrics" *ngIf="loadDurationSeconds as total">
+  <h3>Ladezeiten</h3>
+  <p class="load-total">
+    Gesamtzeit: <span class="load-time">{{ total }}</span> s
+    <span *ngIf="loadMetrics?.error" class="load-error">(Fehler beim Laden)</span>
+  </p>
+  <table *ngIf="loadStepDetails.length > 0">
+    <thead>
+      <tr>
+        <th>Schritt</th>
+        <th>Seit Start (s)</th>
+        <th>Seit vorher (s)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let step of loadStepDetails">
+        <td>{{ step.label }}</td>
+        <td>{{ step.sinceStart }}</td>
+        <td>{{ step.delta }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
 <mat-tab-group [selectedIndex]="selectedTab" (selectedIndexChange)="tabChanged($event)">
 
   <mat-tab label="Dienstplan">

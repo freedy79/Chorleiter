@@ -22,6 +22,24 @@ import { MonthNavigationService } from '@shared/services/month-navigation.servic
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 
+type LoadStepKey = 'planResponseAt' |
+  'planProcessedAt' |
+  'availabilityResponseAt' |
+  'availabilityProcessedAt' |
+  'membersResponseAt';
+
+interface LoadMetrics {
+  planRequestId: number;
+  startedAt: number;
+  planResponseAt?: number;
+  planProcessedAt?: number;
+  availabilityResponseAt?: number;
+  availabilityProcessedAt?: number;
+  membersResponseAt?: number;
+  finishedAt?: number;
+  error?: boolean;
+}
+
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
@@ -57,6 +75,91 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private skipNextParamLoad = false;
   private planRequestId = 0;
   private availabilityRequestId = 0;
+  loadMetrics: LoadMetrics | null = null;
+
+  private readonly loadStepOrder: LoadStepKey[] = [
+    'planResponseAt',
+    'planProcessedAt',
+    'availabilityResponseAt',
+    'availabilityProcessedAt',
+    'membersResponseAt'
+  ];
+
+  get loadDurationSeconds(): string | null {
+    if (!this.loadMetrics?.finishedAt) {
+      return null;
+    }
+    return this.formatMilliseconds(this.loadMetrics.finishedAt - this.loadMetrics.startedAt);
+  }
+
+  get loadStepDetails(): { key: LoadStepKey; label: string; sinceStart: string; delta: string }[] {
+    if (!this.loadMetrics) {
+      return [];
+    }
+    const labels: Record<LoadStepKey, string> = {
+      planResponseAt: 'Antwort vom Dienstplan-Endpunkt',
+      planProcessedAt: 'Dienstplan aufbereitet',
+      availabilityResponseAt: 'Verfügbarkeiten empfangen',
+      availabilityProcessedAt: 'Verfügbarkeiten aufbereitet',
+      membersResponseAt: 'Mitgliederliste empfangen'
+    };
+    const rows: { key: LoadStepKey; label: string; sinceStart: string; delta: string }[] = [];
+    let previous = this.loadMetrics.startedAt;
+    for (const key of this.loadStepOrder) {
+      const value = this.loadMetrics[key];
+      if (!value) {
+        continue;
+      }
+      rows.push({
+        key,
+        label: labels[key],
+        sinceStart: this.formatMilliseconds(value - this.loadMetrics.startedAt),
+        delta: this.formatMilliseconds(value - previous)
+      });
+      previous = value;
+    }
+    return rows;
+  }
+
+  private now(): number {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      return performance.now();
+    }
+    return Date.now();
+  }
+
+  private formatMilliseconds(value: number): string {
+    return (value / 1000).toFixed(2);
+  }
+
+  private markLoadStep(step: LoadStepKey, loadRequestId: number | null): void {
+    if (!this.loadMetrics || (loadRequestId !== null && this.loadMetrics.planRequestId !== loadRequestId)) {
+      return;
+    }
+    const timestamp = this.now();
+    this.loadMetrics[step] = timestamp;
+    this.refreshFinishedAt(timestamp);
+  }
+
+  private markLoadError(): void {
+    if (!this.loadMetrics) {
+      return;
+    }
+    this.loadMetrics.error = true;
+    const timestamp = this.now();
+    this.refreshFinishedAt(timestamp);
+  }
+
+  private refreshFinishedAt(timestamp: number): void {
+    if (!this.loadMetrics) {
+      return;
+    }
+    const recorded = this.loadStepOrder
+      .map(step => this.loadMetrics?.[step])
+      .filter((value): value is number => typeof value === 'number');
+    recorded.push(timestamp);
+    this.loadMetrics.finishedAt = Math.max(...recorded, this.loadMetrics.startedAt);
+  }
 
   timestamp(date: string | Date): string {
     return parseDateOnly(date).getTime().toString();
@@ -72,7 +175,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
 
-  private loadAvailabilities(year: number, month: number): void {
+  private loadAvailabilities(year: number, month: number, loadRequestId: number | null = null): void {
     if (!this.isChoirAdmin) {
       if (this.availabilitySub) {
         this.availabilitySub.unsubscribe();
@@ -91,12 +194,14 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       if (requestId !== this.availabilityRequestId) {
         return;
       }
+      this.markLoadStep('availabilityResponseAt', loadRequestId);
       this.availabilityMap = {};
       for (const a of av) {
         if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
         this.availabilityMap[a.userId][a.date] = a.status;
       }
       this.updateCounterPlan();
+      this.markLoadStep('availabilityProcessedAt', loadRequestId);
     });
   }
 
@@ -244,6 +349,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
           });
           this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
           this.updateCounterPlan();
+          this.markLoadStep('membersResponseAt', this.loadMetrics?.planRequestId ?? null);
         });
         this.loadAvailabilities(this.selectedYear, this.selectedMonth);
       } else {
@@ -258,6 +364,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   loadPlan(year: number, month: number): void {
     const requestId = ++this.planRequestId;
+    this.loadMetrics = {
+      planRequestId: requestId,
+      startedAt: this.now()
+    };
     this.isLoadingPlan = true;
     this.plan = null;
     this.entries = [];
@@ -272,6 +382,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         if (requestId !== this.planRequestId) {
           return;
         }
+        this.markLoadStep('planResponseAt', requestId);
         this.plan = plan;
         const valid = (plan?.entries || []).filter(e => !isNaN(parseDateOnly(e.date).getTime()));
         this.entries = valid.map(e => ({
@@ -281,6 +392,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.sortEntries();
         this.updateDisplayedColumns();
         this.updateCounterPlan();
+        this.markLoadStep('planProcessedAt', requestId);
         this.isLoadingPlan = false;
         this.planSub = undefined;
       },
@@ -295,9 +407,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.counterPlanRows = [];
         this.isLoadingPlan = false;
         this.planSub = undefined;
+        this.markLoadError();
       }
     });
-    this.loadAvailabilities(year, month);
+    this.loadAvailabilities(year, month, requestId);
   }
 
   reloadPlan(): void {
