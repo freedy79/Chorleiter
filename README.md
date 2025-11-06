@@ -60,6 +60,23 @@ default is 200 requests per minute:
 RATE_LIMIT_MAX=200
 ```
 
+### Monthly Plan Cache
+
+Monthly plan lookups keep a short-lived in-memory cache per choir, year and
+month to avoid repeated database queries when the same data is requested in
+quick succession. The cache defaults to a time-to-live of 60 seconds and can be
+configured via environment variables in `choir-app-backend/.env`:
+
+```ini
+MONTHLY_PLAN_CACHE_TTL=120
+MONTHLY_PLAN_CACHE_DISABLED=false
+```
+
+Set `MONTHLY_PLAN_CACHE_TTL` to the desired number of seconds. Define it as `0`
+or set `MONTHLY_PLAN_CACHE_DISABLED` to `true` to turn the cache off entirely.
+Whenever a monthly plan is created, finalized, reopened or one of its entries
+changes, the corresponding cache entry is invalidated automatically.
+
 ### Mail Templates
 
 Invitation, password reset, monthly plan and availability request mails are based on templates

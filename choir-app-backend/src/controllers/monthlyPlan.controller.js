@@ -5,6 +5,10 @@ const { monthlyPlanPdf } = require('../services/pdf.service');
 const emailService = require('../services/email.service');
 const { emailDisabled } = require('../services/emailTransporter');
 const { isPublicHoliday } = require('../services/holiday.service');
+const {
+    getMonthlyPlanWithCache,
+    invalidateMonthlyPlanCache
+} = require('../services/monthlyPlanCache.service');
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
@@ -32,19 +36,23 @@ async function createEntriesFromRules(plan) {
 }
 
 exports.findByMonth = async (req, res) => {
-    const { year, month } = req.params;
+    const year = parseInt(req.params.year, 10);
+    const month = parseInt(req.params.month, 10);
     try {
-        const plan = await MonthlyPlan.findOne({
-            where: { choirId: req.activeChoirId, year, month },
-            include: [{
-                model: db.plan_entry,
-                as: 'entries',
-                include: [
-                    { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
-                ]
-            }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
-            order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
+        const plan = await getMonthlyPlanWithCache(req.activeChoirId, year, month, async () => {
+            const result = await MonthlyPlan.findOne({
+                where: { choirId: req.activeChoirId, year, month },
+                include: [{
+                    model: db.plan_entry,
+                    as: 'entries',
+                    include: [
+                        { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                        { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+                    ]
+                }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
+                order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
+            });
+            return result ? result.toJSON() : null;
         });
         if (!plan) return res.status(204).send();
         res.status(200).send(plan);
@@ -54,7 +62,8 @@ exports.findByMonth = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-    const { year, month } = req.body;
+    const year = parseInt(req.body.year, 10);
+    const month = parseInt(req.body.month, 10);
     if (!year || !month) {
         return res.status(400).send({ message: 'year and month required' });
     }
@@ -71,6 +80,7 @@ exports.create = async (req, res) => {
         if (created) {
             await createEntriesFromRules(plan);
         }
+        invalidateMonthlyPlanCache(req.activeChoirId, year, month);
         res.status(created ? 201 : 200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not create plan.' });
@@ -83,6 +93,7 @@ exports.finalize = async (req, res) => {
         const plan = await MonthlyPlan.findOne({ where: { id, choirId: req.activeChoirId } });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
         await plan.update({ finalized: true, version: plan.version + 1 });
+        invalidateMonthlyPlanCache(plan.choirId, plan.year, plan.month);
         res.status(200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not finalize plan.' });
@@ -95,6 +106,7 @@ exports.reopen = async (req, res) => {
         const plan = await MonthlyPlan.findOne({ where: { id, choirId: req.activeChoirId } });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
         await plan.update({ finalized: false });
+        invalidateMonthlyPlanCache(plan.choirId, plan.year, plan.month);
         res.status(200).send(plan);
     } catch (err) {
         res.status(500).send({ message: err.message || 'Could not reopen plan.' });

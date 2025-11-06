@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -174,6 +174,38 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.entries.sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   }
 
+
+  private loadAvailabilities(year: number, month: number, loadRequestId: number | null = null): void {
+    if (!this.isChoirAdmin) {
+      if (this.availabilitySub) {
+        this.availabilitySub.unsubscribe();
+        this.availabilitySub = undefined;
+      }
+      this.availabilityMap = {};
+      return;
+    }
+    if (this.availabilitySub) {
+      this.availabilitySub.unsubscribe();
+    }
+    const requestId = ++this.availabilityRequestId;
+    this.availabilityMap = {};
+    this.updateCounterPlan();
+    this.availabilitySub = this.api.getMemberAvailabilities(year, month).subscribe(av => {
+      if (requestId !== this.availabilityRequestId) {
+        return;
+      }
+      this.markLoadStep('availabilityResponseAt', loadRequestId);
+      this.availabilityMap = {};
+      for (const a of av) {
+        if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
+        this.availabilityMap[a.userId][a.date] = a.status;
+      }
+      this.updateCounterPlan();
+      this.markLoadStep('availabilityProcessedAt', loadRequestId);
+      this.cdr.markForCheck();
+    });
+  }
+
   private dateKey(date: string): string {
     const d = parseDateOnly(date);
     const year = d.getUTCFullYear();
@@ -269,7 +301,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private snackBar: MatSnackBar,
               private router: Router,
               private route: ActivatedRoute,
-              private monthNav: MonthNavigationService) {}
+              private monthNav: MonthNavigationService,
+              private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     const now = new Date();
@@ -326,7 +359,20 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       const wasAdmin = this.isChoirAdmin;
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
-      if (!this.isChoirAdmin) {
+      if (this.isChoirAdmin) {
+        this.api.getChoirMembers().subscribe(m => {
+          this.members = m;
+          this.directors = m.filter(u => {
+            const roles = u.membership?.rolesInChoir || [];
+            return roles.includes('director') || roles.includes('choir_admin');
+          });
+          this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
+          this.updateCounterPlan();
+          this.markLoadStep('membersResponseAt', this.loadMetrics?.planRequestId ?? null);
+          this.cdr.markForCheck();
+        });
+        this.loadAvailabilities(this.selectedYear, this.selectedMonth);
+      } else {
         this.members = [];
         this.directors = [];
         this.organists = [];
@@ -345,6 +391,12 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       startedAt: this.now()
     };
     this.isLoadingPlan = true;
+    this.cdr.markForCheck();
+    this.plan = null;
+    this.entries = [];
+    this.counterPlanDates = [];
+    this.counterPlanRows = [];
+    this.updateDisplayedColumns();
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
@@ -404,7 +456,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.updateCounterPlan();
         this.isLoadingPlan = false;
         this.planSub = undefined;
-        this.refreshFinishedAt(this.now());
+        this.cdr.markForCheck();
       },
       error: () => {
         if (requestId !== this.planRequestId) {
@@ -413,6 +465,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.isLoadingPlan = false;
         this.planSub = undefined;
         this.markLoadError();
+        this.cdr.markForCheck();
       }
     });
   }
