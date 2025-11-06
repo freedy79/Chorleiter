@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -202,6 +202,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       }
       this.updateCounterPlan();
       this.markLoadStep('availabilityProcessedAt', loadRequestId);
+      this.cdr.markForCheck();
     });
   }
 
@@ -288,7 +289,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private snackBar: MatSnackBar,
               private router: Router,
               private route: ActivatedRoute,
-              private monthNav: MonthNavigationService) {}
+              private monthNav: MonthNavigationService,
+              private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     const now = new Date();
@@ -350,6 +352,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
           this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
           this.updateCounterPlan();
           this.markLoadStep('membersResponseAt', this.loadMetrics?.planRequestId ?? null);
+          this.cdr.markForCheck();
         });
         this.loadAvailabilities(this.selectedYear, this.selectedMonth);
       } else {
@@ -369,6 +372,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       startedAt: this.now()
     };
     this.isLoadingPlan = true;
+    this.cdr.markForCheck();
     this.plan = null;
     this.entries = [];
     this.counterPlanDates = [];
@@ -395,6 +399,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.markLoadStep('planProcessedAt', requestId);
         this.isLoadingPlan = false;
         this.planSub = undefined;
+        this.cdr.markForCheck();
       },
       error: () => {
         if (requestId !== this.planRequestId) {
@@ -408,6 +413,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.isLoadingPlan = false;
         this.planSub = undefined;
         this.markLoadError();
+        this.cdr.markForCheck();
       }
     });
     this.loadAvailabilities(year, month, requestId);
