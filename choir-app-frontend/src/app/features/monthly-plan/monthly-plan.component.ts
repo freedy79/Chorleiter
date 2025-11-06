@@ -43,6 +43,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   currentUserId: number | null = null;
   availabilityMap: { [userId: number]: { [date: string]: string } } = {};
   selectedTab = 0;
+  isLoadingPlan = false;
 
   counterPlanDates: Date[] = [];
   counterPlanDateKeys: string[] = [];
@@ -54,6 +55,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private planSub?: Subscription;
   private availabilitySub?: Subscription;
   private skipNextParamLoad = false;
+  private planRequestId = 0;
+  private availabilityRequestId = 0;
 
   timestamp(date: string | Date): string {
     return parseDateOnly(date).getTime().toString();
@@ -81,7 +84,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (this.availabilitySub) {
       this.availabilitySub.unsubscribe();
     }
+    const requestId = ++this.availabilityRequestId;
+    this.availabilityMap = {};
+    this.updateCounterPlan();
     this.availabilitySub = this.api.getMemberAvailabilities(year, month).subscribe(av => {
+      if (requestId !== this.availabilityRequestId) {
+        return;
+      }
       this.availabilityMap = {};
       for (const a of av) {
         if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
@@ -248,11 +257,21 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   loadPlan(year: number, month: number): void {
+    const requestId = ++this.planRequestId;
+    this.isLoadingPlan = true;
+    this.plan = null;
+    this.entries = [];
+    this.counterPlanDates = [];
+    this.counterPlanRows = [];
+    this.updateDisplayedColumns();
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
     this.planSub = this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
       next: plan => {
+        if (requestId !== this.planRequestId) {
+          return;
+        }
         this.plan = plan;
         const valid = (plan?.entries || []).filter(e => !isNaN(parseDateOnly(e.date).getTime()));
         this.entries = valid.map(e => ({
@@ -262,16 +281,27 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.sortEntries();
         this.updateDisplayedColumns();
         this.updateCounterPlan();
+        this.isLoadingPlan = false;
+        this.planSub = undefined;
       },
       error: () => {
+        if (requestId !== this.planRequestId) {
+          return;
+        }
         this.plan = null;
         this.entries = [];
         this.updateDisplayedColumns();
         this.counterPlanDates = [];
         this.counterPlanRows = [];
+        this.isLoadingPlan = false;
+        this.planSub = undefined;
       }
     });
     this.loadAvailabilities(year, month);
+  }
+
+  reloadPlan(): void {
+    this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
   monthChanged(): void {
