@@ -29,8 +29,7 @@ export function passwordsMatchValidator(): ValidatorFn {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MaterialModule,
-    ConfirmDialogComponent
+    MaterialModule
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']

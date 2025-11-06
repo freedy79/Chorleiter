@@ -73,8 +73,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private roleSub?: Subscription;
   private paramSub?: Subscription;
   private planSub?: Subscription;
+  private availabilitySub?: Subscription;
   private skipNextParamLoad = false;
   private planRequestId = 0;
+  private availabilityRequestId = 0;
   loadMetrics: LoadMetrics | null = null;
 
   private readonly loadStepOrder: LoadStepKey[] = [
@@ -181,6 +183,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.availabilitySub.unsubscribe();
         this.availabilitySub = undefined;
       }
+      this.availabilityRequestId = 0;
       this.availabilityMap = {};
       return;
     }
@@ -378,7 +381,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.organists = [];
         this.availabilityMap = {};
         this.updateCounterPlan();
-      } else if (!wasAdmin && this.isChoirAdmin) {
+        if (this.availabilitySub) {
+          this.availabilitySub.unsubscribe();
+          this.availabilitySub = undefined;
+        }
+        this.availabilityRequestId = 0;
+      }
+      if (!wasAdmin && this.isChoirAdmin) {
         this.loadPlan(this.selectedYear, this.selectedMonth);
       }
     });
@@ -668,5 +677,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (this.roleSub) this.roleSub.unsubscribe();
     if (this.paramSub) this.paramSub.unsubscribe();
     if (this.planSub) this.planSub.unsubscribe();
+    if (this.availabilitySub) this.availabilitySub.unsubscribe();
   }
 }
