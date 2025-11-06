@@ -16,6 +16,14 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 1
         }
+    }, {
+        indexes: [
+            {
+                name: 'monthly_plan_choir_year_month_unique',
+                unique: true,
+                fields: ['choirId', 'year', 'month']
+            }
+        ]
     });
     return MonthlyPlan;
 };
