@@ -8,6 +8,13 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.TEXT,
             allowNull: true
         }
+    }, {
+        indexes: [
+            {
+                name: 'plan_entry_monthly_plan_date',
+                fields: ['monthlyPlanId', 'date']
+            }
+        ]
     });
     return PlanEntry;
 };

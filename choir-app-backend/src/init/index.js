@@ -1,5 +1,6 @@
 const { syncDatabase } = require('./dbSync');
 const { ensureJoinHashes } = require('./joinHashes');
+const { ensureMonthlyPlanIndexes } = require('./ensureMonthlyPlanIndexes');
 const { seedDatabase } = require('../seed');
 const { migrateRoles } = require('./migrateRoles');
 const { assignAdminRole } = require('./assignAdminRole');
@@ -12,6 +13,7 @@ async function init(options = {}) {
     await migrateRoles();
     await fixProgramPublishedFromIdColumn();
     await syncDatabase(syncOptions);
+    await ensureMonthlyPlanIndexes();
     await ensureJoinHashes();
     await seedDatabase({ includeDemoData });
     await assignAdminRole();
@@ -25,4 +27,5 @@ module.exports = {
     migrateUserNames,
     assignAdminRole,
     fixProgramPublishedFromIdColumn,
+    ensureMonthlyPlanIndexes,
 };
