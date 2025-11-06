@@ -10,7 +10,8 @@ import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
-import { Subscription } from 'rxjs';
+import { Subscription, forkJoin, of } from 'rxjs';
+import { map, take, tap } from 'rxjs/operators';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
 import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
@@ -21,6 +22,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { MonthNavigationService } from '@shared/services/month-navigation.service';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
+import { MemberAvailability } from '@core/models/member-availability';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -71,10 +73,8 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private roleSub?: Subscription;
   private paramSub?: Subscription;
   private planSub?: Subscription;
-  private availabilitySub?: Subscription;
   private skipNextParamLoad = false;
   private planRequestId = 0;
-  private availabilityRequestId = 0;
   loadMetrics: LoadMetrics | null = null;
 
   private readonly loadStepOrder: LoadStepKey[] = [
@@ -174,43 +174,24 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     this.entries.sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   }
 
-
-  private loadAvailabilities(year: number, month: number, loadRequestId: number | null = null): void {
-    if (!this.isChoirAdmin) {
-      if (this.availabilitySub) {
-        this.availabilitySub.unsubscribe();
-        this.availabilitySub = undefined;
-      }
-      this.availabilityMap = {};
-      return;
-    }
-    if (this.availabilitySub) {
-      this.availabilitySub.unsubscribe();
-    }
-    const requestId = ++this.availabilityRequestId;
-    this.availabilityMap = {};
-    this.updateCounterPlan();
-    this.availabilitySub = this.api.getMemberAvailabilities(year, month).subscribe(av => {
-      if (requestId !== this.availabilityRequestId) {
-        return;
-      }
-      this.markLoadStep('availabilityResponseAt', loadRequestId);
-      this.availabilityMap = {};
-      for (const a of av) {
-        if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
-        this.availabilityMap[a.userId][a.date] = a.status;
-      }
-      this.updateCounterPlan();
-      this.markLoadStep('availabilityProcessedAt', loadRequestId);
-    });
-  }
-
   private dateKey(date: string): string {
     const d = parseDateOnly(date);
     const year = d.getUTCFullYear();
     const month = d.getUTCMonth() + 1;
     const day = d.getUTCDate();
     return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+  }
+
+  private buildAvailabilityMap(availabilities: MemberAvailability[]): { [userId: number]: { [date: string]: string } } {
+    const map: { [userId: number]: { [date: string]: string } } = {};
+    for (const availability of availabilities) {
+      const key = this.dateKey(availability.date);
+      if (!map[availability.userId]) {
+        map[availability.userId] = {};
+      }
+      map[availability.userId][key] = availability.status;
+    }
+    return map;
   }
 
   isAvailable(userId: number, date: string): boolean {
@@ -304,7 +285,11 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       : now.getMonth() + 1;
     this.selectedTab = initialParams.get('tab') === 'avail' ? 1 : 0;
 
-    this.loadPlan(this.selectedYear, this.selectedMonth);
+    this.auth.isChoirAdmin$.pipe(take(1)).subscribe(isChoirAdmin => {
+      this.isChoirAdmin = isChoirAdmin;
+      this.updateDisplayedColumns();
+      this.loadPlan(this.selectedYear, this.selectedMonth);
+    });
 
     this.paramSub = this.route.queryParamMap.subscribe(params => {
       const tabIndex = params.get('tab') === 'avail' ? 1 : 0;
@@ -338,26 +323,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
     this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
     this.roleSub = this.auth.isChoirAdmin$.subscribe(isChoirAdmin => {
+      const wasAdmin = this.isChoirAdmin;
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
-      if (this.isChoirAdmin) {
-        this.api.getChoirMembers().subscribe(m => {
-          this.members = m;
-          this.directors = m.filter(u => {
-            const roles = u.membership?.rolesInChoir || [];
-            return roles.includes('director') || roles.includes('choir_admin');
-          });
-          this.organists = m.filter(u => u.membership?.rolesInChoir?.includes('organist'));
-          this.updateCounterPlan();
-          this.markLoadStep('membersResponseAt', this.loadMetrics?.planRequestId ?? null);
-        });
-        this.loadAvailabilities(this.selectedYear, this.selectedMonth);
-      } else {
+      if (!this.isChoirAdmin) {
         this.members = [];
         this.directors = [];
         this.organists = [];
         this.availabilityMap = {};
         this.updateCounterPlan();
+      } else if (!wasAdmin && this.isChoirAdmin) {
+        this.loadPlan(this.selectedYear, this.selectedMonth);
       }
     });
   }
@@ -369,51 +345,80 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       startedAt: this.now()
     };
     this.isLoadingPlan = true;
-    this.plan = null;
-    this.entries = [];
-    this.counterPlanDates = [];
-    this.counterPlanRows = [];
-    this.updateDisplayedColumns();
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
-    this.planSub = this.monthlyPlan.getMonthlyPlan(year, month).subscribe({
-      next: plan => {
+    const plan$ = this.monthlyPlan.getMonthlyPlan(year, month).pipe(
+      tap(() => this.markLoadStep('planResponseAt', requestId)),
+      map(plan => {
+        const entries = (plan?.entries || [])
+          .filter(e => !isNaN(parseDateOnly(e.date).getTime()))
+          .map(e => ({
+            ...e,
+            holidayHint: getHolidayName(parseDateOnly(e.date)) || undefined
+          }))
+          .sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
+        return { plan, entries };
+      }),
+      tap(() => this.markLoadStep('planProcessedAt', requestId))
+    );
+
+    const availability$ = this.isChoirAdmin
+      ? this.api.getMemberAvailabilities(year, month).pipe(
+          tap(() => this.markLoadStep('availabilityResponseAt', requestId)),
+          map(av => this.buildAvailabilityMap(av)),
+          tap(() => this.markLoadStep('availabilityProcessedAt', requestId))
+        )
+      : of<{ [userId: number]: { [date: string]: string } }>({});
+
+    const members$ = this.isChoirAdmin
+      ? this.api.getChoirMembers().pipe(
+          tap(() => this.markLoadStep('membersResponseAt', requestId)),
+          map(members => {
+            const directors = members.filter(u => {
+              const roles = u.membership?.rolesInChoir || [];
+              return roles.includes('director') || roles.includes('choir_admin');
+            });
+            const organists = members.filter(u => u.membership?.rolesInChoir?.includes('organist'));
+            return { members, directors, organists };
+          })
+        )
+      : of({ members: [] as UserInChoir[], directors: [] as UserInChoir[], organists: [] as UserInChoir[] });
+
+    this.planSub = forkJoin({
+      planData: plan$,
+      availabilityMap: availability$,
+      memberData: members$
+    }).subscribe({
+      next: ({ planData, availabilityMap, memberData }) => {
         if (requestId !== this.planRequestId) {
           return;
         }
-        this.markLoadStep('planResponseAt', requestId);
-        this.plan = plan;
-        const valid = (plan?.entries || []).filter(e => !isNaN(parseDateOnly(e.date).getTime()));
-        this.entries = valid.map(e => ({
-          ...e,
-          holidayHint: getHolidayName(parseDateOnly(e.date)) || undefined
-        }));
-        this.sortEntries();
+        this.plan = planData.plan;
+        this.entries = planData.entries;
+        this.availabilityMap = availabilityMap;
+        this.members = memberData.members;
+        this.directors = memberData.directors;
+        this.organists = memberData.organists;
         this.updateDisplayedColumns();
         this.updateCounterPlan();
-        this.markLoadStep('planProcessedAt', requestId);
         this.isLoadingPlan = false;
         this.planSub = undefined;
+        this.refreshFinishedAt(this.now());
       },
       error: () => {
         if (requestId !== this.planRequestId) {
           return;
         }
-        this.plan = null;
-        this.entries = [];
-        this.updateDisplayedColumns();
-        this.counterPlanDates = [];
-        this.counterPlanRows = [];
         this.isLoadingPlan = false;
         this.planSub = undefined;
         this.markLoadError();
       }
     });
-    this.loadAvailabilities(year, month, requestId);
   }
 
   reloadPlan(): void {
+    this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
@@ -571,6 +576,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
         this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).subscribe({
           next: () => {
             this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 });
+            this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
             this.loadPlan(this.selectedYear, this.selectedMonth);
           },
           error: () => this.snackBar.open('Fehler beim Anlegen des Eintrags.', 'Schließen', { duration: 4000 })
@@ -609,6 +615,5 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     if (this.roleSub) this.roleSub.unsubscribe();
     if (this.paramSub) this.paramSub.unsubscribe();
     if (this.planSub) this.planSub.unsubscribe();
-    if (this.availabilitySub) this.availabilitySub.unsubscribe();
   }
 }
