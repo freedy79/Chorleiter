@@ -20,6 +20,7 @@
   </button>
 </div>
 
+<ng-container *ngIf="isDeveloper">
 <div class="plan-controls">
   <button mat-stroked-button color="primary" (click)="reloadPlan()" [disabled]="isLoadingPlan">
     <mat-icon>refresh</mat-icon>
@@ -50,6 +51,7 @@
     </tbody>
   </table>
 </div>
+</ng-container>
 
 <mat-tab-group [selectedIndex]="selectedTab" (selectedIndexChange)="tabChanged($event)">
 

@@ -23,6 +23,7 @@ import { MonthNavigationService } from '@shared/services/month-navigation.servic
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 import { MemberAvailability } from '@core/models/member-availability';
+import { DebugLogService } from '@core/services/debug-log.service';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -78,6 +79,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   private planRequestId = 0;
   private availabilityRequestId = 0;
   loadMetrics: LoadMetrics | null = null;
+  public isDeveloper = false;
 
   private readonly loadStepOrder: LoadStepKey[] = [
     'planResponseAt',
@@ -305,7 +307,10 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private router: Router,
               private route: ActivatedRoute,
               private monthNav: MonthNavigationService,
-              private cdr: ChangeDetectorRef) {}
+              private cdr: ChangeDetectorRef,
+            private logger: DebugLogService) {
+    this.isDeveloper = this.logger.isEnabled();
+  }
 
   ngOnInit(): void {
     const now = new Date();
