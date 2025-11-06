@@ -20,14 +20,23 @@
 
 /* Content Grid (2-spaltig) */
 .content-grid {
-  display: grid;
+  display: flex;
   gap: 16px;
-  grid-template-columns: 2fr 1.2fr;
-  grid-auto-rows: minmax(120px, auto);
 }
 
-.first-col-element {
-  grid-column: 1 / 2;
+.content-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.content-column--primary {
+  flex: 2 1 0;
+}
+
+.content-column--secondary {
+  flex: 1.2 1 0;
 }
 
 /* Utilities */
@@ -40,15 +49,15 @@
 .timeline { border-inline-start:2px solid #e5e7eb; padding-inline-start:16px; display:grid; gap:14px; }
 .t-dot { width:10px; height:10px; border:2px solid #fff; background:var(--brand); border-radius:999px; position:relative; left:-23px; top:15px; box-shadow:0 0 0 2px #e5e7eb; }
 
-/* Optionale Kartenpositionierung */
-.left-tile { }
-.right-tile {
-  grid-column: 2 / 3;
-}
-
 /* Tablet: 1 Spalte */
 @media (max-width: 1024px) {
-  .content-grid { grid-template-columns: 1fr; }
+  .content-grid {
+    flex-direction: column;
+  }
+
+  .content-column {
+    flex: none;
+  }
 }
 
 /* Mobile: Platz für eventuell vorhandene Bottom-Nav schaffen */
