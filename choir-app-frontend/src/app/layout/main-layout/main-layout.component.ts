@@ -363,6 +363,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
           { displayName: 'Allgemein', route: '/admin/general' },
           { displayName: 'Chöre', route: '/admin/choirs' },
           { displayName: 'Benutzer', route: '/admin/users' },
+          { displayName: 'Bezirke', route: '/admin/districts' },
+          { displayName: 'Gemeinden', route: '/admin/congregations' },
           { displayName: 'Komponisten/Autoren', route: '/admin/creators' },
           { displayName: 'Verlage', route: '/admin/publishers' },
           { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
