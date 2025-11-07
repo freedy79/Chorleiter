@@ -55,4 +55,8 @@ export class ManageFilesComponent implements OnInit {
   getImageUrl(filename: string): string {
     return `${this.apiBase}/uploads/piece-images/${encodeURIComponent(filename)}`;
   }
+
+  getFileUrl(filename: string): string {
+    return `${this.apiBase}/uploads/piece-files/${encodeURIComponent(filename)}`;
+  }
 }
