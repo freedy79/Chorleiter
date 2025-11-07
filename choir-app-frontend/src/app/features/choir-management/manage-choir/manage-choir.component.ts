@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, forkJoin } from 'rxjs';
@@ -514,7 +514,14 @@ export class ManageChoirComponent implements OnInit {
       return;
     }
       if (this.collectionCopyIds.has(collection.id)) {
-      this.dialog.open(CollectionCopiesDialogComponent, { data: { collectionId: collection.id } });
+
+        const dialogConfig = new MatDialogConfig();
+
+        // Configure the dialog options
+        dialogConfig.disableClose = true; // Prevents closing the dialog by clicking outside
+        dialogConfig.width = '80%';       // Set the width of the dialog
+        dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
+        this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
 
     } else {
       const copiesStr = prompt('Anzahl der Exemplare eingeben:');
