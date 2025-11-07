@@ -76,11 +76,32 @@
     <mat-table [dataSource]="files" class="mat-elevation-z1" *ngIf="files.length > 0">
       <ng-container matColumnDef="filename">
         <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
-        <mat-cell *matCellDef="let f">{{ f.filename }}</mat-cell>
+        <mat-cell *matCellDef="let f">
+          <a
+            [href]="getFileUrl(f.filename)"
+            target="_blank"
+            rel="noopener"
+            [attr.download]="f.downloadName || f.filename"
+          >
+            {{ f.filename }}
+          </a>
+        </mat-cell>
       </ng-container>
       <ng-container matColumnDef="downloadName">
         <mat-header-cell *matHeaderCellDef>Downloadname</mat-header-cell>
-        <mat-cell *matCellDef="let f">{{ f.downloadName || '–' }}</mat-cell>
+        <mat-cell *matCellDef="let f">
+          <ng-container *ngIf="f.downloadName; else noDownloadName">
+            <a
+              [href]="getFileUrl(f.filename)"
+              target="_blank"
+              rel="noopener"
+              [attr.download]="f.downloadName"
+            >
+              {{ f.downloadName }}
+            </a>
+          </ng-container>
+          <ng-template #noDownloadName>–</ng-template>
+        </mat-cell>
       </ng-container>
       <ng-container matColumnDef="linked">
         <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
