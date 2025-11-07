@@ -513,15 +513,16 @@ export class ManageChoirComponent implements OnInit {
     if (!this.libraryItemsLoaded) {
       return;
     }
-      if (this.collectionCopyIds.has(collection.id)) {
+    if (this.collectionCopyIds.has(collection.id)) {
 
-        const dialogConfig = new MatDialogConfig();
+      const dialogConfig = new MatDialogConfig();
 
-        // Configure the dialog options
-        dialogConfig.disableClose = true; // Prevents closing the dialog by clicking outside
-        dialogConfig.width = '80%';       // Set the width of the dialog
-        dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
-        this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
+      // Configure the dialog options
+      dialogConfig.disableClose = true; // Prevents closing the dialog by clicking outside
+      dialogConfig.width = '80%';       // Set the width of the dialog
+      dialogConfig.maxWidth = '100%';
+      dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
+      this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
 
     } else {
       const copiesStr = prompt('Anzahl der Exemplare eingeben:');
@@ -529,7 +530,14 @@ export class ManageChoirComponent implements OnInit {
       if (!isNaN(copies) && copies > 0) {
         this.apiService.initCollectionCopies(collection.id, copies).subscribe(() => {
           this.collectionCopyIds.add(collection.id);
-          this.dialog.open(CollectionCopiesDialogComponent, { data: { collectionId: collection.id } });
+          const dialogConfig = new MatDialogConfig();
+
+          // Configure the dialog options
+          dialogConfig.disableClose = true; // Prevents closing the dialog by clicking outside
+          dialogConfig.width = '80%';       // Set the width of the dialog
+          dialogConfig.maxWidth = '100%';
+          dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
+          this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
         });
       }
     }
