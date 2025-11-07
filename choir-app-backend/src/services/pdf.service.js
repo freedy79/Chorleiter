@@ -223,8 +223,9 @@ function lendingListPdf(title, copies) {
   const col3 = col2 + 250;
   const col4 = col3 + 100;
   const right = 545;
-  const lines = [];
-  let y = 800;
+  const rowHeight = 20;
+  const bottomMargin = 70;
+  const totalPlaceholder = '__TOTAL_PAGES__';
 
   function cellCenter(x1, x2, text, yPos, size = 12) {
     const width = x2 - x1;
@@ -240,54 +241,83 @@ function lendingListPdf(title, copies) {
     return `${day}.${month}.${date.getFullYear()}`;
   }
 
-  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Ausleihliste ' + title)}) Tj ET`);
-  y -= 30;
-  const topLine = y + 8;
-  lines.push('0.5 w 0 0 0 RG');
-  lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-  lines.push(cellCenter(left, col2, 'Nr.', y));
-  lines.push(cellCenter(col2, col3, 'Name', y));
-  lines.push(cellCenter(col3, col4, 'Ausleihe', y));
-  lines.push(cellCenter(col4, right, 'Rückgabe', y));
-  y -= 20;
-  lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
-
-  for (const copy of copies) {
-    lines.push(cellCenter(left, col2, String(copy.copyNumber), y));
-    lines.push(cellCenter(col2, col3, copy.borrowerName || '', y));
-    lines.push(cellCenter(col3, col4, formatDate(copy.borrowedAt), y));
-    lines.push(cellCenter(col4, right, formatDate(copy.returnedAt), y));
-    y -= 20;
+  function newPage() {
+    const lines = [];
+    let y = 800;
+    lines.push('0.5 w 0 0 0 RG');
+    lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Ausleihliste ' + title)}) Tj ET`);
+    y -= 30;
+    const topLine = y + 8;
+    lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
+    lines.push(cellCenter(left, col2, 'Nr.', y));
+    lines.push(cellCenter(col2, col3, 'Name', y));
+    lines.push(cellCenter(col3, col4, 'Ausleihe', y));
+    lines.push(cellCenter(col4, right, 'Rückgabe', y));
+    y -= rowHeight;
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
+    return { lines, y, topLine };
   }
 
-  const bottomLine = y + 8;
-  lines.push(`${left} ${topLine} m ${left} ${bottomLine} l S`);
-  lines.push(`${col2} ${topLine} m ${col2} ${bottomLine} l S`);
-  lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
-  lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
-  lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
+  function finishPage(page, pageNumber) {
+    const bottomLine = page.y + 8;
+    page.lines.push(`${left} ${page.topLine} m ${left} ${bottomLine} l S`);
+    page.lines.push(`${col2} ${page.topLine} m ${col2} ${bottomLine} l S`);
+    page.lines.push(`${col3} ${page.topLine} m ${col3} ${bottomLine} l S`);
+    page.lines.push(`${col4} ${page.topLine} m ${col4} ${bottomLine} l S`);
+    page.lines.push(`${right} ${page.topLine} m ${right} ${bottomLine} l S`);
+    const pageLabel = `Seite ${pageNumber} / ${totalPlaceholder}`;
+    page.lines.push(`BT /F1 10 Tf ${left} 40 Td (${escape(pageLabel)}) Tj ET`);
+    pages.push(page.lines.join('\n'));
+  }
 
-  const content = lines.join('\n');
+  const pages = [];
+  let page = newPage();
+
+  for (const copy of copies) {
+    if (page.y - rowHeight < bottomMargin) {
+      finishPage(page, pages.length + 1);
+      page = newPage();
+    }
+    page.lines.push(cellCenter(left, col2, String(copy.copyNumber), page.y));
+    page.lines.push(cellCenter(col2, col3, copy.borrowerName || '', page.y));
+    page.lines.push(cellCenter(col3, col4, formatDate(copy.borrowedAt), page.y));
+    page.lines.push(cellCenter(col4, right, formatDate(copy.returnedAt), page.y));
+    page.y -= rowHeight;
+    page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
+  }
+
+  finishPage(page, pages.length + 1);
+
+  const totalPages = pages.length;
+  const pageKids = [];
   const objects = [];
   objects.push('<< /Type /Catalog /Pages 2 0 R >>');
-  objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
-  objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>');
+  objects.push(null);
   objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
-  objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
-    const offsets = [];
-    let pdf = '%PDF-1.4\n';
-    for (let i = 0; i < objects.length; i++) {
-      offsets[i] = pdf.length;
-      pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-    }
-    const xrefStart = pdf.length;
-    pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-    for (let i = 0; i < offsets.length; i++) {
-      pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
-    }
-    pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-    return Buffer.from(pdf, 'binary');
+
+  for (const content of pages.map(p => p.replace(new RegExp(totalPlaceholder, 'g'), totalPages))) {
+    const pageObjNum = objects.length + 1;
+    const contentObjNum = objects.length + 2;
+    pageKids.push(`${pageObjNum} 0 R`);
+    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R >> >> >>`);
+    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  }
+
+  objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
+
+  const offsets = [];
+  let pdf = '%PDF-1.4\n';
+  for (let i = 0; i < objects.length; i++) {
+    offsets[i] = pdf.length;
+    pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
+  }
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let i = 0; i < offsets.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return Buffer.from(pdf, 'binary');
 }
 
 const db = require('../models');
