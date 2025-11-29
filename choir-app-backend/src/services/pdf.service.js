@@ -224,8 +224,11 @@ function lendingListPdf(title, copies) {
   const col4 = col3 + 100;
   const right = 545;
   const rowHeight = 20;
+  const rowsPerPage = 35;
   const bottomMargin = 70;
   const totalPlaceholder = '__TOTAL_PAGES__';
+  const creationDateText = `Erstellt am ${formatDate(new Date())}`;
+  const footerY = 40;
 
   function cellCenter(x1, x2, text, yPos, size = 12) {
     const width = x2 - x1;
@@ -266,17 +269,21 @@ function lendingListPdf(title, copies) {
     page.lines.push(`${col4} ${page.topLine} m ${col4} ${bottomLine} l S`);
     page.lines.push(`${right} ${page.topLine} m ${right} ${bottomLine} l S`);
     const pageLabel = `Seite ${pageNumber} / ${totalPlaceholder}`;
-    page.lines.push(`BT /F1 10 Tf ${left} 40 Td (${escape(pageLabel)}) Tj ET`);
+    page.lines.push(`BT /F1 10 Tf ${left} ${footerY} Td (${escape(pageLabel)}) Tj ET`);
+    const creationDateX = right - textWidth(creationDateText, 10);
+    page.lines.push(`BT /F1 10 Tf ${creationDateX} ${footerY} Td (${escape(creationDateText)}) Tj ET`);
     pages.push(page.lines.join('\n'));
   }
 
   const pages = [];
   let page = newPage();
+  let rowsOnPage = 0;
 
   for (const copy of copies) {
-    if (page.y - rowHeight < bottomMargin) {
+    if (rowsOnPage >= rowsPerPage || page.y - rowHeight < bottomMargin) {
       finishPage(page, pages.length + 1);
       page = newPage();
+      rowsOnPage = 0;
     }
     page.lines.push(cellCenter(left, col2, String(copy.copyNumber), page.y));
     page.lines.push(cellCenter(col2, col3, copy.borrowerName || '', page.y));
@@ -284,6 +291,7 @@ function lendingListPdf(title, copies) {
     page.lines.push(cellCenter(col4, right, formatDate(copy.returnedAt), page.y));
     page.y -= rowHeight;
     page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
+    rowsOnPage += 1;
   }
 
   finishPage(page, pages.length + 1);
