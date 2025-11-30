@@ -43,13 +43,13 @@
 
     <ng-container *ngIf="displayMode === 'events'">
       <ng-container *ngFor="let col of eventColumns" [matColumnDef]="col.key">
-        <mat-header-cell *matHeaderCellDef>{{ col.label }}</mat-header-cell>
-        <mat-cell *matCellDef="let m">
+        <mat-header-cell *matHeaderCellDef class="date-column"><span class="date-label">{{ col.label }}</span></mat-header-cell>
+        <mat-cell *matCellDef="let m" class="date-column">
           <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, col.key))" (click)="changeStatus(m.id, col.key)">
             {{ iconFor(status(m.id, col.key)) }}
           </mat-icon>
         </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
+        <mat-footer-cell *matFooterCellDef class="date-column">
           <span class="summary-item">
             <mat-icon class="status-icon available">check</mat-icon>{{ statusCount(col.key, 'AVAILABLE') }}
           </span>
@@ -68,13 +68,13 @@
 
     <ng-container *ngIf="displayMode === 'months'">
       <ng-container *ngFor="let col of dateColumns" [matColumnDef]="col.key">
-        <mat-header-cell *matHeaderCellDef>{{ col.label }}</mat-header-cell>
-        <mat-cell *matCellDef="let m">
+        <mat-header-cell *matHeaderCellDef class="date-column">{{ col.label }}</mat-header-cell>
+        <mat-cell *matCellDef="let m" class="date-column">
           <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, col.key))" (click)="changeStatus(m.id, col.key)">
             {{ iconFor(status(m.id, col.key)) }}
           </mat-icon>
         </mat-cell>
-        <mat-footer-cell *matFooterCellDef>
+        <mat-footer-cell *matFooterCellDef class="date-column">
           <span class="summary-item">
             <mat-icon class="status-icon available">check</mat-icon>{{ statusCount(col.key, 'AVAILABLE') }}
           </span>
