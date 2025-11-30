@@ -406,11 +406,6 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     };
     this.isLoadingPlan = true;
     this.cdr.markForCheck();
-    this.plan = null;
-    this.entries = [];
-    this.counterPlanDates = [];
-    this.counterPlanRows = [];
-    this.updateDisplayedColumns();
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
