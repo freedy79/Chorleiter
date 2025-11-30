@@ -1,5 +1,9 @@
 .table-container {
   overflow-x: auto;
+  mat-table {
+    table-layout: fixed;
+    min-width: 100%;
+  }
 }
 
 .controls {
@@ -26,6 +30,33 @@
   border-radius: 2px;
   padding: 2px;
   cursor: pointer;
+}
+
+.date-column {
+  width: 72px;
+  min-width: 72px;
+  text-align: center;
+  padding: 8px 4px;
+}
+
+.date-label {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+}
+
+.mat-column-name {
+  min-width: 160px;
+}
+
+.mat-column-voice {
+  min-width: 110px;
+}
+
+.date-column .status-icon {
+  margin: 0 auto;
+  display: block;
 }
 
 .available {
