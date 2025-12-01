@@ -399,12 +399,22 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   loadPlan(year: number, month: number): void {
+    const previousPlan = this.plan;
+    const previousEntries = this.entries;
+    const previousAvailabilityMap = this.availabilityMap;
+
     const requestId = ++this.planRequestId;
     this.loadMetrics = {
       planRequestId: requestId,
       startedAt: this.now()
     };
     this.isLoadingPlan = true;
+    // Preserve the currently displayed data while the new responses are pending
+    // to avoid briefly clearing the UI. The new values are assigned once all
+    // parallel requests have completed.
+    this.plan = previousPlan;
+    this.entries = previousEntries;
+    this.availabilityMap = previousAvailabilityMap;
     // Keep the currently displayed plan data while the new plan, availabilities
     // and member list are still loading to avoid flashing empty content.
     this.cdr.markForCheck();
