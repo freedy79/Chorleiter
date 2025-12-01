@@ -3,13 +3,18 @@
     <mat-card-title id="current-loans-title">Aktuelle Entleihungen</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <div class="loan-entry" *ngFor="let loan of loans">
-      <div class="loan-composer">{{ loan.collectionComposer || '–' }}</div>
-      <div class="loan-title">
-        <span class="loan-title-text">{{ loan.collectionTitle }}</span>
-        <span class="loan-date" *ngIf="loan.startDate">({{ loan.startDate | date:'dd.MM.yyyy' }})</span>
+    <ng-container *ngIf="loans?.length; else noLoans">
+      <div class="loan-entry" *ngFor="let loan of loans">
+        <div class="loan-composer">{{ loan.collectionComposer || '–' }}</div>
+        <div class="loan-title">
+          <span class="loan-title-text">{{ loan.collectionTitle }}</span>
+          <span class="loan-date" *ngIf="loan.startDate">({{ loan.startDate | date:'dd.MM.yyyy' }})</span>
+        </div>
+        <div class="loan-choir">{{ loan.choirName }}</div>
       </div>
-      <div class="loan-choir">{{ loan.choirName }}</div>
-    </div>
+    </ng-container>
+    <ng-template #noLoans>
+      <p class="loan-empty">Keine aktiven Entleihungen</p>
+    </ng-template>
   </mat-card-content>
 </mat-card>
