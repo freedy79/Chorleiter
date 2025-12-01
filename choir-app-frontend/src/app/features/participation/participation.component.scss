@@ -1,8 +1,17 @@
 .table-container {
   overflow-x: auto;
   mat-table {
-    table-layout: fixed;
+    //table-layout: fixed;
     min-width: 100%;
+
+     &.fixed-layout {
+      table-layout: fixed;
+    }
+
+    &.auto-layout {
+      table-layout: auto;
+      min-width: max-content;
+    }
   }
 }
 

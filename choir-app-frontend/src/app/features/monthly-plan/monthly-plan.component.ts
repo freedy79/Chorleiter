@@ -405,12 +405,14 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       startedAt: this.now()
     };
     this.isLoadingPlan = true;
+    // Keep the currently displayed plan data while the new plan, availabilities
+    // and member list are still loading to avoid flashing empty content.
     this.cdr.markForCheck();
-    this.plan = null;
+    /*this.plan = null;
     this.entries = [];
     this.counterPlanDates = [];
     this.counterPlanRows = [];
-    this.updateDisplayedColumns();
+    this.updateDisplayedColumns();*/
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
