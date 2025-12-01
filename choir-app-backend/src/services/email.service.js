@@ -30,6 +30,13 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   await sendMail({ to, subject, html, text }, overrideSettings);
 }
 
+function buildBorrowerNames(borrower = {}) {
+  return {
+    surname: borrower.name || borrower.surname,
+    first_name: borrower.firstName || borrower.first_name
+  };
+}
+
 async function buildPostEmail(text, choirName) {
   const linkBase = await getFrontendUrl();
   const ids = Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
@@ -230,6 +237,42 @@ exports.sendPieceReportMail = async (recipients, piece, reporter, category, reas
     await sendMail({ to: recipients, subject, text, html });
   } catch (err) {
     logger.error(`Error sending piece report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendLendingBorrowedNotification = async (to, { title, copyNumber, borrowedAt, borrowerName }, borrower) => {
+  if (emailDisabled()) return;
+  try {
+    const replacements = {
+      title,
+      copyNumber: String(copyNumber ?? ''),
+      borrowedAt: formatDate(borrowedAt || new Date()),
+      borrowerName,
+      ...buildBorrowerNames(borrower)
+    };
+    await sendTemplateMail('lending-borrowed', to, replacements);
+  } catch (err) {
+    logger.error(`Error sending lending borrowed mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendLendingReturnedNotification = async (to, { title, copyNumber, returnedAt, borrowerName }, borrower) => {
+  if (emailDisabled()) return;
+  try {
+    const replacements = {
+      title,
+      copyNumber: String(copyNumber ?? ''),
+      returnedAt: formatDate(returnedAt || new Date()),
+      borrowerName,
+      ...buildBorrowerNames(borrower)
+    };
+    await sendTemplateMail('lending-returned', to, replacements);
+  } catch (err) {
+    logger.error(`Error sending lending return mail to ${to}: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }

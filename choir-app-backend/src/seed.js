@@ -92,6 +92,22 @@ async function seedDatabase(options = {}) {
                 }
             });
 
+            await db.mail_template.findOrCreate({
+                where: { type: 'lending-borrowed' },
+                defaults: {
+                    subject: 'Ausleihe: {{title}} (Nr. {{copyNumber}})',
+                    body: '<p>Hallo {{first_name}} {{surname}},</p><p>dir wurde am {{borrowedAt}} {{title}} (Nr. {{copyNumber}}) ausgeliehen.</p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'lending-returned' },
+                defaults: {
+                    subject: 'Rückgabe bestätigt: {{title}} (Nr. {{copyNumber}})',
+                    body: '<p>Hallo {{first_name}} {{surname}},</p><p>die Rückgabe von {{title}} (Nr. {{copyNumber}}) wurde am {{returnedAt}} erfasst.</p>'
+                }
+            });
+
             await db.system_setting.findOrCreate({
                 where: { key: 'FRONTEND_URL' },
                 defaults: { value: process.env.FRONTEND_URL || 'https://nak-chorleiter.de' }
