@@ -61,6 +61,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ENUM('REGISTERED', 'PENDING'),
             defaultValue: 'REGISTERED'
         },
+        leaveRequestedAt: {
+            type: DataTypes.DATE,
+            allowNull: true
+        },
         inviteToken: {
             type: DataTypes.STRING,
             allowNull: true

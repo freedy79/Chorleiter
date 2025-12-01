@@ -5,6 +5,7 @@ export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer';
 export interface ChoirMembership {
     rolesInChoir: ChoirRole[];
     registrationStatus: 'REGISTERED' | 'PENDING';
+    leaveRequestedAt?: string | null;
 }
 
 export interface Choir {

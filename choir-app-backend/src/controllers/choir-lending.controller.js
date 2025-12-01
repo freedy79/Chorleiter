@@ -2,6 +2,7 @@ const db = require('../models');
 const Lending = db.lending;
 const { lendingListPdf } = require('../services/pdf.service');
 const { Op } = require('sequelize');
+const { updateBorrower } = require('../services/lending.service');
 
 // List copies for a choir collection
 exports.list = async (req, res) => {
@@ -74,25 +75,8 @@ exports.setCount = async (req, res) => {
 // Update borrower of a copy
 exports.update = async (req, res) => {
   const { id } = req.params;
-  const copy = await Lending.findByPk(id);
+  const copy = await updateBorrower(id, req.body);
   if (!copy) return res.status(404).send({ message: 'Copy not found.' });
-  const { borrowerName, borrowerId } = req.body;
-  const data = {};
-  if (borrowerName !== undefined) {
-    data.borrowerName = borrowerName;
-    data.status = borrowerName ? 'borrowed' : 'available';
-    if (borrowerName) {
-      data.borrowedAt = new Date();
-      data.returnedAt = null;
-      if (borrowerId !== undefined) data.borrowerId = borrowerId;
-    } else {
-      data.returnedAt = new Date();
-      data.borrowerId = null;
-    }
-  } else if (borrowerId !== undefined) {
-    data.borrowerId = borrowerId;
-  }
-  await copy.update(data);
   res.status(200).send(copy);
 };
 

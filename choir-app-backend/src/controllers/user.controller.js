@@ -50,7 +50,7 @@ function createAccessToken(user, activeChoirId) {
 exports.getMe = async (req, res) => {
     try {
         const user = await User.findByPk(req.userId, {
-            attributes: ['id', 'firstName', 'name', 'email', 'phone', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'helpShown'],
+            attributes: ['id', 'firstName', 'name', 'email', 'phone', 'roles', 'lastDonation', 'street', 'postalCode', 'city', 'congregation', 'district', 'voice', 'shareWithChoir', 'helpShown', 'deletionRequestedAt'],
             include: [{
                 model: Choir,
                 as: 'choirs', // Use the plural alias 'choirs' defined in the association
@@ -266,13 +266,6 @@ exports.leaveChoir = async (req, res) => {
         }
 
         const reasons = [];
-        const openBorrowings = await countOpenBorrowings(req.userId);
-        if (openBorrowings > 0) {
-            reasons.push(openBorrowings === 1
-                ? 'Es besteht noch eine offene Ausleihe. Bitte gib diese zuerst zurück.'
-                : `Es bestehen noch ${openBorrowings} offene Ausleihen. Bitte gib diese zuerst zurück.`);
-        }
-
         const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
         if (roles.includes('choir_admin')) {
             const lastAdmin = await isLastChoirAdmin(req.userId, choirId);
@@ -285,6 +278,18 @@ exports.leaveChoir = async (req, res) => {
         const restrictionMessage = buildRestrictionMessage(reasons);
         if (restrictionMessage) {
             return res.status(409).send({ message: restrictionMessage });
+        }
+
+        const openBorrowings = await countOpenBorrowings(req.userId);
+        if (openBorrowings > 0) {
+            const leaveRequestedAt = new Date();
+            await membership.update({ leaveRequestedAt });
+            const choirName = membership.choir?.name || 'dem Chor';
+            const pendingText = openBorrowings === 1
+                ? 'Du hast noch eine offene Ausleihe.'
+                : `Du hast noch ${openBorrowings} offene Ausleihen.`;
+            const message = `${pendingText} Deine Abmeldung aus dem Chor ${choirName} wurde vorgemerkt. Bitte gib die Noten zuerst zurück.`;
+            return res.status(202).send({ message, accountDeleted: false });
         }
 
         const choirName = membership.choir?.name || 'dem Chor';
@@ -342,13 +347,6 @@ exports.deleteMe = async (req, res) => {
         });
 
         const reasons = [];
-        const openBorrowings = await countOpenBorrowings(req.userId);
-        if (openBorrowings > 0) {
-            reasons.push(openBorrowings === 1
-                ? 'Es besteht noch eine offene Ausleihe. Bitte gib diese zuerst zurück.'
-                : `Es bestehen noch ${openBorrowings} offene Ausleihen. Bitte gib diese zuerst zurück.`);
-        }
-
         for (const membership of memberships) {
             const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
             if (!roles.includes('choir_admin')) {
@@ -364,6 +362,17 @@ exports.deleteMe = async (req, res) => {
         const restrictionMessage = buildRestrictionMessage(reasons);
         if (restrictionMessage) {
             return res.status(409).send({ message: restrictionMessage });
+        }
+
+        const openBorrowings = await countOpenBorrowings(req.userId);
+        if (openBorrowings > 0) {
+            const timestamp = new Date();
+            await user.update({ deletionRequestedAt: timestamp });
+            await Promise.all(memberships.map(m => m.update({ leaveRequestedAt: timestamp })));
+            const pendingText = openBorrowings === 1
+                ? 'Du hast noch eine offene Ausleihe. Deine Abmeldung wurde vorgemerkt.'
+                : `Du hast noch ${openBorrowings} offene Ausleihen. Deine Abmeldung wurde vorgemerkt.`;
+            return res.status(202).send({ message: `${pendingText} Bitte gib zuerst die ausgeliehenen Noten zurück.`, accountDeleted: false });
         }
 
         const userDetails = user.toJSON();

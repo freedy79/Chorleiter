@@ -57,6 +57,7 @@ export interface User {
   availableChoirs?: Choir[];
   lastDonation?: string;
   lastLogin?: string;
+  deletionRequestedAt?: string | null;
   resetToken?: string | null;
   resetTokenExpiry?: string | null;
 }

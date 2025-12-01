@@ -105,6 +105,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.JSON,
       allowNull: true,
       defaultValue: {},
+    },
+    deletionRequestedAt: {
+      type: DataTypes.DATE,
+      allowNull: true
     }
   });
   return User;
