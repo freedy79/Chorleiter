@@ -600,6 +600,10 @@ export class ApiService {
     return this.libraryService.getLoans();
   }
 
+  getCurrentLibraryLoans(): Observable<Loan[]> {
+    return this.libraryService.getCurrentLoans();
+  }
+
   updateLibraryLoan(id: number, data: Partial<Loan>): Observable<any> {
     return this.libraryService.updateLoan(id, data);
   }

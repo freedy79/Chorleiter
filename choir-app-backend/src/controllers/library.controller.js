@@ -3,9 +3,44 @@ const db = require('../models');
 const LibraryItem = db.library_item;
 const Piece = db.piece;
 const Collection = db.collection;
+const Composer = db.composer;
 const LoanRequest = db.loan_request;
 const LoanRequestItem = db.loan_request_item;
 const Choir = db.choir;
+
+const buildLoanResponse = (requests, filterByChoirId = null) => {
+  const now = new Date();
+  const result = [];
+
+  for (const reqItem of requests) {
+    if (filterByChoirId && reqItem.choirId !== filterByChoirId) continue;
+    for (const item of reqItem.items) {
+      if (!item.libraryItem || !item.libraryItem.collection) continue;
+      let status = item.libraryItem.status;
+      if (status === 'borrowed' && reqItem.endDate && new Date(reqItem.endDate) < now) {
+        status = 'due';
+      }
+
+      const composerName = item.libraryItem.collection.pieces?.[0]?.composer?.name
+        || item.libraryItem.collection.pieces?.[0]?.origin
+        || '';
+
+      if (status === 'available') continue;
+
+      result.push({
+        id: reqItem.id,
+        collectionTitle: item.libraryItem.collection.title,
+        collectionComposer: composerName,
+        choirName: reqItem.choir ? reqItem.choir.name : '',
+        startDate: reqItem.startDate,
+        endDate: reqItem.endDate,
+        status
+      });
+    }
+  }
+
+  return result;
+};
 
 // List all library items with collection details
 exports.findAll = async (req, res) => {
@@ -166,32 +201,52 @@ exports.requestLoan = async (req, res) => {
 exports.listLoans = async (req, res) => {
   const requests = await LoanRequest.findAll({
     include: [
-      { model: LoanRequestItem, as: 'items', include: [{ model: LibraryItem, as: 'libraryItem', include: [{ model: Collection, as: 'collection' }] }] },
+      {
+        model: LoanRequestItem,
+        as: 'items',
+        include: [
+          {
+            model: LibraryItem,
+            as: 'libraryItem',
+            include: [{
+              model: Collection,
+              as: 'collection',
+              include: [{ model: Piece, include: [{ model: Composer, as: 'composer' }], through: { attributes: ['numberInCollection'] } }]
+            }]
+          }
+        ]
+      },
       { model: Choir, as: 'choir' }
     ]
   });
 
-  const now = new Date();
-  const result = [];
-  for (const reqItem of requests) {
-    for (const item of reqItem.items) {
-      if (!item.libraryItem || !item.libraryItem.collection) continue;
-      let status = item.libraryItem.status;
-      if (status === 'borrowed' && reqItem.endDate && new Date(reqItem.endDate) < now) {
-        status = 'due';
-      }
-      result.push({
-        id: reqItem.id,
-        collectionTitle: item.libraryItem.collection.title,
-        choirName: reqItem.choir ? reqItem.choir.name : '',
-        startDate: reqItem.startDate,
-        endDate: reqItem.endDate,
-        status
-      });
-    }
-  }
+  res.status(200).send(buildLoanResponse(requests));
+};
 
-  res.status(200).send(result);
+// List active choir loans for all authenticated users
+exports.listCurrentLoans = async (req, res) => {
+  const requests = await LoanRequest.findAll({
+    include: [
+      {
+        model: LoanRequestItem,
+        as: 'items',
+        include: [
+          {
+            model: LibraryItem,
+            as: 'libraryItem',
+            include: [{
+              model: Collection,
+              as: 'collection',
+              include: [{ model: Piece, include: [{ model: Composer, as: 'composer' }], through: { attributes: ['numberInCollection'] } }]
+            }]
+          }
+        ]
+      },
+      { model: Choir, as: 'choir' }
+    ]
+  });
+
+  res.status(200).send(buildLoanResponse(requests, req.activeChoirId));
 };
 
 // Update loan request details and optionally item status
