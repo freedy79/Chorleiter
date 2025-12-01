@@ -12,6 +12,7 @@ const validate = require("../validators/validate");
 router.use(authJwt.verifyToken);
 
 router.get('/', wrap(controller.findAll));
+router.get('/loans/current', wrap(controller.listCurrentLoans));
 router.get('/loans', role.requireLibrarian, wrap(controller.listLoans));
 router.put('/loans/:id', role.requireNonDemo, role.requireLibrarian, wrap(controller.updateLoan));
 router.post('/loans/:id/end', role.requireNonDemo, role.requireLibrarian, wrap(controller.endLoan));

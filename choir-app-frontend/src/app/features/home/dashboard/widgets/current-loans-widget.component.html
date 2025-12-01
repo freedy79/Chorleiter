@@ -1,0 +1,15 @@
+<mat-card class="current-loans" role="region" aria-labelledby="current-loans-title">
+  <mat-card-header>
+    <mat-card-title id="current-loans-title">Aktuelle Entleihungen</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="loan-entry" *ngFor="let loan of loans">
+      <div class="loan-composer">{{ loan.collectionComposer || '–' }}</div>
+      <div class="loan-title">
+        <span class="loan-title-text">{{ loan.collectionTitle }}</span>
+        <span class="loan-date" *ngIf="loan.startDate">({{ loan.startDate | date:'dd.MM.yyyy' }})</span>
+      </div>
+      <div class="loan-choir">{{ loan.choirName }}</div>
+    </div>
+  </mat-card-content>
+</mat-card>

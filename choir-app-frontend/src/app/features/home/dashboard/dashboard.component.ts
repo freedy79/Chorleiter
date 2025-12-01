@@ -19,6 +19,7 @@ import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
 import { Post } from '@core/models/post';
+import { Loan } from '@core/models/loan';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserService } from '@core/services/user.service';
@@ -34,6 +35,7 @@ import { CurrentProgramWidgetComponent } from './widgets/current-program.compone
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { DashboardContactWidgetComponent } from './widgets/dashboard-contact-widget.component';
 import { DashboardContact } from '@core/models/dashboard-contact';
+import { CurrentLoansWidgetComponent } from './widgets/current-loans-widget.component';
 
 type VM = {
   activeChoir: any | null;
@@ -64,6 +66,7 @@ type VM = {
     LatestPostWidgetComponent,
     CurrentProgramWidgetComponent,
     DashboardContactWidgetComponent,
+    CurrentLoansWidgetComponent,
     PureDatePipe,
   ],
   templateUrl: './dashboard.component.html',
@@ -88,6 +91,7 @@ export class DashboardComponent implements OnInit {
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
   dashboardContacts$!: Observable<DashboardContact[]>;
+  currentLoans$!: Observable<Loan[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
@@ -166,6 +170,11 @@ export class DashboardComponent implements OnInit {
 
     this.dashboardContacts$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getDashboardContacts()),
+      shareReplay(1)
+    );
+
+    this.currentLoans$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getCurrentLibraryLoans()),
       shareReplay(1)
     );
 
