@@ -8,12 +8,6 @@
     }
   }
 
-  .loan-composer {
-    font-size: 0.85rem;
-    color: rgba(0, 0, 0, 0.6);
-    font-weight: 400;
-  }
-
   .loan-title {
     display: flex;
     flex-wrap: wrap;
@@ -25,16 +19,20 @@
       color: #000;
     }
 
-    .loan-date {
-      font-weight: 400;
-      color: rgba(0, 0, 0, 0.75);
+    .loan-copy {
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.7);
     }
   }
 
-  .loan-choir {
+  .loan-meta {
     font-size: 0.9rem;
     color: rgba(0, 0, 0, 0.8);
     margin-top: 0.15rem;
+
+    .loan-date {
+      color: rgba(0, 0, 0, 0.75);
+    }
   }
 
   .loan-empty {

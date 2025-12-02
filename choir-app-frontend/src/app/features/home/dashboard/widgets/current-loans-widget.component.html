@@ -5,12 +5,13 @@
   <mat-card-content>
     <ng-container *ngIf="loans?.length; else noLoans">
       <div class="loan-entry" *ngFor="let loan of loans">
-        <div class="loan-composer">{{ loan.collectionComposer || '–' }}</div>
         <div class="loan-title">
-          <span class="loan-title-text">{{ loan.collectionTitle }}</span>
-          <span class="loan-date" *ngIf="loan.startDate">({{ loan.startDate | date:'dd.MM.yyyy' }})</span>
+          <span class="loan-title-text">{{ loan.collection?.title || '–' }}</span>
+          <span class="loan-copy" *ngIf="loan.copyNumber">Exemplar {{ loan.copyNumber }}</span>
         </div>
-        <div class="loan-choir">{{ loan.choirName }}</div>
+        <div class="loan-meta">
+          <span class="loan-date" *ngIf="loan.borrowedAt">seit {{ loan.borrowedAt | date:'dd.MM.yyyy' }}</span>
+        </div>
       </div>
     </ng-container>
     <ng-template #noLoans>

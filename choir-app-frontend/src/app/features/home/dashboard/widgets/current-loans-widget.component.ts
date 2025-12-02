@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { MaterialModule } from '@modules/material.module';
-import { Loan } from '@core/models/loan';
+import { Lending } from '@core/models/lending';
 
 @Component({
   selector: 'app-current-loans-widget',
@@ -11,5 +11,5 @@ import { Loan } from '@core/models/loan';
   styleUrls: ['./current-loans-widget.component.scss']
 })
 export class CurrentLoansWidgetComponent {
-  @Input() loans: Loan[] | null = [];
+  @Input() loans: Lending[] | null = [];
 }

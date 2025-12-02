@@ -18,7 +18,7 @@ exports.list = async (req, res) => {
 // List copies borrowed by current user
 exports.listForUser = async (req, res) => {
   const copies = await Lending.findAll({
-    where: { borrowerId: req.userId },
+    where: { borrowerId: req.userId, collectionId: { [Op.ne]: null } },
     include: [{ model: db.collection, as: 'collection', attributes: ['id', 'title'] }],
     order: [['copyNumber', 'ASC']]
   });

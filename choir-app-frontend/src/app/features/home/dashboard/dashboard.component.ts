@@ -19,7 +19,7 @@ import { AuthService } from '@core/services/auth.service';
 import { Choir } from '@core/models/choir';
 import { PieceChange } from '@core/models/piece-change';
 import { Post } from '@core/models/post';
-import { Loan } from '@core/models/loan';
+import { Lending } from '@core/models/lending';
 import { HelpService } from '@core/services/help.service';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { UserService } from '@core/services/user.service';
@@ -91,7 +91,7 @@ export class DashboardComponent implements OnInit {
   latestPost$!: Observable<import('@core/models/post').Post | null>;
   borrowedItems$!: Observable<LibraryItem[]>;
   dashboardContacts$!: Observable<DashboardContact[]>;
-  currentLoans$!: Observable<Loan[]>;
+  currentLoans$!: Observable<Lending[]>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
@@ -174,7 +174,7 @@ export class DashboardComponent implements OnInit {
     );
 
     this.currentLoans$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getCurrentLibraryLoans()),
+      switchMap(() => this.apiService.getMyBorrowings()),
       shareReplay(1)
     );
 
