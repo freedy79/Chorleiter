@@ -4,8 +4,8 @@
 
 <ng-container *ngIf="posts.length; else noPosts">
   <div class="post-list">
-    <ng-container *ngFor="let p of posts | slice:0:displayCount; let last = last">
-      <mat-card id="post-{{ p.id }}">
+    <ng-container *ngFor="let p of posts | slice:0:displayCount">
+      <mat-card id="post-{{ p.id }}" class="post-card">
         <mat-card-header>
           <mat-card-title>{{ p.title }}</mat-card-title>
           <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }} <span *ngIf="!p.published">(Entwurf)</span></mat-card-subtitle>
@@ -54,7 +54,7 @@
 
         <div class="comments" *ngIf="p.comments?.length">
           <ng-container *ngFor="let comment of p.comments">
-            <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment, post: p, depth: 0 }"></ng-container>
+            <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment, post: p, depth: 0, parent: null }"></ng-container>
           </ng-container>
         </div>
 
@@ -64,7 +64,6 @@
           <button mat-icon-button (click)="deletePost(p)" matTooltip="Löschen"><mat-icon>delete</mat-icon></button>
         </mat-card-actions>
       </mat-card>
-      <mat-divider *ngIf="!last"></mat-divider>
     </ng-container>
     <div class="load-more" *ngIf="displayCount < posts.length">
       <a (click)="showMore()">Ältere anzeigen</a>
@@ -72,11 +71,16 @@
   </div>
 </ng-container>
 
-<ng-template #commentTemplate let-comment let-post="post" let-depth="depth">
+<ng-template #commentTemplate let-comment let-post="post" let-depth="depth" let-parent="parent">
   <div class="comment" [class.reply]="depth > 0">
     <div class="comment-header">
-      <span class="author">{{ comment.author?.name || 'Unbekannt' }}</span>
-      <span class="time">{{ comment.createdAt | date:'short' }}</span>
+      <div class="author-line">
+        <span class="author">{{ comment.author?.name || 'Unbekannt' }}</span>
+        <span class="time">{{ comment.createdAt | date:'short' }}</span>
+      </div>
+      <div class="reply-context" *ngIf="parent">
+        Antwort auf <span class="reply-target">{{ parent.author?.name || 'Unbekannt' }}</span>
+      </div>
     </div>
     <div class="comment-body">{{ comment.text }}</div>
 
@@ -116,7 +120,7 @@
 
     <div class="replies" *ngIf="comment.replies?.length">
       <ng-container *ngFor="let child of comment.replies">
-        <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: child, post: post, depth: depth + 1 }"></ng-container>
+        <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: child, post: post, depth: depth + 1, parent: comment }"></ng-container>
       </ng-container>
     </div>
   </div>
