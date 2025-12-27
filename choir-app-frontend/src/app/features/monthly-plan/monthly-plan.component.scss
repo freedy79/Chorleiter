@@ -158,3 +158,20 @@ mat-tab-group {
   justify-content: center;
   padding: 2rem 0;
 }
+
+.person-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.person-option--maybe {
+  color: #c05600;
+  font-weight: 600;
+}
+
+.person-option__icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
