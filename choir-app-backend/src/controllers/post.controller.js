@@ -579,7 +579,7 @@ exports.reactOnPost = async (req, res) => {
     }
     const reactions = await db.post_reaction.findAll({
       where: { postId: post.id },
-      attributes: ['type', 'userId']
+      attributes: ['id', 'type', 'userId']
     });
     res.status(200).send(summarizeReactions(reactions, req.userId));
   } catch (err) {
@@ -610,7 +610,7 @@ exports.reactOnComment = async (req, res) => {
     }
     const reactions = await db.post_reaction.findAll({
       where: { commentId: comment.id },
-      attributes: ['type', 'userId']
+      attributes: ['id', 'type', 'userId']
     });
     res.status(200).send(summarizeReactions(reactions, req.userId));
   } catch (err) {
