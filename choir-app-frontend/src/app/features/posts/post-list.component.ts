@@ -7,7 +7,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Post } from '@core/models/post';
 import { PostComment } from '@core/models/post-comment';
-import { ReactionInfo, ReactionType } from '@core/models/reaction';
+import { ReactionInfo, ReactionSummary, ReactionType } from '@core/models/reaction';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
@@ -187,6 +187,11 @@ export class PostListComponent implements OnInit {
   countComments(comments?: PostComment[]): number {
     if (!comments) return 0;
     return comments.reduce((sum, comment) => sum + 1 + this.countComments(comment.replies), 0);
+  }
+
+  reactionSummaries(info?: ReactionInfo | null): ReactionSummary[] {
+    if (!info) return [];
+    return Array.isArray(info.summary) ? info.summary : [];
   }
 
   focusCommentInput(postId: number): void {
