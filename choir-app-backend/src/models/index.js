@@ -53,6 +53,9 @@ db.district = require("./district.model.js")(sequelize, Sequelize);
  db.congregation = require("./congregation.model.js")(sequelize, Sequelize);
 db.donation = require("./donation.model.js")(sequelize, Sequelize);
 db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
+db.poll = require("./poll.model.js")(sequelize, Sequelize);
+db.poll_option = require("./poll_option.model.js")(sequelize, Sequelize);
+db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -156,6 +159,16 @@ db.choir.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
+db.post.hasOne(db.poll, { as: 'poll', foreignKey: 'postId', onDelete: 'CASCADE' });
+db.poll.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
+db.poll.hasMany(db.poll_option, { as: 'options', foreignKey: 'pollId', onDelete: 'CASCADE' });
+db.poll_option.belongsTo(db.poll, { foreignKey: 'pollId', as: 'poll' });
+db.poll.hasMany(db.poll_vote, { as: 'votes', foreignKey: 'pollId', onDelete: 'CASCADE' });
+db.poll_vote.belongsTo(db.poll, { foreignKey: 'pollId', as: 'poll' });
+db.poll_option.hasMany(db.poll_vote, { as: 'votes', foreignKey: 'pollOptionId', onDelete: 'CASCADE' });
+db.poll_vote.belongsTo(db.poll_option, { foreignKey: 'pollOptionId', as: 'option' });
+db.user.hasMany(db.poll_vote, { as: 'pollVotes', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.poll_vote.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 // Donations
 db.user.hasMany(db.donation, { as: 'donations' });
@@ -214,4 +227,3 @@ db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
  db.district.hasMany(db.congregation, { as: "congregations" });
  db.congregation.belongsTo(db.district, { foreignKey: "districtId", as: "district" });
 module.exports = db;
-

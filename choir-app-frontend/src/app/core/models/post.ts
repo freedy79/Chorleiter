@@ -1,3 +1,5 @@
+import { Poll } from './poll';
+
 export interface Post {
   id: number;
   title: string;
@@ -10,4 +12,5 @@ export interface Post {
   published: boolean;
   author?: { id: number; name: string };
   sendAsUser?: boolean;
+  poll?: Poll | null;
 }

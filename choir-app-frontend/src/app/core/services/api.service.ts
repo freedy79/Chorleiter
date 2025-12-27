@@ -54,7 +54,7 @@ import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
 import { SearchService } from './search.service';
 import { MonthlyPlanService } from './monthly-plan.service';
-import { PostService } from './post.service';
+import { PostService, PostPayload } from './post.service';
 import { LibraryService } from './library.service';
 import { ChoirLendingService } from './choir-lending.service';
 import { ProgramService } from './program.service';
@@ -62,6 +62,7 @@ import { District } from '../models/district';
 import { DistrictService } from './district.service';
 import { Congregation } from '../models/congregation';
 import { CongregationService } from './congregation.service';
+import { Poll } from '../models/poll';
 
 @Injectable({
   providedIn: 'root'
@@ -912,11 +913,11 @@ export class ApiService {
     return this.postService.getLatestPost();
   }
 
-  createPost(data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
+  createPost(data: PostPayload): Observable<Post> {
     return this.postService.createPost(data);
   }
 
-  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
+  updatePost(id: number, data: PostPayload): Observable<Post> {
     return this.postService.updatePost(id, data);
   }
 
@@ -926,6 +927,10 @@ export class ApiService {
 
   deletePost(id: number): Observable<any> {
     return this.postService.deletePost(id);
+  }
+
+  voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
+    return this.postService.voteOnPost(id, optionIds);
   }
 
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {

@@ -1,0 +1,51 @@
+<div class="post-poll" *ngIf="poll">
+  <div class="poll-header">
+    <div>
+      <strong>Abstimmung</strong>
+      <span *ngIf="poll.closesAt"> · offen bis {{ poll.closesAt | date:'short' }}</span>
+      <span *ngIf="isClosed" class="closed">Abgeschlossen</span>
+    </div>
+    <div class="votes">Stimmen gesamt: {{ poll.totalVotes }}</div>
+  </div>
+
+  <div class="poll-options" *ngIf="poll.allowMultiple; else singleChoice">
+    <div class="option-row" *ngFor="let option of poll.options">
+      <div class="option-main">
+        <mat-checkbox
+          [checked]="selectedOptionIds.includes(option.id)"
+          (change)="toggleMulti(option.id, $event.checked)"
+          [disabled]="isClosed || voting">
+          {{ option.label }}
+        </mat-checkbox>
+        <div class="option-progress">
+          <mat-progress-bar mode="determinate" [value]="getPercentage(option)"></mat-progress-bar>
+        </div>
+      </div>
+      <div class="option-meta">
+        <span class="votes">{{ option.votes }} Stimme{{ option.votes === 1 ? '' : 'n' }}</span>
+      </div>
+    </div>
+    <div class="hint">Du kannst bis zu {{ poll.maxSelections }} Optionen auswählen.</div>
+  </div>
+
+  <ng-template #singleChoice>
+    <mat-radio-group class="poll-options" [value]="selectedOptionIds[0]" (change)="selectSingle($event.value)" [disabled]="isClosed || voting">
+      <div class="option-row" *ngFor="let option of poll.options">
+        <div class="option-main">
+          <mat-radio-button [value]="option.id">{{ option.label }}</mat-radio-button>
+          <div class="option-progress">
+            <mat-progress-bar mode="determinate" [value]="getPercentage(option)"></mat-progress-bar>
+          </div>
+        </div>
+        <div class="option-meta">
+          <span class="votes">{{ option.votes }} Stimme{{ option.votes === 1 ? '' : 'n' }}</span>
+        </div>
+      </div>
+    </mat-radio-group>
+  </ng-template>
+
+  <div class="poll-actions">
+    <button mat-stroked-button color="primary" (click)="submitVote()" [disabled]="voting || isClosed">Abstimmen</button>
+    <span *ngIf="isClosed" class="closed">Abstimmung beendet</span>
+  </div>
+</div>

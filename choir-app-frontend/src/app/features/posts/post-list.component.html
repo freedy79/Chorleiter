@@ -13,6 +13,7 @@
         <mat-card-content>
           <div [innerHTML]="p.text | markdown | async"></div>
           <div *ngIf="p.expiresAt" class="expires">Sichtbar bis {{ p.expiresAt | date:'shortDate' }}</div>
+          <app-post-poll *ngIf="p.poll" [post]="p" (pollChange)="onPollChange(p, $event)"></app-post-poll>
         </mat-card-content>
         <mat-card-actions *ngIf="canEdit(p)" class="actions">
           <button mat-button color="accent" (click)="publishPost(p)" *ngIf="!p.published">Veröffentlichen</button>
