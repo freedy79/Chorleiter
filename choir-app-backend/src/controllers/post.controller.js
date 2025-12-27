@@ -203,37 +203,52 @@ async function upsertPoll(postId, pollPayload, transaction) {
     transaction
   });
   if (existing) {
-    const options = [...existing.options].sort((a, b) => a.position - b.position);
-    const labelBuckets = options.reduce((acc, option) => {
-      acc[option.label] = acc[option.label] || [];
-      acc[option.label].push(option);
-      return acc;
-    }, {});
-    const sameOptionSet = options.length === pollPayload.options.length &&
-      pollPayload.options.every(label => (labelBuckets[label] || []).length > 0);
     await existing.update({
       allowMultiple: pollPayload.allowMultiple,
       maxSelections: pollPayload.maxSelections,
       closesAt: pollPayload.closesAt
     }, { transaction });
-    if (sameOptionSet) {
-      const used = {};
-      for (let index = 0; index < pollPayload.options.length; index++) {
-        const label = pollPayload.options[index];
-        used[label] = used[label] || 0;
-        const option = (labelBuckets[label] || [])[used[label]++];
-        if (option && option.position !== index) {
-          await option.update({ position: index }, { transaction });
-        }
+
+    const sortedExisting = [...existing.options].sort((a, b) => a.position - b.position);
+    const remaining = [...sortedExisting];
+    const assignments = new Array(pollPayload.options.length).fill(null);
+
+    // first try to match by unchanged labels (supports duplicates)
+    pollPayload.options.forEach((label, index) => {
+      const matchIndex = remaining.findIndex(option => option.label === label);
+      if (matchIndex !== -1) {
+        assignments[index] = { option: remaining.splice(matchIndex, 1)[0], label, position: index };
       }
-      return existing;
+    });
+
+    // reuse any still-unmatched existing options to preserve their votes when labels were edited
+    pollPayload.options.forEach((label, index) => {
+      if (assignments[index] || remaining.length === 0) return;
+      assignments[index] = { option: remaining.shift(), label, position: index };
+    });
+
+    // create entries for brand new options
+    pollPayload.options.forEach((label, index) => {
+      if (!assignments[index]) assignments[index] = { option: null, label, position: index };
+    });
+
+    for (const assignment of assignments) {
+      if (assignment.option) {
+        if (assignment.option.label !== assignment.label || assignment.option.position !== assignment.position) {
+          await assignment.option.update({ label: assignment.label, position: assignment.position }, { transaction });
+        }
+      } else {
+        await db.poll_option.create({ pollId: existing.id, label: assignment.label, position: assignment.position }, { transaction });
+      }
     }
-    await db.poll_vote.destroy({ where: { pollId: existing.id }, transaction });
-    await db.poll_option.destroy({ where: { pollId: existing.id }, transaction });
-    await db.poll_option.bulkCreate(
-      pollPayload.options.map((label, index) => ({ pollId: existing.id, label, position: index })),
-      { transaction }
-    );
+
+    // remove options that no longer exist, along with their votes
+    const removedOptionIds = remaining.map(option => option.id);
+    if (removedOptionIds.length > 0) {
+      await db.poll_vote.destroy({ where: { pollOptionId: removedOptionIds }, transaction });
+      await db.poll_option.destroy({ where: { id: removedOptionIds }, transaction });
+    }
+
     return existing;
   }
   const poll = await db.poll.create({
