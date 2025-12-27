@@ -19,7 +19,7 @@
         <div class="social-counts" *ngIf="p.reactions?.total || (p.comments?.length || 0)">
           <div class="reaction-count" *ngIf="p.reactions?.total">
             <span class="reaction-icons">
-              <span *ngFor="let summary of (p.reactions?.summary || []) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
+              <span *ngFor="let summary of reactionSummaries(p.reactions) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
                 {{ reactionIcon(summary.type) }}
               </span>
             </span>
@@ -83,7 +83,7 @@
     <div class="comment-counts" *ngIf="comment.reactions?.total">
       <div class="reaction-count">
         <span class="reaction-icons">
-          <span *ngFor="let summary of (comment.reactions?.summary || []) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
+          <span *ngFor="let summary of reactionSummaries(comment.reactions) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
             {{ reactionIcon(summary.type) }}
           </span>
         </span>
