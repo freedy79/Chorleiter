@@ -1,4 +1,6 @@
 import { Poll } from './poll';
+import { PostComment } from './post-comment';
+import { ReactionInfo } from './reaction';
 
 export interface Post {
   id: number;
@@ -13,4 +15,6 @@ export interface Post {
   author?: { id: number; name: string };
   sendAsUser?: boolean;
   poll?: Poll | null;
+  reactions?: ReactionInfo;
+  comments?: PostComment[];
 }

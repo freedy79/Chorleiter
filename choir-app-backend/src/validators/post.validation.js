@@ -34,3 +34,15 @@ exports.pollVoteValidation = [
   body('optionIds').isArray({ min: 1 }).withMessage('At least one option required'),
   body('optionIds.*').isInt().withMessage('Invalid option id')
 ];
+
+exports.commentValidation = [
+  body('text').isString().notEmpty().custom(noHtml).withMessage('HTML not allowed'),
+  body('parentId').optional({ nullable: true }).isInt().withMessage('Invalid parent id')
+];
+
+exports.reactionValidation = [
+  body('type')
+    .optional({ nullable: true })
+    .isIn(['like', 'celebrate', 'support', 'love', 'insightful', 'curious'])
+    .withMessage('Invalid reaction type')
+];

@@ -128,6 +128,71 @@ const controller = require('../src/controllers/post.controller');
     }, res);
     assert.strictEqual(res.statusCode, 400);
 
+    // comments can be added and replied to
+    await controller.addComment({
+      params: { id: p1.id },
+      body: { text: 'Toller Beitrag!' },
+      activeChoirId: choir.id,
+      userId: user3.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 201);
+    const baseComment = res.data;
+    assert.strictEqual(baseComment.text, 'Toller Beitrag!');
+    assert.strictEqual(baseComment.replies.length, 0);
+
+    await controller.addComment({
+      params: { id: p1.id },
+      body: { text: 'Danke für den Hinweis', parentId: baseComment.id },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 201);
+    const reply = res.data;
+    assert.strictEqual(reply.parentId, baseComment.id);
+
+    // reactions on posts and comments
+    await controller.reactOnPost({
+      params: { id: p1.id },
+      body: { type: 'like' },
+      activeChoirId: choir.id,
+      userId: user2.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.total, 1);
+    assert.strictEqual(res.data.userReaction, 'like');
+
+    await controller.reactOnComment({
+      params: { id: p1.id, commentId: baseComment.id },
+      body: { type: 'love' },
+      activeChoirId: choir.id,
+      userId: user3.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.total, 1);
+    assert.strictEqual(res.data.userReaction, 'love');
+
+    // removing a reaction leaves zero summary
+    await controller.reactOnPost({
+      params: { id: p1.id },
+      body: {},
+      activeChoirId: choir.id,
+      userId: user2.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.total, 0);
+
+    // full fetch should include comments and replies
+    await controller.findAll({ activeChoirId: choir.id, userId: user1.id, userRoles: [] }, res);
+    const refreshedPost = res.data.find(p => p.id === p1.id);
+    const storedComment = refreshedPost.comments.find(c => c.id === baseComment.id);
+    assert.strictEqual(storedComment.replies.length, 1);
+    assert.strictEqual(storedComment.reactions.total, 1);
+
     console.log('post.controller tests passed');
     await db.sequelize.close();
   } catch (err) {
