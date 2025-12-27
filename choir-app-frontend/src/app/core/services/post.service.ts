@@ -3,6 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
+import { Poll } from '../models/poll';
+
+export type PostPayload = {
+  title: string;
+  text: string;
+  expiresAt?: string | null;
+  sendTest?: boolean;
+  sendAsUser?: boolean;
+  poll?: {
+    options: string[];
+    allowMultiple?: boolean;
+    maxSelections?: number;
+    closesAt?: string | null;
+  } | null;
+};
 
 @Injectable({ providedIn: 'root' })
 export class PostService {
@@ -17,11 +32,11 @@ export class PostService {
     return this.http.get<Post | null>(`${this.apiUrl}/posts/latest`);
   }
 
-  createPost(data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
+  createPost(data: PostPayload): Observable<Post> {
     return this.http.post<Post>(`${this.apiUrl}/posts`, data);
   }
 
-  updatePost(id: number, data: { title: string; text: string; expiresAt?: string | null; sendTest?: boolean; sendAsUser?: boolean }): Observable<Post> {
+  updatePost(id: number, data: PostPayload): Observable<Post> {
     return this.http.put<Post>(`${this.apiUrl}/posts/${id}`, data);
   }
 
@@ -31,5 +46,9 @@ export class PostService {
 
   deletePost(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/posts/${id}`);
+  }
+
+  voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
+    return this.http.post<Poll>(`${this.apiUrl}/posts/${id}/vote`, { optionIds });
   }
 }

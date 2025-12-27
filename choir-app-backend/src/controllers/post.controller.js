@@ -13,24 +13,143 @@ async function isChoirAdmin(req) {
   return assoc && Array.isArray(assoc.rolesInChoir) && assoc.rolesInChoir.includes('choir_admin');
 }
 
+function sanitizePollPayload(poll) {
+  if (!poll) return null;
+  const options = Array.isArray(poll.options)
+    ? poll.options.map(o => stripHtml(String(o || '').trim())).filter(Boolean)
+    : [];
+  if (options.length < 2) return null;
+  const allowMultiple = !!poll.allowMultiple;
+  const maxSelections = allowMultiple
+    ? Math.max(1, Math.min(Number(poll.maxSelections) || options.length, options.length))
+    : 1;
+  const closesAt = poll.closesAt ? new Date(poll.closesAt) : null;
+  const validClosesAt = closesAt && !isNaN(closesAt.getTime()) ? closesAt : null;
+  return { allowMultiple, maxSelections, closesAt: validClosesAt, options };
+}
+
+const pollInclude = {
+  model: db.poll,
+  as: 'poll',
+  include: [
+    {
+      model: db.poll_option,
+      as: 'options',
+      include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'] }]
+    }
+  ]
+};
+
+function formatPoll(poll, currentUserId) {
+  if (!poll) return null;
+  const options = [...(poll.options || [])].sort((a, b) => a.position - b.position);
+  const totalVotes = options.reduce((sum, option) => sum + (option.votes ? option.votes.length : 0), 0);
+  return {
+    id: poll.id,
+    allowMultiple: !!poll.allowMultiple,
+    maxSelections: poll.maxSelections || 1,
+    closesAt: poll.closesAt,
+    totalVotes,
+    options: options.map(option => ({
+      id: option.id,
+      label: option.label,
+      position: option.position,
+      votes: option.votes ? option.votes.length : 0,
+      selected: option.votes ? option.votes.some(v => v.userId === currentUserId) : false
+    }))
+  };
+}
+
+function serializePost(post, currentUserId) {
+  if (!post) return null;
+  const plain = post.toJSON();
+  plain.poll = formatPoll(plain.poll, currentUserId);
+  return plain;
+}
+
+async function upsertPoll(postId, pollPayload, transaction) {
+  if (!pollPayload) return null;
+  const existing = await db.poll.findOne({
+    where: { postId },
+    include: [{ model: db.poll_option, as: 'options' }],
+    transaction
+  });
+  if (existing) {
+    const options = [...existing.options].sort((a, b) => a.position - b.position);
+    const labelBuckets = options.reduce((acc, option) => {
+      acc[option.label] = acc[option.label] || [];
+      acc[option.label].push(option);
+      return acc;
+    }, {});
+    const sameOptionSet = options.length === pollPayload.options.length &&
+      pollPayload.options.every(label => (labelBuckets[label] || []).length > 0);
+    await existing.update({
+      allowMultiple: pollPayload.allowMultiple,
+      maxSelections: pollPayload.maxSelections,
+      closesAt: pollPayload.closesAt
+    }, { transaction });
+    if (sameOptionSet) {
+      const used = {};
+      for (let index = 0; index < pollPayload.options.length; index++) {
+        const label = pollPayload.options[index];
+        used[label] = used[label] || 0;
+        const option = (labelBuckets[label] || [])[used[label]++];
+        if (option && option.position !== index) {
+          await option.update({ position: index }, { transaction });
+        }
+      }
+      return existing;
+    }
+    await db.poll_vote.destroy({ where: { pollId: existing.id }, transaction });
+    await db.poll_option.destroy({ where: { pollId: existing.id }, transaction });
+    await db.poll_option.bulkCreate(
+      pollPayload.options.map((label, index) => ({ pollId: existing.id, label, position: index })),
+      { transaction }
+    );
+    return existing;
+  }
+  const poll = await db.poll.create({
+    postId,
+    allowMultiple: pollPayload.allowMultiple,
+    maxSelections: pollPayload.maxSelections,
+    closesAt: pollPayload.closesAt
+  }, { transaction });
+  await db.poll_option.bulkCreate(
+    pollPayload.options.map((label, index) => ({ pollId: poll.id, label, position: index })),
+    { transaction }
+  );
+  return poll;
+}
+
 exports.create = async (req, res) => {
-  const { title, text, expiresAt, sendTest, publish, sendAsUser } = req.body;
+  const { title, text, expiresAt, sendTest, publish, sendAsUser, poll } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
     const expDate = expiresAt ? new Date(expiresAt) : null;
-    const post = await Post.create({
-      title: sanitizedTitle,
-      text: sanitizedText,
-      expiresAt: expDate,
-      choirId: req.activeChoirId,
-      userId: req.userId,
-      published: !!publish,
-      sendAsUser: !!sendAsUser
+    const pollPayload = sanitizePollPayload(poll);
+    if (poll !== undefined && poll !== null && !pollPayload) {
+      return res.status(400).send({ message: 'Invalid poll configuration' });
+    }
+    const created = await db.sequelize.transaction(async transaction => {
+      const post = await Post.create({
+        title: sanitizedTitle,
+        text: sanitizedText,
+        expiresAt: expDate,
+        choirId: req.activeChoirId,
+        userId: req.userId,
+        published: !!publish,
+        sendAsUser: !!sendAsUser
+      }, { transaction });
+      if (pollPayload) {
+        await upsertPoll(post.id, pollPayload, transaction);
+      }
+      return post;
     });
-    const full = await Post.findByPk(post.id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] }
+    const full = await Post.findByPk(created.id, { include: [
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      pollInclude
     ] });
 
     const author = await db.user.findByPk(req.userId);
@@ -55,7 +174,7 @@ exports.create = async (req, res) => {
       await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
     }
 
-    res.status(201).send(full);
+    res.status(201).send(serializePost(full, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -85,11 +204,12 @@ exports.findAll = async (req, res) => {
     const posts = await Post.findAll({
       where,
       include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] }
+        { model: db.user, as: 'author', attributes: ['id','name'] },
+        pollInclude
       ],
       order: [['createdAt', 'DESC']]
     });
-    res.status(200).send(posts);
+    res.status(200).send(posts.map(p => serializePost(p, req.userId)));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -119,11 +239,12 @@ exports.findLatest = async (req, res) => {
     const post = await Post.findOne({
       where,
       include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] }
+        { model: db.user, as: 'author', attributes: ['id','name'] },
+        pollInclude
       ],
       order: [['createdAt', 'DESC']]
     });
-    res.status(200).send(post);
+    res.status(200).send(serializePost(post, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -131,7 +252,7 @@ exports.findLatest = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { title, text, expiresAt, sendTest, sendAsUser } = req.body;
+  const { title, text, expiresAt, sendTest, sendAsUser, poll } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
     const post = await Post.findByPk(id);
@@ -143,9 +264,26 @@ exports.update = async (req, res) => {
     const expDate = expiresAt ? new Date(expiresAt) : null;
     const updateData = { title: sanitizedTitle, text: sanitizedText, expiresAt: expDate };
     if (sendAsUser !== undefined) updateData.sendAsUser = !!sendAsUser;
-    await post.update(updateData);
+    const pollPayload = sanitizePollPayload(poll);
+    if (poll !== undefined && poll !== null && !pollPayload) {
+      return res.status(400).send({ message: 'Invalid poll configuration' });
+    }
+    await db.sequelize.transaction(async transaction => {
+      await post.update(updateData, { transaction });
+      if (poll === null) {
+        const existingPoll = await db.poll.findOne({ where: { postId: post.id }, transaction });
+        if (existingPoll) {
+          await db.poll_vote.destroy({ where: { pollId: existingPoll.id }, transaction });
+          await db.poll_option.destroy({ where: { pollId: existingPoll.id }, transaction });
+          await existingPoll.destroy({ transaction });
+        }
+      } else if (pollPayload) {
+        await upsertPoll(post.id, pollPayload, transaction);
+      }
+    });
     const full = await Post.findByPk(id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] }
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      pollInclude
     ] });
     if (sendTest) {
       const author = await db.user.findByPk(req.userId);
@@ -155,7 +293,7 @@ exports.update = async (req, res) => {
         await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
       }
     }
-    res.status(200).send(full);
+    res.status(200).send(serializePost(full, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -170,7 +308,8 @@ exports.publish = async (req, res) => {
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     await post.update({ published: true });
     const full = await Post.findByPk(id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] }
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      pollInclude
     ] });
     const members = await db.user.findAll({
       include: [{ model: db.choir, where: { id: req.activeChoirId } }]
@@ -182,7 +321,7 @@ exports.publish = async (req, res) => {
       const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
       await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, replyTo);
     }
-    res.status(200).send(full);
+    res.status(200).send(serializePost(full, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -197,6 +336,59 @@ exports.remove = async (req, res) => {
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     await post.destroy();
     res.status(204).send();
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.vote = async (req, res) => {
+  const id = req.params.id;
+  const { optionIds } = req.body;
+  const uniqueOptionIds = Array.from(new Set((optionIds || []).map(Number).filter(n => !Number.isNaN(n))));
+  try {
+    const post = await Post.findByPk(id, {
+      include: [
+        pollInclude,
+        { model: db.user, as: 'author', attributes: ['id','name'] }
+      ]
+    });
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    const isOwner = post.userId === req.userId;
+    const stillVisible = !post.expiresAt || new Date(post.expiresAt) > new Date() || isOwner;
+    const isPublishedOrOwner = post.published || isOwner;
+    if (!admin && (!stillVisible || !isPublishedOrOwner)) {
+      return res.status(403).send({ message: 'Not allowed' });
+    }
+    if (!post.poll) return res.status(400).send({ message: 'Poll not available' });
+    if (uniqueOptionIds.length === 0) return res.status(400).send({ message: 'No options selected' });
+    if (post.poll.closesAt && new Date(post.poll.closesAt) < new Date()) {
+      return res.status(400).send({ message: 'Poll is closed' });
+    }
+    const pollOptionIds = (post.poll.options || []).map(o => o.id);
+    const invalid = uniqueOptionIds.some(idVal => !pollOptionIds.includes(Number(idVal)));
+    if (invalid) return res.status(400).send({ message: 'Invalid option selected' });
+    if (!post.poll.allowMultiple && uniqueOptionIds.length !== 1) {
+      return res.status(400).send({ message: 'Single choice poll requires exactly one option' });
+    }
+    if (post.poll.allowMultiple && uniqueOptionIds.length > post.poll.maxSelections) {
+      return res.status(400).send({ message: 'Too many selections' });
+    }
+    await db.sequelize.transaction(async transaction => {
+      await db.poll_vote.destroy({ where: { pollId: post.poll.id, userId: req.userId }, transaction });
+      const votes = uniqueOptionIds.map(optionId => ({
+        pollId: post.poll.id,
+        pollOptionId: optionId,
+        userId: req.userId
+      }));
+      if (votes.length > 0) {
+        await db.poll_vote.bulkCreate(votes, { transaction });
+      }
+    });
+    const fresh = await db.poll.findByPk(post.poll.id, {
+      include: [{ model: db.poll_option, as: 'options', include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'] }] }]
+    });
+    res.status(200).send(formatPoll(fresh, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }

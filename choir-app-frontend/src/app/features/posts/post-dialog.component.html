@@ -22,6 +22,45 @@
     </mat-expansion-panel>
     <h3>Vorschau</h3>
     <div class="preview" [innerHTML]="form.get('text')?.value | markdown | async"></div>
+    <mat-divider></mat-divider>
+    <div class="poll-section">
+      <div class="poll-header">
+        <h3>Abstimmung</h3>
+        <mat-slide-toggle formControlName="enablePoll">Abstimmung hinzufügen</mat-slide-toggle>
+      </div>
+      <ng-container *ngIf="form.get('enablePoll')?.value">
+        <p class="hint">Lege die Optionen an, sortiere sie und definiere, ob Mehrfachauswahl erlaubt ist.</p>
+        <mat-checkbox formControlName="pollAllowMultiple" (change)="toggleAllowMultiple($event.checked)">
+          Mehrfachauswahl erlauben
+        </mat-checkbox>
+        <mat-form-field appearance="fill" class="full-width" *ngIf="form.get('pollAllowMultiple')?.value">
+          <mat-label>Maximale Stimmen pro Person</mat-label>
+          <input matInput type="number" min="1" [max]="pollOptions.length" formControlName="pollMaxSelections">
+        </mat-form-field>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Ablaufdatum der Abstimmung</mat-label>
+          <input matInput [matDatepicker]="pollPicker" formControlName="pollClosesAt">
+          <mat-datepicker-toggle matSuffix [for]="pollPicker"></mat-datepicker-toggle>
+          <mat-datepicker #pollPicker></mat-datepicker>
+        </mat-form-field>
+        <div cdkDropList (cdkDropListDropped)="dropPollOption($event)" class="poll-options">
+          <div class="poll-option" *ngFor="let ctrl of pollOptions.controls; let i = index" cdkDrag>
+            <mat-icon cdkDragHandle>drag_handle</mat-icon>
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Option {{ i + 1 }}</mat-label>
+              <input matInput [formControl]="ctrl">
+            </mat-form-field>
+            <button mat-icon-button color="warn" (click)="removePollOption(i)" [disabled]="pollOptions.length <= 2" matTooltip="Option entfernen">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+        <button mat-button color="primary" type="button" (click)="addPollOption()">
+          <mat-icon>add</mat-icon>
+          Option hinzufügen
+        </button>
+      </ng-container>
+    </div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
       <input matInput [matDatepicker]="picker" formControlName="expiresAt">

@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Post } from '@core/models/post';
@@ -9,6 +9,7 @@ import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.com
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs/operators';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 type PostDialogAction = 'created' | 'updated';
 
@@ -18,6 +19,10 @@ type PostFormValue = {
   expiresAt: Date | null;
   sendTest: boolean;
   sendAsUser: boolean;
+  enablePoll: boolean;
+  pollAllowMultiple: boolean;
+  pollMaxSelections: number;
+  pollClosesAt: Date | null;
 };
 
 @Component({
@@ -44,12 +49,41 @@ export class PostDialogComponent {
       text: ['', Validators.required],
       expiresAt: [null],
       sendTest: [false],
-      sendAsUser: [false]
+      sendAsUser: [false],
+      enablePoll: [false],
+      pollAllowMultiple: [false],
+      pollMaxSelections: [1, [Validators.min(1)]],
+      pollClosesAt: [null],
+      pollOptions: this.fb.array<FormControl<string | null>>([
+        this.fb.control<string>(''),
+        this.fb.control<string>('')
+      ])
     });
     if (data?.post) {
       this.isEdit = true;
-      this.form.patchValue({ title: data.post.title, text: data.post.text, expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null, sendAsUser: data.post.sendAsUser });
+      this.form.patchValue({
+        title: data.post.title,
+        text: data.post.text,
+        expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null,
+        sendAsUser: data.post.sendAsUser
+      });
+      if (data.post.poll) {
+        this.form.patchValue({
+          enablePoll: true,
+          pollAllowMultiple: data.post.poll.allowMultiple,
+          pollMaxSelections: data.post.poll.maxSelections,
+          pollClosesAt: data.post.poll.closesAt ? new Date(data.post.poll.closesAt) : null
+        });
+        this.pollOptions.clear();
+        data.post.poll.options
+          .sort((a, b) => a.position - b.position)
+          .forEach(option => this.pollOptions.push(this.fb.control<string>(option.label)));
+      }
     }
+  }
+
+  get pollOptions(): FormArray<FormControl<string | null>> {
+    return this.form.get('pollOptions') as FormArray<FormControl<string | null>>;
   }
 
   onTextKeyDown(event: KeyboardEvent): void {
@@ -98,12 +132,17 @@ export class PostDialogComponent {
     }
     const value = this.form.getRawValue() as PostFormValue;
     const expiresAt = value.expiresAt ? value.expiresAt.toISOString() : null;
+    const pollPayload = this.buildPollPayload();
+    if (pollPayload === false) {
+      return;
+    }
     const payload = {
       title: value.title,
       text: value.text,
       expiresAt,
       sendTest: value.sendTest,
-      sendAsUser: value.sendAsUser
+      sendAsUser: value.sendAsUser,
+      poll: pollPayload
     };
     const request$ = this.isEdit && this.data?.post
       ? this.api.updatePost(this.data.post.id, payload)
@@ -129,5 +168,55 @@ export class PostDialogComponent {
 
   cancel(): void {
     this.dialogRef.close();
+  }
+
+  addPollOption(): void {
+    this.pollOptions.push(this.fb.control<string>(''));
+  }
+
+  removePollOption(index: number): void {
+    if (this.pollOptions.length <= 2) {
+      return;
+    }
+    this.pollOptions.removeAt(index);
+  }
+
+  dropPollOption(event: CdkDragDrop<FormControl<string | null>[]>): void {
+    moveItemInArray(this.pollOptions.controls, event.previousIndex, event.currentIndex);
+  }
+
+  toggleAllowMultiple(checked: boolean): void {
+    if (!checked) {
+      this.form.patchValue({ pollMaxSelections: 1 });
+    } else if ((this.form.get('pollMaxSelections')?.value || 1) < 1) {
+      this.form.patchValue({ pollMaxSelections: Math.max(1, this.pollOptions.length) });
+    }
+  }
+
+  private buildPollPayload(): { options: string[]; allowMultiple: boolean; maxSelections: number; closesAt: string | null } | null | false {
+    if (!this.form.get('enablePoll')?.value) {
+      return null;
+    }
+    const options = this.pollOptions.controls
+      .map(ctrl => (ctrl.value || '').trim())
+      .filter(Boolean);
+    if (options.length < 2) {
+      this.snackBar.open('Bitte mindestens zwei Optionen angeben.', 'Schließen', { duration: 4000 });
+      return false;
+    }
+    const allowMultiple = !!this.form.get('pollAllowMultiple')?.value;
+    let maxSelections = allowMultiple ? Number(this.form.get('pollMaxSelections')?.value || 1) : 1;
+    if (Number.isNaN(maxSelections) || maxSelections < 1) {
+      this.snackBar.open('Bitte eine gültige Stimmenanzahl angeben.', 'Schließen', { duration: 4000 });
+      return false;
+    }
+    maxSelections = Math.min(maxSelections, options.length);
+    const closes = this.form.get('pollClosesAt')?.value as Date | null;
+    return {
+      options,
+      allowMultiple,
+      maxSelections,
+      closesAt: closes ? closes.toISOString() : null
+    };
   }
 }

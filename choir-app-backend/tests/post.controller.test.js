@@ -60,6 +60,74 @@ const controller = require('../src/controllers/post.controller');
     assert.strictEqual(res.statusCode, 200);
     assert.strictEqual(res.data.id, p5.id);
 
+    // create a poll post
+    const pollReq = {
+      body: {
+        title: 'Mit Umfrage',
+        text: 'Bitte abstimmen',
+        poll: { options: ['Sopran', 'Alt', 'Tenor'], allowMultiple: true, maxSelections: 2 },
+        publish: true
+      },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    };
+    await controller.create(pollReq, res);
+    assert.strictEqual(res.statusCode, 201);
+    const pollPost = res.data;
+    assert.ok(pollPost.poll);
+    assert.strictEqual(pollPost.poll.options.length, 3);
+    assert.strictEqual(pollPost.poll.maxSelections, 2);
+
+    // user2 votes twice (allowed because of maxSelections=2)
+    await controller.vote({
+      params: { id: pollPost.id },
+      body: { optionIds: [pollPost.poll.options[0].id, pollPost.poll.options[1].id] },
+      activeChoirId: choir.id,
+      userId: user2.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.totalVotes, 2);
+    const optionAfterVote = res.data.options.find(o => o.id === pollPost.poll.options[0].id);
+    assert.strictEqual(optionAfterVote.votes, 1);
+
+    // user3 votes once
+    await controller.vote({
+      params: { id: pollPost.id },
+      body: { optionIds: [pollPost.poll.options[2].id] },
+      activeChoirId: choir.id,
+      userId: user3.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.totalVotes, 3);
+
+    // user2 changes vote to single option -> previous votes removed
+    await controller.vote({
+      params: { id: pollPost.id },
+      body: { optionIds: [pollPost.poll.options[2].id] },
+      activeChoirId: choir.id,
+      userId: user2.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const optionVotes = res.data.options.map(o => ({ id: o.id, votes: o.votes })).reduce((acc, cur) => ({ ...acc, [cur.id]: cur.votes }), {});
+    assert.strictEqual(optionVotes[pollPost.poll.options[0].id], 0);
+    assert.strictEqual(optionVotes[pollPost.poll.options[1].id], 0);
+    assert.strictEqual(optionVotes[pollPost.poll.options[2].id], 2);
+
+    // closed poll rejects votes
+    await db.poll.update({ closesAt: new Date(Date.now() - 1000) }, { where: { id: pollPost.poll.id } });
+    await controller.vote({
+      params: { id: pollPost.id },
+      body: { optionIds: [pollPost.poll.options[0].id] },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 400);
+
     console.log('post.controller tests passed');
     await db.sequelize.close();
   } catch (err) {

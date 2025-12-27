@@ -10,11 +10,12 @@ import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { PostPollComponent } from './post-poll.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, MarkdownPipe],
+  imports: [CommonModule, RouterModule, MaterialModule, MarkdownPipe, PostPollComponent],
   templateUrl: './post-list.component.html'
 })
 export class PostListComponent implements OnInit {
@@ -98,5 +99,9 @@ export class PostListComponent implements OnInit {
         });
       }
     });
+  }
+
+  onPollChange(post: Post, poll: Post['poll']): void {
+    post.poll = poll;
   }
 }
