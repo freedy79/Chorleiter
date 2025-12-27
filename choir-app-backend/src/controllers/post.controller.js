@@ -3,8 +3,10 @@ const Post = db.post;
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 
+const REACTION_TYPES = ['like', 'celebrate', 'support', 'love', 'insightful', 'curious'];
+
 function stripHtml(text) {
-  return text.replace(/<[^>]*>/g, '');
+  return (text || '').replace(/<[^>]*>/g, '');
 }
 
 async function isChoirAdmin(req) {
@@ -12,6 +14,86 @@ async function isChoirAdmin(req) {
   const assoc = await db.user_choir.findOne({ where: { userId: req.userId, choirId: req.activeChoirId } });
   return assoc && Array.isArray(assoc.rolesInChoir) && assoc.rolesInChoir.includes('choir_admin');
 }
+
+function summarizeReactions(reactions, currentUserId) {
+  const reactionList = Array.isArray(reactions) ? reactions : [];
+  const uniqueReactions = [];
+  const seen = new Set();
+  for (const reaction of reactionList) {
+    if (reaction && !seen.has(reaction.id)) {
+      seen.add(reaction.id);
+      uniqueReactions.push(reaction);
+    }
+  }
+  const summary = REACTION_TYPES
+    .map(type => ({ type, count: uniqueReactions.filter(r => r.type === type).length }))
+    .filter(item => item.count > 0)
+    .sort((a, b) => b.count - a.count || REACTION_TYPES.indexOf(a.type) - REACTION_TYPES.indexOf(b.type));
+  const userReaction = uniqueReactions.find(r => r.userId === currentUserId)?.type || null;
+  return { summary, total: uniqueReactions.length, userReaction };
+}
+
+function serializeComment(comment, currentUserId) {
+  if (!comment) return null;
+  const plain = comment.toJSON ? comment.toJSON() : comment;
+  const replyList = Array.isArray(plain.replies) ? plain.replies : [];
+  const seenReplies = new Set();
+  const replies = replyList
+    .filter(reply => {
+      if (!reply || seenReplies.has(reply.id)) return false;
+      seenReplies.add(reply.id);
+      return true;
+    })
+    .map(reply => serializeComment(reply, currentUserId))
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  return {
+    id: plain.id,
+    text: plain.text,
+    postId: plain.postId,
+    choirId: plain.choirId,
+    parentId: plain.parentId,
+    userId: plain.userId,
+    author: plain.author,
+    createdAt: plain.createdAt,
+    updatedAt: plain.updatedAt,
+    reactions: summarizeReactions(plain.reactions, currentUserId),
+    replies
+  };
+}
+
+const postReactionInclude = {
+  association: db.post.associations.reactions,
+  attributes: ['id', 'type', 'userId']
+};
+
+const createCommentReactionInclude = () => ({
+  association: db.post_comment.associations.reactions,
+  attributes: ['id', 'type', 'userId'],
+  required: false
+});
+
+const commentInclude = {
+  model: db.post_comment,
+  as: 'comments',
+  where: { parentId: null },
+  required: false,
+  include: [
+    { model: db.user, as: 'author', attributes: ['id','name'] },
+    createCommentReactionInclude(),
+    {
+      model: db.post_comment,
+      as: 'replies',
+      required: false,
+      include: [
+        { model: db.user, as: 'author', attributes: ['id','name'] },
+        createCommentReactionInclude()
+      ]
+    }
+  ]
+};
+
+const authorInclude = { model: db.user, as: 'author', attributes: ['id','name'] };
 
 function sanitizePollPayload(poll) {
   if (!poll) return null;
@@ -40,6 +122,8 @@ const pollInclude = {
   ]
 };
 
+const postIncludes = [authorInclude, pollInclude, postReactionInclude, commentInclude];
+
 function formatPoll(poll, currentUserId) {
   if (!poll) return null;
   const options = [...(poll.options || [])].sort((a, b) => a.position - b.position);
@@ -64,7 +148,51 @@ function serializePost(post, currentUserId) {
   if (!post) return null;
   const plain = post.toJSON();
   plain.poll = formatPoll(plain.poll, currentUserId);
+  plain.reactions = summarizeReactions(plain.reactions, currentUserId);
+  const comments = Array.isArray(plain.comments) ? plain.comments : [];
+  const seenComments = new Set();
+  plain.comments = comments
+    .filter(comment => {
+      if (!comment || seenComments.has(comment.id)) return false;
+      seenComments.add(comment.id);
+      return true;
+    })
+    .map(comment => serializeComment(comment, currentUserId))
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   return plain;
+}
+
+async function loadPostWithDetails(id) {
+  return Post.findByPk(id, { include: postIncludes });
+}
+
+async function loadCommentWithDetails(id) {
+  return db.post_comment.findByPk(id, {
+    include: [
+      { model: db.user, as: 'author', attributes: ['id','name'] },
+      createCommentReactionInclude(),
+      {
+        model: db.post_comment,
+        as: 'replies',
+        required: false,
+        include: [
+          { model: db.user, as: 'author', attributes: ['id','name'] },
+          createCommentReactionInclude()
+        ]
+      }
+    ]
+  });
+}
+
+async function canAccessPost(post, req) {
+  if (!post || post.choirId !== req.activeChoirId) return false;
+  const admin = await isChoirAdmin(req);
+  if (admin) return true;
+  const owner = post.userId === req.userId;
+  const stillVisible = !post.expiresAt || new Date(post.expiresAt) > new Date() || owner;
+  const publishedOrOwner = post.published || owner;
+  return stillVisible && publishedOrOwner;
 }
 
 async function upsertPoll(postId, pollPayload, transaction) {
@@ -147,10 +275,7 @@ exports.create = async (req, res) => {
       }
       return post;
     });
-    const full = await Post.findByPk(created.id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] },
-      pollInclude
-    ] });
+    const full = await loadPostWithDetails(created.id);
 
     const author = await db.user.findByPk(req.userId);
     const choir = await db.choir.findByPk(req.activeChoirId);
@@ -203,11 +328,9 @@ exports.findAll = async (req, res) => {
     }
     const posts = await Post.findAll({
       where,
-      include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] },
-        pollInclude
-      ],
-      order: [['createdAt', 'DESC']]
+      include: postIncludes,
+      order: [['createdAt', 'DESC']],
+      distinct: true
     });
     res.status(200).send(posts.map(p => serializePost(p, req.userId)));
   } catch (err) {
@@ -238,10 +361,7 @@ exports.findLatest = async (req, res) => {
     }
     const post = await Post.findOne({
       where,
-      include: [
-        { model: db.user, as: 'author', attributes: ['id','name'] },
-        pollInclude
-      ],
+      include: postIncludes,
       order: [['createdAt', 'DESC']]
     });
     res.status(200).send(serializePost(post, req.userId));
@@ -281,10 +401,7 @@ exports.update = async (req, res) => {
         await upsertPoll(post.id, pollPayload, transaction);
       }
     });
-    const full = await Post.findByPk(id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] },
-      pollInclude
-    ] });
+    const full = await loadPostWithDetails(id);
     if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       const choir = await db.choir.findByPk(req.activeChoirId);
@@ -307,10 +424,7 @@ exports.publish = async (req, res) => {
     const admin = await isChoirAdmin(req);
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     await post.update({ published: true });
-    const full = await Post.findByPk(id, { include: [
-      { model: db.user, as: 'author', attributes: ['id','name'] },
-      pollInclude
-    ] });
+    const full = await loadPostWithDetails(id);
     const members = await db.user.findAll({
       include: [{ model: db.choir, where: { id: req.activeChoirId } }]
     });
@@ -389,6 +503,116 @@ exports.vote = async (req, res) => {
       include: [{ model: db.poll_option, as: 'options', include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'] }] }]
     });
     res.status(200).send(formatPoll(fresh, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.addComment = async (req, res) => {
+  const postId = Number(req.params.id);
+  const { text, parentId } = req.body;
+  const sanitizedText = stripHtml(String(text || '').trim());
+  if (!sanitizedText) return res.status(400).send({ message: 'text required' });
+  try {
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+    let parentComment = null;
+    if (parentId !== undefined && parentId !== null) {
+      parentComment = await db.post_comment.findByPk(parentId);
+      if (!parentComment || parentComment.postId !== post.id || parentComment.choirId !== req.activeChoirId) {
+        return res.status(404).send({ message: 'Parent comment not found' });
+      }
+    }
+    const created = await db.post_comment.create({
+      text: sanitizedText,
+      postId: post.id,
+      choirId: req.activeChoirId,
+      parentId: parentComment ? parentComment.id : null,
+      userId: req.userId
+    });
+    const full = await loadCommentWithDetails(created.id);
+    res.status(201).send(serializeComment(full, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.removeComment = async (req, res) => {
+  const postId = Number(req.params.id);
+  const commentId = Number(req.params.commentId);
+  try {
+    const comment = await db.post_comment.findByPk(commentId);
+    if (!comment || comment.postId !== postId || comment.choirId !== req.activeChoirId) {
+      return res.status(404).send({ message: 'Comment not found' });
+    }
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    const isOwner = comment.userId === req.userId;
+    const postOwner = post.userId === req.userId;
+    if (!admin && !isOwner && !postOwner) {
+      return res.status(403).send({ message: 'Not allowed' });
+    }
+    await comment.destroy();
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.reactOnPost = async (req, res) => {
+  const postId = Number(req.params.id);
+  const { type } = req.body;
+  const reactionType = type === undefined ? null : type;
+  if (reactionType && !REACTION_TYPES.includes(reactionType)) {
+    return res.status(400).send({ message: 'Invalid reaction type' });
+  }
+  try {
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+    const where = { postId: post.id, userId: req.userId };
+    await db.post_reaction.destroy({ where });
+    if (reactionType) {
+      await db.post_reaction.create({ postId: post.id, userId: req.userId, type: reactionType });
+    }
+    const reactions = await db.post_reaction.findAll({
+      where: { postId: post.id },
+      attributes: ['id', 'type', 'userId']
+    });
+    res.status(200).send(summarizeReactions(reactions, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.reactOnComment = async (req, res) => {
+  const postId = Number(req.params.id);
+  const commentId = Number(req.params.commentId);
+  const { type } = req.body;
+  const reactionType = type === undefined ? null : type;
+  if (reactionType && !REACTION_TYPES.includes(reactionType)) {
+    return res.status(400).send({ message: 'Invalid reaction type' });
+  }
+  try {
+    const comment = await db.post_comment.findByPk(commentId);
+    if (!comment || comment.postId !== postId || comment.choirId !== req.activeChoirId) {
+      return res.status(404).send({ message: 'Comment not found' });
+    }
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+    const where = { commentId: comment.id, userId: req.userId };
+    await db.post_reaction.destroy({ where });
+    if (reactionType) {
+      await db.post_reaction.create({ commentId: comment.id, userId: req.userId, type: reactionType });
+    }
+    const reactions = await db.post_reaction.findAll({
+      where: { commentId: comment.id },
+      attributes: ['id', 'type', 'userId']
+    });
+    res.status(200).send(summarizeReactions(reactions, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }

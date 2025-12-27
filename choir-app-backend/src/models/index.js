@@ -56,6 +56,8 @@ db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
 db.poll = require("./poll.model.js")(sequelize, Sequelize);
 db.poll_option = require("./poll_option.model.js")(sequelize, Sequelize);
 db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
+db.post_comment = require("./post_comment.model.js")(sequelize, Sequelize);
+db.post_reaction = require("./post_reaction.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -169,6 +171,20 @@ db.poll_option.hasMany(db.poll_vote, { as: 'votes', foreignKey: 'pollOptionId', 
 db.poll_vote.belongsTo(db.poll_option, { foreignKey: 'pollOptionId', as: 'option' });
 db.user.hasMany(db.poll_vote, { as: 'pollVotes', foreignKey: 'userId', onDelete: 'CASCADE' });
 db.poll_vote.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.post.hasMany(db.post_comment, { as: 'comments', foreignKey: 'postId', onDelete: 'CASCADE' });
+db.post_comment.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
+db.post_comment.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.choir.hasMany(db.post_comment, { as: 'postComments', foreignKey: 'choirId' });
+db.user.hasMany(db.post_comment, { as: 'postComments', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.post_comment.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
+db.post_comment.hasMany(db.post_comment, { as: 'replies', foreignKey: 'parentId', onDelete: 'CASCADE' });
+db.post_comment.belongsTo(db.post_comment, { foreignKey: 'parentId', as: 'parent' });
+db.post.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'postId', onDelete: 'CASCADE' });
+db.post_reaction.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
+db.post_comment.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'commentId', onDelete: 'CASCADE' });
+db.post_reaction.belongsTo(db.post_comment, { foreignKey: 'commentId', as: 'comment' });
+db.user.hasMany(db.post_reaction, { as: 'postReactions', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.post_reaction.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 // Donations
 db.user.hasMany(db.donation, { as: 'donations' });

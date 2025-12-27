@@ -20,6 +20,7 @@ import { ChoirLog } from '../models/choir-log';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
+import { PostComment } from '../models/post-comment';
 import { Program } from '../models/program';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
@@ -63,6 +64,7 @@ import { DistrictService } from './district.service';
 import { Congregation } from '../models/congregation';
 import { CongregationService } from './congregation.service';
 import { Poll } from '../models/poll';
+import { ReactionInfo, ReactionType } from '../models/reaction';
 
 @Injectable({
   providedIn: 'root'
@@ -931,6 +933,22 @@ export class ApiService {
 
   voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
     return this.postService.voteOnPost(id, optionIds);
+  }
+
+  addPostComment(id: number, text: string, parentId?: number | null): Observable<PostComment> {
+    return this.postService.addComment(id, text, parentId);
+  }
+
+  deletePostComment(id: number, commentId: number): Observable<void> {
+    return this.postService.deleteComment(id, commentId);
+  }
+
+  reactToPost(id: number, type?: ReactionType | null): Observable<ReactionInfo> {
+    return this.postService.reactToPost(id, type);
+  }
+
+  reactToComment(postId: number, commentId: number, type?: ReactionType | null): Observable<ReactionInfo> {
+    return this.postService.reactToComment(postId, commentId, type);
   }
 
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {

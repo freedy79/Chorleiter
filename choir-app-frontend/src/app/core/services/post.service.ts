@@ -4,6 +4,8 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
 import { Poll } from '../models/poll';
+import { PostComment } from '../models/post-comment';
+import { ReactionInfo, ReactionType } from '../models/reaction';
 
 export type PostPayload = {
   title: string;
@@ -50,5 +52,21 @@ export class PostService {
 
   voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
     return this.http.post<Poll>(`${this.apiUrl}/posts/${id}/vote`, { optionIds });
+  }
+
+  addComment(postId: number, text: string, parentId?: number | null): Observable<PostComment> {
+    return this.http.post<PostComment>(`${this.apiUrl}/posts/${postId}/comments`, { text, parentId: parentId ?? null });
+  }
+
+  deleteComment(postId: number, commentId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/posts/${postId}/comments/${commentId}`);
+  }
+
+  reactToPost(postId: number, type?: ReactionType | null): Observable<ReactionInfo> {
+    return this.http.post<ReactionInfo>(`${this.apiUrl}/posts/${postId}/reactions`, { type: type ?? null });
+  }
+
+  reactToComment(postId: number, commentId: number, type?: ReactionType | null): Observable<ReactionInfo> {
+    return this.http.post<ReactionInfo>(`${this.apiUrl}/posts/${postId}/comments/${commentId}/reactions`, { type: type ?? null });
   }
 }
