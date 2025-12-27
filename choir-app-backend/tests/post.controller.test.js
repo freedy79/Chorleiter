@@ -117,6 +117,43 @@ const controller = require('../src/controllers/post.controller');
     assert.strictEqual(optionVotes[pollPost.poll.options[1].id], 0);
     assert.strictEqual(optionVotes[pollPost.poll.options[2].id], 2);
 
+    // updating poll options keeps existing votes
+    await controller.update({
+      params: { id: pollPost.id },
+      body: {
+        title: pollPost.title,
+        text: pollPost.text,
+        poll: { options: ['Sopran', 'Alt', 'Tenor', 'Bass'], allowMultiple: true, maxSelections: 3 }
+      },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.poll.options.length, 4);
+    const tenorAfterAdd = res.data.poll.options.find(o => o.label === 'Tenor');
+    assert.ok(tenorAfterAdd);
+    assert.strictEqual(tenorAfterAdd.votes, 2);
+    assert.strictEqual(res.data.poll.totalVotes, 2);
+
+    // renaming an option also keeps votes
+    await controller.update({
+      params: { id: pollPost.id },
+      body: {
+        title: pollPost.title,
+        text: pollPost.text,
+        poll: { options: ['Sopran', 'Alt', 'Tenor (neu)', 'Bass'], allowMultiple: true, maxSelections: 3 }
+      },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const renamedOption = res.data.poll.options.find(o => o.label === 'Tenor (neu)');
+    assert.ok(renamedOption);
+    assert.strictEqual(renamedOption.votes, 2);
+    assert.strictEqual(res.data.poll.totalVotes, 2);
+
     // closed poll rejects votes
     await db.poll.update({ closesAt: new Date(Date.now() - 1000) }, { where: { id: pollPost.poll.id } });
     await controller.vote({
