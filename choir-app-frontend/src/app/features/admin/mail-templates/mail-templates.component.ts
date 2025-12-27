@@ -82,7 +82,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   }
 
   save(type?: string): void {
-    if (this.form.invalid) return;
+    const controls = this.getControlsForType(type);
+    controls.forEach(control => this.form.get(control)?.markAsTouched());
+    if (controls.some(control => this.form.get(control)?.invalid)) return;
     const templates: MailTemplate[] = [];
     const value = this.form.value;
     if (!type || type === 'invite') {
@@ -105,7 +107,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.snack.open('Gespeichert', 'OK', { duration: 2000 });
-      this.form.markAsPristine();
+      controls.forEach(control => this.form.get(control)?.markAsPristine());
     });
   }
 
@@ -141,6 +143,25 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
 
   hasPendingChanges(): boolean {
     return this.form.dirty;
+  }
+
+  private getControlsForType(type?: string): string[] {
+    switch (type) {
+      case 'invite':
+        return ['inviteSubject', 'inviteBody'];
+      case 'reset':
+        return ['resetSubject', 'resetBody'];
+      case 'availability-request':
+        return ['availabilitySubject', 'availabilityBody'];
+      case 'piece-change':
+        return ['changeSubject', 'changeBody'];
+      case 'monthly-plan':
+        return ['monthlySubject', 'monthlyBody'];
+      case 'email-change':
+        return ['emailChangeSubject', 'emailChangeBody'];
+      default:
+        return Object.keys(this.form.controls);
+    }
   }
 
   getChangedFields(): string[] {
