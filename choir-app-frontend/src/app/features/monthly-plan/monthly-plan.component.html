@@ -86,8 +86,12 @@
             <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorText">
               <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
                 <mat-option [value]="null">--</mat-option>
-                <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">{{ m.name }}, {{
-                  m.firstName }}</mat-option>
+                <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">
+                  <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
+                    <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
+                    {{ m.name }}, {{ m.firstName }}
+                  </span>
+                </mat-option>
               </mat-select>
               <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director.id, ev.date)" class="warning-icon" color="warn"
                 matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
@@ -105,8 +109,12 @@
             <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistText">
               <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
                 <mat-option [value]="null">--</mat-option>
-                <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">{{ m.name }}, {{
-                  m.firstName }}</mat-option>
+                <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">
+                  <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
+                    <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
+                    {{ m.name }}, {{ m.firstName }}
+                  </span>
+                </mat-option>
               </mat-select>
               <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist.id, ev.date)" class="warning-icon" color="warn"
                 matTooltip="Nur nach Absprache verfügbar">warning</mat-icon>
