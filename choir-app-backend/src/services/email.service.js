@@ -11,9 +11,9 @@ function formatDate(date = new Date()) {
   return date.toLocaleString('de-DE', { timeZone: TIME_ZONE });
 }
 
-async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
+async function sendTemplateMail(type, to, replacements = {}, overrideSettings, mailOptions = {}, templateOverride) {
   if (emailDisabled()) return;
-  const template = await db.mail_template.findOne({ where: { type } });
+  const template = templateOverride || await db.mail_template.findOne({ where: { type } });
 
   // merge defaults first to avoid undefined values overriding fallbacks
   const final = { date: formatDate(), ...replacements };
@@ -27,7 +27,7 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings) {
   }
 
   const { subject, html, text } = buildTemplate(template, type, final);
-  await sendMail({ to, subject, html, text }, overrideSettings);
+  await sendMail({ to, subject, html, text, ...mailOptions }, overrideSettings);
 }
 
 function buildBorrowerNames(borrower = {}) {
@@ -142,29 +142,29 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
 
 exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) => {
   if (emailDisabled()) return;
-  const template = await db.mail_template.findOne({ where: { type: 'monthly-plan' } });
   const linkBase = await getFrontendUrl();
   const link = `${linkBase}/dienstplan?year=${year}&month=${month}`;
+  const defaults = {
+    month: String(month),
+    year: String(year),
+    choir: choir || '',
+    choirname: choir || '',
+    link
+  };
+  const templateFromDb = await db.mail_template.findOne({ where: { type: 'monthly-plan' } });
+  const subjectTemplate = templateFromDb?.subject || 'Dienstplan {{month}}/{{year}}';
+  const bodyTemplate = templateFromDb?.body ||
+    '<p>Im Anhang befindet sich der aktuelle Dienstplan.</p>' +
+    '<p><a href="{{link}}">Dienstplan online ansehen</a></p>';
+  const template = { subject: subjectTemplate, body: bodyTemplate };
+
   try {
-    const defaults = {
-      month: String(month),
-      year: String(year),
-      choir: choir || '',
-      choirname: choir || '',
-      link
-    };
-    const subjectTemplate = template?.subject || 'Dienstplan {{month}}/{{year}}';
-    const bodyTemplate = template?.body ||
-      '<p>Im Anhang befindet sich der aktuelle Dienstplan.</p>' +
-      '<p><a href="{{link}}">Dienstplan online ansehen</a></p>';
-    const { subject, html, text } = buildTemplate({ subject: subjectTemplate, body: bodyTemplate }, 'monthly-plan', defaults);
-    await sendMail({
-      to: recipients,
-      subject,
-      text,
-      html,
-      attachments: [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }]
-    });
+    const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+    const attachments = [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }];
+
+    for (const to of recipientList.filter(Boolean)) {
+      await sendTemplateMail('monthly-plan', to, defaults, undefined, { attachments }, template);
+    }
   } catch (err) {
     logger.error(`Error sending monthly plan mail: ${err.message}`);
     logger.error(err.stack);
