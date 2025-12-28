@@ -44,15 +44,20 @@
 .date-column {
   width: 72px;
   min-width: 72px;
-  text-align: center;
   padding: 8px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .date-label {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   white-space: nowrap;
+  transform-origin: center;
 }
 
 .mat-column-name {
