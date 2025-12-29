@@ -37,3 +37,21 @@
   line-height: 2rem;
   cursor: pointer;
 }
+
+.least-used-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.least-used-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.least-used-meta {
+  color: #555;
+}
