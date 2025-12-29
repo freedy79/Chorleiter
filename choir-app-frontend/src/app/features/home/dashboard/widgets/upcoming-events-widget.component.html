@@ -5,11 +5,15 @@
   <mat-card-content>
     <ul class="timeline">
       <li *ngFor="let ev of events; trackBy: trackById"
-        [style.--dot-color]="((ev.choirId !== null && ev.choirId !== undefined) ? choirColors[ev.choirId] : undefined) || '#1976d2'">
-        <div click="open.emit(ev)">
-        <div>
-            <strong>{{ (ev?.date) | pureDate | date:'dd.MM.yy':'Europe/Berlin':'de-DE' }}</strong>
-            · {{ ev.choir?.name }} – {{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}
+        [style.--dot-color]="((ev.choirId !== null && ev.choirId !== undefined) ? choirColors[ev.choirId] : undefined) || '#1976d2'"
+        (click)="open.emit(ev)" (keyup.enter)="open.emit(ev)" tabindex="0" role="button">
+        <div class="timeline-content">
+          <div class="timeline-primary">
+            <strong class="date">{{ (ev?.date) | pureDate | date:'dd.MM.yy':'Europe/Berlin':'de-DE' }}</strong>
+            <span class="type">{{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}</span>
+          </div>
+          <div class="timeline-secondary">
+            {{ ev.choir?.name || '—' }}
           </div>
         </div>
       </li>
