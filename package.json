@@ -7,8 +7,7 @@
     "test": "npm test --prefix choir-app-frontend",
     "test:backend": "npm test --prefix choir-app-backend",
     "check-backend": "npm run check --prefix choir-app-backend"
-  }
-  ,
+  },
   "devDependencies": {
     "@angular-eslint/builder": "^20.2.0",
     "@angular-eslint/eslint-plugin": "^20.2.0",
@@ -16,6 +15,7 @@
     "@angular-eslint/template-parser": "^20.2.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
+    "baseline-browser-mapping": "^2.9.11",
     "eslint": "^8.57.0",
     "typescript": "^5.8.2"
   }
