@@ -7,16 +7,24 @@
 
         <div class="hero">
           <div class="dashboard-header">
-            <h1 *ngIf="(activeChoir$ | async)?.name as name">
-              Willkommen bei {{ name }}
-            </h1>
-            <button *ngIf="(isSingerOnly$ | async) !== true" mat-icon-button color="primary" (click)="openAddEventDialog()"
-              matTooltip="Neues Ereignis erstellen">
-              <mat-icon>add</mat-icon>
-            </button>
-            <button mat-icon-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
-              <mat-icon>list</mat-icon>
-            </button>
+            <div class="title-block" *ngIf="(activeChoir$ | async)?.name as name">
+              <h1>
+                Willkommen bei {{ name }}
+              </h1>
+              <p class="subline">Aktuelle Übersicht deines Projektchors</p>
+            </div>
+
+            <div class="header-actions">
+              <button *ngIf="(isSingerOnly$ | async) !== true" mat-stroked-button color="primary" (click)="openAddEventDialog()"
+                matTooltip="Neues Ereignis erstellen">
+                <mat-icon>add</mat-icon>
+                <span>Neues Ereignis</span>
+              </button>
+              <button mat-stroked-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse">
+                <mat-icon>list</mat-icon>
+                <span>Alle Ereignisse</span>
+              </button>
+            </div>
           </div>
 
           <app-kpi-widget [items]="[

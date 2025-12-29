@@ -1,8 +1,38 @@
-.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.metric{background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:12px 14px}
-.metric .label{font-size:12px;color:#6b7280}
-.metric .value{font-weight:800;font-size:20px}
-@media (max-width:480px){ .kpi{ grid-template-columns:repeat(2,1fr) } }
+.kpi{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+  gap:12px;
+}
+
+.metric{
+  background:#f8fafc;
+  border:1px solid #e5e7eb;
+  border-radius:12px;
+  padding:12px 14px;
+  min-height: 76px;
+}
+
+.metric .label{
+  font-size:12px;
+  color:#6b7280;
+  margin-bottom: 4px;
+}
+
+.metric .value{
+  font-weight:800;
+  font-size:20px;
+  line-height: 1.25;
+}
+
+@media (max-width:640px){
+  .metric {
+    padding: 10px 12px;
+  }
+
+  .metric .value {
+    font-size: 18px;
+  }
+}
 
 mat-card-header {
     display: flex;
