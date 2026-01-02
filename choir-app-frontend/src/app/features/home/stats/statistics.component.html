@@ -50,7 +50,20 @@
       <h3>Lange nicht verwendet</h3>
       <ol>
         <li *ngFor="let item of leastUsedPieces">
-          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{item.title}}</a> ({{item.count}} Monate)
+          <div class="least-used-row">
+            <span class="least-used-info">
+              <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{item.title}}</a>
+              <span class="least-used-meta">({{item.count}} Monate)</span>
+            </span>
+            <button
+              mat-stroked-button
+              color="warn"
+              (click)="resetRehearsalStatus(item)"
+              [disabled]="globalMode || isLeastUsedUpdating(item.id)">
+              <mat-icon>undo</mat-icon>
+              Nicht im Repertoire setzen
+            </button>
+          </div>
         </li>
       </ol>
     </mat-card>
