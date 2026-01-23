@@ -40,12 +40,24 @@ function wrapText(text, size, width) {
   return lines.length ? lines : [''];
 }
 
+function eventShort(notes) {
+  const value = (notes || '').toLowerCase();
+  if (/\b(gottesdienst|gd)\b/.test(value)) {
+    return 'GD';
+  }
+  if (/\b(chorprobe|probe|cp)\b/.test(value)) {
+    return 'CP';
+  }
+  return '';
+}
+
 function monthlyPlanPdf(plan) {
   const left = 50;
   const right = 545;
-  const col2 = left + 100;
-  const col3 = left + 250;
-  const col4 = left + 400;
+  const col2 = left + 90;
+  const col3 = col2 + 50;
+  const col4 = col3 + 120;
+  const col5 = col4 + 120;
   const lines = [];
   let y = 800;
 
@@ -76,9 +88,10 @@ function monthlyPlanPdf(plan) {
   lines.push('0.5 w 0 0 0 RG');
   lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
   lines.push(cellCenter(left, col2, 'Datum', y));
-  lines.push(cellCenter(col2, col3, 'Chorleiter', y));
-  lines.push(cellCenter(col3, col4, 'Organist', y));
-  lines.push(cellCenter(col4, right, 'Notizen', y));
+  lines.push(cellCenter(col2, col3, 'Ereignis', y));
+  lines.push(cellCenter(col3, col4, 'Chorleiter', y));
+  lines.push(cellCenter(col4, col5, 'Organist', y));
+  lines.push(cellCenter(col5, right, 'Notizen', y));
   y -= 20;
   lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
 
@@ -87,22 +100,25 @@ function monthlyPlanPdf(plan) {
     col2 - left,
     col3 - col2,
     col4 - col3,
-    right - col4
+    col5 - col4,
+    right - col5
   ];
 
   for (const e of plan.entries) {
     const cells = [
       wrapText(shortWeekdayDateString(new Date(e.date)), 12, colWidths[0]),
-      wrapText(e.director?.name || '', 12, colWidths[1]),
-      wrapText(e.organist?.name || '', 12, colWidths[2]),
-      wrapText(e.notes || '', 12, colWidths[3])
+      wrapText(eventShort(e.notes), 12, colWidths[1]),
+      wrapText(e.director?.name || '', 12, colWidths[2]),
+      wrapText(e.organist?.name || '', 12, colWidths[3]),
+      wrapText(e.notes || '', 12, colWidths[4])
     ];
     const count = Math.max(...cells.map(c => c.length));
     for (let i = 0; i < count; i++) {
       lines.push(cellCenter(left, col2, cells[0][i] || '', y));
       lines.push(cellCenter(col2, col3, cells[1][i] || '', y));
       lines.push(cellCenter(col3, col4, cells[2][i] || '', y));
-      lines.push(cellCenter(col4, right, cells[3][i] || '', y));
+      lines.push(cellCenter(col4, col5, cells[3][i] || '', y));
+      lines.push(cellCenter(col5, right, cells[4][i] || '', y));
       y -= 20;
     }
     lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
@@ -114,6 +130,7 @@ function monthlyPlanPdf(plan) {
   lines.push(`${col2} ${topLine} m ${col2} ${bottomLine} l S`);
   lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
   lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
+  lines.push(`${col5} ${topLine} m ${col5} ${bottomLine} l S`);
   lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
   const standDate = germanDateString(plan.updatedAt ? new Date(plan.updatedAt) : new Date());
   lines.push(`BT /F1 12 Tf ${left} ${y - 12} Td (${escape('Stand: ' + standDate)}) Tj ET`);

@@ -7,6 +7,8 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { Piece } from '@core/models/piece';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-statistics',
@@ -28,8 +30,9 @@ export class StatisticsComponent implements OnInit {
   activeMonths?: number;
   globalMode = false;
 
+  leastUsedStatusUpdates = new Set<number>();
 
-  constructor(private apiService: ApiService) {}
+  constructor(private apiService: ApiService, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -51,6 +54,27 @@ export class StatisticsComponent implements OnInit {
 
   onModeChange(): void {
     this.loadStats();
+  }
+
+  resetRehearsalStatus(piece: PieceStat): void {
+    if (this.globalMode || this.leastUsedStatusUpdates.has(piece.id)) return;
+    this.leastUsedStatusUpdates.add(piece.id);
+    this.apiService
+      .updatePieceStatus(piece.id, 'NOT_READY')
+      .pipe(finalize(() => this.leastUsedStatusUpdates.delete(piece.id)))
+      .subscribe({
+        next: () => {
+          this.snackBar.open('Probenstatus auf "Nicht im Repertoire" gesetzt.', 'OK', { duration: 3000 });
+          this.loadStats();
+        },
+        error: () => {
+          this.snackBar.open('Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
+        }
+      });
+  }
+
+  isLeastUsedUpdating(pieceId: number): boolean {
+    return this.leastUsedStatusUpdates.has(pieceId);
   }
 
   private loadRehearsalPieces(): void {
