@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process');
 const dbConfig = require('../config/db.config');
+const logger = require('../config/logger');
 
 function timestamp() {
   return new Date().toISOString().replace(/[:.]/g, '-');
@@ -33,7 +34,7 @@ async function backupDatabase() {
     return;
   }
 
-  console.log('Starting database backup...');
+  logger.info('Starting database backup...');
   await new Promise((resolve, reject) => {
     exec(cmd, (err, stdout, stderr) => {
       if (stdout) process.stdout.write(stdout);
@@ -45,7 +46,7 @@ async function backupDatabase() {
       resolve();
     });
   });
-  console.log(`Backup written to ${filePath}`);
+  logger.info(`Backup written to ${filePath}`);
 }
 
 module.exports = { backupDatabase };

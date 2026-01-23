@@ -138,9 +138,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.availableChoirs$
       .pipe(takeUntil(this.destroy$))
       .subscribe(choirs => this.choirList = Array.isArray(choirs) ? choirs : []);
-    this.apiService.getDistricts().subscribe(ds => this.districts = ds);
-    this.apiService.getCongregations().subscribe(cs => this.congregations = cs);
-    this.apiService.getCurrentUser().subscribe({
+    this.apiService.getDistricts().pipe(takeUntil(this.destroy$)).subscribe(ds => this.districts = ds);
+    this.apiService.getCongregations().pipe(takeUntil(this.destroy$)).subscribe(cs => this.congregations = cs);
+    this.apiService.getCurrentUser().pipe(takeUntil(this.destroy$)).subscribe({
       next: (user) => {
         this.currentUser = user;
         // Populate the form with the user's current data
@@ -220,7 +220,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       updatePayload.newPassword = passwordGroup.newPassword;
     }
 
-    this.apiService.updateCurrentUser(updatePayload).subscribe({
+    this.apiService.updateCurrentUser(updatePayload).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (formValue.email && oldEmail && formValue.email !== oldEmail) {
           this.profileForm.patchValue({ email: oldEmail });
@@ -254,7 +254,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (!confirmed) {
         return;
       }
-      this.apiService.leaveChoir(choir.id).subscribe({
+      this.apiService.leaveChoir(choir.id).pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => this.handleMembershipChange(response, `Du hast den Chor ${choir.name} verlassen.`),
         error: (err) => {
           const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
@@ -280,7 +280,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       if (!confirmed) {
         return;
       }
-      this.apiService.deleteMyAccount().subscribe({
+      this.apiService.deleteMyAccount().pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => this.handleMembershipChange(response, 'Dein Profil wurde gelöscht.'),
         error: (err) => {
           const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
@@ -320,7 +320,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       localStorage.setItem('auth-token', response.accessToken);
     }
 
-    this.apiService.getCurrentUser().subscribe({
+    this.apiService.getCurrentUser().pipe(takeUntil(this.destroy$)).subscribe({
       next: (user) => {
         this.authService.setCurrentUser(user);
         this.currentUser = user;

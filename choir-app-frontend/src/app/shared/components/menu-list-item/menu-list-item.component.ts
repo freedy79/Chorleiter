@@ -76,7 +76,7 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
             //console.log(this.isVisible);
         }
 
-        this.navService.currentUrl.subscribe((url: string) => {
+        this.navService.currentUrl.pipe(takeUntil(this.ngUnsubscribe)).subscribe((url: string) => {
             if (this.item?.route && url) {
                 //console.log(`Checking '${this.item.route}' against '${url}'`);
                 this.expanded = url.indexOf(`/${this.item.route}`) === 0;

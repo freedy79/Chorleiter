@@ -21,15 +21,33 @@
     margin-left: 180px;
   }
 
-    .mat-mdc-list-item.active {
-      background-color: mat.m2-get-color-from-palette(
-        nak.$choir-app-primary,
-        default
-      ) !important;
-      // Selected SideNav entries should always use white text
+  a.active {
+    background-color: mat.m2-get-color-from-palette(
+      nak.$choir-app-primary,
+      default
+    ) !important;
+    // Selected SideNav entries should always use white text
+    color: white !important;
+    border-radius: 0px;
+
+    mat-icon {
       color: white !important;
-      border-radius: 0px;
     }
+
+    .expandIcon {
+      color: white !important;
+    }
+  }
+
+  .mat-mdc-list-item.active {
+    background-color: mat.m2-get-color-from-palette(
+      nak.$choir-app-primary,
+      default
+    ) !important;
+    // Selected SideNav entries should always use white text
+    color: white !important;
+    border-radius: 0px;
+  }
 
   &:hover {
     > a:not(.expanded) {

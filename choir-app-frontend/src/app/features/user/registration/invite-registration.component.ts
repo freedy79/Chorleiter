@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-invite-registration',
@@ -12,7 +13,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './invite-registration.component.html',
 })
-export class InviteRegistrationComponent implements OnInit {
+export class InviteRegistrationComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
   form: FormGroup;
   token: string = '';
   choirName = '';
@@ -28,8 +30,8 @@ export class InviteRegistrationComponent implements OnInit {
 
   ngOnInit(): void {
     this.token = this.route.snapshot.params['token'];
-    this.api.getInvitation(this.token).subscribe({
-      next: data => { this.email = data.email; this.choirName = data.choirName; },
+    this.api.getInvitation(this.token).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (data: any) => { this.email = data.email; this.choirName = data.choirName; },
       error: () => { this.snack.open('Einladung ungültig oder abgelaufen', 'Schließen'); }
     });
   }
@@ -37,12 +39,16 @@ export class InviteRegistrationComponent implements OnInit {
   submit(): void {
     if (this.form.invalid) return;
     const payload = this.form.value;
-    this.api.completeRegistration(this.token, payload).subscribe({
+    this.api.completeRegistration(this.token, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
         this.snack.open('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.', 'OK');
         this.router.navigate(['/login']);
       },
       error: err => this.snack.open(err.error?.message || 'Fehler', 'Schließen')
     });
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup handled by takeUntilDestroyed
   }
 }

@@ -32,6 +32,10 @@
   .metric .value {
     font-size: 18px;
   }
+
+  .metric.hide-on-mobile {
+    display: none;
+  }
 }
 
 mat-card-header {

@@ -40,9 +40,11 @@
   margin: 0 1rem;
   text-transform: none;
   max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.2;
+  height: auto;
 }
 
 @media (max-width: 768px) {
@@ -235,7 +237,8 @@ app-search-box {
 
   .appDrawer,
   app-footer,
-  .sidenav-toggle {
+  .sidenav-toggle,
+  .donate-button {
     display: none !important;
   }
 }

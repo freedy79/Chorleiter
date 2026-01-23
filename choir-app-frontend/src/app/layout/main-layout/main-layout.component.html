@@ -1,6 +1,6 @@
 <mat-toolbar color="primary" class="main-toolbar">
 
-  <ng-container *ngIf="(isLoggedIn$ | async) && ((isSmallScreen$ | async) !== true) && searchOpen">
+  <ng-container *ngIf="(isLoggedIn$ | async) && (isSmallScreen$ | async)">
     <button type="button" aria-label="Menü umschalten" class="sidenav-toggle" mat-icon-button (click)="toggleDrawer()">
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
@@ -34,7 +34,7 @@
   <!-- SWITCH CHOIR -->
 
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
-    *ngIf="(availableChoirs$ | async)?.length && (((isSmallScreen$ | async) && searchOpen) !== true)">
+    *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (((isSmallScreen$ | async) && searchOpen) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
   <mat-menu #choirMenu="matMenu">
@@ -42,7 +42,7 @@
   </mat-menu>
 
   <ng-container *ngIf="(isLoggedIn$ | async) && ((donatedRecently$ | async) !== true)">
-    <button mat-button color="accent" routerLink="/donate">Spenden</button>
+    <button mat-button color="accent" routerLink="/donate" class="donate-button">Spenden</button>
   </ng-container>
 
   <ng-container *ngIf="donatedRecently$ | async">

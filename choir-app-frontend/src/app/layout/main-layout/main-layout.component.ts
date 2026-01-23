@@ -71,7 +71,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   set appDrawer(drawer: MatDrawer | undefined) {
     this._appDrawer = drawer;
     if (drawer) {
-      this.navService.appDrawer = drawer;
+      this.navService.appDrawer = drawer as any;
       this.evaluateDrawerWidth();
     }
   }
@@ -202,7 +202,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   ngAfterViewInit(): void {
     this.evaluateDrawerWidth();
     if (this._appDrawer) {
-      this.navService.appDrawer = this._appDrawer;
+      this.navService.appDrawer = this._appDrawer as any;
     }
   }
 
@@ -235,7 +235,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   switchChoir(id: number): void {
-    this.authService.switchChoir(id).subscribe();
+    this.authService.switchChoir(id).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {

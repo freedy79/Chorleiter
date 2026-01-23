@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
-import { Observable, forkJoin } from 'rxjs';
-import { take } from 'rxjs/operators';
+import { Observable, forkJoin, Subject } from 'rxjs';
+import { take, takeUntil } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -29,7 +30,10 @@ import { LibraryItem } from '@core/models/library-item';
   templateUrl: './manage-choir.component.html',
   styleUrls: ['./manage-choir.component.scss']
 })
-export class ManageChoirComponent implements OnInit {
+export class ManageChoirComponent implements OnInit, OnDestroy {
+  private readonly destroyRef = inject(DestroyRef);
+  private destroy$ = new Subject<void>();
+
   choirForm: FormGroup;
 
   isChoirAdmin = false;
@@ -128,7 +132,7 @@ export class ManageChoirComponent implements OnInit {
       this.updateCanManageMenu();
     });
 
-    this.route.data.subscribe(data => {
+    this.route.data.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data: any) => {
       const pageData = data['pageData'];
       if (pageData) {
         // Füllen Sie das Formular und die Tabelle
@@ -195,7 +199,7 @@ export class ManageChoirComponent implements OnInit {
         this.collectionCopyIds.clear();
         if (this.isChoirAdmin || this.isAdmin) {
           pageData.collections.forEach((col: Collection) => {
-            this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+            this.apiService.getCollectionCopies(col.id).pipe(takeUntil(this.destroy$)).subscribe(copies => {
               if (copies.length > 0) {
                 this.collectionCopyIds.add(col.id);
               }
@@ -203,7 +207,7 @@ export class ManageChoirComponent implements OnInit {
             this.libraryItemsLoaded = true;
           });
         } else {
-          this.apiService.getMyBorrowings().subscribe(borrowings => {
+          this.apiService.getMyBorrowings().pipe(takeUntil(this.destroy$)).subscribe(borrowings => {
             borrowings.forEach(b => {
               if (b.collectionId) {
                 this.borrowedCopies.set(b.collectionId, b.copyNumber);
@@ -225,22 +229,22 @@ export class ManageChoirComponent implements OnInit {
     // um den Resolver erneut auszulösen.
     if (this.isChoirAdmin) {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-      this.apiService.getChoirMembers(opts).subscribe(members => {
+      this.apiService.getChoirMembers(opts).pipe(takeUntil(this.destroy$)).subscribe(members => {
         this.dataSource.data = members;
         this.pruneDashboardContactIds();
       });
-      this.apiService.getChoirCollections(opts).subscribe(cols => {
+      this.apiService.getChoirCollections(opts).pipe(takeUntil(this.destroy$)).subscribe(cols => {
         this.collectionDataSource.data = cols;
         this.collectionCopyIds.clear();
         cols.forEach(col => {
-          this.apiService.getCollectionCopies(col.id).subscribe(copies => {
+          this.apiService.getCollectionCopies(col.id).pipe(takeUntil(this.destroy$)).subscribe(copies => {
             if (copies.length > 0) {
               this.collectionCopyIds.add(col.id);
             }
           });
         });
       });
-      this.apiService.getChoirLogs(opts).subscribe(logs => {
+      this.apiService.getChoirLogs(opts).pipe(takeUntil(this.destroy$)).subscribe(logs => {
         this.logDataSource.data = logs;
       });
     }
@@ -566,6 +570,11 @@ export class ManageChoirComponent implements OnInit {
         });
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }
