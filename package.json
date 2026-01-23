@@ -15,7 +15,7 @@
     "@angular-eslint/template-parser": "^20.2.0",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
-    "baseline-browser-mapping": "^2.9.11",
+    "baseline-browser-mapping": "^2.9.17",
     "eslint": "^8.57.0",
     "typescript": "^5.8.2"
   }

@@ -78,6 +78,23 @@ export class ProfileComponent implements OnInit, OnDestroy {
   congregations: Congregation[] = [];
   choirList: Choir[] = [];
   private destroy$ = new Subject<void>();
+
+  // Password validation helper methods for template
+  hasUpperCase(value: string): boolean {
+    return /[A-Z]/.test(value);
+  }
+
+  hasLowerCase(value: string): boolean {
+    return /[a-z]/.test(value);
+  }
+
+  hasNumber(value: string): boolean {
+    return /\d/.test(value);
+  }
+
+  hasSpecialChar(value: string): boolean {
+    return /[@$!%*?&]/.test(value);
+  }
   private isDemoUser = false;
 
   constructor(

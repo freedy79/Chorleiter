@@ -60,6 +60,23 @@ export class PasswordResetComponent implements OnInit {
     }, { validators: this.passwordsMatch });
   }
 
+  // Password validation helper methods for template
+  hasUpperCase(value: string): boolean {
+    return /[A-Z]/.test(value);
+  }
+
+  hasLowerCase(value: string): boolean {
+    return /[a-z]/.test(value);
+  }
+
+  hasNumber(value: string): boolean {
+    return /\d/.test(value);
+  }
+
+  hasSpecialChar(value: string): boolean {
+    return /[@$!%*?&]/.test(value);
+  }
+
   private passwordsMatch(control: AbstractControl): ValidationErrors | null {
     const password = control.get('password')?.value;
     const repeat = control.get('passwordRepeat')?.value;
