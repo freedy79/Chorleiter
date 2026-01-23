@@ -70,7 +70,7 @@
         <button *ngIf="plan.finalized" mat-raised-button color="accent" (click)="openEmailDialog()"
           matTooltip="Als E-Mail versenden"><mat-icon>mail</mat-icon></button>
         <button *ngIf="isChoirAdmin && !plan.finalized" mat-raised-button color="accent"
-          (click)="openAvailabilityDialog()" matTooltip="Verfügbarkeit anfragen"><mat-icon>Drafts</mat-icon></button>
+          (click)="openAvailabilityDialog()" matTooltip="Verfügbarkeit anfragen"><mat-icon>poll</mat-icon></button>
       </div>
       <mat-table [dataSource]="entries" class="mat-elevation-z2">
         <ng-container matColumnDef="date">

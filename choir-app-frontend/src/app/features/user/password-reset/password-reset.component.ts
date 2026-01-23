@@ -1,9 +1,43 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators, ValidatorFn } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+
+/**
+ * Validator für sichere Passwörter (Option 1: Neue Anforderungen)
+ * Mind. 12 Zeichen mit Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen
+ */
+export function strongPasswordValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const password = control.value;
+    if (!password) {
+      return null;
+    }
+
+    const hasLength = password.length >= 12;
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[@$!%*?&]/.test(password);
+
+    const isValid = hasLength && hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar;
+
+    if (!isValid) {
+      return {
+        weakPassword: {
+          hasLength,
+          hasLowerCase,
+          hasUpperCase,
+          hasNumber,
+          hasSpecialChar
+        }
+      };
+    }
+    return null;
+  };
+}
 
 @Component({
   selector: 'app-password-reset',
@@ -21,7 +55,7 @@ export class PasswordResetComponent implements OnInit {
   constructor(private fb: FormBuilder, private route: ActivatedRoute, private api: ApiService, private router: Router) {
     this.token = this.route.snapshot.params['token'];
     this.form = this.fb.group({
-      password: ['', Validators.required],
+      password: ['', [Validators.required, strongPasswordValidator()]],
       passwordRepeat: ['', Validators.required]
     }, { validators: this.passwordsMatch });
   }

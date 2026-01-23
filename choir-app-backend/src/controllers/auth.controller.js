@@ -60,7 +60,7 @@ exports.signup = async (req, res) => {
       firstName: req.body.firstName,
       name: req.body.name,
       email: req.body.email?.toLowerCase(),
-      password: bcrypt.hashSync(req.body.password, 8)
+      password: bcrypt.hashSync(req.body.password, 12)  // Erhöhe Salt Rounds von 8 auf 12
     });
     // Ordnen Sie den Benutzer dem Chor zu (fügt einen Eintrag in 'user_choirs' hinzu)
     await user.addChoir(choir);

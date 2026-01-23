@@ -1,7 +1,7 @@
 const { verifyToken } = require("../middleware/auth.middleware");
 const controller = require("../controllers/auth.controller");
 const role = require("../middleware/role.middleware");
-const { signupValidation } = require("../validators/auth.validation");
+const { signupValidation, resetPasswordValidation } = require("../validators/auth.validation");
 const validate = require("../validators/validate");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");

@@ -11,6 +11,16 @@
   align-items: center;
   margin-bottom: 8px;
   font-size: 14px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 600px) {
+  .poll-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
 }
 
 .poll-header .closed {
@@ -28,6 +38,15 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .option-row {
+    gap: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .option-main {
@@ -35,10 +54,25 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .option-main {
+    width: 100%;
+  }
 }
 
 .option-progress {
   flex: 1;
+  min-width: 100px;
+}
+
+@media (max-width: 600px) {
+  .option-progress {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 .option-meta {
@@ -48,14 +82,63 @@
   color: #555;
 }
 
+@media (max-width: 768px) {
+  .option-meta {
+    min-width: 80px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .option-meta {
+    min-width: auto;
+    width: 100%;
+    text-align: left;
+    font-size: 12px;
+  }
+}
+
 .poll-actions {
   margin-top: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .poll-actions {
+    width: 100%;
+  }
+
+  .poll-actions button {
+    flex: 1;
+    min-width: 120px;
+  }
 }
 
 .hint {
   font-size: 13px;
   color: #666;
+}
+
+@media (max-width: 600px) {
+  .hint {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .post-poll {
+    padding: 10px;
+    margin-top: 10px;
+  }
+
+  .poll-options {
+    gap: 6px;
+  }
+
+  .option-row {
+    gap: 6px;
+  }
 }

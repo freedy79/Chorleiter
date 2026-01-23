@@ -1,6 +1,6 @@
 :host {
   --header-height: 64px;
-  --footer-height: 8px;
+  --footer-height: 64px;
 }
 
 .site-container {
@@ -12,14 +12,19 @@
   top: 0; // Sie klebt am oberen Rand.
   z-index: 100; // Sie bleibt über allen anderen Inhalten.
   height: var(--header-height); // Wir verwenden unsere definierte Höhe.
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
 
+@media (max-width: 768px) {
+  .main-toolbar {
+    gap: 0.25rem;
+  }
+}
 
-  // Diese Stile sind für das Aussehen und die Funktionalität der Links.
-  a.mat-mdc-button {
-    margin: 0 4px;
-    padding: 0 16px;
-    line-height: 48px;
-    transition: background-color 0.3s;
+@media (max-width: 480px) {
+  .main-toolbar {
+    gap: 0;
   }
 }
 
@@ -34,6 +39,26 @@
 .choir-badge {
   margin: 0 1rem;
   text-transform: none;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .choir-badge {
+    max-width: 100px;
+    margin: 0 0.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .choir-badge {
+    max-width: 80px;
+    margin: 0 0.25rem;
+    padding: 0 8px !important;
+  }
 }
 
 app-search-box {
@@ -63,11 +88,13 @@ app-search-box {
   gap: 8px;
   padding: 12px 12px;
   margin-top: auto;
+  max-height: 40px;
 }
 
 @media (max-width: 480px) {
   app-search-box {
     margin: 0;
+    max-width: calc(100vw - 120px);
   }
 }
 
@@ -78,15 +105,15 @@ app-search-box {
 .main-content {
   flex: 1; // Dieser Container wächst und füllt den verbleibenden Platz.
   position: relative;
-    z-index: 1;
-    overflow: auto;
+  z-index: 1;
+  overflow: auto;
 
   & > .container {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
     // Lässt den Container die verfügbare Höhe ausfüllen, abzüglich des Paddings des main-content.
-    height: calc(100vh - var(--header-height) - var(--footer-height) - 48px);
+    min-height: calc(100vh - var(--header-height) - var(--footer-height));
     overflow: auto;
     //background-color: aliceblue; // debug only
   }
@@ -171,6 +198,8 @@ app-search-box {
     justify-content: space-around;
     align-items: center;
     z-index: 1000;
+    padding: 0;
+    margin: 0;
   }
 
   .bottom-nav a {
@@ -180,7 +209,16 @@ app-search-box {
     justify-content: center;
     text-decoration: none;
     color: inherit;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    min-width: 50px;
+    min-height: 64px;
+    padding: 8px 4px;
+    transition: background-color 0.2s;
+  }
+
+  .bottom-nav a:active,
+  .bottom-nav a:hover {
+    background-color: rgba(0, 0, 0, 0.05);
   }
 
   .bottom-nav a.active {
@@ -188,8 +226,11 @@ app-search-box {
   }
 
   .bottom-nav mat-icon {
-    font-size: 22px;
-    line-height: 22px;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    margin-bottom: 4px;
   }
 
   .appDrawer,

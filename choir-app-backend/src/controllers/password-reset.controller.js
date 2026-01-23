@@ -53,6 +53,22 @@ exports.resetPassword = async (req, res) => {
   if (!password) {
     return res.status(400).send({ message: 'Password is required.' });
   }
+
+  // Validiere Passwort-Stärke (Option 1: Neue Anforderungen für neue Passwörter)
+  const isStrongPassword = (pwd) => {
+    return pwd.length >= 12 &&
+           /[a-z]/.test(pwd) &&
+           /[A-Z]/.test(pwd) &&
+           /\d/.test(pwd) &&
+           /[@$!%*?&]/.test(pwd);
+  };
+
+  if (!isStrongPassword(password)) {
+    return res.status(400).send({
+      message: 'Password must be at least 12 characters and contain uppercase, lowercase, number, and special character (@$!%*?&).'
+    });
+  }
+
   try {
     const user = await db.user.findOne({
       where: {
@@ -67,7 +83,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(403).send({ message: 'Demo user cannot reset password.' });
     }
     await user.update({
-      password: bcrypt.hashSync(password, 8),
+      password: bcrypt.hashSync(password, 12),  // Erhöhe Salt Rounds von 8 auf 12
       resetToken: null,
       resetTokenExpiry: null
     });

@@ -27,7 +27,9 @@ body {
 
 .container {
   padding: 2rem;
-  width: 10%;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 mat-form-field {
@@ -88,6 +90,31 @@ mat-form-field {
 // Add space below all Material card headers
 mat-card-header {
   margin-bottom: 1rem;
+}
+
+// Responsive typography
+@media (max-width: 768px) {
+  html, body {
+    font-size: 15px;
+  }
+
+  h1 { font-size: 1.8rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.3rem; }
+}
+
+@media (max-width: 480px) {
+  html, body {
+    font-size: 14px;
+  }
+
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.2rem; }
+  h3 { font-size: 1.1rem; }
+
+  mat-form-field {
+    font-size: 0.9rem;
+  }
 }
 
 // Wenden Sie das helle Theme standardmäßig auf den body an.

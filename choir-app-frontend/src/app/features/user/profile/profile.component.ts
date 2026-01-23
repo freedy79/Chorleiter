@@ -15,6 +15,40 @@ import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
+/**
+ * Validator für sichere Passwörter (Option 1: Neue Anforderungen)
+ * Mind. 12 Zeichen mit Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen
+ */
+export function strongPasswordValidator(): ValidatorFn {
+  return (control: AbstractControl): ValidationErrors | null => {
+    const password = control.value;
+    if (!password) {
+      return null; // Lass leere Felder zu (sie werden durch Validators.required geprüft)
+    }
+
+    const hasLength = password.length >= 12;
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[@$!%*?&]/.test(password);
+
+    const isValid = hasLength && hasLowerCase && hasUpperCase && hasNumber && hasSpecialChar;
+
+    if (!isValid) {
+      return {
+        weakPassword: {
+          hasLength,
+          hasLowerCase,
+          hasUpperCase,
+          hasNumber,
+          hasSpecialChar
+        }
+      };
+    }
+    return null;
+  };
+}
+
 export function passwordsMatchValidator(): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const newPassword = control.get('newPassword')?.value;
@@ -70,7 +104,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       roles: [{ value: [], disabled: true }],
       passwords: this.fb.group({
         oldPassword: [''],
-        newPassword: [''],
+        newPassword: ['', [strongPasswordValidator()]],
         confirmPassword: ['']
       }, { validators: passwordsMatchValidator() })
     });
