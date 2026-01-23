@@ -8,7 +8,9 @@ function isoDateString(date) {
 
 function shortWeekdayDateString(date) {
     const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    return `${weekdays[date.getUTCDay()]}, ${date.getUTCDate()}.`;
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+    return `${weekdays[date.getUTCDay()]} ${day}.${month}.`;
 }
 
 function germanDateString(date) {

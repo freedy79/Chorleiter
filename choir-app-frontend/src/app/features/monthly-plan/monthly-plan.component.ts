@@ -54,7 +54,7 @@ interface LoadMetrics {
 export class MonthlyPlanComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'event', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
@@ -169,8 +169,24 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     return parseDateOnly(date).getTime().toString();
   }
 
+  weekdayShort(date: string | Date): string {
+    const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    return weekdays[parseDateOnly(date).getUTCDay()];
+  }
+
+  eventShort(entry: PlanEntry): string {
+    const notes = (entry.notes || '').toLowerCase();
+    if (/\b(gottesdienst|gd)\b/.test(notes)) {
+      return 'GD';
+    }
+    if (/\b(chorprobe|probe|cp)\b/.test(notes)) {
+      return 'CP';
+    }
+    return '';
+  }
+
   private updateDisplayedColumns(): void {
-    const base = ['date', 'director', 'organist', 'notes'];
+    const base = ['date', 'event', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
   }
 

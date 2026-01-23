@@ -40,6 +40,15 @@ mat-tab-group {
   color: #555;
 }
 
+.weekday {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.date-value {
+  white-space: nowrap;
+}
+
 .warning-icon {
   vertical-align: middle;
   margin-left: 4px;
