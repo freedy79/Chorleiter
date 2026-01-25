@@ -28,57 +28,93 @@
   </div>
 
   <ng-container *ngIf="stats">
+    <!-- Top Service Pieces -->
     <mat-card>
-      <h3>Top 3 Gottesdienst-Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</h3>
-      <ol>
-        <li *ngFor="let item of stats.topServicePieces">
-          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
-        </li>
-      </ol>
+      <mat-card-header>
+        <mat-card-title>Top 3 Gottesdienst-Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</mat-card-title>
+        <button mat-icon-button (click)="toggleSection('topService')" [attr.aria-label]="collapsedSections['topService'] ? 'Ausklappen' : 'Einklappen'">
+          <mat-icon>{{ collapsedSections['topService'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content *ngIf="!collapsedSections['topService']">
+        <ol>
+          <li *ngFor="let item of stats.topServicePieces">
+            <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
+          </li>
+        </ol>
+      </mat-card-content>
     </mat-card>
 
+    <!-- Top Rehearsal Pieces -->
     <mat-card>
-      <h3>Meist geprobte Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</h3>
-      <ol>
-        <li *ngFor="let item of stats.topRehearsalPieces">
-          <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
-        </li>
-      </ol>
+      <mat-card-header>
+        <mat-card-title>Meist geprobte Stücke{{ globalMode ? ' (Alle Chöre)' : '' }}</mat-card-title>
+        <button mat-icon-button (click)="toggleSection('topRehearsal')" [attr.aria-label]="collapsedSections['topRehearsal'] ? 'Ausklappen' : 'Einklappen'">
+          <mat-icon>{{ collapsedSections['topRehearsal'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content *ngIf="!collapsedSections['topRehearsal']">
+        <ol>
+          <li *ngFor="let item of stats.topRehearsalPieces">
+            <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{ item.title }}</a> ({{ item.count }}x)
+          </li>
+        </ol>
+      </mat-card-content>
     </mat-card>
 
+    <!-- Least Used Pieces -->
     <mat-card *ngIf="leastUsedPieces.length">
-      <h3>Lange nicht verwendet</h3>
-      <ol>
-        <li *ngFor="let item of leastUsedPieces">
-          <div class="least-used-row">
-            <span class="least-used-info">
-              <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{item.title}}</a>
-              <span class="least-used-meta">({{item.count}} Monate)</span>
-            </span>
-            <button
-              mat-stroked-button
-              color="warn"
-              (click)="resetRehearsalStatus(item)"
-              [disabled]="globalMode || isLeastUsedUpdating(item.id)">
-              <mat-icon>undo</mat-icon>
-              Nicht im Repertoire setzen
-            </button>
-          </div>
-        </li>
-      </ol>
+      <mat-card-header>
+        <mat-card-title>Lange nicht verwendet</mat-card-title>
+        <button mat-icon-button (click)="toggleSection('leastUsed')" [attr.aria-label]="collapsedSections['leastUsed'] ? 'Ausklappen' : 'Einklappen'">
+          <mat-icon>{{ collapsedSections['leastUsed'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content *ngIf="!collapsedSections['leastUsed']">
+        <ol>
+          <li *ngFor="let item of leastUsedPieces">
+            <div class="least-used-row">
+              <span class="least-used-info">
+                <a [routerLink]="['/pieces', item.id]" class="piece-item-link">{{item.title}}</a>
+                <span class="least-used-meta">({{item.count}} Monate)</span>
+              </span>
+              <button
+                mat-stroked-button
+                color="warn"
+                (click)="resetRehearsalStatus(item)"
+                [disabled]="globalMode || isLeastUsedUpdating(item.id)">
+                <mat-icon>undo</mat-icon>
+                Nicht im Repertoire setzen
+              </button>
+            </div>
+          </li>
+        </ol>
+      </mat-card-content>
     </mat-card>
 
+    <!-- Repertoire Statistics -->
     <mat-card>
-      <h3>Stücke im Repertoire</h3>
-      <p>Singfähig: {{ stats.singableCount }}</p>
-      <p>Probe: {{ stats.rehearsalCount }}</p>
+      <mat-card-header>
+        <mat-card-title>Stücke im Repertoire</mat-card-title>
+        <button mat-icon-button (click)="toggleSection('repertoire')" [attr.aria-label]="collapsedSections['repertoire'] ? 'Ausklappen' : 'Einklappen'">
+          <mat-icon>{{ collapsedSections['repertoire'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
+      </mat-card-header>
+      <mat-card-content *ngIf="!collapsedSections['repertoire']">
+        <p>Singfähig: {{ stats.singableCount }}</p>
+        <p>Probe: {{ stats.rehearsalCount }}</p>
+      </mat-card-content>
     </mat-card>
 
+    <!-- Rehearsal Table -->
     <mat-card class="table-card" *ngIf="!globalMode">
       <mat-card-header>
         <mat-card-title>Probe</mat-card-title>
+        <button mat-icon-button (click)="toggleSection('rehearsal')" [attr.aria-label]="collapsedSections['rehearsal'] ? 'Ausklappen' : 'Einklappen'">
+          <mat-icon>{{ collapsedSections['rehearsal'] ? 'expand_more' : 'expand_less' }}</mat-icon>
+        </button>
       </mat-card-header>
-      <mat-card-content>
+      <mat-card-content *ngIf="!collapsedSections['rehearsal']">
         <div class="table-wrapper mat-elevation-z4">
           <mat-table [dataSource]="rehearsalDataSource">
             <ng-container matColumnDef="title">

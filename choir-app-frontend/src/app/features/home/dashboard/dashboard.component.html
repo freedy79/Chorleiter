@@ -30,7 +30,8 @@
           <app-kpi-widget [items]="[
               { label: 'Nächste Probe', value: (vm.nextRehearsal?.date | pureDate | date:'dd.MM.':'Europe/Berlin':'de-DE') || '–' },
               { label: 'Angemeldete Sänger:innen', value: (memberCount$ | async) || '-' },
-              { label: 'Letzter Beitrag', value: timeAgo(vm.latestPost?.updatedAt || '') || '-' }
+              { label: 'Letzter Beitrag', value: timeAgo(vm.latestPost?.updatedAt || '') || '-' },
+              { label: 'Aktuell im Repertoire', value: (vm.performableCount || 0) }
             ]" class="hide-on-mobile">
           </app-kpi-widget>
 <!--

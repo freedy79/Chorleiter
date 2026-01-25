@@ -12,7 +12,7 @@
         {{ event.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE' }}
         <span class="event-creator" *ngIf="event.director">({{ event.director.name }})</span>
       </h3>
-      <ng-container *ngIf="event.pieces.length > 0; else noteBlock">
+      <ng-container *ngIf="event.pieces && event.pieces.length > 0; else noteBlock">
         <mat-list>
           <mat-list-item *ngFor="let piece of event.pieces">
             <div matListItemTitle>

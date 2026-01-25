@@ -20,12 +20,16 @@ router.use(authJwt.verifyToken);
 
 router.get('/last', wrap(controller.findLastPublished));
 router.get('/', role.requireDirector, wrap(controller.findAll));
-router.get('/:id/pdf', role.requireDirector, wrap(controller.downloadPdf));
-router.get('/:id', role.requireDirector, wrap(controller.findOne));
-router.delete('/:id', role.requireNonDemo, role.requireDirector, wrap(controller.delete));
 router.post('/', role.requireNonDemo, role.requireDirector, programValidation, validate, wrap(controller.create));
-router.put('/:id', role.requireNonDemo, role.requireDirector, programUpdateValidation, validate, wrap(controller.update));
+
+router.get('/:id/edit', role.requireDirector, wrap(controller.getForEditing));
+router.get('/:id/pdf', role.requireDirector, wrap(controller.downloadPdf));
+router.post('/:id/start-editing', role.requireNonDemo, role.requireDirector, wrap(controller.startEditing));
 router.post('/:id/publish', role.requireNonDemo, role.requireDirector, wrap(controller.publish));
+router.put('/:id', role.requireNonDemo, role.requireDirector, programUpdateValidation, validate, wrap(controller.update));
+router.delete('/:id', role.requireNonDemo, role.requireDirector, wrap(controller.delete));
+router.get('/:id', role.requireDirector, wrap(controller.findOne));
+
 router.post('/:id/items', role.requireNonDemo, role.requireDirector, programItemPieceValidation, validate, wrap(controller.addPieceItem));
 router.post('/:id/items/free', role.requireNonDemo, role.requireDirector, programItemFreePieceValidation, validate, wrap(controller.addFreePieceItem));
 router.post('/:id/items/speech', role.requireNonDemo, role.requireDirector, programItemSpeechValidation, validate, wrap(controller.addSpeechItem));

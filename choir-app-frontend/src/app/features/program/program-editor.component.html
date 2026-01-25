@@ -1,15 +1,20 @@
 <div class="program-header">
   <span>Startzeit: {{ startTime ? (startTime | date:'short') : '-' }}</span>
-  <button mat-button (click)="editBasics()">Stammdaten bearbeiten</button>
+  <span *ngIf="isPublished" class="status-badge published">Veröffentlicht</span>
+  <span *ngIf="isDraft && !isPublished" class="status-badge draft">Entwurf</span>
+  <button *ngIf="isPublished && !isEditing" mat-raised-button color="primary" (click)="startEditing()">Bearbeiten starten</button>
+  <button *ngIf="isEditing" mat-button (click)="editBasics()">Stammdaten bearbeiten</button>
   <button mat-raised-button color="accent" (click)="downloadPdf()" matTooltip="Als PDF herunterladen">
     <mat-icon>picture_as_pdf</mat-icon>
   </button>
 </div>
 
-<button mat-raised-button color="primary" (click)="addPiece()">+ Stück</button>
-<button mat-raised-button color="accent" (click)="addFreePiece()">+ Freies Stück</button>
-<button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()">+ Sprachbeitrag</button>
-<button mat-raised-button color="accent" (click)="addBreak()">+ Pause</button>
+<ng-container *ngIf="!isPublished || isEditing">
+  <button mat-raised-button color="primary" (click)="addPiece()" [disabled]="!isEditing">+ Stück</button>
+  <button mat-raised-button color="accent" (click)="addFreePiece()" [disabled]="!isEditing">+ Freies Stück</button>
+  <button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()" [disabled]="!isEditing">+ Sprachbeitrag</button>
+  <button mat-raised-button color="accent" (click)="addBreak()" [disabled]="!isEditing">+ Pause</button>
+</ng-container>
 
 <div *ngIf="hasMissingDurations()" class="duration-warning">
   Es existieren Elemente ohne Dauerangabe.
@@ -51,9 +56,9 @@
 
   <ng-container matColumnDef="details">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let item" class="details-cell">
+    <mat-cell *matCellDef="let item" class="details-cell" [class.missing-duration]="typeof item.durationSec !== 'number'">
       <div class="program-block">
-        <div class="composer" *ngIf="getComposer(item)">{{ getComposer(item) }}</div>
+        <div class="composer" *ngIf="getComposer(item)">{{ getComposer(item) }}{{ getComposerYears(item) }}</div>
         <div class="title">
           <ng-container [ngSwitch]="item.type">
             <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
@@ -79,6 +84,7 @@
             [(ngModel)]="item.durationStr"
             (blur)="onDurationChange(item)"
             placeholder="mm:ss"
+            [class.duration-error]="typeof item.durationSec !== 'number'"
           />
         </div>
       </div>
@@ -97,22 +103,23 @@
       <ng-container [ngSwitch]="item.type">
         <a *ngSwitchCase="'piece'" [routerLink]="['/pieces', item.pieceId]" target="_blank">Details</a>
         <ng-container *ngSwitchCase="'slot'">
-          <button mat-button (click)="fillSlotWithPiece(item)">Stück</button>
-          <button mat-button (click)="fillSlotWithFreePiece(item)">Freies Stück</button>
-          <button mat-button (click)="fillSlotWithSpeech(item)">Text</button>
-          <button mat-button (click)="fillSlotWithBreak(item)">Pause</button>
+          <button mat-button (click)="fillSlotWithPiece(item)" [disabled]="!isEditing">Stück</button>
+          <button mat-button (click)="fillSlotWithFreePiece(item)" [disabled]="!isEditing">Freies Stück</button>
+          <button mat-button (click)="fillSlotWithSpeech(item)" [disabled]="!isEditing">Text</button>
+          <button mat-button (click)="fillSlotWithBreak(item)" [disabled]="!isEditing">Pause</button>
         </ng-container>
       </ng-container>
       <button
         *ngIf="item.type !== 'slot'"
         mat-icon-button
         (click)="editItem(item)"
+        [disabled]="!isEditing"
         aria-label="Bearbeiten"
       >
         <mat-icon>edit</mat-icon>
       </button>
 
-      <button mat-icon-button color="warn" (click)="deleteItem(item)" aria-label="Löschen">
+      <button mat-icon-button color="warn" (click)="deleteItem(item)" [disabled]="!isEditing" aria-label="Löschen">
         <mat-icon>delete</mat-icon>
       </button>
     </mat-cell>

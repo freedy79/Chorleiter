@@ -29,6 +29,10 @@ export class ProgramEditorComponent implements OnInit {
   programTitle = '';
   programDescription = '';
   items: ProgramItem[] = [];
+  isPublished = false;
+  isDraft = false;
+  isEditing = false;
+  composerCache = new Map<string, any>();
 
   displayedColumns: string[] = ['move', 'details', 'time', 'actions'];
 
@@ -43,13 +47,38 @@ export class ProgramEditorComponent implements OnInit {
   ngOnInit(): void {
     this.programId = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.programId) {
-      this.programService.getProgram(this.programId).subscribe(program => {
-        this.programTitle = program.title;
-        this.programDescription = program.description ?? '';
-        this.startTime = program.startTime ?? null;
-        this.items = program.items.map(i => this.enhanceItem(i));
-      });
+      this.loadProgram();
     }
+  }
+
+  private loadProgram(): void {
+    this.programService.getProgram(this.programId).subscribe(program => {
+      this.isPublished = program.status === 'published';
+      this.isDraft = program.status === 'draft';
+      this.isEditing = this.isDraft;
+      this.programTitle = program.title;
+      this.programDescription = program.description ?? '';
+      this.startTime = program.startTime ?? null;
+      this.items = program.items.map(i => this.enhanceItem(i));
+    });
+  }
+
+  startEditing(): void {
+    if (!this.isPublished || this.isDraft) return;
+
+    this.programService.startEditing(this.programId).subscribe({
+      next: (draftProgram) => {
+        this.programId = draftProgram.id;
+        this.isDraft = true;
+        this.isEditing = true;
+        this.snack.open('Bearbeitung gestartet', 'OK', { duration: 3000 });
+        // Reload with new draft program
+        this.loadProgram();
+      },
+      error: () => {
+        this.snack.open('Fehler beim Starten der Bearbeitung', 'Schließen', { duration: 4000 });
+      }
+    });
   }
 
 
@@ -57,9 +86,15 @@ export class ProgramEditorComponent implements OnInit {
     const dialogRef = this.dialog.open(ProgramPieceDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.programService.addPieceItem(this.programId, result).subscribe(item => {
-          this.updateProgramId(item.programId);
-          this.items = [...this.items, this.enhanceItem(item)];
+        this.programService.addPieceItem(this.programId, result).subscribe({
+          next: (item) => {
+            this.updateProgramId(item.programId);
+            this.items = [...this.items, this.enhanceItem(item)];
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen des Stücks';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+          }
         });
       }
     });
@@ -69,9 +104,15 @@ export class ProgramEditorComponent implements OnInit {
     const dialogRef = this.dialog.open(ProgramFreePieceDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.programService.addFreePieceItem(this.programId, result).subscribe(item => {
-          this.updateProgramId(item.programId);
-          this.items = [...this.items, this.enhanceItem(item)];
+        this.programService.addFreePieceItem(this.programId, result).subscribe({
+          next: (item) => {
+            this.updateProgramId(item.programId);
+            this.items = [...this.items, this.enhanceItem(item)];
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen des freien Stücks';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+          }
         });
       }
     });
@@ -81,9 +122,15 @@ export class ProgramEditorComponent implements OnInit {
     const dialogRef = this.dialog.open(ProgramSpeechDialogComponent, { width: '600px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.programService.addSpeechItem(this.programId, result).subscribe(item => {
-          this.updateProgramId(item.programId);
-          this.items = [...this.items, this.enhanceItem(item)];
+        this.programService.addSpeechItem(this.programId, result).subscribe({
+          next: (item) => {
+            this.updateProgramId(item.programId);
+            this.items = [...this.items, this.enhanceItem(item)];
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen der Rede';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+          }
         });
       }
     });
@@ -93,9 +140,15 @@ export class ProgramEditorComponent implements OnInit {
     const dialogRef = this.dialog.open(ProgramBreakDialogComponent, { width: '400px' });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.programService.addBreakItem(this.programId, result).subscribe(item => {
-          this.updateProgramId(item.programId);
-          this.items = [...this.items, this.enhanceItem(item)];
+        this.programService.addBreakItem(this.programId, result).subscribe({
+          next: (item) => {
+            this.updateProgramId(item.programId);
+            this.items = [...this.items, this.enhanceItem(item)];
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen der Pause';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+          }
         });
       }
     });
@@ -124,10 +177,17 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+              this.snack.open('Stück aktualisiert', undefined, { duration: 2000 });
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Bearbeiten des Stücks';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -148,10 +208,17 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addFreePieceItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+              this.snack.open('Freies Stück aktualisiert', undefined, { duration: 2000 });
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Bearbeiten des freien Stücks';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -172,10 +239,17 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addSpeechItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+              this.snack.open('Sprachbeitrag aktualisiert', undefined, { duration: 2000 });
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Bearbeiten des Sprachbeitrags';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -190,10 +264,17 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addBreakItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+              this.snack.open('Pause aktualisiert', undefined, { duration: 2000 });
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Bearbeiten der Pause';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -210,11 +291,17 @@ export class ProgramEditorComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
-        this.programService.updateProgram(this.programId, result).subscribe(updated => {
-          this.updateProgramId(updated.id);
-          this.programTitle = updated.title;
-          this.programDescription = updated.description ?? '';
-          this.startTime = updated.startTime ?? null;
+        this.programService.updateProgram(this.programId, result).subscribe({
+          next: (updated) => {
+            this.updateProgramId(updated.id);
+            this.programTitle = updated.title;
+            this.programDescription = updated.description ?? '';
+            this.startTime = updated.startTime ?? null;
+          },
+          error: (err) => {
+            const errorMsg = err?.error?.message || 'Fehler beim Aktualisieren des Programms';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+          }
         });
       }
     });
@@ -227,10 +314,16 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addPieceItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen des Stücks';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -242,10 +335,16 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addFreePieceItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen des freien Stücks';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -257,10 +356,16 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addSpeechItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen der Rede';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -272,10 +377,16 @@ export class ProgramEditorComponent implements OnInit {
       if (result) {
         this.programService
           .addBreakItem(this.programId, { ...result, slotId: item.id })
-          .subscribe(updated => {
-            this.updateProgramId(updated.programId);
-            const enh = this.enhanceItem(updated);
-            this.items = this.items.map(i => (i.id === item.id ? enh : i));
+          .subscribe({
+            next: (updated) => {
+              this.updateProgramId(updated.programId);
+              const enh = this.enhanceItem(updated);
+              this.items = this.items.map(i => (i.id === item.id ? enh : i));
+            },
+            error: (err) => {
+              const errorMsg = err?.error?.message || 'Fehler beim Hinzufügen der Pause';
+              this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+            }
           });
       }
     });
@@ -300,11 +411,21 @@ export class ProgramEditorComponent implements OnInit {
   }
 
   saveOrder() {
-    this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe(items => {
-      if (items.length) {
-        this.updateProgramId(items[0].programId);
+    const originalOrder = [...this.items];
+    this.programService.reorderItems(this.programId, this.items.map(i => i.id)).subscribe({
+      next: (items) => {
+        if (items.length) {
+          this.updateProgramId(items[0].programId);
+        }
+        this.items = items.map(i => this.enhanceItem(i));
+        this.snack.open('Reihenfolge gespeichert', undefined, { duration: 2000 });
+      },
+      error: (err) => {
+        // Rollback on error
+        this.items = originalOrder;
+        const errorMsg = err?.error?.message || 'Fehler beim Speichern der Reihenfolge';
+        this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
       }
-      this.items = items.map(i => this.enhanceItem(i));
     });
   }
 
@@ -329,37 +450,58 @@ export class ProgramEditorComponent implements OnInit {
   }
 
   onDurationChange(item: ProgramItem) {
-    item.durationSec = this.parseDuration(item.durationStr);
-    if (item.durationStr === '' || item.durationSec !== null) {
+    const parsedDuration = this.parseDuration(item.durationStr);
+    // Only save if the input is empty or a valid duration
+    if (item.durationStr === '' || parsedDuration !== null) {
+      const previousDuration = item.durationSec;
+      item.durationSec = parsedDuration;
+
       const shouldOfferSave =
         item.type === 'piece' &&
         !!item.pieceId &&
         !item.pieceDurationSecSnapshot &&
         typeof item.durationSec === 'number';
+
       this.programService
         .updateItem(this.programId, item.id, { durationSec: item.durationSec ?? null })
-        .subscribe(updated => {
-          this.updateProgramId(updated.programId);
-          Object.assign(item, this.enhanceItem(updated));
-          if (shouldOfferSave && item.durationSec) {
-            const dialogData: ConfirmDialogData = {
-              title: 'Dauer speichern?',
-              message:
-                'Die eingegebene Dauer ist beim Stück noch nicht hinterlegt. Soll sie dort gespeichert werden?',
-              confirmButtonText: 'Ja',
-              cancelButtonText: 'Nein',
-            };
-            const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-            ref.afterClosed().subscribe(confirmed => {
-              if (confirmed) {
-                this.pieceService
-                  .updateGlobalPiece(Number(item.pieceId), { durationSec: item.durationSec })
-                  .subscribe(() => {
-                    item.pieceDurationSecSnapshot = item.durationSec ?? null;
-                    this.snack.open('Dauer beim Stück gespeichert', undefined, { duration: 2000 });
-                  });
-              }
-            });
+        .subscribe({
+          next: (updated) => {
+            this.updateProgramId(updated.programId);
+            Object.assign(item, this.enhanceItem(updated));
+            this.snack.open('Dauer gespeichert', undefined, { duration: 1500 });
+            if (shouldOfferSave && item.durationSec) {
+              const dialogData: ConfirmDialogData = {
+                title: 'Dauer speichern?',
+                message:
+                  'Die eingegebene Dauer ist beim Stück noch nicht hinterlegt. Soll sie dort gespeichert werden?',
+                confirmButtonText: 'Ja',
+                cancelButtonText: 'Nein',
+              };
+              const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
+              ref.afterClosed().subscribe(confirmed => {
+                if (confirmed) {
+                  this.pieceService
+                    .updateGlobalPiece(Number(item.pieceId), { durationSec: item.durationSec })
+                    .subscribe({
+                      next: () => {
+                        item.pieceDurationSecSnapshot = item.durationSec ?? null;
+                        this.snack.open('Dauer beim Stück gespeichert', undefined, { duration: 2000 });
+                      },
+                      error: (err) => {
+                        const errorMsg = err?.error?.message || 'Fehler beim Speichern der Dauer';
+                        this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+                      }
+                    });
+                }
+              });
+            }
+          },
+          error: (err) => {
+            // Rollback on error
+            item.durationSec = previousDuration;
+            item.durationStr = this.formatDurationInput(previousDuration);
+            const errorMsg = err?.error?.message || 'Fehler beim Aktualisieren der Dauer';
+            this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
           }
         });
     }
@@ -368,33 +510,51 @@ export class ProgramEditorComponent implements OnInit {
   onNoteChange(item: ProgramItem) {
     this.programService
       .updateItem(this.programId, item.id, { note: item.note ?? null })
-      .subscribe(updated => {
-        this.updateProgramId(updated.programId);
-        Object.assign(item, this.enhanceItem(updated));
+      .subscribe({
+        next: (updated) => {
+          this.updateProgramId(updated.programId);
+          Object.assign(item, this.enhanceItem(updated));
+        },
+        error: (err) => {
+          const errorMsg = err?.error?.message || 'Fehler beim Speichern der Notiz';
+          this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+        }
       });
   }
 
   deleteItem(item: ProgramItem) {
-    this.programService.deleteItem(this.programId, item.id).subscribe(() => {
-      this.items = this.items.filter(i => i.id !== item.id);
+    this.programService.deleteItem(this.programId, item.id).subscribe({
+      next: () => {
+        this.items = this.items.filter(i => i.id !== item.id);
+      },
+      error: (err) => {
+        const errorMsg = err?.error?.message || 'Fehler beim Löschen des Items';
+        this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+      }
     });
   }
 
   downloadPdf() {
-    this.programService.downloadProgramPdf(this.programId).subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `programm-${this.programId}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+    this.programService.downloadProgramPdf(this.programId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `programm-${this.programId}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: (err) => {
+        const errorMsg = err?.error?.message || 'Fehler beim Download der PDF';
+        this.snack.open(`Fehler: ${errorMsg}`, undefined, { duration: 5000, panelClass: 'error-snackbar' });
+      }
     });
   }
 
   private updateProgramId(id: string | undefined) {
-    if (id && id !== this.programId) {
-      this.programId = id;
-    }
+    // With the new draft-based system, we no longer update the programId
+    // as the backend now handles draft creation transparently via getForEditing
+    // and all operations stay on the same program ID
   }
 
   getComposer(item: ProgramItem): string | null {
@@ -406,6 +566,39 @@ export class ProgramEditorComponent implements OnInit {
       default:
         return null;
     }
+  }
+
+  getComposerYears(item: ProgramItem): string {
+    if (item.type === 'piece' && item.pieceId && this.composerCache.has(item.pieceId)) {
+      const composer = this.composerCache.get(item.pieceId);
+      return this.formatComposerYears(composer);
+    }
+    return '';
+  }
+
+  loadComposerData(item: ProgramItem): void {
+    if (item.type === 'piece' && item.pieceId && !this.composerCache.has(item.pieceId)) {
+      this.pieceService.getPieceById(Number(item.pieceId)).subscribe({
+        next: (piece: any) => {
+          if (piece.composer && item.pieceId) {
+            this.composerCache.set(item.pieceId, piece.composer);
+          }
+        },
+        error: () => {
+          // Silently fail - years just won't be shown
+        }
+      });
+    }
+  }
+
+  formatComposerYears(composer: any): string {
+    if (!composer || !composer.birthYear) {
+      return '';
+    }
+    if (composer.deathYear) {
+      return ` (${composer.birthYear}-${composer.deathYear})`;
+    }
+    return ` (${composer.birthYear})`;
   }
 
   getSubtitle(item: ProgramItem): string | null {
@@ -420,6 +613,8 @@ export class ProgramEditorComponent implements OnInit {
   }
 
   private enhanceItem(item: ProgramItem): ProgramItem {
+    // Load composer data if it's a piece
+    this.loadComposerData(item);
     return {
       ...item,
       durationStr: this.formatDurationInput(item.durationSec),

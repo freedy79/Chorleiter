@@ -263,9 +263,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     return list.filter(u => this.isAvailable(u.id, date));
   }
 
+  private hasRoleGreaterThanSinger(user: UserInChoir): boolean {
+    const roles = user.membership?.rolesInChoir || [];
+    return roles.includes('director') || roles.includes('choir_admin') || roles.includes('organist');
+  }
+
   membersByAvailability(date: string, status: string): UserInChoir[] {
     const key = this.dateKey(date);
-    return this.members.filter(m => (this.availabilityMap[m.id]?.[key] || 'AVAILABLE') === status);
+    return this.members.filter(m =>
+      (this.availabilityMap[m.id]?.[key] || 'AVAILABLE') === status &&
+      this.hasRoleGreaterThanSinger(m)
+    );
   }
 
   memberNamesByAvailability(date: string, status: string): string {

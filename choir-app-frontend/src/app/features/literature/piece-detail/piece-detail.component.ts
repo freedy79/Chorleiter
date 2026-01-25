@@ -224,4 +224,14 @@ export class PieceDetailComponent implements OnInit {
     }
     return `${(kb / 1024).toFixed(1)} MB`;
   }
+
+  formatComposerYears(composer: any): string {
+    if (!composer || !composer.birthYear) {
+      return '';
+    }
+    if (composer.deathYear) {
+      return ` (${composer.birthYear}-${composer.deathYear})`;
+    }
+    return ` (${composer.birthYear})`;
+  }
 }

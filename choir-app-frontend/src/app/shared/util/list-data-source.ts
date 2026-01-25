@@ -17,7 +17,11 @@ export class ListDataSource<T> extends MatTableDataSource<T> {
     paginator.pageSize = size;
     paginator.page.pipe(
       takeUntil(this.destroy$)
-    ).subscribe(e => this.paginatorService.setPageSize(this.key, e.pageSize));
+    ).subscribe(e => {
+      this.paginatorService.setPageSize(this.key, e.pageSize);
+      // Trigger filtering to update the view when page size changes
+      this._updateChangeSubscription();
+    });
     this.paginator = paginator;
     return size;
   }

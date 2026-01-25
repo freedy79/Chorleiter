@@ -47,6 +47,7 @@ type VM = {
   lastProgram: Program | null;
   upcomingEvents: any[];
   dashboardContacts: DashboardContact[];
+  performableCount: number;
 };
 
 @Component({
@@ -92,6 +93,7 @@ export class DashboardComponent implements OnInit {
   borrowedItems$!: Observable<LibraryItem[]>;
   dashboardContacts$!: Observable<DashboardContact[]>;
   currentLoans$!: Observable<Lending[]>;
+  performableCount$!: Observable<number>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
@@ -140,7 +142,7 @@ export class DashboardComponent implements OnInit {
     );
 
     this.lastService$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLastEvent('SERVICE'))
+      switchMap(() => this.getLastEventIncludingToday('SERVICE'))
     );
 
     this.lastProgram$ = this.refresh$.pipe(
@@ -148,7 +150,7 @@ export class DashboardComponent implements OnInit {
     );
 
     this.lastRehearsal$ = this.refresh$.pipe(
-      switchMap(() => this.apiService.getLastEvent('REHEARSAL'))
+      switchMap(() => this.getLastEventIncludingToday('REHEARSAL'))
     );
 
     this.upcomingEvents$ = this.refresh$.pipe(
@@ -178,6 +180,13 @@ export class DashboardComponent implements OnInit {
       shareReplay(1)
     );
 
+    // Load count of performable pieces (CAN_BE_SUNG)
+    this.performableCount$ = this.refresh$.pipe(
+      switchMap(() => this.apiService.getMyRepertoire(undefined, undefined, undefined, undefined, 1, 1, ['CAN_BE_SUNG']).pipe(
+        map(result => result.total)
+      ))
+    );
+
     this.userService.getCurrentUser().pipe(take(1)).subscribe(user => {
       this.authService.setCurrentUser(user);
       if (this.help.shouldShowHelp(user)) {
@@ -195,7 +204,8 @@ export class DashboardComponent implements OnInit {
       latestPost: this.latestPost$,
       lastProgram: this.lastProgram$,
       upcomingEvents: this.upcomingEvents$,
-      dashboardContacts: this.dashboardContacts$
+      dashboardContacts: this.dashboardContacts$,
+      performableCount: this.performableCount$
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
@@ -345,6 +355,24 @@ export class DashboardComponent implements OnInit {
     return `vor ${diffDays} Tagen`;
   }
 
+  /**
+   * Get last event including today. This method gets all events up to and including today,
+   * then returns the most recent one.
+   */
+  private getLastEventIncludingToday(type: 'SERVICE' | 'REHEARSAL'): Observable<Event | null> {
+    // Create date range: from very old date to end of today
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
 
-
+    // Get all events of this type up to today
+    return this.apiService.getEvents(type, false, undefined, today).pipe(
+      map(events => {
+        if (events.length === 0) return null;
+        // Sort by date descending and return the first (most recent)
+        return events.sort((a, b) =>
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0] || null;
+      })
+    );
+  }
 }

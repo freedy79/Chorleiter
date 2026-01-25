@@ -91,12 +91,20 @@ exports.overview = async (req, res) => {
                 'title',
                 [Sequelize.fn('MAX', Sequelize.col('events.date')), 'lastDate'],
             ],
-            include: [{
-                model: db.event,
-                attributes: [],
-                where: { ...choirFilter },
-                through: { attributes: [] }
-            }],
+            include: [
+                {
+                    model: db.event,
+                    attributes: [],
+                    where: { ...choirFilter },
+                    through: { attributes: [] }
+                },
+                {
+                    model: db.choir_repertoire,
+                    attributes: [],
+                    where: { ...choirFilter, status: { [Op.in]: ['IN_REHEARSAL', 'CAN_BE_SUNG'] } },
+                    required: true
+                }
+            ],
             group: ['piece.id'],
             having: Sequelize.where(
                 Sequelize.fn('MAX', Sequelize.col('events.date')),

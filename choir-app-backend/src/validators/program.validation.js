@@ -67,8 +67,8 @@ exports.programItemSlotValidation = [
 
 // Validation rules for reordering program items
 exports.programItemsReorderValidation = [
-  body('order').isArray(),
-  body('order.*').isUUID(),
+  body('order').isArray({ min: 1 }).withMessage('order must be a non-empty array'),
+  body('order.*').isUUID().withMessage('each item in order must be a valid UUID'),
 ];
 
 // Validation rules for updating a program item

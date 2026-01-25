@@ -7,7 +7,7 @@
   </h2>
   <button mat-button color="warn" (click)="openReportDialog()">Stück melden</button>
   <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>
-  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}</p>
+  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ formatComposerYears(piece.composer) }}</p>
   <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>

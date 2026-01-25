@@ -100,7 +100,11 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
         const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
         if (sel) this.selectedCollection = sel;
       }
-      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-list', e.pageSize));
+      this.paginator.page.subscribe(e => {
+        this.paginatorService.setPageSize('collection-list', e.pageSize);
+        // Trigger re-filtering to update the view when page size changes
+        this.dataSource._updateChangeSubscription();
+      });
     }
   }
 

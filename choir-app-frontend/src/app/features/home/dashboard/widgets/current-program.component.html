@@ -7,7 +7,7 @@
                   <div class="item-container">
                     <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
                       [routerLink]="['/pieces', item.pieceId]">
-                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}{{ getComposerYears(item) }}</div>
                       <div matLine class="title">{{ getItemTitle(item) }}</div>
                       <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
                     </a>

@@ -27,6 +27,14 @@ export class ProgramService {
   ): Observable<Program> {
     return this.http.put<Program>(`${this.apiUrl}/programs/${id}`, data);
   }
+
+  getForEditing(id: string): Observable<Program> {
+    return this.http.get<Program>(`${this.apiUrl}/programs/${id}/edit`);
+  }
+
+  startEditing(id: string): Observable<Program> {
+    return this.http.post<Program>(`${this.apiUrl}/programs/${id}/start-editing`, {});
+  }
   deleteProgram(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/programs/${id}`);
   }

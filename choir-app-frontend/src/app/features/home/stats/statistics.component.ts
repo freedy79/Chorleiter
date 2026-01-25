@@ -32,6 +32,14 @@ export class StatisticsComponent implements OnInit {
 
   leastUsedStatusUpdates = new Set<number>();
 
+  collapsedSections: { [key: string]: boolean } = {
+    topService: false,
+    topRehearsal: false,
+    leastUsed: false,
+    repertoire: false,
+    rehearsal: false
+  };
+
   constructor(private apiService: ApiService, private snackBar: MatSnackBar) {}
 
   ngOnInit(): void {
@@ -94,5 +102,9 @@ export class StatisticsComponent implements OnInit {
       return `${prefix}${num}`;
     }
     return '-';
+  }
+
+  toggleSection(sectionKey: string): void {
+    this.collapsedSections[sectionKey] = !this.collapsedSections[sectionKey];
   }
 }

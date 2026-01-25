@@ -104,6 +104,37 @@ exports.findOne = async (req, res) => {
   }
 };
 
+// Get the appropriate program for editing:
+// - If the program is a draft, return it as-is
+// - If the program is published, check if a draft revision exists:
+//   - If yes, return the draft revision
+//   - If no, return the published program (user can start editing)
+exports.getForEditing = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findByPk(id, {
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    // If it's a draft, return it
+    if (program.status === 'draft') {
+      return res.status(200).send(program);
+    }
+
+    // If it's published, check for an existing draft revision
+    const draft = await Program.findOne({
+      where: { publishedFromId: id, status: 'draft' },
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+
+    // Return whichever exists (draft takes priority)
+    res.status(200).send(draft || program);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 exports.downloadPdf = async (req, res) => {
   const { id } = req.params;
   try {
@@ -125,6 +156,25 @@ exports.delete = async (req, res) => {
   try {
     const program = await Program.findByPk(id);
     if (!program) return res.status(404).send({ message: 'program not found' });
+
+    // If this is a published program, also delete any draft revisions based on it
+    if (program.status === 'published') {
+      const draftRevisions = await Program.findAll({ where: { publishedFromId: id } });
+      for (const revision of draftRevisions) {
+        await db.program_item.destroy({ where: { programId: revision.id } });
+        await db.program_element.destroy({ where: { programId: revision.id } });
+        await revision.destroy();
+      }
+    } else if (program.publishedFromId) {
+      // If this is a draft revision, check if the published version still exists and delete it too
+      const published = await Program.findByPk(program.publishedFromId);
+      if (published) {
+        await db.program_item.destroy({ where: { programId: published.id } });
+        await db.program_element.destroy({ where: { programId: published.id } });
+        await published.destroy();
+      }
+    }
+
     await db.program_item.destroy({ where: { programId: id } });
     await db.program_element.destroy({ where: { programId: id } });
     await program.destroy();
@@ -135,12 +185,11 @@ exports.delete = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  let { id } = req.params;
+  const { id } = req.params;
   const { title, description, startTime } = req.body;
   try {
-    const { program } = await ensureEditableProgram(id, req.userId);
+    const program = await Program.findByPk(id);
     if (!program) return res.status(404).send({ message: 'program not found' });
-    id = program.id;
 
     const start = typeof startTime !== 'undefined' ? (startTime === null ? null : new Date(startTime)) : program.startTime;
 
@@ -158,6 +207,44 @@ exports.update = async (req, res) => {
   }
 };
 
+// Start editing a published program by creating a draft revision if it doesn't exist
+exports.startEditing = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const program = await Program.findByPk(id);
+    if (!program) return res.status(404).send({ message: 'program not found' });
+
+    // If already a draft, return it
+    if (program.status === 'draft') {
+      const full = await Program.findByPk(id, {
+        include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+      });
+      return res.status(200).send(full);
+    }
+
+    // If published, check if draft already exists
+    const existingDraft = await Program.findOne({
+      where: { publishedFromId: id, status: 'draft' },
+    });
+
+    if (existingDraft) {
+      const full = await Program.findByPk(existingDraft.id, {
+        include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+      });
+      return res.status(200).send(full);
+    }
+
+    // Create new draft revision
+    const { program: revision } = await ensureEditableProgram(id, req.userId);
+    const full = await Program.findByPk(revision.id, {
+      include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
+    });
+    res.status(200).send(full);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 
 // Publish a program so that choir members can view it
 exports.publish = async (req, res) => {
@@ -165,7 +252,25 @@ exports.publish = async (req, res) => {
   try {
     const program = await Program.findByPk(id);
     if (!program) return res.status(404).send({ message: 'program not found' });
-    await program.update({ status: 'published', publishedAt: new Date(), updatedBy: req.userId });
+
+    // If this is a draft, we need to handle the previous published version
+    if (program.status === 'draft' && program.publishedFromId) {
+      const oldPublished = await Program.findByPk(program.publishedFromId);
+      if (oldPublished) {
+        // Delete the old published version and its items
+        await db.program_item.destroy({ where: { programId: oldPublished.id } });
+        await db.program_element.destroy({ where: { programId: oldPublished.id } });
+        await oldPublished.destroy();
+      }
+    }
+
+    // Update the draft to published status and clear the publishedFromId
+    await program.update({
+      status: 'published',
+      publishedAt: new Date(),
+      publishedFromId: null,
+      updatedBy: req.userId
+    });
     res.status(200).send(program);
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -179,7 +284,7 @@ exports.addPieceItem = async (req, res) => {
   const { pieceId, title, composer, durationSec, note, slotId } = req.body;
 
   try {
-    const { program } = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedSlotId } = await ensureEditableProgram(id, req.userId, slotId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
@@ -189,7 +294,7 @@ exports.addPieceItem = async (req, res) => {
     if (!piece) return res.status(404).send({ message: 'piece not found' });
 
     if (slotId) {
-      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      const existing = await db.program_item.findOne({ where: { id: mappedSlotId || slotId, programId: id } });
       if (!existing) return res.status(404).send({ message: 'item not found' });
       const updated = await existing.update({
         type: 'piece',
@@ -228,12 +333,12 @@ exports.addFreePieceItem = async (req, res) => {
   let { id } = req.params;
   const { title, composer, instrument, performerNames, durationSec, note, slotId } = req.body;
   try {
-    const { program } = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedSlotId } = await ensureEditableProgram(id, req.userId, slotId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
     if (slotId) {
-      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      const existing = await db.program_item.findOne({ where: { id: mappedSlotId || slotId, programId: id } });
       if (!existing) return res.status(404).send({ message: 'item not found' });
       const updated = await existing.update({
         type: 'piece',
@@ -275,12 +380,12 @@ exports.addSpeechItem = async (req, res) => {
   let { id } = req.params;
   const { title, source, speaker, text, durationSec, note, slotId } = req.body;
   try {
-    const { program } = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedSlotId } = await ensureEditableProgram(id, req.userId, slotId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
     if (slotId) {
-      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      const existing = await db.program_item.findOne({ where: { id: mappedSlotId || slotId, programId: id } });
       if (!existing) return res.status(404).send({ message: 'item not found' });
       const updated = await existing.update({
         type: 'speech',
@@ -313,7 +418,7 @@ exports.addSpeechItem = async (req, res) => {
     res.status(500).send({ message: err.message });
   }
 };
-  
+
 
 // Add a break item to an existing program
 exports.addBreakItem = async (req, res) => {
@@ -322,12 +427,12 @@ exports.addBreakItem = async (req, res) => {
   const { durationSec, note, slotId } = req.body;
 
   try {
-    const { program } = await ensureEditableProgram(id, req.userId);
+    const { program, itemId: mappedSlotId } = await ensureEditableProgram(id, req.userId, slotId);
     if (!program) return res.status(404).send({ message: 'program not found' });
     id = program.id;
 
     if (slotId) {
-      const existing = await db.program_item.findOne({ where: { id: slotId, programId: id } });
+      const existing = await db.program_item.findOne({ where: { id: mappedSlotId || slotId, programId: id } });
       if (!existing) return res.status(404).send({ message: 'item not found' });
       const updated = await existing.update({
         type: 'break',
@@ -355,11 +460,12 @@ exports.addBreakItem = async (req, res) => {
 
 // Add a slot item to an existing program
 exports.addSlotItem = async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   const { label, note } = req.body;
   try {
-    const program = await Program.findByPk(id);
+    const { program } = await ensureEditableProgram(id, req.userId);
     if (!program) return res.status(404).send({ message: 'program not found' });
+    id = program.id;
 
     const sortIndex = await db.program_item.count({ where: { programId: id } });
 
@@ -388,8 +494,26 @@ exports.reorderItems = async (req, res) => {
 
     const items = await db.program_item.findAll({ where: { programId: id } });
     const itemIds = items.map(i => i.id);
-    if (order.length !== items.length || !order.every(o => itemIds.includes(o))) {
-      return res.status(400).send({ message: 'invalid order' });
+
+    // Validate order array
+    if (!Array.isArray(order)) {
+      return res.status(400).send({ message: 'invalid order: must be an array' });
+    }
+
+    if (order.length !== items.length) {
+      return res.status(400).send({
+        message: 'invalid order: array length mismatch',
+        expected: items.length,
+        received: order.length
+      });
+    }
+
+    const invalidIds = order.filter(o => !itemIds.includes(o));
+    if (invalidIds.length > 0) {
+      return res.status(400).send({
+        message: 'invalid order: unknown item IDs',
+        invalidIds
+      });
     }
 
     await Promise.all(

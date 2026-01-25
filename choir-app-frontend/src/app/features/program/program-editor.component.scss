@@ -10,6 +10,24 @@
   margin-bottom: 8px;
 }
 
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+
+  &.published {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  &.draft {
+    background-color: #ff9800;
+    color: white;
+  }
+}
+
 
 .program-table .mat-column-time {
   width: 4em;
@@ -75,6 +93,14 @@
 .duration-warning {
   margin-top: 8px;
   color: #b00020;
+}
+
+.details-cell.missing-duration {
+  background-color: rgba(255, 193, 7, 0.06) !important;
+}
+
+.details-cell.missing-duration .duration-error {
+  border-color: #ffc107;
 }
 
 @media (max-width: 600px) {

@@ -51,7 +51,11 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
     if (this.paginator) {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
-      this.paginator.page.subscribe(e => this.paginatorService.setPageSize('collection-piece-list', e.pageSize));
+      this.paginator.page.subscribe(e => {
+        this.paginatorService.setPageSize('collection-piece-list', e.pageSize);
+        // Trigger re-filtering to update the view when page size changes
+        this.dataSource._updateChangeSubscription();
+      });
     }
     if (this.sort) {
       this.dataSource.sort = this.sort;
