@@ -7,8 +7,9 @@ import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, BehaviorSubject, merge, of } from 'rxjs';
-import { switchMap, map, startWith, catchError, tap, take } from 'rxjs/operators';
+import { switchMap, map, startWith, catchError, tap, take, takeUntil } from 'rxjs/operators';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { BaseComponent } from '@shared/components/base.component';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -34,7 +35,7 @@ import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
-export class LiteratureListComponent implements OnInit, AfterViewInit {
+export class LiteratureListComponent extends BaseComponent implements OnInit, AfterViewInit {
   // --- Reactive Subjects for triggering updates ---
   private refresh$ = new BehaviorSubject<void>(undefined);
   public filterByCollectionIds$ = new BehaviorSubject<number[]>([]);
@@ -105,7 +106,9 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     if (paginator) {
       this._paginator = paginator;
       this._paginator.pageSize = this.pageSize;
-      this._paginator.page.subscribe(e => this.paginatorService.setPageSize('literature-list', e.pageSize));
+      this._paginator.page.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(e => this.paginatorService.setPageSize('literature-list', e.pageSize));
     }
   }
 
@@ -121,6 +124,7 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
     private prefs: UserPreferencesService,
     private router: Router
   ) {
+    super(); // Call BaseComponent constructor
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
   }
 
@@ -133,9 +137,19 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       switchMap(ids => this.apiService.getCategories(ids.length ? ids : undefined))
     );
     this.loadPresets();
-    this.authService.isChoirAdmin$.subscribe(isChoirAdmin => this.isChoirAdmin = isChoirAdmin);
-    this.authService.isAdmin$.subscribe(a => this.isAdmin = a);
-    this.authService.isDirector$.subscribe(isDirector => this.isDirector = isDirector);
+
+    // Subscribe with automatic cleanup on component destroy
+    this.authService.isChoirAdmin$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isChoirAdmin => this.isChoirAdmin = isChoirAdmin);
+
+    this.authService.isAdmin$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(a => this.isAdmin = a);
+
+    this.authService.isDirector$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isDirector => this.isDirector = isDirector);
 
     const saved = localStorage.getItem(this.FILTER_KEY);
     if (saved) {
@@ -250,7 +264,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
           this.pageCache.set(this._paginator.pageIndex, res.data);
           this.prefetchNextPage();
           return res.data;
-        })
+        }),
+        takeUntil(this.destroy$)
       ).subscribe(data => {
         this.dataSource.data = data;
       });
@@ -285,6 +300,8 @@ export class LiteratureListComponent implements OnInit, AfterViewInit {
       statuses,
       dir,
       this.searchControl.value || undefined
+    ).pipe(
+      takeUntil(this.destroy$)
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
 

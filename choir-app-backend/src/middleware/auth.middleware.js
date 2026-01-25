@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const db = require("../models");
 const { getRequestContext } = require("../config/request-context");
+const { AuthenticationError, AuthorizationError } = require("../utils/errors");
 
 const optionalAuth = (req, res, next) => {
   let token = req.headers["authorization"];
@@ -29,7 +30,7 @@ const verifyToken = (req, res, next) => {
   let token = req.headers["authorization"];
 
   if (!token) {
-    return res.status(403).send({ message: "No token provided!" });
+    return next(new AuthenticationError("No token provided!"));
   }
 
   // Expect "Bearer [token]"
@@ -37,7 +38,7 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: "Unauthorized!" });
+      return next(new AuthenticationError("Invalid or expired token!"));
     }
     req.userId = decoded.id;
     req.userRoles = decoded.roles || [];
@@ -74,19 +75,18 @@ const isChoirAdminOrAdmin = async (req, res, next) => {
             return next();
         }
 
-        res.status(403).send({ message: "Require Choir Admin or Admin Role!" });
+        return next(new AuthorizationError("Require Choir Admin or Admin Role!"));
 
     } catch (error) {
-        res.status(500).send({ message: "Error checking permissions." });
+        return next(error); // Pass database errors to error handler
     }
 };
 
 const isAdmin = (req, res, next) => {
     if (req.userRoles.includes('admin')) {
-        next();
-        return;
+        return next();
     }
-    res.status(403).send({ message: "Require Admin Role!" });
+    return next(new AuthorizationError("Require Admin Role!"));
 };
 
 const authJwt = {

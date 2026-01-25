@@ -17,7 +17,8 @@ import {
 } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Observable, of, combineLatest, Subscription, timer } from 'rxjs';
-import { map, startWith, switchMap, takeWhile } from 'rxjs/operators';
+import { map, startWith, switchMap, takeWhile, takeUntil } from 'rxjs/operators';
+import { BaseComponent } from '@shared/components/base.component';
 import {
     MatAutocompleteModule,
     MatAutocompleteSelectedEvent,
@@ -58,7 +59,7 @@ interface SelectedPieceWithNumber {
     templateUrl: './collection-edit.component.html',
     styleUrls: ['./collection-edit.component.scss'],
 })
-export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy {
+export class CollectionEditComponent extends BaseComponent implements OnInit, AfterViewInit, OnDestroy {
     collectionForm: FormGroup;
     addPieceForm: FormGroup;
     isEditMode = false;
@@ -102,7 +103,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
             this._paginator = paginator;
             this._paginator.pageSize = this.pageSize;
             this.pieceLinkDataSource.paginator = this._paginator;
-            this._paginator.page.subscribe(e => {
+            this._paginator.page.pipe(
+                takeUntil(this.destroy$)
+            ).subscribe(e => {
                 this.pageSize = e.pageSize;
                 this.paginatorService.setPageSize('collection-edit', e.pageSize);
             });
@@ -119,6 +122,7 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
         private paginatorService: PaginatorService,
         private authService: AuthService
     ) {
+        super(); // Call BaseComponent constructor
         this.collectionForm = this.fb.group({
             title: ['', Validators.required],
             subtitle: [''],
@@ -138,7 +142,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
     }
 
     ngOnInit(): void {
-        combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).subscribe(([isAdmin, isChoirAdmin]) => {
+        combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(([isAdmin, isChoirAdmin]) => {
             this.isAdmin = isAdmin;
             this.isChoirAdmin = isChoirAdmin;
             if (!this.isAdmin && !this.isChoirAdmin) {
@@ -146,14 +152,20 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                 this.snackBar.open('Keine Berechtigung Sammlungen zu bearbeiten.', 'Schließen');
             }
         });
-        this.apiService.getPublishers().subscribe(list => {
+        this.apiService.getPublishers().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(list => {
             this.publishers = list;
             this.setupPublisherAutocomplete();
         });
-        this.collectionForm.get('publisher')?.valueChanges.subscribe(v => {
+        this.collectionForm.get('publisher')?.valueChanges.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(v => {
             this.publisherCtrl.setValue(v || '', { emitEvent: false });
         });
-        this.publisherCtrl.valueChanges.subscribe(v => {
+        this.publisherCtrl.valueChanges.pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(v => {
             this.collectionForm.get('publisher')?.setValue(v);
         });
         // --- Determine Edit/Create Mode (No Change Here) ---
@@ -171,7 +183,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                         );
                     }
                     return of(null);
-                })
+                }),
+                takeUntil(this.destroy$)
             )
             .subscribe((collectionData) => {
                 if (this.isEditMode && collectionData) {
@@ -181,7 +194,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
 
         // --- Setup for Autocomplete (THIS IS THE CORE FIX) ---
         // Fetch all global pieces first.
-        this.apiService.getGlobalPieces().subscribe((pieces) => {
+        this.apiService.getGlobalPieces().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe((pieces) => {
             //console.log('Fetched pieces:', pieces);
             if (!pieces || pieces.length === 0) {
                 pieces = [];
@@ -300,7 +315,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
 
             if (this.isEditMode && this.collectionId) {
                 this.isSaving = true;
-                this.apiService.updateCollection(this.collectionId, payload).subscribe({
+                this.apiService.updateCollection(this.collectionId, payload).pipe(
+                    takeUntil(this.destroy$)
+                ).subscribe({
                     next: (response) => this.pollUpdateStatus(response.jobId),
                     error: (err) => {
                         this.isSaving = false;
@@ -317,14 +334,18 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                     },
                 });
             } else {
-                this.apiService.createCollection(payload).subscribe({
+                this.apiService.createCollection(payload).pipe(
+                    takeUntil(this.destroy$)
+                ).subscribe({
                     next: (response) => {
                         const id = response.id;
                         const afterSave = () => this.router.navigate(['/collections']);
                         const upload$ = this.coverFile
                             ? this.apiService.uploadCollectionCover(id, this.coverFile)
                             : of(null);
-                        upload$.subscribe({ next: afterSave, error: afterSave });
+                        upload$.pipe(
+                            takeUntil(this.destroy$)
+                        ).subscribe({ next: afterSave, error: afterSave });
                         this.snackBar.open('Die Sammlung wurde erfolgreich erstellt.', 'OK', {
                             duration: 3000,
                             verticalPosition: 'top',
@@ -354,7 +375,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                 cancelButtonText: 'Abbrechen',
             };
             const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-            ref.afterClosed().subscribe((confirmed) => {
+            ref.afterClosed().pipe(
+                takeUntil(this.destroy$)
+            ).subscribe((confirmed) => {
                 if (confirmed) {
                     proceed();
                 }
@@ -370,7 +393,8 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
         }
         this.statusSub = timer(0, 500).pipe(
             switchMap(() => this.apiService.getCollectionUpdateStatus(jobId)),
-            takeWhile((job) => job.status === 'running', true)
+            takeWhile((job) => job.status === 'running', true),
+            takeUntil(this.destroy$)
         ).subscribe({
             next: (job) => {
                 if (job.status === 'completed') {
@@ -379,7 +403,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                     const upload$ = this.coverFile
                         ? this.apiService.uploadCollectionCover(id, this.coverFile)
                         : of(null);
-                    upload$.subscribe({ next: afterSave, error: afterSave });
+                    upload$.pipe(
+                        takeUntil(this.destroy$)
+                    ).subscribe({ next: afterSave, error: afterSave });
                     this.snackBar.open('Die Sammlung wurde erfolgreich aktualisiert.', 'OK', {
                         duration: 3000,
                         verticalPosition: 'top',
@@ -403,10 +429,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
         });
     }
 
-    ngOnDestroy(): void {
-        if (this.statusSub) {
-            this.statusSub.unsubscribe();
-        }
+    override ngOnDestroy(): void {
+        // BaseComponent.ngOnDestroy() will handle all subscriptions using takeUntil(this.destroy$)
+        super.ngOnDestroy();
     }
 
     populateForm(collection: Collection): void {
@@ -422,7 +447,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
         this.publisherCtrl.setValue(collection.publisher || '');
 
         if (collection.coverImage) {
-            this.apiService.getCollectionCover(collection.id).subscribe(data => this.coverPreview = data);
+            this.apiService.getCollectionCover(collection.id).pipe(
+                takeUntil(this.destroy$)
+            ).subscribe(data => this.coverPreview = data);
         }
 
         if (collection.pieces) {
@@ -456,6 +483,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
         });
         pieceDialogRef
             .afterClosed()
+            .pipe(
+                takeUntil(this.destroy$)
+            )
             .subscribe((newPiece: Piece | undefined) => {
                 if (newPiece) {
                     this.allPieces.push(newPiece);
@@ -473,9 +503,13 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
             data: { pieceId }
         });
 
-        dialogRef.afterClosed().subscribe((wasUpdated) => {
+        dialogRef.afterClosed().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe((wasUpdated) => {
             if (wasUpdated) {
-                this.apiService.getPieceById(pieceId).subscribe((updatedPiece) => {
+                this.apiService.getPieceById(pieceId).pipe(
+                    takeUntil(this.destroy$)
+                ).subscribe((updatedPiece) => {
                     const allIndex = this.allPieces.findIndex((p) => p.id === updatedPiece.id);
                     if (allIndex !== -1) {
                         this.allPieces[allIndex] = updatedPiece;
@@ -602,7 +636,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
                 message: 'Es existiert bereits ein Coverbild. Möchten Sie es überschreiben?',
             };
             const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-            ref.afterClosed().subscribe(confirmed => {
+            ref.afterClosed().pipe(
+                takeUntil(this.destroy$)
+            ).subscribe(confirmed => {
                 if (confirmed) {
                     proceed();
                 }
@@ -624,7 +660,9 @@ export class CollectionEditComponent implements OnInit, AfterViewInit, OnDestroy
             },
         });
 
-        dialogRef.afterClosed().subscribe((wasImported) => {
+        dialogRef.afterClosed().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe((wasImported) => {
             if (wasImported) {
                 // Laden Sie die Sammlungsdaten neu, um die neuen Stücke anzuzeigen
                 this.router

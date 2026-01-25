@@ -9,6 +9,7 @@ const path = require('path');
 const logger = require("./config/logger");
 const emailService = require('./services/email.service');
 const { runWithRequestContext } = require('./config/request-context');
+const { errorHandler, notFoundHandler, sequelizeErrorHandler } = require('./middleware/error.middleware');
 
 app.set("trust proxy", 1);
 
@@ -119,26 +120,26 @@ app.use("/api/library", libraryRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/districts", districtRoutes);
 app.use("/api/congregations", congregationRoutes);
-// Handle 404 for unknown routes
-app.use((req, res, _next) => {
-    logger.warn(`404 - Not Found - ${req.originalUrl} - ${req.method} - ${req.ip}`);
-    res.status(404).send({ message: "Not Found" });
-});
 
+// Error Handling Middleware (must be AFTER all routes)
+// 1. Handle 404 for unknown routes
+app.use(notFoundHandler);
+
+// 2. Convert Sequelize errors to standardized errors
+app.use(sequelizeErrorHandler);
+
+// 3. Global error handler
 app.use((err, req, res, next) => {
-    logger.error(
-        `${err.status || 500} - ${err.message} - ${req.originalUrl} - ${
-            req.method
-        } - ${req.ip}`
-    );
-    logger.error(err.stack);
-    emailService.notifyAdminsOnCrash(err, req).catch(e => {
-        logger.error(`Error notifying admins of crash: ${e.message}`);
-        logger.error(e.stack);
-    });
-    res.status(err.status || 500).send({
-        message: "An internal server error occurred. Please try again later.",
-    });
+    // Send admin notification for non-operational errors
+    if (!err.isOperational) {
+        emailService.notifyAdminsOnCrash(err, req).catch(e => {
+            logger.error(`Error notifying admins of crash: ${e.message}`);
+            logger.error(e.stack);
+        });
+    }
+
+    // Use the standardized error handler
+    errorHandler(err, req, res, next);
 });
 
 module.exports = app;

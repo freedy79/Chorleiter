@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 
-import { map, switchMap, take, shareReplay } from 'rxjs/operators';
+import { map, switchMap, take, shareReplay, takeUntil } from 'rxjs/operators';
+import { BaseComponent } from '@shared/components/base.component';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -73,7 +74,7 @@ type VM = {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent extends BaseComponent implements OnInit {
   // Ein BehaviorSubject, das als manueller Auslöser für das Neuladen von Daten dient.
   public refresh$ = new BehaviorSubject<void>(undefined);
 
@@ -112,10 +113,15 @@ export class DashboardComponent implements OnInit {
     private userService: UserService,
     private router: Router
   ) {
+    super(); // Call BaseComponent constructor
     this.activeChoir$ = this.authService.activeChoir$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.isSingerOnly$ = this.authService.isSingerOnly$;
-    this.authService.availableChoirs$.subscribe(choirs => {
+
+    // Subscribe with automatic cleanup on component destroy
+    this.authService.availableChoirs$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(choirs => {
       choirs.forEach((c, idx) => {
         this.choirColors[c.id] = this.colorPalette[idx % this.colorPalette.length];
       });
@@ -187,11 +193,16 @@ export class DashboardComponent implements OnInit {
       ))
     );
 
-    this.userService.getCurrentUser().pipe(take(1)).subscribe(user => {
+    this.userService.getCurrentUser().pipe(
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
       this.authService.setCurrentUser(user);
       if (this.help.shouldShowHelp(user)) {
         const ref = this.dialog.open(HelpWizardComponent, { width: '600px' });
-        ref.afterClosed().subscribe(() => this.help.markHelpShown(user));
+        ref.afterClosed().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(() => this.help.markHelpShown(user));
       }
     });
 

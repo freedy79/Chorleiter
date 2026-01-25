@@ -13,6 +13,89 @@ function parseSearchTokens(search) {
 }
 
 /**
+ * Safely validates and parses choirId to prevent SQL injection
+ * @param {*} choirId - The choir ID to validate
+ * @returns {number} - Validated integer choir ID
+ * @throws {Error} - If choir ID is invalid
+ */
+function validateChoirId(choirId) {
+    const parsed = parseInt(choirId, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+        throw new Error('Invalid choir ID');
+    }
+    return parsed;
+}
+
+/**
+ * SQL Subquery Builders - Parameterized to prevent SQL injection
+ * These functions return safe SQL subqueries with validated parameters
+ */
+const SUBQUERIES = {
+    collectionPrefix: () => `(
+        SELECT CASE
+            WHEN c."singleEdition" THEN (
+                SELECT COALESCE((SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"), "piece"."origin")
+            )
+            ELSE c.prefix
+        END
+        FROM collection_pieces cp
+        JOIN collections c ON cp."collectionId" = c.id
+        WHERE cp."pieceId" = "piece"."id"
+        ORDER BY cp."numberInCollection"
+        LIMIT 1
+    )`,
+
+    collectionNumber: () => `(
+        SELECT cp."numberInCollection"
+        FROM collection_pieces cp
+        JOIN collections c ON cp."collectionId" = c.id
+        WHERE cp."pieceId" = "piece"."id"
+        ORDER BY cp."numberInCollection"
+        LIMIT 1
+    )`,
+
+    lastSung: (choirId) => {
+        const validChoirId = validateChoirId(choirId);
+        return `(
+            SELECT MAX(e.date)
+            FROM event_pieces ep
+            JOIN events e ON ep."eventId" = e.id
+            WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${validChoirId} AND e.type = 'SERVICE'
+        )`;
+    },
+
+    lastRehearsed: (choirId) => {
+        const validChoirId = validateChoirId(choirId);
+        return `(
+            SELECT MAX(e.date)
+            FROM event_pieces ep
+            JOIN events e ON ep."eventId" = e.id
+            WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${validChoirId} AND e.type = 'REHEARSAL'
+        )`;
+    },
+
+    timesSung: (choirId) => {
+        const validChoirId = validateChoirId(choirId);
+        return `(
+            SELECT COUNT(*)
+            FROM event_pieces ep
+            JOIN events e ON ep."eventId" = e.id
+            WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${validChoirId} AND e.type = 'SERVICE'
+        )`;
+    },
+
+    timesRehearsed: (choirId) => {
+        const validChoirId = validateChoirId(choirId);
+        return `(
+            SELECT COUNT(*)
+            FROM event_pieces ep
+            JOIN events e ON ep."eventId" = e.id
+            WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${validChoirId} AND e.type = 'REHEARSAL'
+        )`;
+    }
+};
+
+/**
  * NEW, INTELLIGENT LOOKUP FUNCTION
  * @description Provides a simple, flat list of all pieces in a choir's repertoire,
  * enriched with a formatted reference string for easy searching on the frontend.
@@ -186,71 +269,15 @@ exports.findMyRepertoire = async (req, res) => {
 
         // Attribute zum Ermitteln der ersten Referenz eines Stücks ohne Join,
         // damit keine Duplikate entstehen.
+        // Using safe subquery builders to prevent SQL injection
         const pieceAttributes = {
             include: [
-                [
-                    literal(`(
-                        SELECT CASE
-                            WHEN c."singleEdition" THEN (
-                                SELECT COALESCE((SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"), "piece"."origin")
-                            )
-                            ELSE c.prefix
-                        END
-                        FROM collection_pieces cp
-                        JOIN collections c ON cp."collectionId" = c.id
-                        WHERE cp."pieceId" = "piece"."id"
-                        ORDER BY cp."numberInCollection"
-                        LIMIT 1
-                    )`),
-                    'collectionPrefix'
-                ],
-                [
-                    literal(`(
-                        SELECT cp."numberInCollection"
-                        FROM collection_pieces cp
-                        JOIN collections c ON cp."collectionId" = c.id
-                        WHERE cp."pieceId" = "piece"."id"
-                        ORDER BY cp."numberInCollection"
-                        LIMIT 1
-                    )`),
-                    'collectionNumber'
-                ],
-                [
-                    literal(`(
-                        SELECT MAX(e.date)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
-                    )`),
-                    'lastSung'
-                ],
-                [
-                    literal(`(
-                        SELECT MAX(e.date)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
-                    )`),
-                    'lastRehearsed'
-                ],
-                [
-                    literal(`(
-                        SELECT COUNT(*)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
-                    )`),
-                    'timesSung'
-                ],
-                [
-                    literal(`(
-                        SELECT COUNT(*)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
-                    )`),
-                    'timesRehearsed'
-                ]
+                [literal(SUBQUERIES.collectionPrefix()), 'collectionPrefix'],
+                [literal(SUBQUERIES.collectionNumber()), 'collectionNumber'],
+                [literal(SUBQUERIES.lastSung(req.activeChoirId)), 'lastSung'],
+                [literal(SUBQUERIES.lastRehearsed(req.activeChoirId)), 'lastRehearsed'],
+                [literal(SUBQUERIES.timesSung(req.activeChoirId)), 'timesSung'],
+                [literal(SUBQUERIES.timesRehearsed(req.activeChoirId)), 'timesRehearsed']
             ]
         };
 
@@ -267,27 +294,9 @@ exports.findMyRepertoire = async (req, res) => {
                 order = [[{ model: db.category, as: 'category' }, 'name', sortDirection]];
                 break;
             case 'reference':
-                const collectionPrefixSubquery = `(
-                        SELECT CASE
-                            WHEN c."singleEdition" THEN (
-                                SELECT COALESCE((SELECT co.name FROM composers co WHERE co.id = "piece"."composerId"), "piece"."origin")
-                            )
-                            ELSE c.prefix
-                        END
-                        FROM collection_pieces cp
-                        JOIN collections c ON cp."collectionId" = c.id
-                        WHERE cp."pieceId" = "piece"."id"
-                        ORDER BY cp."numberInCollection"
-                        LIMIT 1
-                    )`;
-                const collectionNumberSubquery = `(
-                        SELECT cp."numberInCollection"
-                        FROM collection_pieces cp
-                        JOIN collections c ON cp."collectionId" = c.id
-                        WHERE cp."pieceId" = "piece"."id"
-                        ORDER BY cp."numberInCollection"
-                        LIMIT 1
-                    )`;
+                // Use safe subquery builders
+                const collectionPrefixSubquery = SUBQUERIES.collectionPrefix();
+                const collectionNumberSubquery = SUBQUERIES.collectionNumber();
                 order = [
                     [literal(collectionPrefixSubquery), sortDirection],
                     [
@@ -299,12 +308,8 @@ exports.findMyRepertoire = async (req, res) => {
                 ];
                 break;
             case 'lastSung': {
-                const base = `(
-                        SELECT MAX(e.date)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
-                    )`;
+                // Use safe subquery builder
+                const base = SUBQUERIES.lastSung(req.activeChoirId);
                 const expr = sortDirection === 'DESC'
                     ? `COALESCE(${base}, TO_TIMESTAMP(0))`
                     : base;
@@ -312,12 +317,8 @@ exports.findMyRepertoire = async (req, res) => {
                 break;
             }
             case 'lastRehearsed': {
-                const base = `(
-                        SELECT MAX(e.date)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
-                    )`;
+                // Use safe subquery builder
+                const base = SUBQUERIES.lastRehearsed(req.activeChoirId);
                 const expr = sortDirection === 'DESC'
                     ? `COALESCE(${base}, TO_TIMESTAMP(0))`
                     : base;
@@ -325,20 +326,12 @@ exports.findMyRepertoire = async (req, res) => {
                 break;
             }
             case 'timesSung':
-                order = [[literal(`(
-                        SELECT COUNT(*)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'SERVICE'
-                    )`), sortDirection]];
+                // Use safe subquery builder
+                order = [[literal(SUBQUERIES.timesSung(req.activeChoirId)), sortDirection]];
                 break;
             case 'timesRehearsed':
-                order = [[literal(`(
-                        SELECT COUNT(*)
-                        FROM event_pieces ep
-                        JOIN events e ON ep."eventId" = e.id
-                        WHERE ep."pieceId" = "piece"."id" AND e."choirId" = ${req.activeChoirId} AND e.type = 'REHEARSAL'
-                    )`), sortDirection]];
+                // Use safe subquery builder
+                order = [[literal(SUBQUERIES.timesRehearsed(req.activeChoirId)), sortDirection]];
                 break;
             case 'title':
             default:

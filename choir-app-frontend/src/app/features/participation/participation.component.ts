@@ -8,6 +8,8 @@ import { UserInChoir } from '@core/models/user';
 import { MemberAvailability } from '@core/models/member-availability';
 import { parseDateOnly } from '@shared/util/date';
 import { combineLatest } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { BaseComponent } from '@shared/components/base.component';
 
 interface EventColumn {
   key: string;
@@ -29,7 +31,7 @@ interface MonthColumn extends EventColumn {
   templateUrl: './participation.component.html',
   styleUrls: ['./participation.component.scss']
 })
-export class ParticipationComponent implements OnInit {
+export class ParticipationComponent extends BaseComponent implements OnInit {
   members: UserInChoir[] = [];
   sortMode: 'voice' | 'name' = 'voice';
   displayMode: 'events' | 'months' = 'events';
@@ -45,10 +47,14 @@ export class ParticipationComponent implements OnInit {
 
   private availabilityMap: { [userId: number]: { [date: string]: string } } = {};
 
-  constructor(private api: ApiService, private auth: AuthService) {}
+  constructor(private api: ApiService, private auth: AuthService) {
+    super(); // Call BaseComponent constructor
+  }
 
   ngOnInit(): void {
-    combineLatest([this.auth.isAdmin$, this.auth.activeChoir$]).subscribe(([isAdmin, choir]) => {
+    combineLatest([this.auth.isAdmin$, this.auth.activeChoir$]).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(([isAdmin, choir]) => {
       const roles = choir?.membership?.rolesInChoir ?? [];
       const privilegedRoles = ['choir_admin', 'director'];
       this.isChoirAdmin = isAdmin || roles.some(role => privilegedRoles.includes(role));
@@ -58,13 +64,17 @@ export class ParticipationComponent implements OnInit {
   }
 
   private loadMembers(): void {
-    this.api.getChoirMembers().subscribe(m => {
+    this.api.getChoirMembers().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(m => {
       this.members = this.sortMembers(m);
     });
   }
 
   loadEvents(): void {
-    this.api.getEvents(undefined, false, this.startDate, this.endDate).subscribe(events => {
+    this.api.getEvents(undefined, false, this.startDate, this.endDate).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(events => {
       let filtered = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       if (!this.startDate && !this.endDate) {
         const today = parseDateOnly(new Date());
@@ -123,7 +133,9 @@ export class ParticipationComponent implements OnInit {
     const requests = months.map(m => this.api.getMemberAvailabilities(m.year, m.month));
     if (requests.length === 0) return;
     requests.forEach(req => {
-      req.subscribe((data: MemberAvailability[]) => {
+      req.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe((data: MemberAvailability[]) => {
         for (const a of data) {
           if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
           this.availabilityMap[a.userId][a.date] = a.status;

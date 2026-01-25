@@ -11,7 +11,8 @@ import { PlanEntry } from '@core/models/plan-entry';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
 import { Subscription, forkJoin, of } from 'rxjs';
-import { map, take, tap } from 'rxjs/operators';
+import { map, take, tap, takeUntil } from 'rxjs/operators';
+import { BaseComponent } from '@shared/components/base.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
 import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
@@ -51,7 +52,7 @@ interface LoadMetrics {
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MonthlyPlanComponent implements OnInit, OnDestroy {
+export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
   displayedColumns = ['date', 'event', 'director', 'organist', 'notes'];
@@ -211,7 +212,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
     const requestId = ++this.availabilityRequestId;
     this.availabilityMap = {};
     this.updateCounterPlan();
-    this.availabilitySub = this.api.getMemberAvailabilities(year, month).subscribe(av => {
+    this.availabilitySub = this.api.getMemberAvailabilities(year, month).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(av => {
       if (requestId !== this.availabilityRequestId) {
         return;
       }
@@ -333,6 +336,7 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
               private monthNav: MonthNavigationService,
               private cdr: ChangeDetectorRef,
             private logger: DebugLogService) {
+    super(); // Call BaseComponent constructor
     this.isDeveloper = this.logger.isEnabled();
   }
 
@@ -356,7 +360,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       this.loadPlan(this.selectedYear, this.selectedMonth);
     });
 
-    this.paramSub = this.route.queryParamMap.subscribe(params => {
+    this.paramSub = this.route.queryParamMap.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(params => {
       const tabIndex = params.get('tab') === 'avail' ? 1 : 0;
       if (this.selectedTab !== tabIndex) {
         this.selectedTab = tabIndex;
@@ -386,13 +392,20 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.userSub = this.auth.currentUser$.subscribe(u => this.currentUserId = u?.id || null);
-    this.roleSub = this.auth.isChoirAdmin$.subscribe(isChoirAdmin => {
+    this.userSub = this.auth.currentUser$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(u => this.currentUserId = u?.id || null);
+
+    this.roleSub = this.auth.isChoirAdmin$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isChoirAdmin => {
       const wasAdmin = this.isChoirAdmin;
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
       if (this.isChoirAdmin) {
-        this.api.getChoirMembers().subscribe(m => {
+        this.api.getChoirMembers().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(m => {
           this.members = m;
           this.directors = m.filter(u => {
             const roles = u.membership?.rolesInChoir || [];
@@ -491,7 +504,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       planData: plan$,
       availabilityMap: availability$,
       memberData: members$
-    }).subscribe({
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: ({ planData, availabilityMap, memberData }) => {
         if (requestId !== this.planRequestId) {
           return;
@@ -586,7 +601,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       notes: ev.notes || '',
       directorId: userId,
       organistId: ev.organist?.id ?? undefined
-    }).subscribe(updated => {
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
       ev.director = updated.director;
       this.updateCounterPlan();
     });
@@ -598,7 +615,9 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       notes: ev.notes || '',
       directorId: ev.director?.id ?? undefined,
       organistId: userId
-    }).subscribe(updated => {
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
       ev.organist = updated.organist;
       this.updateCounterPlan();
     });
@@ -610,14 +629,18 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       notes,
       directorId: ev.director?.id ?? undefined,
       organistId: ev.organist?.id ?? undefined
-    }).subscribe(updated => {
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
       ev.notes = updated.notes;
     });
   }
 
   finalizePlan(): void {
     if (this.plan) {
-      this.monthlyPlan.finalizeMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      this.monthlyPlan.finalizeMonthlyPlan(this.plan.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
   }
 
@@ -625,13 +648,17 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
 
   reopenPlan(): void {
     if (this.plan) {
-      this.monthlyPlan.reopenMonthlyPlan(this.plan.id).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      this.monthlyPlan.reopenMonthlyPlan(this.plan.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
     }
   }
 
   downloadPdf(): void {
     if (!this.plan) return;
-    this.monthlyPlan.downloadMonthlyPlanPdf(this.plan.id).subscribe(blob => {
+    this.monthlyPlan.downloadMonthlyPlanPdf(this.plan.id).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(blob => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -644,9 +671,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   openEmailDialog(): void {
     if (!this.plan) return;
     const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
-    ref.afterClosed().subscribe((result: { ids: number[]; emails: string[] }) => {
+    ref.afterClosed().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((result: { ids: number[]; emails: string[] }) => {
       if (result && (result.ids.length > 0 || result.emails.length > 0)) {
-        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).subscribe({
+        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
           next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
           error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
         });
@@ -661,9 +692,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
       m.membership?.rolesInChoir?.includes('choir_admin') ||
       m.membership?.rolesInChoir?.includes('organist'));
     const ref = this.dialog.open(RequestAvailabilityDialogComponent, { data: { members: people } });
-    ref.afterClosed().subscribe((ids: number[]) => {
+    ref.afterClosed().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((ids: number[]) => {
       if (ids && ids.length > 0) {
-        this.monthlyPlan.requestAvailability(this.plan!.id, ids).subscribe({
+        this.monthlyPlan.requestAvailability(this.plan!.id, ids).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
           next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
           error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
         });
@@ -674,9 +709,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   openAddEntryDialog(): void {
     const dialogRef = this.dialog.open(PlanEntryDialogComponent, { width: '600px', disableClose: true });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
       if (result && this.plan) {
-        this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).subscribe({
+        this.api.createPlanEntry({ ...result, monthlyPlanId: this.plan.id }).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
           next: () => {
             this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 });
             this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
@@ -691,9 +730,13 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   deleteEntry(ev: PlanEntry): void {
     const data: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
     const ref = this.dialog.open(ConfirmDialogComponent, { data });
-    ref.afterClosed().subscribe(confirmed => {
+    ref.afterClosed().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(confirmed => {
       if (confirmed) {
-        this.api.deletePlanEntry(ev.id).subscribe({
+        this.api.deletePlanEntry(ev.id).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
           next: () => {
             this.entries = this.entries.filter(e => e.id !== ev.id);
             this.sortEntries();
@@ -707,17 +750,20 @@ export class MonthlyPlanComponent implements OnInit, OnDestroy {
   }
 
   createPlan(): void {
-    this.monthlyPlan.createMonthlyPlan(this.selectedYear, this.selectedMonth).subscribe(plan => {
+    this.monthlyPlan.createMonthlyPlan(this.selectedYear, this.selectedMonth).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(plan => {
       this.plan = plan;
       this.loadPlan(plan.year, plan.month);
     });
   }
 
   ngOnDestroy(): void {
-    if (this.userSub) this.userSub.unsubscribe();
-    if (this.roleSub) this.roleSub.unsubscribe();
-    if (this.paramSub) this.paramSub.unsubscribe();
-    if (this.planSub) this.planSub.unsubscribe();
+    // BaseComponent.ngOnDestroy() will handle all subscriptions using takeUntil(this.destroy$)
+    // Manual cleanup for subscriptions that need immediate cancellation
     if (this.availabilitySub) this.availabilitySub.unsubscribe();
+
+    // Call parent class cleanup
+    super.ngOnDestroy();
   }
 }
