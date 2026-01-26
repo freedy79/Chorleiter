@@ -125,14 +125,14 @@ exports.findLast = async (req, res) => {
         return res.status(400).send({ message: "Event type is required." });
     }
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
 
     const lastEvent = await Event.findOne({
             where: {
                 choirId: req.activeChoirId,
                 type: type.toUpperCase(),
-                date: { [Op.lt]: startOfToday }
+                date: { [Op.lte]: endOfToday }
             },
             order: [['date', 'DESC']],
             // --- DIE ANPASSUNG IST HIER ---
@@ -201,6 +201,29 @@ exports.findAll = async (req, res) => {
         where,
         order: [['date', 'DESC']],
         include: [
+            {
+                model: Piece,
+                as: 'pieces',
+                attributes: ['id', 'title', 'origin'],
+                through: { attributes: [] },
+                include: [
+                    {
+                        model: Composer,
+                        as: 'composer',
+                        attributes: ['name']
+                    },
+                    {
+                        model: Collection,
+                        as: 'collections',
+                        attributes: ['prefix', 'singleEdition'],
+                        through: {
+                            model: CollectionPiece,
+                            as: 'collection_piece',
+                            attributes: ['numberInCollection']
+                        }
+                    }
+                ]
+            },
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
             { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
             { model: db.choir, as: 'choir', attributes: ['id', 'name'] },

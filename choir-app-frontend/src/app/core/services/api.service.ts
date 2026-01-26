@@ -65,6 +65,7 @@ import { Congregation } from '../models/congregation';
 import { CongregationService } from './congregation.service';
 import { Poll } from '../models/poll';
 import { ReactionInfo, ReactionType } from '../models/reaction';
+import { PayPalService } from './paypal.service';
 
 @Injectable({
   providedIn: 'root'
@@ -95,7 +96,8 @@ export class ApiService {
               private libraryService: LibraryService,
               private programService: ProgramService,
               private districtService: DistrictService,
-              private congregationService: CongregationService) {
+              private congregationService: CongregationService,
+              private paypalService: PayPalService) {
 
   }
 
@@ -904,6 +906,10 @@ export class ApiService {
 
   getDonations(): Observable<Donation[]> {
         return this.adminService.getDonations();
+  }
+
+  verifyPayPalTransaction(txToken: string): Observable<any> {
+    return this.paypalService.verifyPDT(txToken);
   }
 
   // --- Post Methods ---

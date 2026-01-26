@@ -193,4 +193,16 @@ export class AdminService {
   getDonations(): Observable<Donation[]> {
     return this.http.get<Donation[]>(`${this.apiUrl}/admin/donations`);
   }
+
+  createDonation(userId: number, amount: number, donatedAt?: Date): Observable<Donation> {
+    return this.http.post<Donation>(`${this.apiUrl}/admin/donations`, { userId, amount, donatedAt });
+  }
+
+  getPayPalSettings(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/paypal-settings`);
+  }
+
+  updatePayPalSettings(pdtToken: string, mode: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/paypal-settings`, { pdtToken, mode });
+  }
 }

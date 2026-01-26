@@ -1,6 +1,7 @@
 const db = require("../models");
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
+const paypalSettingsService = require('../services/paypal-settings.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
 const { spawn } = require('child_process');
@@ -283,6 +284,41 @@ exports.getDonations = async (req, res) => {
             order: [['donatedAt', 'DESC']]
         });
         res.status(200).send(donations);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.createDonation = async (req, res) => {
+    try {
+        const { userId, amount, donatedAt } = req.body;
+
+        if (!userId || !amount) {
+            return res.status(400).send({ message: 'userId and amount are required' });
+        }
+
+        const user = await db.user.findByPk(userId);
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        const date = donatedAt ? new Date(donatedAt) : new Date();
+        const donation = await db.donation.create({
+            userId,
+            amount: parseFloat(amount),
+            donatedAt: date
+        });
+
+        // Update user's lastDonation
+        user.lastDonation = date;
+        await user.save();
+
+        // Fetch the created donation with user details
+        const createdDonation = await db.donation.findByPk(donation.id, {
+            include: [{ model: db.user, as: 'user', attributes: ['id', 'firstName', 'name', 'email'] }]
+        });
+
+        res.status(201).send(createdDonation);
     } catch (err) {
         res.status(500).send({ message: err.message });
     }
@@ -677,4 +713,41 @@ exports.pullAndDeploy = (req, res) => {
         logger.error('git pull failed', err);
         res.status(500).end(`git pull failed: ${err.message}\n`);
     });
+};
+
+// PayPal Settings
+exports.getPayPalSettings = async (req, res) => {
+    try {
+        const settings = await paypalSettingsService.getPayPalSettings();
+        res.status(200).send(settings);
+    } catch (err) {
+        logger.error('Error getting PayPal settings', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updatePayPalSettings = async (req, res) => {
+    try {
+        const { pdtToken, mode } = req.body;
+
+        if (!pdtToken) {
+            return res.status(400).send({ message: 'PDT Token is required' });
+        }
+
+        if (mode && !['sandbox', 'live'].includes(mode)) {
+            return res.status(400).send({ message: 'Mode must be "sandbox" or "live"' });
+        }
+
+        await paypalSettingsService.savePDTToken(pdtToken);
+
+        if (mode) {
+            await paypalSettingsService.savePayPalMode(mode);
+        }
+
+        logger.info('PayPal settings updated successfully');
+        res.status(200).send({ message: 'PayPal settings saved successfully' });
+    } catch (err) {
+        logger.error('Error updating PayPal settings', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
 };

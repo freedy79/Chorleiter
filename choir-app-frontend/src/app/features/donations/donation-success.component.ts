@@ -15,11 +15,23 @@ import { AuthService } from '@core/services/auth.service';
 export class DonationSuccessComponent implements OnInit {
   amount = 0;
   saved = false;
+  verifying = false;
+  error: string | null = null;
+  paypalVerified = false;
 
   constructor(private api: ApiService, private auth: AuthService, private router: Router) {}
 
   ngOnInit(): void {
     const params = new URLSearchParams(window.location.search);
+
+    // Check for PayPal PDT token first
+    const txToken = params.get('tx');
+    if (txToken) {
+      this.verifyPayPalTransaction(txToken);
+      return;
+    }
+
+    // Fallback to manual amount parameter
     const amt = params.get('amount') || params.get('amt');
     if (amt) {
       const parsed = parseFloat(amt);
@@ -30,10 +42,44 @@ export class DonationSuccessComponent implements OnInit {
     }
   }
 
+  verifyPayPalTransaction(txToken: string): void {
+    this.verifying = true;
+    this.api.verifyPayPalTransaction(txToken).subscribe({
+      next: (response) => {
+        this.verifying = false;
+        if (response.verified && response.amount > 0) {
+          this.amount = response.amount;
+          this.paypalVerified = true;
+          this.save();
+        } else if (!response.configured) {
+          // PDT not configured - show message but don't save
+          this.error = 'PayPal PDT ist nicht konfiguriert. Bitte tragen Sie die Spende manuell im Admin-Bereich ein.';
+        } else {
+          this.error = 'Transaktion konnte nicht verifiziert werden.';
+        }
+      },
+      error: (err) => {
+        this.verifying = false;
+        console.error('PayPal verification error:', err);
+        this.error = 'Fehler bei der PayPal-Verifizierung. Bitte tragen Sie die Spende manuell im Admin-Bereich ein.';
+      }
+    });
+  }
+
   save(): void {
-    this.api.registerDonation(this.amount).subscribe(() => {
-      this.saved = true;
-      this.api.getCurrentUser().subscribe(user => this.auth.setCurrentUser(user));
+    if (this.amount <= 0) {
+      return;
+    }
+
+    this.api.registerDonation(this.amount).subscribe({
+      next: () => {
+        this.saved = true;
+        this.api.getCurrentUser().subscribe(user => this.auth.setCurrentUser(user));
+      },
+      error: (err) => {
+        console.error('Error saving donation:', err);
+        this.error = 'Fehler beim Speichern der Spende.';
+      }
     });
   }
 
@@ -41,4 +87,3 @@ export class DonationSuccessComponent implements OnInit {
     this.router.navigate(['/']);
   }
 }
-

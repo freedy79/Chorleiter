@@ -2,16 +2,40 @@
   <mat-card>
     <mat-card-content>
       <h2>Vielen Dank für deine Spende!</h2>
-      <p>Dein Beitrag hilft, die laufenden Kosten zu decken.</p>
-      <div *ngIf="!saved">
+
+      <div *ngIf="verifying" style="text-align: center; padding: 20px;">
+        <mat-spinner style="margin: 0 auto;"></mat-spinner>
+        <p style="margin-top: 20px;">PayPal-Transaktion wird verifiziert...</p>
+      </div>
+
+      <div *ngIf="error" style="margin: 20px 0;">
+        <mat-error style="color: #d32f2f; display: block; margin-bottom: 10px;">
+          {{ error }}
+        </mat-error>
+      </div>
+
+      <div *ngIf="paypalVerified && !verifying" style="margin: 20px 0;">
+        <p style="color: #4caf50;">
+          <mat-icon style="vertical-align: middle;">check_circle</mat-icon>
+          PayPal-Zahlung erfolgreich verifiziert: {{ amount | number:'1.2-2' }} €
+        </p>
+      </div>
+
+      <div *ngIf="!saved && !verifying">
+        <p>Dein Beitrag hilft, die laufenden Kosten zu decken.</p>
         <mat-form-field>
           <mat-label>Betrag (EUR)</mat-label>
           <input matInput type="number" [(ngModel)]="amount" />
         </mat-form-field>
         <button mat-raised-button color="primary" (click)="save()">Speichern</button>
       </div>
+
       <div *ngIf="saved">
-        <button mat-raised-button color="primary" (click)="back()">Zurück</button>
+        <p style="color: #4caf50; font-weight: bold;">
+          <mat-icon style="vertical-align: middle;">check_circle</mat-icon>
+          Spende wurde erfolgreich gespeichert!
+        </p>
+        <button mat-raised-button color="primary" (click)="back()">Zurück zur Startseite</button>
       </div>
     </mat-card-content>
   </mat-card>

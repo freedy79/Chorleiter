@@ -758,7 +758,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
     // BaseComponent.ngOnDestroy() will handle all subscriptions using takeUntil(this.destroy$)
     // Manual cleanup for subscriptions that need immediate cancellation
     if (this.availabilitySub) this.availabilitySub.unsubscribe();

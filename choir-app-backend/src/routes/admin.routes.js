@@ -38,6 +38,7 @@ router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/mail-logs', wrap(controller.getMailLogs));
 router.delete('/mail-logs', role.requireNonDemo, wrap(controller.clearMailLogs));
 router.get('/donations', wrap(controller.getDonations));
+router.post('/donations', role.requireNonDemo, wrap(controller.createDonation));
 
 router.get('/logs', wrap(controller.listLogs));
 router.get('/logs/:filename', wrap(controller.getLog));
@@ -54,9 +55,10 @@ router.get('/frontend-url', wrap(controller.getFrontendUrl));
 router.put('/frontend-url', role.requireNonDemo, wrap(controller.updateFrontendUrl));
 router.get('/system-admin-email', wrap(controller.getSystemAdminEmail));
 router.put('/system-admin-email', role.requireNonDemo, wrap(controller.updateSystemAdminEmail));
+router.get('/paypal-settings', wrap(controller.getPayPalSettings));
+router.put('/paypal-settings', role.requireNonDemo, wrap(controller.updatePayPalSettings));
 
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));
 
 module.exports = router;
-
