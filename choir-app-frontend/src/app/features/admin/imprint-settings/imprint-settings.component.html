@@ -1,0 +1,126 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Impressum-Einstellungen</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="loading" style="text-align: center; padding: 40px;">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p style="margin-top: 16px;">Wird geladen...</p>
+    </div>
+
+    <div *ngIf="!loading">
+      <div *ngIf="isComplete && !saved" style="margin-bottom: 20px; padding: 12px; background-color: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+        <mat-icon style="color: #4caf50; vertical-align: middle;">check_circle</mat-icon>
+        <span style="color: #2e7d32; margin-left: 8px;">Impressum ist vollständig konfiguriert.</span>
+      </div>
+
+      <div *ngIf="saved" style="margin-bottom: 20px; padding: 12px; background-color: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+        <mat-icon style="color: #4caf50; vertical-align: middle;">check_circle</mat-icon>
+        <span style="color: #2e7d32; margin-left: 8px;">Einstellungen erfolgreich gespeichert!</span>
+      </div>
+
+      <div *ngIf="error" style="margin-bottom: 20px; padding: 12px; background-color: #ffebee; border-left: 4px solid #d32f2f; border-radius: 4px;">
+        <mat-icon style="color: #d32f2f; vertical-align: middle;">error</mat-icon>
+        <span style="color: #c62828; margin-left: 8px;">{{ error }}</span>
+      </div>
+
+      <p style="margin-bottom: 24px; color: #666;">
+        Diese Daten werden im öffentlichen Impressum angezeigt. Felder mit * sind Pflichtfelder.
+      </p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <mat-form-field style="width: 100%;">
+          <mat-label>Name / Organisation *</mat-label>
+          <input matInput
+                 type="text"
+                 [(ngModel)]="name"
+                 placeholder="z.B. Michael Free (Chorleiter)">
+          <mat-icon matSuffix>person</mat-icon>
+          <mat-hint>Anbieter gemäß § 5 TMG</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field style="width: 100%;">
+          <mat-label>E-Mail *</mat-label>
+          <input matInput
+                 type="email"
+                 [(ngModel)]="email"
+                 placeholder="info@example.de">
+          <mat-icon matSuffix>email</mat-icon>
+          <mat-hint>Kontakt-E-Mail-Adresse</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field style="width: 100%; margin-bottom: 16px;">
+        <mat-label>Straße und Hausnummer *</mat-label>
+        <input matInput
+               type="text"
+               [(ngModel)]="street"
+               placeholder="z.B. Musterstraße 1">
+        <mat-icon matSuffix>home</mat-icon>
+      </mat-form-field>
+
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px; margin-bottom: 16px;">
+        <mat-form-field style="width: 100%;">
+          <mat-label>Postleitzahl *</mat-label>
+          <input matInput
+                 type="text"
+                 [(ngModel)]="postalCode"
+                 placeholder="12345">
+          <mat-icon matSuffix>markunread_mailbox</mat-icon>
+        </mat-form-field>
+
+        <mat-form-field style="width: 100%;">
+          <mat-label>Stadt *</mat-label>
+          <input matInput
+                 type="text"
+                 [(ngModel)]="city"
+                 placeholder="z.B. Berlin">
+          <mat-icon matSuffix>location_city</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <mat-form-field style="width: 100%;">
+          <mat-label>Land</mat-label>
+          <input matInput
+                 type="text"
+                 [(ngModel)]="country"
+                 placeholder="Deutschland">
+          <mat-icon matSuffix>public</mat-icon>
+          <mat-hint>Standard: Deutschland</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field style="width: 100%;">
+          <mat-label>Telefon</mat-label>
+          <input matInput
+                 type="tel"
+                 [(ngModel)]="phone"
+                 placeholder="z.B. (05503) 8058300">
+          <mat-icon matSuffix>phone</mat-icon>
+          <mat-hint>Optional</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <mat-form-field style="width: 100%; margin-bottom: 16px;">
+        <mat-label>Verantwortlicher nach § 55 Abs. 2 RStV</mat-label>
+        <input matInput
+               type="text"
+               [(ngModel)]="responsibleName"
+               placeholder="z.B. Michael Free">
+        <mat-icon matSuffix>assignment_ind</mat-icon>
+        <mat-hint>Optional - Name der verantwortlichen Person für den Inhalt</mat-hint>
+      </mat-form-field>
+
+      <div style="margin-top: 24px; text-align: right;">
+        <button mat-raised-button color="primary"
+                (click)="saveSettings()"
+                [disabled]="saving || !isValid">
+          <mat-icon *ngIf="!saving">save</mat-icon>
+          <mat-spinner *ngIf="saving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+          {{ saving ? 'Wird gespeichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

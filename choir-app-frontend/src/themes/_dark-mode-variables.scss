@@ -1,0 +1,287 @@
+// Dark Mode Variables and Mixins following UX Design Institute Guidelines
+// https://www.uxdesigninstitute.com/blog/dark-mode-design-practical-guide/
+//
+// Key Principles:
+// 1. Avoid pure colors (#000 and #fff) - use muted dark grays and off-whites
+// 2. Ensure sufficient contrast (WCAG 4.5:1 minimum for normal text)
+// 3. Dial down saturation for colors on dark backgrounds
+// 4. Use highlights/gradients instead of shadows in dark mode
+// 5. Optimize typography for readability
+
+// ============================================================================
+// LIGHT MODE COLORS (Default)
+// ============================================================================
+
+$light-mode-colors: (
+  // Backgrounds
+  bg-primary: #ffffff,
+  bg-secondary: #f5f5f5,
+  bg-tertiary: #eeeeee,
+  bg-hover: #f9f9f9,
+  bg-card: #ffffff,
+  bg-input: #ffffff,
+  bg-disabled: #f5f5f5,
+
+  // Text/Foreground
+  text-primary: #212121,           // Dark text for body
+  text-secondary: #666666,         // Medium gray for secondary text
+  text-tertiary: #999999,          // Light gray for hints
+  text-disabled: #cccccc,          // Light gray for disabled
+  text-inverted: #ffffff,          // White text when needed
+
+  // Borders
+  border-primary: #dddddd,         // Light gray borders
+  border-secondary: #eeeeee,       // Very light borders
+  border-disabled: #f0f0f0,        // Nearly white borders
+
+  // Interactive
+  border-focus: #3f51b5,           // Primary blue for focus states
+  border-error: #d32f2f,           // Red for errors
+
+  // Shadows
+  shadow-elevation-1: rgba(0, 0, 0, 0.1),
+  shadow-elevation-2: rgba(0, 0, 0, 0.15),
+  shadow-elevation-3: rgba(0, 0, 0, 0.2),
+
+  // Special
+  overlay: rgba(0, 0, 0, 0.4),
+);
+
+// ============================================================================
+// DARK MODE COLORS
+// ============================================================================
+
+$dark-mode-colors: (
+  // Backgrounds - Using dark grays as per UX guidelines (#121212 base)
+  bg-primary: #121212,             // Pure dark background (WCAG AA compliant)
+  bg-secondary: #1e1e1e,           // Slightly lighter for contrast
+  bg-tertiary: #2a2a2a,            // Card/container backgrounds
+  bg-hover: #2e2e2e,               // Hover states
+  bg-card: #1e1e1e,                // Material card style dark
+  bg-input: #2a2a2a,               // Input fields dark
+  bg-disabled: #1a1a1a,            // Disabled backgrounds
+
+  // Text/Foreground - Using off-white as per UX guidelines (#E0E0E0)
+  text-primary: #e0e0e0,           // Off-white body text (avoid pure white #fff)
+  text-secondary: #b0b0b0,         // Medium gray for secondary
+  text-tertiary: #808080,          // Darker gray for hints
+  text-disabled: #505050,          // Very dark gray for disabled
+  text-inverted: #121212,          // Dark text on light backgrounds
+
+  // Borders - Using muted grays
+  border-primary: #404040,         // Medium-dark gray borders
+  border-secondary: #2e2e2e,       // Light dark gray borders
+  border-disabled: #1f1f1f,        // Very dark gray borders
+
+  // Interactive - Desaturated/muted colors
+  border-focus: #6b7fc0,           // Muted blue for focus (desaturated from #3f51b5)
+  border-error: #e57373,           // Muted red for errors
+
+  // Shadows - Reduced in dark mode
+  shadow-elevation-1: rgba(0, 0, 0, 0.3),
+  shadow-elevation-2: rgba(0, 0, 0, 0.4),
+  shadow-elevation-3: rgba(0, 0, 0, 0.5),
+
+  // Highlights - Instead of shadows
+  highlight-glow: rgba(107, 127, 192, 0.15),
+  highlight-border: rgba(224, 224, 224, 0.1),
+
+  // Special
+  overlay: rgba(0, 0, 0, 0.7),
+);
+
+// ============================================================================
+// MIXINS FOR DARK MODE SUPPORT
+// ============================================================================
+
+/// Use this mixin to apply different colors based on theme
+/// @param {String} $property - CSS property name
+/// @param {String} $light-value - Value for light mode
+/// @param {String} $dark-value - Value for dark mode
+@mixin theme-color($property, $light-value, $dark-value) {
+  #{$property}: $light-value;
+
+  .dark-theme & {
+    #{$property}: $dark-value;
+  }
+}
+
+/// Convenience mixin for text color with dark mode support
+@mixin text-color($light-color, $dark-color) {
+  @include theme-color('color', $light-color, $dark-color);
+}
+
+/// Convenience mixin for background color with dark mode support
+@mixin bg-color($light-color, $dark-color) {
+  @include theme-color('background-color', $light-color, $dark-color);
+}
+
+/// Convenience mixin for border color with dark mode support
+@mixin border-color($light-color, $dark-color) {
+  @include theme-color('border-color', $light-color, $dark-color);
+}
+
+/// Apply theme colors map
+/// @param {String} $property - CSS property name
+/// @param {String} $color-key - Key from color map (e.g., 'text-primary')
+@mixin apply-theme-var($property, $color-key) {
+  #{$property}: map-get($light-mode-colors, $color-key);
+
+  .dark-theme & {
+    #{$property}: map-get($dark-mode-colors, $color-key);
+  }
+}
+
+/// Mixin for text with proper dark mode contrast
+/// Uses off-white text for body in dark mode
+@mixin readable-text {
+  @include text-color(
+    map-get($light-mode-colors, 'text-primary'),
+    map-get($dark-mode-colors, 'text-primary')
+  );
+}
+
+/// Mixin for secondary text (slightly lighter/grayer)
+@mixin secondary-text {
+  @include text-color(
+    map-get($light-mode-colors, 'text-secondary'),
+    map-get($dark-mode-colors, 'text-secondary')
+  );
+}
+
+/// Mixin for subtle text (hints, labels)
+@mixin subtle-text {
+  @include text-color(
+    map-get($light-mode-colors, 'text-tertiary'),
+    map-get($dark-mode-colors, 'text-tertiary')
+  );
+}
+
+/// Mixin for backgrounds with proper contrast
+@mixin surface-background {
+  @include bg-color(
+    map-get($light-mode-colors, 'bg-secondary'),
+    map-get($dark-mode-colors, 'bg-secondary')
+  );
+}
+
+/// Mixin for card/elevated backgrounds
+@mixin card-background {
+  @include bg-color(
+    map-get($light-mode-colors, 'bg-card'),
+    map-get($dark-mode-colors, 'bg-card')
+  );
+}
+
+/// Mixin for input/form field backgrounds
+@mixin input-background {
+  @include bg-color(
+    map-get($light-mode-colors, 'bg-input'),
+    map-get($dark-mode-colors, 'bg-input')
+  );
+}
+
+/// Mixin for borders that should adapt to theme
+@mixin adaptive-border($width: 1px, $style: solid) {
+  border: $width $style;
+  @include border-color(
+    map-get($light-mode-colors, 'border-primary'),
+    map-get($dark-mode-colors, 'border-primary')
+  );
+}
+
+/// Mixin for shadows in light mode, highlights in dark mode
+@mixin elevation-shadow($elevation: 1) {
+  @if $elevation == 1 {
+    box-shadow: 0 2px 4px map-get($light-mode-colors, 'shadow-elevation-1');
+  } @else if $elevation == 2 {
+    box-shadow: 0 4px 8px map-get($light-mode-colors, 'shadow-elevation-2');
+  } @else if $elevation == 3 {
+    box-shadow: 0 8px 16px map-get($light-mode-colors, 'shadow-elevation-3');
+  }
+
+  .dark-theme & {
+    // In dark mode, use highlight glow instead of shadow
+    @if $elevation == 1 {
+      box-shadow: 0 0 8px map-get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+    } @else if $elevation == 2 {
+      box-shadow: 0 0 12px map-get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+    } @else if $elevation == 3 {
+      box-shadow: 0 0 16px map-get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+    }
+  }
+}
+
+/// Mixin for focus states with proper contrast
+@mixin focus-state {
+  outline: 2px solid map-get($light-mode-colors, 'border-focus');
+  outline-offset: 2px;
+
+  .dark-theme & {
+    outline-color: map-get($dark-mode-colors, 'border-focus');
+  }
+}
+
+/// Mixin for placeholder text
+@mixin placeholder-text {
+  color: map-get($light-mode-colors, 'text-tertiary');
+
+  .dark-theme & {
+    color: map-get($dark-mode-colors, 'text-tertiary');
+  }
+}
+
+/// Mixin for disabled state
+@mixin disabled-state {
+  @include bg-color(
+    map-get($light-mode-colors, 'bg-disabled'),
+    map-get($dark-mode-colors, 'bg-disabled')
+  );
+  @include text-color(
+    map-get($light-mode-colors, 'text-disabled'),
+    map-get($dark-mode-colors, 'text-disabled')
+  );
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/// Utility mixin for hover/active states with proper contrast
+@mixin hover-state {
+  @include bg-color(
+    map-get($light-mode-colors, 'bg-hover'),
+    map-get($dark-mode-colors, 'bg-hover')
+  );
+}
+
+/// Mixin for overlay/modal backgrounds
+@mixin overlay {
+  background-color: map-get($light-mode-colors, 'overlay');
+
+  .dark-theme & {
+    background-color: map-get($dark-mode-colors, 'overlay');
+  }
+}
+
+// ============================================================================
+// UTILITY VARIABLES FOR FONTS
+// ============================================================================
+
+// Font weights for readability (thin fonts appear faint in dark mode)
+$font-weight-thin: 300;      // Avoid in dark mode body text
+$font-weight-regular: 400;   // Default for body text
+$font-weight-medium: 500;    // For secondary headings
+$font-weight-bold: 700;      // For primary headings
+
+// Line spacing for better readability
+$line-height-tight: 1.3;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.7;
+$line-height-loose: 2;
+
+// Letter spacing for improved readability
+$letter-spacing-tight: -0.02em;
+$letter-spacing-normal: 0;
+$letter-spacing-wide: 0.05em;

@@ -51,6 +51,11 @@ module.exports = (sequelize, DataTypes) => {
         origin: { // Alternativer Ursprung (z.B. Volksweise)
             type: DataTypes.STRING,
             allowNull: true
+        },
+        shareToken: { // Token zum Teilen des Stücks mit nicht-angemeldeten Nutzern
+            type: DataTypes.STRING,
+            allowNull: true,
+            unique: true
         }
     });
     return Piece;

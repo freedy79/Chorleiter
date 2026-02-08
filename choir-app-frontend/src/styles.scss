@@ -54,6 +54,181 @@ mat-form-field {
   padding: 1rem;
 }
 
+// ============================================================================
+// DARK MODE STYLES - Following UX Design Institute Best Practices
+// ============================================================================
+// Apply dark theme when .dark-theme class is present on body
+// Principles:
+// - Use #121212 for primary dark background (not pure black)
+// - Use #E0E0E0 for text (not pure white)
+// - Mute colors and reduce saturation
+// - Use highlights instead of shadows
+// - Ensure WCAG 4.5:1 contrast ratio
+
+.dark-theme {
+  --page-header-bg-color: #1e1e1e;
+
+  // Include dark theme colors
+  @include mat.all-component-colors(nak.$nak-dark-theme);
+
+  // Root level dark mode backgrounds and text
+  background-color: #121212;
+  color: #e0e0e0;
+
+  // Generic element styling for dark mode
+  h1, h2, h3, h4, h5, h6 {
+    color: #ffffff; // Slightly brighter for headings
+  }
+
+  p, span, div, li, td {
+    color: #e0e0e0;
+  }
+
+  // Form elements
+  mat-form-field {
+    color: #e0e0e0;
+
+    .mat-mdc-form-field-label {
+      color: #b0b0b0;
+    }
+
+    .mdc-text-field--outlined {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: #404040;
+      }
+
+      &:hover .mdc-notched-outline__leading,
+      &:hover .mdc-notched-outline__notch,
+      &:hover .mdc-notched-outline__trailing {
+        border-color: #555555;
+      }
+    }
+
+    input, textarea {
+      color: #e0e0e0;
+      background-color: #2a2a2a;
+      caret-color: #b0d4f1;
+
+      &::placeholder {
+        color: #808080;
+      }
+    }
+  }
+
+  // Tables
+  .table-container {
+    background-color: #1e1e1e;
+    border-color: #404040;
+
+    table {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+
+      thead {
+        background-color: #2a2a2a;
+        border-bottom-color: #404040;
+      }
+
+      tbody tr {
+        border-bottom-color: #2e2e2e;
+
+        &:hover {
+          background-color: #2a2a2a;
+        }
+      }
+
+      th, td {
+        color: #e0e0e0;
+        border-color: #2e2e2e;
+      }
+    }
+  }
+
+  // Dialogs
+  .mat-mdc-dialog-container {
+    background-color: #1e1e1e;
+    border-color: rgba(255, 255, 255, 0.12);
+
+    .mat-mdc-dialog-title {
+      color: #ffffff;
+      border-bottom-color: #404040;
+    }
+
+    .mat-mdc-dialog-content {
+      color: #e0e0e0;
+    }
+  }
+
+  // Cards
+  mat-card {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+
+    mat-card-header {
+      border-bottom-color: #2e2e2e;
+    }
+
+    mat-card-title {
+      color: #ffffff;
+    }
+
+    mat-card-subtitle {
+      color: #b0b0b0;
+    }
+
+    mat-card-content {
+      color: #e0e0e0;
+    }
+  }
+
+  // Buttons
+  .mat-mdc-button, .mat-mdc-raised-button {
+    &:not(.mat-primary):not(.mat-accent):not(.mat-warn) {
+      background-color: #2a2a2a;
+      color: #e0e0e0;
+      border-color: #404040;
+
+      &:hover {
+        background-color: #333333;
+      }
+    }
+  }
+
+  // Panels and Expansion
+  .mat-expansion-panel {
+    background-color: #1e1e1e;
+    border-color: #2e2e2e;
+
+    .mat-expansion-panel-header {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+  }
+
+  // Links
+  a {
+    color: #6b7fc0; // Muted blue (desaturated from #3f51b5)
+
+    &:visited {
+      color: #9981c8; // Muted purple
+    }
+  }
+}
+
+// ============================================================================
+// MEDIA QUERIES FOR DARK MODE SUPPORT
+// ============================================================================
+
+// Respect user's system dark mode preference
+@media (prefers-color-scheme: dark) {
+  body:not(.light-theme) {
+    // This won't automatically apply dark theme unless the app implements it
+    // But it's here for future use with auto-detection
+  }
+}
+
 @media (max-width: 960px) {
   .container {
     padding: 1.5rem;
@@ -130,38 +305,8 @@ mat-card-header {
 // Das Theme wird bereits weiter oben eingebunden, daher genügt
 // es hier auf weitere Einbindungen zu verzichten.
 
-// Definieren Sie die Styles für das dunkle Theme unter einer spezifischen Klasse.
-// Diese Regeln werden nur aktiv, wenn der body-Tag die Klasse '.dark-theme' hat.
-.dark-theme {
-  --page-header-bg-color: #303030;
-  // Only include the color styles for the dark theme to avoid duplicating
-  // typography and density rules.
-  @include mat.all-component-colors(nak.$nak-dark-theme);
-
-  // Fügen Sie hier alle Ihre anderen Dark-Mode-Anpassungen hinzu
-  body {
-    background: #303030;
-    color: rgba(255, 255, 255, 0.87);
-  }
-
-  .table-container {
-    background: #303030;
-    border-color: #555;
-  }
-
-  .mat-mdc-dialog-container {
-    background: #424242;
-    border-color: rgba(255, 255, 255, 0.12);
-  }
-
-  h1[mat-dialog-title] {
-    border-bottom-color: rgba(255, 255, 255, 0.12);
-  }
-
-  .filter-controls mat-form-field .mat-mdc-select-value {
-    color: white;
-  }
-}
+// Die Styles für das dunkle Theme sind oben bereits definiert.
+// Alle zusätzlichen Material-spezifischen Anpassungen sind dort implementiert.
 
 
 mat-form-field.dense .mat-mdc-form-field-infix {

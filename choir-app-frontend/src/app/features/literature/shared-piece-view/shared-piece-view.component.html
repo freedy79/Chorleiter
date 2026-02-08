@@ -1,0 +1,134 @@
+<div class="shared-piece-container">
+
+  <div *ngIf="notFound" class="not-found">
+    <mat-card>
+      <mat-card-content>
+        <h2>Stück nicht gefunden</h2>
+        <p>Das geteilte Stück konnte nicht gefunden werden. Bitte überprüfen Sie den Link.</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="piece-detail" *ngIf="piece && !notFound">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ piece.title }}</mat-card-title>
+        <mat-card-subtitle *ngIf="piece.subtitle">{{ piece.subtitle }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="piece-info">
+          <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ formatComposerYears(piece.composer) }}</p>
+          <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
+          <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
+          <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
+          <p *ngIf="piece.voicing"><strong>Besetzung:</strong> {{ piece.voicing }}</p>
+          <p *ngIf="piece.key"><strong>Tonart:</strong> {{ piece.key }}</p>
+          <p *ngIf="piece.timeSignature"><strong>Takt:</strong> {{ piece.timeSignature }}</p>
+          <p *ngIf="piece.durationSec !== null && piece.durationSec !== undefined">
+            <strong>Dauer:</strong> {{ formatDuration(piece.durationSec) }}
+          </p>
+          <p *ngIf="piece.opus"><strong>Opus/Verzeichniszahl:</strong> {{ piece.opus }}</p>
+          <p *ngIf="piece.license"><strong>Lizenz:</strong> {{ piece.license }}</p>
+        </div>
+
+        <mat-expansion-panel *ngIf="piece.lyrics" class="lyrics-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Liedtext</mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="lyrics">{{ piece.lyrics }}</div>
+        </mat-expansion-panel>
+
+        <div *ngIf="pieceImage" class="sheet-image">
+          <h3>Notenbild</h3>
+          <img [src]="pieceImage" alt="Notenbild" loading="lazy" />
+        </div>
+
+        <div *ngIf="fileLinks.length" class="files-section">
+          <h3>Dateien</h3>
+          <ul>
+            <li *ngFor="let link of fileLinks" class="file-item">
+              <!-- MP3 Player UI -->
+              <div *ngIf="link.isMp3" class="mp3-player">
+                <button
+                  mat-icon-button
+                  [color]="isAudioPlaying(link.id) ? 'primary' : ''"
+                  (click)="isAudioPlaying(link.id) ? pauseAudio(link.id) : playAudio(link)"
+                  matTooltip="Play/Pause">
+                  <mat-icon>{{ isAudioPlaying(link.id) ? 'pause_circle' : 'play_circle' }}</mat-icon>
+                </button>
+
+                <div class="audio-info">
+                  <span class="audio-filename">
+                    <mat-icon class="file-icon">audio_file</mat-icon>
+                    {{ link.description }}
+                  </span>
+
+                  <div class="audio-controls" *ngIf="audioDuration.get(link.id)">
+                    <span class="time-display">
+                      {{ formatDuration(audioCurrentTime.get(link.id) || 0) }} /
+                      {{ formatDuration(audioDuration.get(link.id) || 0) }}
+                    </span>
+                    <mat-progress-bar
+                      mode="determinate"
+                      [value]="audioProgress.get(link.id) || 0"
+                      class="audio-progress">
+                    </mat-progress-bar>
+                  </div>
+                </div>
+
+                <span *ngIf="link.size" class="file-size">({{ formatFileSize(link.size) }})</span>
+                <a [href]="getLinkUrl(link)"
+                   [attr.download]="link.downloadName || link.description"
+                   mat-icon-button
+                   matTooltip="Download"
+                   (click)="$event.stopPropagation()">
+                  <mat-icon>download</mat-icon>
+                </a>
+              </div>
+
+              <!-- Original UI for non-MP3 files -->
+              <div *ngIf="!link.isMp3">
+                <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
+                  <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
+                  {{ link.description }}
+                </a>
+                <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div *ngIf="externalLinks.length" class="links-section">
+          <h3>Links</h3>
+          <ul>
+            <li *ngFor="let link of externalLinks">
+              <a [href]="getLinkUrl(link)" target="_blank" rel="noopener noreferrer">
+                <mat-icon class="link-icon">link</mat-icon>
+                {{ link.description }}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <div *ngIf="piece.composers && piece.composers.length > 1" class="composers-section">
+          <h3>Komponisten</h3>
+          <ul>
+            <li *ngFor="let composer of piece.composers">
+              {{ composer.name }}{{ formatComposerYears(composer) }}
+              <span *ngIf="composer.piece_composer?.type"> - {{ composer.piece_composer.type }}</span>
+            </li>
+          </ul>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="footer-note">
+      <mat-card>
+        <mat-card-content>
+          <p><mat-icon>info</mat-icon> Dies ist eine schreibgeschützte Ansicht eines geteilten Stücks.</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

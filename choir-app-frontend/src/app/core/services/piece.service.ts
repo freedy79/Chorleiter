@@ -164,4 +164,8 @@ export class PieceService {
   reportPiece(pieceId: number, category: string, reason: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/pieces/${pieceId}/report`, { category, reason });
   }
+
+  getPieceByShareToken(token: string): Observable<Piece> {
+    return this.http.get<Piece>(`${this.apiUrl}/pieces/share/${encodeURIComponent(token)}`);
+  }
 }

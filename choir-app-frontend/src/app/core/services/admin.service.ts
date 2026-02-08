@@ -205,4 +205,12 @@ export class AdminService {
   updatePayPalSettings(pdtToken: string, mode: string, donationEmail: string): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/admin/paypal-settings`, { pdtToken, mode, donationEmail });
   }
+
+  getImprintSettings(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/imprint-settings`);
+  }
+
+  updateImprintSettings(data: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/imprint-settings`, data);
+  }
 }

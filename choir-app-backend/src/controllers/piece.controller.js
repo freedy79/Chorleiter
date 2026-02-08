@@ -6,6 +6,7 @@ const Author = db.author;
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs/promises');
+const crypto = require('crypto');
 const fileService = require('../services/file.service');
 const pieceService = require('../services/piece.service');
 const BaseCrudController = require('./baseCrud.controller');
@@ -310,4 +311,62 @@ exports.getImage = async (req, res, next) => {
     const base64 = fileData.toString('base64');
     const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
     res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
+};
+
+/**
+ * @description Generate or retrieve a share token for a piece
+ * If a token already exists, return it. Otherwise, generate a new one.
+ */
+exports.generateShareToken = async (req, res) => {
+    const id = req.params.id;
+
+    const piece = await Piece.findByPk(id);
+    if (!piece) {
+        return res.status(404).send({ message: 'Piece not found.' });
+    }
+
+    // If token already exists, return it
+    if (piece.shareToken) {
+        return res.status(200).send({ shareToken: piece.shareToken });
+    }
+
+    // Generate a new unique token
+    let shareToken;
+    let isUnique = false;
+
+    while (!isUnique) {
+        shareToken = crypto.randomBytes(16).toString('hex');
+        const existing = await Piece.findOne({ where: { shareToken } });
+        if (!existing) {
+            isUnique = true;
+        }
+    }
+
+    await piece.update({ shareToken });
+    res.status(200).send({ shareToken });
+};
+
+/**
+ * @description Get piece details by share token (public endpoint)
+ * Returns piece information including composers, category, author, and links
+ */
+exports.getByShareToken = async (req, res) => {
+    const { token } = req.params;
+
+    const piece = await Piece.findOne({
+        where: { shareToken: token },
+        include: [
+            { model: Composer, as: 'composers', through: { attributes: ['type'] } },
+            { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+            { model: Category, as: 'category', attributes: ['id', 'name'] },
+            { model: Author, as: 'author', attributes: ['id', 'name'] },
+            { model: db.piece_link, as: 'links' }
+        ]
+    });
+
+    if (!piece) {
+        return res.status(404).send({ message: 'Piece not found with this share token.' });
+    }
+
+    res.status(200).send(piece);
 };

@@ -2,6 +2,7 @@ const db = require("../models");
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const paypalSettingsService = require('../services/paypal-settings.service');
+const imprintSettingsService = require('../services/imprint-settings.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
 const { spawn } = require('child_process');
@@ -756,6 +757,55 @@ exports.updatePayPalSettings = async (req, res) => {
         res.status(200).send({ message: 'PayPal settings saved successfully' });
     } catch (err) {
         logger.error('Error updating PayPal settings', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
+};
+
+// Imprint Settings
+exports.getImprintSettings = async (req, res) => {
+    try {
+        const settings = await imprintSettingsService.getImprintSettings();
+        res.status(200).send(settings);
+    } catch (err) {
+        logger.error('Error getting imprint settings', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateImprintSettings = async (req, res) => {
+    try {
+        const { name, street, postalCode, city, country, phone, email, responsibleName } = req.body;
+
+        // Validierung der Pflichtfelder
+        const requiredFields = ['name', 'street', 'postalCode', 'city', 'email'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+
+        if (missingFields.length > 0) {
+            return res.status(400).send({
+                message: `Pflichtfelder fehlen: ${missingFields.join(', ')}`
+            });
+        }
+
+        // E-Mail-Validierung
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).send({ message: 'Ungültige E-Mail-Adresse' });
+        }
+
+        await imprintSettingsService.saveImprintSettings({
+            name,
+            street,
+            postalCode,
+            city,
+            country,
+            phone,
+            email,
+            responsibleName
+        });
+
+        logger.info('Imprint settings updated successfully');
+        res.status(200).send({ message: 'Imprint settings saved successfully' });
+    } catch (err) {
+        logger.error('Error updating imprint settings', { error: err.message });
         res.status(500).send({ message: err.message });
     }
 };

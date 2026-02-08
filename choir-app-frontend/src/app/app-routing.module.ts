@@ -77,6 +77,13 @@ export const routes: Routes = [
             { path: 'donation-success', component: DonationSuccessComponent },
             { path: 'donation-cancel', component: DonationCancelComponent },
 
+            // Shared Piece Route (öffentlich zugänglich mit Token, muss vor geschützten Routen kommen)
+            {
+                path: 'share/:token',
+                loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
+                data: { title: 'Geteiltes Stück' }
+            },
+
             // --- Geschützte Routen (jede einzelne hat jetzt den Guard) ---
             {
                 path: 'dashboard',

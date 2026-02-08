@@ -57,6 +57,8 @@ router.get('/system-admin-email', wrap(controller.getSystemAdminEmail));
 router.put('/system-admin-email', role.requireNonDemo, wrap(controller.updateSystemAdminEmail));
 router.get('/paypal-settings', wrap(controller.getPayPalSettings));
 router.put('/paypal-settings', role.requireNonDemo, wrap(controller.updatePayPalSettings));
+router.get('/imprint-settings', wrap(controller.getImprintSettings));
+router.put('/imprint-settings', role.requireNonDemo, wrap(controller.updateImprintSettings));
 
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));

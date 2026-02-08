@@ -1,0 +1,207 @@
+.shared-piece-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+.shared-piece-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  h1 {
+    margin: 0;
+    @include darkmode.apply-theme-var('color', 'border-focus');
+  }
+
+  .share-icon {
+    font-size: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    @include darkmode.apply-theme-var('color', 'border-focus');
+  }
+}
+
+.not-found {
+  text-align: center;
+  padding: 2rem;
+}
+
+.piece-detail {
+  mat-card {
+    margin-bottom: 1.5rem;
+  }
+}
+
+.piece-info {
+  p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    @include darkmode.readable-text;
+  }
+}
+
+.lyrics-panel {
+  margin: 1rem 0;
+}
+
+.lyrics {
+  white-space: pre-wrap;
+  font-family: Georgia, serif;
+  line-height: 1.6;
+  padding: 1rem;
+  @include darkmode.bg-color(#f5f5f5, #2a2a2a);
+  @include darkmode.text-color(#333, #e0e0e0);
+  border-radius: 4px;
+  border: 1px solid;
+  @include darkmode.border-color(#e0e0e0, #404040);
+}
+
+.sheet-image {
+  margin: 1.5rem 0;
+
+  h3 {
+    margin-bottom: 1rem;
+    @include darkmode.readable-text;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid;
+    @include darkmode.border-color(#ddd, #555);
+    border-radius: 4px;
+    @include darkmode.elevation-shadow(1);
+  }
+}
+
+.files-section,
+.links-section,
+.composers-section {
+  margin: 1.5rem 0;
+
+  h3 {
+    margin-bottom: 1rem;
+    @include darkmode.apply-theme-var('color', 'border-focus');
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+
+    li {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border-left: 3px solid;
+      @include darkmode.border-color(#3f51b5, #6b7fc0);
+      padding-left: 1rem;
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        @include darkmode.text-color(#3f51b5, #6b7fc0);
+        text-decoration: none;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+  }
+}
+
+.file-item {
+  .mp3-player {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    @include darkmode.bg-color(#f9f9f9, #2a2a2a);
+    border: 1px solid;
+    @include darkmode.border-color(#e0e0e0, #404040);
+    border-radius: 4px;
+
+    .audio-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      .audio-filename {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        @include darkmode.readable-text;
+      }
+
+      .audio-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .time-display {
+          font-size: 0.875rem;
+          @include darkmode.text-color(#666, #aaa);
+          white-space: nowrap;
+        }
+
+        .audio-progress {
+          flex: 1;
+          height: 4px;
+        }
+      }
+    }
+
+    .file-size {
+      font-size: 0.875rem;
+      @include darkmode.text-color(#666, #aaa);
+    }
+  }
+}
+
+.file-icon,
+.link-icon {
+  vertical-align: middle;
+  margin-right: 0.25rem;
+}
+
+.footer-note {
+  margin-top: 2rem;
+
+  mat-card-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    @include darkmode.text-color(#666, #aaa);
+
+    mat-icon {
+      @include darkmode.apply-theme-var('color', 'border-focus');
+    }
+
+    p {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .shared-piece-container {
+    padding: 0.5rem;
+  }
+
+  .shared-piece-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .mp3-player {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
