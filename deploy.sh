@@ -8,17 +8,21 @@ REMOTE="${REMOTE_USER}@${REMOTE_HOST}"
 BACKEND_DEST="/usr/local/lsws/ChorStatistik/backend"
 FRONTEND_DEST="/usr/local/lsws/ChorStatistik/html"
 
-# Ensure local repository is up to date
+# Ensure remote repository is up to date
 echo "Checking git status..."
 git fetch >/dev/null 2>&1 || true
 STATUS=$(git status -uno)
-if [[ -n $(git status --porcelain) || "$STATUS" == *"behind"* ]]; then
-    read -r -p "Repository is not up to date. Pull latest changes before deploying? (y/N) " update_repo
+
+# Only ask to pull if remote is ahead, ignore local changes
+if [[ "$STATUS" == *"behind"* ]]; then
+    read -r -p "Remote repository is ahead. Pull latest changes before deploying? (y/N) " update_repo
     if [[ $update_repo =~ ^[Yy]$ ]]; then
         git pull --rebase
     else
         echo "Continuing with current repository state."
     fi
+else
+    echo "Local repository is up to date with remote."
 fi
 
 # Build Angular frontend

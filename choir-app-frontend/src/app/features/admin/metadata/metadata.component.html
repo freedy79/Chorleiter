@@ -1,0 +1,42 @@
+<div class="metadata">
+  <div class="header">
+    <h1>Metadaten verwalten</h1>
+    <p class="description">Verlage, Komponisten, Autoren und Dateien zentral pflegen</p>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- Verlage Tab -->
+    <mat-tab label="Verlage">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>business</mat-icon>
+        <span class="tab-label">Verlage</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-publishers></app-manage-publishers>
+      </div>
+    </mat-tab>
+
+    <!-- Komponisten & Autoren Tab -->
+    <mat-tab label="Komponisten">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>person</mat-icon>
+        <span class="tab-label">Komponisten</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-creators></app-manage-creators>
+      </div>
+    </mat-tab>
+
+    <!-- Dateien Tab -->
+    <mat-tab label="Dateien">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>folder</mat-icon>
+        <span class="tab-label">Dateien</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-files></app-manage-files>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

@@ -8,6 +8,9 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './donation-cancel.component.html',
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class DonationCancelComponent {
   constructor(private router: Router) {}
@@ -16,4 +19,3 @@ export class DonationCancelComponent {
     this.router.navigate(['/']);
   }
 }
-

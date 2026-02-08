@@ -27,10 +27,19 @@ app-root {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  flex: 1;
+}
+
+/* Ensure router-outlet and its direct children are visible */
+router-outlet ~ * {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
 
 :root {
   --page-header-bg-color: #fff;
+  --header-title-color: inherit; // Light mode: inherit from theme
 }
 
 .container {
@@ -67,6 +76,7 @@ mat-form-field {
 
 .dark-theme {
   --page-header-bg-color: #1e1e1e;
+  --header-title-color: #ffffff; // Dark mode: always white for header title
 
   // Include dark theme colors
   @include mat.all-component-colors(nak.$nak-dark-theme);
@@ -221,13 +231,9 @@ mat-form-field {
 // MEDIA QUERIES FOR DARK MODE SUPPORT
 // ============================================================================
 
-// Respect user's system dark mode preference
-@media (prefers-color-scheme: dark) {
-  body:not(.light-theme) {
-    // This won't automatically apply dark theme unless the app implements it
-    // But it's here for future use with auto-detection
-  }
-}
+// NOTE: Dark mode is handled by ThemeService via .dark-theme and .light-theme classes.
+// The media query is NOT used here to avoid conflicts with the theme switching logic.
+// The ThemeService evaluates prefers-color-scheme when 'system' is selected.
 
 @media (max-width: 960px) {
   .container {

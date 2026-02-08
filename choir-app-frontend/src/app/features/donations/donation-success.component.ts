@@ -11,6 +11,9 @@ import { AuthService } from '@core/services/auth.service';
   standalone: true,
   imports: [CommonModule, MaterialModule, FormsModule],
   templateUrl: './donation-success.component.html',
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class DonationSuccessComponent implements OnInit {
   amount = 0;

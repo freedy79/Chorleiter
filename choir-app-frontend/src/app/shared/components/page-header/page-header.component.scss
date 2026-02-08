@@ -12,4 +12,16 @@
 h1 {
   margin: 0;
   font-size: 1.5rem;
+  color: #212121; // Light mode: dark text
+
+  @media (prefers-color-scheme: dark) {
+    color: #ffffff; // Dark mode: white text
+  }
+}
+
+// Dark mode styles
+:host-context(.dark-theme) {
+  h1 {
+    color: #ffffff; // Dark mode: white text
+  }
 }

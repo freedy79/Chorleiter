@@ -1,0 +1,42 @@
+<div class="organizations">
+  <div class="header">
+    <h1>Organisationen verwalten</h1>
+    <p class="description">Zentrale Verwaltung von Bezirken, Gemeinden und Chören</p>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- Bezirke Tab -->
+    <mat-tab label="Bezirke">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>map</mat-icon>
+        <span class="tab-label">Bezirke</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-districts></app-manage-districts>
+      </div>
+    </mat-tab>
+
+    <!-- Gemeinden Tab -->
+    <mat-tab label="Gemeinden">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>place</mat-icon>
+        <span class="tab-label">Gemeinden</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-congregations></app-manage-congregations>
+      </div>
+    </mat-tab>
+
+    <!-- Chöre Tab -->
+    <mat-tab label="Chöre">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>group</mat-icon>
+        <span class="tab-label">Chöre</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-manage-choirs></app-manage-choirs>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

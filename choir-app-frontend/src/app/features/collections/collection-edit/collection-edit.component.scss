@@ -1,3 +1,5 @@
+@use "../../../../themes/_dark-mode-variables" as dark;
+
 .form-container {
     max-width: 800px;
     margin: 0 auto;
@@ -7,6 +9,18 @@
     display: flex;
     justify-content: flex-end;
     margin-bottom: 1rem;
+}
+
+mat-card-title {
+    color: #212121 !important;
+
+    .dark-theme & {
+        color: #ffffff !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        color: #ffffff !important;
+    }
 }
 
 .edit-form {

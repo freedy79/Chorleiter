@@ -9,7 +9,10 @@ import { MaterialModule } from '@modules/material.module';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './email-confirm.component.html',
-  styleUrls: ['./email-confirm.component.scss']
+  styleUrls: ['./email-confirm.component.scss'],
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class EmailConfirmComponent implements OnInit {
   message = '';

@@ -1,4 +1,25 @@
+param(
+    [switch]$Verbose
+)
+
 $ErrorActionPreference = 'Stop'
+$VerboseLogging = $Verbose.IsPresent
+
+# UTF-8 Konsolen-Encoding für korrekte Linux-Ausgabe
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+chcp 65001 | Out-Null
+
+function Write-VerboseLog {
+    param(
+        [string]$Message
+    )
+
+    if ($VerboseLogging) {
+        Write-Host $Message
+    }
+}
 
 $PasswordFile = "$env:USERPROFILE\.chorleiter_deploy_pw"
 $RemoteUser = "root"
@@ -7,26 +28,31 @@ $Remote = "$RemoteUser@$RemoteHost"
 $BackendDest = "/usr/local/lsws/ChorStatistik/backend"
 $FrontendDest = "/usr/local/lsws/ChorStatistik/html"
 
-# Ensure local repository is up to date
+$script:DeployFailed = $false
+
+try {
+# Ensure remote repository is up to date
 Write-Host "Checking git status..."
 git fetch | Out-Null
 $status = git status -uno
-$changes = git status --porcelain
-if ($changes -or $status -match 'behind') {
-    $update = Read-Host "Repository is not up to date. Pull latest changes before deploying? (y/N)"
+
+# Only ask to pull if remote is ahead, ignore local changes
+if ($status -match 'behind') {
+    $update = Read-Host "Remote repository is ahead. Pull latest changes before deploying? (y/N)"
     if ($update -match '^[Yy]') {
         git pull --rebase
     } else {
         Write-Host "Continuing with current repository state."
     }
+} else {
+    Write-Host "Local repository is up to date with remote."
 }
 
 # Build Angular frontend
 Write-Host "Building Angular frontend..."
 npm --prefix choir-app-frontend run build
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Build failed. Aborting deployment."
-    exit 1
+    throw "Build failed. Aborting deployment."
 }
 
 Write-Host "Build finished."
@@ -105,10 +131,20 @@ function Invoke-Ssh {
     )
 
     if ($sshUsePlink) {
-        & plink -v -batch -l $RemoteUser -pw "$Password" $RemoteHost $Command
+        $plinkArgs = @()
+        if ($VerboseLogging) {
+            $plinkArgs += '-v'
+        }
+        $plinkArgs += @('-batch', '-l', $RemoteUser, '-pw', "$Password", $RemoteHost, $Command)
+        & plink @plinkArgs
     }
     else {
-        & ssh $Remote $Command
+        $sshArgs = @()
+        if ($VerboseLogging) {
+            $sshArgs += '-v'
+        }
+        $sshArgs += @($Remote, $Command)
+        & ssh @sshArgs
     }
 }
 
@@ -119,10 +155,20 @@ function Invoke-Scp {
     )
 
     if ($sshUsePlink) {
-        & pscp -v -batch -l $RemoteUser -pw "$Password" $Source $Destination
+        $pscpArgs = @()
+        if ($VerboseLogging) {
+            $pscpArgs += '-v'
+        }
+        $pscpArgs += @('-batch', '-l', $RemoteUser, '-pw', "$Password", $Source, $Destination)
+        & pscp @pscpArgs
     }
     else {
-        & scp $Source $Destination
+        $scpArgs = @()
+        if ($VerboseLogging) {
+            $scpArgs += '-v'
+        }
+        $scpArgs += @($Source, $Destination)
+        & scp @scpArgs
     }
 }
 
@@ -165,7 +211,7 @@ if ($pm2Status -notmatch 'online') {
     Invoke-Ssh "tail -n 20 '$BackendDest/logs/exceptions.log' 2>/dev/null || echo 'No exceptions log found'"
     Remove-Item $BackendArchive
     Remove-Item $FrontendArchive
-    exit 1
+    throw "Backend failed to start."
 }
 
 Remove-Item $BackendArchive
@@ -173,9 +219,22 @@ Remove-Item $FrontendArchive
 
 Write-Host "Deployment completed."
 
-# Close the persistent SSH connection
+# Close the persistent SSH connection (best-effort)
 if (-not $sshUsePlink) {
-    & ssh @SshOptions -O exit $Remote
+    Write-VerboseLog "Closing SSH connection..."
+    & ssh -O exit $Remote 2>$null
 }
 
 Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Successully deployed"
+}
+catch {
+    Write-Error $_
+    $script:DeployFailed = $true
+}
+finally {
+    Write-Host ("[{0}] Script finished" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
+}
+
+if ($script:DeployFailed) {
+    exit 1
+}

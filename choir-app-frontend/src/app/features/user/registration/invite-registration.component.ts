@@ -12,6 +12,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './invite-registration.component.html',
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class InviteRegistrationComponent implements OnInit, OnDestroy {
   private readonly destroyRef = inject(DestroyRef);

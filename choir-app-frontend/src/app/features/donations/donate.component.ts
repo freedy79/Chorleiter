@@ -10,6 +10,9 @@ import { AdminService } from '@core/services/admin.service';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   templateUrl: './donate.component.html',
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class DonateComponent implements OnInit {
   donationSummary: DonationSummary | null = null;

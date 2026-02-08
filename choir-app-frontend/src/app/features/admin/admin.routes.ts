@@ -7,13 +7,43 @@ export const adminRoutes: Routes = [
     path: '',
     component: MainLayoutComponent,
     children: [
-      { path: '', redirectTo: 'general', pathMatch: 'full' },
+      // Main Dashboard
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
-        path: 'general',
-        loadComponent: () => import('./general/general-settings.component').then(m => m.GeneralSettingsComponent),
-        canDeactivate: [PendingChangesGuard],
-        data: { title: 'Admin – Allgemein' }
+        path: 'dashboard',
+        loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
+        data: { title: 'Admin Dashboard' }
       },
+
+      // Consolidated Hubs
+      {
+        path: 'mail-management',
+        loadComponent: () => import('./mail-management/mail-management.component').then(m => m.MailManagementComponent),
+        data: { title: 'Admin – E-Mail Management' }
+      },
+      {
+        path: 'organizations',
+        loadComponent: () => import('./organizations/organizations.component').then(m => m.OrganizationsComponent),
+        data: { title: 'Admin – Organisationen' }
+      },
+      {
+        path: 'metadata',
+        loadComponent: () => import('./metadata/metadata.component').then(m => m.MetadataComponent),
+        data: { title: 'Admin – Metadaten' }
+      },
+      {
+        path: 'security',
+        loadComponent: () => import('./security/security.component').then(m => m.SecurityComponent),
+        data: { title: 'Admin – Sicherheit' }
+      },
+      {
+        path: 'system-settings',
+        loadComponent: () => import('./system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
+        data: { title: 'Admin – Systemeinstellungen' }
+      },
+
+      // Legacy routes (kept for backward compatibility)
+      { path: 'general', loadComponent: () => import('./general/general-settings.component').then(m => m.GeneralSettingsComponent), canDeactivate: [PendingChangesGuard], data: { title: 'Admin – Allgemein' } },
       { path: 'creators', loadComponent: () => import('./manage-creators/manage-creators.component').then(m => m.ManageCreatorsComponent), data: { title: 'Admin – Komponisten' } },
       { path: 'publishers', loadComponent: () => import('./manage-publishers/manage-publishers.component').then(m => m.ManagePublishersComponent), data: { title: 'Admin – Verlage' } },
       { path: 'choirs', loadComponent: () => import('./manage-choirs/manage-choirs.component').then(m => m.ManageChoirsComponent), data: { title: 'Admin – Chöre' } },

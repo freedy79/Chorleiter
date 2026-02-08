@@ -25,3 +25,4 @@ if ! pm2 describe chorleiter-api | grep -qi 'status.*online' >/dev/null 2>&1; th
 fi
 
 echo "Deployment completed."
+printf "[%s] Deployment finished\n" "$(date '+%Y-%m-%d %H:%M:%S')"

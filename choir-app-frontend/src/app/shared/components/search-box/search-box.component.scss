@@ -70,3 +70,26 @@
     color: #ffffff;
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .search-box {
+    --mdc-outlined-text-field-outline-color: #ffffff;
+    --mdc-outlined-text-field-focus-outline-color: #ffffff;
+    --mdc-outlined-text-field-hover-outline-color: #ffffff;
+    color: #ffffff;
+
+    // Icon color in dark theme
+    ::ng-deep .mat-mdc-form-field-icon-prefix {
+      color: #ffffff;
+    }
+  }
+
+  input {
+    color: #ffffff;
+    caret-color: #ffffff;
+
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+  }
+}

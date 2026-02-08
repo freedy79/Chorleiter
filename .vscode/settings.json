@@ -188,6 +188,10 @@
     "C_Cpp_Runner.msvcSecureNoWarnings": false,
     "C_Cpp_Runner.msvcBatchPath": "",
     "chat.tools.terminal.autoApprove": {
-        "ng": true
+        "ng": true,
+        "/^\\.\\\\deploy\\.ps1 2>&1$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

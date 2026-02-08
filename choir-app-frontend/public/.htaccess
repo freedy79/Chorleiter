@@ -1,0 +1,74 @@
+# ============================================
+# ANGULAR SPA CONFIGURATION FOR LITESPEED
+# ============================================
+
+# Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json application/xml
+</IfModule>
+
+# Proper MIME types
+<IfModule mod_mime.c>
+  AddType application/javascript js
+  AddType text/css css
+  AddType application/json json
+  AddType image/svg+xml svg
+  AddType font/woff2 woff2
+</IfModule>
+
+# ============================================
+# CACHE CONTROL - Kritisch für Angular SPA
+# ============================================
+
+<IfModule mod_headers.c>
+  # index.html: NIEMALS cachen! Muss immer frisch geladen werden
+  # Dies verhindert Chunk-Loading-Fehler nach Deployments
+  <FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # Hashed Assets (main-*.js, chunk-*.js, styles-*.css)
+  # Diese können lange gecached werden, da sich der Dateiname bei Änderungen ändert
+  <FilesMatch "\.(js|css)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Fonts
+  <FilesMatch "\.(woff|woff2|ttf|eot|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Images
+  <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+</IfModule>
+
+# ============================================
+# ANGULAR ROUTING - SPA Fallback zu index.html
+# ============================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Keine Rewrite für existierende Dateien und Verzeichnisse
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Alle anderen Requests auf index.html umleiten für Angular SPA Routing
+  RewriteRule ^ index.html [QSA,L]
+</IfModule>
+
+# ============================================
+# SECURITY HEADERS
+# ============================================
+
+<IfModule mod_headers.c>
+  # XSS Protection
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-XSS-Protection "1; mode=block"
+</IfModule>

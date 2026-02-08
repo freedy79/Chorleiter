@@ -1,0 +1,53 @@
+<div class="security">
+  <div class="header">
+    <h1>Sicherheit & Monitoring</h1>
+    <p class="description">Login-Versuche, Protokolle, Datensicherung und Systemstatus</p>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- Login-Versuche Tab -->
+    <mat-tab label="Login-Versuche">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>login</mat-icon>
+        <span class="tab-label">Login</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-login-attempts></app-login-attempts>
+      </div>
+    </mat-tab>
+
+    <!-- Protokolle Tab -->
+    <mat-tab label="Protokolle">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>history</mat-icon>
+        <span class="tab-label">Protokolle</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-protocols></app-protocols>
+      </div>
+    </mat-tab>
+
+    <!-- Backup Tab -->
+    <mat-tab label="Backup">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>backup</mat-icon>
+        <span class="tab-label">Backup</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-backup></app-backup>
+      </div>
+    </mat-tab>
+
+    <!-- Log-Viewer Tab -->
+    <mat-tab label="System-Logs">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>receipt_long</mat-icon>
+        <span class="tab-label">Logs</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-log-viewer></app-log-viewer>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

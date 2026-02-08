@@ -1,0 +1,64 @@
+.mail-management {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @media (max-width: 600px) {
+    padding: 12px;
+  }
+}
+
+.header {
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: #333;
+
+    @media (max-width: 600px) {
+      font-size: 22px;
+    }
+  }
+
+  .description {
+    margin: 0;
+    color: #999;
+    font-size: 14px;
+  }
+}
+
+mat-tab-group {
+  ::ng-deep .mat-tab-labels {
+    margin-bottom: 16px;
+  }
+
+  .tab-content {
+    padding: 20px 0;
+
+    @media (max-width: 600px) {
+      padding: 12px 0;
+    }
+  }
+
+  .tab-label {
+    margin-left: 8px;
+
+    @media (max-width: 600px) {
+      display: none;
+    }
+  }
+}
+
+// Fix für Angular Material Tab-Breite auf Mobile
+::ng-deep {
+  .mail-management .mat-tab-label {
+    min-width: 100px !important;
+
+    @media (max-width: 600px) {
+      min-width: 50px !important;
+      padding: 0 12px !important;
+    }
+  }
+}

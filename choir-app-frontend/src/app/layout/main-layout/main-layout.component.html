@@ -1,6 +1,6 @@
 <mat-toolbar color="primary" class="main-toolbar">
 
-  <ng-container *ngIf="(isLoggedIn$ | async) && (isSmallScreen$ | async)">
+  <ng-container *ngIf="(isLoggedIn$ | async)">
     <button type="button" aria-label="Menü umschalten" class="sidenav-toggle" mat-icon-button (click)="toggleDrawer()">
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
@@ -10,31 +10,16 @@
 
   <!-- Search bar -->
   <ng-container *ngIf="isLoggedIn$ | async">
-    <!-- Small -->
-    <ng-container *ngIf="isSmallScreen$ | async; else largeTpl">
-      <ng-container *ngIf="searchOpen; else searchIcon">
-        <app-search-box></app-search-box>
-        <button mat-icon-button (click)="searchOpen = false">
-          <mat-icon>close</mat-icon>
-        </button>
-      </ng-container>
-      <ng-template #searchIcon>
-        <button mat-icon-button (click)="searchOpen = true">
-          <mat-icon>search</mat-icon>
-        </button>
-      </ng-template>
-    </ng-container>
-
     <!-- Not small -->
-    <ng-template #largeTpl>
+    <ng-container *ngIf="!(isSmallScreen$ | async)">
       <app-search-box class="search"></app-search-box>
-    </ng-template>
+    </ng-container>
+    <!-- Spacer for mobile to push profile icon to the right -->
+    <span class="spacer" *ngIf="isSmallScreen$ | async"></span>
   </ng-container>
 
-  <!-- SWITCH CHOIR -->
-
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
-    *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (((isSmallScreen$ | async) && searchOpen) !== true)">
+    *ngIf="(availableChoirs$ | async)?.length && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
   <mat-menu #choirMenu="matMenu">
@@ -69,6 +54,11 @@
         <span>Profil</span>
       </a>
 
+      <button mat-menu-item [matMenuTriggerFor]="choirMenu" *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && !(isDemo$ | async)">
+        <mat-icon>groups</mat-icon>
+        <span>Chor wechseln</span>
+      </button>
+
       <button mat-menu-item [matMenuTriggerFor]="themeMenu">
         <mat-icon>contrast</mat-icon>
         <span>Theme</span>
@@ -90,6 +80,10 @@
       </button>
     </mat-menu>
 
+    <mat-menu #choirMenu="matMenu">
+      <button mat-menu-item *ngFor="let c of (availableChoirs$ | async)" (click)="switchChoir(c.id)">{{ c.name }}</button>
+    </mat-menu>
+
     <mat-menu #themeMenu="matMenu">
       <button mat-menu-item (click)="setTheme('light')">
         <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
@@ -109,7 +103,7 @@
 
 </mat-toolbar>
 
-<mat-sidenav-container class="site-container">
+<mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async)">
   <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'" class="appDrawer">
 
@@ -126,16 +120,22 @@
     <app-error-display></app-error-display>
     <app-loading-indicator></app-loading-indicator>
 
-    <main class="main-content">
+    <div class="content-wrapper">
       <div class="container">
         <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
         <router-outlet></router-outlet>
       </div>
-    </main>
+    </div>
 
 
   </mat-sidenav-content>
-</mat-sidenav-container>
+ </mat-sidenav-container>
+
+<main class="public-content" *ngIf="!(isLoggedIn$ | async)">
+  <div class="container">
+    <router-outlet></router-outlet>
+  </div>
+</main>
 
 <nav class="bottom-nav" *ngIf="(isLoggedIn$ | async)">
   <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
@@ -146,9 +146,13 @@
     <mat-icon>event</mat-icon>
     <span>Termine</span>
   </a>
-  <a mat-button routerLink="/dienstplan" routerLinkActive="active" *ngIf="!(isDemo$ | async)">
+  <a mat-button routerLink="/dienstplan" routerLinkActive="active" *ngIf="dienstplanVisible$ | async">
     <mat-icon>assignment</mat-icon>
     <span>Dienstplan</span>
+  </a>
+  <a mat-button routerLink="/posts" routerLinkActive="active" *ngIf="(dienstplanVisible$ | async) === false">
+    <mat-icon>article</mat-icon>
+    <span>Beiträge</span>
   </a>
   <a mat-button routerLink="/repertoire" routerLinkActive="active">
     <mat-icon>library_music</mat-icon>

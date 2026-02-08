@@ -142,6 +142,31 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     }
 
     ngOnInit(): void {
+        // --- Determine Edit/Create Mode FIRST (before auth check) ---
+        this.route.paramMap
+            .pipe(
+                switchMap((params) => {
+                    const id = params.get('id');
+                    if (id) {
+                        this.isEditMode = true;
+                        this.collectionId = +id;
+                        this.pageSubtitle =
+                            "Sammlungsdetails und Stücke verwalten";
+                        return this.apiService.getCollectionById(
+                            this.collectionId
+                        );
+                    }
+                    this.isEditMode = false;
+                    return of(null);
+                }),
+                takeUntil(this.destroy$)
+            )
+            .subscribe((collectionData) => {
+                if (this.isEditMode && collectionData) {
+                    this.populateForm(collectionData);
+                }
+            });
+
         combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
             takeUntil(this.destroy$)
         ).subscribe(([isAdmin, isChoirAdmin]) => {
@@ -168,29 +193,6 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
         ).subscribe(v => {
             this.collectionForm.get('publisher')?.setValue(v);
         });
-        // --- Determine Edit/Create Mode (No Change Here) ---
-        this.route.paramMap
-            .pipe(
-                switchMap((params) => {
-                    const id = params.get('id');
-                    if (id) {
-                        this.isEditMode = true;
-                        this.collectionId = +id;
-                        this.pageSubtitle =
-                            "Sammlungsdetails und Stücke verwalten";
-                        return this.apiService.getCollectionById(
-                            this.collectionId
-                        );
-                    }
-                    return of(null);
-                }),
-                takeUntil(this.destroy$)
-            )
-            .subscribe((collectionData) => {
-                if (this.isEditMode && collectionData) {
-                    this.populateForm(collectionData);
-                }
-            });
 
         // --- Setup for Autocomplete (THIS IS THE CORE FIX) ---
         // Fetch all global pieces first.

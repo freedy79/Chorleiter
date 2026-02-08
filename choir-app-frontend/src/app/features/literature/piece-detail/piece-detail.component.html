@@ -49,12 +49,21 @@
     <div *ngIf="fileLinks.length">
       <h3>Dateien</h3>
       <ul>
-        <li *ngFor="let link of fileLinks">
-          <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
-            <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
-            {{ link.description }}
-          </a>
-          <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+        <li *ngFor="let link of fileLinks" class="file-item">
+          <app-audio-player
+            *ngIf="link.isMp3"
+            [title]="link.description"
+            [url]="getLinkUrl(link)"
+            [downloadName]="link.downloadName || link.description">
+          </app-audio-player>
+
+          <div *ngIf="!link.isMp3">
+            <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
+              <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
+              {{ link.description }}
+            </a>
+            <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+          </div>
         </li>
       </ul>
     </div>

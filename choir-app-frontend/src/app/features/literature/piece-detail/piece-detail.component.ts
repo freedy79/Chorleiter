@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { ApiService } from '@core/services/api.service';
@@ -20,6 +21,7 @@ import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { combineLatest } from 'rxjs';
 import { RehearsalSupportComponent } from './rehearsal-support/rehearsal-support.component';
+import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
 
 @Component({
   selector: 'app-piece-detail',
@@ -31,12 +33,13 @@ import { RehearsalSupportComponent } from './rehearsal-support/rehearsal-support
     RouterModule,
     EventTypeLabelPipe,
     PureDatePipe,
-    RehearsalSupportComponent
+    RehearsalSupportComponent,
+    AudioPlayerComponent
   ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']
 })
-export class PieceDetailComponent implements OnInit {
+export class PieceDetailComponent implements OnInit, OnDestroy {
   piece?: Piece;
   newNoteText = '';
   editState: { [id: number]: string } = {};
@@ -44,7 +47,7 @@ export class PieceDetailComponent implements OnInit {
   isAdmin = false;
   canRate = false;
   pieceImage: string | null = null;
-  fileLinks: (PieceLink & { isPdf: boolean; size?: number })[] = [];
+  fileLinks: (PieceLink & { isPdf: boolean; size?: number; isMp3?: boolean })[] = [];
   externalLinks: PieceLink[] = [];
   libraryItems: { [collectionId: number]: LibraryItem } = {};
 
@@ -54,7 +57,8 @@ export class PieceDetailComponent implements OnInit {
     private auth: AuthService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
-    private http: HttpClient
+    private http: HttpClient,
+    private titleService: Title
   ) {}
 
   ngOnInit(): void {
@@ -71,10 +75,19 @@ export class PieceDetailComponent implements OnInit {
     this.loadLibraryItems();
   }
 
+  ngOnDestroy(): void {
+    // Cleanup handled by AudioPlayerComponent
+  }
+
   private loadPiece(id: number, afterLoad?: () => void): void {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       if (!p) return;
       this.piece = p;
+
+      // Set page title
+      const title = p.title ? `${p.title} - NAK Chorleiter` : 'NAK Chorleiter';
+      this.titleService.setTitle(title);
+
       if (p.imageIdentifier) {
         this.apiService.getPieceImage(p.id).subscribe(img => this.pieceImage = img);
       } else {
@@ -82,7 +95,8 @@ export class PieceDetailComponent implements OnInit {
       }
       this.fileLinks = (p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || []).map(l => ({
         ...l,
-        isPdf: /\.pdf$/i.test(l.url) || /\.pdf$/i.test(l.description)
+        isPdf: /\.pdf$/i.test(l.url) || /\.pdf$/i.test(l.description),
+        isMp3: /\.mp3$/i.test(l.url) || /\.mp3$/i.test(l.description)
       }));
       this.fileLinks.forEach(link => {
         const url = this.getLinkUrl(link);

@@ -44,7 +44,10 @@ export function strongPasswordValidator(): ValidatorFn {
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './password-reset.component.html',
-  styleUrls: ['./password-reset.component.scss']
+  styleUrls: ['./password-reset.component.scss'],
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class PasswordResetComponent implements OnInit {
   form: ReturnType<FormBuilder['group']>;

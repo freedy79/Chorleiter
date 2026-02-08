@@ -1,0 +1,128 @@
+<div class="admin-container">
+  <!-- Mobile Header -->
+  <mat-toolbar *ngIf="isMobile" color="primary" class="mobile-toolbar">
+    <button mat-icon-button (click)="toggleSidebar()">
+      <mat-icon>menu</mat-icon>
+    </button>
+    <span class="spacer"></span>
+    <span>Admin Panel</span>
+    <span class="spacer"></span>
+  </mat-toolbar>
+
+  <!-- Responsive Layout: Desktop Sidebar + Mobile Drawer -->
+  <div class="layout-wrapper" [class.mobile]="isMobile">
+
+    <!-- Desktop Sidebar -->
+    <nav class="admin-sidebar" *ngIf="!isMobile">
+      <div class="sidebar-header">
+        <h2>Admin</h2>
+        <span class="version">v1.0</span>
+      </div>
+
+      <div class="sections-container">
+        <div class="section-group" *ngFor="let category of ['organization', 'content', 'communication', 'security', 'system']">
+          <div class="category-label">{{ getCategoryLabel(category) }}</div>
+          <button
+            *ngFor="let section of sectionsByCategory[category]"
+            mat-button
+            class="section-button"
+            [class.active]="selectedSection?.id === section.id"
+            (click)="navigate(section)"
+          >
+            <mat-icon>{{ section.icon }}</mat-icon>
+            <span class="label">{{ section.label }}</span>
+            <span class="badge" *ngIf="section.badge && section.badge > 0">{{ section.badge }}</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile Drawer (Slide-out) -->
+    <mat-drawer-container *ngIf="isMobile" class="mobile-drawer-container">
+      <mat-drawer #drawer mode="over" [opened]="isSidebarOpen" (openedChange)="isSidebarOpen = $event">
+        <div class="drawer-header">Admin Panel</div>
+        <button
+          *ngFor="let section of adminSections"
+          mat-menu-item
+          class="drawer-item"
+          (click)="navigate(section); drawer.toggle()"
+        >
+          <mat-icon>{{ section.icon }}</mat-icon>
+          <span>{{ section.label }}</span>
+        </button>
+      </mat-drawer>
+
+      <mat-drawer-content class="mobile-content">
+        <ng-container *ngTemplateOutlet="contentArea"></ng-container>
+      </mat-drawer-content>
+    </mat-drawer-container>
+
+    <!-- Desktop Main Content -->
+    <main class="main-content" *ngIf="!isMobile">
+      <ng-container *ngTemplateOutlet="contentArea"></ng-container>
+    </main>
+  </div>
+</div>
+
+<!-- Main Content Template (used by both desktop and mobile) -->
+<ng-template #contentArea>
+  <!-- Tabs für Mobile, Cards für Desktop -->
+  <div class="content-header">
+    <h1>Admin Dashboard</h1>
+    <p class="subtitle">Zentrale Verwaltung aller Administratoraufgaben</p>
+  </div>
+
+  <!-- Mobile: Tab-Navigation für schnelle Übersicht -->
+  <div *ngIf="isMobile" class="mobile-tabs">
+    <mat-tab-group>
+      <mat-tab label="Schnellzugriff">
+        <div class="tab-content">
+          <div class="quick-access-grid">
+            <button
+              *ngFor="let section of adminSections"
+              mat-raised-button
+              class="quick-button"
+              (click)="navigate(section)"
+            >
+              <mat-icon>{{ section.icon }}</mat-icon>
+              <div class="button-label">{{ section.label }}</div>
+              <div class="button-desc">{{ section.description }}</div>
+            </button>
+          </div>
+        </div>
+      </mat-tab>
+      <mat-tab label="Status">
+        <div class="tab-content">
+          <app-admin-status-widget></app-admin-status-widget>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </div>
+
+  <!-- Desktop: Card-Grid Layout -->
+  <div *ngIf="!isMobile" class="desktop-grid">
+    <div class="section-group" *ngFor="let category of ['organization', 'content', 'communication', 'security', 'system']">
+      <h2 class="category-title">{{ getCategoryLabel(category) }}</h2>
+      <div class="cards-grid">
+        <mat-card
+          *ngFor="let section of sectionsByCategory[category]"
+          class="admin-card"
+          (click)="navigate(section)"
+        >
+          <mat-card-header>
+            <div class="card-icon">
+              <mat-icon>{{ section.icon }}</mat-icon>
+            </div>
+          </mat-card-header>
+          <mat-card-content>
+            <h3>{{ section.label }}</h3>
+            <p>{{ section.description }}</p>
+          </mat-card-content>
+          <mat-card-footer *ngIf="section.badge && section.badge > 0">
+            <span class="footer-badge">{{ section.badge }} ausstehende</span>
+          </mat-card-footer>
+        </mat-card>
+      </div>
+    </div>
+  </div>
+</ng-template>

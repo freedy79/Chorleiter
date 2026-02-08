@@ -48,46 +48,13 @@
           <h3>Dateien</h3>
           <ul>
             <li *ngFor="let link of fileLinks" class="file-item">
-              <!-- MP3 Player UI -->
-              <div *ngIf="link.isMp3" class="mp3-player">
-                <button
-                  mat-icon-button
-                  [color]="isAudioPlaying(link.id) ? 'primary' : ''"
-                  (click)="isAudioPlaying(link.id) ? pauseAudio(link.id) : playAudio(link)"
-                  matTooltip="Play/Pause">
-                  <mat-icon>{{ isAudioPlaying(link.id) ? 'pause_circle' : 'play_circle' }}</mat-icon>
-                </button>
+              <app-audio-player
+                *ngIf="link.isMp3"
+                [title]="link.description"
+                [url]="getLinkUrl(link)"
+                [downloadName]="link.downloadName || link.description">
+              </app-audio-player>
 
-                <div class="audio-info">
-                  <span class="audio-filename">
-                    <mat-icon class="file-icon">audio_file</mat-icon>
-                    {{ link.description }}
-                  </span>
-
-                  <div class="audio-controls" *ngIf="audioDuration.get(link.id)">
-                    <span class="time-display">
-                      {{ formatDuration(audioCurrentTime.get(link.id) || 0) }} /
-                      {{ formatDuration(audioDuration.get(link.id) || 0) }}
-                    </span>
-                    <mat-progress-bar
-                      mode="determinate"
-                      [value]="audioProgress.get(link.id) || 0"
-                      class="audio-progress">
-                    </mat-progress-bar>
-                  </div>
-                </div>
-
-                <span *ngIf="link.size" class="file-size">({{ formatFileSize(link.size) }})</span>
-                <a [href]="getLinkUrl(link)"
-                   [attr.download]="link.downloadName || link.description"
-                   mat-icon-button
-                   matTooltip="Download"
-                   (click)="$event.stopPropagation()">
-                  <mat-icon>download</mat-icon>
-                </a>
-              </div>
-
-              <!-- Original UI for non-MP3 files -->
               <div *ngIf="!link.isMp3">
                 <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
                   <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>

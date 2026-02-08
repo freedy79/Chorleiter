@@ -1,0 +1,84 @@
+<div class="responsive-table-container">
+  <div class="table-header" *ngIf="title">
+    <h3>{{ title }}</h3>
+  </div>
+
+  <!-- Desktop: Standard Table -->
+  <div class="table-wrapper" *ngIf="(isMobile$ | async) === false">
+    <mat-table [dataSource]="paginatedData" class="responsive-table mat-elevation-z2">
+      <!-- Columns -->
+      <ng-container *ngFor="let column of visibleColumns" [matColumnDef]="column.key">
+        <mat-header-cell *matHeaderCellDef [style.width]="column.width">
+          <span *ngIf="column.icon" class="column-icon">
+            <mat-icon>{{ column.icon }}</mat-icon>
+          </span>
+          {{ column.label }}
+        </mat-header-cell>
+        <mat-cell *matCellDef="let element" [style.width]="column.width">
+          {{ getCellValue(element, column) }}
+        </mat-cell>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions" *ngIf="actions.length > 0">
+        <mat-header-cell *matHeaderCellDef class="actions-column">Aktionen</mat-header-cell>
+        <mat-cell *matCellDef="let element" class="actions-cell">
+          <button
+            *ngFor="let action of actions"
+            mat-icon-button
+            [color]="action.color"
+            [matTooltip]="action.label"
+            [disabled]="!shouldShowAction(action, element)"
+            (click)="onAction(action, element)"
+          >
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </button>
+        </mat-cell>
+      </ng-container>
+
+      <mat-header-row *matHeaderRowDef="getDisplayColumns()"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: getDisplayColumns();"></mat-row>
+    </mat-table>
+  </div>
+
+  <!-- Mobile: Card Layout -->
+  <div class="cards-wrapper" *ngIf="(isMobile$ | async) === true">
+    <mat-card *ngFor="let item of paginatedData" class="responsive-card">
+      <mat-card-content>
+        <div class="card-row" *ngFor="let column of columns">
+          <span class="card-label">{{ column.label }}</span>
+          <span class="card-value">{{ getCellValue(item, column) }}</span>
+        </div>
+        <div class="card-actions" *ngIf="actions.length > 0">
+          <button
+            *ngFor="let action of actions"
+            mat-mini-fab
+            [color]="action.color"
+            [matTooltip]="action.label"
+            [disabled]="!shouldShowAction(action, item)"
+            (click)="onAction(action, item)"
+          >
+            <mat-icon>{{ action.icon }}</mat-icon>
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="data.length > pageSize">
+    <button mat-icon-button (click)="previousPage()" [disabled]="currentPage === 0">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="page-info">
+      {{ currentPage + 1 }} / {{ Math.ceil(data.length / pageSize) }}
+    </span>
+    <button
+      mat-icon-button
+      (click)="nextPage()"
+      [disabled]="(currentPage + 1) * pageSize >= data.length"
+    >
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

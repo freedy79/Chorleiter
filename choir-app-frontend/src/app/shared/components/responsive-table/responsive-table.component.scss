@@ -1,0 +1,168 @@
+.responsive-table-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.table-header {
+  h3 {
+    margin: 0 0 12px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+}
+
+// Desktop Table
+.table-wrapper {
+  overflow-x: auto;
+
+  .responsive-table {
+    width: 100%;
+    background: white;
+    border-collapse: collapse;
+
+    mat-header-row {
+      background-color: #f5f5f5;
+      font-weight: 600;
+    }
+
+    mat-row {
+      border-bottom: 1px solid #e0e0e0;
+
+      &:hover {
+        background-color: #fafafa;
+      }
+    }
+
+    mat-cell,
+    mat-header-cell {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 14px;
+
+      &.actions-column {
+        text-align: right;
+      }
+    }
+
+    .column-icon {
+      display: inline-block;
+      margin-right: 8px;
+      vertical-align: middle;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+
+    .actions-cell {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  }
+}
+
+// Mobile Card Layout
+.cards-wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  .responsive-card {
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    mat-card-content {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-of-type:not(.card-actions) {
+        border-bottom: none;
+      }
+
+      .card-label {
+        font-weight: 600;
+        color: #666;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .card-value {
+        color: #333;
+        font-size: 14px;
+        font-weight: 500;
+        text-align: right;
+      }
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f0f0f0;
+      justify-content: flex-end;
+    }
+  }
+}
+
+// Pagination
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  .page-info {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  button {
+    &[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// Responsive Adjustments
+@media (max-width: 600px) {
+  .table-wrapper {
+    display: none;
+  }
+
+  .pagination {
+    padding: 12px;
+  }
+}
+
+@media (min-width: 601px) {
+  .cards-wrapper {
+    display: none;
+  }
+}

@@ -1,0 +1,35 @@
+<div class="audio-player">
+  <div class="audio-player-content">
+    <div class="audio-title">{{ title }}</div>
+
+    <div class="audio-player-row">
+      <button
+        mat-icon-button
+        [color]="isPlaying ? 'primary' : ''"
+        (click)="togglePlay()"
+        matTooltip="Play/Pause">
+        <mat-icon>{{ isPlaying ? 'pause_circle' : 'play_circle' }}</mat-icon>
+      </button>
+
+      <div class="audio-controls" *ngIf="duration">
+        <mat-progress-bar
+          mode="determinate"
+          [value]="progress"
+          class="audio-progress">
+        </mat-progress-bar>
+        <span class="time-display">
+          {{ formatDuration(currentTime) }} / {{ formatDuration(duration) }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <a [href]="url"
+     [attr.download]="downloadName || title"
+     mat-icon-button
+     class="download-icon"
+     matTooltip="Download"
+     (click)="$event.stopPropagation()">
+    <mat-icon>download</mat-icon>
+  </a>
+</div>

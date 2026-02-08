@@ -77,9 +77,9 @@ export const routes: Routes = [
             { path: 'donation-success', component: DonationSuccessComponent },
             { path: 'donation-cancel', component: DonationCancelComponent },
 
-            // Shared Piece Route (öffentlich zugänglich mit Token, muss vor geschützten Routen kommen)
+            // Shared Piece Route (öffentlich zugänglich mit Token, OHNE AuthGuard!)
             {
-                path: 'share/:token',
+                path: 'shared-piece/:token',
                 loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
                 data: { title: 'Geteiltes Stück' }
             },
@@ -90,12 +90,6 @@ export const routes: Routes = [
                 component: DashboardComponent,
                 canActivate: [AuthGuard],
                 data: { title: 'Home' },
-            },
-            {
-                path: 'repertoire',
-                component: LiteratureListComponent,
-                canActivate: [AuthGuard],
-                data: { title: 'Repertoire' },
             },
             {
                 path: 'collections/pieces',

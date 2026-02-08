@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ApiService } from 'src/app/core/services/api.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
@@ -98,7 +99,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     activeChoir$: Observable<Choir | null>;
     userInitials$: Observable<string>;
     isSmallScreen$: Observable<boolean>;
-    searchOpen = false;
+    dienstplanVisible$: Observable<boolean>;
 
 
   constructor(private authService: AuthService,
@@ -111,7 +112,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private router: Router,
     private route: ActivatedRoute,
     private cart: LoanCartService,
-    private menu: MenuVisibilityService
+    private menu: MenuVisibilityService,
+    private titleService: Title
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -161,6 +163,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(result => result.matches)
     );
 
+    this.dienstplanVisible$ = this.restrictForDemo(this.menu.isVisible('dienstplan'));
+
     this.isLoggedIn$.pipe(
       switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null)),
       withLatestFrom(this.authService.currentUser$),
@@ -192,6 +196,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         return data.title;
       })
     );
+
+    // Update browser tab title when page title changes
+    this.pageTitle$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(title => {
+      const browserTitle = title ? `${title} - NAK Chorleiter` : 'NAK Chorleiter';
+      this.titleService.setTitle(browserTitle);
+    });
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
@@ -382,8 +394,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   setTheme(theme: Theme): void {
+    console.log(`[MainLayoutComponent] Theme-Schalter betätigt: "${theme}"`);
     this.themeService.setTheme(theme);
     this.currentTheme = theme; // Aktualisieren Sie den lokalen Status für die UI
+    console.log(`[MainLayoutComponent] Lokaler Theme-Status aktualisiert: "${this.currentTheme}"`);
   }
 
   public closeSidenav() {

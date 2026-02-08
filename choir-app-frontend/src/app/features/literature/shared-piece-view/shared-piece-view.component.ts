@@ -1,61 +1,65 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { MaterialModule } from '@modules/material.module';
 import { Piece } from '@core/models/piece';
 import { PieceLink } from '@core/models/piece-link';
 import { PieceService } from '@core/services/piece.service';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
 
 @Component({
   selector: 'app-shared-piece-view',
   standalone: true,
   imports: [
     CommonModule,
-    MaterialModule
+    MaterialModule,
+    AudioPlayerComponent
   ],
   templateUrl: './shared-piece-view.component.html',
-  styleUrls: ['./shared-piece-view.component.scss']
+  styleUrls: ['./shared-piece-view.component.scss'],
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
-export class SharedPieceViewComponent implements OnInit, OnDestroy {
+export class SharedPieceViewComponent implements OnInit {
   piece?: Piece;
   pieceImage: string | null = null;
   fileLinks: (PieceLink & { isPdf: boolean; size?: number; isMp3?: boolean })[] = [];
   externalLinks: PieceLink[] = [];
   notFound = false;
 
-  // Audio player state
-  audioPlayers: Map<number, HTMLAudioElement> = new Map();
-  currentPlayingLinkId: number | null = null;
-  audioProgress: Map<number, number> = new Map();
-  audioDuration: Map<number, number> = new Map();
-  audioCurrentTime: Map<number, number> = new Map();
-
   constructor(
     private route: ActivatedRoute,
     private pieceService: PieceService,
     private http: HttpClient,
-    private snackBar: MatSnackBar
+    private titleService: Title
   ) {}
 
   ngOnInit(): void {
     const token = this.route.snapshot.paramMap.get('token');
+    //console.log('SharedPieceView - Token from URL:', token);
     if (token) {
       this.loadSharedPiece(token);
+    } else {
+      console.warn('No token found in route parameters');
+      this.notFound = true;
     }
   }
 
-  ngOnDestroy(): void {
-    this.stopAllAudio();
-    this.audioPlayers.clear();
-  }
-
   private loadSharedPiece(token: string): void {
+    //console.log('Loading shared piece with token:', token);
     this.pieceService.getPieceByShareToken(token).subscribe({
       next: (p: any) => {
+        //console.log('Shared piece loaded successfully:', p);
         this.piece = p;
+
+        // Set page title
+        const title = p.title ? `${p.title} - NAK Chorleiter` : 'NAK Chorleiter';
+        this.titleService.setTitle(title);
+
         if (p.imageIdentifier) {
           this.pieceService.getPieceImage(p.id).subscribe((img: any) => this.pieceImage = img);
         }
@@ -77,6 +81,7 @@ export class SharedPieceViewComponent implements OnInit, OnDestroy {
       },
       error: (err: any) => {
         console.error('Error loading shared piece:', err);
+        console.error('Error details:', err.status, err.message);
         this.notFound = true;
       }
     });
@@ -114,73 +119,5 @@ export class SharedPieceViewComponent implements OnInit, OnDestroy {
       return ` (${composer.birthYear}-${composer.deathYear})`;
     }
     return ` (${composer.birthYear})`;
-  }
-
-  // Audio player methods
-  playAudio(link: PieceLink & { isMp3?: boolean }): void {
-    if (!link.id) return;
-
-    this.stopAllAudio();
-
-    let audio = this.audioPlayers.get(link.id);
-
-    if (!audio) {
-      audio = new Audio(this.getLinkUrl(link));
-      this.audioPlayers.set(link.id, audio);
-
-      audio.addEventListener('timeupdate', () => this.onAudioTimeUpdate(link.id!, audio!));
-      audio.addEventListener('loadedmetadata', () => this.onAudioLoadedMetadata(link.id!, audio!));
-      audio.addEventListener('ended', () => this.onAudioEnded(link.id!));
-      audio.addEventListener('error', (e) => {
-        console.error('Audio playback error:', e);
-        this.snackBar.open('Fehler beim Abspielen der Audio-Datei', 'OK', { duration: 3000 });
-      });
-    }
-
-    this.currentPlayingLinkId = link.id;
-    audio.play().catch(err => {
-      console.error('Play error:', err);
-      this.snackBar.open('Fehler beim Abspielen', 'OK', { duration: 3000 });
-    });
-  }
-
-  pauseAudio(linkId: number): void {
-    const audio = this.audioPlayers.get(linkId);
-    if (audio) {
-      audio.pause();
-      this.currentPlayingLinkId = null;
-    }
-  }
-
-  stopAllAudio(): void {
-    this.audioPlayers.forEach((audio) => {
-      audio.pause();
-      audio.currentTime = 0;
-    });
-    this.currentPlayingLinkId = null;
-    this.audioProgress.clear();
-    this.audioCurrentTime.clear();
-  }
-
-  private onAudioTimeUpdate(linkId: number, audio: HTMLAudioElement): void {
-    if (audio.duration) {
-      const progress = (audio.currentTime / audio.duration) * 100;
-      this.audioProgress.set(linkId, progress);
-      this.audioCurrentTime.set(linkId, audio.currentTime);
-    }
-  }
-
-  private onAudioLoadedMetadata(linkId: number, audio: HTMLAudioElement): void {
-    this.audioDuration.set(linkId, audio.duration);
-  }
-
-  private onAudioEnded(linkId: number): void {
-    this.currentPlayingLinkId = null;
-    this.audioProgress.set(linkId, 0);
-    this.audioCurrentTime.set(linkId, 0);
-  }
-
-  isAudioPlaying(linkId: number): boolean {
-    return this.currentPlayingLinkId === linkId;
   }
 }

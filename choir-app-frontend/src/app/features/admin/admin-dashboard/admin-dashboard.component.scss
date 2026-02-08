@@ -1,0 +1,355 @@
+.admin-container {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.mobile-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.layout-wrapper {
+  display: flex;
+  flex: 1;
+  width: 100%;
+
+  &.mobile {
+    flex-direction: column;
+  }
+}
+
+// ===== SIDEBAR (Desktop) =====
+.admin-sidebar {
+  width: 280px;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  overflow-y: auto;
+  padding: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  .sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .version {
+      font-size: 12px;
+      color: #999;
+      background: #f5f5f5;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+  }
+
+  .sections-container {
+    padding: 0 8px;
+  }
+
+  .section-group {
+    margin-bottom: 24px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .category-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #999;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      letter-spacing: 0.5px;
+    }
+
+    .section-button {
+      width: 100%;
+      justify-content: flex-start;
+      margin-bottom: 4px;
+      color: #666;
+      text-align: left;
+      height: 44px;
+      position: relative;
+
+      mat-icon {
+        margin-right: 12px;
+        color: inherit;
+      }
+
+      .label {
+        flex: 1;
+      }
+
+      .badge {
+        background: #ff5252;
+        color: white;
+        border-radius: 50%;
+        min-width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 8px;
+      }
+
+      &.active {
+        background-color: #f5f5f5;
+        color: #1976d2;
+        font-weight: 600;
+
+        mat-icon {
+          color: #1976d2;
+        }
+      }
+
+      &:hover {
+        background-color: #f9f9f9;
+      }
+    }
+  }
+}
+
+// ===== MOBILE DRAWER =====
+.mobile-drawer-container {
+  flex: 1;
+}
+
+.drawer-header {
+  padding: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 16px;
+}
+
+.drawer-item {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 16px;
+  height: auto;
+
+  mat-icon {
+    margin-right: 12px;
+  }
+}
+
+.mobile-content {
+  padding: 8px;
+}
+
+// ===== MAIN CONTENT =====
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.content-header {
+  margin-bottom: 32px;
+
+  h1 {
+    margin: 0 0 8px 0;
+    font-size: 28px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .subtitle {
+    margin: 0;
+    color: #999;
+    font-size: 14px;
+  }
+}
+
+// ===== DESKTOP GRID LAYOUT =====
+.desktop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  .section-group {
+    .category-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      &::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: #1976d2;
+        border-radius: 2px;
+      }
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+
+      @media (max-width: 1024px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}
+
+// ===== ADMIN CARD =====
+.admin-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    border-color: #1976d2;
+
+    .card-icon {
+      background-color: #1976d2;
+      color: white;
+    }
+  }
+
+  mat-card-header {
+    margin-bottom: 12px;
+  }
+
+  .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: #666;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  mat-card-content {
+    flex: 1;
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+      line-height: 1.5;
+    }
+  }
+
+  mat-card-footer {
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    text-align: right;
+
+    .footer-badge {
+      font-size: 12px;
+      color: #ff5252;
+      font-weight: 600;
+    }
+  }
+}
+
+// ===== MOBILE TABS =====
+.mobile-tabs {
+  margin-top: 16px;
+
+  .tab-content {
+    padding: 16px;
+  }
+
+  .quick-access-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+
+    .quick-button {
+      height: auto;
+      padding: 16px 8px;
+      flex-direction: column;
+      white-space: normal;
+      line-height: 1.2;
+
+      mat-icon {
+        margin-bottom: 8px;
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+      }
+
+      .button-label {
+        font-weight: 600;
+        font-size: 13px;
+        margin-bottom: 4px;
+      }
+
+      .button-desc {
+        font-size: 11px;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+}
+
+// ===== UTILITIES =====
+.spacer {
+  flex: 1 1 auto;
+}
+
+// ===== SCROLLBAR STYLING =====
+.admin-sidebar::-webkit-scrollbar,
+.main-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.admin-sidebar::-webkit-scrollbar-track,
+.main-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+.admin-sidebar::-webkit-scrollbar-thumb,
+.main-content::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 4px;
+
+  &:hover {
+    background: #bbb;
+  }
+}

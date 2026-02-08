@@ -10,7 +10,10 @@ import { ApiService } from '@core/services/api.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule],
   templateUrl: './password-reset-request.component.html',
-  styleUrls: ['./password-reset-request.component.scss']
+  styleUrls: ['./password-reset-request.component.scss'],
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class PasswordResetRequestComponent {
   form;

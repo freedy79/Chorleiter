@@ -1,0 +1,53 @@
+<div class="mail-management">
+  <div class="header">
+    <h1>E-Mail Management Hub</h1>
+    <p class="description">Zentrale Verwaltung von E-Mail-Templates, Logs und Einstellungen</p>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- Templates Tab -->
+    <mat-tab label="Templates">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>mail</mat-icon>
+        <span class="tab-label">Templates</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-mail-templates-hub></app-mail-templates-hub>
+      </div>
+    </mat-tab>
+
+    <!-- Einstellungen Tab -->
+    <mat-tab label="Einstellungen">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>settings</mat-icon>
+        <span class="tab-label">Einstellungen</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-mail-settings-hub></app-mail-settings-hub>
+      </div>
+    </mat-tab>
+
+    <!-- Logs Tab -->
+    <mat-tab label="Logs">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>history</mat-icon>
+        <span class="tab-label">Logs</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-mail-logs-hub></app-mail-logs-hub>
+      </div>
+    </mat-tab>
+
+    <!-- System-Admin Email Tab -->
+    <mat-tab label="Admin Email">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>admin_panel_settings</mat-icon>
+        <span class="tab-label">Admin Email</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-admin-email-settings-hub></app-admin-email-settings-hub>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

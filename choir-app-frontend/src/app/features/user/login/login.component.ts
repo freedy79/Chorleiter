@@ -18,7 +18,10 @@ import { PasswordResetDialogComponent } from './password-reset-dialog.component'
     RouterModule
   ],
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss']
+  styleUrls: ['./login.component.scss'],
+  host: {
+    'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
+  }
 })
 export class LoginComponent implements OnInit {
   loginForm: FormGroup;

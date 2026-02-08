@@ -3,6 +3,22 @@
   margin: 0 auto;
 }
 
+h2 {
+  color: #212121 !important;
+
+  .dark-theme & {
+    color: #ffffff !important;
+  }
+}
+
+h3 {
+  color: #212121 !important;
+
+  .dark-theme & {
+    color: #ffffff !important;
+  }
+}
+
 .add-note {
   display: flex;
   flex-direction: column;
@@ -34,4 +50,8 @@
 .library-icon {
   margin-left: auto;
   cursor: pointer;
+}
+
+.file-item {
+  margin-bottom: 0.5rem;
 }

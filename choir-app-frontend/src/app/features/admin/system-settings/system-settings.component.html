@@ -1,0 +1,53 @@
+<div class="system-settings">
+  <div class="header">
+    <h1>Systemeinstellungen</h1>
+    <p class="description">PayPal, Frontend-URLs, Imprint und weitere Systemkonfigurationen</p>
+  </div>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- Frontend-URLs Tab -->
+    <mat-tab label="Frontend URLs">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>language</mat-icon>
+        <span class="tab-label">URLs</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-frontend-url-settings></app-frontend-url-settings>
+      </div>
+    </mat-tab>
+
+    <!-- PayPal Tab -->
+    <mat-tab label="PayPal">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>payment</mat-icon>
+        <span class="tab-label">PayPal</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-paypal-settings></app-paypal-settings>
+      </div>
+    </mat-tab>
+
+    <!-- Imprint Tab -->
+    <mat-tab label="Imprint">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>description</mat-icon>
+        <span class="tab-label">Imprint</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-imprint-settings></app-imprint-settings>
+      </div>
+    </mat-tab>
+
+    <!-- Entwicklung Tab -->
+    <mat-tab label="Entwicklung">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>code</mat-icon>
+        <span class="tab-label">Dev</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-develop></app-develop>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

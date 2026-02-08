@@ -166,6 +166,6 @@ export class PieceService {
   }
 
   getPieceByShareToken(token: string): Observable<Piece> {
-    return this.http.get<Piece>(`${this.apiUrl}/pieces/share/${encodeURIComponent(token)}`);
+    return this.http.get<Piece>(`${this.apiUrl}/pieces/shared/${encodeURIComponent(token)}`);
   }
 }
