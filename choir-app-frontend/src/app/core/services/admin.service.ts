@@ -202,7 +202,7 @@ export class AdminService {
     return this.http.get<any>(`${this.apiUrl}/admin/paypal-settings`);
   }
 
-  updatePayPalSettings(pdtToken: string, mode: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/admin/paypal-settings`, { pdtToken, mode });
+  updatePayPalSettings(pdtToken: string, mode: string, donationEmail: string): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/paypal-settings`, { pdtToken, mode, donationEmail });
   }
 }

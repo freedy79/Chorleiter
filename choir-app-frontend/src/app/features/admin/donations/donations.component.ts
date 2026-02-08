@@ -23,7 +23,7 @@ export class DonationsComponent implements OnInit {
   // Form fields
   selectedUserId: number | null = null;
   amount: number | null = null;
-  donatedAt: Date = new Date();
+  donatedAt: string = this.getTodayAsString();
   isAddingDonation = false;
 
   constructor(
@@ -31,6 +31,11 @@ export class DonationsComponent implements OnInit {
     private adminService: AdminService,
     private dialog: MatDialog
   ) {}
+
+  private getTodayAsString(): string {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+  }
 
   ngOnInit(): void {
     this.loadDonations();
@@ -50,7 +55,12 @@ export class DonationsComponent implements OnInit {
       return;
     }
 
-    this.adminService.createDonation(this.selectedUserId, this.amount, this.donatedAt).subscribe({
+    // Convert date string to Date object
+    const donationDate = new Date(this.donatedAt);
+    // Add timezone offset to get midnight in local time
+    donationDate.setHours(0, 0, 0, 0);
+
+    this.adminService.createDonation(this.selectedUserId, this.amount, donationDate).subscribe({
       next: (donation) => {
         this.donations = [donation, ...this.donations];
         this.resetForm();
@@ -66,7 +76,7 @@ export class DonationsComponent implements OnInit {
   resetForm(): void {
     this.selectedUserId = null;
     this.amount = null;
-    this.donatedAt = new Date();
+    this.donatedAt = this.getTodayAsString();
   }
 
   toggleAddForm(): void {

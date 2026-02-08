@@ -3,7 +3,9 @@
     "allow": [
       "Bash(tree:*)",
       "Bash(wc:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm install:*)",
+      "Bash(timeout 5 tail:*)"
     ]
   },
   "allowedTools": [

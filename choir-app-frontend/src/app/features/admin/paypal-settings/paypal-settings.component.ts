@@ -15,6 +15,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 export class PayPalSettingsComponent implements OnInit {
   pdtToken: string = '';
   mode: 'sandbox' | 'live' = 'sandbox';
+  donationEmail: string = '';
   pdtConfigured: boolean = false;
   saving: boolean = false;
   saved: boolean = false;
@@ -36,6 +37,7 @@ export class PayPalSettingsComponent implements OnInit {
       next: (settings) => {
         this.pdtConfigured = settings.pdtConfigured;
         this.mode = settings.mode || 'sandbox';
+        this.donationEmail = settings.donationEmail || '';
       },
       error: (err) => {
         console.error('Error loading PayPal settings:', err);
@@ -50,11 +52,16 @@ export class PayPalSettingsComponent implements OnInit {
       return;
     }
 
+    if (!this.donationEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.donationEmail)) {
+      this.error = 'Gültige Spendenmail-Adresse ist erforderlich.';
+      return;
+    }
+
     this.saving = true;
     this.error = null;
     this.saved = false;
 
-    this.adminService.updatePayPalSettings(this.pdtToken, this.mode).subscribe({
+    this.adminService.updatePayPalSettings(this.pdtToken, this.mode, this.donationEmail).subscribe({
       next: () => {
         this.saving = false;
         this.saved = true;

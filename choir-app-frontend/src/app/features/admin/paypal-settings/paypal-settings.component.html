@@ -26,6 +26,16 @@
   </mat-form-field>
 
   <mat-form-field style="width: 100%; margin-bottom: 16px;">
+    <mat-label>Spendenmail-Adresse</mat-label>
+    <input matInput
+           type="email"
+           [(ngModel)]="donationEmail"
+           placeholder="Beispiel: spenden@example.de">
+    <mat-icon matSuffix>email</mat-icon>
+    <mat-hint>Die PayPal-Adresse, an die Spenden gesendet werden sollen</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field style="width: 100%; margin-bottom: 16px;">
     <mat-label>PDT Identity Token</mat-label>
     <input matInput
            [type]="showToken ? 'text' : 'password'"
@@ -56,7 +66,7 @@
   <button mat-button (click)="close()">Abbrechen</button>
   <button mat-raised-button color="primary"
           (click)="saveSettings()"
-          [disabled]="saving || !pdtToken">
+          [disabled]="saving || !pdtToken || !donationEmail">
     <mat-icon *ngIf="!saving">save</mat-icon>
     <mat-spinner *ngIf="saving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
     {{ saving ? 'Wird gespeichert...' : 'Speichern' }}

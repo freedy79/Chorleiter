@@ -35,7 +35,9 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
             ],
             "allowedCommonJsDependencies": [
-              "@ckeditor/ckeditor5-build-classic"
+              "@ckeditor/ckeditor5-build-classic",
+              "@tonejs/midi",
+              "soundfont-player"
             ]
           },
           "configurations": {
@@ -43,8 +45,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2300kB",
-                  "maximumError": "2.5MB"
+                  "maximumWarning": "2500kB",
+                  "maximumError": "2.7MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -78,8 +80,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2300kB",
-                  "maximumError": "2.5MB"
+                  "maximumWarning": "2500kB",
+                  "maximumError": "2.7MB"
                 },
                 {
                   "type": "anyComponentStyle",

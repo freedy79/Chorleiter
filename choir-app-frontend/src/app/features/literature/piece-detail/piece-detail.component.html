@@ -18,6 +18,12 @@
     </mat-expansion-panel-header>
     <div class="lyrics">{{ piece.lyrics }}</div>
   </mat-expansion-panel>
+  <mat-expansion-panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>Probenunterstützung (Rehearsal Support)</mat-panel-title>
+    </mat-expansion-panel-header>
+    <app-rehearsal-support [pieceId]="piece.id"></app-rehearsal-support>
+  </mat-expansion-panel>
   <div *ngIf="piece.collections?.length">
     <p><strong>Enthalten in:</strong></p>
     <ul>

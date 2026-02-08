@@ -1,0 +1,261 @@
+<div class="rehearsal-support">
+  <h3>Probenunterstützung (Rehearsal Support)</h3>
+
+  <!-- MIDI Upload Section -->
+  <mat-card class="upload-card">
+    <mat-card-header>
+      <mat-card-title>MIDI-Datei</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="upload-section">
+        <input
+          type="file"
+          accept=".mid,.midi"
+          (change)="onMidiFileSelected($event)"
+          #fileInput
+          style="display: none"
+        />
+        <button mat-raised-button color="primary" (click)="fileInput.click()" [disabled]="isLoading">
+          <mat-icon>upload_file</mat-icon>
+          MIDI hochladen
+        </button>
+        <span *ngIf="selectedMidiFile" class="file-name">{{ selectedMidiFile.name }}</span>
+        <mat-spinner *ngIf="isLoading" diameter="24"></mat-spinner>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        {{ errorMessage }}
+      </div>
+
+      <!-- Track Overview -->
+      <div *ngIf="midiFileInfo" class="track-overview">
+        <h4>Tracks ({{ midiFileInfo.tracks.length }})</h4>
+        <table mat-table [dataSource]="midiFileInfo.tracks" class="track-table">
+          <ng-container matColumnDef="index">
+            <th mat-header-cell *matHeaderCellDef>#</th>
+            <td mat-cell *matCellDef="let track">{{ track.index + 1 }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let track">{{ track.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="notes">
+            <th mat-header-cell *matHeaderCellDef>Noten</th>
+            <td mat-cell *matCellDef="let track">{{ track.noteCount }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="channel">
+            <th mat-header-cell *matHeaderCellDef>Kanal</th>
+            <td mat-cell *matCellDef="let track">{{ track.channel ?? '-' }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['index', 'name', 'notes', 'channel']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['index', 'name', 'notes', 'channel']"></tr>
+        </table>
+
+        <div class="actions">
+          <button mat-raised-button color="accent" (click)="autoGenerateMeasureMapping()">
+            <mat-icon>auto_fix_high</mat-icon>
+            Takte automatisch generieren
+          </button>
+          <button mat-raised-button (click)="openEditRehearsalData()">
+            <mat-icon>edit</mat-icon>
+            Proben-Daten bearbeiten
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Playback Controls -->
+  <mat-card *ngIf="midiFileInfo" class="playback-card">
+    <mat-card-header>
+      <mat-card-title>Wiedergabe</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Transport Controls -->
+      <div class="transport-controls">
+        <button
+          mat-fab
+          color="primary"
+          (click)="playbackState.isPlaying ? onPause() : onPlay()"
+          [disabled]="!audioInitialized && !midiFileInfo"
+        >
+          <mat-icon>{{ playbackState.isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
+        </button>
+        <button mat-fab (click)="onStop()" [disabled]="!playbackState.isPlaying && !playbackState.isPaused">
+          <mat-icon>stop</mat-icon>
+        </button>
+      </div>
+
+      <!-- Playback Info -->
+      <div class="playback-info">
+        <p>
+          <strong>Position:</strong> {{ formatTime(playbackState.currentTime) }} / {{ formatTick(playbackState.currentTick) }}
+        </p>
+      </div>
+
+      <!-- Tempo Control -->
+      <div class="control-row">
+        <mat-form-field appearance="outline" class="control-field">
+          <mat-label>Tempo</mat-label>
+          <input
+            matInput
+            type="number"
+            [(ngModel)]="playbackState.tempoFactor"
+            (ngModelChange)="onTempoChange($event)"
+            min="0.5"
+            max="2.0"
+            step="0.1"
+          />
+          <span matSuffix>x</span>
+        </mat-form-field>
+        <mat-slider
+          min="0.5"
+          max="2.0"
+          step="0.1"
+          class="control-slider"
+        >
+          <input matSliderThumb [value]="playbackState.tempoFactor" (valueChange)="onTempoChange($event)" />
+        </mat-slider>
+      </div>
+
+      <!-- Transpose Control -->
+      <div class="control-row">
+        <mat-form-field appearance="outline" class="control-field">
+          <mat-label>Transponieren</mat-label>
+          <input
+            matInput
+            type="number"
+            [(ngModel)]="playbackState.transpose"
+            (ngModelChange)="onTransposeChange($event)"
+            min="-24"
+            max="24"
+            step="1"
+          />
+          <span matSuffix>Halbtöne</span>
+        </mat-form-field>
+      </div>
+
+      <!-- Jump Controls -->
+      <div class="jump-controls" *ngIf="measureKeys.length > 0 || pageKeys.length > 0">
+        <h4>Springen zu:</h4>
+        <div class="jump-row" *ngIf="measureKeys.length > 0">
+          <mat-form-field appearance="outline">
+            <mat-label>Takt</mat-label>
+            <mat-select [(ngModel)]="playbackState.selectedMeasure">
+              <mat-option *ngFor="let key of measureKeys" [value]="key">
+                Takt {{ key }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-raised-button (click)="onJumpToMeasure()" [disabled]="!playbackState.selectedMeasure">
+            Springen
+          </button>
+        </div>
+
+        <div class="jump-row" *ngIf="pageKeys.length > 0">
+          <mat-form-field appearance="outline">
+            <mat-label>Seite</mat-label>
+            <mat-select [(ngModel)]="playbackState.selectedPage">
+              <mat-option *ngFor="let key of pageKeys" [value]="key">
+                Seite {{ key }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-raised-button (click)="onJumpToPage()" [disabled]="!playbackState.selectedPage">
+            Springen
+          </button>
+        </div>
+
+        <div class="mark-controls" *ngIf="playbackState.isPlaying || playbackState.isPaused">
+          <button mat-button (click)="markCurrentAsMeasure()">
+            <mat-icon>bookmark_add</mat-icon>
+            Als Takt markieren
+          </button>
+          <button mat-button (click)="markCurrentAsPage()">
+            <mat-icon>bookmark_add</mat-icon>
+            Als Seite markieren
+          </button>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Track/Voice Mixer -->
+  <mat-card *ngIf="midiFileInfo" class="mixer-card">
+    <mat-card-header>
+      <mat-card-title>Stimmen-Mix</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Voice-based mixer (if voicing is set) -->
+      <div *ngIf="voiceNames.length > 0" class="voice-mixer">
+        <h4>Stimmen</h4>
+        <div *ngFor="let voiceName of voiceNames" class="mixer-row">
+          <span class="voice-label">{{ voiceName }} (Track {{ getTrackForVoice(voiceName) }})</span>
+          <button
+            mat-icon-button
+            [color]="getVoiceMixer(voiceName)?.muted ? 'warn' : ''"
+            (click)="onVoiceMixerChange(voiceName, { muted: !getVoiceMixer(voiceName)?.muted })"
+            matTooltip="Mute"
+          >
+            <mat-icon>{{ getVoiceMixer(voiceName)?.muted ? 'volume_off' : 'volume_up' }}</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            [color]="getVoiceMixer(voiceName)?.solo ? 'primary' : ''"
+            (click)="onVoiceMixerChange(voiceName, { solo: !getVoiceMixer(voiceName)?.solo })"
+            matTooltip="Solo"
+          >
+            <mat-icon>{{ getVoiceMixer(voiceName)?.solo ? 'star' : 'star_border' }}</mat-icon>
+          </button>
+          <mat-slider
+            min="0"
+            max="1"
+            step="0.01"
+            class="volume-slider"
+          >
+            <input matSliderThumb [value]="getVoiceMixer(voiceName)?.volume || 0.7" (valueChange)="onVoiceMixerChange(voiceName, { volume: $event })" />
+          </mat-slider>
+          <span class="volume-value">{{ ((getVoiceMixer(voiceName)?.volume || 0.7) * 100).toFixed(0) }}%</span>
+        </div>
+      </div>
+
+      <!-- Track-based mixer (fallback) -->
+      <div *ngIf="voiceNames.length === 0" class="track-mixer">
+        <h4>Tracks</h4>
+        <div *ngFor="let track of midiFileInfo.tracks" class="mixer-row">
+          <span class="track-label">{{ track.name }}</span>
+          <button
+            mat-icon-button
+            [color]="trackMixers.get(track.index)?.muted ? 'warn' : ''"
+            (click)="onToggleMute(track.index)"
+            matTooltip="Mute"
+          >
+            <mat-icon>{{ trackMixers.get(track.index)?.muted ? 'volume_off' : 'volume_up' }}</mat-icon>
+          </button>
+          <button
+            mat-icon-button
+            [color]="trackMixers.get(track.index)?.solo ? 'primary' : ''"
+            (click)="onToggleSolo(track.index)"
+            matTooltip="Solo"
+          >
+            <mat-icon>{{ trackMixers.get(track.index)?.solo ? 'star' : 'star_border' }}</mat-icon>
+          </button>
+          <mat-slider
+            min="0"
+            max="1"
+            step="0.01"
+            class="volume-slider"
+          >
+            <input matSliderThumb [value]="trackMixers.get(track.index)?.volume || 0.7" (valueChange)="onVolumeChange(track.index, $event)" />
+          </mat-slider>
+          <span class="volume-value">{{ ((trackMixers.get(track.index)?.volume || 0.7) * 100).toFixed(0) }}%</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

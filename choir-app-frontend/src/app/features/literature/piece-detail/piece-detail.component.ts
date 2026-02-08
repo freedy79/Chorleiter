@@ -19,6 +19,7 @@ import { LibraryItem } from '@core/models/library-item';
 import { LibraryItemInfoDialogComponent } from '../../library/library-item-info-dialog.component';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { combineLatest } from 'rxjs';
+import { RehearsalSupportComponent } from './rehearsal-support/rehearsal-support.component';
 
 @Component({
   selector: 'app-piece-detail',
@@ -29,7 +30,8 @@ import { combineLatest } from 'rxjs';
     MaterialModule,
     RouterModule,
     EventTypeLabelPipe,
-    PureDatePipe
+    PureDatePipe,
+    RehearsalSupportComponent
   ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']

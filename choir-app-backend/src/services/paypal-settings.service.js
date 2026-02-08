@@ -3,6 +3,7 @@ const { encrypt, decrypt } = require('./encryption.service');
 
 const PAYPAL_PDT_TOKEN_KEY = 'paypal_pdt_token';
 const PAYPAL_MODE_KEY = 'paypal_mode';
+const PAYPAL_DONATION_EMAIL_KEY = 'paypal_donation_email';
 
 /**
  * Speichert den PayPal PDT Token verschlüsselt
@@ -60,16 +61,43 @@ async function getPayPalMode() {
 }
 
 /**
+ * Speichert die PayPal Spendenmail-Adresse
+ * @param {string} email - Die Spendenmail-Adresse
+ * @returns {Promise}
+ */
+async function saveDonationEmail(email) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Invalid email address');
+    }
+
+    await db.system_setting.upsert({
+        key: PAYPAL_DONATION_EMAIL_KEY,
+        value: email
+    });
+}
+
+/**
+ * Ruft die PayPal Spendenmail-Adresse ab
+ * @returns {Promise<string|null>}
+ */
+async function getDonationEmail() {
+    const setting = await db.system_setting.findByPk(PAYPAL_DONATION_EMAIL_KEY);
+    return setting?.value || null;
+}
+
+/**
  * Ruft alle PayPal-Einstellungen ab (Token ist nicht entschlüsselt!)
- * @returns {Promise<{pdtConfigured: boolean, mode: string}>}
+ * @returns {Promise<{pdtConfigured: boolean, mode: string, donationEmail: string|null}>}
  */
 async function getPayPalSettings() {
     const token = await getPDTToken();
     const mode = await getPayPalMode();
+    const donationEmail = await getDonationEmail();
 
     return {
         pdtConfigured: !!token,
-        mode: mode
+        mode: mode,
+        donationEmail: donationEmail
     };
 }
 
@@ -78,5 +106,7 @@ module.exports = {
     getPDTToken,
     savePayPalMode,
     getPayPalMode,
+    saveDonationEmail,
+    getDonationEmail,
     getPayPalSettings
 };

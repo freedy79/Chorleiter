@@ -728,7 +728,7 @@ exports.getPayPalSettings = async (req, res) => {
 
 exports.updatePayPalSettings = async (req, res) => {
     try {
-        const { pdtToken, mode } = req.body;
+        const { pdtToken, mode, donationEmail } = req.body;
 
         if (!pdtToken) {
             return res.status(400).send({ message: 'PDT Token is required' });
@@ -738,10 +738,18 @@ exports.updatePayPalSettings = async (req, res) => {
             return res.status(400).send({ message: 'Mode must be "sandbox" or "live"' });
         }
 
+        if (donationEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donationEmail)) {
+            return res.status(400).send({ message: 'Invalid donation email address' });
+        }
+
         await paypalSettingsService.savePDTToken(pdtToken);
 
         if (mode) {
             await paypalSettingsService.savePayPalMode(mode);
+        }
+
+        if (donationEmail) {
+            await paypalSettingsService.saveDonationEmail(donationEmail);
         }
 
         logger.info('PayPal settings updated successfully');

@@ -20,7 +20,17 @@ async function createTransporter(existingSettings) {
 
 function getFromAddress(settings) {
   const address = settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de';
-  return { name: address, address };
+
+  // If address contains '@', it's already a full email address
+  if (address.includes('@')) {
+    // Extract the local part before @ as the name (or use a sensible default)
+    const localPart = address.split('@')[0];
+    const name = localPart.replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    return { name: name || 'NAK Chorleiter', address };
+  }
+
+  // If it doesn't contain '@', treat it as a name and use default email
+  return { name: address, address: 'no-reply@nak-chorleiter.de' };
 }
 
 async function sendMail(options, overrideSettings) {

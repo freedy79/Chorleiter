@@ -1,0 +1,173 @@
+<h2 mat-dialog-title>Proben-Daten bearbeiten</h2>
+
+<mat-dialog-content>
+  <!-- Mode Switch -->
+  <div class="mode-switch">
+    <mat-button-toggle-group [(value)]="editMode" aria-label="Edit Mode">
+      <mat-button-toggle value="form" (click)="editMode === 'json' && onSwitchToForm()">Formular</mat-button-toggle>
+      <mat-button-toggle value="json" (click)="editMode === 'form' && onSwitchToJson()">JSON</mat-button-toggle>
+    </mat-button-toggle-group>
+  </div>
+
+  <!-- Form Mode -->
+  <div *ngIf="editMode === 'form'" class="form-mode">
+    <!-- PPQ -->
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>PPQ (Pulses Per Quarter)</mat-label>
+      <input matInput type="number" [(ngModel)]="ppq" min="1" />
+      <mat-hint>MIDI-Auflösung (typisch 480 oder 960)</mat-hint>
+    </mat-form-field>
+
+    <!-- Measure Mapping -->
+    <div class="section">
+      <h3>Takt-Mapping (measureToTick)</h3>
+      <div *ngIf="checkMonotonicWarning(measureRows) as warning" class="warning-message">
+        {{ warning }}
+      </div>
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>Taktnummer</th>
+            <th>Tick</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of measureRows; let i = index">
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput [(ngModel)]="row.key" placeholder="1" />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" [(ngModel)]="row.tick" min="0" placeholder="0" />
+              </mat-form-field>
+            </td>
+            <td>
+              <button mat-icon-button color="warn" (click)="removeMeasureRow(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button mat-raised-button (click)="addMeasureRow()">
+        <mat-icon>add</mat-icon>
+        Takt hinzufügen
+      </button>
+    </div>
+
+    <!-- Page Mapping -->
+    <div class="section">
+      <h3>Seiten-Mapping (pageToTick)</h3>
+      <div *ngIf="checkMonotonicWarning(pageRows) as warning" class="warning-message">
+        {{ warning }}
+      </div>
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>Seitennummer</th>
+            <th>Tick</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of pageRows; let i = index">
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput [(ngModel)]="row.key" placeholder="1" />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput type="number" [(ngModel)]="row.tick" min="0" placeholder="0" />
+              </mat-form-field>
+            </td>
+            <td>
+              <button mat-icon-button color="warn" (click)="removePageRow(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button mat-raised-button (click)="addPageRow()">
+        <mat-icon>add</mat-icon>
+        Seite hinzufügen
+      </button>
+    </div>
+
+    <!-- Voicing -->
+    <div class="section">
+      <h3>Stimmen-Zuordnung (voicing)</h3>
+      <table class="mapping-table">
+        <thead>
+          <tr>
+            <th>Stimme</th>
+            <th>Track</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of voicingRows; let i = index">
+            <td>
+              <mat-form-field appearance="outline">
+                <input matInput [(ngModel)]="row.voiceName" placeholder="S1" />
+              </mat-form-field>
+            </td>
+            <td>
+              <mat-form-field appearance="outline">
+                <mat-select [(ngModel)]="row.trackIndex">
+                  <mat-option *ngFor="let trackIdx of getTrackOptions()" [value]="trackIdx">
+                    {{ trackIdx }}: {{ getTrackName(trackIdx) }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </td>
+            <td>
+              <button mat-icon-button color="warn" (click)="removeVoicingRow(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <button mat-raised-button (click)="addVoicingRow()">
+        <mat-icon>add</mat-icon>
+        Stimme hinzufügen
+      </button>
+    </div>
+  </div>
+
+  <!-- JSON Mode -->
+  <div *ngIf="editMode === 'json'" class="json-mode">
+    <div class="json-actions">
+      <button mat-raised-button (click)="onFormatJson()">
+        <mat-icon>format_align_left</mat-icon>
+        Formatieren
+      </button>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width json-editor">
+      <mat-label>JSON</mat-label>
+      <textarea
+        matInput
+        [(ngModel)]="jsonText"
+        rows="20"
+        class="json-textarea"
+        spellcheck="false"
+      ></textarea>
+    </mat-form-field>
+
+    <div *ngIf="jsonError" class="error-message">
+      <mat-icon color="warn">error</mat-icon>
+      {{ jsonError }}
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" (click)="onSave()">Speichern</button>
+</mat-dialog-actions>
