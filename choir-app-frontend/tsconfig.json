@@ -16,6 +16,7 @@
     "target": "ES2022",
     "module": "preserve",
     "paths": {
+      "@app/*": ["src/app/*"],
       "@core": ["src/app/core"],
       "@core/*": ["src/app/core/*"],
       "@assets/*": ["public/assets/*"],

@@ -3,12 +3,6 @@ import { Routes } from '@angular/router';
 // Importieren der Komponenten und des Guards
 import { LoginComponent } from './features/user/login/login.component';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
-import { DashboardComponent } from './features/home/dashboard/dashboard.component';
-import { LiteratureListComponent } from './features/literature/literature-list/literature-list.component';
-import { CollectionListComponent } from './features/collections/collection-list/collection-list.component';
-import { CollectionEditComponent } from './features/collections/collection-edit/collection-edit.component';
-import { CollectionPieceListComponent } from './features/collections/piece-list/collection-piece-list.component';
-import { ProfileComponent } from './features/user/profile/profile.component';
 import { AuthGuard } from './core/guards/auth-guard'; // Stellen Sie sicher, dass der Pfad korrekt ist
 import { ImprintComponent } from '@features/legal/imprint/imprint.component';
 import { PrivacyComponent } from '@features/legal/privacy/privacy.component';
@@ -17,23 +11,14 @@ import { LoginGuard } from '@core/guards/login.guard';
 import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
 import { ProgramGuard } from '@core/guards/program.guard';
 import { HomeComponent } from '@features/home/home.component';
-import { ManageChoirComponent } from '@features/choir-management/manage-choir/manage-choir.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
-import { EventListComponent } from '@features/events/event-list/event-list.component';
-import { MonthlyPlanComponent } from '@features/monthly-plan/monthly-plan.component';
-import { AvailabilityComponent } from '@features/availability/availability.component';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
-import { StatisticsComponent } from '@features/home/stats/statistics.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { EmailConfirmComponent } from '@features/user/email-confirm/email-confirm.component';
-import { PieceDetailComponent } from '@features/literature/piece-detail/piece-detail.component';
 import { DonateComponent } from '@features/donations/donate.component';
 import { DonationSuccessComponent } from '@features/donations/donation-success.component';
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
-import { SearchResultsComponent } from './features/search-results/search-results.component';
-import { ChoirMembersComponent } from '@features/choir-members/choir-members.component';
-import { ParticipationComponent } from '@features/participation/participation.component';
 
 export const routes: Routes = [
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
@@ -87,49 +72,49 @@ export const routes: Routes = [
             // --- Geschützte Routen (jede einzelne hat jetzt den Guard) ---
             {
                 path: 'dashboard',
-                component: DashboardComponent,
+                loadComponent: () => import('./features/home/dashboard/dashboard.component').then(m => m.DashboardComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Home' },
             },
             {
                 path: 'collections/pieces',
-                component: CollectionPieceListComponent,
+                loadComponent: () => import('./features/collections/piece-list/collection-piece-list.component').then(m => m.CollectionPieceListComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Stücke' },
             },
             {
                 path: 'collections',
-                component: CollectionListComponent,
+                loadComponent: () => import('./features/collections/collection-list/collection-list.component').then(m => m.CollectionListComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Sammlungen' },
             },
             {
                 path: 'collections/new',
-                component: CollectionEditComponent,
+                loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
                 data: { title: 'Neue Sammlung' },
             },
             {
                 path: 'collections/edit/:id',
-                component: CollectionEditComponent,
+                loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
                 data: { title: 'Sammlung bearbeiten' },
             },
             {
                 path: 'events',
-                component: EventListComponent,
+                loadComponent: () => import('./features/events/event-list/event-list.component').then(m => m.EventListComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Ereignisse' }
             },
             {
                 path: 'dienstplan',
-                component: MonthlyPlanComponent,
+                loadComponent: () => import('./features/monthly-plan/monthly-plan.component').then(m => m.MonthlyPlanComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Dienstplan' }
             },
             {
                 path: 'availability',
-                component: AvailabilityComponent,
+                loadComponent: () => import('./features/availability/availability.component').then(m => m.AvailabilityComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Verfügbarkeiten' }
             },
@@ -159,7 +144,7 @@ export const routes: Routes = [
             },
             {
                 path: 'stats',
-                component: StatisticsComponent,
+                loadComponent: () => import('./features/home/stats/statistics.component').then(m => m.StatisticsComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Statistik' }
             },
@@ -177,37 +162,37 @@ export const routes: Routes = [
             },
             {
                 path: 'pieces/:id',
-                component: PieceDetailComponent,
+                loadComponent: () => import('./features/literature/piece-detail/piece-detail.component').then(m => m.PieceDetailComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Stückdetails' }
             },
             {
                 path: 'search',
-                component: SearchResultsComponent,
+                loadComponent: () => import('./features/search-results/search-results.component').then(m => m.SearchResultsComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Suche' }
             },
             {
                 path: 'profile',
-                component: ProfileComponent,
+                loadComponent: () => import('./features/user/profile/profile.component').then(m => m.ProfileComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Profil' },
             },
             {
                 path: 'members',
-                component: ChoirMembersComponent,
+                loadComponent: () => import('./features/choir-members/choir-members.component').then(m => m.ChoirMembersComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Chormitglieder' }
             },
             {
                 path: 'participation',
-                component: ParticipationComponent,
+                loadComponent: () => import('./features/participation/participation.component').then(m => m.ParticipationComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Beteiligung' }
             },
             {
                 path: 'manage-choir',
-                component: ManageChoirComponent,
+                loadComponent: () => import('./features/choir-management/manage-choir/manage-choir.component').then(m => m.ManageChoirComponent),
                 canActivate: [AuthGuard],
                 resolve: {pageData: ManageChoirResolver },
                 data: { title: 'Mein Chor' }

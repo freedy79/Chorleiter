@@ -11,8 +11,9 @@ const strongPasswordValidator = body('password')
   .withMessage('Password must contain uppercase, lowercase, number, and special character (@$!%*?&).');
 
 exports.signupValidation = [
-  body('name').notEmpty().withMessage('Name is required.'),
-  body('email').isEmail().withMessage('Valid email is required.'),
+  body('firstName').notEmpty().trim().withMessage('First name is required.'),
+  body('name').notEmpty().trim().withMessage('Name is required.'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.'),
   strongPasswordValidator,
   body('choirName').notEmpty().withMessage('Choir name is required.')
 ];

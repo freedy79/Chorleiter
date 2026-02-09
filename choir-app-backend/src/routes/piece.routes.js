@@ -5,9 +5,9 @@ const { createPieceValidation, updatePieceValidation } = require("../validators/
 const validate = require("../validators/validate");
 const { handler: wrap } = require("../utils/async");
 const router = require("express").Router();
-const { diskUpload } = require('../utils/upload');
+const { diskUpload, createFileFilter, ALLOWED_PIECE_FILE_EXT, ALLOWED_PIECE_FILE_MIME } = require('../utils/upload');
 const imageUpload = diskUpload('piece-images');
-const fileUpload = diskUpload('piece-files');
+const fileUpload = diskUpload('piece-files', { fileFilter: createFileFilter(ALLOWED_PIECE_FILE_EXT, ALLOWED_PIECE_FILE_MIME) });
 
 // Public endpoints (no authentication required)
 router.get("/:id/image", wrap(controller.getImage));

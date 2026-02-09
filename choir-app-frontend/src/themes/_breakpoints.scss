@@ -1,0 +1,227 @@
+/**
+ * Responsive Breakpoints für NAK Chorleiter App
+ *
+ * Diese Datei definiert konsistente Breakpoints für die gesamte Anwendung.
+ * Verwenden Sie diese Werte für Media Queries und Breakpoint Observer.
+ */
+
+// ========================================
+// BREAKPOINT DEFINITIONEN
+// ========================================
+
+$breakpoint-handset-max: 599.98px;
+$breakpoint-handset-landscape-min: 600px;
+$breakpoint-handset-landscape-max: 959.98px;
+$breakpoint-tablet-min: 600px;
+$breakpoint-tablet-max: 1024px;
+$breakpoint-desktop-min: 1025px;
+
+// Spezifische Breakpoints
+$breakpoint-xs: 360px;  // Sehr kleine Handsets
+$breakpoint-sm: 600px;  // Small (Handset Landscape Start)
+$breakpoint-md: 960px;  // Medium (Tablet Landscape)
+$breakpoint-lg: 1280px; // Large (Desktop)
+$breakpoint-xl: 1920px; // Extra Large (Large Desktop)
+
+// ========================================
+// MIXINS FÜR MEDIA QUERIES
+// ========================================
+
+@mixin handset {
+  @media (max-width: $breakpoint-handset-max) {
+    @content;
+  }
+}
+
+@mixin handset-landscape {
+  @media (min-width: $breakpoint-handset-landscape-min) and (max-width: $breakpoint-handset-landscape-max) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: $breakpoint-tablet-min) and (max-width: $breakpoint-tablet-max) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: $breakpoint-desktop-min) {
+    @content;
+  }
+}
+
+@mixin xs {
+  @media (max-width: $breakpoint-xs) {
+    @content;
+  }
+}
+
+@mixin sm-up {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin md-up {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin lg-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+@mixin xl-up {
+  @media (min-width: $breakpoint-xl) {
+    @content;
+  }
+}
+
+// ========================================
+// VERWENDUNGSBEISPIELE
+// ========================================
+
+/*
+// In Ihrer Komponente:
+
+.my-component {
+  padding: 1rem;
+
+  @include handset {
+    padding: 0.5rem;
+  }
+
+  @include tablet {
+    padding: 1.5rem;
+  }
+
+  @include desktop {
+    padding: 2rem;
+  }
+}
+
+// Oder mit spezifischen Breakpoints:
+
+.navigation {
+  @include xs {
+    // Nur Icons
+    .nav-label { display: none; }
+  }
+
+  @include sm-up {
+    // Icons + Labels
+    .nav-label { display: block; }
+  }
+}
+*/
+
+// ========================================
+// LAYOUT CONSTANTS
+// ========================================
+
+$header-height-mobile: 56px;
+$header-height-desktop: 64px;
+$bottom-nav-height: 64px;
+$bottom-nav-height-xs: 56px;
+$sidenav-width-desktop: 220px;
+$sidenav-width-mobile: 85vw;
+$sidenav-width-mobile-max: 320px;
+
+// ========================================
+// TOUCH TARGET SIZES
+// ========================================
+
+$touch-target-min: 44px;  // iOS Minimum
+$touch-target-optimal: 48px; // Material Design Empfehlung
+$touch-target-icon: 40px;
+
+// ========================================
+// SPACING
+// ========================================
+
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+
+// Responsive Spacing Map
+$spacing-map: (
+  'xs': (
+    'mobile': $spacing-xs,
+    'desktop': $spacing-sm
+  ),
+  'sm': (
+    'mobile': $spacing-sm,
+    'desktop': $spacing-md
+  ),
+  'md': (
+    'mobile': $spacing-md,
+    'desktop': $spacing-lg
+  ),
+  'lg': (
+    'mobile': $spacing-lg,
+    'desktop': $spacing-xl
+  )
+);
+
+// ========================================
+// Z-INDEX HIERARCHY
+// ========================================
+
+$z-index-content: 1;
+$z-index-header: 100;
+$z-index-sidenav: 1000;
+$z-index-bottom-nav: 1000;
+$z-index-fab: 999;
+$z-index-overlay: 1100;
+$z-index-modal: 1200;
+$z-index-snackbar: 1300;
+
+// ========================================
+// ANIMATION DURATIONS
+// ========================================
+
+$animation-fast: 150ms;
+$animation-normal: 200ms;
+$animation-slow: 300ms;
+$animation-timing: cubic-bezier(0.4, 0, 0.2, 1); // Material Design Standard
+
+// ========================================
+// UTILITIES
+// ========================================
+
+// Mixin für konsistente Transitions
+@mixin smooth-transition($property: all, $duration: $animation-normal) {
+  transition: $property $duration $animation-timing;
+}
+
+// Mixin für Card Elevation (Material Design)
+@mixin elevation($level: 1) {
+  @if $level == 1 {
+    box-shadow: 0 2px 1px -1px rgba(0,0,0,.2), 0 1px 1px 0 rgba(0,0,0,.14), 0 1px 3px 0 rgba(0,0,0,.12);
+  } @else if $level == 2 {
+    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+  } @else if $level == 3 {
+    box-shadow: 0 3px 3px -2px rgba(0,0,0,.2), 0 3px 4px 0 rgba(0,0,0,.14), 0 1px 8px 0 rgba(0,0,0,.12);
+  } @else if $level == 4 {
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2), 0 4px 5px 0 rgba(0,0,0,.14), 0 1px 10px 0 rgba(0,0,0,.12);
+  }
+}
+
+// Hide element visually but keep for screen readers
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

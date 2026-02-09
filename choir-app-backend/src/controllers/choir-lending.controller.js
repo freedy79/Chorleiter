@@ -4,6 +4,17 @@ const { lendingListPdf } = require('../services/pdf.service');
 const { Op } = require('sequelize');
 const { updateBorrower } = require('../services/lending.service');
 
+// Return collection IDs that have at least one copy (bulk check)
+exports.listCopyIds = async (req, res) => {
+  const rows = await Lending.findAll({
+    where: { collectionId: { [Op.ne]: null } },
+    attributes: ['collectionId'],
+    group: ['collectionId'],
+    raw: true
+  });
+  res.status(200).send(rows.map(r => r.collectionId));
+};
+
 // List copies for a choir collection
 exports.list = async (req, res) => {
   const { id } = req.params;

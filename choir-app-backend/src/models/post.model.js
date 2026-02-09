@@ -21,6 +21,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: false
+    },
+    attachmentFilename: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    attachmentOriginalName: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   });
   return Post;

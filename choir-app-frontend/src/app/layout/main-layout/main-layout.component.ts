@@ -9,7 +9,7 @@ import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { combineLatest, map, Observable, of, filter, startWith, Subject } from 'rxjs';
+import { combineLatest, map, Observable, of, filter, startWith, Subject, take } from 'rxjs';
 import { switchMap, takeUntil, withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
@@ -20,6 +20,7 @@ import { NavService } from '@shared/components/menu-list-item/nav-service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDrawer } from '@angular/material/sidenav';
 import { MatDialog } from '@angular/material/dialog';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
 import { HelpService } from '@core/services/help.service';
 import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/build-info-dialog.component';
@@ -27,6 +28,7 @@ import { SearchBoxComponent } from '@shared/components/search-box/search-box.com
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { Choir } from '@core/models/choir';
+import { ChoirSwitcherSheetComponent, ChoirSwitcherData } from '../choir-switcher-sheet/choir-switcher-sheet.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -92,14 +94,19 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isTablet$: Observable<boolean> | undefined;
   isMedium$: Observable<boolean> | undefined;
 
-    pageTitle$: Observable<string | null>;
-    cartCount$: Observable<number>;
+  pageTitle$: Observable<string | null>;
+  cartCount$: Observable<number>;
 
-    availableChoirs$: Observable<Choir[]>;
-    activeChoir$: Observable<Choir | null>;
-    userInitials$: Observable<string>;
-    isSmallScreen$: Observable<boolean>;
-    dienstplanVisible$: Observable<boolean>;
+  availableChoirs$: Observable<Choir[]>;
+  activeChoir$: Observable<Choir | null>;
+  userInitials$: Observable<string>;
+  isSmallScreen$: Observable<boolean>;
+  dienstplanVisible$: Observable<boolean>;
+  isLibrarian$: Observable<boolean>;
+  hasMoreItems$: Observable<boolean>;
+  bottomNavVisible = true;
+  private lastScrollY = 0;
+  searchExpanded = false;
 
 
   constructor(private authService: AuthService,
@@ -107,6 +114,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private navService: NavService,
     private breakpointObserver: BreakpointObserver,
     private dialog: MatDialog,
+    private bottomSheet: MatBottomSheet,
     private help: HelpService,
     private api: ApiService,
     private router: Router,
@@ -164,6 +172,18 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     );
 
     this.dienstplanVisible$ = this.restrictForDemo(this.menu.isVisible('dienstplan'));
+
+    this.isLibrarian$ = this.authService.globalRoles$.pipe(
+      map(roles => roles.includes('librarian'))
+    );
+
+    this.hasMoreItems$ = combineLatest([
+      this.dienstplanVisible$,
+      this.isAdmin$,
+      this.isDemo$
+    ]).pipe(
+      map(([dienstplan, admin, demo]) => dienstplan || (!demo && admin))
+    );
 
     this.isLoggedIn$.pipe(
       switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null)),
@@ -412,6 +432,37 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   openHelp(): void {
     this.dialog.open(HelpWizardComponent, { width: '600px' });
+  }
+
+  toggleSearch(): void {
+    this.searchExpanded = !this.searchExpanded;
+  }
+
+  openChoirSwitcher(): void {
+    const data: ChoirSwitcherData = {
+      choirs: [],
+      activeChoirId: null
+    };
+
+    // Get current values synchronously
+    this.availableChoirs$.pipe(
+      take(1),
+      withLatestFrom(this.activeChoir$)
+    ).subscribe(([choirs, activeChoir]) => {
+      data.choirs = choirs;
+      data.activeChoirId = activeChoir?.id ?? null;
+
+      const bottomSheetRef = this.bottomSheet.open(ChoirSwitcherSheetComponent, {
+        data,
+        panelClass: 'choir-switcher-bottom-sheet'
+      });
+
+      bottomSheetRef.afterDismissed().subscribe(choirId => {
+        if (choirId) {
+          this.switchChoir(choirId);
+        }
+      });
+    });
   }
 
   ngOnDestroy(): void {

@@ -2,6 +2,10 @@ const db = require('../models');
 const Post = db.post;
 const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
+const path = require('path');
+const fs = require('fs');
+
+const ATTACHMENTS_DIR = path.join(__dirname, '../..', 'uploads', 'post-attachments');
 
 const REACTION_TYPES = ['like', 'celebrate', 'support', 'love', 'insightful', 'curious'];
 
@@ -302,16 +306,19 @@ exports.create = async (req, res) => {
       });
       const emails = members.map(u => u.email).filter(e => e);
       if (emails.length > 0 && choir) {
-        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, replyTo);
+        const hasAttachment = !!full.attachmentFilename;
+        await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, replyTo, full.id, hasAttachment);
       }
     } else if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       if (author?.email) {
         const choir = await db.choir.findByPk(req.activeChoirId);
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
+        const hasAttachment = !!full.attachmentFilename;
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
       }
     } else if (sendTest && author?.email) {
-      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
+      const hasAttachment = !!full.attachmentFilename;
+      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
     }
 
     res.status(201).send(serializePost(full, req.userId));
@@ -422,7 +429,8 @@ exports.update = async (req, res) => {
       const choir = await db.choir.findByPk(req.activeChoirId);
       const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
       if (author?.email) {
-        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo);
+        const hasAttachment = !!full.attachmentFilename;
+        await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
       }
     }
     res.status(200).send(serializePost(full, req.userId));
@@ -448,13 +456,20 @@ exports.publish = async (req, res) => {
       const author = await db.user.findByPk(post.userId);
       const choir = await db.choir.findByPk(req.activeChoirId);
       const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
-      await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, replyTo);
+      const hasAttachment = !!full.attachmentFilename;
+      await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, replyTo, full.id, hasAttachment);
     }
     res.status(200).send(serializePost(full, req.userId));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
 };
+
+function deleteAttachmentFile(filename) {
+  if (!filename) return;
+  const filePath = path.join(ATTACHMENTS_DIR, filename);
+  fs.unlink(filePath, () => {});
+}
 
 exports.remove = async (req, res) => {
   const id = req.params.id;
@@ -463,6 +478,7 @@ exports.remove = async (req, res) => {
     if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
     const admin = await isChoirAdmin(req);
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
+    deleteAttachmentFile(post.attachmentFilename);
     await post.destroy();
     res.status(204).send();
   } catch (err) {
@@ -628,6 +644,57 @@ exports.reactOnComment = async (req, res) => {
       attributes: ['id', 'type', 'userId']
     });
     res.status(200).send(summarizeReactions(reactions, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.uploadAttachment = async (req, res) => {
+  const id = req.params.id;
+  if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+  try {
+    const post = await Post.findByPk(id);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
+    deleteAttachmentFile(post.attachmentFilename);
+    await post.update({
+      attachmentFilename: req.file.filename,
+      attachmentOriginalName: req.file.originalname
+    });
+    const full = await loadPostWithDetails(id);
+    res.status(200).send(serializePost(full, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.removeAttachment = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const post = await Post.findByPk(id);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
+    deleteAttachmentFile(post.attachmentFilename);
+    await post.update({ attachmentFilename: null, attachmentOriginalName: null });
+    const full = await loadPostWithDetails(id);
+    res.status(200).send(serializePost(full, req.userId));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.downloadAttachment = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const post = await Post.findByPk(id);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+    if (!post.attachmentFilename) return res.status(404).send({ message: 'No attachment' });
+    const filePath = path.join(ATTACHMENTS_DIR, post.attachmentFilename);
+    if (!fs.existsSync(filePath)) return res.status(404).send({ message: 'File not found' });
+    res.download(filePath, post.attachmentOriginalName || post.attachmentFilename);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }

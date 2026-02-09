@@ -67,6 +67,29 @@
       <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
     </mat-form-field>
+    <div class="attachment-section">
+      <h3>Anhang</h3>
+      <div *ngIf="existingAttachment && !selectedFile" class="existing-attachment">
+        <mat-icon>attach_file</mat-icon>
+        <span>{{ existingAttachment }}</span>
+        <button mat-icon-button color="warn" (click)="markRemoveAttachment()" matTooltip="Anhang entfernen">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div *ngIf="selectedFile" class="selected-file">
+        <mat-icon>attach_file</mat-icon>
+        <span>{{ selectedFile.name }}</span>
+        <button mat-icon-button color="warn" (click)="clearSelectedFile()" matTooltip="Auswahl aufheben">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <button mat-stroked-button type="button" (click)="fileInput.click()" *ngIf="!selectedFile && !existingAttachment">
+        <mat-icon>upload_file</mat-icon>
+        Datei auswählen
+      </button>
+      <input #fileInput type="file" hidden (change)="onFileSelected($event)"
+             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.webp,.mp3,.zip">
+    </div>
     <mat-checkbox formControlName="sendTest">Test-E-Mail an mich senden</mat-checkbox>
     <mat-checkbox formControlName="sendAsUser">Eigene Adresse als Absender verwenden</mat-checkbox>
   </form>

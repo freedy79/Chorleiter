@@ -17,6 +17,7 @@ import { PieceService } from 'src/app/core/services/piece.service';
 import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
 import { Category } from 'src/app/core/models/category';
+import { Composer } from 'src/app/core/models/composer';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
@@ -38,6 +39,7 @@ import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 export class LiteratureListComponent extends BaseComponent implements OnInit, AfterViewInit {
   // --- Reactive Subjects for triggering updates ---
   private refresh$ = new BehaviorSubject<void>(undefined);
+  public filterByComposerIds$ = new BehaviorSubject<number[]>([]);
   public filterByCollectionIds$ = new BehaviorSubject<number[]>([]);
   public filterByCategoryIds$ = new BehaviorSubject<number[]>([]);
   public filterByLicense$ = new BehaviorSubject<string[]>([]);
@@ -48,6 +50,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
 
   // --- Observables for filter display ---
   public collections$!: Observable<Collection[]>;
+  public composers$!: Observable<Composer[]>;
   public categories$!: Observable<Category[]>;
   public licenseOptions = [
     { type: 'CC0', label: 'CC0' },
@@ -132,6 +135,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.updateDisplayedColumns();
     // Pre-fetch data for the filter dropdowns - only collections present in the choir
     this.collections$ = this.apiService.getChoirCollections();
+    this.composers$ = this.apiService.getComposers();
     this.categories$ = this.filterByCollectionIds$.pipe(
       startWith(this.filterByCollectionIds$.value),
       switchMap(ids => this.apiService.getCategories(ids.length ? ids : undefined))
@@ -155,6 +159,11 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     if (saved) {
       try {
         const s = JSON.parse(saved);
+        if (Array.isArray(s.composerIds)) {
+          this.filterByComposerIds$.next(s.composerIds);
+        } else if (s.composerId !== undefined && s.composerId !== null) {
+          this.filterByComposerIds$.next([s.composerId]);
+        }
         if (Array.isArray(s.collectionIds)) {
           this.filterByCollectionIds$.next(s.collectionIds);
         } else if (s.collectionId !== undefined && s.collectionId !== null) {
@@ -175,6 +184,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
         }
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
         if (
+          (s.composerIds && s.composerIds.length) ||
+          s.composerId ||
           (s.collectionIds && s.collectionIds.length) ||
           s.collectionId ||
           (s.categoryIds && s.categoryIds.length) ||
@@ -209,7 +220,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
     const search$ = this.searchControl.valueChanges.pipe(startWith(this.searchControl.value || ''));
 
-    merge(this.refresh$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.status$, this.filterByLicense$, sort$, page$, search$)
+    merge(this.refresh$, this.filterByComposerIds$, this.filterByCollectionIds$, this.filterByCategoryIds$, this.status$, this.filterByLicense$, sort$, page$, search$)
       .pipe(
         startWith({}),
         tap(() => {
@@ -239,7 +250,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
             statuses,
             dir,
             this.searchControl.value || undefined,
-            this.filterByLicense$.value.length ? this.filterByLicense$.value : undefined
+            this.filterByLicense$.value.length ? this.filterByLicense$.value : undefined,
+            this.filterByComposerIds$.value.length ? this.filterByComposerIds$.value : undefined
           ).pipe(
             catchError((err) => {
               const msg = err.error?.message || 'Could not load repertoire.';
@@ -273,6 +285,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
 
   private currentCacheKey(): string {
     return [
+      this.filterByComposerIds$.value.join(','),
       this.filterByCollectionIds$.value.join(','),
       this.filterByCategoryIds$.value.join(','),
       this.status$.value.join(','),
@@ -299,7 +312,9 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       this._paginator.pageSize,
       statuses,
       dir,
-      this.searchControl.value || undefined
+      this.searchControl.value || undefined,
+      undefined,
+      this.filterByComposerIds$.value.length ? this.filterByComposerIds$.value : undefined
     ).pipe(
       takeUntil(this.destroy$)
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
@@ -351,6 +366,15 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.refresh$.next();
   }
 
+  onComposerFilterChange(composerIds: number[]): void {
+    if (this._paginator) {
+      this._paginator.firstPage();
+    }
+    this.filterByComposerIds$.next(composerIds);
+    this.saveFilters();
+    this.refresh$.next();
+  }
+
   onCategoryFilterChange(categoryIds: number[]): void {
     if (this._paginator) {
       this._paginator.firstPage();
@@ -380,6 +404,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   }
 
   clearFilters(): void {
+    this.filterByComposerIds$.next([]);
     this.filterByCollectionIds$.next([]);
     this.filterByCategoryIds$.next([]);
     this.status$.next([]);
@@ -396,6 +421,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
 
   private saveFilters(): void {
     const state = {
+      composerIds: this.filterByComposerIds$.value,
       collectionIds: this.filterByCollectionIds$.value,
       categoryIds: this.filterByCategoryIds$.value,
       statuses: this.status$.value,
@@ -404,6 +430,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
     this.filtersExpanded = !!(
+      (state.composerIds && state.composerIds.length) ||
       (state.collectionIds && state.collectionIds.length) ||
       (state.categoryIds && state.categoryIds.length) ||
       (state.statuses && state.statuses.length) ||
@@ -537,6 +564,13 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   }
 
   private applyPreset(preset: RepertoireFilter): void {
+    if (Array.isArray((preset.data as any).composerIds)) {
+      this.filterByComposerIds$.next((preset.data as any).composerIds);
+    } else if ((preset.data as any).composerId !== undefined && (preset.data as any).composerId !== null) {
+      this.filterByComposerIds$.next([(preset.data as any).composerId]);
+    } else {
+      this.filterByComposerIds$.next([]);
+    }
     if (Array.isArray(preset.data.collectionIds)) {
       this.filterByCollectionIds$.next(preset.data.collectionIds);
     } else if (preset.data.collectionId !== undefined && preset.data.collectionId !== null) {
@@ -565,6 +599,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
     const singleId = (preset.data as any).categoryId;
     this.filtersExpanded = !!(
+      ((preset.data as any).composerIds && (preset.data as any).composerIds.length) ||
+      (preset.data as any).composerId ||
       (preset.data.collectionIds && preset.data.collectionIds.length) ||
       preset.data.collectionId ||
       (preset.data.categoryIds && preset.data.categoryIds.length) ||
@@ -588,6 +624,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
       const data = {
+        composerIds: this.filterByComposerIds$.value,
         collectionIds: this.filterByCollectionIds$.value,
         categoryIds: this.filterByCategoryIds$.value,
         statuses: this.status$.value,

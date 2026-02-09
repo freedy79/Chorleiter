@@ -5,7 +5,10 @@
       "Bash(wc:*)",
       "Bash(find:*)",
       "Bash(npm install:*)",
-      "Bash(timeout 5 tail:*)"
+      "Bash(timeout 5 tail:*)",
+      "Bash(npm audit:*)",
+      "WebFetch(domain:www.chorilo.com)",
+      "Bash(npm ls:*)"
     ]
   },
   "allowedTools": [

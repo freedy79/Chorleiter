@@ -24,15 +24,19 @@ export class AuthInterceptor implements HttpInterceptor {
         const token = localStorage.getItem('auth-token');
         const isApiUrl = request.url.startsWith(environment.apiUrl);
 
-        // Füge den Authorization-Header hinzu, wenn ein Token vorhanden ist.
-        if (token && isApiUrl) {
-            //console.log('Token found, adding to request:', token);
+        if (isApiUrl) {
+            // Send httpOnly cookie with every API request
+            request = request.clone({ withCredentials: true });
 
-            request = request.clone({
-                setHeaders: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            // Fallback: also send Authorization header if token exists in localStorage
+            // (migration period until all tokens are cookie-based)
+            if (token) {
+                request = request.clone({
+                    setHeaders: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            }
         }
 
         //console.log('Request intercepted and token added if available:', request);

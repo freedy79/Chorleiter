@@ -40,6 +40,24 @@ process.on('exit', (code) => {
 });
 
 
+// --- Security: Validate critical environment variables ---
+const WEAK_SECRETS = [
+    'this-is-a-very-secret-key-change-it',
+    'secret', 'changeme', 'password', 'jwt-secret'
+];
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+    logger.error('FATAL: JWT_SECRET is not set. Server cannot start.');
+    process.exit(1);
+}
+if (WEAK_SECRETS.includes(jwtSecret) || jwtSecret.length < 32) {
+    if (process.env.NODE_ENV === 'production') {
+        logger.error('FATAL: JWT_SECRET is too weak for production. Use at least 32 random characters.');
+        process.exit(1);
+    }
+    logger.warn('WARNING: JWT_SECRET is weak. Set a strong secret (min. 32 characters) before deploying to production.');
+}
+
 const PORT = process.env.PORT || 8088;
 const ADDRESS = process.env.ADDRESS || "localhost"
 

@@ -10,6 +10,14 @@
         <mat-hint>Anführungszeichen für Wortgruppen verwenden</mat-hint>
       </mat-form-field>
       <mat-form-field appearance="outline">
+        <mat-label>Komponisten</mat-label>
+        <mat-select multiple [value]="filterByComposerIds$.value" (selectionChange)="onComposerFilterChange($event.value)">
+          <mat-option *ngFor="let composer of composers$ | async" [value]="composer.id">
+            {{ composer.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
         <mat-label>Sammlungen</mat-label>
         <mat-select multiple [value]="filterByCollectionIds$.value" (selectionChange)="onCollectionFilterChange($event.value)">
           <mat-option *ngFor="let collection of collections$ | async" [value]="collection.id">

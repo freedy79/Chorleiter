@@ -1,0 +1,82 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(svg|cur|jpg|jpeg|png|apng|webp|gif|otf|ttf|woff|woff2)"
+        ],
+        "urls": [
+          "https://fonts.googleapis.com/**",
+          "https://fonts.gstatic.com/**"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-performance",
+      "urls": [
+        "/api/performances/**",
+        "/api/programs/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxAge": "1h",
+        "maxSize": 20
+      }
+    },
+    {
+      "name": "api-freshness",
+      "urls": [
+        "/api/absences/**",
+        "/api/holidays/**",
+        "/api/library/**",
+        "/api/pieces/**",
+        "/api/collections/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxAge": "10m",
+        "maxSize": 50,
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-user",
+      "urls": [
+        "/api/users/**",
+        "/api/auth/**",
+        "/api/admin/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxAge": "5m",
+        "maxSize": 30,
+        "timeout": "10s"
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**/!(*.*)",
+    "/**/*.html"
+  ]
+}

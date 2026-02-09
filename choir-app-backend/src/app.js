@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const app = express();
 const helmet = require("helmet");
 const compression = require("compression");
@@ -10,15 +11,45 @@ const logger = require("./config/logger");
 const emailService = require('./services/email.service');
 const { runWithRequestContext } = require('./config/request-context');
 const { errorHandler, notFoundHandler, sequelizeErrorHandler } = require('./middleware/error.middleware');
+const { csrfCookie, csrfProtection } = require('./middleware/csrf.middleware');
 
 app.set("trust proxy", 1);
 
 // Initialize request-scoped context storage
 app.use(runWithRequestContext);
 
-app.use(cors());
-app.use(helmet());
+const allowedOrigins = (process.env.CORS_ORIGINS || 'https://nak-chorleiter.de')
+    .split(',')
+    .map(o => o.trim());
+if (process.env.NODE_ENV !== 'production') {
+    allowedOrigins.push('http://localhost:4200', 'http://localhost:4201');
+}
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            connectSrc: ["'self'"],
+            frameSrc: ["'none'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            formAction: ["'self'"],
+            upgradeInsecureRequests: [],
+        },
+    },
+}));
 app.use(compression());
+app.use(cookieParser());
+app.use(csrfCookie);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(['/uploads', '/api/uploads'], express.static(path.join(__dirname, '..', 'uploads')));
@@ -55,6 +86,16 @@ app.get(["/ping", "/api/ping"], (req, res) => {
     res.json({ message: "PONG" });
 });
 
+// CSRF protection: validate token on state-changing requests for authenticated routes.
+// Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
+app.use('/api', (req, res, next) => {
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors'];
+    if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
+        return next();
+    }
+    csrfProtection(req, res, next);
+});
+
 // --- Routes ---
 const authRoutes = require("./routes/auth.routes");
 const pieceRoutes = require("./routes/piece.routes");
@@ -75,6 +116,7 @@ const invitationRoutes = require("./routes/invitation.routes");
 const joinRoutes = require("./routes/join.routes");
 const statsRoutes = require("./routes/stats.routes");
 const searchRoutes = require("./routes/search.routes");
+const searchHistoryRoutes = require("./routes/search-history.routes");
 const passwordResetRoutes = require("./routes/password-reset.routes");
 const emailChangeRoutes = require("./routes/email-change.routes");
 const repertoireFilterRoutes = require("./routes/repertoire-filter.routes");
@@ -108,6 +150,7 @@ app.use("/api/choir-management", choirManagementRoutes);
 app.use("/api/invitations", invitationRoutes);
 app.use("/api/join", joinRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/search-history", searchHistoryRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 app.use("/api/email-change", emailChangeRoutes);

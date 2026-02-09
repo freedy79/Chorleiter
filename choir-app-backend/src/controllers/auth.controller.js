@@ -69,7 +69,7 @@ exports.signup = async (req, res) => {
 };
 
 exports.signin = async (req, res) => {
-    logger.info("Sign-in request received:", req.body);
+    logger.info(`Sign-in request received for: ${req.body.email}`);
     const rawEmail = req.body.email;
     const email = rawEmail?.toLowerCase();
     const ipAddress = req.ip;
@@ -160,6 +160,17 @@ exports.signin = async (req, res) => {
     await user.save().catch(() => {});
 
     await LoginAttempt.create({ email, success: true, ipAddress, userAgent });
+
+    const isProduction = process.env.NODE_ENV === 'production';
+    const maxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 8 * 60 * 60 * 1000;
+    res.cookie('auth-token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? 'strict' : 'lax',
+      maxAge,
+      path: '/'
+    });
+
     res.status(200).send({
       id: user.id,
       firstName: user.firstName,
@@ -204,6 +215,15 @@ exports.switchChoir = async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '8h' } // Oder die verbleibende Zeit des alten Tokens
         );
+
+        const isProduction = process.env.NODE_ENV === 'production';
+        res.cookie('auth-token', token, {
+          httpOnly: true,
+          secure: isProduction,
+          sameSite: isProduction ? 'strict' : 'lax',
+          maxAge: 8 * 60 * 60 * 1000,
+          path: '/'
+        });
 
         res.status(200).send({
             message: "Switched choir successfully.",

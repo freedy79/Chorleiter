@@ -1,2 +1,4 @@
+<app-offline-indicator></app-offline-indicator>
 <app-service-unavailable *ngIf="!backendAvailable"></app-service-unavailable>
 <router-outlet *ngIf="backendAvailable"></router-outlet>
+<app-pwa-update-notification></app-pwa-update-notification>

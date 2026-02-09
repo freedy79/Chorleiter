@@ -163,7 +163,7 @@ exports.lookup = async (req, res) => {
 
 
 exports.findMyRepertoire = async (req, res) => {
-    const { composerId, categoryId, categoryIds, collectionId, collectionIds, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search, license } = req.query;
+    const { composerId, composerIds, composers, categoryId, categoryIds, collectionId, collectionIds, sortBy, sortDir = 'ASC', status, page = 1, limit = 25, voicing, key, search, license } = req.query;
     let parsedStatuses = [];
     if (status) {
         parsedStatuses = Array.isArray(status) ? status : String(status).split(',');
@@ -183,6 +183,16 @@ exports.findMyRepertoire = async (req, res) => {
         parsedCollectionIds = [collectionId];
     }
     parsedCollectionIds = parsedCollectionIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+
+    let parsedComposerIds = [];
+    if (composerIds) {
+        parsedComposerIds = Array.isArray(composerIds) ? composerIds : String(composerIds).split(',');
+    } else if (composers) {
+        parsedComposerIds = Array.isArray(composers) ? composers : String(composers).split(',');
+    } else if (composerId) {
+        parsedComposerIds = [composerId];
+    }
+    parsedComposerIds = parsedComposerIds.map(id => parseInt(id, 10)).filter(id => !isNaN(id));
 
     let parsedLicenses = [];
     if (license) {
@@ -217,7 +227,7 @@ exports.findMyRepertoire = async (req, res) => {
         // Beginnen Sie mit der Bedingung, nur Stücke aus dem Repertoire zu holen.
         const whereCondition = {
             id: { [Op.in]: pieceIdsInRepertoire },
-            ...(composerId && { composerId }),
+            ...(parsedComposerIds.length && { composerId: { [Op.in]: parsedComposerIds } }),
             ...(parsedCategoryIds.length && { categoryId: { [Op.in]: parsedCategoryIds } }),
             ...(voicing && { voicing: { [Op.iLike]: `%${voicing}%` } }), // Case-insensitive search
             ...(key && { key }),

@@ -1,22 +1,67 @@
 
 <mat-form-field class="search-box dense" appearance="outline">
   <mat-icon matPrefix>search</mat-icon>
-  <input matInput [formControl]="searchCtrl" [matAutocomplete]="auto" placeholder="Suche..." (keyup.enter)="goToResults()" />
+  <input matInput
+         [formControl]="searchCtrl"
+         [matAutocomplete]="auto"
+         placeholder="Suche..."
+         (focus)="onInputFocus()"
+         (keyup.enter)="goToResults()" />
+  <button mat-icon-button matSuffix *ngIf="searchCtrl.value" (click)="clearSearch()" aria-label="Suche löschen">
+    <mat-icon>close</mat-icon>
+  </button>
 </mat-form-field>
-<mat-autocomplete #auto="matAutocomplete" [autoActiveFirstOption]="false">
-  <ng-container *ngIf="results.pieces.length">
-    <mat-optgroup label="Pieces">
-      <mat-option *ngFor="let p of results.pieces" [value]="p.title">{{p.title}}</mat-option>
+
+<mat-autocomplete #auto="matAutocomplete"
+                  [autoActiveFirstOption]="false"
+                  panelClass="search-autocomplete-panel"
+                  (optionSelected)="onOptionSelected($event.option.value)">
+  <!-- Search History (shown when no query) -->
+  <ng-container *ngIf="showHistory && historyEntries.length && !currentQuery">
+    <mat-optgroup label="Letzte Suchen">
+      <mat-option *ngFor="let entry of historyEntries" [value]="'__history__' + entry.query" class="history-option">
+        <mat-icon class="type-icon">history</mat-icon>
+        <span class="suggestion-text">{{ entry.query }}</span>
+        <button mat-icon-button class="history-delete-btn" (click)="deleteHistoryEntry($event, entry.id!)" *ngIf="entry.id">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-option>
     </mat-optgroup>
+    <mat-option class="clear-history-option" (click)="clearHistory()">
+      <mat-icon>delete_sweep</mat-icon>
+      <span>Historie löschen</span>
+    </mat-option>
   </ng-container>
-  <ng-container *ngIf="results.events.length">
-    <mat-optgroup label="Events">
-      <mat-option *ngFor="let e of results.events" [value]="e.date">{{e.type}} {{e.date | date}}</mat-option>
-    </mat-optgroup>
+
+  <!-- Loading State -->
+  <ng-container *ngIf="isLoading">
+    <mat-option class="loading-option" disabled>
+      <mat-progress-spinner mode="indeterminate" diameter="18"></mat-progress-spinner>
+      <span>Suche läuft...</span>
+    </mat-option>
   </ng-container>
-  <ng-container *ngIf="results.collections.length">
-    <mat-optgroup label="Collections">
-      <mat-option *ngFor="let c of results.collections" [value]="c.title">{{c.title}}</mat-option>
-    </mat-optgroup>
+
+  <!-- Suggestions (shown when query exists) -->
+  <ng-container *ngIf="!isLoading && groupedSuggestions.length">
+    <ng-container *ngFor="let group of groupedSuggestions">
+      <mat-optgroup [label]="group.label">
+        <mat-option *ngFor="let s of group.items" [value]="s.text">
+          <mat-icon class="type-icon">{{ typeIcons[s.type] }}</mat-icon>
+          <span class="suggestion-text" [innerHTML]="highlight(s.text, currentQuery)"></span>
+          <span class="suggestion-subtitle" *ngIf="s.subtitle"> – {{ s.subtitle }}</span>
+          <span class="suggestion-meta" *ngIf="s.metadata && s.metadata['category']"> · {{ s.metadata['category'] }}</span>
+        </mat-option>
+      </mat-optgroup>
+    </ng-container>
   </ng-container>
+
+  <!-- No Results -->
+  <mat-option *ngIf="noResults" disabled>
+    Keine Ergebnisse. Tipp: Suchbegriff prüfen oder erweitern.
+  </mat-option>
+
+  <!-- Show All Results -->
+  <mat-option *ngIf="!isLoading && suggestions.length" [value]="'__show_all__'" class="show-all-option">
+    Alle Ergebnisse anzeigen ({{ total || suggestions.length }})
+  </mat-option>
 </mat-autocomplete>

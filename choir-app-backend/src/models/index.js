@@ -52,12 +52,15 @@ db.program_item = require("./program_item.model.js")(sequelize, Sequelize);
 db.district = require("./district.model.js")(sequelize, Sequelize);
  db.congregation = require("./congregation.model.js")(sequelize, Sequelize);
 db.donation = require("./donation.model.js")(sequelize, Sequelize);
+db.physical_copy = require("./physical_copy.model.js")(sequelize, Sequelize);
+db.digital_license = require("./digital_license.model.js")(sequelize, Sequelize);
 db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
 db.poll = require("./poll.model.js")(sequelize, Sequelize);
 db.poll_option = require("./poll_option.model.js")(sequelize, Sequelize);
 db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
 db.post_comment = require("./post_comment.model.js")(sequelize, Sequelize);
 db.post_reaction = require("./post_reaction.model.js")(sequelize, Sequelize);
+db.search_history = require("./search_history.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -200,6 +203,12 @@ db.lending.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'librar
 db.user.hasMany(db.lending, { as: 'borrowedCopies', foreignKey: 'borrowerId' });
 db.lending.belongsTo(db.user, { foreignKey: 'borrowerId', as: 'borrower' });
 
+// Physical copies and digital licenses of library items
+db.library_item.hasMany(db.physical_copy, { as: 'physicalCopies', foreignKey: 'libraryItemId', onDelete: 'CASCADE' });
+db.physical_copy.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
+db.library_item.hasMany(db.digital_license, { as: 'digitalLicenses', foreignKey: 'libraryItemId', onDelete: 'CASCADE' });
+db.digital_license.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
+
 // Internal choir copies linked directly to collections
 db.collection.hasMany(db.lending, { as: 'copies', foreignKey: 'collectionId' });
 db.lending.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
@@ -237,6 +246,10 @@ db.choir.hasMany(db.choir_log, { as: 'logs' });
 db.choir_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.choir_log, { as: 'choirLogs' });
 db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+
+// Search history
+db.user.hasMany(db.search_history, { as: 'searchHistory', foreignKey: 'userId' });
+db.search_history.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 
 // Districts and congregations

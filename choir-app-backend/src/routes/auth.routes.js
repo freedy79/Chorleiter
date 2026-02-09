@@ -5,9 +5,18 @@ const { signupValidation, resetPasswordValidation } = require("../validators/aut
 const validate = require("../validators/validate");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
+const RateLimit = require("express-rate-limit");
 
-router.post("/signup", role.requireNonDemo, signupValidation, validate, wrap(controller.signup));
-router.post("/signin", role.requireNonDemo, wrap(controller.signin));
+const authLimiter = RateLimit({
+    windowMs: 15 * 60 * 1000, // 15 Minuten
+    max: 10, // max. 10 Versuche pro IP
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Zu viele Anmeldeversuche. Bitte versuche es in 15 Minuten erneut." },
+});
+
+router.post("/signup", role.requireNonDemo, authLimiter, signupValidation, validate, wrap(controller.signup));
+router.post("/signin", role.requireNonDemo, authLimiter, wrap(controller.signin));
 
 router.post("/switch-choir/:choirId", verifyToken, role.requireNonDemo, wrap(controller.switchChoir));
 router.get("/check-choir-admin", verifyToken, wrap(controller.checkChoirAdminStatus));
@@ -15,6 +24,18 @@ router.get("/check-choir-admin", verifyToken, wrap(controller.checkChoirAdminSta
 // Returns 200 when the provided token is valid
 router.get('/check-token', verifyToken, (req, res) => {
   res.status(200).send({ valid: true });
+});
+
+// Logout: clear httpOnly auth cookie
+router.post('/logout', (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie('auth-token', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    path: '/'
+  });
+  res.status(200).send({ message: 'Logged out' });
 });
 
 module.exports = router;

@@ -295,7 +295,7 @@ exports.leaveChoir = async (req, res) => {
         const choirName = membership.choir?.name || 'dem Chor';
         await membership.destroy();
 
-        await ChoirLog.create({ choirId, userId: req.userId, action: 'member_leave', details: { selfService: true } }).catch(() => {});
+        await ChoirLog.create({ choirId, userId: req.userId, action: 'member_leave', details: { selfService: true, userName: `${user.firstName} ${user.name}` } }).catch(() => {});
 
         const userDetails = user.toJSON();
         try {
@@ -379,7 +379,7 @@ exports.deleteMe = async (req, res) => {
         for (const membership of memberships) {
             const choirId = membership.choirId;
             await membership.destroy();
-            await ChoirLog.create({ choirId, userId: req.userId, action: 'member_leave', details: { selfService: true, systemExit: true } }).catch(() => {});
+            await ChoirLog.create({ choirId, userId: req.userId, action: 'member_leave', details: { selfService: true, systemExit: true, userName: `${user.firstName} ${user.name}` } }).catch(() => {});
             try {
                 await emailService.sendMemberLeftNotification(choirId, userDetails, { accountDeleted: true });
             } catch (err) {

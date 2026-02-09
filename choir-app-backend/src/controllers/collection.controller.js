@@ -197,6 +197,13 @@ exports.addToChoir = async (req, res, next) => {
             }
         }
 
+        await db.choir_log.create({
+            choirId: req.activeChoirId,
+            userId: req.userId,
+            action: 'repertoire_add_collection',
+            details: { collectionId: collection.id, collectionTitle: collection.title, piecesAdded: missingPieces.length }
+        });
+
         res.status(200).send({ message: `Collection '${collection.title}' synced with your repertoire.` });
     } catch (err) { next(err); }
 };
@@ -219,11 +226,13 @@ exports.bulkAddToChoir = async (req, res, next) => {
         const choirPieces = await choir.getPieces({ attributes: ['id'] });
         const choirPieceIds = new Set(choirPieces.map(p => p.id));
 
+        const addedCollections = [];
         for (const id of collectionIds) {
             const collection = await db.collection.findByPk(id);
             if (!collection) continue;
 
             await choir.addCollection(collection).catch(() => {});
+            addedCollections.push({ id: collection.id, title: collection.title });
 
             const pieces = await collection.getPieces({ attributes: ['id'] });
             const missingPieces = pieces.filter(p => !choirPieceIds.has(p.id));
@@ -234,6 +243,13 @@ exports.bulkAddToChoir = async (req, res, next) => {
                 }
             }
         }
+
+        await db.choir_log.create({
+            choirId: req.activeChoirId,
+            userId: req.userId,
+            action: 'repertoire_add_collections',
+            details: { collections: addedCollections }
+        });
 
         res.status(200).send({ message: 'Collections synced with your repertoire.' });
     } catch (err) { next(err); }

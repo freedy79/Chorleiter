@@ -8,7 +8,8 @@ import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 import { ApiService } from '@core/services/api.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { finalize } from 'rxjs/operators';
+import { finalize, switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 type PostDialogAction = 'created' | 'updated';
@@ -35,6 +36,9 @@ export class PostDialogComponent {
   form: FormGroup;
   isEdit = false;
   saving = false;
+  selectedFile: File | null = null;
+  existingAttachment: string | null = null;
+  removeExistingAttachment = false;
   private placeholderStart: number | null = null;
   constructor(
     private fb: FormBuilder,
@@ -61,6 +65,7 @@ export class PostDialogComponent {
     });
     if (data?.post) {
       this.isEdit = true;
+      this.existingAttachment = data.post.attachmentOriginalName || null;
       this.form.patchValue({
         title: data.post.title,
         text: data.post.text,
@@ -126,6 +131,24 @@ export class PostDialogComponent {
     }
   }
 
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.selectedFile = input.files[0];
+      this.removeExistingAttachment = false;
+    }
+  }
+
+  clearSelectedFile(): void {
+    this.selectedFile = null;
+  }
+
+  markRemoveAttachment(): void {
+    this.removeExistingAttachment = true;
+    this.existingAttachment = null;
+    this.selectedFile = null;
+  }
+
   save(): void {
     if (this.form.invalid || this.saving) {
       return;
@@ -152,10 +175,21 @@ export class PostDialogComponent {
     this.saving = true;
     this.dialogRef.disableClose = true;
     request$
-      .pipe(finalize(() => {
-        this.saving = false;
-        this.dialogRef.disableClose = false;
-      }))
+      .pipe(
+        switchMap(post => {
+          if (this.removeExistingAttachment && !this.selectedFile) {
+            return this.api.removePostAttachment(post.id);
+          }
+          if (this.selectedFile) {
+            return this.api.uploadPostAttachment(post.id, this.selectedFile);
+          }
+          return of(post);
+        }),
+        finalize(() => {
+          this.saving = false;
+          this.dialogRef.disableClose = false;
+        })
+      )
       .subscribe({
         next: () => {
           this.dialogRef.close(action);

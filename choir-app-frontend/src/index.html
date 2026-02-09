@@ -3,9 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1976d2">
+  <meta name="description" content="NAK Chorleiter - Verwaltungsanwendung für Chöre mit Funktionen für Repertoire, Absenceverwaltung und Einsatzplanung">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NAK Chorleiter">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
   <title>NAK Chorleiter</title>
   <base href="/">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Preconnect to critical domains for faster font loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
@@ -28,6 +42,9 @@
     if (appRoot) {
       appRoot.style.removeProperty('display');
     }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>

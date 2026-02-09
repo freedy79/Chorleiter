@@ -10,18 +10,40 @@
 
   <!-- Search bar -->
   <ng-container *ngIf="isLoggedIn$ | async">
-    <!-- Not small -->
+    <!-- Desktop Search - Always visible -->
     <ng-container *ngIf="!(isSmallScreen$ | async)">
       <app-search-box class="search"></app-search-box>
     </ng-container>
-    <!-- Spacer for mobile to push profile icon to the right -->
-    <span class="spacer" *ngIf="isSmallScreen$ | async"></span>
+
+    <!-- Mobile Search - Expandable -->
+    <ng-container *ngIf="(isSmallScreen$ | async) && !searchExpanded">
+      <span class="spacer"></span>
+      <button mat-icon-button (click)="toggleSearch()" matTooltip="Suchen">
+        <mat-icon>search</mat-icon>
+      </button>
+    </ng-container>
+
+    <!-- Expanded Mobile Search -->
+    <ng-container *ngIf="(isSmallScreen$ | async) && searchExpanded">
+      <app-search-box class="search search-expanded"></app-search-box>
+      <button mat-icon-button (click)="toggleSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </ng-container>
   </ng-container>
 
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
     *ngIf="(availableChoirs$ | async)?.length && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
+
+  <!-- Mobile: Choir Switcher als Bottom Sheet -->
+  <button mat-icon-button class="choir-badge-mobile" (click)="openChoirSwitcher()" [disabled]="isDemo$ | async"
+    *ngIf="(availableChoirs$ | async)?.length && (isSmallScreen$ | async)"
+    matTooltip="{{ (activeChoir$ | async)?.name || 'Chor wählen' }}">
+    <mat-icon>groups</mat-icon>
+  </button>
+
   <mat-menu #choirMenu="matMenu">
     <button mat-menu-item *ngFor="let c of (availableChoirs$ | async)" (click)="switchChoir(c.id)">{{ c.name }}</button>
   </mat-menu>
@@ -43,14 +65,12 @@
     <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}" [matTooltip]="userRole$ | async">{{ userName$ | async }}</span>
 
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
-      <mat-icon>
-        <div class="svg_icon_white"><img src="./../../assets/icons/user-filled.svg" loading="lazy"></div>
-      </mat-icon>
+      <mat-icon>person</mat-icon>
     </button>
 
     <mat-menu #userMenu="matMenu">
       <a mat-menu-item routerLink="/profile">
-        <mat-icon><img src="./../../assets/icons/user-filled.svg" class="own_icon_size" loading="lazy"></mat-icon>
+        <mat-icon>person</mat-icon>
         <span>Profil</span>
       </a>
 
@@ -75,7 +95,7 @@
       </button>
 
       <button mat-menu-item (click)="logout()">
-        <mat-icon><img src="./../../assets/icons/logout.svg" class="own_icon_size" loading="lazy"></mat-icon>
+        <mat-icon>logout</mat-icon>
         <span>Abmelden</span>
       </button>
     </mat-menu>
@@ -105,7 +125,7 @@
 
 <mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async)">
   <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'" class="appDrawer">
+    [mode]="(isHandset$ | async) ? 'over' : 'side'" class="appDrawer" (backdropClick)="closeSidenav()">
 
     <ng-container *ngIf="(isLoggedIn$ | async)">
       <mat-nav-list>
@@ -137,31 +157,55 @@
   </div>
 </main>
 
+<!-- Bottom Navigation - Optimiert für Mobile -->
 <nav class="bottom-nav" *ngIf="(isLoggedIn$ | async)">
-  <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+  <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>home</mat-icon>
-    <span>Home</span>
+    <span class="nav-label">Home</span>
   </a>
-  <a mat-button routerLink="/events" routerLinkActive="active">
+  <a mat-button routerLink="/events" routerLinkActive="active"
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>event</mat-icon>
-    <span>Termine</span>
+    <span class="nav-label">Termine</span>
   </a>
-  <a mat-button routerLink="/dienstplan" routerLinkActive="active" *ngIf="dienstplanVisible$ | async">
+  <a mat-button routerLink="/repertoire" routerLinkActive="active"
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    <mat-icon>library_music</mat-icon>
+    <span class="nav-label">Repertoire</span>
+  </a>
+  <a mat-button routerLink="/library" routerLinkActive="active"
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"
+    *ngIf="(isAdmin$ | async) || (isLibrarian$ | async)">
+    <mat-icon>local_library</mat-icon>
+    <span class="nav-label">Bibliothek</span>
+  </a>
+  <button mat-button class="bottom-nav-item bottom-nav-more" [matMenuTriggerFor]="moreMenu"
+    matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"
+    *ngIf="hasMoreItems$ | async">
+    <mat-icon>more_horiz</mat-icon>
+    <span class="nav-label">Mehr</span>
+  </button>
+</nav>
+
+<!-- Overflow-Menü für zusätzliche Navigation Items -->
+<mat-menu #moreMenu="matMenu" class="bottom-nav-overflow">
+  <a mat-menu-item routerLink="/dienstplan" *ngIf="dienstplanVisible$ | async">
     <mat-icon>assignment</mat-icon>
     <span>Dienstplan</span>
   </a>
-  <a mat-button routerLink="/posts" routerLinkActive="active" *ngIf="(dienstplanVisible$ | async) === false">
+  <a mat-menu-item routerLink="/posts" *ngIf="(dienstplanVisible$ | async) === false">
     <mat-icon>article</mat-icon>
     <span>Beiträge</span>
   </a>
-  <a mat-button routerLink="/repertoire" routerLinkActive="active">
-    <mat-icon>library_music</mat-icon>
-    <span>Chor</span>
-  </a>
-  <a mat-button routerLink="/admin" routerLinkActive="active" *ngIf="(isAdmin$ | async) && !(isDemo$ | async)">
+  <a mat-menu-item routerLink="/admin" *ngIf="(isAdmin$ | async) && !(isDemo$ | async)">
     <mat-icon>settings</mat-icon>
     <span>Admin</span>
   </a>
-</nav>
+  <a mat-menu-item routerLink="/profile">
+    <mat-icon>person</mat-icon>
+    <span>Profil</span>
+  </a>
+</mat-menu>
 
 <app-footer></app-footer>

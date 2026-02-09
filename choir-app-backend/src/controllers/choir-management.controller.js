@@ -356,11 +356,13 @@ exports.removeUserFromChoir = async (req, res, next) => {
 
     try {
         const choir = await db.choir.findByPk(choirId);
+        const userToRemove = await db.user.findByPk(userId, { attributes: ['id', 'firstName', 'name'] });
         // 'removeUser' ist ein weiterer Sequelize-Helfer, der die Verknüpfung löscht.
         const result = await choir.removeUser(userId);
 
         if (result > 0) {
-            await db.choir_log.create({ choirId, userId, action: 'member_leave', details: { removedBy: req.userId } });
+            const userName = userToRemove ? `${userToRemove.firstName} ${userToRemove.name}` : null;
+            await db.choir_log.create({ choirId, userId, action: 'member_leave', details: { removedBy: req.userId, userName } });
             res.status(200).send({ message: "User removed from choir." });
         } else {
             res.status(404).send({ message: "User is not a member of this choir." });

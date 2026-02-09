@@ -22,6 +22,7 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { combineLatest } from 'rxjs';
 import { RehearsalSupportComponent } from './rehearsal-support/rehearsal-support.component';
 import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
+import { DebugLogService } from '@core/services/debug-log.service';
 
 @Component({
   selector: 'app-piece-detail',
@@ -47,9 +48,10 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
   isAdmin = false;
   canRate = false;
   pieceImage: string | null = null;
-  fileLinks: (PieceLink & { isPdf: boolean; size?: number; isMp3?: boolean })[] = [];
+  fileLinks: (PieceLink & { isPdf: boolean; size?: number; isMp3?: boolean; isImage?: boolean; isCapella?: boolean; isMuseScore?: boolean })[] = [];
   externalLinks: PieceLink[] = [];
   libraryItems: { [collectionId: number]: LibraryItem } = {};
+  isDeveloper = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -58,7 +60,8 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private http: HttpClient,
-    private titleService: Title
+    private titleService: Title,
+    private logger: DebugLogService
   ) {}
 
   ngOnInit(): void {
@@ -72,6 +75,7 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     combineLatest([this.auth.isChoirAdmin$, this.auth.isDirector$]).subscribe(([isChoirAdmin, isDirector]) => {
       this.canRate = isChoirAdmin || isDirector;
     });
+    this.isDeveloper = this.logger.isEnabled();
     this.loadLibraryItems();
   }
 
@@ -93,11 +97,17 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
       } else {
         this.pieceImage = null;
       }
-      this.fileLinks = (p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || []).map(l => ({
-        ...l,
-        isPdf: /\.pdf$/i.test(l.url) || /\.pdf$/i.test(l.description),
-        isMp3: /\.mp3$/i.test(l.url) || /\.mp3$/i.test(l.description)
-      }));
+      this.fileLinks = (p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || []).map(l => {
+        const urlOrDesc = (l.url || '') + '|' + (l.description || '');
+        return {
+          ...l,
+          isPdf: /\.pdf$/i.test(urlOrDesc),
+          isMp3: /\.mp3$/i.test(urlOrDesc),
+          isImage: /\.(jpe?g|png|webp)$/i.test(urlOrDesc),
+          isCapella: /\.(cap|capx)$/i.test(urlOrDesc),
+          isMuseScore: /\.(musicxml|mxl)$/i.test(urlOrDesc)
+        };
+      });
       this.fileLinks.forEach(link => {
         const url = this.getLinkUrl(link);
         this.http.head(url, { observe: 'response', responseType: 'blob' }).subscribe(res => {
@@ -223,12 +233,21 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     return `${m}:${s}`;
   }
 
-  getLinkUrl(link: PieceLink): string {
-    if (/^https?:\/\//i.test(link.url)) {
-      return link.url;
+  getLinkUrl(link: PieceLink | any): string {
+    // Defensive type checking for runtime safety
+    if (!link) return '';
+    const url = link.url;
+    if (!url || typeof url !== 'string') return '';
+
+    // Check if it's an absolute URL
+    if (/^https?:\/\//i.test(url)) {
+      return url;
     }
-    const apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
-    const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
+
+    // Build relative URL path
+    const apiUrlStr = typeof environment.apiUrl === 'string' ? environment.apiUrl : '';
+    const apiBase = apiUrlStr.replace(/\/api\/?$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
     return `${apiBase}${fullPath}`;
   }

@@ -65,8 +65,8 @@ export class SharedPieceViewComponent implements OnInit {
         }
         this.fileLinks = (p.links?.filter((l: any) => l.type === 'FILE_DOWNLOAD') || []).map((l: any) => ({
           ...l,
-          isPdf: /\.pdf$/i.test(l.url) || /\.pdf$/i.test(l.description),
-          isMp3: /\.mp3$/i.test(l.url) || /\.mp3$/i.test(l.description)
+          isPdf: (typeof l.url === 'string' && /\.pdf$/i.test(l.url)) || (typeof l.description === 'string' && /\.pdf$/i.test(l.description)),
+          isMp3: (typeof l.url === 'string' && /\.mp3$/i.test(l.url)) || (typeof l.description === 'string' && /\.mp3$/i.test(l.description))
         }));
         this.fileLinks.forEach(link => {
           const url = this.getLinkUrl(link);
@@ -93,12 +93,21 @@ export class SharedPieceViewComponent implements OnInit {
     return `${m}:${s}`;
   }
 
-  getLinkUrl(link: PieceLink): string {
-    if (/^https?:\/\//i.test(link.url)) {
-      return link.url;
+  getLinkUrl(link: PieceLink | any): string {
+    // Defensive type checking for runtime safety
+    if (!link) return '';
+    const url = link.url;
+    if (!url || typeof url !== 'string') return '';
+
+    // Check if it's an absolute URL
+    if (/^https?:\/\//i.test(url)) {
+      return url;
     }
-    const apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
-    const path = link.url.startsWith('/') ? link.url : `/${link.url}`;
+
+    // Build relative URL path
+    const apiUrlStr = typeof environment.apiUrl === 'string' ? environment.apiUrl : '';
+    const apiBase = apiUrlStr.replace(/\/api\/?$/, '');
+    const path = url.startsWith('/') ? url : `/${url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
     return `${apiBase}${fullPath}`;
   }

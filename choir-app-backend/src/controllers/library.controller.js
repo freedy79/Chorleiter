@@ -7,6 +7,8 @@ const Composer = db.composer;
 const LoanRequest = db.loan_request;
 const LoanRequestItem = db.loan_request_item;
 const Choir = db.choir;
+const PhysicalCopy = db.physical_copy;
+const DigitalLicense = db.digital_license;
 
 const buildLoanResponse = (requests, filterByChoirId = null) => {
   const now = new Date();
@@ -50,7 +52,9 @@ exports.findAll = async (req, res) => {
         model: Collection,
         as: 'collection',
         include: [{ model: Piece, through: { attributes: ['numberInCollection'] } }]
-      }
+      },
+      { model: PhysicalCopy, as: 'physicalCopies' },
+      { model: DigitalLicense, as: 'digitalLicenses' }
     ]
   });
 

@@ -271,7 +271,7 @@ export class AuthService {
   }
 
   login(credentials: any): Observable<User> {
-    return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials).pipe(
+    return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials, { withCredentials: true }).pipe(
       tap((user: User) => {
         if (user.accessToken) {
           const normalizedUser = this.withNormalizedChoirData(user);
@@ -293,6 +293,11 @@ export class AuthService {
   }
 
   logout(reason?: string): void {
+    // Clear httpOnly cookie on the server
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .pipe(catchError(() => of(null)))
+      .subscribe();
+
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem('theme');

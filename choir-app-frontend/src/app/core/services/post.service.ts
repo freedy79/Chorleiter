@@ -69,4 +69,18 @@ export class PostService {
   reactToComment(postId: number, commentId: number, type?: ReactionType | null): Observable<ReactionInfo> {
     return this.http.post<ReactionInfo>(`${this.apiUrl}/posts/${postId}/comments/${commentId}/reactions`, { type: type ?? null });
   }
+
+  uploadAttachment(postId: number, file: File): Observable<Post> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<Post>(`${this.apiUrl}/posts/${postId}/attachment`, formData);
+  }
+
+  removeAttachment(postId: number): Observable<Post> {
+    return this.http.delete<Post>(`${this.apiUrl}/posts/${postId}/attachment`);
+  }
+
+  getAttachmentUrl(postId: number): string {
+    return `${this.apiUrl}/posts/${postId}/attachment`;
+  }
 }

@@ -37,7 +37,7 @@ function buildBorrowerNames(borrower = {}) {
   };
 }
 
-async function buildPostEmail(text, choirName) {
+async function buildPostEmail(text, choirName, postId, hasAttachment) {
   const linkBase = await getFrontendUrl();
   const ids = Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
   let replaced = text;
@@ -50,10 +50,29 @@ async function buildPostEmail(text, choirName) {
     });
   }
   const body = marked.parse(replaced);
-  const signatureHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a></p>`;
+
+  // Build footer with post link and attachment notice
+  let footerHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a>`;
+  let footerText = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
+
+  // Add post link if postId is available
+  if (postId) {
+    const postLink = `${linkBase}/posts`;
+    footerHtml += `<br><br><a href="${postLink}">Zum Beitrag im System</a>`;
+    footerText += `\n\nZum Beitrag im System:\n${postLink}`;
+  }
+
+  // Add attachment notice if there are attachments
+  if (hasAttachment) {
+    footerHtml += `<br><em>Anhänge können nur im Original-Beitrag heruntergeladen werden.</em>`;
+    footerText += `\n\nAnhänge können nur im Original-Beitrag heruntergeladen werden.`;
+  }
+
+  footerHtml += `</p>`;
+
+  const signatureHtml = footerHtml;
   const html = `${body}${signatureHtml}`;
-  const textSignature = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
-  const plainText = `${replaced}${textSignature}`;
+  const plainText = `${replaced}${footerText}`;
   return { html, text: plainText };
 }
 
@@ -211,10 +230,10 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
   }
 };
 
-exports.sendPostNotificationMail = async (recipients, title, text, choirName, replyTo) => {
+exports.sendPostNotificationMail = async (recipients, title, text, choirName, replyTo, postId, hasAttachment) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const { html, text: plainText } = await buildPostEmail(text, choirName);
+    const { html, text: plainText } = await buildPostEmail(text, choirName, postId, hasAttachment);
     const options = { to: recipients, subject: title, text: plainText, html };
     if (replyTo) options.replyTo = replyTo;
     await sendMail(options);

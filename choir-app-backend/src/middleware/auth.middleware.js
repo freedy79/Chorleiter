@@ -2,9 +2,16 @@ const jwt = require("jsonwebtoken");
 const db = require("../models");
 const { getRequestContext } = require("../config/request-context");
 const { AuthenticationError, AuthorizationError } = require("../utils/errors");
+const logger = require('../config/logger');
+
+const DEBUG_AUTH = (process.env.DEBUG_AUTH || '').toLowerCase() === 'true'
+  || (process.env.DEBUG_CSRF || '').toLowerCase() === 'true';
 
 const optionalAuth = (req, res, next) => {
   let token = req.headers["authorization"];
+  if (!token && req.cookies?.['auth-token']) {
+    token = 'Bearer ' + req.cookies['auth-token'];
+  }
   if (!token) return next();
   token = token.split(' ')[1];
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
@@ -28,8 +35,20 @@ const optionalAuth = (req, res, next) => {
 
 const verifyToken = (req, res, next) => {
   let token = req.headers["authorization"];
+  if (!token && req.cookies?.['auth-token']) {
+    token = 'Bearer ' + req.cookies['auth-token'];
+  }
 
   if (!token) {
+    if (DEBUG_AUTH) {
+      logger.warn('Auth token missing', {
+        method: req.method,
+        path: req.originalUrl,
+        hasCookieToken: Boolean(req.cookies?.['auth-token']),
+        hasAuthHeader: Boolean(req.headers['authorization']),
+        ip: req.ip
+      });
+    }
     return next(new AuthenticationError("No token provided!"));
   }
 
@@ -38,6 +57,14 @@ const verifyToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
+      if (DEBUG_AUTH) {
+        logger.warn('Auth token invalid/expired', {
+          method: req.method,
+          path: req.originalUrl,
+          error: err.message,
+          ip: req.ip
+        });
+      }
       return next(new AuthenticationError("Invalid or expired token!"));
     }
     req.userId = decoded.id;

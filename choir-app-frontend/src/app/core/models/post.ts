@@ -14,6 +14,7 @@ export interface Post {
   published: boolean;
   author?: { id: number; name: string };
   sendAsUser?: boolean;
+  attachmentOriginalName?: string | null;
   poll?: Poll | null;
   reactions?: ReactionInfo;
   comments?: PostComment[];

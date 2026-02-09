@@ -54,6 +54,10 @@
   height: auto;
 }
 
+.choir-badge-mobile {
+  margin: 0 0.25rem;
+}
+
 @media (max-width: 768px) {
   .choir-badge {
     max-width: 100px;
@@ -100,10 +104,35 @@ app-search-box {
   max-height: 40px;
 }
 
+.search-expanded {
+  position: absolute;
+  left: 56px;
+  right: 48px;
+  z-index: 10;
+  background: inherit;
+  animation: expandSearch 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes expandSearch {
+  from {
+    opacity: 0;
+    transform: scaleX(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
 @media (max-width: 480px) {
   app-search-box {
     margin: 0;
     max-width: calc(100vw - 120px);
+  }
+
+  .search-expanded {
+    left: 48px;
+    right: 48px;
   }
 }
 
@@ -191,6 +220,12 @@ app-search-box {
   width: 220px; // Feste Breite für den Sidenav
   z-index: 1000; // Sicherstellen, dass der Sidenav über anderen Inhalten liegt
   padding: 0.0rem;
+
+  // Schnellere Animation für Mobile
+  ::ng-deep .mat-drawer-transition & {
+    transition-duration: 250ms !important;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
 }
 
 .user-name {
@@ -202,7 +237,13 @@ app-search-box {
 
 @media (max-width: 599px) {
   .appDrawer {
-    width: 100vw;
+    width: 85vw;
+    max-width: 320px;
+
+    // Noch schnellere Animation auf Handsets
+    ::ng-deep .mat-drawer-transition & {
+      transition-duration: 200ms !important;
+    }
   }
 }
 
@@ -223,64 +264,146 @@ app-search-box {
   color: green !important;
 }
 
+// ========================================
+// BOTTOM NAVIGATION - Mobile Optimiert
+// ========================================
 .bottom-nav {
   display: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 599px) {
   .bottom-nav {
     display: flex;
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
-    height: var(--footer-height);
+    height: 64px;
     background: var(--page-header-bg-color, #fff);
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
     justify-content: space-around;
-    align-items: center;
+    align-items: stretch;
     z-index: 1000;
     padding: 0;
     margin: 0;
+    transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .bottom-nav a {
+  // Navigation Item (Link oder Button)
+  .bottom-nav-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: inherit;
-    font-size: 0.7rem;
-    min-width: 50px;
-    min-height: 64px;
-    padding: 8px 4px;
-    transition: background-color 0.2s;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    font-size: 0.75rem;
+    font-weight: 500;
+    flex: 1;
+    min-width: 0;
+    max-width: 168px;
+    padding: 6px 12px 8px;
+    border-radius: 0;
+    transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible;
+
+    // Icon Styling
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      margin-bottom: 4px;
+      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    // Label Styling
+    .nav-label {
+      font-size: 0.75rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      transition: opacity 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    // Hover State
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    // Active State - Deutlich sichtbar
+    &.active {
+      color: var(--brand, #1976d2);
+
+      mat-icon {
+        transform: scale(1.1);
+      }
+
+      // Active Indicator Bar
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 32px;
+        height: 3px;
+        background: var(--brand, #1976d2);
+        border-radius: 0 0 3px 3px;
+      }
+    }
   }
 
-  .bottom-nav a span {
-    display: none;
+  .bottom-nav-more {
+    flex: 0.8;
   }
 
-  .bottom-nav a:active,
-  .bottom-nav a:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+  // Sehr kleine Screens - Nur Icons
+  @media (max-width: 360px) {
+    .bottom-nav {
+      height: 56px;
+    }
+
+    .bottom-nav-item {
+      padding: 8px 4px;
+
+      .nav-label {
+        display: none;
+      }
+
+      mat-icon {
+        margin-bottom: 0;
+      }
+    }
   }
 
-  .bottom-nav a.active {
-    color: var(--brand);
-  }
-
-  .bottom-nav mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-    line-height: 24px;
-    margin-bottom: 4px;
+  // Größere Handsets - Icons + Labels
+  @media (min-width: 361px) and (max-width: 599px) {
+    .bottom-nav-item .nav-label {
+      display: block;
+    }
   }
 
   app-footer,
   .donate-button {
     display: none !important;
+  }
+
+  // Platz für Bottom Nav
+  .main-content,
+  .public-content {
+    padding-bottom: 64px;
+  }
+}
+
+// Overflow Menu Styling
+.bottom-nav-overflow {
+  max-width: 280px;
+
+  .mat-mdc-menu-item {
+    min-height: 48px;
   }
 }

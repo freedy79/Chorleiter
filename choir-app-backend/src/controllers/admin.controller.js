@@ -446,8 +446,11 @@ exports.removeUserFromChoir = async (req, res) => {
             }
         }
 
+        const userToRemove = await db.user.findByPk(userId, { attributes: ['id', 'firstName', 'name'] });
         const result = await choir.removeUser(userId);
         if (result > 0) {
+            const userName = userToRemove ? `${userToRemove.firstName} ${userToRemove.name}` : null;
+            await db.choir_log.create({ choirId, userId, action: 'member_leave', details: { removedBy: req.userId, userName, adminAction: true } }).catch(() => {});
             res.status(200).send({ message: 'User removed from choir.' });
         } else {
             res.status(412).send({ message: 'User is not a member of this choir.' });

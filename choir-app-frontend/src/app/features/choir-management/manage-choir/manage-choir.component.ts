@@ -198,12 +198,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
 
         this.collectionCopyIds.clear();
         if (this.isChoirAdmin || this.isAdmin) {
-          pageData.collections.forEach((col: Collection) => {
-            this.apiService.getCollectionCopies(col.id).pipe(takeUntil(this.destroy$)).subscribe(copies => {
-              if (copies.length > 0) {
-                this.collectionCopyIds.add(col.id);
-              }
-            });
+          this.apiService.getCollectionCopyIds().pipe(takeUntil(this.destroy$)).subscribe(ids => {
+            ids.forEach(id => this.collectionCopyIds.add(id));
             this.libraryItemsLoaded = true;
           });
         } else {
@@ -236,12 +232,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       this.apiService.getChoirCollections(opts).pipe(takeUntil(this.destroy$)).subscribe(cols => {
         this.collectionDataSource.data = cols;
         this.collectionCopyIds.clear();
-        cols.forEach(col => {
-          this.apiService.getCollectionCopies(col.id).pipe(takeUntil(this.destroy$)).subscribe(copies => {
-            if (copies.length > 0) {
-              this.collectionCopyIds.add(col.id);
-            }
-          });
+        this.apiService.getCollectionCopyIds().pipe(takeUntil(this.destroy$)).subscribe(ids => {
+          ids.forEach(id => this.collectionCopyIds.add(id));
         });
       });
       this.apiService.getChoirLogs(opts).pipe(takeUntil(this.destroy$)).subscribe(logs => {

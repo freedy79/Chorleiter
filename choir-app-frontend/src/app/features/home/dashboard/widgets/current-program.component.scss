@@ -15,6 +15,18 @@ mat-card-header {
   &:last-child {
     border-bottom: none;
   }
+
+  mat-list-item, a[mat-list-item] {
+    height: auto !important;
+    min-height: 48px;
+    padding: 8px 0;
+  }
+
+  ::ng-deep .mdc-list-item__content {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+  }
 }
 
 .clickable {
@@ -26,16 +38,22 @@ mat-card-header {
 }
 
 .title {
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
+  font-weight: bold;
+  font-size: 1.1rem;
+  white-space: normal;
+  line-height: 1.3;
+}
 
-  .composer {
-    font-size: 0.9rem;
-    color: #999;
-  }
+.composer {
+  font-size: 0.9rem;
+  color: #999;
+  white-space: normal;
+  line-height: 1.3;
+}
 
-    .subtitle {
-      font-size: 0.9rem;
-      color: #666;
-    }
+.subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  white-space: normal;
+  line-height: 1.3;
+}

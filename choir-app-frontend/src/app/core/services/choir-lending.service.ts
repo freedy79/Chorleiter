@@ -14,6 +14,10 @@ export class ChoirLendingService {
     return this.http.get<Lending[]>(`${this.baseUrl}/${collectionId}/copies`);
   }
 
+  getCopyIds(): Observable<number[]> {
+    return this.http.get<number[]>(`${this.baseUrl}/copy-ids`);
+  }
+
   initCopies(collectionId: number, copies: number): Observable<Lending[]> {
     return this.http.post<Lending[]>(`${this.baseUrl}/${collectionId}/copies`, { copies });
   }

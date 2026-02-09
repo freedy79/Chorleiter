@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LibraryItem } from '../models/library-item';
+import { PhysicalCopy } from '../models/physical-copy';
+import { DigitalLicense } from '../models/digital-license';
 import { LoanRequestPayload } from '../models/loan-request';
 import { Loan } from '../models/loan';
 import { Lending } from '../models/lending';
@@ -73,5 +75,39 @@ export class LibraryService {
 
   downloadCopiesPdf(itemId: number): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${itemId}/copies/pdf`, { responseType: 'blob' });
+  }
+
+  // Physical copies
+  getPhysicalCopies(itemId: number): Observable<PhysicalCopy[]> {
+    return this.http.get<PhysicalCopy[]>(`${this.apiUrl}/${itemId}/physical-copies`);
+  }
+
+  createPhysicalCopy(itemId: number, data: Partial<PhysicalCopy>): Observable<PhysicalCopy> {
+    return this.http.post<PhysicalCopy>(`${this.apiUrl}/${itemId}/physical-copies`, data);
+  }
+
+  updatePhysicalCopy(copyId: number, data: Partial<PhysicalCopy>): Observable<PhysicalCopy> {
+    return this.http.put<PhysicalCopy>(`${this.apiUrl}/physical-copies/${copyId}`, data);
+  }
+
+  deletePhysicalCopy(copyId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/physical-copies/${copyId}`);
+  }
+
+  // Digital licenses
+  getDigitalLicenses(itemId: number): Observable<DigitalLicense[]> {
+    return this.http.get<DigitalLicense[]>(`${this.apiUrl}/${itemId}/digital-licenses`);
+  }
+
+  createDigitalLicense(itemId: number, data: Partial<DigitalLicense>): Observable<DigitalLicense> {
+    return this.http.post<DigitalLicense>(`${this.apiUrl}/${itemId}/digital-licenses`, data);
+  }
+
+  updateDigitalLicense(licenseId: number, data: Partial<DigitalLicense>): Observable<DigitalLicense> {
+    return this.http.put<DigitalLicense>(`${this.apiUrl}/digital-licenses/${licenseId}`, data);
+  }
+
+  deleteDigitalLicense(licenseId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/digital-licenses/${licenseId}`);
   }
 }

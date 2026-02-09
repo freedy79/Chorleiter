@@ -9,12 +9,15 @@ const { migrateUserNames } = require('./migrateUserNames');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = { alter: true } } = options;
+    // 1. Sync database first to create all tables
+    await syncDatabase(syncOptions);
+    // 2. Then run migrations on existing tables
     await migrateUserNames();
     await migrateRoles();
     await fixProgramPublishedFromIdColumn();
-    await syncDatabase(syncOptions);
     await ensureMonthlyPlanIndexes();
     await ensureJoinHashes();
+    // 3. Finally seed and assign roles
     await seedDatabase({ includeDemoData });
     await assignAdminRole();
 }

@@ -5,7 +5,13 @@ const crypto = require('crypto');
  * wie PayPal PDT Token
  */
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-insecure-key-please-change';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY === 'default-insecure-key-please-change') {
+    throw new Error(
+        'ENCRYPTION_KEY is not set or uses the insecure default. ' +
+        'Please set a strong ENCRYPTION_KEY in your .env file (min. 32 characters).'
+    );
+}
 const ALGORITHM = 'aes-256-cbc';
 const IV_LENGTH = 16;
 
@@ -50,7 +56,7 @@ function decrypt(text) {
 
         return decrypted;
     } catch (err) {
-        console.error('Decryption error:', err);
+        console.error('Decryption error: failed to decrypt value');
         return null;
     }
 }

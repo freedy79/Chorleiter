@@ -128,7 +128,8 @@ export class ApiService {
     statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string,
-    licenses?: string[]
+    licenses?: string[],
+    composerIds?: number[]
   ): Observable<{ data: Piece[]; total: number }> {
     // composerId not yet supported by PieceService, pass as part of search/filter when implemented
     return this.pieceService.getMyRepertoire(
@@ -140,7 +141,8 @@ export class ApiService {
       statuses,
       sortDir,
       search,
-      licenses
+      licenses,
+      composerIds
     );
   }
 
@@ -634,6 +636,10 @@ export class ApiService {
     return this.choirLendingService.getCopies(id);
   }
 
+  getCollectionCopyIds(): Observable<number[]> {
+    return this.choirLendingService.getCopyIds();
+  }
+
   initCollectionCopies(id: number, copies: number): Observable<Lending[]> {
     return this.choirLendingService.initCopies(id, copies);
   }
@@ -955,6 +961,18 @@ export class ApiService {
 
   reactToComment(postId: number, commentId: number, type?: ReactionType | null): Observable<ReactionInfo> {
     return this.postService.reactToComment(postId, commentId, type);
+  }
+
+  uploadPostAttachment(postId: number, file: File): Observable<Post> {
+    return this.postService.uploadAttachment(postId, file);
+  }
+
+  removePostAttachment(postId: number): Observable<Post> {
+    return this.postService.removeAttachment(postId);
+  }
+
+  getPostAttachmentUrl(postId: number): string {
+    return this.postService.getAttachmentUrl(postId);
   }
 
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {

@@ -33,7 +33,8 @@ export class PieceService {
     statuses?: string[],
     sortDir: 'ASC' | 'DESC' = 'ASC',
     search?: string,
-    licenses?: string[]
+    licenses?: string[],
+    composerIds?: number[]
   ): Observable<{ data: Piece[]; total: number }> {
     let params = new HttpParams();
     if (categoryIds && categoryIds.length > 0) {
@@ -50,6 +51,7 @@ export class PieceService {
     if (statuses && statuses.length) params = params.set('status', statuses.join(','));
     if (search) params = params.set('search', search);
     if (licenses && licenses.length) params = params.set('license', licenses.join(','));
+    if (composerIds && composerIds.length) params = params.set('composerIds', composerIds.join(','));
 
     return this.http.get<{ data: Piece[]; total: number }>(`${this.apiUrl}/repertoire`, { params });
   }

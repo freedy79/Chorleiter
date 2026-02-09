@@ -15,7 +15,15 @@
     "prebuild": "npm run generate-build-info",
     "prestart": "npm run generate-build-info",
     "prestartwithtimestamp": "npm run generate-build-info",
-    "prune": "ts-prune -p tsconfig.app.json"
+    "prune": "ts-prune -p tsconfig.app.json",
+    "lighthouse": "lighthouse http://localhost:4200 --view --preset=desktop",
+    "lighthouse:mobile": "lighthouse http://localhost:4200 --view --preset=perf --emulated-form-factor=mobile --throttling.cpuSlowdownMultiplier=4",
+    "lighthouse:ci": "lighthouse http://localhost:4200 --output=json --output=html --output-path=./lighthouse-report",
+    "lighthouse:auth": "lighthouse http://localhost:4200 --view --chrome-flags=\"--no-sandbox\" --disable-storage-reset",
+    "lighthouse:build": "npm run build && node ./scripts/lighthouse-test-server.js",
+    "pwa-health-check": "node ./scripts/pwa-health-check.js",
+    "icons:convert": "node ./scripts/convert-svg-to-png.js",
+    "build:prod": "npm run generate-build-info && ng build --configuration production"
   },
   "private": true,
   "dependencies": {
@@ -28,6 +36,7 @@
     "@angular/material": "^20.0.3",
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
+    "@angular/service-worker": "^20.3.16",
     "@ckeditor/ckeditor5-angular": "^10.0.0",
     "@ckeditor/ckeditor5-build-classic": "^41.4.2",
     "@tonejs/midi": "^2.0.28",
@@ -51,7 +60,9 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
+    "lighthouse": "^12.8.2",
     "puppeteer": "^24.13.0",
+    "sharp": "^0.34.5",
     "ts-prune": "^0.10.3",
     "typescript": "~5.8.2"
   }

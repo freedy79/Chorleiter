@@ -19,7 +19,7 @@ export class ManageFilesComponent implements OnInit {
   files: BackendFile[] = [];
   displayedColumns = ['filename', 'linked', 'actions'];
   displayedFileColumns = ['filename', 'downloadName', 'linked', 'actions'];
-  private readonly apiBase = environment.apiUrl.replace(/\/api\/?$/, '');
+  private readonly apiBase = typeof environment.apiUrl === 'string' ? environment.apiUrl.replace(/\/api\/?$/, '') : '';
 
   constructor(private api: ApiService) {}
 

@@ -18,7 +18,7 @@
     </mat-expansion-panel-header>
     <div class="lyrics">{{ piece.lyrics }}</div>
   </mat-expansion-panel>
-  <mat-expansion-panel>
+  <mat-expansion-panel *ngIf="isDeveloper">
     <mat-expansion-panel-header>
       <mat-panel-title>Probenunterstützung (Rehearsal Support)</mat-panel-title>
     </mat-expansion-panel-header>
@@ -57,9 +57,17 @@
             [downloadName]="link.downloadName || link.description">
           </app-audio-player>
 
-          <div *ngIf="!link.isMp3">
+          <div *ngIf="link.isImage">
+            <p>{{ link.description }}</p>
+            <img [src]="getLinkUrl(link)" [alt]="link.description" loading="lazy" style="max-width: 100%; max-height: 600px;" />
+            <br><span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+          </div>
+
+          <div *ngIf="!link.isMp3 && !link.isImage">
             <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
               <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
+              <mat-icon *ngIf="link.isCapella || link.isMuseScore" class="file-icon">music_note</mat-icon>
+              <mat-icon *ngIf="!link.isPdf && !link.isCapella && !link.isMuseScore" class="file-icon">insert_drive_file</mat-icon>
               {{ link.description }}
             </a>
             <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>

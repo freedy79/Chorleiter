@@ -5,6 +5,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $VerboseLogging = $Verbose.IsPresent
 
+if ($VerboseLogging) {
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting deployment script in verbose mode"
+} else {
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting deployment script"
+}
+
 # UTF-8 Konsolen-Encoding für korrekte Linux-Ausgabe
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -17,7 +23,7 @@ function Write-VerboseLog {
     )
 
     if ($VerboseLogging) {
-        Write-Host $Message
+        Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $Message"
     }
 }
 
@@ -172,37 +178,94 @@ function Invoke-Scp {
     }
 }
 
-$BackendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
-$FrontendArchive = [IO.Path]::GetTempFileName() + ".tar.gz"
+# Ensure we're in the root directory for tar operations
+Push-Location $PSScriptRoot
+
+Write-Host "Requesting temporary files for packaging..."
+$BackendArchive = [IO.Path]::GetFullPath([IO.Path]::GetTempFileName() + ".tar.gz")
+$FrontendArchive = [IO.Path]::GetFullPath([IO.Path]::GetTempFileName() + ".tar.gz")
+
+Write-VerboseLog "Backend archive path: $BackendArchive"
+Write-VerboseLog "Frontend archive path: $FrontendArchive"
 
 # Pack directories
-& tar --exclude=".env" -czf $BackendArchive -C "choir-app-backend" .
-& tar -czf $FrontendArchive -C "choir-app-frontend/dist/choir-app-frontend/browser" .
+Write-Host "Compressing now..."
+
+# Convert relative paths to absolute for tar
+$BackendSourcePath = Join-Path $PSScriptRoot "choir-app-backend"
+$FrontendSourcePath = Join-Path $PSScriptRoot "choir-app-frontend/dist/choir-app-frontend/browser"
+
+Write-VerboseLog "Backend source: $BackendSourcePath"
+Write-VerboseLog "Frontend source: $FrontendSourcePath"
+
+# Verify directories exist
+if (-not (Test-Path $BackendSourcePath)) {
+    throw "Backend directory not found: $BackendSourcePath"
+}
+if (-not (Test-Path $FrontendSourcePath)) {
+    throw "Frontend directory not found: $FrontendSourcePath"
+}
+
+Write-VerboseLog "Compressing backend (excluding node_modules, logs, uploads)..."
+$tarArgs = @('--exclude=.env', '--exclude=node_modules', '--exclude=logs', '--exclude=uploads', '-czf', $BackendArchive, '-C', $BackendSourcePath, '.')
+& tar $tarArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Backend compression failed with exit code $LASTEXITCODE. Command: tar $($tarArgs -join ' ')"
+}
+Write-Host "Backend compressed successfully."
+
+Write-VerboseLog "Compressing frontend..."
+$tarArgs = @('-czf', $FrontendArchive, '-C', $FrontendSourcePath, '.')
+& tar $tarArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "Frontend compression failed with exit code $LASTEXITCODE. Command: tar $($tarArgs -join ' ')"
+}
+Write-Host "Frontend compressed successfully."
+
+Write-Host "Compression finished. Starting deployment..."
 
 # Create remote directories
+Write-VerboseLog "Creating remote directories..."
 Invoke-Ssh "mkdir -p '$BackendDest' '$FrontendDest'"
+Write-VerboseLog "Remote directories created."
 
 # Remove existing frontend files before uploading new ones
 Write-Host "Removing old frontend files..."
 Invoke-Ssh "rm -rf '$FrontendDest'/*"
+Write-VerboseLog "Old files removed."
 
 # Upload archives
+Write-Host "Uploading backend archive..."
 Invoke-Scp $BackendArchive "${Remote}:/tmp/backend.tar.gz"
+Write-VerboseLog "Backend archive uploaded."
+
+Write-Host "Uploading frontend archive..."
 Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
+Write-VerboseLog "Frontend archive uploaded."
 
 # Extract archives on server and clean up
+Write-Host "Extracting backend on server..."
 Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
+Write-VerboseLog "Backend extracted."
+
+Write-Host "Extracting frontend on server..."
 Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"
+Write-VerboseLog "Frontend extracted."
 
 # Create database backup
 Write-Host "Creating database backup on server..."
 Invoke-Ssh "cd '$BackendDest' && npm run backup"
+Write-VerboseLog "Database backup completed."
 
 # Ensure backend dependencies are installed
+Write-Host "Installing backend dependencies..."
 Invoke-Ssh "cd '$BackendDest' && npm install"
+Write-VerboseLog "Dependencies installed."
 
 # Restart backend
+Write-Host "Restarting backend service..."
 Invoke-Ssh "pm2 restart chorleiter-api"
+Write-VerboseLog "Backend restart command sent."
 
 # Verify backend started
 $pm2Status = Invoke-Ssh "pm2 describe chorleiter-api | grep -i status" 2>$null

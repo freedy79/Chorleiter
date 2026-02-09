@@ -1,25 +1,27 @@
 <mat-card *ngIf="program" class="last-service-card left-tile">
-            <mat-card-title>{{ program.title }}</mat-card-title>
-            <mat-card-content>
-              <p *ngIf="program.startTime">{{ program.startTime | date:'shortDate' }}</p>
-              <mat-list>
-                <ng-container *ngFor="let item of program.items">
-                  <div class="item-container">
-                    <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
-                      [routerLink]="['/pieces', item.pieceId]">
-                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}{{ getComposerYears(item) }}</div>
-                      <div matLine class="title">{{ getItemTitle(item) }}</div>
-                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                    </a>
-                  </div>
-                  <ng-template #noPiece>
-                    <mat-list-item>
-                      <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
-                      <div matLine class="title">{{ getItemTitle(item) }}</div>
-                      <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
-                    </mat-list-item>
-                  </ng-template>
-                </ng-container>
-              </mat-list>
-            </mat-card-content>
+  <mat-card-header>
+    <mat-card-title>{{ program.title }}</mat-card-title>
+    <mat-card-subtitle *ngIf="program.startTime">{{ program.startTime | date:'dd.MM.yy' }}</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-list>
+      <ng-container *ngFor="let item of program.items">
+        <div class="item-container">
+          <a *ngIf="item.pieceId; else noPiece" mat-list-item class="clickable"
+            [routerLink]="['/pieces', item.pieceId]">
+            <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}{{ getComposerYears(item) }}</div>
+            <div matLine class="title">{{ getItemTitle(item) }}</div>
+            <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+          </a>
+        </div>
+        <ng-template #noPiece>
+          <mat-list-item>
+            <div matLine *ngIf="getItemComposer(item)" class="composer">{{ getItemComposer(item) }}</div>
+            <div matLine class="title">{{ getItemTitle(item) }}</div>
+            <div matLine *ngIf="getItemSubtitle(item)" class="subtitle">{{ getItemSubtitle(item) }}</div>
+          </mat-list-item>
+        </ng-template>
+      </ng-container>
+    </mat-list>
+  </mat-card-content>
 </mat-card>

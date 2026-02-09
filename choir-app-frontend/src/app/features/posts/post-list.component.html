@@ -5,126 +5,21 @@
 <ng-container *ngIf="posts.length; else noPosts">
   <div class="post-list">
     <ng-container *ngFor="let p of posts | slice:0:displayCount">
-      <mat-card id="post-{{ p.id }}" class="post-card">
-        <mat-card-header>
-          <mat-card-title>{{ p.title }}</mat-card-title>
-          <mat-card-subtitle>{{ p.updatedAt | date:'short' }} – {{ p.author?.name }} <span *ngIf="!p.published">(Entwurf)</span></mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div [innerHTML]="p.text | markdown | async"></div>
-          <div *ngIf="p.expiresAt" class="expires">Sichtbar bis {{ p.expiresAt | date:'shortDate' }}</div>
-          <app-post-poll *ngIf="p.poll" [post]="p" (pollChange)="onPollChange(p, $event)"></app-post-poll>
-        </mat-card-content>
-
-        <div class="social-counts" *ngIf="p.reactions?.total || (p.comments?.length || 0)">
-          <div class="reaction-count" *ngIf="p.reactions?.total">
-            <span class="reaction-icons">
-              <span *ngFor="let summary of reactionSummaries(p.reactions) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
-                {{ reactionIcon(summary.type) }}
-              </span>
-            </span>
-            <span class="count">{{ p.reactions?.total }}</span>
-          </div>
-          <div class="comment-count" *ngIf="p.comments?.length">{{ countComments(p.comments) }} Kommentare</div>
-        </div>
-
-        <div class="social-actions">
-          <div class="reaction-picker">
-            <button mat-button [matMenuTriggerFor]="postReactionMenu" [class.active]="p.reactions?.userReaction">
-              <span class="emoji">{{ reactionIcon(p.reactions?.userReaction) }}</span>
-              <span>{{ reactionLabel(p.reactions?.userReaction) }}</span>
-            </button>
-            <mat-menu #postReactionMenu="matMenu">
-              <button mat-menu-item *ngFor="let option of reactionOptions" (click)="setPostReaction(p, option.type)">
-                <span class="emoji">{{ option.emoji }}</span>
-                <span>{{ option.label }}</span>
-              </button>
-              <button mat-menu-item *ngIf="p.reactions?.userReaction" (click)="setPostReaction(p, null)">Reaktion entfernen</button>
-            </mat-menu>
-          </div>
-          <button mat-button (click)="focusCommentInput(p.id)">Kommentieren</button>
-        </div>
-
-        <div class="comment-form">
-          <mat-form-field appearance="outline" class="comment-field">
-            <input matInput [id]="'comment-input-' + p.id" placeholder="Kommentar schreiben" [(ngModel)]="newCommentText[p.id]" (keydown.enter)="submitComment(p.id)">
-          </mat-form-field>
-          <button mat-stroked-button color="primary" (click)="submitComment(p.id)">Senden</button>
-        </div>
-
-        <div class="comments" *ngIf="p.comments?.length">
-          <ng-container *ngFor="let comment of p.comments">
-            <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: comment, post: p, depth: 0, parent: null }"></ng-container>
-          </ng-container>
-        </div>
-
-        <mat-card-actions *ngIf="canEdit(p)" class="actions">
-          <button mat-button color="accent" (click)="publishPost(p)" *ngIf="!p.published">Veröffentlichen</button>
-          <button mat-icon-button (click)="editPost(p)" matTooltip="Bearbeiten"><mat-icon>edit</mat-icon></button>
-          <button mat-icon-button (click)="deletePost(p)" matTooltip="Löschen"><mat-icon>delete</mat-icon></button>
-        </mat-card-actions>
-      </mat-card>
+      <app-post
+        [post]="p"
+        [currentUserId]="currentUserId"
+        [isChoirAdmin]="isChoirAdmin"
+        [isAdmin]="isAdmin"
+        (postEdited)="onPostEdited($event)"
+        (postDeleted)="onPostDeleted($event)"
+        (postPublished)="onPostPublished()"
+      ></app-post>
     </ng-container>
     <div class="load-more" *ngIf="displayCount < posts.length">
       <a (click)="showMore()">Ältere anzeigen</a>
     </div>
   </div>
 </ng-container>
-
-<ng-template #commentTemplate let-comment let-post="post" let-depth="depth" let-parent="parent">
-  <div class="comment" [class.reply]="depth > 0">
-    <div class="comment-header">
-      <div class="author-line">
-        <span class="author">{{ comment.author?.name || 'Unbekannt' }}</span>
-        <span class="time">{{ comment.createdAt | date:'short' }}</span>
-      </div>
-      <div class="reply-context" *ngIf="parent">
-        Antwort auf <span class="reply-target">{{ parent.author?.name || 'Unbekannt' }}</span>
-      </div>
-    </div>
-    <div class="comment-body">{{ comment.text }}</div>
-
-    <div class="comment-counts" *ngIf="comment.reactions?.total">
-      <div class="reaction-count">
-        <span class="reaction-icons">
-          <span *ngFor="let summary of reactionSummaries(comment.reactions) | slice:0:3" class="reaction-emoji" [matTooltip]="reactionLabel(summary.type)">
-            {{ reactionIcon(summary.type) }}
-          </span>
-        </span>
-        <span class="count">{{ comment.reactions?.total }}</span>
-      </div>
-    </div>
-
-    <div class="comment-actions-row">
-      <button mat-button class="reaction-action" [matMenuTriggerFor]="commentReactionMenu" [class.active]="comment.reactions?.userReaction">
-        <span class="emoji">{{ reactionIcon(comment.reactions?.userReaction) }}</span>
-        <span>{{ reactionLabel(comment.reactions?.userReaction) }}</span>
-      </button>
-      <mat-menu #commentReactionMenu="matMenu">
-        <button mat-menu-item *ngFor="let option of reactionOptions" (click)="setCommentReaction(post, comment, option.type)">
-          <span class="emoji">{{ option.emoji }}</span>
-          <span>{{ option.label }}</span>
-        </button>
-        <button mat-menu-item *ngIf="comment.reactions?.userReaction" (click)="setCommentReaction(post, comment, null)">Reaktion entfernen</button>
-      </mat-menu>
-      <button mat-button (click)="toggleReplyBox(comment.id)">Antworten</button>
-      <button mat-button color="warn" *ngIf="canDeleteComment(comment, post)" (click)="deleteComment(post.id, comment.id)">Löschen</button>
-    </div>
-
-    <div class="reply-form" *ngIf="replyBoxOpen[comment.id]">
-      <mat-form-field appearance="outline" class="comment-field">
-        <input matInput placeholder="Antwort schreiben" [(ngModel)]="replyText[comment.id]" (keydown.enter)="submitComment(post.id, comment.id)">
-      </mat-form-field>
-      <button mat-stroked-button color="primary" (click)="submitComment(post.id, comment.id)">Antworten</button>
-    </div>
-
-    <div class="replies" *ngIf="comment.replies?.length">
-      <ng-container *ngFor="let child of comment.replies">
-        <ng-container *ngTemplateOutlet="commentTemplate; context: { $implicit: child, post: post, depth: depth + 1, parent: comment }"></ng-container>
-      </ng-container>
-    </div>
-  </div>
-</ng-template>
 
 <ng-template #noPosts>
   <div class="no-posts">Noch keine Beiträge angelegt.</div>
