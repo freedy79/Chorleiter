@@ -3,10 +3,12 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 1rem;
+  padding: 0.5rem 0;
   position: sticky;
   top: 0;
-  z-index: 1;
-  //background-color: var(--page-header-bg-color, #fff);
+  z-index: 10;
+  background-color: var(--page-header-bg-color, #fff);
+  color: var(--page-header-text-color, #212121);
 }
 
 h1 {
@@ -14,7 +16,7 @@ h1 {
   font-size: 1.5rem;
   color: #212121; // Light mode: dark text
 
-  @media (prefers-color-scheme: dark) {
+  .dark-theme & {
     color: #ffffff; // Dark mode: white text
   }
 }
