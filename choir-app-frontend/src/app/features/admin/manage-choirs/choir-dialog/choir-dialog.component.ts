@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { Choir } from 'src/app/core/models/choir';
@@ -30,7 +30,7 @@ export class ChoirDialogComponent extends BaseFormDialog<Choir, Choir | null> im
     @Inject(MAT_DIALOG_DATA) data: Choir | null,
     private api: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {
     super(fb, dialogRef, data);
     this.title = this.getDialogTitle('Chor hinzufügen', 'Chor bearbeiten');
@@ -64,10 +64,10 @@ export class ChoirDialogComponent extends BaseFormDialog<Choir, Choir | null> im
       if (result && result.email && result.roles) {
         this.api.inviteUserToChoirAdmin(this.data!.id, result.email, result.roles).subscribe({
           next: (resp) => {
-            this.snackBar.open(resp.message, 'OK', { duration: 4000 });
+            this.notification.success(resp.message);
             this.loadMembers();
           },
-          error: err => this.snackBar.open(err.error?.message || 'Fehler', 'Schließen')
+          error: err => this.notification.error(err.error?.message || 'Fehler')
         });
       }
     });
@@ -84,10 +84,10 @@ export class ChoirDialogComponent extends BaseFormDialog<Choir, Choir | null> im
       if (conf) {
         this.api.removeUserFromChoirAdmin(this.data!.id, user.id).subscribe({
           next: () => {
-            this.snackBar.open('Mitglied entfernt', 'OK', { duration: 3000 });
+            this.notification.success('Mitglied entfernt');
             this.loadMembers();
           },
-          error: () => this.snackBar.open('Fehler beim Entfernen des Mitglieds', 'Schließen')
+          error: () => this.notification.error('Fehler beim Entfernen des Mitglieds')
         });
       }
     });
@@ -99,7 +99,7 @@ export class ChoirDialogComponent extends BaseFormDialog<Choir, Choir | null> im
     const updated = (checked ? [...new Set([...roles, 'organist'])] : roles.filter(r => r !== 'organist')) as ('director' | 'choir_admin' | 'organist' | 'singer')[];
     this.api.updateChoirMemberAdmin(this.data.id, user.id, { rolesInChoir: updated }).subscribe({
       next: () => user.membership!.rolesInChoir = updated,
-      error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen')
+      error: () => this.notification.error('Fehler beim Aktualisieren')
     });
   }
 }

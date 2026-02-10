@@ -2,7 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { Subscription, timer } from 'rxjs';
@@ -30,7 +30,7 @@ export class EventImportDialogComponent implements OnDestroy {
   constructor(
     private dialogRef: MatDialogRef<EventImportDialogComponent>,
     private apiService: ApiService,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   onFileSelected(event: Event): void {
@@ -48,7 +48,7 @@ export class EventImportDialogComponent implements OnDestroy {
     this.isLoading = true;
     this.apiService.uploadEventCsv(this.selectedFile, this.eventType, 'preview').subscribe({
       next: preview => { this.previewData = preview; this.isLoading = false; },
-      error: err => { this.snackBar.open(`Fehler beim Laden der Vorschau: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen'); this.isLoading = false; }
+      error: err => { this.notification.error(`Fehler beim Laden der Vorschau: ${err.error?.message || 'Unbekannter Fehler'}`); this.isLoading = false; }
     });
   }
 
@@ -61,7 +61,7 @@ export class EventImportDialogComponent implements OnDestroy {
 
     this.apiService.startEventCsvImport(this.selectedFile, this.eventType).subscribe({
       next: res => { this.isLoading = false; this.pollStatus(res.jobId); },
-      error: err => { this.snackBar.open(`Import konnte nicht gestartet werden: ${err.error?.message || 'Unbekannter Fehler'}`, 'Schließen'); this.isLoading = false; this.isImporting = false; }
+      error: err => { this.notification.error(`Import konnte nicht gestartet werden: ${err.error?.message || 'Unbekannter Fehler'}`); this.isLoading = false; this.isImporting = false; }
     });
   }
 
@@ -80,14 +80,14 @@ export class EventImportDialogComponent implements OnDestroy {
           this.importProgress = 0;
         }
         if (job.status === 'completed') {
-          this.snackBar.open(job.result?.message || 'Import erfolgreich abgeschlossen!', 'OK', { duration: 7000 });
+          this.notification.success(job.result?.message || 'Import erfolgreich abgeschlossen!');
           this.dialogRef.close(true);
         } else if (job.status === 'failed') {
-          this.snackBar.open(`Import fehlgeschlagen: ${job.error}`, 'Schließen');
+          this.notification.error(`Import fehlgeschlagen: ${job.error}`);
           this.isImporting = false;
         }
       },
-      error: () => { this.snackBar.open('Fehler beim Abrufen des Importstatus.', 'Schließen'); this.isImporting = false; }
+      error: () => { this.notification.error('Fehler beim Abrufen des Importstatus.'); this.isImporting = false; }
     });
   }
 

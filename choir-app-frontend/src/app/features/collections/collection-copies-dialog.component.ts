@@ -5,7 +5,7 @@ import { MaterialModule } from '@modules/material.module';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
 import { Lending } from '@core/models/lending';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { UserInChoir } from '@core/models/user';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 
@@ -24,7 +24,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: { collectionId: number },
     private dialogRef: MatDialogRef<CollectionCopiesDialogComponent>,
     private api: ApiService,
-    private snack: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -40,7 +40,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
     const data: any = { borrowerName: copy.borrowerName };
     if (copy.borrowerId) data.borrowerId = copy.borrowerId;
     this.api.updateCollectionCopy(copy.id, data).subscribe(() => {
-      this.snack.open('Gespeichert', undefined, { duration: 2000 });
+      this.notification.success('Gespeichert');
       this.load();
     });
   }
@@ -66,7 +66,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
 
   returnCopy(copy: Lending): void {
     this.api.updateCollectionCopy(copy.id, { borrowerName: null, borrowerId: null }).subscribe(() => {
-      this.snack.open('Gespeichert', undefined, { duration: 2000 });
+      this.notification.success('Gespeichert');
       this.load();
     });
   }
@@ -89,16 +89,16 @@ export class CollectionCopiesDialogComponent implements OnInit {
       return;
     }
     if (copies < this.copies.length && this.copies.some(c => c.status === 'borrowed')) {
-      this.snack.open('Reduzierung nicht möglich: Ausleihen vorhanden.', undefined, { duration: 3000 });
+      this.notification.error('Reduzierung nicht möglich: Ausleihen vorhanden.');
       return;
     }
     this.api.setCollectionCopies(this.data.collectionId, copies).subscribe({
       next: () => {
-        this.snack.open('Gespeichert', undefined, { duration: 2000 });
+        this.notification.success('Gespeichert');
         this.load();
       },
       error: err => {
-        this.snack.open(err.error?.message || 'Fehler beim Speichern', undefined, { duration: 3000 });
+        this.notification.error(err.error?.message || 'Fehler beim Speichern');
       }
     });
   }

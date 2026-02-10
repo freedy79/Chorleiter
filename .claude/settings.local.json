@@ -8,7 +8,8 @@
       "Bash(timeout 5 tail:*)",
       "Bash(npm audit:*)",
       "WebFetch(domain:www.chorilo.com)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(findstr:*)"
     ]
   },
   "allowedTools": [

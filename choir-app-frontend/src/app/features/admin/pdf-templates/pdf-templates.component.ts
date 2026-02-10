@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { PdfTemplate } from '@core/models/pdf-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 
@@ -29,7 +29,7 @@ export class PdfTemplatesComponent implements OnInit, PendingChanges {
     { type: 'participation', label: 'Teilnahmeübersicht', control: 'participationConfig' }
   ];
 
-  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
+  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
     this.form = this.fb.group({
       programConfig: ['', Validators.required],
       monthlyPlanConfig: ['', Validators.required],
@@ -65,7 +65,7 @@ export class PdfTemplatesComponent implements OnInit, PendingChanges {
       try {
         JSON.parse(control.value);
       } catch (err) {
-        this.snack.open(`JSON für ${meta.label} ist ungültig.`, 'OK', { duration: 3000 });
+        this.notification.error(`JSON für ${meta.label} ist ungültig.`);
         return;
       }
     }
@@ -77,7 +77,7 @@ export class PdfTemplatesComponent implements OnInit, PendingChanges {
     }));
 
     this.api.updatePdfTemplates(payload).subscribe(() => {
-      this.snack.open('PDF-Templates gespeichert', 'OK', { duration: 2000 });
+      this.notification.success('PDF-Templates gespeichert');
       metas.forEach(meta => this.form.get(meta.control)?.markAsPristine());
     });
   }

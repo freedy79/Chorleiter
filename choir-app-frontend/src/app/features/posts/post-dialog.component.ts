@@ -7,7 +7,7 @@ import { Post } from '@core/models/post';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { finalize, switchMap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
@@ -44,7 +44,7 @@ export class PostDialogComponent {
     private fb: FormBuilder,
     private dialog: MatDialog,
     private api: ApiService,
-    private snackBar: MatSnackBar,
+    private notification: NotificationService,
     public dialogRef: MatDialogRef<PostDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: { post?: Post } | null,
   ) {
@@ -195,7 +195,7 @@ export class PostDialogComponent {
           this.dialogRef.close(action);
         },
         error: () => {
-          this.snackBar.open(errorMessage, 'Schließen', { duration: 4000 });
+          this.notification.error(errorMessage);
         }
       });
   }
@@ -235,13 +235,13 @@ export class PostDialogComponent {
       .map(ctrl => (ctrl.value || '').trim())
       .filter(Boolean);
     if (options.length < 2) {
-      this.snackBar.open('Bitte mindestens zwei Optionen angeben.', 'Schließen', { duration: 4000 });
+      this.notification.error('Bitte mindestens zwei Optionen angeben.');
       return false;
     }
     const allowMultiple = !!this.form.get('pollAllowMultiple')?.value;
     let maxSelections = allowMultiple ? Number(this.form.get('pollMaxSelections')?.value || 1) : 1;
     if (Number.isNaN(maxSelections) || maxSelections < 1) {
-      this.snackBar.open('Bitte eine gültige Stimmenanzahl angeben.', 'Schließen', { duration: 4000 });
+      this.notification.error('Bitte eine gültige Stimmenanzahl angeben.');
       return false;
     }
     maxSelections = Math.min(maxSelections, options.length);

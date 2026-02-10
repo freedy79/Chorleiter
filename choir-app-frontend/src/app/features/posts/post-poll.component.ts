@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MaterialModule } from '@modules/material.module';
 import { Poll, PollOption } from '@core/models/poll';
 import { Post } from '@core/models/post';
@@ -20,7 +20,7 @@ export class PostPollComponent implements OnChanges {
   selectedOptionIds: number[] = [];
   voting = false;
 
-  constructor(private api: ApiService, private snackBar: MatSnackBar) {}
+  constructor(private api: ApiService, private notification: NotificationService) {}
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['post']) {
@@ -46,7 +46,7 @@ export class PostPollComponent implements OnChanges {
     if (!this.poll || this.isClosed || this.voting) return;
     if (checked) {
       if (this.selectedOptionIds.length >= this.poll.maxSelections) {
-        this.snackBar.open(`Maximal ${this.poll.maxSelections} Optionen auswählbar.`, 'Schließen', { duration: 3000 });
+        this.notification.error(`Maximal ${this.poll.maxSelections} Optionen auswählbar.`);
         return;
       }
       this.selectedOptionIds = [...this.selectedOptionIds, optionId];
@@ -58,7 +58,7 @@ export class PostPollComponent implements OnChanges {
   submitVote(): void {
     if (!this.post?.id || !this.poll || this.isClosed) return;
     if (this.selectedOptionIds.length === 0) {
-      this.snackBar.open('Bitte mindestens eine Option auswählen.', 'Schließen', { duration: 3000 });
+      this.notification.error('Bitte mindestens eine Option auswählen.');
       return;
     }
     this.voting = true;
@@ -67,11 +67,11 @@ export class PostPollComponent implements OnChanges {
         this.post.poll = poll;
         this.pollChange.emit(poll);
         this.syncSelection();
-        this.snackBar.open('Stimme gespeichert.', 'OK', { duration: 3000 });
+        this.notification.success('Stimme gespeichert.');
         this.voting = false;
       },
       error: () => {
-        this.snackBar.open('Abstimmung nicht möglich.', 'Schließen', { duration: 4000 });
+        this.notification.error('Abstimmung nicht möglich.');
         this.voting = false;
       }
     });

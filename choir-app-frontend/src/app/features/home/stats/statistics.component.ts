@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatTableDataSource } from '@angular/material/table';
 import { Piece } from '@core/models/piece';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { finalize } from 'rxjs/operators';
 
 @Component({
@@ -40,7 +40,7 @@ export class StatisticsComponent implements OnInit {
     rehearsal: false
   };
 
-  constructor(private apiService: ApiService, private snackBar: MatSnackBar) {}
+  constructor(private apiService: ApiService, private notification: NotificationService) {}
 
   ngOnInit(): void {
     this.loadStats();
@@ -72,11 +72,11 @@ export class StatisticsComponent implements OnInit {
       .pipe(finalize(() => this.leastUsedStatusUpdates.delete(piece.id)))
       .subscribe({
         next: () => {
-          this.snackBar.open('Probenstatus auf "Nicht im Repertoire" gesetzt.', 'OK', { duration: 3000 });
+          this.notification.success('Probenstatus auf "Nicht im Repertoire" gesetzt.');
           this.loadStats();
         },
         error: () => {
-          this.snackBar.open('Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
+          this.notification.error('Status konnte nicht aktualisiert werden.');
         }
       });
   }

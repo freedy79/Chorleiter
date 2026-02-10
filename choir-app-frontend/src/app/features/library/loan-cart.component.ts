@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { LoanCartService, CartItem } from '@core/services/loan-cart.service';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { Router } from '@angular/router';
 import { LoanRequestPayload } from '@core/models/loan-request';
 import { Observable } from 'rxjs';
@@ -26,7 +26,7 @@ export class LoanCartComponent {
   user$!: Observable<any>;
   isSingerOnly = false;
 
-  constructor(private cart: LoanCartService, private api: ApiService, private auth: AuthService, private snack: MatSnackBar, private router: Router) {
+  constructor(private cart: LoanCartService, private api: ApiService, private auth: AuthService, private notification: NotificationService, private router: Router) {
     this.items$ = this.cart.items$;
     this.choir$ = this.api.getMyChoirDetails();
     this.user$ = this.auth.currentUser$;
@@ -51,7 +51,7 @@ export class LoanCartComponent {
       items: items.map(i => ({ libraryItemId: i.item.id, quantity: i.quantity }))
     };
     this.api.requestLibraryLoan(payload).subscribe(() => {
-      this.snack.open('Anfrage gesendet', undefined, { duration: 3000 });
+      this.notification.success('Anfrage gesendet');
       this.cart.clear();
       this.router.navigate(['/library']);
     });

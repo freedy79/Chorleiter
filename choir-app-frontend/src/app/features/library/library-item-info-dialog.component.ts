@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { MaterialModule } from '@modules/material.module';
 import { LibraryItem } from '@core/models/library-item';
 import { LoanCartService } from '@core/services/loan-cart.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-library-item-info-dialog',
@@ -17,12 +17,12 @@ export class LibraryItemInfoDialogComponent {
     @Inject(MAT_DIALOG_DATA) public item: LibraryItem,
     private dialogRef: MatDialogRef<LibraryItemInfoDialogComponent>,
     private cart: LoanCartService,
-    private snack: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   addToCart(): void {
     this.cart.addItem(this.item);
-    this.snack.open('Zur Anfrage hinzugefügt', undefined, { duration: 2000 });
+    this.notification.success('Zur Anfrage hinzugefügt');
     this.dialogRef.close();
   }
 }

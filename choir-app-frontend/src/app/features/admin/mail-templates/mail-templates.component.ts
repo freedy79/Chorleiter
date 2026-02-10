@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
@@ -29,7 +29,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
   };
 
-  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
+  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
     this.form = this.fb.group({
       inviteSubject: ['', Validators.required],
       inviteBody: ['', Validators.required],
@@ -106,7 +106,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       templates.push({ type: 'email-change', subject: value.emailChangeSubject, body: value.emailChangeBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
-      this.snack.open('Gespeichert', 'OK', { duration: 2000 });
+      this.notification.success('Gespeichert');
       controls.forEach(control => this.form.get(control)?.markAsPristine());
     });
   }
@@ -137,7 +137,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
 
   sendTest(type: string): void {
     this.api.sendTemplateTest(type).subscribe(() => {
-      this.snack.open('Testmail verschickt', 'OK', { duration: 2000 });
+      this.notification.success('Testmail verschickt');
     });
   }
 

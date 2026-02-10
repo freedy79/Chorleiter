@@ -2,7 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 import { MaterialModule } from '@modules/material.module';
 import { Event, EventPiece } from 'src/app/core/models/event';
@@ -33,7 +33,7 @@ export class EventCardComponent {
 
   constructor(
     private clipboard: Clipboard,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   getPieceSubtitle(piece: EventPiece): string {
@@ -73,7 +73,7 @@ export class EventCardComponent {
     });
     const text = lines.join('\n');
     if (this.clipboard.copy(text)) {
-      this.snackBar.open('Liste kopiert', undefined, { duration: 2000 });
+      this.notification.success('Liste kopiert');
     }
   }
 }

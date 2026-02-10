@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MailSettings } from '@core/models/mail-settings';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 
@@ -17,7 +17,7 @@ import { PendingChanges } from '@core/guards/pending-changes.guard';
 export class MailSettingsComponent implements OnInit, PendingChanges {
   form!: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
+  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
     this.form = this.fb.group({
       host: ['', Validators.required],
       port: [587, Validators.required],
@@ -68,14 +68,14 @@ export class MailSettingsComponent implements OnInit, PendingChanges {
   save(): void {
     if (this.form.invalid) return;
     this.api.updateMailSettings(this.prepareData()).subscribe(() => {
-      this.snack.open('Gespeichert', 'OK', { duration: 2000 });
+      this.notification.success('Gespeichert');
       this.form.markAsPristine();
     });
   }
 
   sendTest(): void {
     this.api.sendTestMail(this.prepareData()).subscribe(() => {
-      this.snack.open('Testmail verschickt', 'OK', { duration: 2000 });
+      this.notification.success('Testmail verschickt');
     });
   }
 

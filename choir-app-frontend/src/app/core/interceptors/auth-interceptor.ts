@@ -10,11 +10,11 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 import { environment } from '@env/environment';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '../services/notification.service';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
-    constructor(private injector: Injector, private snackBar: MatSnackBar) {}
+    constructor(private injector: Injector, private notification: NotificationService) {}
 
     intercept(
         request: HttpRequest<unknown>,
@@ -47,7 +47,7 @@ export class AuthInterceptor implements HttpInterceptor {
                     const svc = this.injector.get(AuthService);
                     svc.logout('sessionExpired');
                 } else if (error.status === 403) {
-                    this.snackBar.open('Diese Funktion erfordert höhere Rechte.', 'Schließen', { duration: 5000 });
+                    this.notification.error('Diese Funktion erfordert höhere Rechte.');
                 }
                 return throwError(() => error);
             })

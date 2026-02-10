@@ -6,7 +6,7 @@ import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
 import { map, switchMap, take, shareReplay, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@shared/components/base.component';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 import { MaterialModule } from '@modules/material.module';
 import { FormsModule } from '@angular/forms';
@@ -108,7 +108,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
     private apiService: ApiService,
     private authService: AuthService,
     private dialog: MatDialog, // Zum Öffnen von Dialogen
-    private snackBar: MatSnackBar, // Zum Anzeigen von Benachrichtigungen
+    private notification: NotificationService, // Zum Anzeigen von Benachrichtigungen
     private help: HelpService,
     private userService: UserService,
     private router: Router
@@ -239,10 +239,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
               ? 'Event für diesen Tag wurde aktualisiert!'
               : 'Event erfolgreich angelegt!';
             const message = response.warning ? response.warning : baseMessage;
-            this.snackBar.open(message, 'OK', {
-              duration: 3000,
-              verticalPosition: 'top'
-            });
+            this.notification.success(message);
             this.refresh$.next();
           },
           error: (err) => {
@@ -250,10 +247,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
             const msg = err.status === 409 && err.error?.message
               ? err.error.message
               : 'Fehler: Das Event konnte nicht gespeichert werden.';
-            this.snackBar.open(msg, 'Schließen', {
-              duration: 5000,
-              verticalPosition: 'top'
-            });
+            this.notification.error(msg);
           }
         });
       }
@@ -291,10 +285,10 @@ export class DashboardComponent extends BaseComponent implements OnInit {
             if (result && result.id) {
               this.apiService.updateEvent(result.id, result).subscribe({
                 next: () => {
-                  this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000, verticalPosition: 'top' });
+                  this.notification.success('Event aktualisiert.');
                   this.refresh$.next();
                 },
-                error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000, verticalPosition: 'top' })
+                error: () => this.notification.error('Fehler beim Aktualisieren des Events.')
               });
             }
           });
@@ -307,18 +301,12 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   approvePieceChange(change: PieceChange): void {
     this.apiService.approvePieceChange(change.id).subscribe({
       next: () => {
-        this.snackBar.open('Stückänderung genehmigt!', 'OK', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
+        this.notification.success('Stückänderung genehmigt!');
         this.refresh$.next();
       },
       error: (err) => {
         console.error('Fehler beim Genehmigen der Stückänderung', err);
-        this.snackBar.open('Fehler: Die Stückänderung konnte nicht genehmigt werden.', 'Schließen', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
+        this.notification.error('Fehler: Die Stückänderung konnte nicht genehmigt werden.');
       }
     });
   }
@@ -326,18 +314,12 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   declinePieceChange(change: PieceChange): void {
     this.apiService.deletePieceChange(change.id).subscribe({
       next: () => {
-        this.snackBar.open('Stückänderung abgelehnt!', 'OK', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
+        this.notification.success('Stückänderung abgelehnt!');
         this.refresh$.next();
       },
       error: (err) => {
         console.error('Fehler beim Ablehnen der Stückänderung', err);
-        this.snackBar.open('Fehler: Die Stückänderung konnte nicht abgelehnt werden.', 'Schließen', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
+        this.notification.error('Fehler: Die Stückänderung konnte nicht abgelehnt werden.');
       }
     });
   }

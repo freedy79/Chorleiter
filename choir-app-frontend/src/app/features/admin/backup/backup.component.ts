@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-backup',
@@ -14,7 +14,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class BackupComponent {
   selectedFile: File | null = null;
 
-  constructor(private api: ApiService, private snack: MatSnackBar) {}
+  constructor(private api: ApiService, private notification: NotificationService) {}
 
   download(): void {
     this.api.downloadBackup().subscribe(blob => {
@@ -37,8 +37,8 @@ export class BackupComponent {
   restore(): void {
     if (!this.selectedFile) return;
     this.api.restoreBackup(this.selectedFile).subscribe({
-      next: () => this.snack.open('Backup eingespielt', 'OK', { duration: 3000 }),
-      error: (err) => this.snack.open('Fehler: ' + err.message, 'OK', { duration: 3000 })
+      next: () => this.notification.success('Backup eingespielt'),
+      error: (err) => this.notification.error('Fehler: ' + err.message)
     });
   }
 }

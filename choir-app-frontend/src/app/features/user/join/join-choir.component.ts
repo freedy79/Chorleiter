@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-join-choir',
@@ -21,7 +21,7 @@ export class JoinChoirComponent implements OnInit {
   choirName = '';
 
   constructor(private route: ActivatedRoute, private fb: FormBuilder,
-              private api: ApiService, private snack: MatSnackBar,
+              private api: ApiService, private notification: NotificationService,
               private router: Router) {
     this.form = this.fb.group({
       firstName: ['', Validators.required],
@@ -35,7 +35,7 @@ export class JoinChoirComponent implements OnInit {
     this.token = this.route.snapshot.params['token'];
     this.api.getJoinInfo(this.token).subscribe({
       next: d => this.choirName = d.choirName,
-      error: () => this.snack.open('Ungültiger Link', 'Schließen')
+      error: () => this.notification.error('Ungültiger Link')
     });
   }
 
@@ -43,10 +43,10 @@ export class JoinChoirComponent implements OnInit {
     if (this.form.invalid) return;
     this.api.joinChoir(this.token, this.form.value).subscribe({
       next: () => {
-        this.snack.open('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.', 'OK');
+        this.notification.success('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.');
         this.router.navigate(['/login']);
       },
-      error: err => this.snack.open(err.error?.message || 'Fehler', 'Schließen')
+      error: err => this.notification.error(err.error?.message || 'Fehler')
     });
   }
 }

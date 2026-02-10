@@ -5,7 +5,7 @@ import { ApiService } from 'src/app/core/services/api.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { LoginAttempt } from 'src/app/core/models/login-attempt';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { UserDialogComponent } from '../manage-users/user-dialog/user-dialog.component';
 import { MonthNavigationService, MonthYear } from '@shared/services/month-navigation.service';
 
@@ -25,7 +25,7 @@ export class LoginAttemptsComponent implements OnInit {
 
   constructor(private api: ApiService,
               private dialog: MatDialog,
-              private snack: MatSnackBar,
+              private notification: NotificationService,
               private monthNav: MonthNavigationService,
               private cdr: ChangeDetectorRef) {
     const now = new Date();
@@ -69,7 +69,7 @@ export class LoginAttemptsComponent implements OnInit {
           }
         });
       },
-      error: () => this.snack.open('User not found', 'OK', { duration: 3000 })
+      error: () => this.notification.error('User not found')
     });
   }
 }

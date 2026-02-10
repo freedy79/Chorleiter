@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -23,7 +23,7 @@ export class InviteRegistrationComponent implements OnInit, OnDestroy {
   choirName = '';
   email = '';
 
-  constructor(private route: ActivatedRoute, private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar, private router: Router) {
+  constructor(private route: ActivatedRoute, private fb: FormBuilder, private api: ApiService, private notification: NotificationService, private router: Router) {
     this.form = this.fb.group({
       firstName: ['', Validators.required],
       name: ['', Validators.required],
@@ -35,7 +35,7 @@ export class InviteRegistrationComponent implements OnInit, OnDestroy {
     this.token = this.route.snapshot.params['token'];
     this.api.getInvitation(this.token).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (data: any) => { this.email = data.email; this.choirName = data.choirName; },
-      error: () => { this.snack.open('Einladung ungültig oder abgelaufen', 'Schließen'); }
+      error: () => { this.notification.error('Einladung ungültig oder abgelaufen'); }
     });
   }
 
@@ -44,10 +44,10 @@ export class InviteRegistrationComponent implements OnInit, OnDestroy {
     const payload = this.form.value;
     this.api.completeRegistration(this.token, payload).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: () => {
-        this.snack.open('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.', 'OK');
+        this.notification.success('Registrierung abgeschlossen. Du kannst dich jetzt anmelden.');
         this.router.navigate(['/login']);
       },
-      error: err => this.snack.open(err.error?.message || 'Fehler', 'Schließen')
+      error: err => this.notification.error(err.error?.message || 'Fehler')
     });
   }
 
