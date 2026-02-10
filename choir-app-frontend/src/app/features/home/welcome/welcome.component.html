@@ -1,0 +1,95 @@
+<div class="welcome-page">
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="welcome-title">NAK Chorleiter</h1>
+      <p class="welcome-subtitle">Die clevere Verwaltungssoftware für Ihren Chor</p>
+      <p class="welcome-description">
+        Verwalten Sie Mitglieder, Noten, Dienstpläne und Programme –
+        alles an einem Ort, einfach und effizient.
+      </p>
+
+      <div class="cta-buttons">
+        <a mat-raised-button color="primary" routerLink="/register" class="primary-cta">
+          <mat-icon>person_add</mat-icon>
+          Jetzt kostenlos registrieren
+        </a>
+        <a mat-raised-button routerLink="/login" class="secondary-cta">
+          Anmelden
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-section">
+    <mat-card class="demo-card">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="demo-icon">visibility</mat-icon>
+        <mat-card-title>Demo-Account testen</mat-card-title>
+        <mat-card-subtitle>Probieren Sie Chorleiter ohne Registrierung aus</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="demo-intro">
+          Entdecken Sie alle Funktionen mit unserem Demo-Account:
+        </p>
+
+        <div class="demo-credentials">
+          <div class="credential-row">
+            <mat-icon>email</mat-icon>
+            <div class="credential-info">
+              <span class="label">E-Mail:</span>
+              <code class="value">{{ demoEmail }}</code>
+            </div>
+          </div>
+          <div class="credential-row">
+            <mat-icon>lock</mat-icon>
+            <div class="credential-info">
+              <span class="label">Passwort:</span>
+              <code class="value">{{ demoPassword }}</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo-note">
+          <mat-icon>info</mat-icon>
+          <p>Im Demo-Modus können Sie alle Funktionen ansehen, aber keine Änderungen speichern.</p>
+        </div>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <a mat-button color="primary" routerLink="/login">
+          <mat-icon>login</mat-icon>
+          Demo-Account ausprobieren
+        </a>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="features-section">
+    <h2>Funktionen im Überblick</h2>
+    <div class="features-grid">
+      <mat-card *ngFor="let feature of features" class="feature-card">
+        <mat-card-content>
+          <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+          <h3>{{ feature.title }}</h3>
+          <p>{{ feature.description }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <div class="register-cta-section">
+    <h2>Bereit loszulegen?</h2>
+    <p>Registrieren Sie sich jetzt kostenlos und verwalten Sie Ihren Chor professionell</p>
+    <a mat-raised-button color="primary" routerLink="/register" class="final-cta">
+      <mat-icon>person_add</mat-icon>
+      Kostenlos registrieren
+    </a>
+  </div>
+
+  <footer class="welcome-footer">
+    <div class="footer-links">
+      <a routerLink="/imprint">Impressum</a>
+      <span class="separator">•</span>
+      <a routerLink="/privacy">Datenschutz</a>
+    </div>
+  </footer>
+</div>

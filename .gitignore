@@ -7,6 +7,8 @@ yarn-error.log*
 lerna-debug.log*
 .pnpm-debug.log*
 
+*.ignore
+
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -139,3 +141,10 @@ choir-app-frontend/src/environments/build-info.ts
 src/environment/build-info.ts
 Extract/*.csv
 choir-app-backend/backups/
+
+# Documentation - Temporary Files
+DOC/claude/
+DOC/tasks/
+tmpclaude-*
+*.report.html
+MOBILE-SEARCH-TESTS-REPORT.html

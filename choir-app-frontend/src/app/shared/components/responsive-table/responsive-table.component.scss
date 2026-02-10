@@ -7,7 +7,7 @@
 .table-header {
   h3 {
     margin: 0 0 12px 0;
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 600;
     color: #333;
   }
@@ -39,7 +39,7 @@
     mat-header-cell {
       padding: 12px 16px;
       text-align: left;
-      font-size: 14px;
+      font-size: 0.875rem;
 
       &.actions-column {
         text-align: right;
@@ -52,16 +52,8 @@
       vertical-align: middle;
 
       mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
+        font-size: 1.125rem;
       }
-    }
-
-    .actions-cell {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
     }
   }
 }
@@ -101,14 +93,14 @@
       .card-label {
         font-weight: 600;
         color: #666;
-        font-size: 12px;
+        font-size: 0.8125rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
 
       .card-value {
         color: #333;
-        font-size: 14px;
+        font-size: 0.875rem;
         font-weight: 500;
         text-align: right;
       }
@@ -135,7 +127,7 @@
   border-top: 1px solid #e0e0e0;
 
   .page-info {
-    font-size: 14px;
+    font-size: 0.875rem;
     color: #666;
     font-weight: 500;
     min-width: 60px;

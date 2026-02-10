@@ -1,0 +1,8 @@
+DB_HOST=localhost
+DB_USER=choir_app_user
+DB_PASSWORD=W6PKk7i4&,R&_hm9DNDDbJNnEA
+DB_NAME=choir_db
+DB_DIALECT=postgres
+
+Angerstein-2017
+

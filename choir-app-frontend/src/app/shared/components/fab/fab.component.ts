@@ -57,6 +57,9 @@ export interface FabAction {
       right: 16px;
       z-index: 999;
       transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      /* Phase 10: GPU acceleration */
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
     }
 
     @media (min-width: 600px) {
@@ -68,6 +71,8 @@ export interface FabAction {
 
     .main-fab {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      /* Phase 10: Better touch response */
+      -webkit-tap-highlight-color: transparent;
     }
 
     .speed-dial-actions {
@@ -99,7 +104,7 @@ export interface FabAction {
       color: white;
       padding: 6px 12px;
       border-radius: 4px;
-      font-size: 0.875rem;
+      font-size: 1rem;
       white-space: nowrap;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       height: 40px;
@@ -109,22 +114,22 @@ export interface FabAction {
   `],
   animations: [
     trigger('fabState', [
-      state('visible', style({ transform: 'scale(1)', opacity: 1 })),
-      state('hidden', style({ transform: 'scale(0)', opacity: 0 })),
+      state('visible', style({ transform: 'scale3d(1, 1, 1)', opacity: 1 })),
+      state('hidden', style({ transform: 'scale3d(0, 0, 1)', opacity: 0 })),
       transition('visible <=> hidden', animate('200ms cubic-bezier(0.4, 0, 0.2, 1)'))
     ]),
     trigger('fabIcon', [
-      state('normal', style({ transform: 'rotate(0deg)' })),
-      state('rotated', style({ transform: 'rotate(45deg)' })),
+      state('normal', style({ transform: 'rotate3d(0, 0, 1, 0deg)' })),
+      state('rotated', style({ transform: 'rotate3d(0, 0, 1, 45deg)' })),
       transition('normal <=> rotated', animate('200ms cubic-bezier(0.4, 0, 0.2, 1)'))
     ]),
     trigger('speedDialItem', [
       state('closed', style({
-        transform: 'scale(0) translateY(20px)',
+        transform: 'scale3d(0, 0, 1) translateY(20px)',
         opacity: 0
       })),
       state('open', style({
-        transform: 'scale(1) translateY(0)',
+        transform: 'scale3d(1, 1, 1) translateY(0)',
         opacity: 1
       })),
       transition('closed => open', animate('200ms cubic-bezier(0.4, 0, 0.2, 1)')),
@@ -132,11 +137,11 @@ export interface FabAction {
     ]),
     trigger('speedDialLabel', [
       state('closed', style({
-        transform: 'translateX(20px)',
+        transform: 'translate3d(20px, 0, 0)',
         opacity: 0
       })),
       state('open', style({
-        transform: 'translateX(0)',
+        transform: 'translate3d(0, 0, 0)',
         opacity: 1
       })),
       transition('closed => open', animate('200ms cubic-bezier(0.4, 0, 0.2, 1)')),

@@ -14,22 +14,6 @@
     <ng-container *ngIf="!(isSmallScreen$ | async)">
       <app-search-box class="search"></app-search-box>
     </ng-container>
-
-    <!-- Mobile Search - Expandable -->
-    <ng-container *ngIf="(isSmallScreen$ | async) && !searchExpanded">
-      <span class="spacer"></span>
-      <button mat-icon-button (click)="toggleSearch()" matTooltip="Suchen">
-        <mat-icon>search</mat-icon>
-      </button>
-    </ng-container>
-
-    <!-- Expanded Mobile Search -->
-    <ng-container *ngIf="(isSmallScreen$ | async) && searchExpanded">
-      <app-search-box class="search search-expanded"></app-search-box>
-      <button mat-icon-button (click)="toggleSearch()">
-        <mat-icon>close</mat-icon>
-      </button>
-    </ng-container>
   </ng-container>
 
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
@@ -48,12 +32,8 @@
     <button mat-menu-item *ngFor="let c of (availableChoirs$ | async)" (click)="switchChoir(c.id)">{{ c.name }}</button>
   </mat-menu>
 
-  <ng-container *ngIf="(isLoggedIn$ | async) && ((donatedRecently$ | async) !== true)">
+  <ng-container *ngIf="(isLoggedIn$ | async) && (isAdmin$ | async) === false && (donatedRecently$ | async) === false">
     <button mat-button color="accent" routerLink="/donate" class="donate-button">Spenden</button>
-  </ng-container>
-
-  <ng-container *ngIf="donatedRecently$ | async">
-    <mat-icon color="accent">favorite</mat-icon>
   </ng-container>
 
   <ng-container *ngIf="isLoggedIn$ | async">
@@ -179,6 +159,11 @@
     *ngIf="(isAdmin$ | async) || (isLibrarian$ | async)">
     <mat-icon>local_library</mat-icon>
     <span class="nav-label">Bibliothek</span>
+  </a>
+  <a mat-button routerLink="/search" routerLinkActive="active"
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    <mat-icon>search</mat-icon>
+    <span class="nav-label">Suche</span>
   </a>
   <button mat-button class="bottom-nav-item bottom-nav-more" [matMenuTriggerFor]="moreMenu"
     matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"

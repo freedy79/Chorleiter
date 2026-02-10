@@ -9,7 +9,7 @@ import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { combineLatest, map, Observable, of, filter, startWith, Subject, take } from 'rxjs';
+import { combineLatest, map, Observable, of, filter, startWith, Subject, take, from } from 'rxjs';
 import { switchMap, takeUntil, withLatestFrom, tap, shareReplay } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
@@ -28,7 +28,6 @@ import { SearchBoxComponent } from '@shared/components/search-box/search-box.com
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { Choir } from '@core/models/choir';
-import { ChoirSwitcherSheetComponent, ChoirSwitcherData } from '../choir-switcher-sheet/choir-switcher-sheet.component';
 
 @Component({
   selector: 'app-main-layout',
@@ -106,7 +105,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   hasMoreItems$: Observable<boolean>;
   bottomNavVisible = true;
   private lastScrollY = 0;
-  searchExpanded = false;
 
 
   constructor(private authService: AuthService,
@@ -301,7 +299,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   private setupNavItems(): void {
+    // Phase 2: Wichtigste Items nach oben sortiert
     this.navItems = [
+      // Primäre Navigation (am häufigsten verwendet)
       {
         key: 'dashboard',
         displayName: 'Home',
@@ -324,25 +324,20 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         iconName: 'calendar_today',
       },
       {
+        key: 'repertoire',
+        displayName: 'Repertoire',
+        route: '/repertoire',
+        visibleSubject: this.menu.isVisible('repertoire'),
+        iconName: 'library_music',
+      },
+
+      // Sekundäre Navigation
+      {
         key: 'availability',
         displayName: 'Verfügbarkeiten',
         route: '/availability',
         visibleSubject: this.restrictForDemo(this.menu.isVisible('availability')),
         iconName: 'event_available',
-      },
-      {
-        key: 'participation',
-        displayName: 'Beteiligung',
-        route: '/participation',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
-        iconName: 'group',
-      },
-      {
-        key: 'posts',
-        displayName: 'Beiträge',
-        route: '/posts',
-        visibleSubject: this.menu.isVisible('posts'),
-        iconName: 'article',
       },
       {
         key: 'programs',
@@ -352,26 +347,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         iconName: 'queue_music',
       },
       {
-        key: 'stats',
-        displayName: 'Statistik',
-        route: '/stats',
-        visibleSubject: this.menu.isVisible('stats'),
-        iconName: 'bar_chart',
+        key: 'library',
+        displayName: 'Bibliothek',
+        route: '/library',
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('library')),
+        iconName: 'menu_book',
       },
-      {
-        key: 'manageChoir',
-        displayName: 'Mein Chor',
-        route: '/manage-choir',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
-        iconName: 'settings',
-      },
-      {
-        key: 'repertoire',
-        displayName: 'Repertoire',
-        route: '/repertoire',
-        visibleSubject: this.menu.isVisible('repertoire'),
-        iconName: 'library_music',
-      },
+
+      // Tertiäre Navigation
       {
         key: 'collections',
         displayName: 'Sammlungen',
@@ -380,11 +363,34 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         iconName: 'folder',
       },
       {
-        key: 'library',
-        displayName: 'Bibliothek',
-        route: '/library',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('library')),
-        iconName: 'menu_book',
+        key: 'posts',
+        displayName: 'Beiträge',
+        route: '/posts',
+        visibleSubject: this.menu.isVisible('posts'),
+        iconName: 'article',
+      },
+      {
+        key: 'participation',
+        displayName: 'Beteiligung',
+        route: '/participation',
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
+        iconName: 'group',
+      },
+      {
+        key: 'stats',
+        displayName: 'Statistik',
+        route: '/stats',
+        visibleSubject: this.menu.isVisible('stats'),
+        iconName: 'bar_chart',
+      },
+
+      // Verwaltung
+      {
+        key: 'manageChoir',
+        displayName: 'Mein Chor',
+        route: '/manage-choir',
+        visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
+        iconName: 'settings',
       },
       {
         displayName: 'Administration',
@@ -434,34 +440,32 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.dialog.open(HelpWizardComponent, { width: '600px' });
   }
 
-  toggleSearch(): void {
-    this.searchExpanded = !this.searchExpanded;
-  }
-
   openChoirSwitcher(): void {
-    const data: ChoirSwitcherData = {
-      choirs: [],
-      activeChoirId: null
-    };
-
-    // Get current values synchronously
+    // Phase 10: Lazy load Bottom Sheet for better performance
     this.availableChoirs$.pipe(
       take(1),
-      withLatestFrom(this.activeChoir$)
-    ).subscribe(([choirs, activeChoir]) => {
-      data.choirs = choirs;
-      data.activeChoirId = activeChoir?.id ?? null;
+      withLatestFrom(this.activeChoir$),
+      switchMap(([choirs, activeChoir]) => {
+        return from(import('../choir-switcher-sheet/choir-switcher-sheet.component')).pipe(
+          switchMap(m => {
+            const data = {
+              choirs,
+              activeChoirId: activeChoir?.id ?? null
+            };
 
-      const bottomSheetRef = this.bottomSheet.open(ChoirSwitcherSheetComponent, {
-        data,
-        panelClass: 'choir-switcher-bottom-sheet'
-      });
+            const bottomSheetRef = this.bottomSheet.open(m.ChoirSwitcherSheetComponent, {
+              data,
+              panelClass: 'choir-switcher-bottom-sheet'
+            });
 
-      bottomSheetRef.afterDismissed().subscribe(choirId => {
-        if (choirId) {
-          this.switchChoir(choirId);
-        }
-      });
+            return bottomSheetRef.afterDismissed();
+          })
+        );
+      })
+    ).subscribe((choirId: number | undefined) => {
+      if (choirId) {
+        this.switchChoir(choirId);
+      }
     });
   }
 

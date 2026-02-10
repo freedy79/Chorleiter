@@ -62,7 +62,7 @@
   .choir-badge {
     max-width: 100px;
     margin: 0 0.5rem;
-    font-size: 0.85rem;
+    font-size: 1rem;
   }
 }
 
@@ -81,8 +81,8 @@ app-search-box {
 .avatar {
   background: #fff;
   color: var(--primary-color, #1976d2);
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -111,16 +111,19 @@ app-search-box {
   z-index: 10;
   background: inherit;
   animation: expandSearch 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Phase 10: GPU acceleration for search expansion */
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
 }
 
 @keyframes expandSearch {
   from {
     opacity: 0;
-    transform: scaleX(0.8);
+    transform: scale3d(0.8, 1, 1);
   }
   to {
     opacity: 1;
-    transform: scaleX(1);
+    transform: scale3d(1, 1, 1);
   }
 }
 
@@ -148,6 +151,9 @@ app-search-box {
   flex-direction: column;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Phase 10: Optimize scroll performance */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 
   .content-wrapper {
     flex: 1;
@@ -221,6 +227,10 @@ app-search-box {
   z-index: 1000; // Sicherstellen, dass der Sidenav über anderen Inhalten liegt
   padding: 0.0rem;
 
+  // Phase 10: GPU acceleration for smoother animations
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+
   // Schnellere Animation für Mobile
   ::ng-deep .mat-drawer-transition & {
     transition-duration: 250ms !important;
@@ -252,8 +262,8 @@ app-search-box {
 }
 
 .own_icon_size {
-  width:28px;
-  height: 28px;
+  width:1.75rem;
+  height: 1.75rem;
 }
 
 .svg_icon_white {
@@ -287,6 +297,10 @@ app-search-box {
     z-index: 1000;
     padding: 0;
     margin: 0;
+
+    // Phase 10: GPU acceleration for smooth transitions
+    will-change: transform;
+    transform: translate3d(0, 0, 0);
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -298,7 +312,7 @@ app-search-box {
     justify-content: center;
     text-decoration: none;
     color: var(--text-secondary, rgba(0, 0, 0, 0.6));
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-weight: 500;
     flex: 1;
     min-width: 0;
@@ -309,19 +323,25 @@ app-search-box {
     position: relative;
     overflow: visible;
 
+    // Phase 10: Better touch performance
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+
     // Icon Styling
     mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
+      font-size: 1.5rem;
+      width: 1.5rem;
+      height: 1.5rem;
+      line-height: 1.5rem;
       margin-bottom: 4px;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      // Phase 10: GPU acceleration for icon scaling
+      will-change: transform;
     }
 
     // Label Styling
     .nav-label {
-      font-size: 0.75rem;
+      font-size: 1rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -339,7 +359,8 @@ app-search-box {
       color: var(--brand, #1976d2);
 
       mat-icon {
-        transform: scale(1.1);
+        // Phase 10: Use scale3d for GPU acceleration
+        transform: scale3d(1.1, 1.1, 1);
       }
 
       // Active Indicator Bar
@@ -349,7 +370,7 @@ app-search-box {
         top: 0;
         left: 50%;
         transform: translateX(-50%);
-        width: 32px;
+        width: 2rem;
         height: 3px;
         background: var(--brand, #1976d2);
         border-radius: 0 0 3px 3px;

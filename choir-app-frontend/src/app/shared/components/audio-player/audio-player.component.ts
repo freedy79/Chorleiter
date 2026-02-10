@@ -1,7 +1,7 @@
 import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
   selector: 'app-audio-player',
@@ -21,7 +21,7 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
   duration = 0;
   currentTime = 0;
 
-  constructor(private snackBar: MatSnackBar) {}
+  constructor(private notification: NotificationService) {}
 
   ngOnInit(): void {
     this.initAudio();
@@ -73,7 +73,7 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
 
   private onError = (e: Event): void => {
     console.error('Audio playback error:', e);
-    this.snackBar.open('Fehler beim Abspielen der Audio-Datei', 'OK', { duration: 3000 });
+    this.notification.error('Fehler beim Abspielen der Audio-Datei');
   };
 
   togglePlay(): void {
@@ -85,7 +85,7 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
     } else {
       this.audio.play().catch(err => {
         console.error('Play error:', err);
-        this.snackBar.open('Fehler beim Abspielen', 'OK', { duration: 3000 });
+        this.notification.error('Fehler beim Abspielen');
       });
       this.isPlaying = true;
     }
