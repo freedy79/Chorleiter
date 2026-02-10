@@ -142,34 +142,23 @@
   <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
     class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>home</mat-icon>
-    <span class="nav-label">Home</span>
   </a>
   <a mat-button routerLink="/events" routerLinkActive="active"
     class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>event</mat-icon>
-    <span class="nav-label">Termine</span>
   </a>
   <a mat-button routerLink="/repertoire" routerLinkActive="active"
     class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>library_music</mat-icon>
-    <span class="nav-label">Repertoire</span>
-  </a>
-  <a mat-button routerLink="/library" routerLinkActive="active"
-    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"
-    *ngIf="(isAdmin$ | async) || (isLibrarian$ | async)">
-    <mat-icon>local_library</mat-icon>
-    <span class="nav-label">Bibliothek</span>
   </a>
   <a mat-button routerLink="/search" routerLinkActive="active"
     class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>search</mat-icon>
-    <span class="nav-label">Suche</span>
   </a>
   <button mat-button class="bottom-nav-item bottom-nav-more" [matMenuTriggerFor]="moreMenu"
     matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"
     *ngIf="hasMoreItems$ | async">
     <mat-icon>more_horiz</mat-icon>
-    <span class="nav-label">Mehr</span>
   </button>
 </nav>
 
