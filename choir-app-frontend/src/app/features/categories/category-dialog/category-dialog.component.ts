@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -11,7 +11,7 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './category-dialog.component.html',
 })
-export class CategoryDialogComponent extends BaseFormDialog<string> {
+export class CategoryDialogComponent extends BaseFormDialog<string> implements OnInit {
   constructor(
     fb: FormBuilder,
     dialogRef: MatDialogRef<CategoryDialogComponent>

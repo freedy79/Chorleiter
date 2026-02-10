@@ -54,7 +54,7 @@ exports.downloadPdf = async (req, res) => {
     returnedAt: c.returnedAt
   }));
 
-  const pdf = lendingListPdf(item.collection ? item.collection.title : 'Ausleihe', copies);
+  const pdf = await lendingListPdf(item.collection ? item.collection.title : 'Ausleihe', copies);
   res.setHeader('Content-Type', 'application/pdf');
   res.status(200).send(pdf);
 };

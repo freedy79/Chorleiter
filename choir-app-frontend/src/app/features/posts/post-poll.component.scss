@@ -10,7 +10,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -78,14 +78,14 @@
 .option-meta {
   min-width: 110px;
   text-align: right;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #555;
 }
 
 @media (max-width: 768px) {
   .option-meta {
     min-width: 80px;
-    font-size: 12px;
+    font-size: 0.8125rem;
   }
 }
 
@@ -94,7 +94,7 @@
     min-width: auto;
     width: 100%;
     text-align: left;
-    font-size: 12px;
+    font-size: 0.8125rem;
   }
 }
 
@@ -118,13 +118,13 @@
 }
 
 .hint {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: #666;
 }
 
 @media (max-width: 600px) {
   .hint {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
 }
 

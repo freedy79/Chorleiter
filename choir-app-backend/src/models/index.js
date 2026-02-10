@@ -39,6 +39,7 @@ db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequel
 db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
 db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 db.mail_template = require("./mail_template.model.js")(sequelize, Sequelize);
+db.pdf_template = require("./pdf_template.model.js")(sequelize, Sequelize);
 db.mail_log = require("./mail_log.model.js")(sequelize, Sequelize);
 db.system_setting = require("./system_setting.model.js")(sequelize, Sequelize);
 db.post = require("./post.model.js")(sequelize, Sequelize);

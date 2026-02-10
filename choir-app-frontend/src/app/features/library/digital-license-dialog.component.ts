@@ -1,18 +1,19 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { DigitalLicense } from '@core/models/digital-license';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-digital-license-dialog',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule],
   template: `
-    <h1 mat-dialog-title>{{ data.license ? 'Digitale Lizenz bearbeiten' : 'Digitale Lizenz hinzufügen' }}</h1>
+    <h1 mat-dialog-title>{{ title }}</h1>
     <div mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
+      <form [formGroup]="form" class="dialog-form" id="digital-license-form" (ngSubmit)="onSave()">
         <mat-form-field>
           <mat-label>Lizenznummer</mat-label>
           <input matInput formControlName="licenseNumber" />
@@ -63,8 +64,8 @@ import { DigitalLicense } from '@core/models/digital-license';
       </form>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Abbrechen</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+      <button mat-button (click)="onCancel()">Abbrechen</button>
+      <button mat-raised-button color="primary" type="submit" form="digital-license-form" [disabled]="form.invalid">Speichern</button>
     </div>
   `,
   styles: [`
@@ -75,16 +76,25 @@ import { DigitalLicense } from '@core/models/digital-license';
     }
   `]
 })
-export class DigitalLicenseDialogComponent {
-  form: FormGroup;
+export class DigitalLicenseDialogComponent extends BaseFormDialog<any, { license?: DigitalLicense }> implements OnInit {
+  title!: string;
 
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<DigitalLicenseDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { license?: DigitalLicense }
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<DigitalLicenseDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: { license?: DigitalLicense }
   ) {
-    const l = data.license;
-    this.form = this.fb.group({
+    super(fb, dialogRef, data);
+    this.title = this.getDialogTitle('Digitale Lizenz hinzufügen', 'Digitale Lizenz bearbeiten');
+  }
+
+  protected override isEditMode(): boolean {
+    return !!this.data?.license;
+  }
+
+  protected buildForm(): FormGroup {
+    const l = this.data?.license;
+    return this.fb.group({
       licenseNumber: [l?.licenseNumber || '', Validators.required],
       licenseType: [l?.licenseType || 'print', Validators.required],
       quantity: [l?.quantity || null],
@@ -97,19 +107,14 @@ export class DigitalLicenseDialogComponent {
     });
   }
 
-  save(): void {
-    if (this.form.valid) {
-      const val = this.form.value;
-      for (const key of ['purchaseDate', 'validFrom', 'validUntil']) {
-        if (val[key] instanceof Date) {
-          val[key] = val[key].toISOString().split('T')[0];
-        }
+  protected override getResult(): any {
+    const val = this.form.value;
+    // Convert Date objects to ISO date strings
+    for (const key of ['purchaseDate', 'validFrom', 'validUntil']) {
+      if (val[key] instanceof Date) {
+        val[key] = val[key].toISOString().split('T')[0];
       }
-      this.dialogRef.close(val);
     }
-  }
-
-  cancel(): void {
-    this.dialogRef.close();
+    return val;
   }
 }

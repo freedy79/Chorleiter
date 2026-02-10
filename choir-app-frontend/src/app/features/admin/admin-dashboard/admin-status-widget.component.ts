@@ -77,7 +77,7 @@ interface StatusWidget {
         border-radius: 50%;
 
         mat-icon {
-          font-size: 20px;
+          font-size: 1.25rem;
           width: 20px;
           height: 20px;
         }
@@ -85,19 +85,19 @@ interface StatusWidget {
 
       .status-info {
         .status-value {
-          font-size: 18px;
+          font-size: 1.125rem;
           font-weight: 700;
           color: #333;
         }
 
         .status-title {
-          font-size: 12px;
+          font-size: 0.75rem;
           color: #999;
           margin-bottom: 4px;
         }
 
         .status-trend {
-          font-size: 11px;
+          font-size: 0.6875rem;
 
           .positive {
             color: #4caf50;

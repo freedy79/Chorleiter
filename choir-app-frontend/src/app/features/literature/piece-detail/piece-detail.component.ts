@@ -6,12 +6,12 @@ import { Title } from '@angular/platform-browser';
 import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { ApiService } from '@core/services/api.service';
+import { NotificationService } from '@core/services/notification.service';
 import { Piece, PieceNote } from '@core/models/piece';
 import { PieceLink } from '@core/models/piece-link';
 import { AuthService } from '@core/services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { PieceReportDialogComponent } from '../piece-report-dialog/piece-report-dialog.component';
 import { environment } from 'src/environments/environment';
@@ -23,6 +23,10 @@ import { combineLatest } from 'rxjs';
 import { RehearsalSupportComponent } from './rehearsal-support/rehearsal-support.component';
 import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
 import { DebugLogService } from '@core/services/debug-log.service';
+import { DurationPipe } from '@shared/pipes/duration.pipe';
+import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
+import { FileSizePipe } from '@shared/pipes/file-size.pipe';
+import { Clipboard } from '@angular/cdk/clipboard';
 
 @Component({
   selector: 'app-piece-detail',
@@ -35,7 +39,10 @@ import { DebugLogService } from '@core/services/debug-log.service';
     EventTypeLabelPipe,
     PureDatePipe,
     RehearsalSupportComponent,
-    AudioPlayerComponent
+    AudioPlayerComponent,
+    DurationPipe,
+    ComposerYearsPipe,
+    FileSizePipe
   ],
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']
@@ -58,10 +65,11 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private auth: AuthService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private notification: NotificationService,
     private http: HttpClient,
     private titleService: Title,
-    private logger: DebugLogService
+    private logger: DebugLogService,
+    private clipboard: Clipboard
   ) {}
 
   ngOnInit(): void {
@@ -98,14 +106,13 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
         this.pieceImage = null;
       }
       this.fileLinks = (p.links?.filter(l => l.type === 'FILE_DOWNLOAD') || []).map(l => {
-        const urlOrDesc = (l.url || '') + '|' + (l.description || '');
         return {
           ...l,
-          isPdf: /\.pdf$/i.test(urlOrDesc),
-          isMp3: /\.mp3$/i.test(urlOrDesc),
-          isImage: /\.(jpe?g|png|webp)$/i.test(urlOrDesc),
-          isCapella: /\.(cap|capx)$/i.test(urlOrDesc),
-          isMuseScore: /\.(musicxml|mxl)$/i.test(urlOrDesc)
+          isPdf: (typeof l.url === 'string' && /\.pdf$/i.test(l.url)) || (typeof l.description === 'string' && /\.pdf$/i.test(l.description)),
+          isMp3: (typeof l.url === 'string' && /\.mp3$/i.test(l.url)) || (typeof l.description === 'string' && /\.mp3$/i.test(l.description)),
+          isImage: (typeof l.url === 'string' && /\.(jpe?g|png|webp)$/i.test(l.url)) || (typeof l.description === 'string' && /\.(jpe?g|png|webp)$/i.test(l.description)),
+          isCapella: (typeof l.url === 'string' && /\.(cap|capx)$/i.test(l.url)) || (typeof l.description === 'string' && /\.(cap|capx)$/i.test(l.description)),
+          isMuseScore: (typeof l.url === 'string' && /\.(musicxml|mxl)$/i.test(l.url)) || (typeof l.description === 'string' && /\.(musicxml|mxl)$/i.test(l.description))
         };
       });
       this.fileLinks.forEach(link => {
@@ -209,11 +216,13 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
       data: { pieceId: this.piece.id }
     });
 
-    dialogRef.afterClosed().subscribe(wasUpdated => {
-      if (wasUpdated) {
-        this.snackBar.open('Stück aktualisiert.', 'OK', { duration: 3000 });
-        this.loadPiece(this.piece!.id);
+    dialogRef.afterClosed().subscribe(result => {
+      if (!this.piece || result === undefined) return;
+      if (result) {
+        this.notification.success('Stück aktualisiert.');
       }
+      this.loadPiece(this.piece.id);
+      this.loadLibraryItems();
     });
   }
 
@@ -222,15 +231,9 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(PieceReportDialogComponent, { data: { pieceId: this.piece.id } });
     dialogRef.afterClosed().subscribe(sent => {
       if (sent) {
-        this.snackBar.open('Meldung gesendet.', 'OK', { duration: 3000 });
+        this.notification.success('Meldung gesendet.');
       }
     });
-  }
-
-  formatDuration(sec: number): string {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
   }
 
   getLinkUrl(link: PieceLink | any): string {
@@ -252,21 +255,19 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     return `${apiBase}${fullPath}`;
   }
 
-  formatFileSize(bytes: number): string {
-    const kb = bytes / 1024;
-    if (kb < 1024) {
-      return `${kb.toFixed(1)} kB`;
-    }
-    return `${(kb / 1024).toFixed(1)} MB`;
-  }
+  sharePiece(): void {
+    if (!this.piece) return;
 
-  formatComposerYears(composer: any): string {
-    if (!composer || !composer.birthYear) {
-      return '';
-    }
-    if (composer.deathYear) {
-      return ` (${composer.birthYear}-${composer.deathYear})`;
-    }
-    return ` (${composer.birthYear})`;
+    this.apiService.generateShareToken(this.piece.id).subscribe({
+      next: (response) => {
+        const shareUrl = `${window.location.origin}/shared-piece/${response.shareToken}`;
+        this.clipboard.copy(shareUrl);
+        this.notification.success('Link wurde in die Zwischenablage kopiert.');
+      },
+      error: (err) => {
+        this.notification.error('Fehler beim Erstellen des Share-Links.');
+        console.error('Share error:', err);
+      }
+    });
   }
 }

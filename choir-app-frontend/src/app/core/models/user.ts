@@ -55,6 +55,7 @@ export interface User {
 
   activeChoir?: Choir;
   availableChoirs?: Choir[];
+  choirs?: Choir[];
   lastDonation?: string;
   lastLogin?: string;
   deletionRequestedAt?: string | null;

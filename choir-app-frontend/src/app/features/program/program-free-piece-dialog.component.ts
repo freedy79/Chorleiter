@@ -6,6 +6,23 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { Composer } from '@core/models/composer';
 import { Observable, startWith, map } from 'rxjs';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
+
+interface FreePieceData {
+  title?: string;
+  composer?: string;
+  instrument?: string | null;
+  performerNames?: string | null;
+  duration?: string | null;
+}
+
+interface FreePieceResult {
+  title: string;
+  composer: string;
+  instrument: string;
+  performerNames: string;
+  durationSec?: number;
+}
 
 @Component({
   selector: 'app-program-free-piece-dialog',
@@ -14,36 +31,23 @@ import { Observable, startWith, map } from 'rxjs';
   templateUrl: './program-free-piece-dialog.component.html',
   styleUrls: ['./program-free-piece-dialog.component.scss'],
 })
-export class ProgramFreePieceDialogComponent implements OnInit {
-  form: FormGroup;
+export class ProgramFreePieceDialogComponent extends BaseFormDialog<FreePieceResult, FreePieceData | null> implements OnInit {
   composerCtrl = new FormControl('');
   filteredComposers$!: Observable<Composer[]>;
   allComposers: Composer[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private dialogRef: MatDialogRef<ProgramFreePieceDialogComponent>,
-    private api: ApiService,
-    @Inject(MAT_DIALOG_DATA)
-    public data: {
-      title?: string;
-      composer?: string;
-      instrument?: string | null;
-      performerNames?: string | null;
-      duration?: string | null;
-    } | null
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<ProgramFreePieceDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: FreePieceData | null,
+    private api: ApiService
   ) {
-    this.form = this.fb.group({
-      title: ['', Validators.required],
-      composer: this.composerCtrl,
-      instrument: [''],
-      performerNames: [''],
-      duration: ['', Validators.pattern(/^\d{1,2}:\d{2}$/)],
-    });
+    super(fb, dialogRef, data);
   }
 
-  ngOnInit(): void {
-    this.api.getComposers().subscribe(list => {
+  override ngOnInit(): void {
+    super.ngOnInit();
+   this.api.getComposers().subscribe(list => {
       this.allComposers = list;
       this.filteredComposers$ = this.composerCtrl.valueChanges.pipe(
         startWith(''),
@@ -51,30 +55,31 @@ export class ProgramFreePieceDialogComponent implements OnInit {
         map(name => this.allComposers.filter(c => c.name.toLowerCase().includes(name)))
       );
     });
-    if (this.data) {
-      this.form.patchValue({
-        title: this.data.title ?? '',
-        instrument: this.data.instrument ?? '',
-        performerNames: this.data.performerNames ?? '',
-        duration: this.data.duration ?? '',
-      });
-      this.composerCtrl.setValue(this.data.composer ?? '');
+
+    if (this.data?.composer) {
+      this.composerCtrl.setValue(this.data.composer);
     }
   }
 
-  save() {
-    if (this.form.valid) {
-      const { duration, ...rest } = this.form.value;
-      let durationSec: number | undefined;
-      if (duration) {
-        const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
-        durationSec = m * 60 + s;
-      }
-      this.dialogRef.close({ ...rest, durationSec });
-    }
+  protected buildForm(): FormGroup {
+    return this.fb.group({
+      title: [this.data?.title ?? '', Validators.required],
+      composer: this.composerCtrl,
+      instrument: [this.data?.instrument ?? ''],
+      performerNames: [this.data?.performerNames ?? ''],
+      duration: [this.data?.duration ?? '', Validators.pattern(/^\d{1,2}:\d{2}$/)],
+    });
   }
 
-  cancel() {
-    this.dialogRef.close();
+  protected override getResult(): FreePieceResult {
+    const { duration, ...rest } = this.form.value;
+    let durationSec: number | undefined;
+
+    if (duration) {
+      const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
+      durationSec = m * 60 + s;
+    }
+
+    return { ...rest, durationSec };
   }
 }

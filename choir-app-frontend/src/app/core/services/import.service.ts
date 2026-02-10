@@ -16,9 +16,16 @@ export class ImportService {
     return this.http.post(`${this.apiUrl}/import/collection/${collectionId}`, formData, { params });
   }
 
-  startCollectionCsvImport(collectionId: number, file: File): Observable<{ jobId: string }> {
+  startCollectionCsvImport(
+    collectionId: number,
+    file: File,
+    resolutions?: Record<number, { composerId?: number; pieceId?: number; createNewPiece?: boolean }>
+  ): Observable<{ jobId: string }> {
     const formData = new FormData();
     formData.append('csvfile', file, file.name);
+    if (resolutions) {
+      formData.append('resolutions', JSON.stringify(resolutions));
+    }
     return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/collection/${collectionId}`, formData);
   }
 

@@ -1,12 +1,12 @@
 mat-card.post-card {
   border: 1px solid #e4e7ec;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
 }
 
 .post-header {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .title-row {
@@ -26,14 +26,14 @@ mat-card.post-card {
 }
 
 .small-icon-btn {
-  width: 32px !important;
-  height: 32px !important;
-  line-height: 32px !important;
+  width: 2rem !important;
+  height: 2rem !important;
+  line-height: 2rem !important;
 
   .mat-icon {
-    font-size: 18px;
-    width: 18px;
-    height: 18px;
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
   }
 }
 
@@ -42,7 +42,7 @@ mat-card.post-card {
   justify-content: space-between;
   align-items: center;
   padding: 0 16px 8px;
-  font-size: 13px;
+  font-size: 0.875rem;
   color: #555;
 }
 
@@ -62,11 +62,11 @@ mat-card.post-card {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 1.625rem;
+  height: 1.625rem;
   border-radius: 50%;
   background: #f0f2f5;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 
 .social-actions {
@@ -91,7 +91,7 @@ mat-card.post-card {
 .comment-toggle {
   cursor: pointer;
   color: #000;
-  font-size: 14px;
+  font-size: 0.875rem;
   padding: 6px 8px;
   border-radius: 4px;
 
@@ -149,8 +149,8 @@ mat-card.post-card {
   position: absolute;
   left: -16px;
   top: 18px;
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   border-radius: 50%;
   background: #dfe4ea;
 }
@@ -166,7 +166,7 @@ mat-card.post-card {
   align-items: baseline;
   justify-content: space-between;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: #1f2937;
 }
 
@@ -175,7 +175,7 @@ mat-card.post-card {
 }
 
 .time {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #6b7280;
   font-weight: 600;
 }
@@ -184,7 +184,7 @@ mat-card.post-card {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: #4b5563;
   background: #eef2ff;
   padding: 4px 10px;
@@ -207,7 +207,7 @@ mat-card.post-card {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 
 .comment-actions-row button {
@@ -233,7 +233,7 @@ mat-card.post-card {
 }
 
 .emoji {
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .attachment-link {
@@ -254,6 +254,6 @@ mat-card.post-card {
 
 .expires {
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 0.8125rem;
   color: #666;
 }

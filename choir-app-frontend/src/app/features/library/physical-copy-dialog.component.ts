@@ -1,18 +1,19 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { PhysicalCopy } from '@core/models/physical-copy';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-physical-copy-dialog',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule],
   template: `
-    <h1 mat-dialog-title>{{ data.copy ? 'Druckexemplar bearbeiten' : 'Druckexemplar hinzufügen' }}</h1>
+    <h1 mat-dialog-title>{{ title }}</h1>
     <div mat-dialog-content>
-      <form [formGroup]="form" class="dialog-form">
+      <form [formGroup]="form" class="dialog-form" id="physical-copy-form" (ngSubmit)="onSave()">
         <mat-form-field>
           <mat-label>Anzahl</mat-label>
           <input matInput type="number" formControlName="quantity" />
@@ -48,8 +49,8 @@ import { PhysicalCopy } from '@core/models/physical-copy';
       </form>
     </div>
     <div mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">Abbrechen</button>
-      <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+      <button mat-button (click)="onCancel()">Abbrechen</button>
+      <button mat-raised-button color="primary" type="submit" form="physical-copy-form" [disabled]="form.invalid">Speichern</button>
     </div>
   `,
   styles: [`
@@ -60,16 +61,25 @@ import { PhysicalCopy } from '@core/models/physical-copy';
     }
   `]
 })
-export class PhysicalCopyDialogComponent {
-  form: FormGroup;
+export class PhysicalCopyDialogComponent extends BaseFormDialog<any, { copy?: PhysicalCopy }> implements OnInit {
+  title!: string;
 
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<PhysicalCopyDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { copy?: PhysicalCopy }
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<PhysicalCopyDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: { copy?: PhysicalCopy }
   ) {
-    const c = data.copy;
-    this.form = this.fb.group({
+    super(fb, dialogRef, data);
+    this.title = this.getDialogTitle('Druckexemplar hinzufügen', 'Druckexemplar bearbeiten');
+  }
+
+  protected override isEditMode(): boolean {
+    return !!this.data?.copy;
+  }
+
+  protected buildForm(): FormGroup {
+    const c = this.data?.copy;
+    return this.fb.group({
       quantity: [c?.quantity || 1, [Validators.required, Validators.min(1)]],
       purchaseDate: [c?.purchaseDate ? new Date(c.purchaseDate) : null],
       vendor: [c?.vendor || ''],
@@ -79,17 +89,11 @@ export class PhysicalCopyDialogComponent {
     });
   }
 
-  save(): void {
-    if (this.form.valid) {
-      const val = this.form.value;
-      if (val.purchaseDate instanceof Date) {
-        val.purchaseDate = val.purchaseDate.toISOString().split('T')[0];
-      }
-      this.dialogRef.close(val);
+  protected override getResult(): any {
+    const val = this.form.value;
+    if (val.purchaseDate instanceof Date) {
+      val.purchaseDate = val.purchaseDate.toISOString().split('T')[0];
     }
-  }
-
-  cancel(): void {
-    this.dialogRef.close();
+    return val;
   }
 }

@@ -4,7 +4,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { PieceChange } from '@core/models/piece-change';
 import { MatTableDataSource } from '@angular/material/table';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 @Component({
     selector: 'app-manage-piece-changes',
@@ -17,7 +17,7 @@ export class ManagePieceChangesComponent implements OnInit {
     displayedColumns = ['piece', 'createdAt', 'actions'];
     dataSource = new MatTableDataSource<PieceChange>();
 
-    constructor(private api: ApiService, private snack: MatSnackBar) {}
+    constructor(private api: ApiService, private notification: NotificationService) {}
 
     ngOnInit(): void {
         this.loadChanges();
@@ -32,20 +32,20 @@ export class ManagePieceChangesComponent implements OnInit {
     approve(change: PieceChange): void {
         this.api.approvePieceChange(change.id).subscribe({
             next: () => {
-                this.snack.open('Änderung übernommen', 'OK', { duration: 3000 });
+                this.notification.success('Änderung übernommen', 3000);
                 this.loadChanges();
             },
-            error: () => this.snack.open('Fehler beim Übernehmen', 'OK', { duration: 3000 })
+            error: () => this.notification.error('Fehler beim Übernehmen', 3000)
         });
     }
 
     decline(change: PieceChange): void {
         this.api.deletePieceChange(change.id).subscribe({
             next: () => {
-                this.snack.open('Änderung abgelehnt', 'OK', { duration: 3000 });
+                this.notification.success('Änderung abgelehnt', 3000);
                 this.loadChanges();
             },
-            error: () => this.snack.open('Fehler beim Ablehnen', 'OK', { duration: 3000 })
+            error: () => this.notification.error('Fehler beim Ablehnen', 3000)
         });
     }
 }

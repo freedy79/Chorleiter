@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { AdminService } from '@core/services/admin.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { ImprintSettings } from '@core/models/imprint-settings';
 
 @Component({
@@ -30,7 +30,7 @@ export class ImprintSettingsComponent implements OnInit {
 
   constructor(
     private adminService: AdminService,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -95,7 +95,7 @@ export class ImprintSettingsComponent implements OnInit {
         this.saving = false;
         this.saved = true;
         this.isComplete = true;
-        this.snackBar.open('Impressum gespeichert', 'OK', { duration: 2000 });
+        this.notification.success('Impressum gespeichert', 2000);
         console.log('Imprint settings saved successfully');
 
         // Erfolgsmeldung nach kurzer Zeit zurücksetzen
@@ -107,7 +107,7 @@ export class ImprintSettingsComponent implements OnInit {
         this.saving = false;
         console.error('Error saving imprint settings:', err);
         this.error = err.error?.message || 'Fehler beim Speichern der Impressum-Einstellungen.';
-        this.snackBar.open('Fehler beim Speichern', 'OK', { duration: 3000 });
+        this.notification.error('Fehler beim Speichern');
       }
     });
   }

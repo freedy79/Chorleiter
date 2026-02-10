@@ -42,7 +42,7 @@
 
   <ng-container matColumnDef="choirs">
     <mat-header-cell *matHeaderCellDef>Chöre</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ choirList(element) }}</mat-cell>
+    <mat-cell *matCellDef="let element">{{ element.choirs | join:'name' }}</mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="lastLogin">
@@ -107,7 +107,7 @@
           </mat-select>
         </mat-form-field>
       </div>
-      <div><strong>Chöre:</strong> {{ choirList(element) }}</div>
+      <div><strong>Chöre:</strong> {{ element.choirs | join:'name' }}</div>
       <div><strong>Letzter Login:</strong> {{ element.lastLogin | date:'short' }}</div>
       <div *ngIf="element.resetToken"><strong>Reset-Token:</strong> {{ element.resetTokenExpiry | date:'short' }}</div>
     </div>

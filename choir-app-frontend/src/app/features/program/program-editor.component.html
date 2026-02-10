@@ -1,54 +1,92 @@
+<h1 class="program-title">{{ programTitle || 'Unbenanntes Programm' }}</h1>
+
 <div class="program-header">
-  <span>Startzeit: {{ startTime ? (startTime | date:'short') : '-' }}</span>
+  <span>Startzeit: {{ getFormattedStartTime() }}</span>
   <span *ngIf="isPublished" class="status-badge published">Veröffentlicht</span>
   <span *ngIf="isDraft && !isPublished" class="status-badge draft">Entwurf</span>
   <button *ngIf="isPublished && !isEditing" mat-raised-button color="primary" (click)="startEditing()">Bearbeiten starten</button>
-  <button *ngIf="isEditing" mat-button (click)="editBasics()">Stammdaten bearbeiten</button>
+  <button *ngIf="isDraft && isEditing" mat-raised-button color="primary" (click)="publishDraft()">
+    <mat-icon>save</mat-icon>
+    Speichern
+  </button>
+  <button
+    *ngIf="isEditing"
+    mat-icon-button
+    (click)="editBasics()"
+    matTooltip="Stammdaten bearbeiten"
+    aria-label="Stammdaten bearbeiten"
+  >
+    <mat-icon>edit</mat-icon>
+  </button>
   <button mat-raised-button color="accent" (click)="downloadPdf()" matTooltip="Als PDF herunterladen">
     <mat-icon>picture_as_pdf</mat-icon>
   </button>
 </div>
 
 <ng-container *ngIf="!isPublished || isEditing">
-  <button mat-raised-button color="primary" (click)="addPiece()" [disabled]="!isEditing">+ Stück</button>
-  <button mat-raised-button color="accent" (click)="addFreePiece()" [disabled]="!isEditing">+ Freies Stück</button>
-  <button mat-raised-button color="accent" class="add-speech" (click)="addSpeech()" [disabled]="!isEditing">+ Sprachbeitrag</button>
-  <button mat-raised-button color="accent" (click)="addBreak()" [disabled]="!isEditing">+ Pause</button>
+  <!-- Desktop: Individual Icon Buttons -->
+  <div class="add-buttons desktop-add-buttons">
+    <button mat-fab class="add-btn" color="primary" (click)="addPiece()" [disabled]="!isEditing" matTooltip="Stück aus Bibliothek hinzufügen">
+      <svg class="custom-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <rect x="14.5" y="6" width="3" height="20" rx="1.5" ry="1.5" fill="currentColor"/>
+        <rect x="6" y="14.5" width="20" height="3" rx="1.5" ry="1.5" fill="currentColor"/>
+      </svg>
+    </button>
+
+    <button mat-fab class="add-btn" color="accent" (click)="addFreePiece()" [disabled]="!isEditing" matTooltip="Freies Stück hinzufügen">
+      <svg class="custom-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="13" cy="22" r="4.2" fill="currentColor"/>
+        <rect x="16" y="7" width="3" height="15" rx="1.5" ry="1.5" fill="currentColor"/>
+        <path fill="currentColor" d="M19 7.4c4 .2 6.5 2.4 6.5 5.6 0 2.2-1.3 4-3.8 4.9-.7.3-1.5-.1-1.8-.9-.3-.7.1-1.5.9-1.8 1.5-.5 2.1-1.2 2.1-2.2 0-1.3-1-2.1-3.1-2.3-.7-.1-1.3-.7-1.2-1.4.1-.7.7-1.3 1.4-1.2z"/>
+      </svg>
+    </button>
+
+    <button mat-fab class="add-btn" color="accent" (click)="addSpeech()" [disabled]="!isEditing" matTooltip="Sprachbeitrag / Text hinzufügen">
+      <svg class="custom-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <path fill="currentColor" d="M9.5 7.5h13c2.8 0 5 2.2 5 5v7c0 2.8-2.2 5-5 5H14.8l-5.9 4.1c-1.2.8-2.9-.1-2.9-1.6v-2.5H9.5c-2.8 0-5-2.2-5-5v-7c0-2.8 2.2-5 5-5z"/>
+      </svg>
+    </button>
+
+    <button mat-fab class="add-btn" color="accent" (click)="addBreak()" [disabled]="!isEditing" matTooltip="Pause hinzufügen">
+      <svg class="custom-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+        <g transform="translate(2 2) scale(0.875)">
+          <path fill="currentColor" d="M18.9 4.8c1.2 0 2 1 1.8 2.1-.4 2.6-2 4.9-4.8 7.1l4.2 4.2c1.2 1.2 1.9 2.7 1.9 4.4 0 3.3-2.7 6-6 6h-3l2.8 3.4c.7.9.6 2.2-.3 2.9-.9.7-2.2.6-2.9-.3l-4.6-5.7c-1-1.2-.2-3 1.4-3h6.6c1.3 0 2.4-1.1 2.4-2.4 0-.7-.3-1.3-.7-1.7l-5-5c-.8-.8-.8-2 0-2.8l1.4-1.4c1.8-1.6 2.8-3 3-4.3.1-1 .9-1.7 1.9-1.7z"/>
+        </g>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Mobile: Single Button with Type Selection -->
+  <div class="add-buttons mobile-add-buttons">
+    <button mat-fab color="primary" (click)="openAddItemMenu()" [disabled]="!isEditing" matTooltip="Element hinzufügen">
+      <mat-icon>add</mat-icon>
+    </button>
+  </div>
 </ng-container>
 
 <div *ngIf="hasMissingDurations()" class="duration-warning">
   Es existieren Elemente ohne Dauerangabe.
 </div>
 
-<div *ngIf="items.length" class="table-container">
+<!-- Desktop View: Table -->
+<div *ngIf="items.length" class="table-container desktop-view">
   <mat-table
     [dataSource]="items"
     class="program-table"
     cdkDropList
     (cdkDropListDropped)="drop($event)"
+    multiTemplateDataRows
   >
   <ng-container matColumnDef="move">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-
     <mat-cell *matCellDef="let item; let i = index">
       <span class="drag-handle" cdkDragHandle aria-label="Greifen">
         <mat-icon>drag_indicator</mat-icon>
       </span>
-
-      <button
-        mat-icon-button
-        (click)="moveUp(i)"
-        [disabled]="i === 0"
-        aria-label="Nach oben"
-      >
+      <button mat-icon-button (click)="moveUp(i)" [disabled]="i === 0" aria-label="Nach oben">
         <mat-icon>arrow_upward</mat-icon>
       </button>
-      <button
-        mat-icon-button
-        (click)="moveDown(i)"
-        [disabled]="i === items.length - 1"
-        aria-label="Nach unten"
-      >
+      <button mat-icon-button (click)="moveDown(i)" [disabled]="i === items.length - 1" aria-label="Nach unten">
         <mat-icon>arrow_downward</mat-icon>
       </button>
     </mat-cell>
@@ -56,7 +94,7 @@
 
   <ng-container matColumnDef="details">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let item" class="details-cell" [class.missing-duration]="typeof item.durationSec !== 'number'">
+    <mat-cell *matCellDef="let item" class="details-cell">
       <div class="program-block">
         <div class="composer" *ngIf="getComposer(item)">{{ getComposer(item) }}{{ getComposerYears(item) }}</div>
         <div class="title">
@@ -69,23 +107,6 @@
         </div>
         <div class="subtitle">
           <span *ngIf="getSubtitle(item)">{{ getSubtitle(item) }}</span>
-          <span *ngIf="getSubtitle(item)" class="separator">|</span>
-          <input
-            matInput
-            class="note-input"
-            [(ngModel)]="item.note"
-            (blur)="onNoteChange(item)"
-            placeholder="Notiz"
-          />
-        </div>
-        <div class="duration">
-          <input
-            matInput
-            [(ngModel)]="item.durationStr"
-            (blur)="onDurationChange(item)"
-            placeholder="mm:ss"
-            [class.duration-error]="typeof item.durationSec !== 'number'"
-          />
         </div>
       </div>
     </mat-cell>
@@ -93,13 +114,18 @@
 
   <ng-container matColumnDef="time">
     <mat-header-cell *matHeaderCellDef>Uhrzeit</mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index">{{ getPlannedTime(i) }}</mat-cell>
+    <mat-cell *matCellDef="let item; let i = index" class="time-cell" [class.missing-duration]="typeof item.durationSec !== 'number'">
+      <div class="planned-time">{{ getPlannedTime(i) }}</div>
+      <div class="duration">
+        <input matInput [(ngModel)]="item.durationStr" (blur)="onDurationChange(item)" placeholder="mm:ss"
+          [class.duration-error]="typeof item.durationSec !== 'number'" />
+      </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef> Aktionen </mat-header-cell>
     <mat-cell *matCellDef="let item">
-
       <ng-container [ngSwitch]="item.type">
         <a *ngSwitchCase="'piece'" [routerLink]="['/pieces', item.pieceId]" target="_blank">Details</a>
         <ng-container *ngSwitchCase="'slot'">
@@ -109,25 +135,103 @@
           <button mat-button (click)="fillSlotWithBreak(item)" [disabled]="!isEditing">Pause</button>
         </ng-container>
       </ng-container>
-      <button
-        *ngIf="item.type !== 'slot'"
-        mat-icon-button
-        (click)="editItem(item)"
-        [disabled]="!isEditing"
-        aria-label="Bearbeiten"
-      >
+      <button *ngIf="item.type !== 'slot'" mat-icon-button (click)="editItem(item)" [disabled]="!isEditing" aria-label="Bearbeiten">
         <mat-icon>edit</mat-icon>
       </button>
-
       <button mat-icon-button color="warn" (click)="deleteItem(item)" [disabled]="!isEditing" aria-label="Löschen">
         <mat-icon>delete</mat-icon>
       </button>
     </mat-cell>
   </ng-container>
 
+  <ng-container matColumnDef="note">
+    <mat-header-cell *matHeaderCellDef>Notiz</mat-header-cell>
+    <mat-cell *matCellDef="let item" class="note-cell">
+      <input matInput class="note-input" [(ngModel)]="item.note" (blur)="onNoteChange(item)" placeholder="Notiz" [disabled]="!isEditing" />
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="noteRow">
+    <mat-cell *matCellDef="let item" class="note-row-cell" [attr.colspan]="displayedColumns.length">
+      <div class="note-row-content">
+        <mat-icon>notes</mat-icon>
+        <span>{{ item.note }}</span>
+      </div>
+    </mat-cell>
+  </ng-container>
+
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
   <mat-row *matRowDef="let row; columns: displayedColumns" cdkDrag></mat-row>
+  <mat-row *matRowDef="let row; columns: ['noteRow']; when: hasNoteRow" class="note-row"></mat-row>
   </mat-table>
+</div>
+
+<!-- Mobile View: Cards with Drag -->
+<div *ngIf="items.length" class="mobile-view">
+  <div class="mobile-sticky-actions" *ngIf="selectedItemId && getSelectedItem() && isEditing">
+    <button mat-raised-button color="primary" (click)="editItem(getSelectedItem()!)">
+      <mat-icon>edit</mat-icon>
+      Bearbeiten
+    </button>
+    <button mat-icon-button (click)="toggleSelectItem(selectedItemId)">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="mobile-cards" cdkDropList (cdkDropListDropped)="drop($event)" [cdkDropListData]="items">
+    <div *ngFor="let item of items; let i = index"
+         cdkDrag
+         class="card"
+         [class.selected]="selectedItemId === item.id"
+         (click)="toggleSelectItem(item.id)"
+         [cdkDragDisabled]="!isEditing">
+
+      <div class="card-drag-indicator" *ngIf="isEditing">
+        <mat-icon>drag_indicator</mat-icon>
+      </div>
+
+      <div class="card-content">
+        <div class="card-row">
+          <div class="card-time">
+            <span class="label">Zeit</span>
+            <span class="value">{{ getPlannedTime(i) }}</span>
+          </div>
+          <div class="card-duration" [class.missing]="typeof item.durationSec !== 'number'">
+            <span class="label">Dauer</span>
+            <span class="value">{{ item.durationStr }}</span>
+          </div>
+        </div>
+
+        <div class="card-composer" *ngIf="getComposer(item)">
+          {{ getComposer(item) }}{{ getComposerYears(item) }}
+        </div>
+
+        <div class="card-title">
+          <ng-container [ngSwitch]="item.type">
+            <span *ngSwitchCase="'piece'">{{ item.pieceTitleSnapshot }}</span>
+            <span *ngSwitchCase="'speech'">{{ item.speechTitle }}</span>
+            <span *ngSwitchCase="'break'">{{ item.breakTitle || 'Pause' }}</span>
+            <span *ngSwitchCase="'slot'">{{ item.slotLabel }}</span>
+          </ng-container>
+        </div>
+
+        <div class="card-subtitle" *ngIf="getSubtitle(item)">
+          {{ getSubtitle(item) }}
+        </div>
+
+        <div class="card-note" *ngIf="item.note">
+          <mat-icon>notes</mat-icon>
+          <span>{{ item.note }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions" *ngIf="isEditing">
+        <button mat-icon-button (click)="deleteItem(item); $event.stopPropagation()" color="warn" aria-label="Löschen">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div *ngIf="items.length" class="total-duration">

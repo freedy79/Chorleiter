@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -15,7 +15,7 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
   ],
   templateUrl: './composer-dialog.component.html',
 })
-export class ComposerDialogComponent extends BaseFormDialog<{ name: string; birthYear: string; deathYear: string }, { role: 'composer' | 'author'; record?: any }> {
+export class ComposerDialogComponent extends BaseFormDialog<{ name: string; birthYear: string; deathYear: string }, { role: 'composer' | 'author'; record?: any }> implements OnInit {
   title = 'Neuen Komponisten erstellen';
 
   constructor(
@@ -24,8 +24,12 @@ export class ComposerDialogComponent extends BaseFormDialog<{ name: string; birt
     @Inject(MAT_DIALOG_DATA) public override data: { role: 'composer' | 'author'; record?: any }
   ) {
     super(fb, dialogRef, data);
-    const isEdit = !!data.record;
-    this.title = data.role === 'author'
+  }
+
+  override ngOnInit(): void {
+    super.ngOnInit();
+    const isEdit = !!this.data?.record;
+    this.title = this.data?.role === 'author'
       ? isEdit ? 'Dichter bearbeiten' : 'Neuen Dichter erstellen'
       : isEdit ? 'Komponist bearbeiten' : 'Neuen Komponisten erstellen';
   }

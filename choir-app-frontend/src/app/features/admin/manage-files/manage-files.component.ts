@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
 import { ApiService } from 'src/app/core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { BackendFile, UploadOverview } from 'src/app/core/models/backend-file';
 import { environment } from 'src/environments/environment';
 
@@ -21,7 +22,10 @@ export class ManageFilesComponent implements OnInit {
   displayedFileColumns = ['filename', 'downloadName', 'linked', 'actions'];
   private readonly apiBase = typeof environment.apiUrl === 'string' ? environment.apiUrl.replace(/\/api\/?$/, '') : '';
 
-  constructor(private api: ApiService) {}
+  constructor(
+    private api: ApiService,
+    private dialogHelper: DialogHelperService
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -36,8 +40,14 @@ export class ManageFilesComponent implements OnInit {
   }
 
   delete(category: string, filename: string): void {
-    if (!confirm('Datei wirklich löschen?')) return;
-    this.api.deleteUploadFile(category, filename).subscribe(() => this.load());
+    this.dialogHelper.confirmDelete(
+      { itemName: 'diese Datei' },
+      () => this.api.deleteUploadFile(category, filename),
+      {
+        silent: true,
+        onSuccess: () => this.load()
+      }
+    ).subscribe();
   }
 
   get unassignedCovers(): number {

@@ -67,10 +67,32 @@ exports.create = async (req, res) => {
 exports.findAll = async (req, res) => {
   try {
     const programs = await Program.findAll({
-      where: { choirId: req.activeChoirId },
+      where: { choirId: req.activeChoirId, publishedFromId: null },
       order: [['createdAt', 'DESC']],
     });
-    res.status(200).send(programs);
+
+    // For each published program, check if a draft revision exists and
+    // annotate it so the frontend knows editing is in progress.
+    const drafts = await Program.findAll({
+      where: {
+        choirId: req.activeChoirId,
+        status: 'draft',
+        publishedFromId: { [db.Sequelize.Op.ne]: null },
+      },
+    });
+    const draftByPublishedId = new Map(drafts.map(d => [d.publishedFromId, d]));
+
+    const result = programs.map(p => {
+      const json = p.toJSON();
+      const draft = draftByPublishedId.get(p.id);
+      if (draft) {
+        json.hasDraft = true;
+        json.draftId = draft.id;
+      }
+      return json;
+    });
+
+    res.status(200).send(result);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -142,7 +164,7 @@ exports.downloadPdf = async (req, res) => {
       include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
     });
     if (!program) return res.status(404).send({ message: 'program not found' });
-    const buffer = programPdf(program.toJSON());
+    const buffer = await programPdf(program.toJSON());
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="programm-${program.id}.pdf"`);
     res.status(200).send(buffer);
@@ -546,7 +568,7 @@ exports.updateItem = async (req, res) => {
     if (!item) return res.status(404).send({ message: 'item not found' });
 
     await item.update({
-      durationSec: typeof durationSec === 'number' ? durationSec : null,
+      durationSec: typeof durationSec === 'number' ? durationSec : (durationSec === null ? null : item.durationSec),
       note: typeof note === 'string' ? note : item.note,
     });
 

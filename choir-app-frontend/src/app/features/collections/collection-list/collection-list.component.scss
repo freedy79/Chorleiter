@@ -1,76 +1,77 @@
-.container-two-sections {
-    display: flex;
-    flex-direction: column ;
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+@use '../../../../themes/responsive-utilities' as *;
 
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    height: 100%;
+.container-two-sections {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  height: 100%;
 }
 
 .subtitle {
-    font-size: 1rem;
-    color: #666;
-    margin-top: -0.5rem;
-    margin-bottom: 2rem;
+  font-size: 1rem;
+  @include secondary-text;
+  margin-top: -0.5rem;
+  margin-bottom: 2rem;
 }
 
 .header-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .action-buttons {
-    display: flex;
-    gap: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
 }
 
 .collection-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
 }
 
 mat-card-actions button mat-icon {
-    margin-right: 8px;
+  margin-right: $spacing-sm;
 }
 
 .loading-state, .empty-state {
-    grid-column: 1 / -1; // Span all columns
-    padding: 2rem;
-    text-align: center;
-    color: #666;
-    border: 1px dashed #ccc;
-    border-radius: 4px;
-    margin-top: 1.5rem;
+  grid-column: 1 / -1;
+  padding: 2rem;
+  text-align: center;
+  @include secondary-text;
+  @include adaptive-border(1px, dashed);
+  border-radius: 4px;
+  margin-top: 1.5rem;
 }
 
 .loading-state {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  min-height: 200px;
 }
-
 
 .actions-cell {
-    text-align: right;
+  text-align: right;
 
-    button {
-        margin-left: 8px;
-    }
+  button {
+    margin-left: $spacing-sm;
+  }
 
-    .library-icon {
-        margin-left: 8px;
-    }
+  .library-icon {
+    margin-left: $spacing-sm;
+  }
 }
 
-// ADD THIS NEW STYLE
 .title-cell {
-    min-width: 200px;
+  min-width: 200px;
 }
 
 .mat-column-cover {
@@ -79,9 +80,7 @@ mat-card-actions button mat-icon {
   max-width: 80px !important;
   overflow-wrap: break-word;
   word-wrap: break-word;
-
   word-break: break-word;
-
   -ms-hyphens: auto;
   -moz-hyphens: auto;
   -webkit-hyphens: auto;
@@ -94,9 +93,7 @@ mat-card-actions button mat-icon {
   max-width: 120px !important;
   overflow-wrap: break-word;
   word-wrap: break-word;
-
   word-break: break-word;
-
   -ms-hyphens: auto;
   -moz-hyphens: auto;
   -webkit-hyphens: auto;
@@ -109,9 +106,7 @@ mat-card-actions button mat-icon {
   min-width: 35% !important;
   overflow-wrap: break-word;
   word-wrap: break-word;
-
   word-break: break-word;
-
   -ms-hyphens: auto;
   -moz-hyphens: auto;
   -webkit-hyphens: auto;
@@ -124,131 +119,22 @@ mat-card-actions button mat-icon {
   max-width: 120px !important;
   overflow-wrap: break-word;
   word-wrap: break-word;
-
   word-break: break-word;
-
   -ms-hyphens: auto;
   -moz-hyphens: auto;
   -webkit-hyphens: auto;
   hyphens: auto;
 }
 
-
-
-
 .collection_title_block {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    width: 100%;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 
-    .title {
-        font-weight: bold;
-    }
-
-    .subtitle-hint {
-        font-size: 0.8rem;
-        color: #555;
-    }
-    .prefix-hint {
-        font-size: 0.8rem;
-        color: #555;
-    }
-}
-
-.titles-cell {
-    text-align: center;
-    font-weight: 500;
-}
-
-.cover-cell img {
-    height: 48px;
-    width: auto;
-    object-fit: cover;
-}
-
-.table-wrapper {
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    max-height: calc(100vh - 280px); // Adjust based on your layout
-    flex-grow: 1;
-}
-
-.table-scroll-container {
-    flex: 1 1 auto;
-    overflow-y: auto;
-}
-
-.table-wrapper .mat-row {
-    cursor: pointer;
-}
-
-.table-wrapper .mat-row:hover {
-    background-color: rgba(0, 0, 0, 0.04);
-}
-
-.table-wrapper .mat-row.selected {
-    background-color: rgba(25, 118, 210, 0.15);
-}
-
-@media (prefers-color-scheme: dark) {
-    .table-wrapper .mat-row:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    }
-    .table-wrapper .mat-row.selected {
-    background-color: rgba(25, 118, 210, 0.25);
-    }
-}
-
-mat-paginator {
-    flex-shrink: 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.mat-paginator-sticky {
-  bottom: 0px;
-  position: sticky;
-  z-index: 10;
-}
-
-.mobile-list {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(0, 0, 0, 0.12);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.mobile-item {
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.mobile-item:last-child {
-    border-bottom: none;
-}
-
-.cover-img {
-    width: 64px;
-    height: auto;
-    margin-bottom: 4px;
-}
-
-.detail {
-    font-size: 0.9rem;
-    color: #555;
-}
-
-.mobile-actions {
-    margin-top: 4px;
-    text-align: right;
-}
-
-.highlight-on-hover:hover {
-    transition: transform 0.6s;
-    background-color: rgba(150, 150, 150, 0.04);
+  .title {
+    font-weight: bold;
+  }
 }

@@ -21,7 +21,7 @@
 
   <mat-tab label="Bibliotheksliste">
     <div class="list-header" *ngIf="isAdmin || isLibrarian">
-      <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+      <input type="file" #fileInput (change)="onFileSelected($event)" accept=".csv,text/csv,text/plain,application/csv" hidden />
       <button mat-icon-button [matMenuTriggerFor]="adminMenu">
         <mat-icon>more_vert</mat-icon>
       </button>
@@ -31,67 +31,132 @@
       </mat-menu>
     </div>
 
-    <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
-      <ng-container matColumnDef="cover">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let element" class="cover-cell">
-          <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
-        </mat-cell>
-      </ng-container>
+    <!-- Desktop View -->
+    <div class="desktop-view">
+      <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
+        <ng-container matColumnDef="cover">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let element" class="cover-cell">
+            <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="title">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>Titel</mat-header-cell>
-        <mat-cell *matCellDef="let element">
-          <div class="composer-hint" *ngIf="getCollectionComposer(element.collection) as composer">{{ composer }}</div>
-          <div class="title">{{ element.collection?.title }}</div>
-          <div class="subtitle-hint" *ngIf="getCollectionHint(element.collection) as hint">{{ hint }}</div>
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="title">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Titel</mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <div class="composer-hint" *ngIf="getCollectionComposer(element.collection) as composer">{{ composer }}</div>
+            <div class="title">{{ element.collection?.title }}</div>
+            <div class="subtitle-hint" *ngIf="getCollectionHint(element.collection) as hint">{{ hint }}</div>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="copies">
-        <mat-header-cell *matHeaderCellDef mat-sort-header>Exemplare</mat-header-cell>
-        <mat-cell *matCellDef="let element">{{element.copies}}</mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="copies">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Exemplare</mat-header-cell>
+          <mat-cell *matCellDef="let element">{{element.copies}}</mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let element">
-          <button mat-icon-button color="primary" *ngIf="element.status === 'available' && !isSingerOnly" (click)="addToCart(element, $event)">
-            <mat-icon>add_shopping_cart</mat-icon>
-          </button>
-          <button mat-icon-button *ngIf="isAdmin || isLibrarian" [matMenuTriggerFor]="itemMenu" (click)="$event.stopPropagation()">
-            <mat-icon>more_vert</mat-icon>
-          </button>
-          <mat-menu #itemMenu="matMenu">
-            <button mat-menu-item (click)="editCopies(element, $event)">Bestand ändern</button>
-            <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
-            <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
-          </mat-menu>
-        </mat-cell>
-      </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" *ngIf="element.status === 'available' && !isSingerOnly" (click)="addToCart(element, $event)">
+              <mat-icon>add_shopping_cart</mat-icon>
+            </button>
+            <button mat-icon-button *ngIf="isAdmin || isLibrarian" [matMenuTriggerFor]="itemMenu" (click)="$event.stopPropagation()">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #itemMenu="matMenu">
+              <button mat-menu-item (click)="editCopies(element, $event)">Bestand ändern</button>
+              <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
+              <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
+            </mat-menu>
+          </mat-cell>
+        </ng-container>
 
-      <ng-container matColumnDef="expandedDetail">
-        <mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
-          <div *ngIf="expandedItem === element">
-            <mat-nav-list>
-              <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
-                {{ piece.title }}
-                <span *ngIf="piece.composer?.name || piece.origin">
-                  – {{ piece.composer?.name || piece.origin }}
-                </span>
-                <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
-              </a>
-            </mat-nav-list>
-            <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
+        <ng-container matColumnDef="expandedDetail">
+          <mat-cell *matCellDef="let element" [attr.colspan]="displayedColumns.length">
+            <div *ngIf="expandedItem === element">
+              <mat-nav-list>
+                <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
+                  {{ piece.title }}
+                  <span *ngIf="piece.composer?.name || piece.origin">
+                    – {{ piece.composer?.name || piece.origin }}
+                  </span>
+                  <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
+                </a>
+              </mat-nav-list>
+              <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></mat-row>
+        <mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></mat-row>
+      </mat-table>
+      <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+    </div>
+
+    <!-- Mobile View: Cards -->
+    <div class="mobile-view">
+      <div class="mobile-card-container">
+        <ng-container *ngIf="dataSource.data.length; else mobileNoData">
+          <div class="mobile-cards">
+            <div class="library-card" *ngFor="let element of dataSource.data" (click)="toggleCollection(element)">
+              <div class="card-header">
+                <img *ngIf="element.collection?.coverImageData" [src]="element.collection?.coverImageData" alt="Cover" class="card-cover" loading="lazy" />
+                <div class="card-info">
+                  <div class="card-composer" *ngIf="getCollectionComposer(element.collection) as composer">{{ composer }}</div>
+                  <div class="card-title">{{ element.collection?.title }}</div>
+                  <div class="card-subtitle" *ngIf="getCollectionHint(element.collection) as hint">{{ hint }}</div>
+                </div>
+              </div>
+
+              <div class="card-meta">
+                <span class="label">Exemplare:</span>
+                <span class="value">{{ element.copies }}</span>
+              </div>
+
+              <div class="card-actions">
+                <button mat-stroked-button color="primary" *ngIf="element.status === 'available' && !isSingerOnly" (click)="addToCart(element, $event)">
+                  <mat-icon>add_shopping_cart</mat-icon>
+                  In den Warenkorb
+                </button>
+                <button mat-icon-button *ngIf="isAdmin || isLibrarian" [matMenuTriggerFor]="itemMenu" (click)="$event.stopPropagation()">
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #itemMenu="matMenu">
+                  <button mat-menu-item (click)="editCopies(element, $event)">Bestand ändern</button>
+                  <button mat-menu-item (click)="changeStatus(element, $event)">Entleihstatus ändern</button>
+                  <button mat-menu-item class="delete-button" (click)="deleteItem(element, $event)">Löschen</button>
+                </mat-menu>
+              </div>
+
+              <!-- Expanded pieces list for mobile -->
+              <div class="card-expanded" *ngIf="expandedItem === element">
+                <div class="expanded-header">Enthaltene Stücke:</div>
+                <div class="piece-list">
+                  <a class="piece-item" *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
+                    <mat-icon>music_note</mat-icon>
+                    <span class="piece-info">
+                      {{ piece.title }}
+                      <span *ngIf="piece.composer?.name || piece.origin" class="piece-composer">
+                        – {{ piece.composer?.name || piece.origin }}
+                      </span>
+                      <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
+                    </span>
+                  </a>
+                </div>
+                <mat-paginator [length]="expandedPieces.length" [pageSize]="piecePageSize" (page)="onPiecePage($event)"></mat-paginator>
+              </div>
+            </div>
           </div>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleCollection(row)" class="clickable-row"></mat-row>
-      <mat-row *matRowDef="let row; columns: ['expandedDetail']" class="detail-row"></mat-row>
-    </mat-table>
-    <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+        </ng-container>
+        <ng-template #mobileNoData>
+          <div class="no-data-message">Keine Bibliothekseinträge gefunden.</div>
+        </ng-template>
+      </div>
+      <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
+    </div>
   </mat-tab>
 
   <mat-tab *ngIf="isAdmin || isLibrarian" label="Ausleihen">

@@ -1,0 +1,62 @@
+/**
+ * Card Utilities für NAK Chorleiter App
+ *
+ * Zentrale Mixins für Card-Komponenten mit konsistenten Styles
+ * und Dark-Mode Support.
+ */
+
+@use 'sass:map';
+@use 'breakpoints' as *;
+@use 'dark-mode-variables' as *;
+
+// ============================================================================
+// CARD UTILITIES
+// ============================================================================
+
+/// Standard Mobile Card (für Listen-Ansichten)
+/// Verwendet konsistente Farben, Borders, Shadows und Transitions
+@mixin mobile-card {
+  @include card-background;
+  @include adaptive-border(1px);
+  border-radius: 10px;
+  padding: $spacing-md;
+  @include elevation-shadow(1);
+  cursor: pointer;
+  @include smooth-transition(transform);
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/// Desktop Card (größeres Padding für Desktop-Ansichten)
+@mixin desktop-card {
+  @include card-background;
+  @include adaptive-border(1px);
+  border-radius: 12px;
+  padding: $spacing-lg;
+  @include elevation-shadow(2);
+}
+
+/// Compact Card (kleineres Padding für verdichtete Ansichten)
+@mixin compact-card {
+  @include card-background;
+  @include adaptive-border(1px);
+  border-radius: 8px;
+  padding: $spacing-sm;
+  @include elevation-shadow(1);
+}
+
+/// Card Header (für Card-Kopfbereiche)
+@mixin card-header {
+  display: flex;
+  gap: $spacing-md;
+  align-items: flex-start;
+}
+
+/// Card Content (für Card-Inhalte)
+@mixin card-content {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}

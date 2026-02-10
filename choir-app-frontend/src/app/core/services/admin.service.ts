@@ -9,6 +9,7 @@ import { LoginAttempt } from '../models/login-attempt';
 import { StatsSummary } from '../models/stats-summary';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
+import { PdfTemplate } from '../models/pdf-template';
 import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
@@ -172,6 +173,14 @@ export class AdminService {
 
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.http.put<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`, data);
+  }
+
+  getPdfTemplates(): Observable<PdfTemplate[]> {
+    return this.http.get<PdfTemplate[]>(`${this.apiUrl}/admin/pdf-templates`);
+  }
+
+  updatePdfTemplates(data: PdfTemplate[]): Observable<PdfTemplate[]> {
+    return this.http.put<PdfTemplate[]>(`${this.apiUrl}/admin/pdf-templates`, data);
   }
 
   getFrontendUrl(): Observable<FrontendUrl> {

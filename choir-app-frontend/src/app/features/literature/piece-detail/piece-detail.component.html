@@ -4,14 +4,17 @@
     <button mat-icon-button color="primary" (click)="openEditPieceDialog()" aria-label="Stück bearbeiten">
       <mat-icon>edit</mat-icon>
     </button>
+    <button mat-icon-button color="primary" (click)="sharePiece()" aria-label="Stück teilen">
+      <mat-icon>share</mat-icon>
+    </button>
   </h2>
   <button mat-button color="warn" (click)="openReportDialog()">Stück melden</button>
   <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>
-  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ formatComposerYears(piece.composer) }}</p>
+  <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ piece.composer | composerYears }}</p>
   <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
   <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
   <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
-  <p *ngIf="piece.durationSec !== null && piece.durationSec !== undefined"><strong>Dauer:</strong> {{ formatDuration(piece.durationSec) }}</p>
+  <p *ngIf="piece.durationSec !== null && piece.durationSec !== undefined"><strong>Dauer:</strong> {{ piece.durationSec | duration }}</p>
   <mat-expansion-panel *ngIf="piece.lyrics">
     <mat-expansion-panel-header>
       <mat-panel-title>Liedtext</mat-panel-title>
@@ -60,7 +63,7 @@
           <div *ngIf="link.isImage">
             <p>{{ link.description }}</p>
             <img [src]="getLinkUrl(link)" [alt]="link.description" loading="lazy" style="max-width: 100%; max-height: 600px;" />
-            <br><span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+            <br><span *ngIf="link.size">({{ link.size | fileSize }})</span>
           </div>
 
           <div *ngIf="!link.isMp3 && !link.isImage">
@@ -70,7 +73,7 @@
               <mat-icon *ngIf="!link.isPdf && !link.isCapella && !link.isMuseScore" class="file-icon">insert_drive_file</mat-icon>
               {{ link.description }}
             </a>
-            <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+            <span *ngIf="link.size">({{ link.size | fileSize }})</span>
           </div>
         </li>
       </ul>

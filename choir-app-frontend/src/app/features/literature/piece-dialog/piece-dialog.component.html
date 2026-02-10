@@ -159,31 +159,50 @@
           <ng-container *ngSwitchCase="'files'">
             <div class="form-section">
               <h4 class="full-width">Links</h4>
-              <div formArrayName="links" class="full-width">
-                <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-row">
-                  <mat-form-field appearance="outline">
+              <div formArrayName="links" class="full-width links-container">
+                <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-item">
+                  <div class="link-header">
+                    <mat-form-field appearance="outline" class="type-field">
+                      <mat-label>Typ</mat-label>
+                      <mat-select formControlName="type" (selectionChange)="onLinkTypeChange(i)">
+                        <mat-option value="EXTERNAL">Externer Link</mat-option>
+                        <mat-option value="FILE_DOWNLOAD">Datei</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <button mat-icon-button color="warn" (click)="removeLink(i)" type="button" class="delete-button">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="description-field">
                     <mat-label>Beschreibung</mat-label>
                     <input matInput formControlName="description" />
                   </mat-form-field>
-                  <mat-form-field *ngIf="link.get('type')?.value !== 'FILE_DOWNLOAD'" appearance="outline">
+
+                  <mat-form-field *ngIf="link.get('type')?.value !== 'FILE_DOWNLOAD'" appearance="outline" class="url-field">
                     <mat-label>URL</mat-label>
                     <input matInput formControlName="url" />
                   </mat-form-field>
-                  <div *ngIf="link.get('type')?.value === 'FILE_DOWNLOAD'" class="file-upload">
-                    <input type="file" (change)="onLinkFileSelected($event, i)" accept="application/pdf,image/*,audio/*,.cap,.capx,.musicxml,.mxl" />
-                    <span *ngIf="link.get('url')?.value">{{ link.get('downloadName')?.value || 'Datei hochgeladen' }}</span>
+
+                  <div *ngIf="link.get('type')?.value === 'FILE_DOWNLOAD'" class="file-upload-section">
+                    <button mat-stroked-button type="button" onclick="this.nextElementSibling.click()">
+                      <mat-icon>upload_file</mat-icon>
+                      Datei auswählen
+                    </button>
+                    <input type="file" (change)="onLinkFileSelected($event, i)"
+                           accept="application/pdf,image/*,audio/*,.cap,.capx,.musicxml,.mxl"
+                           style="display: none;" />
+                    <div *ngIf="link.get('url')?.value" class="file-info">
+                      <mat-icon>attach_file</mat-icon>
+                      <span>{{ link.get('downloadName')?.value || 'Datei hochgeladen' }}</span>
+                    </div>
                   </div>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Typ</mat-label>
-                    <mat-select formControlName="type" (selectionChange)="onLinkTypeChange(i)">
-                      <mat-option value="EXTERNAL">Externer Link</mat-option>
-                      <mat-option value="FILE_DOWNLOAD">Datei</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <button mat-icon-button color="warn" (click)="removeLink(i)" type="button"><mat-icon>delete</mat-icon></button>
                 </div>
               </div>
-              <button mat-stroked-button class="full-width" (click)="addLink()" type="button">Link hinzufügen</button>
+              <button mat-stroked-button class="full-width add-link-button" (click)="addLink()" type="button">
+                <mat-icon>add</mat-icon>
+                Link hinzufügen
+              </button>
             </div>
             <mat-divider></mat-divider>
             <div class="form-section">

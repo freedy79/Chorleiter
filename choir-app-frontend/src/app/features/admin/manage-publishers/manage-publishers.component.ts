@@ -5,7 +5,7 @@ import { PublisherService } from '@core/services/publisher.service';
 import { Publisher } from '@core/models/publisher';
 import { MatTableDataSource } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { PublisherDialogComponent } from './publisher-dialog/publisher-dialog.component';
@@ -30,7 +30,7 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   constructor(private publisherService: PublisherService,
-              private dialog: MatDialog,
+              private dialogHelper: DialogHelperService,
               private paginatorService: PaginatorService) {
     this.pageSize = this.paginatorService.getPageSize('manage-publishers', this.pageSizeOptions[0]);
   }
@@ -75,33 +75,54 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
   }
 
   addPublisher(): void {
-    const ref = this.dialog.open(PublisherDialogComponent, { width: '400px' });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.publisherService.createPublisher(result).subscribe(() => {
+    this.dialogHelper.openCreateDialog<
+      PublisherDialogComponent,
+      { name: string },
+      Publisher
+    >(
+      PublisherDialogComponent,
+      (result) => this.publisherService.createPublisher(result),
+      {
+        silent: true,
+        onSuccess: () => {
           this.selectedLetter = 'Alle';
           this.loadPublishers();
-        });
-      }
-    });
+        }
+      },
+      { width: '400px' }
+    ).subscribe();
   }
 
   editPublisher(publisher: Publisher): void {
-    const ref = this.dialog.open(PublisherDialogComponent, { width: '400px', data: publisher });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.publisherService.updatePublisher(publisher.id, result).subscribe(() => {
+    this.dialogHelper.openEditDialog<
+      PublisherDialogComponent,
+      Publisher,
+      { name: string },
+      Publisher
+    >(
+      PublisherDialogComponent,
+      (result) => this.publisherService.updatePublisher(publisher.id, result),
+      publisher,
+      {
+        silent: true,
+        onSuccess: () => {
           this.selectedLetter = 'Alle';
           this.loadPublishers();
-        });
-      }
-    });
+        }
+      },
+      { width: '400px' }
+    ).subscribe();
   }
 
   deletePublisher(publisher: Publisher): void {
     if (!publisher.canDelete) return;
-    if (confirm('Verlag löschen?')) {
-      this.publisherService.deletePublisher(publisher.id).subscribe(() => this.loadPublishers());
-    }
+    this.dialogHelper.confirmDelete(
+      { itemName: 'diesen Verlag' },
+      () => this.publisherService.deletePublisher(publisher.id),
+      {
+        silent: true,
+        onSuccess: () => this.loadPublishers()
+      }
+    ).subscribe();
   }
 }

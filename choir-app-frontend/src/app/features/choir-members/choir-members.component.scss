@@ -1,3 +1,85 @@
+@use '../../../themes/breakpoints' as *;
+@use '../../../themes/dark-mode-variables' as *;
+@use '../../../themes/cards' as *;
+@use '../../../themes/responsive-utilities' as *;
+
 .table-container {
   overflow-x: auto;
+}
+
+// Responsive Views
+.desktop-view {
+  @extend %desktop-only;
+}
+
+.mobile-view {
+  @extend %mobile-only;
+}
+
+// Mobile Card Styles
+.mobile-card-container {
+  @include mobile-card-container;
+}
+
+.mobile-cards {
+  @include mobile-cards-grid;
+}
+
+.member-card {
+  @include mobile-card;
+}
+
+.card-header {
+  @include card-header;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.member-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  @include readable-text;
+}
+
+.member-voice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  @include secondary-text;
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+}
+
+.card-contact,
+.card-address {
+  @include card-content;
+}
+
+.contact-item,
+.address-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+
+  mat-icon {
+    font-size: 1.2rem;
+    width: 1.2rem;
+    height: 1.2rem;
+    @include secondary-text;
+  }
+
+  a {
+    color: #3f51b5;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }

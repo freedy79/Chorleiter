@@ -23,8 +23,8 @@ import {
     MatAutocompleteModule,
     MatAutocompleteSelectedEvent,
 } from '@angular/material/autocomplete';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { NotificationService } from '@core/services/notification.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '@core/services/auth.service';
 import { ImportDialogComponent } from '../import-dialog/import-dialog.component';
@@ -115,7 +115,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     constructor(
         private fb: FormBuilder,
         private apiService: ApiService,
-        private snackBar: MatSnackBar,
+        private notification: NotificationService,
         private router: Router,
         private route: ActivatedRoute,
         public dialog: MatDialog,
@@ -174,7 +174,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
             this.isChoirAdmin = isChoirAdmin;
             if (!this.isAdmin && !this.isChoirAdmin) {
                 this.router.navigate(['/collections']);
-                this.snackBar.open('Keine Berechtigung Sammlungen zu bearbeiten.', 'Schließen');
+                this.notification.error('Keine Berechtigung Sammlungen zu bearbeiten.');
             }
         });
         this.apiService.getPublishers().pipe(
@@ -329,10 +329,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                         }
                         const title = this.collectionForm.value.title;
                         const context = title ? ` der Sammlung '${title}'` : '';
-                        this.snackBar.open(`Fehler beim Aktualisieren${context}: ${message}`, 'Schließen', {
-                            duration: 5000,
-                            verticalPosition: 'top',
-                        });
+                        this.notification.error(`Fehler beim Aktualisieren${context}: ${message}`, 5000);
                     },
                 });
             } else {
@@ -348,10 +345,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                         upload$.pipe(
                             takeUntil(this.destroy$)
                         ).subscribe({ next: afterSave, error: afterSave });
-                        this.snackBar.open('Die Sammlung wurde erfolgreich erstellt.', 'OK', {
-                            duration: 3000,
-                            verticalPosition: 'top',
-                        });
+                        this.notification.success('Die Sammlung wurde erfolgreich erstellt.', 3000);
                     },
                     error: (err) => {
                         let message = err.error?.message || err.error || err.message || 'Unbekannter Fehler beim Speichern.';
@@ -360,10 +354,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                         }
                         const title = this.collectionForm.value.title;
                         const context = title ? ` der Sammlung '${title}'` : '';
-                        this.snackBar.open(`Fehler beim Erstellen${context}: ${message}`, 'Schließen', {
-                            duration: 5000,
-                            verticalPosition: 'top',
-                        });
+                        this.notification.error(`Fehler beim Erstellen${context}: ${message}`, 5000);
                     },
                 });
             }
@@ -408,24 +399,15 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                     upload$.pipe(
                         takeUntil(this.destroy$)
                     ).subscribe({ next: afterSave, error: afterSave });
-                    this.snackBar.open('Die Sammlung wurde erfolgreich aktualisiert.', 'OK', {
-                        duration: 3000,
-                        verticalPosition: 'top',
-                    });
+                    this.notification.success('Die Sammlung wurde erfolgreich aktualisiert.', 3000);
                     this.isSaving = false;
                 } else if (job.status === 'failed') {
-                    this.snackBar.open(`Fehler beim Aktualisieren der Sammlung: ${job.error}`, 'Schließen', {
-                        duration: 5000,
-                        verticalPosition: 'top',
-                    });
+                    this.notification.error(`Fehler beim Aktualisieren der Sammlung: ${job.error}`, 5000);
                     this.isSaving = false;
                 }
             },
             error: () => {
-                this.snackBar.open('Fehler beim Abrufen des Update-Status.', 'Schließen', {
-                    duration: 5000,
-                    verticalPosition: 'top',
-                });
+                this.notification.error('Fehler beim Abrufen des Update-Status.', 5000);
                 this.isSaving = false;
             },
         });
@@ -531,7 +513,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     addPieceToCollection(): void {
         if (this.addPieceForm.invalid) return;
         if (this.collectionForm.value.singleEdition && this.selectedPieceLinks.length >= 1) {
-            this.snackBar.open('Einzelausgabe: nur ein Stück erlaubt.', 'OK', { duration: 3000 });
+            this.notification.warning('Einzelausgabe: nur ein Stück erlaubt.', 3000);
             return;
         }
 

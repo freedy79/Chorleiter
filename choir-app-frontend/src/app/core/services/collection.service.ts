@@ -1,15 +1,19 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Collection } from '../models/collection';
+import { ImageCacheService } from './image-cache.service';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private imageCacheService: ImageCacheService
+  ) {}
 
   getCollections(): Observable<Collection[]> {
     return this.http.get<Collection[]>(`${this.apiUrl}/collections`);
@@ -34,7 +38,9 @@ export class CollectionService {
   uploadCollectionCover(id: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('cover', file);
-    return this.http.post(`${this.apiUrl}/collections/${id}/cover`, formData);
+    return this.http.post(`${this.apiUrl}/collections/${id}/cover`, formData).pipe(
+      tap(() => this.imageCacheService.invalidate(`collection:${id}`))
+    );
   }
 
   getCollectionCover(id: number): Observable<string> {

@@ -21,6 +21,12 @@ body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
   display: flex;
   flex-direction: column;
+  scroll-behavior: smooth;
+}
+
+/* Smooth scroll for all scrollable elements */
+* {
+  scroll-behavior: smooth;
 }
 
 app-root {
@@ -40,6 +46,13 @@ router-outlet ~ * {
 :root {
   --page-header-bg-color: #fff;
   --header-title-color: inherit; // Light mode: inherit from theme
+}
+
+// ============================================================================
+// DEFAULT HEADING STYLES (Light Mode)
+// ============================================================================
+h1, h2, h3, h4, h5, h6 {
+  color: rgba(0, 0, 0, 0.87); // Material Design primary text color
 }
 
 .container {
@@ -284,7 +297,7 @@ mat-card-header {
 // Responsive typography
 @media (max-width: 768px) {
   html, body {
-    font-size: 15px;
+    font-size: 16px;  // Minimum 1rem for mobile readability
   }
 
   h1 { font-size: 1.8rem; }
@@ -294,15 +307,15 @@ mat-card-header {
 
 @media (max-width: 480px) {
   html, body {
-    font-size: 14px;
+    font-size: 16px;  // Maintain 1rem minimum on small devices
   }
 
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.2rem; }
-  h3 { font-size: 1.1rem; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.15rem; }
 
   mat-form-field {
-    font-size: 0.9rem;
+    font-size: 1.1rem;
   }
 }
 
@@ -323,7 +336,7 @@ mat-form-field.dense .mat-mdc-form-field-infix {
 
 /* Label etwas kleiner, damit nichts kollidiert (optional) */
 mat-form-field.dense .mdc-floating-label {
-  font-size: 0.85rem;
+  font-size: 1rem;
 }
 
 /* Prefix/Suffix-Bereich anpassen, falls Icons „drücken“ (optional) */

@@ -9,10 +9,10 @@ export class AuthorService extends CreatorService<Author> {
   constructor(http: HttpClient) { super(http, 'authors'); }
 
   getAuthors(): Observable<Author[]> { return this.getAll(); }
-  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+  createAuthor(data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Author> {
     return this.create(data, force);
   }
-  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+  updateAuthor(id: number, data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Author> {
     return this.update(id, data, force);
   }
   deleteAuthor(id: number): Observable<any> { return this.delete(id); }

@@ -9,6 +9,9 @@ import { PieceService } from '@core/services/piece.service';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
+import { DurationPipe } from '@shared/pipes/duration.pipe';
+import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
+import { FileSizePipe } from '@shared/pipes/file-size.pipe';
 
 @Component({
   selector: 'app-shared-piece-view',
@@ -16,7 +19,10 @@ import { AudioPlayerComponent } from '@shared/components/audio-player/audio-play
   imports: [
     CommonModule,
     MaterialModule,
-    AudioPlayerComponent
+    AudioPlayerComponent,
+    DurationPipe,
+    ComposerYearsPipe,
+    FileSizePipe
   ],
   templateUrl: './shared-piece-view.component.html',
   styleUrls: ['./shared-piece-view.component.scss'],
@@ -87,12 +93,6 @@ export class SharedPieceViewComponent implements OnInit {
     });
   }
 
-  formatDuration(sec: number): string {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-
   getLinkUrl(link: PieceLink | any): string {
     // Defensive type checking for runtime safety
     if (!link) return '';
@@ -110,23 +110,5 @@ export class SharedPieceViewComponent implements OnInit {
     const path = url.startsWith('/') ? url : `/${url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
     return `${apiBase}${fullPath}`;
-  }
-
-  formatFileSize(bytes: number): string {
-    const kb = bytes / 1024;
-    if (kb < 1024) {
-      return `${kb.toFixed(1)} kB`;
-    }
-    return `${(kb / 1024).toFixed(1)} MB`;
-  }
-
-  formatComposerYears(composer: any): string {
-    if (!composer || !composer.birthYear) {
-      return '';
-    }
-    if (composer.deathYear) {
-      return ` (${composer.birthYear}-${composer.deathYear})`;
-    }
-    return ` (${composer.birthYear})`;
   }
 }

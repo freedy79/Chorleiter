@@ -1,0 +1,76 @@
+/**
+ * Responsive Utilities für NAK Chorleiter App
+ *
+ * Zentrale Utilities für konsistente Desktop/Mobile-Ansichten
+ */
+
+@use 'breakpoints' as *;
+
+// ============================================================================
+// RESPONSIVE VIEW UTILITIES
+// ============================================================================
+
+/// Placeholder für Desktop-only Elemente
+/// Verwendung: @extend %desktop-only;
+%desktop-only {
+  @include handset {
+    display: none !important;
+  }
+}
+
+/// Placeholder für Mobile-only Block-Elemente
+/// Verwendung: @extend %mobile-only;
+%mobile-only {
+  display: none;
+
+  @include handset {
+    display: block;
+  }
+}
+
+/// Placeholder für Mobile-only Flex-Elemente
+/// Verwendung: @extend %mobile-flex;
+%mobile-flex {
+  display: none;
+
+  @include handset {
+    display: flex;
+  }
+}
+
+/// Placeholder für Tablet-only Elemente
+%tablet-only {
+  display: none;
+
+  @include tablet {
+    display: block;
+  }
+}
+
+// ============================================================================
+// CONTAINER MIXINS
+// ============================================================================
+
+/// Standard Mobile Card Container
+/// Responsives Padding das sich an Bildschirmgröße anpasst
+@mixin mobile-card-container {
+  padding: $spacing-md;
+
+  @include xs {
+    padding: $spacing-sm;
+  }
+}
+
+/// Standard Mobile Cards Grid
+/// Erzeugt vertikale Card-Liste mit konsistentem Gap
+/// @param {Size} $gap - Gap zwischen Cards (default: $spacing-md)
+@mixin mobile-cards-grid($gap: $spacing-md) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+/// Standard Mobile Cards Grid mit kleinerer Gap
+@mixin mobile-cards-grid-compact {
+  @include mobile-cards-grid($spacing-sm);
+}

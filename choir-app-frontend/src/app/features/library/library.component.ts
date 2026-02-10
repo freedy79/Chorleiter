@@ -2,24 +2,25 @@ import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { NotificationService } from '@core/services/notification.service';
 import { LibraryItem } from '@core/models/library-item';
 import { Collection } from '@core/models/collection';
 import { Piece } from '@core/models/piece';
 import { Observable, forkJoin } from 'rxjs';
 import { AuthService } from '@core/services/auth.service';
-import { MatDialog } from '@angular/material/dialog';
 import { RouterModule } from '@angular/router';
 import { LibraryItemDialogComponent } from './library-item-dialog.component';
 import { LibraryStatusDialogComponent } from './library-status-dialog.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatPaginator, PageEvent } from '@angular/material/paginator';
-import { MatTableDataSource } from '@angular/material/table';
 import { MatSort } from '@angular/material/sort';
 import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
 import { map } from 'rxjs/operators';
 import { LoanListComponent } from './loan-list.component';
+import { BaseListComponent } from '@shared/components/base-list.component';
+import { PaginatorService } from '@core/services/paginator.service';
 
 
 @Component({
@@ -29,9 +30,9 @@ import { LoanListComponent } from './loan-list.component';
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
-export class LibraryComponent implements OnInit, AfterViewInit {
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild('libraryPaginator') paginator!: MatPaginator;
+export class LibraryComponent extends BaseListComponent<LibraryItem> implements OnInit, AfterViewInit {
+  @ViewChild(MatSort) override sort?: MatSort = undefined;
+  @ViewChild('libraryPaginator') override paginator?: MatPaginator = undefined;
 
   collections$!: Observable<Collection[]>;
   isAdmin = false;
@@ -39,30 +40,57 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   isSingerOnly = false;
   displayedColumns: string[] = ['cover', 'title', 'copies', 'actions'];
 
-  dataSource = new MatTableDataSource<LibraryItem>();
-
-
   constructor(
+    paginatorService: PaginatorService,
     private apiService: ApiService,
     private auth: AuthService,
-    private dialog: MatDialog,
+    private dialogHelper: DialogHelperService,
     private cart: LoanCartService,
-    private snack: MatSnackBar,
     private fileUpload: FileUploadService,
-    public libraryUtil: LibraryUtilService
-  ) {}
-
-  ngOnInit(): void {
-    this.load();
-    this.collections$ = this.apiService.getCollections();
-    this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
-    this.auth.isLibrarian$.subscribe(l => this.isLibrarian = l);
-    this.auth.isSingerOnly$.subscribe(isSingerOnly => this.isSingerOnly = isSingerOnly);
+    public libraryUtil: LibraryUtilService,
+    private notification: NotificationService
+  ) {
+    super(paginatorService);
   }
 
-  ngAfterViewInit(): void {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
+  get paginatorKey(): string {
+    return 'library';
+  }
+
+  loadData(): Observable<LibraryItem[]> {
+    return this.apiService.getLibraryItems();
+  }
+
+  protected override onDataLoaded(items: LibraryItem[]): void {
+    // Load cover images for collections that have them
+    const coverRequests = items
+      .filter(i => i.collection?.coverImage)
+      .map(i =>
+        this.apiService
+          .getCollectionCover(i.collection!.id)
+          .pipe(map(data => ({ id: i.collection!.id, data })))
+      );
+
+    if (coverRequests.length) {
+      forkJoin(coverRequests).subscribe(results => {
+        results.forEach(res => {
+          items
+            .filter(i => i.collection?.id === res.id)
+            .forEach(i => {
+              if (i.collection) {
+                i.collection.coverImageData = res.data;
+              }
+            });
+        });
+        this.dataSource.data = [...items]; // Trigger change detection
+      });
+    }
+  }
+
+  protected override initDataSource(): void {
+    super.initDataSource();
+
+    // Custom sorting accessor for library items
     this.dataSource.sortingDataAccessor = (item, property) => {
       switch (property) {
         case 'title':
@@ -73,49 +101,44 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     };
   }
 
-  load(): void {
-    this.apiService.getLibraryItems().subscribe(items => {
-      const coverRequests = items
-        .filter(i => i.collection?.coverImage)
-        .map(i =>
-          this.apiService
-            .getCollectionCover(i.collection!.id)
-            .pipe(map(data => ({ id: i.collection!.id, data })))
-        );
+  override ngOnInit(): void {
+    this.collections$ = this.apiService.getCollections();
+    this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.auth.isLibrarian$.subscribe(l => this.isLibrarian = l);
+    this.auth.isSingerOnly$.subscribe(isSingerOnly => this.isSingerOnly = isSingerOnly);
 
-      if (coverRequests.length) {
-        forkJoin(coverRequests).subscribe(results => {
-          results.forEach(res => {
-            items
-              .filter(i => i.collection?.id === res.id)
-              .forEach(i => {
-                if (i.collection) {
-                  i.collection.coverImageData = res.data;
-                }
-              });
-          });
-          this.dataSource.data = items;
-        });
-      } else {
-        this.dataSource.data = items;
-      }
-    });
+    // Call parent ngOnInit to trigger data loading
+    super.ngOnInit();
+  }
+
+  override ngAfterViewInit(): void {
+    // Call parent to setup sort/paginator
+    super.ngAfterViewInit();
   }
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
-      this.fileUpload.importLibraryCsv(file).subscribe(() => this.load());
+      this.fileUpload.importLibraryCsv(file).subscribe(() => this.refresh());
     }
   }
 
   openAddDialog(): void {
-    const ref = this.dialog.open(LibraryItemDialogComponent, { data: { collections$: this.collections$ } });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.apiService.addLibraryItem(result).subscribe(() => this.load());
+    this.dialogHelper.openDialogWithApi<
+      LibraryItemDialogComponent,
+      { collectionId: number; copies: number; isBorrowed?: boolean },
+      LibraryItem
+    >(
+      LibraryItemDialogComponent,
+      (result) => this.apiService.addLibraryItem(result),
+      {
+        dialogConfig: { data: { collections$: this.collections$ } },
+        apiConfig: {
+          silent: true,
+          onSuccess: () => this.refresh()
+        }
       }
-    });
+    ).subscribe();
   }
 
   get expandedItem(): LibraryItem | null {
@@ -153,7 +176,7 @@ export class LibraryComponent implements OnInit, AfterViewInit {
   addToCart(item: LibraryItem, event: Event): void {
     event.stopPropagation();
     this.cart.addItem(item);
-    this.snack.open('Zur Anfrage hinzugefügt', undefined, { duration: 2000 });
+    this.notification.success('Zur Anfrage hinzugefügt', 2000);
   }
 
   editCopies(item: LibraryItem, event: Event): void {
@@ -162,25 +185,38 @@ export class LibraryComponent implements OnInit, AfterViewInit {
     if (input !== null) {
       const copies = Number(input);
       if (!isNaN(copies) && copies > 0) {
-        this.apiService.updateLibraryItem(item.id, { copies }).subscribe(() => this.load());
+        this.apiService.updateLibraryItem(item.id, { copies }).subscribe(() => this.refresh());
       }
     }
   }
 
   changeStatus(item: LibraryItem, event: Event): void {
     event.stopPropagation();
-    const ref = this.dialog.open(LibraryStatusDialogComponent, { data: { item } });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.apiService.updateLibraryItem(item.id, result).subscribe(() => this.load());
+    this.dialogHelper.openDialogWithApi<
+      LibraryStatusDialogComponent,
+      Partial<LibraryItem>
+    >(
+      LibraryStatusDialogComponent,
+      (result) => this.apiService.updateLibraryItem(item.id, result),
+      {
+        dialogConfig: { data: { item } },
+        apiConfig: {
+          silent: true,
+          onSuccess: () => this.refresh()
+        }
       }
-    });
+    ).subscribe();
   }
 
   deleteItem(item: LibraryItem, event: Event): void {
     event.stopPropagation();
-    if (confirm('Diesen Eintrag wirklich löschen?')) {
-      this.apiService.deleteLibraryItem(item.id).subscribe(() => this.load());
-    }
+    this.dialogHelper.confirmDelete(
+      { itemName: 'diesen Eintrag' },
+      () => this.apiService.deleteLibraryItem(item.id),
+      {
+        silent: true,
+        onSuccess: () => this.refresh()
+      }
+    ).subscribe();
   }
 }

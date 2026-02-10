@@ -1,6 +1,6 @@
 <h1 mat-dialog-title>Sammlung hinzufügen</h1>
 <div mat-dialog-content>
-  <form [formGroup]="form" class="add-form">
+  <form [formGroup]="form" class="add-form" id="library-item-form" (ngSubmit)="onSave()">
     <mat-form-field>
       <mat-label>Sammlung</mat-label>
       <mat-select formControlName="collectionId">
@@ -17,6 +17,6 @@
   </form>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">Speichern</button>
+  <button mat-button (click)="onCancel()">Abbrechen</button>
+  <button mat-raised-button color="primary" type="submit" form="library-item-form" [disabled]="form.invalid">Speichern</button>
 </div>

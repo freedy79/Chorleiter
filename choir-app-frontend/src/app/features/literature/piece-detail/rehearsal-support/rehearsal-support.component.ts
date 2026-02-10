@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MidiPlaybackService } from './services/midi-playback.service';
 import {
   RehearsalData,
@@ -57,7 +57,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
   constructor(
     private playbackService: MidiPlaybackService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -98,7 +98,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
       // Initialize rehearsal data with ppq from MIDI
       this.rehearsalData.ppq = this.midiFileInfo.ppq;
 
-      this.snackBar.open('MIDI-Datei geladen', 'OK', { duration: 3000 });
+      this.notification.success('MIDI-Datei geladen');
     } catch (error) {
       console.error('Error loading MIDI:', error);
       this.errorMessage = 'Fehler beim Laden der MIDI-Datei: ' + error;
@@ -194,7 +194,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((result: RehearsalData | null) => {
       if (result) {
         this.rehearsalData = result;
-        this.snackBar.open('Proben-Daten aktualisiert', 'OK', { duration: 3000 });
+        this.notification.success('Proben-Daten aktualisiert');
         // TODO: Save to backend if needed
       }
     });
@@ -218,9 +218,9 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
         this.rehearsalData.measureToTick[i.toString()] = Math.floor((i - 1) * ticksPerMeasure);
       }
 
-      this.snackBar.open(`${measureCount} Takte generiert (${ts.numerator}/${ts.denominator})`, 'OK', { duration: 4000 });
+      this.notification.success(`${measureCount} Takte generiert (${ts.numerator}/${ts.denominator})`, 4000);
     } else {
-      this.snackBar.open('ppq gesetzt. Taktart nicht gefunden - bitte manuell eingeben.', 'OK', { duration: 4000 });
+      this.notification.info('ppq gesetzt. Taktart nicht gefunden - bitte manuell eingeben.', 4000);
     }
   }
 
@@ -228,7 +228,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
     const measureNumber = prompt('Taktnummer:');
     if (measureNumber) {
       this.rehearsalData.measureToTick[measureNumber] = this.playbackState.currentTick;
-      this.snackBar.open(`Takt ${measureNumber} markiert`, 'OK', { duration: 2000 });
+      this.notification.success(`Takt ${measureNumber} markiert`, 2000);
     }
   }
 
@@ -236,7 +236,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
     const pageNumber = prompt('Seitennummer:');
     if (pageNumber) {
       this.rehearsalData.pageToTick[pageNumber] = this.playbackState.currentTick;
-      this.snackBar.open(`Seite ${pageNumber} markiert`, 'OK', { duration: 2000 });
+      this.notification.success(`Seite ${pageNumber} markiert`, 2000);
     }
   }
 

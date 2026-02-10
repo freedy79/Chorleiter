@@ -20,7 +20,7 @@
       <button mat-stroked-button (click)="fileInput.click()">
         <mat-icon>attach_file</mat-icon> CSV-Datei auswählen
       </button>
-      <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv">
+      <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv,text/csv,text/plain,application/csv">
       <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
     </div>
     <mat-divider *ngIf="previewData.length > 0"></mat-divider>

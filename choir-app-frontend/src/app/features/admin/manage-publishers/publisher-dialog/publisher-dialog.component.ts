@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -12,16 +12,16 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './publisher-dialog.component.html',
 })
-export class PublisherDialogComponent extends BaseFormDialog<Publisher, Publisher | null> {
-  title = 'Verlag hinzufügen';
+export class PublisherDialogComponent extends BaseFormDialog<Publisher, Publisher | null> implements OnInit {
+  title!: string;
 
   constructor(
     fb: FormBuilder,
     dialogRef: MatDialogRef<PublisherDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public override data: Publisher | null
+    @Inject(MAT_DIALOG_DATA) data: Publisher | null
   ) {
     super(fb, dialogRef, data);
-    this.title = data ? 'Verlag bearbeiten' : 'Verlag hinzufügen';
+    this.title = this.getDialogTitle('Verlag hinzufügen', 'Verlag bearbeiten');
   }
 
   protected buildForm(): FormGroup {

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { ApiService } from '@core/services/api.service';
 import { MonthlyPlanService } from '@core/services/monthly-plan.service';
 import { MonthlyPlan } from '@core/models/monthly-plan';
@@ -25,6 +25,9 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 import { MemberAvailability } from '@core/models/member-availability';
 import { DebugLogService } from '@core/services/debug-log.service';
+import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
+import { EventShortPipe } from '@shared/pipes/event-short.pipe';
+import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -47,7 +50,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -168,22 +171,6 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   timestamp(date: string | Date): string {
     return parseDateOnly(date).getTime().toString();
-  }
-
-  weekdayShort(date: string | Date): string {
-    const weekdays = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
-    return weekdays[parseDateOnly(date).getUTCDay()];
-  }
-
-  eventShort(entry: PlanEntry): string {
-    const notes = (entry.notes || '').toLowerCase();
-    if (/\b(gottesdienst|gd)\b/.test(notes)) {
-      return 'GD';
-    }
-    if (/\b(chorprobe|probe|cp)\b/.test(notes)) {
-      return 'CP';
-    }
-    return '';
   }
 
   private updateDisplayedColumns(): void {
@@ -330,7 +317,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private monthlyPlan: MonthlyPlanService,
               private auth: AuthService,
               private dialog: MatDialog,
-              private snackBar: MatSnackBar,
+              private notification: NotificationService,
               private router: Router,
               private route: ActivatedRoute,
               private monthNav: MonthNavigationService,
@@ -678,8 +665,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).pipe(
           takeUntil(this.destroy$)
         ).subscribe({
-          next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
-          error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
+          next: () => this.notification.success('E-Mail gesendet.', 3000),
+          error: () => this.notification.error('Fehler beim Versenden der E-Mail.', 4000)
         });
       }
     });
@@ -699,8 +686,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         this.monthlyPlan.requestAvailability(this.plan!.id, ids).pipe(
           takeUntil(this.destroy$)
         ).subscribe({
-          next: () => this.snackBar.open('E-Mail gesendet.', 'OK', { duration: 3000 }),
-          error: () => this.snackBar.open('Fehler beim Versenden der E-Mail.', 'Schließen', { duration: 4000 })
+          next: () => this.notification.success('E-Mail gesendet.', 3000),
+          error: () => this.notification.error('Fehler beim Versenden der E-Mail.', 4000)
         });
       }
     });
@@ -717,11 +704,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
           takeUntil(this.destroy$)
         ).subscribe({
           next: () => {
-            this.snackBar.open('Eintrag angelegt.', 'OK', { duration: 3000 });
+            this.notification.success('Eintrag angelegt.', 3000);
             this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
             this.loadPlan(this.selectedYear, this.selectedMonth);
           },
-          error: () => this.snackBar.open('Fehler beim Anlegen des Eintrags.', 'Schließen', { duration: 4000 })
+          error: () => this.notification.error('Fehler beim Anlegen des Eintrags.', 4000)
         });
       }
     });
@@ -741,9 +728,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
             this.entries = this.entries.filter(e => e.id !== ev.id);
             this.sortEntries();
             this.updateCounterPlan();
-            this.snackBar.open('Eintrag gelöscht.', 'OK', { duration: 3000 });
+            this.notification.success('Eintrag gelöscht.', 3000);
           },
-          error: () => this.snackBar.open('Fehler beim Löschen des Eintrags.', 'Schließen', { duration: 4000 })
+          error: () => this.notification.error('Fehler beim Löschen des Eintrags.', 4000)
         });
       }
     });

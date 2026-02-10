@@ -143,8 +143,8 @@ Extract/*.csv
 choir-app-backend/backups/
 
 # Documentation - Temporary Files
-DOC/claude/
-DOC/tasks/
+doc/claude/
+doc/tasks/
 tmpclaude-*
 *.report.html
 MOBILE-SEARCH-TESTS-REPORT.html

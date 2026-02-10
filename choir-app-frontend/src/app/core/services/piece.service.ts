@@ -1,11 +1,12 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { LookupPiece } from '../models/lookup-piece';
 import { PieceChange } from '../models/piece-change';
+import { ImageCacheService } from './image-cache.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,10 @@ import { PieceChange } from '../models/piece-change';
 export class PieceService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private imageCacheService: ImageCacheService
+  ) {}
 
   getMyRepertoire(
     categoryIds?: number[],
@@ -144,7 +148,9 @@ export class PieceService {
   uploadPieceImage(id: number, file: File): Observable<any> {
     const formData = new FormData();
     formData.append('image', file);
-    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData);
+    return this.http.post(`${this.apiUrl}/pieces/${id}/image`, formData).pipe(
+      tap(() => this.imageCacheService.invalidate(`piece:${id}`))
+    );
   }
 
   getPieceImage(id: number): Observable<string> {
@@ -169,5 +175,9 @@ export class PieceService {
 
   getPieceByShareToken(token: string): Observable<Piece> {
     return this.http.get<Piece>(`${this.apiUrl}/pieces/shared/${encodeURIComponent(token)}`);
+  }
+
+  generateShareToken(pieceId: number): Observable<{ shareToken: string }> {
+    return this.http.post<{ shareToken: string }>(`${this.apiUrl}/pieces/${pieceId}/share-token`, {});
   }
 }

@@ -6,7 +6,7 @@ import { Post } from '@core/models/post';
 import { PostComment } from '@core/models/post-comment';
 import { ReactionInfo, ReactionSummary, ReactionType } from '@core/models/reaction';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { PostPollComponent } from './post-poll.component';
 
@@ -43,7 +43,7 @@ export class PostComponent implements OnInit {
 
   constructor(
     private api: ApiService,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -61,10 +61,10 @@ export class PostComponent implements OnInit {
   publishPost(): void {
     this.api.publishPost(this.post.id).subscribe({
       next: () => {
-        this.snackBar.open('Beitrag veröffentlicht', 'OK', { duration: 3000 });
+        this.notification.success('Beitrag veröffentlicht');
         this.postPublished.emit(this.post.id);
       },
-      error: () => this.snackBar.open('Fehler beim Veröffentlichen', 'Schließen', { duration: 4000 })
+      error: () => this.notification.error('Fehler beim Veröffentlichen', 4000)
     });
   }
 
@@ -81,7 +81,7 @@ export class PostComponent implements OnInit {
       next: reactions => {
         this.post.reactions = this.ensureReactionInfo(reactions);
       },
-      error: () => this.snackBar.open('Reaktion konnte nicht gespeichert werden', 'Schließen', { duration: 4000 })
+      error: () => this.notification.error('Reaktion konnte nicht gespeichert werden', 4000)
     });
   }
 
@@ -90,7 +90,7 @@ export class PostComponent implements OnInit {
       next: reactions => {
         comment.reactions = this.ensureReactionInfo(reactions);
       },
-      error: () => this.snackBar.open('Reaktion konnte nicht gespeichert werden', 'Schließen', { duration: 4000 })
+      error: () => this.notification.error('Reaktion konnte nicht gespeichert werden', 4000)
     });
   }
 
@@ -99,7 +99,7 @@ export class PostComponent implements OnInit {
     const store = parentId ? this.replyText : this.newCommentText;
     const text = (store[targetKey] || '').trim();
     if (!text) {
-      this.snackBar.open('Bitte einen Kommentar eingeben', 'Schließen', { duration: 3000 });
+      this.notification.warning('Bitte einen Kommentar eingeben');
       return;
     }
     this.api.addPostComment(this.post.id, text, parentId ?? null).subscribe({
@@ -110,7 +110,7 @@ export class PostComponent implements OnInit {
           this.replyBoxOpen[parentId] = false;
         }
       },
-      error: () => this.snackBar.open('Kommentar konnte nicht gespeichert werden', 'Schließen', { duration: 4000 })
+      error: () => this.notification.error('Kommentar konnte nicht gespeichert werden', 4000)
     });
   }
 
@@ -118,9 +118,9 @@ export class PostComponent implements OnInit {
     this.api.deletePostComment(this.post.id, commentId).subscribe({
       next: () => {
         this.removeCommentFromPost(commentId);
-        this.snackBar.open('Kommentar gelöscht', 'OK', { duration: 3000 });
+        this.notification.success('Kommentar gelöscht');
       },
-      error: () => this.snackBar.open('Kommentar konnte nicht gelöscht werden', 'Schließen', { duration: 4000 })
+      error: () => this.notification.error('Kommentar konnte nicht gelöscht werden', 4000)
     });
   }
 

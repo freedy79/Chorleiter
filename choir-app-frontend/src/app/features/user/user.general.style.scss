@@ -48,7 +48,7 @@
   }
 
   .login-brand {
-    font-size: 24px;
+    font-size: 1.5rem;
     color: mat.m2-get-color-from-palette(
       nak.$choir-app-primary,
       default
@@ -92,7 +92,7 @@
 
     h1 {
       text-align: center;
-      font-size: 16px;
+      font-size: 1rem;
     }
   }
 
@@ -115,6 +115,6 @@
 
 @media (min-width: 768px) {
   .login-page .login-pf-header h1 {
-    font-size: 24px;
+    font-size: 1.5rem;
   }
 }

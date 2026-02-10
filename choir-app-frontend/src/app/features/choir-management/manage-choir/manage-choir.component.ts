@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { MatDialog, MatDialogConfig } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, forkJoin, Subject } from 'rxjs';
 import { take, takeUntil } from 'rxjs/operators';
@@ -15,12 +14,13 @@ import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
 import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
 import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
 import { LibraryItem } from '@core/models/library-item';
+import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 
 
 @Component({
@@ -109,7 +109,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private apiService: ApiService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar,
+    private notification: NotificationService,
+    private dialogHelper: DialogHelperService,
     private route: ActivatedRoute,
     private authService: AuthService
   ) {
@@ -261,13 +262,13 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       .join(';');
 
     if (!emails) {
-      this.snackBar.open('Keine E-Mailadressen vorhanden.', 'OK', { duration: 3000 });
+      this.notification.info('Keine E-Mailadressen vorhanden.');
       return;
     }
 
     navigator.clipboard.writeText(emails)
-      .then(() => this.snackBar.open('E-Mailadressen kopiert.', 'OK', { duration: 3000 }))
-      .catch(() => this.snackBar.open('Fehler beim Kopieren der E-Mailadressen.', 'Schließen'));
+      .then(() => this.notification.success('E-Mailadressen kopiert.'))
+      .catch(() => this.notification.error('Fehler beim Kopieren der E-Mailadressen.'));
   }
 
   formatAction(log: ChoirLog): string {
@@ -302,10 +303,10 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir(this.choirForm.value, opts).subscribe({
       next: () => {
-        this.snackBar.open('Choir details updated successfully!', 'OK', { duration: 3000 });
+        this.notification.success('Choir details updated successfully!');
         this.choirForm.markAsPristine(); // Markiert das Formular als "unverändert"
       },
-      error: () => this.snackBar.open('Fehler beim Aktualisieren der Chordaten.', 'Schließen')
+      error: () => this.notification.error('Fehler beim Aktualisieren der Chordaten.')
     });
   }
 
@@ -313,46 +314,41 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     if (!this.isChoirAdmin) {
       return;
     }
-    const dialogRef = this.dialog.open(InviteUserDialogComponent, {
-      width: '450px'
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.email && result.roles) {
+    this.dialogHelper.openDialogWithApi(
+      InviteUserDialogComponent,
+      (result: { email: string; roles: string[] }) => {
         const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-        this.apiService.inviteUserToChoir(result.email, result.roles, opts).subscribe({
-          next: (response: { message: string }) => {
-            this.snackBar.open(response.message, 'OK', { duration: 4000 });
-            this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
+        return this.apiService.inviteUserToChoir(result.email, result.roles, opts);
+      },
+      {
+        dialogConfig: { width: '450px' },
+        apiConfig: {
+          onSuccess: (response: { message: string }) => {
+            this.notification.success(response.message, 4000);
+            this.reloadData();
           },
-          error: (err) => this.snackBar.open(`Fehler beim Einladen: ${err.error.message}`, 'Schließen')
-        });
+          errorMessage: 'Fehler beim Einladen'
+        }
       }
-    });
+    ).subscribe();
   }
 
   removeMember(user: UserInChoir): void {
     if (!this.isChoirAdmin) {
       return;
     }
-    const dialogData: ConfirmDialogData = {
+    this.dialogHelper.confirm({
       title: 'Mitglied entfernen?',
       message: `Soll ${user.name}, ${user.firstName} (${user.email}) aus diesem Chor entfernt werden? Dies kann nicht rückgängig gemacht werden.`
-    };
-
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: dialogData
-    });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
+    }).subscribe(confirmed => {
       if (confirmed) {
         const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
         this.apiService.removeUserFromChoir(user.id, opts).subscribe({
           next: () => {
-            this.snackBar.open(`${user.name}, ${user.firstName} wurde aus dem Chor entfernt.`, 'OK', { duration: 3000 });
-            this.reloadData(); // Aktualisieren Sie die Datenquelle der Tabelle
+            this.notification.success(`${user.name}, ${user.firstName} wurde aus dem Chor entfernt.`);
+            this.reloadData();
           },
-          error: () => this.snackBar.open('Fehler beim Entfernen des Mitglieds.', 'Schließen')
+          error: () => this.notification.error('Fehler beim Entfernen des Mitglieds.')
         });
       }
     });
@@ -366,7 +362,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateChoirMember(user.id, { rolesInChoir: roles }, opts).subscribe({
       error: () => {
-        this.snackBar.open('Fehler beim Aktualisieren.', 'Schließen');
+        this.notification.error('Fehler beim Aktualisieren.');
         user.membership!.rolesInChoir = previous;
       }
     });
@@ -395,7 +391,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
     this.apiService.updateMyChoir({ modules }, opts).subscribe({
       next: () => {
-        this.snackBar.open('Einstellungen aktualisiert.', 'OK', { duration: 3000 });
+        this.notification.success('Einstellungen aktualisiert.');
         const choir = this.authService.activeChoir$.value;
         if (choir) {
           const updated = { ...choir, modules } as Choir;
@@ -408,7 +404,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
           });
         }
       },
-      error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
+      error: () => this.notification.error('Fehler beim Speichern der Einstellungen.')
     });
   }
 
@@ -498,8 +494,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     }
 
     forkJoin(ops).subscribe({
-      next: () => this.snackBar.open('Einstellungen aktualisiert.', 'OK', { duration: 3000 }),
-      error: () => this.snackBar.open('Fehler beim Speichern der Einstellungen.', 'Schließen')
+      next: () => this.notification.success('Einstellungen aktualisiert.'),
+      error: () => this.notification.error('Fehler beim Speichern der Einstellungen.')
     });
   }
 
@@ -543,22 +539,18 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     if (!this.isChoirAdmin) {
       return;
     }
-    const dialogData: ConfirmDialogData = {
+    this.dialogHelper.confirm({
       title: 'Sammlung entfernen?',
       message: `Soll die Sammlung '${collection.title}' aus dem Chor entfernt werden?`
-    };
-
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-
-    dialogRef.afterClosed().subscribe(confirmed => {
+    }).subscribe(confirmed => {
       if (confirmed) {
         const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
         this.apiService.removeCollectionFromChoir(collection.id, opts).subscribe({
           next: () => {
-            this.snackBar.open(`'${collection.title}' entfernt.`, 'OK', { duration: 3000 });
+            this.notification.success(`'${collection.title}' entfernt.`);
             this.reloadData();
           },
-          error: () => this.snackBar.open('Fehler beim Entfernen der Sammlung.', 'Schließen')
+          error: () => this.notification.error('Fehler beim Entfernen der Sammlung.')
         });
       }
     });

@@ -75,6 +75,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       category: 'communication'
     },
     {
+      id: 'pdf-templates',
+      label: 'PDF-Templates',
+      icon: 'picture_as_pdf',
+      route: '/admin/pdf-templates',
+      description: 'Layout & Export-Templates verwalten',
+      category: 'communication'
+    },
+    {
       id: 'metadata',
       label: 'Metadaten',
       icon: 'library_music',

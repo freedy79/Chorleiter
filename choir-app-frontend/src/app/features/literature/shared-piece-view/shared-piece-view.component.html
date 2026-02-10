@@ -18,7 +18,7 @@
 
       <mat-card-content>
         <div class="piece-info">
-          <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ formatComposerYears(piece.composer) }}</p>
+          <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ piece.composer | composerYears }}</p>
           <p *ngIf="piece.composerCollection"><strong>Sammlung des Komponisten:</strong> {{ piece.composerCollection }}</p>
           <p><strong>Dichter/Quelle:</strong> {{ piece.author?.name || piece.lyricsSource || '-' }}</p>
           <p><strong>Kategorie:</strong> {{ piece.category?.name }}</p>
@@ -26,7 +26,7 @@
           <p *ngIf="piece.key"><strong>Tonart:</strong> {{ piece.key }}</p>
           <p *ngIf="piece.timeSignature"><strong>Takt:</strong> {{ piece.timeSignature }}</p>
           <p *ngIf="piece.durationSec !== null && piece.durationSec !== undefined">
-            <strong>Dauer:</strong> {{ formatDuration(piece.durationSec) }}
+            <strong>Dauer:</strong> {{ piece.durationSec | duration }}
           </p>
           <p *ngIf="piece.opus"><strong>Opus/Verzeichniszahl:</strong> {{ piece.opus }}</p>
           <p *ngIf="piece.license"><strong>Lizenz:</strong> {{ piece.license }}</p>
@@ -60,7 +60,7 @@
                   <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
                   {{ link.description }}
                 </a>
-                <span *ngIf="link.size">({{ formatFileSize(link.size) }})</span>
+                <span *ngIf="link.size">({{ link.size | fileSize }})</span>
               </div>
             </li>
           </ul>
@@ -82,7 +82,7 @@
           <h3>Komponisten</h3>
           <ul>
             <li *ngFor="let composer of piece.composers">
-              {{ composer.name }}{{ formatComposerYears(composer) }}
+              {{ composer.name }}{{ composer | composerYears }}
               <span *ngIf="composer.piece_composer?.type"> - {{ composer.piece_composer.type }}</span>
             </li>
           </ul>

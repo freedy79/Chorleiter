@@ -1,5 +1,12 @@
 const db = require("../models");
 const logger = require("../config/logger");
+const { BACKUP_FILE_SIZE } = require("../utils/upload");
+
+// Dangerous property names that could lead to prototype pollution
+const DANGEROUS_PROPS = ['__proto__', 'constructor', 'prototype'];
+
+// Maximum backup file size (50MB)
+const MAX_BACKUP_SIZE = BACKUP_FILE_SIZE || 50 * 1024 * 1024;
 
 // Models that are allowed in backup/restore, in dependency order
 const ALLOWED_MODELS = [
@@ -45,6 +52,7 @@ const ALLOWED_MODELS = [
   'login_attempt',
   'mail_setting',
   'mail_template',
+  'pdf_template',
   'mail_log',
   'system_setting',
   'choir_log',
@@ -62,6 +70,11 @@ function sanitizeRecords(records, model) {
   return records.map(record => {
     const clean = {};
     for (const key of Object.keys(record)) {
+      // Block dangerous properties that could lead to prototype pollution
+      if (DANGEROUS_PROPS.includes(key)) {
+        logger.warn(`Blocked dangerous property "${key}" in record`);
+        continue;
+      }
       if (allowed.has(key)) {
         clean[key] = record[key];
       }
@@ -96,9 +109,24 @@ exports.exportData = async (req, res) => {
 exports.importData = async (req, res) => {
   if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
 
+  // Check file size limit
+  if (req.file.buffer.length > MAX_BACKUP_SIZE) {
+    return res.status(400).send({
+      message: `Backup file too large. Maximum size: ${MAX_BACKUP_SIZE / 1024 / 1024}MB`
+    });
+  }
+
   let data;
   try {
-    data = JSON.parse(req.file.buffer.toString());
+    // Parse JSON with prototype pollution protection
+    data = JSON.parse(req.file.buffer.toString(), (key, value) => {
+      // Block dangerous property names that could lead to prototype pollution
+      if (DANGEROUS_PROPS.includes(key)) {
+        logger.warn(`Blocked dangerous property "${key}" during JSON parsing`);
+        return undefined;
+      }
+      return value;
+    });
   } catch {
     return res.status(400).send({ message: 'Invalid JSON file.' });
   }
@@ -120,6 +148,30 @@ exports.importData = async (req, res) => {
     }
     if (data[key].some(r => typeof r !== 'object' || r === null || Array.isArray(r))) {
       return res.status(400).send({ message: `Table "${key}" contains invalid records.` });
+    }
+  }
+
+  // Validate field names in all records
+  for (const tableName of Object.keys(data)) {
+    const model = db[tableName];
+    if (!model) continue;
+
+    const allowedFields = getModelAttributes(model);
+
+    for (const record of data[tableName]) {
+      for (const fieldName of Object.keys(record)) {
+        // Check for dangerous properties
+        if (DANGEROUS_PROPS.includes(fieldName)) {
+          return res.status(400).send({
+            message: `Dangerous property "${fieldName}" found in table "${tableName}"`
+          });
+        }
+
+        // Check for unknown fields
+        if (!allowedFields.has(fieldName)) {
+          logger.warn(`Unknown field "${fieldName}" in table "${tableName}" will be ignored`);
+        }
+      }
     }
   }
 

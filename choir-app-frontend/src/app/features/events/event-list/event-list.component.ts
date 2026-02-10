@@ -1,11 +1,12 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
+import { ApiHelperService } from '@core/services/api-helper.service';
+import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
@@ -14,7 +15,6 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { forkJoin } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
@@ -52,8 +52,9 @@ export class EventListComponent implements OnInit, AfterViewInit {
 
   constructor(private apiService: ApiService,
               private authService: AuthService,
-              private dialog: MatDialog,
-              private snackBar: MatSnackBar,
+              private dialogHelper: DialogHelperService,
+              private apiHelper: ApiHelperService,
+              private notification: NotificationService,
               private paginatorService: PaginatorService,
               private route: ActivatedRoute) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
@@ -113,58 +114,75 @@ export class EventListComponent implements OnInit, AfterViewInit {
 
   editEvent(event: Event): void {
     this.apiService.getEventById(event.id).subscribe(fullEvent => {
-      const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', data: { event: fullEvent } });
-      dialogRef.afterClosed().subscribe(result => {
-        if (result && result.id) {
-          const originalPieces = fullEvent.pieces.map(p => p.id).sort();
-          const newPieces = [...result.pieceIds].sort();
-          const changed =
-            new Date(result.date).getTime() !== new Date(fullEvent.date).getTime() ||
-            result.type !== fullEvent.type ||
-            (result.notes || '') !== (fullEvent.notes || '') ||
-            JSON.stringify(originalPieces) !== JSON.stringify(newPieces);
+      this.dialogHelper.openDialogWithApi<
+        EventDialogComponent,
+        { id: number; date: string; type: string; notes?: string; pieceIds: number[] },
+        Event
+      >(
+        EventDialogComponent,
+        (result) => this.apiService.updateEvent(result.id, result),
+        {
+          dialogConfig: {
+            width: '600px',
+            data: { event: fullEvent }
+          },
+          apiConfig: {
+            shouldProceed: (result) => {
+              if (!result || !result.id) return false;
 
-          if (!changed) {
-            this.snackBar.open('Keine Änderungen vorgenommen.', 'OK', { duration: 3000 });
-            return;
+              const originalPieces = fullEvent.pieces.map(p => p.id).sort();
+              const newPieces = [...result.pieceIds].sort();
+              const changed =
+                new Date(result.date).getTime() !== new Date(fullEvent.date).getTime() ||
+                result.type !== fullEvent.type ||
+                (result.notes || '') !== (fullEvent.notes || '') ||
+                JSON.stringify(originalPieces) !== JSON.stringify(newPieces);
+
+              if (!changed) {
+                this.notification.info('Keine Änderungen vorgenommen.');
+                return false;
+              }
+              return true;
+            },
+            successMessage: 'Event aktualisiert.',
+            errorMessage: 'Fehler beim Aktualisieren des Events.',
+            onRefresh: () => this.loadEvents()
           }
-
-          this.apiService.updateEvent(result.id, result).subscribe({
-            next: () => { this.snackBar.open('Event aktualisiert.', 'OK', { duration: 3000 }); this.loadEvents(); },
-            error: () => this.snackBar.open('Fehler beim Aktualisieren des Events.', 'Schließen', { duration: 4000 })
-          });
         }
-      });
+      ).subscribe();
     });
   }
 
   deleteEvent(event: Event): void {
-    const dialogData: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
-    const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-    ref.afterClosed().subscribe(confirmed => {
-      if (confirmed) {
-        this.apiService.deleteEvent(event.id).subscribe({
-          next: () => { this.snackBar.open('Event gelöscht.', 'OK', { duration: 3000 }); this.loadEvents(); },
-          error: () => this.snackBar.open('Fehler beim Löschen des Events.', 'Schließen', { duration: 4000 })
-        });
+    this.dialogHelper.confirmDelete(
+      { itemName: 'dieses Event' },
+      () => this.apiService.deleteEvent(event.id),
+      {
+        successMessage: 'Event gelöscht.',
+        errorMessage: 'Fehler beim Löschen des Events.',
+        onRefresh: () => this.loadEvents()
       }
-    });
+    ).subscribe();
   }
 
   deleteSelectedEvents(): void {
-    const dialogData: ConfirmDialogData = { title: 'Events löschen?', message: 'Möchten Sie die ausgewählten Events wirklich löschen?' };
-    const ref = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-    ref.afterClosed().subscribe(confirmed => {
+    this.dialogHelper.confirm({
+      title: 'Events löschen?',
+      message: 'Möchten Sie die ausgewählten Events wirklich löschen?'
+    }).subscribe(confirmed => {
       if (confirmed) {
         const requests = this.selection.selected.map(ev => this.apiService.deleteEvent(ev.id));
-        forkJoin(requests).subscribe({
-          next: () => {
-            this.snackBar.open('Events gelöscht.', 'OK', { duration: 3000 });
-            this.selection.clear();
-            this.loadEvents();
-          },
-          error: () => this.snackBar.open('Fehler beim Löschen der Events.', 'Schließen', { duration: 4000 })
-        });
+        this.apiHelper.handleApiCall(
+          forkJoin(requests),
+          {
+            successMessage: 'Events gelöscht.',
+            errorMessage: 'Fehler beim Löschen der Events.',
+            onSuccess: () => {
+              this.selection.clear();
+              this.loadEvents();
+            }
+          }
+        ).subscribe();
       }
     });
   }
@@ -188,32 +206,42 @@ export class EventListComponent implements OnInit, AfterViewInit {
   }
 
   openAddEventDialog(): void {
-    const dialogRef = this.dialog.open(EventDialogComponent, { width: '600px', disableClose: true });
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.apiService.createEvent(result).subscribe({
-          next: (response: CreateEventResponse) => {
+    this.dialogHelper.openDialogWithApi<
+      EventDialogComponent,
+      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number },
+      CreateEventResponse
+    >(
+      EventDialogComponent,
+      (result) => this.apiService.createEvent(result),
+      {
+        dialogConfig: { width: '600px', disableClose: true },
+        apiConfig: {
+          onSuccess: (response: CreateEventResponse) => {
             const baseMessage = response.wasUpdated ?
               'Event für diesen Tag wurde aktualisiert!' :
               'Event erfolgreich angelegt!';
             const message = response.warning ? response.warning : baseMessage;
-            this.snackBar.open(message, 'OK', { duration: 3000 });
+            this.notification.success(message);
             this.loadEvents();
           },
-          error: (err) => {
-            const msg = err.status === 409 && err.error?.message
-              ? err.error.message
-              : 'Fehler: Das Event konnte nicht gespeichert werden.';
-            this.snackBar.open(msg, 'Schließen', { duration: 5000 });
-          }
-        });
+          onError: (err): boolean => {
+            if (err.status === 409 && err.error?.message) {
+              this.notification.error(err.error.message);
+              return true; // Suppress default error notification
+            }
+            return false; // Use default error handling
+          },
+          errorMessage: 'Fehler: Das Event konnte nicht gespeichert werden.'
+        }
       }
-    });
+    ).subscribe();
   }
 
   openImportDialog(): void {
-    const dialogRef = this.dialog.open(EventImportDialogComponent, { width: '800px' });
-    dialogRef.afterClosed().subscribe(wasImported => {
+    this.dialogHelper.openDialog<EventImportDialogComponent, boolean>(
+      EventImportDialogComponent,
+      { width: '800px' }
+    ).subscribe(wasImported => {
       if (wasImported) {
         this.loadEvents();
       }

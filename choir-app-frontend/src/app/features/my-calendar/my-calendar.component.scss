@@ -18,9 +18,9 @@
   }
 
   ::ng-deep mat-calendar.compact .mat-calendar-body-cell-content {
-    height: 32px;
-    width: 32px;
-    line-height: 32px;
+    height: 2rem;
+    width: 2rem;
+    line-height: 2rem;
   }
 
   .calendar-wrapper {
@@ -48,8 +48,8 @@
   }
 
   .choir-dot {
-    width: 8px;
-    height: 8px;
+    width: 0.5rem;
+    height: 0.5rem;
     border-radius: 50%;
     display: inline-block;
     margin-right: 8px;

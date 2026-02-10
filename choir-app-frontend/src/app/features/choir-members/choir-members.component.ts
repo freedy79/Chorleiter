@@ -4,11 +4,12 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { UserInChoir } from '@core/models/user';
+import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
 
 @Component({
   selector: 'app-choir-members',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, PersonNamePipe],
   templateUrl: './choir-members.component.html',
   styleUrls: ['./choir-members.component.scss']
 })

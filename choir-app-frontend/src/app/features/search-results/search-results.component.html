@@ -1,4 +1,7 @@
-<h2>Suchergebnisse für "{{ query }}"</h2>
+<app-search-box class="search"></app-search-box>
+
+<h2 *ngIf="query">Suchergebnisse für "{{ query }}"</h2>
+<p *ngIf="!query">Bitte einen Suchbegriff eingeben.</p>
 
 <section *ngIf="results.pieces.length">
   <h3>Stücke</h3>

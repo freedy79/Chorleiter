@@ -46,15 +46,21 @@
           <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
         </mat-select>
       </mat-form-field>
-      <button mat-button (click)="clearFilters()">Filter löschen</button>
+      <button mat-button class="desktop-only" (click)="clearFilters()">Filter löschen</button>
+      <button mat-icon-button class="mobile-only" (click)="clearFilters()" aria-label="Filter löschen" matTooltip="Filter löschen">
+        <mat-icon>filter_alt_off</mat-icon>
+      </button>
     </div>
   </mat-drawer>
   <mat-drawer-content>
     <div class="page">
       <div class="header-actions">
-        <button mat-flat-button color="primary" (click)="openAddPieceDialog()">
+        <button mat-flat-button color="primary" class="desktop-only" (click)="openAddPieceDialog()">
           <mat-icon>add</mat-icon>
           <span>Stück hinzufügen</span>
+        </button>
+        <button mat-icon-button color="primary" class="mobile-only" (click)="openAddPieceDialog()" aria-label="Stück hinzufügen" matTooltip="Stück hinzufügen">
+          <mat-icon>add</mat-icon>
         </button>
       </div>
       <div class="filter-bar">
@@ -99,10 +105,8 @@
       </div>
 
       <div class="table-wrapper mat-elevation-z8">
-
-
         <!-- The table itself. It is always present in the DOM, but can be overlaid by the loading shade. -->
-        <div class="table-scroll-container">
+        <div class="table-scroll-container desktop-view">
           <mat-table [dataSource]="dataSource" matSort>
 
             <!-- Title Column -->
@@ -125,7 +129,7 @@
             <!-- Reference Column -->
             <ng-container cdkColumnDef="reference">
               <mat-header-cell *cdkHeaderCellDef mat-sort-header="reference"> Nr. </mat-header-cell>
-              <mat-cell *cdkCellDef="let piece"> {{ formatReferenceForDisplay(piece) }} </mat-cell>
+              <mat-cell *cdkCellDef="let piece"> {{ piece | reference:'' }} </mat-cell>
             </ng-container>
 
             <ng-container cdkColumnDef="category">
@@ -213,6 +217,87 @@
               </tr>
             </ng-container>
           </mat-table>
+        </div>
+
+        <!-- Mobile View: Cards -->
+        <div class="mobile-card-container mobile-view">
+          <ng-container *ngIf="dataSource.data.length; else mobileNoData">
+            <div class="mobile-cards">
+              <div class="card" *ngFor="let piece of dataSource.data">
+                <div class="card-header">
+                  <a [routerLink]="['/pieces', piece.id]" class="card-title">{{ piece.title }}</a>
+                  <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                </div>
+
+                <div class="card-subtitle" *ngIf="piece.composer?.name || piece.origin">
+                  {{ piece.composer?.name || piece.origin }}
+                </div>
+
+                <div class="card-meta">
+                  <span class="meta-item" *ngIf="piece.category?.name">
+                    <span class="label">Rubrik:</span>
+                    <span class="value">{{ piece.category?.name }}</span>
+                  </span>
+                  <span class="meta-item">
+                    <span class="label">Nr.:</span>
+                    <span class="value">{{ piece | reference:'' }}</span>
+                  </span>
+                </div>
+
+                <div class="card-stats" *ngIf="showLastSung || showLastRehearsed || showTimesSung || showTimesRehearsed">
+                  <span class="stat" *ngIf="showLastSung">
+                    <span class="label">Zuletzt gesungen:</span>
+                    <span class="value">{{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }}</span>
+                  </span>
+                  <span class="stat" *ngIf="showLastRehearsed">
+                    <span class="label">Zuletzt geprobt:</span>
+                    <span class="value">{{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }}</span>
+                  </span>
+                  <span class="stat" *ngIf="showTimesSung">
+                    <span class="label">Anzahl gesungen:</span>
+                    <span class="value">{{ piece.timesSung || 0 }}</span>
+                  </span>
+                  <span class="stat" *ngIf="showTimesRehearsed">
+                    <span class="label">Anzahl geprobt:</span>
+                    <span class="value">{{ piece.timesRehearsed || 0 }}</span>
+                  </span>
+                </div>
+
+                <div class="card-controls">
+                  <div class="control">
+                    <span class="label">Bewertung</span>
+                    <mat-select [value]="piece.choir_repertoire?.rating"
+                                (selectionChange)="onRatingChange($event.value, piece.id)"
+                                [disabled]="!canRate">
+                      <mat-option [value]="null">-</mat-option>
+                      <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
+                    </mat-select>
+                  </div>
+                  <div class="control">
+                    <span class="label">Status</span>
+                    <ng-container *ngIf="isAdmin || isChoirAdmin || isDirector; else showonlyMobile">
+                      <mat-select [value]="piece.choir_repertoire?.status"
+                                  (selectionChange)="onStatusChange($event.value, piece.id)">
+                        <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
+                        <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
+                        <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
+                      </mat-select>
+                    </ng-container>
+                    <ng-template #showonlyMobile>
+                      <span class="value">{{ piece.choir_repertoire?.status | pieceStatusLabel }}</span>
+                    </ng-template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+          <ng-template #mobileNoData>
+            <div class="mobile-empty" *ngIf="!isLoading">
+              Keine Stücke passend zu den Filtern gefunden.
+            </div>
+          </ng-template>
         </div>
 
         <!-- The Paginator -->

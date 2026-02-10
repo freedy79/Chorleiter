@@ -1,44 +1,8 @@
+const PDFDocument = require('pdfkit');
 const { shortWeekdayDateString, germanDateString } = require('../utils/date.utils');
+const { getPdfTemplateConfig } = require('./pdf-template.service');
 const logger = require('../config/logger');
-
-function escape(text) {
-  return text.replace(/[\\()]/g, c => '\\' + c);
-}
-
-function textWidth(text, size) {
-  return text.length * size * 0.6;
-}
-
-function wrapText(text, size, width) {
-  if (!text) return [''];
-  const words = text.split(/\s+/);
-  const lines = [];
-  let current = '';
-  for (const word of words) {
-    const candidate = current ? current + ' ' + word : word;
-    if (textWidth(candidate, size) <= width) {
-      current = candidate;
-    } else {
-      if (current) lines.push(current);
-      if (textWidth(word, size) <= width) {
-        current = word;
-      } else {
-        let part = '';
-        for (const ch of word) {
-          if (textWidth(part + ch, size) <= width) {
-            part += ch;
-          } else {
-            if (part) lines.push(part);
-            part = ch;
-          }
-        }
-        current = part;
-      }
-    }
-  }
-  if (current) lines.push(current);
-  return lines.length ? lines : [''];
-}
+const db = require('../models');
 
 function eventShort(notes) {
   const value = (notes || '').toLowerCase();
@@ -51,304 +15,327 @@ function eventShort(notes) {
   return '';
 }
 
-function monthlyPlanPdf(plan) {
-  const left = 50;
-  const right = 545;
-  const col2 = left + 90;
-  const col3 = col2 + 50;
-  const col4 = col3 + 120;
-  const col5 = col4 + 120;
-  const lines = [];
-  let y = 800;
-
-  function cellCenter(x1, x2, text, yPos, size = 12) {
-    const width = x2 - x1;
-    const x = x1 + (width - textWidth(text, size)) / 2;
-    return `BT /F1 ${size} Tf ${x} ${yPos - 2} Td (${escape(text)}) Tj ET`;
-  }
-
-  // Title
-  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Musikplan ' + plan.month + '/' + plan.year)}) Tj ET`);
-  y -= 20;
-
-  // Choir name sub heading
-  if (plan.choir && plan.choir.name) {
-    lines.push(`BT /F1 14 Tf ${left} ${y} Td (${escape(plan.choir.name)}) Tj ET`);
-    y -= 20;
-  } else {
-    y -= 10;
-  }
-
-  // Table header
-  const topLine = y + 8;
-  const headerBottom = y - 12;
-  lines.push('0.9 g');
-  lines.push(`${left} ${headerBottom} ${right - left} 20 re f`);
-  lines.push('0 g');
-  lines.push('0.5 w 0 0 0 RG');
-  lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-  lines.push(cellCenter(left, col2, 'Datum', y));
-  lines.push(cellCenter(col2, col3, 'Ereignis', y));
-  lines.push(cellCenter(col3, col4, 'Chorleiter', y));
-  lines.push(cellCenter(col4, col5, 'Organist', y));
-  lines.push(cellCenter(col5, right, 'Notizen', y));
-  y -= 20;
-  lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
-
-  // Table rows with wrapping
-  const colWidths = [
-    col2 - left,
-    col3 - col2,
-    col4 - col3,
-    col5 - col4,
-    right - col5
-  ];
-
-  for (const e of plan.entries) {
-    const cells = [
-      wrapText(shortWeekdayDateString(new Date(e.date)), 12, colWidths[0]),
-      wrapText(eventShort(e.notes), 12, colWidths[1]),
-      wrapText(e.director?.name || '', 12, colWidths[2]),
-      wrapText(e.organist?.name || '', 12, colWidths[3]),
-      wrapText(e.notes || '', 12, colWidths[4])
-    ];
-    const count = Math.max(...cells.map(c => c.length));
-    for (let i = 0; i < count; i++) {
-      lines.push(cellCenter(left, col2, cells[0][i] || '', y));
-      lines.push(cellCenter(col2, col3, cells[1][i] || '', y));
-      lines.push(cellCenter(col3, col4, cells[2][i] || '', y));
-      lines.push(cellCenter(col4, col5, cells[3][i] || '', y));
-      lines.push(cellCenter(col5, right, cells[4][i] || '', y));
-      y -= 20;
-    }
-    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
-  }
-
-  const bottomLine = y + 8;
-  // Vertical lines
-  lines.push(`${left} ${topLine} m ${left} ${bottomLine} l S`);
-  lines.push(`${col2} ${topLine} m ${col2} ${bottomLine} l S`);
-  lines.push(`${col3} ${topLine} m ${col3} ${bottomLine} l S`);
-  lines.push(`${col4} ${topLine} m ${col4} ${bottomLine} l S`);
-  lines.push(`${col5} ${topLine} m ${col5} ${bottomLine} l S`);
-  lines.push(`${right} ${topLine} m ${right} ${bottomLine} l S`);
-  const standDate = germanDateString(plan.updatedAt ? new Date(plan.updatedAt) : new Date());
-  lines.push(`BT /F1 12 Tf ${left} ${y - 12} Td (${escape('Stand: ' + standDate)}) Tj ET`);
-  const content = lines.join('\n');
-  const objects = [];
-  objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
-  objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); //2
-  objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>'); //3
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'); //4
-  objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); //5
-  const offsets = [];
-  let pdf = '%PDF-1.4\n';
-  for (let i = 0; i < objects.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i+1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xrefStart = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 0; i < offsets.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  return Buffer.from(pdf, 'binary');
+function formatDate(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}.${month}.${date.getFullYear()}`;
 }
 
-function programPdf(program) {
-  const left = 50;
-  const right = 545;
-  const lines = [];
-  let y = 800;
+function bufferFromDoc(doc) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    doc.on('data', chunk => chunks.push(chunk));
+    doc.on('end', () => resolve(Buffer.concat(chunks)));
+    doc.on('error', reject);
+    doc.end();
+  });
+}
 
-  // Title
-  lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape(program.title || 'Programm')}) Tj ET`);
-  y -= 30;
+function createDoc(template) {
+  const page = template?.page || {};
+  const baseMargin = page.margin ?? 50;
+  const headerHeight = template?.header?.show ? (template.header.height ?? 30) : 0;
+  const footerHeight = template?.footer?.show ? (template.footer.height ?? 24) : 0;
+  return new PDFDocument({
+    size: page.size || 'A4',
+    layout: page.layout || 'portrait',
+    margins: {
+      top: baseMargin + headerHeight,
+      bottom: baseMargin + footerHeight,
+      left: baseMargin,
+      right: baseMargin
+    },
+    bufferPages: true
+  });
+}
 
-  const width = right - left;
-  const size = 12;
+function moveDownBy(doc, points) {
+  const lineHeight = doc.currentLineHeight(true) || 12;
+  doc.moveDown(points / lineHeight);
+}
 
-  // Optional description
-  if (program.description) {
-    const descLines = wrapText(program.description, size, width);
-    for (const line of descLines) {
-      const x = left + (width - textWidth(line, size)) / 2;
-      lines.push(`BT /F1 ${size} Tf ${x} ${y} Td (${escape(line)}) Tj ET`);
-      y -= 16;
+function applyHeaderFooter(doc, template, meta) {
+  const range = doc.bufferedPageRange();
+  const page = template?.page || {};
+  const baseMargin = page.margin ?? 50;
+  const header = template?.header || {};
+  const footer = template?.footer || {};
+  const headerHeight = header.show ? (header.height ?? 30) : 0;
+  const footerHeight = footer.show ? (footer.height ?? 24) : 0;
+  const title = meta?.title || '';
+  const dateLabel = footer.label ? `${footer.label}: ` : '';
+  const dateText = footer.showDate ? `${dateLabel}${meta?.date || germanDateString(new Date())}` : '';
+  const pageLabel = footer.pageLabel || 'Seite';
+
+  for (let i = 0; i < range.count; i++) {
+    doc.switchToPage(i);
+    const width = doc.page.width;
+    const contentWidth = width - baseMargin * 2;
+
+    if (header.show && title) {
+      const headerFontSize = header.fontSize ?? 14;
+      const headerTop = baseMargin - headerHeight;
+      const headerY = headerTop + (headerHeight - headerFontSize) / 2;
+      doc.font('Helvetica').fontSize(headerFontSize).fillColor('black');
+      doc.text(title, baseMargin, headerY, { width: contentWidth, align: header.align || 'center' });
+      if (header.line) {
+        const lineY = headerTop + headerHeight;
+        doc.moveTo(baseMargin, lineY).lineTo(width - baseMargin, lineY).stroke();
+      }
     }
-    y -= 20;
+
+    if (footer.show) {
+      const footerFontSize = footer.fontSize ?? 10;
+      const footerTop = doc.page.height - baseMargin - footerHeight;
+      const footerY = footerTop + (footerHeight - footerFontSize) / 2;
+      const parts = [];
+      if (dateText) parts.push(dateText);
+      if (footer.showPageNumber) {
+        parts.push(`${pageLabel} ${i + 1} / ${range.count}`);
+      }
+      const footerText = parts.join(' — ');
+      doc.font('Helvetica').fontSize(footerFontSize).fillColor('black');
+      doc.text(footerText, baseMargin, footerY, { width: contentWidth, align: footer.align || 'center' });
+    }
+  }
+}
+
+function buildProgramItemText(item) {
+  let text = '';
+  if (item.type === 'piece') {
+    const composer = item.pieceComposerSnapshot ? item.pieceComposerSnapshot + ': ' : '';
+    text = composer + (item.pieceTitleSnapshot || '');
+    if (item.instrument) text += ` (${item.instrument})`;
+    if (item.performerNames) text += ` — ${item.performerNames}`;
+  } else if (item.type === 'speech') {
+    text = item.speechTitle || '';
+    if (item.speechSpeaker) text += ` – ${item.speechSpeaker}`;
+  } else if (item.type === 'break') {
+    text = item.breakTitle || 'Pause';
+  } else if (item.type === 'slot') {
+    text = item.slotLabel || '';
+  }
+  return text;
+}
+
+async function programPdf(program) {
+  const template = await getPdfTemplateConfig('program');
+  const doc = createDoc(template);
+  const meta = {
+    title: program.title || 'Programm',
+    date: germanDateString(new Date())
+  };
+
+  const description = template.description || {};
+  const itemConfig = template.item || {};
+  const breakConfig = template.break || {};
+  const separator = template.separator || {};
+
+  doc.font('Helvetica').fontSize(description.fontSize || 11);
+
+  if (program.description) {
+    doc.text(program.description, { align: description.align || 'center' });
+    moveDownBy(doc, description.spacingAfter ?? 10);
   }
 
   const items = program.items || [];
   items.forEach((item, index) => {
-    let text = '';
-    if (item.type === 'piece') {
-      const composer = item.pieceComposerSnapshot ? item.pieceComposerSnapshot + ': ' : '';
-      text = composer + (item.pieceTitleSnapshot || '');
-      if (item.instrument) text += ` (${item.instrument})`;
-      if (item.performerNames) text += ` — ${item.performerNames}`;
-    } else if (item.type === 'speech') {
-      text = item.speechTitle || '';
-      if (item.speechSpeaker) text += ` – ${item.speechSpeaker}`;
-    } else if (item.type === 'break') {
-      text = item.breakTitle || 'Pause';
-    } else if (item.type === 'slot') {
-      text = item.slotLabel || '';
+    const text = buildProgramItemText(item);
+    if (item.type === 'break') {
+      moveDownBy(doc, breakConfig.spacingBefore ?? 8);
+      doc.font('Helvetica').fontSize(breakConfig.fontSize || 12).text(text, { align: breakConfig.align || 'center' });
+      moveDownBy(doc, breakConfig.spacingAfter ?? 8);
+      return;
     }
 
-    const wrapped = wrapText(text, size, width);
-    for (const line of wrapped) {
-      const x = left + (width - textWidth(line, size)) / 2;
-      lines.push(`BT /F1 ${size} Tf ${x} ${y} Td (${escape(line)}) Tj ET`);
-      y -= 16;
-    }
+    doc.font('Helvetica').fontSize(itemConfig.fontSize || 12).text(text, {
+      indent: itemConfig.indent ?? 10,
+      lineGap: (itemConfig.lineHeight ?? 1.3) * (itemConfig.fontSize || 12) - (itemConfig.fontSize || 12)
+    });
 
-    if (index < items.length - 1) {
-      y -= 4;
-      const center = left + width / 2;
-      lines.push(`${center - 4} ${y} m ${center + 4} ${y} l S`);
-      y -= 16;
+    if (separator.enabled && index < items.length - 1) {
+      moveDownBy(doc, separator.spacing ?? 8);
+      const width = separator.width ?? 30;
+      const centerX = doc.page.margins.left + (doc.page.width - doc.page.margins.left - doc.page.margins.right) / 2;
+      doc.moveTo(centerX - width / 2, doc.y).lineTo(centerX + width / 2, doc.y).stroke();
+      moveDownBy(doc, separator.spacing ?? 8);
     }
   });
 
-  const content = lines.join('\n');
-  const objects = [];
-  objects.push('<< /Type /Catalog /Pages 2 0 R >>'); //1
-  objects.push('<< /Type /Pages /Kids [3 0 R] /Count 1 >>'); //2
-  objects.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 4 0 R >> >> >>'); //3
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'); //4
-  objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`); //5
-  const offsets = [];
-  let pdf = '%PDF-1.4\n';
-  for (let i = 0; i < objects.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i+1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xrefStart = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 0; i < offsets.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10,'0')} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  return Buffer.from(pdf, 'binary');
+  applyHeaderFooter(doc, template, meta);
+  return bufferFromDoc(doc);
 }
 
-function lendingListPdf(title, copies) {
-  const left = 50;
-  const col2 = left + 50;
-  const col3 = col2 + 250;
-  const col4 = col3 + 100;
-  const right = 545;
-  const rowHeight = 20;
-  const rowsPerPage = 35;
-  const bottomMargin = 70;
-  const totalPlaceholder = '__TOTAL_PAGES__';
-  const creationDateText = `Erstellt am ${formatDate(new Date())}`;
-  const footerY = 40;
+async function monthlyPlanPdf(plan) {
+  const template = await getPdfTemplateConfig('monthly-plan');
+  const doc = createDoc(template);
+  const meta = {
+    title: `Musikplan ${plan.month}/${plan.year}`,
+    date: germanDateString(plan.updatedAt ? new Date(plan.updatedAt) : new Date())
+  };
 
-  function cellCenter(x1, x2, text, yPos, size = 12) {
-    const width = x2 - x1;
-    const x = x1 + (width - textWidth(text, size)) / 2;
-    return `BT /F1 ${size} Tf ${x} ${yPos - 2} Td (${escape(text)}) Tj ET`;
+  const subtitle = template.subtitle || {};
+  const table = template.table || {};
+  const headers = table.headers || ['Datum', 'Ereignis', 'Chorleiter', 'Organist', 'Notizen'];
+
+  doc.font('Helvetica').fontSize(subtitle.fontSize || 12);
+  if (plan.choir?.name) {
+    doc.text(plan.choir.name, { align: subtitle.align || 'left' });
+    moveDownBy(doc, subtitle.spacingAfter ?? 6);
   }
 
-  function formatDate(d) {
-    if (!d) return '';
-    const date = new Date(d);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    return `${day}.${month}.${date.getFullYear()}`;
-  }
+  const left = doc.page.margins.left;
+  const right = doc.page.width - doc.page.margins.right;
+  const columnWidths = table.columnWidths || [90, 50, 120, 120, right - left - 380];
+  const rowHeight = table.rowHeight || 18;
 
-  function newPage() {
-    const lines = [];
-    let y = 800;
-    lines.push('0.5 w 0 0 0 RG');
-    lines.push(`BT /F1 18 Tf ${left} ${y} Td (${escape('Ausleihliste ' + title)}) Tj ET`);
-    y -= 30;
-    const topLine = y + 8;
-    lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-    lines.push(cellCenter(left, col2, 'Nr.', y));
-    lines.push(cellCenter(col2, col3, 'Name', y));
-    lines.push(cellCenter(col3, col4, 'Ausleihe', y));
-    lines.push(cellCenter(col4, right, 'Rückgabe', y));
-    y -= rowHeight;
-    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
-    return { lines, y, topLine };
-  }
-
-  function finishPage(page, pageNumber) {
-    const bottomLine = page.y + 8;
-    page.lines.push(`${left} ${page.topLine} m ${left} ${bottomLine} l S`);
-    page.lines.push(`${col2} ${page.topLine} m ${col2} ${bottomLine} l S`);
-    page.lines.push(`${col3} ${page.topLine} m ${col3} ${bottomLine} l S`);
-    page.lines.push(`${col4} ${page.topLine} m ${col4} ${bottomLine} l S`);
-    page.lines.push(`${right} ${page.topLine} m ${right} ${bottomLine} l S`);
-    const pageLabel = `Seite ${pageNumber} / ${totalPlaceholder}`;
-    page.lines.push(`BT /F1 10 Tf ${left} ${footerY} Td (${escape(pageLabel)}) Tj ET`);
-    const creationDateX = right - textWidth(creationDateText, 10);
-    page.lines.push(`BT /F1 10 Tf ${creationDateX} ${footerY} Td (${escape(creationDateText)}) Tj ET`);
-    pages.push(page.lines.join('\n'));
-  }
-
-  const pages = [];
-  let page = newPage();
-  let rowsOnPage = 0;
-
-  for (const copy of copies) {
-    if (rowsOnPage >= rowsPerPage || page.y - rowHeight < bottomMargin) {
-      finishPage(page, pages.length + 1);
-      page = newPage();
-      rowsOnPage = 0;
+  function drawTableHeader() {
+    const headerFill = table.headerFill || null;
+    const y = doc.y;
+    if (headerFill) {
+      doc.save();
+      doc.rect(left, y, columnWidths.reduce((a, b) => a + b, 0), rowHeight).fill(headerFill);
+      doc.restore();
     }
-    page.lines.push(cellCenter(left, col2, String(copy.copyNumber), page.y));
-    page.lines.push(cellCenter(col2, col3, copy.borrowerName || '', page.y));
-    page.lines.push(cellCenter(col3, col4, formatDate(copy.borrowedAt), page.y));
-    page.lines.push(cellCenter(col4, right, formatDate(copy.returnedAt), page.y));
-    page.y -= rowHeight;
-    page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
-    rowsOnPage += 1;
+    doc.font('Helvetica-Bold').fontSize(table.headerFontSize || 11).fillColor('black');
+    let x = left;
+    headers.forEach((headerText, i) => {
+      doc.text(headerText, x + 4, y + 4, { width: columnWidths[i] - 8, align: 'center' });
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y).lineTo(right, y).stroke();
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+
+    doc.y = y + rowHeight;
   }
 
-  finishPage(page, pages.length + 1);
-
-  const totalPages = pages.length;
-  const pageKids = [];
-  const objects = [];
-  objects.push('<< /Type /Catalog /Pages 2 0 R >>');
-  objects.push(null);
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
-
-  for (const content of pages.map(p => p.replace(new RegExp(totalPlaceholder, 'g'), totalPages))) {
-    const pageObjNum = objects.length + 1;
-    const contentObjNum = objects.length + 2;
-    pageKids.push(`${pageObjNum} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R >> >> >>`);
-    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
+  function drawRow(cells) {
+    if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      drawTableHeader();
+    }
+    const y = doc.y;
+    doc.font('Helvetica').fontSize(table.rowFontSize || 10).fillColor('black');
+    let x = left;
+    cells.forEach((cell, i) => {
+      doc.text(cell, x + 4, y + 4, { width: columnWidths[i] - 8, height: rowHeight - 6, ellipsis: true, align: 'center' });
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.y = y + rowHeight;
   }
 
-  objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
+  drawTableHeader();
+  for (const entry of plan.entries || []) {
+    const cells = [
+      shortWeekdayDateString(new Date(entry.date)),
+      eventShort(entry.notes),
+      entry.director?.name || '',
+      entry.organist?.name || '',
+      entry.notes || ''
+    ];
+    drawRow(cells);
+  }
 
-  const offsets = [];
-  let pdf = '%PDF-1.4\n';
-  for (let i = 0; i < objects.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xrefStart = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 0; i < offsets.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  return Buffer.from(pdf, 'binary');
+  applyHeaderFooter(doc, template, meta);
+  return bufferFromDoc(doc);
 }
 
-const db = require('../models');
+async function lendingListPdf(title, copies) {
+  const template = await getPdfTemplateConfig('lending-list');
+  const doc = createDoc(template);
+  const meta = {
+    title: `Ausleihliste ${title}`,
+    date: germanDateString(new Date())
+  };
+
+  const table = template.table || {};
+  const headers = table.headers || ['Nr.', 'Name', 'Ausleihe', 'Rückgabe'];
+  const rowHeight = table.rowHeight || 18;
+  const left = doc.page.margins.left;
+  const right = doc.page.width - doc.page.margins.right;
+  const columnWidths = table.columnWidths || [50, 250, 120, right - left - 420];
+
+  function drawTableHeader() {
+    const y = doc.y;
+    doc.font('Helvetica-Bold').fontSize(table.headerFontSize || 11).fillColor('black');
+    let x = left;
+    headers.forEach((headerText, i) => {
+      doc.text(headerText, x + 4, y + 4, { width: columnWidths[i] - 8, align: 'center' });
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y).lineTo(right, y).stroke();
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.y = y + rowHeight;
+  }
+
+  function drawRow(cells) {
+    if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      drawTableHeader();
+    }
+    const y = doc.y;
+    doc.font('Helvetica').fontSize(table.rowFontSize || 10).fillColor('black');
+    let x = left;
+    cells.forEach((cell, i) => {
+      doc.text(cell, x + 4, y + 4, { width: columnWidths[i] - 8, height: rowHeight - 6, ellipsis: true, align: 'center' });
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.y = y + rowHeight;
+  }
+
+  drawTableHeader();
+  for (const copy of copies) {
+    drawRow([
+      String(copy.copyNumber),
+      copy.borrowerName || '',
+      formatDate(copy.borrowedAt),
+      formatDate(copy.returnedAt)
+    ]);
+  }
+
+  applyHeaderFooter(doc, template, meta);
+  return bufferFromDoc(doc);
+}
 
 async function participationPdf(members, events, availabilities = []) {
   logger.debug(`Generating participation PDF: ${members.length} members, ${events.length} events`);
+  const template = await getPdfTemplateConfig('participation');
+  const doc = createDoc(template);
+  const meta = {
+    title: 'Teilnahmeübersicht',
+    date: germanDateString(new Date())
+  };
+
   const districtEntries = await db.district.findAll();
   const districtCodes = {};
   for (const d of districtEntries) {
@@ -362,17 +349,16 @@ async function participationPdf(members, events, availabilities = []) {
       districtCodes[nameKey] = nameKey;
     }
   }
-  const left = 40;
-  const right = 802;
-  const top = 550;
-  const rowHeight = 18;
-  const bottomMargin = 60;
-  const eventDates = events.map(e => new Date(e.date));
-  const dateLabels = eventDates.map(d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
-  const columns = ['Name', 'E-Mail', 'St', 'Bez.', 'Gemeinde', ...dateLabels];
-  const nameWidth = 150;
-  const emailWidth = 200;
-  const voiceWidth = 25;
+
+  const table = template.table || {};
+  const left = doc.page.margins.left;
+  const right = doc.page.width - doc.page.margins.right;
+  const rowHeight = table.rowHeight || 16;
+  const nameWidth = table.nameWidth || 150;
+  const emailWidth = table.emailWidth || 200;
+  const voiceWidth = table.voiceWidth || 25;
+  const congregationWidth = table.congregationWidth || 80;
+
   const hasUnknownDistrict = members.some(m => {
     if (!m.district) return true;
     const key = typeof m.district === 'string'
@@ -380,49 +366,22 @@ async function participationPdf(members, events, availabilities = []) {
       : ((m.district.code || m.district.name || '').trim());
     return !districtCodes[key];
   });
-  const districtWidth = hasUnknownDistrict ? 80 : 40;
-  const congregationWidth = 80;
+  const districtWidth = hasUnknownDistrict ? (table.districtWidth || 50) : Math.max(40, table.districtWidth || 40);
   const fixedWidth = nameWidth + emailWidth + voiceWidth + districtWidth + congregationWidth;
   const remainingWidth = (right - left) - fixedWidth;
   const eventWidth = events.length ? remainingWidth / events.length : 0;
   const columnWidths = [nameWidth, emailWidth, voiceWidth, districtWidth, congregationWidth,
     ...Array(events.length).fill(eventWidth)];
 
+  const eventDates = events.map(e => new Date(e.date));
+  const dateLabels = eventDates.map(d => d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }));
+  const headers = ['Name', 'E-Mail', 'St', 'Bez.', 'Gemeinde', ...dateLabels];
+
   const availMap = new Map();
   for (const a of availabilities) {
-    const dateKey = (a.date instanceof Date ? a.date : new Date(a.date)).toISOString().slice(0,10);
+    const dateKey = (a.date instanceof Date ? a.date : new Date(a.date)).toISOString().slice(0, 10);
     if (!availMap.has(a.userId)) availMap.set(a.userId, {});
     availMap.get(a.userId)[dateKey] = a.status;
-  }
-
-  function newPage() {
-    const lines = [];
-    let y = top;
-    const topLine = y + 8;
-    lines.push('0.5 w 0 0 0 RG');
-    lines.push(`${left} ${topLine} m ${right} ${topLine} l S`);
-    let x = left;
-    columns.forEach((col, i) => {
-      lines.push(`BT /F2 11 Tf ${x + 2} ${y - 4} Td (${escape(col)}) Tj ET`);
-      x += columnWidths[i];
-    });
-    y -= rowHeight;
-    lines.push(`${left} ${y + 8} m ${right} ${y + 8} l S`);
-    return { lines, y, topLine };
-  }
-
-  function finishPage(page) {
-    const bottomLine = page.y + 8;
-    let x = left;
-    page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
-    columnWidths.forEach(w => {
-      x += w;
-      page.lines.push(`${x} ${page.topLine} m ${x} ${bottomLine} l S`);
-    });
-    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 12} Td (${escape('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2')}) Tj ET`);
-    const districtLegend = Array.from(new Set(Object.values(districtCodes))).join(',');
-    page.lines.push(`BT /F1 9 Tf ${left} ${page.y - 24} Td (${escape('Bezirke: ' + districtLegend)}) Tj ET`);
-    pages.push(page.lines.join('\n'));
   }
 
   function voiceCode(v) {
@@ -445,13 +404,59 @@ async function participationPdf(members, events, availabilities = []) {
     return districtCodes[key] || key;
   }
 
-  const pages = [];
-  let page = newPage();
-  for (const m of members) {
-    if (page.y - rowHeight < bottomMargin) {
-      finishPage(page);
-      page = newPage();
+  function drawHeader() {
+    const y = doc.y;
+    doc.font('Helvetica-Bold').fontSize(table.headerFontSize || 9).fillColor('black');
+    let x = left;
+    headers.forEach((headerText, i) => {
+      doc.text(headerText, x + 2, y + 2, { width: columnWidths[i] - 4, align: 'center' });
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y).lineTo(right, y).stroke();
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.y = y + rowHeight;
+  }
+
+  function drawRow(cells) {
+    if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+      doc.addPage();
+      drawHeader();
     }
+    const y = doc.y;
+    let x = left;
+    cells.forEach((cell, i) => {
+      if (i >= 5) {
+        doc.font('Helvetica').fontSize(table.rowFontSize || 9).text(cell, x + 2, y + 2, {
+          width: columnWidths[i] - 4,
+          align: 'center'
+        });
+      } else {
+        doc.font('Helvetica').fontSize(table.rowFontSize || 9).text(cell, x + 2, y + 2, {
+          width: columnWidths[i] - 4,
+          align: 'left'
+        });
+      }
+      x += columnWidths[i];
+    });
+    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+    x = left;
+    columnWidths.forEach(w => {
+      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      x += w;
+    });
+    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.y = y + rowHeight;
+  }
+
+  drawHeader();
+  for (const m of members) {
     const row = [
       `${m.name || ''}${m.firstName ? ', ' + m.firstName : ''}`,
       m.email || '',
@@ -461,7 +466,7 @@ async function participationPdf(members, events, availabilities = []) {
     ];
     const userAvail = availMap.get(m.id) || {};
     for (const d of eventDates) {
-      const key = d.toISOString().slice(0,10);
+      const key = d.toISOString().slice(0, 10);
       const status = userAvail[key];
       let mark = '';
       if (status === 'AVAILABLE') mark = '✓';
@@ -469,60 +474,16 @@ async function participationPdf(members, events, availabilities = []) {
       else if (status === 'UNAVAILABLE') mark = '-';
       row.push(mark);
     }
-    let x = left;
-    row.forEach((cell, i) => {
-      const size = 10;
-      const width = columnWidths[i];
-      let text = cell;
-      let font = 'F1';
-      let xPos = x + 2;
-      if (i >= 5) {
-        // Event columns: center symbols
-        if (cell === '✓') {
-          font = 'F3';
-          text = '3';
-        }
-        xPos = x + (width - textWidth(text, size)) / 2;
-      }
-      page.lines.push(`BT /${font} ${size} Tf ${xPos} ${page.y - 4} Td (${escape(text)}) Tj ET`);
-      x += width;
-    });
-    page.y -= rowHeight;
-    page.lines.push(`${left} ${page.y + 8} m ${right} ${page.y + 8} l S`);
+    drawRow(row);
   }
-  finishPage(page);
 
-  const objects = [];
-  objects.push('<< /Type /Catalog /Pages 2 0 R >>');
-  objects.push(null); // placeholder for pages root
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>');
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F2 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
-  objects.push('<< /Type /Font /Subtype /Type1 /Name /F3 /BaseFont /ZapfDingbats >>');
-  const pageKids = [];
-  for (const content of pages) {
-    const contentObjNum = objects.length + 2;
-    const pageObjNum = objects.length + 1;
-    pageKids.push(`${pageObjNum} 0 R`);
-    objects.push(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents ${contentObjNum} 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R /F3 5 0 R >> >> >>`);
-    objects.push(`<< /Length ${content.length} >>\nstream\n${content}\nendstream`);
-  }
-  objects[1] = `<< /Type /Pages /Kids [${pageKids.join(' ')}] /Count ${pages.length} >>`;
+  doc.moveDown(0.5);
+  doc.font('Helvetica').fontSize(9).text('Stimmen: S1,S2,A1,A2,T1,T2,B1,B2');
+  const districtLegend = Array.from(new Set(Object.values(districtCodes))).join(',');
+  doc.font('Helvetica').fontSize(9).text(`Bezirke: ${districtLegend}`);
 
-  const offsets = [];
-  let pdf = '%PDF-1.4\n';
-  for (let i = 0; i < objects.length; i++) {
-    offsets[i] = pdf.length;
-    pdf += `${i + 1} 0 obj\n${objects[i]}\nendobj\n`;
-  }
-  const xrefStart = pdf.length;
-  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let i = 0; i < offsets.length; i++) {
-    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
-  }
-  pdf += `trailer << /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  const pdfBuffer = Buffer.from(pdf, 'binary');
-  logger.debug(`Participation PDF generated with ${pdfBuffer.length} bytes`);
-  return pdfBuffer;
+  applyHeaderFooter(doc, template, meta);
+  return bufferFromDoc(doc);
 }
 
 module.exports = { monthlyPlanPdf, programPdf, lendingListPdf, participationPdf };

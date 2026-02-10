@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const db = require("./models");
 const logger = require("./config/logger");
+const { getDefaultPdfTemplates } = require("./services/pdf-template.defaults");
 
 async function seedDatabase(options = {}) {
     const { includeDemoData = false } = options;
@@ -107,6 +108,13 @@ async function seedDatabase(options = {}) {
                     body: '<p>Hallo {{first_name}} {{surname}},</p><p>die Rückgabe von {{title}} (Nr. {{copyNumber}}) wurde am {{returnedAt}} erfasst.</p>'
                 }
             });
+
+            for (const tpl of getDefaultPdfTemplates()) {
+                await db.pdf_template.findOrCreate({
+                    where: { type: tpl.type },
+                    defaults: { name: tpl.name, config: tpl.config }
+                });
+            }
 
             await db.system_setting.findOrCreate({
                 where: { key: 'FRONTEND_URL' },

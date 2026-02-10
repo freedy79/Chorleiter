@@ -74,7 +74,27 @@ exports.signin = async (req, res) => {
     const email = rawEmail?.toLowerCase();
     const ipAddress = req.ip;
     const userAgent = req.get('User-Agent');
+
     try {
+    // IP-based rate limiting: Check for excessive failed attempts from this IP
+    const recentFailedFromIP = await LoginAttempt.count({
+      where: {
+        ipAddress,
+        success: false,
+        createdAt: { [Op.gt]: new Date(Date.now() - 15 * 60 * 1000) } // Last 15 minutes
+      }
+    });
+
+    if (recentFailedFromIP >= 10) {
+      const reason = 'Too many failed login attempts from this IP address';
+      logger.warn(`Login blocked for ${email} from IP ${ipAddress}: ${reason}`);
+      await LoginAttempt.create({ email, success: false, ipAddress, userAgent, reason });
+      return res.status(429).send({
+        message: 'Too many failed login attempts. Please try again later.',
+        retryAfter: 900 // 15 minutes in seconds
+      });
+    }
+
     if (email === 'demo@nak-chorleiter.de') {
         await ensureDemoAccount();
     }

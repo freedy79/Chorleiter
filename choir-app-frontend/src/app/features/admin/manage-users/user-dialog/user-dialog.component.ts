@@ -7,6 +7,7 @@ import { User, GlobalRole } from 'src/app/core/models/user';
 import { ApiService } from '@core/services/api.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-user-dialog',
@@ -15,62 +16,67 @@ import { Congregation } from '@core/models/congregation';
   templateUrl: './user-dialog.component.html',
   styleUrls: ['./user-dialog.component.scss']
 })
-export class UserDialogComponent implements OnInit {
-  form: FormGroup;
-  title = 'Benutzer hinzufügen';
+export class UserDialogComponent extends BaseFormDialog<User, User | null> implements OnInit {
+  title!: string;
   districts: District[] = [];
   congregations: Congregation[] = [];
 
   constructor(
-    private fb: FormBuilder,
-    private api: ApiService,
-    public dialogRef: MatDialogRef<UserDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: User | null
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<UserDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: User | null,
+    private api: ApiService
   ) {
-    this.title = data ? 'Benutzer bearbeiten' : 'Benutzer hinzufügen';
-    this.form = this.fb.group({
-      firstName: [data?.firstName || '', Validators.required],
-      name: [data?.name || '', Validators.required],
-      email: [data?.email || '', [Validators.required, Validators.email]],
-      phone: [data?.phone || ''],
-      street: [data?.street || ''],
-      postalCode: [data?.postalCode || ''],
-      city: [data?.city || ''],
-      district: [data?.district || ''],
-      congregation: [data?.congregation || ''],
-      voice: [data?.voice || ''],
-      shareWithChoir: [data?.shareWithChoir || false],
-      roles: [data?.roles || ['user'], Validators.required],
-      password: ['', data ? [] : [Validators.required]]
-    });
+    super(fb, dialogRef, data);
+    this.title = this.getDialogTitle('Benutzer hinzufügen', 'Benutzer bearbeiten');
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.api.getDistricts().subscribe(ds => this.districts = ds);
     this.api.getCongregations().subscribe(cs => this.congregations = cs);
   }
 
-  onCancel(): void {
-    this.dialogRef.close();
+  protected buildForm(): FormGroup {
+    return this.fb.group({
+      firstName: [this.data?.firstName || '', Validators.required],
+      name: [this.data?.name || '', Validators.required],
+      email: [this.data?.email || '', [Validators.required, Validators.email]],
+      phone: [this.data?.phone || ''],
+      street: [this.data?.street || ''],
+      postalCode: [this.data?.postalCode || ''],
+      city: [this.data?.city || ''],
+      district: [this.data?.district || ''],
+      congregation: [this.data?.congregation || ''],
+      voice: [this.data?.voice || ''],
+      shareWithChoir: [this.data?.shareWithChoir || false],
+      roles: [this.data?.roles || ['user'], Validators.required],
+      password: ['', this.data ? [] : [Validators.required]]
+    });
   }
 
-  onSave(): void {
-    if (this.form.valid) {
-      const value = { ...this.form.value };
-      if (Array.isArray(value.roles)) {
-        const normalized = Array.from(new Set<GlobalRole>(value.roles));
-        if (!normalized.includes('user')) {
-          normalized.push('user');
-        }
-        value.roles = normalized;
+  protected override getResult(): User {
+    const value = { ...this.form.value };
+
+    // Normalize roles
+    if (Array.isArray(value.roles)) {
+      const normalized = Array.from(new Set<GlobalRole>(value.roles));
+      if (!normalized.includes('user')) {
+        normalized.push('user');
       }
-      if (typeof value.phone === 'string') {
-        value.phone = value.phone.trim();
-      }
-      if (!value.password) {
-        delete value.password;
-      }
-      this.dialogRef.close(value);
+      value.roles = normalized;
     }
+
+    // Trim phone
+    if (typeof value.phone === 'string') {
+      value.phone = value.phone.trim();
+    }
+
+    // Remove empty password
+    if (!value.password) {
+      delete value.password;
+    }
+
+    return value;
   }
 }

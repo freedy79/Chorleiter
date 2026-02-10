@@ -161,6 +161,12 @@ export const routes: Routes = [
                 data: { title: 'Bibliothek' }
             },
             {
+                path: 'repertoire',
+                loadComponent: () => import('./features/literature/literature-list/literature-list.component').then(m => m.LiteratureListComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Repertoire' }
+            },
+            {
                 path: 'pieces/:id',
                 loadComponent: () => import('./features/literature/piece-detail/piece-detail.component').then(m => m.PieceDetailComponent),
                 canActivate: [AuthGuard],

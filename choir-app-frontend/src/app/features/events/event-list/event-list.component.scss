@@ -1,3 +1,8 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+@use '../../../../themes/cards' as *;
+@use '../../../../themes/responsive-utilities' as *;
+@use '../../../../themes/table-utilities' as *;
 
 .filter-row {
   margin-bottom: 0;
@@ -23,15 +28,77 @@
 }
 
 .event-table .mat-row {
-  cursor: pointer;
+  @include table-row-hover;
 }
 
-.event-table .mat-row:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+// Responsive Views
+.desktop-view {
+  @extend %desktop-only;
 }
 
-@media (prefers-color-scheme: dark) {
-  .event-table .mat-row:hover {
-    background-color: rgba(255, 255, 255, 0.08);
+.mobile-view {
+  @extend %mobile-only;
+}
+
+// Mobile Card Styles
+.mobile-card-container {
+  overflow-y: auto;
+  max-height: calc(100vh - 250px);
+  @include mobile-card-container;
+}
+
+.mobile-cards {
+  @include mobile-cards-grid;
+}
+
+.event-card {
+  @include mobile-card;
+}
+
+.card-header {
+  @include card-header;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.card-main {
+  flex: 1;
+}
+
+.card-date {
+  font-weight: 600;
+  font-size: 1rem;
+  @include readable-text;
+}
+
+.card-title {
+  font-weight: 500;
+  font-size: 1.125rem;
+  margin-top: $spacing-xs;
+  @include readable-text;
+}
+
+.card-details {
+  @include card-content;
+  margin-top: $spacing-xs;
+}
+
+.card-detail-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: 0.875rem;
+  @include secondary-text;
+
+  mat-icon {
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
   }
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
 }

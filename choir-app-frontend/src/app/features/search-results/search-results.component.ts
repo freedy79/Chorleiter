@@ -6,11 +6,12 @@ import { SearchService } from '@core/services/search.service';
 import { Piece } from '@core/models/piece';
 import { Event } from '@core/models/event';
 import { Collection } from '@core/models/collection';
+import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterModule],
+  imports: [CommonModule, MaterialModule, RouterModule, SearchBoxComponent],
   templateUrl: './search-results.component.html',
 })
 export class SearchResultsComponent implements OnInit {

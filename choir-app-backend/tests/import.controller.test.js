@@ -66,6 +66,20 @@ const jobs = require('../src/services/import-jobs.service');
 
     await db.sequelize.sync({ force: true });
 
+    const collectionFuzzy = await db.collection.create({ title: 'Fuzzy', prefix: 'FZ' });
+    const existingRutter = await db.composer.create({ name: 'Rutter, John' });
+    const recordsFuzzy = [
+      { title: 'Test Piece', composer: 'Rutter' }
+    ];
+    const jobFuzzy = jobs.createJob('jobFuzzy');
+    jobFuzzy.status = 'running';
+    await controller._test.processImport(jobFuzzy, collectionFuzzy, recordsFuzzy);
+    const composersFuzzy = await db.composer.findAll();
+    assert.strictEqual(composersFuzzy.length, 1, 'should match existing composer by last name');
+    assert.strictEqual(composersFuzzy[0].id, existingRutter.id);
+
+    await db.sequelize.sync({ force: true });
+
     const choir = await db.choir.create({ name: 'Test Choir' });
     const user = await db.user.create({ email: 't@example.com', roles: ['user'] });
     const comp2 = await db.composer.create({ name: 'Composer' });
@@ -95,4 +109,3 @@ const jobs = require('../src/services/import-jobs.service');
     process.exit(1);
   }
 })();
-

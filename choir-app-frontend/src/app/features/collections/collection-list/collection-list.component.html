@@ -27,7 +27,7 @@
           <ng-container matColumnDef="cover">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let collection" class="cover-cell">
-              <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" loading="lazy" />
+              <img *ngIf="collection.coverImage" [appCachedImage]="collection.id" cacheType="collection" alt="Cover" [lazyLoad]="true" />
             </mat-cell>
           </ng-container>
 
@@ -111,8 +111,7 @@
   <ng-template #mobileView>
     <div class="mobile-list">
       <div class="mobile-item" *ngFor="let collection of dataSource.data" (click)="toggleSelection(collection)">
-        <img *ngIf="collection.coverImageData" [src]="collection.coverImageData" alt="Cover" class="cover-img"
-          loading="lazy" />
+        <img *ngIf="collection.coverImage" [appCachedImage]="collection.id" cacheType="collection" alt="Cover" class="cover-img" [lazyLoad]="true" />
         <div class="collection_title_block">
           <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
           <div class="title">{{ collection.title }}</div>

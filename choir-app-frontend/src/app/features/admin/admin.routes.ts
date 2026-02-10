@@ -22,6 +22,11 @@ export const adminRoutes: Routes = [
         data: { title: 'Admin – E-Mail Management' }
       },
       {
+        path: 'pdf-templates',
+        loadComponent: () => import('./pdf-templates/pdf-templates.component').then(m => m.PdfTemplatesComponent),
+        data: { title: 'Admin – PDF Templates' }
+      },
+      {
         path: 'organizations',
         loadComponent: () => import('./organizations/organizations.component').then(m => m.OrganizationsComponent),
         data: { title: 'Admin – Organisationen' }

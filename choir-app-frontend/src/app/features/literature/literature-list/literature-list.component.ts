@@ -8,11 +8,13 @@ import { PaginatorService } from '@core/services/paginator.service';
 import { MatTableDataSource } from '@angular/material/table';
 import { Observable, BehaviorSubject, merge, of } from 'rxjs';
 import { switchMap, map, startWith, catchError, tap, take, takeUntil } from 'rxjs/operators';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { BaseComponent } from '@shared/components/base.component';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
+import { ApiHelperService } from '@core/services/api-helper.service';
+import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { PieceService } from 'src/app/core/services/piece.service';
 import { Piece } from 'src/app/core/models/piece';
 import { Collection } from 'src/app/core/models/collection';
@@ -28,11 +30,13 @@ import { UserPreferencesService } from '@core/services/user-preferences.service'
 import { UserPreferences } from '@core/models/user-preferences';
 import { Router, RouterModule } from '@angular/router';
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
+import { ImageCacheService } from '@core/services/image-cache.service';
+import { ReferencePipe } from '@shared/pipes/reference.pipe';
 
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe, ReferencePipe],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
@@ -93,7 +97,6 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   hoverX = 0;
   hoverY = 0;
   private hoverTimeout: any;
-  private imageCache = new Map<number, string>();
 
   // --- Bulletproof @ViewChild Setters ---
   private _sort!: MatSort;
@@ -121,11 +124,14 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     private filterPresetService: FilterPresetService,
     private authService: AuthService,
     public dialog: MatDialog,
-    private snackBar: MatSnackBar, // Inject MatSnackBar for feedback
+    private apiHelper: ApiHelperService,
+    private notification: NotificationService,
+    private dialogHelper: DialogHelperService,
     private paginatorService: PaginatorService,
     private errorService: ErrorService,
     private prefs: UserPreferencesService,
-    private router: Router
+    private router: Router,
+    private imageCacheService: ImageCacheService
   ) {
     super(); // Call BaseComponent constructor
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
@@ -320,22 +326,6 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     ).subscribe(res => this.pageCache.set(nextIndex, res.data));
   }
 
-  /**
-   * Formats the collection reference for display in the template.
-   */
-  formatReferenceForDisplay(piece: Piece): string {
-    if (piece.collectionPrefix && piece.collectionNumber) {
-      return `${piece.collectionPrefix}${piece.collectionNumber}`;
-    }
-    if (piece.collections && piece.collections.length > 0) {
-      const ref = piece.collections[0];
-      const num = (ref as any).collection_piece.numberInCollection;
-      const prefix = ref.singleEdition ? piece.composer?.name || piece.origin || '' : ref.prefix || '';
-      return `${prefix}${num}`;
-    }
-    return '-';
-  }
-
   /*
    * Former helper for building a sortable reference string. Currently unused
    * but kept for potential future sorting requirements.
@@ -447,17 +437,16 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
    * choir's repertoire in one go.
    */
   openAddPieceDialog(): void {
-    const dialogRef = this.dialog.open(PieceDialogComponent, {
-      width: '90vw',
-      maxWidth: '1000px',
-      data: { pieceId: null }
-    });
-
-    dialogRef.afterClosed().subscribe(wasPieceAdded => {
-      // The dialog should return 'true' if a piece was successfully created and added.
+    this.dialogHelper.openDialog<PieceDialogComponent, boolean>(
+      PieceDialogComponent,
+      {
+        width: '90vw',
+        maxWidth: '1000px',
+        data: { pieceId: null }
+      }
+    ).subscribe(wasPieceAdded => {
       if (wasPieceAdded) {
-        this.snackBar.open('New piece added to repertoire!', 'OK', { duration: 3000 });
-        // Trigger a refresh of the repertoire list to show the new piece.
+        this.notification.success('New piece added to repertoire!');
         this.refresh$.next();
       }
     });
@@ -471,64 +460,72 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
    * Called when a user changes the status of a piece from the dropdown in the table.
    */
   onStatusChange(newStatus: string, pieceId: number): void {
-    this.pieceService.updatePieceStatus(pieceId, newStatus).subscribe({
-      next: () => {
-        // Update the currently displayed data so the change is visible without reload
-        const data = [...this.dataSource.data];
-        const idx = data.findIndex(p => p.id === pieceId);
-        if (idx !== -1) {
-          const piece = { ...data[idx] };
-          piece.choir_repertoire = piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
-          piece.choir_repertoire.status = newStatus as any;
-          data[idx] = piece;
-          this.dataSource.data = data;
-        }
-
-        // Keep cached pages in sync
-        this.pageCache.forEach((arr, key) => {
-          const i = arr.findIndex(p => p.id === pieceId);
-          if (i !== -1) {
-            const pc = [...arr];
-            const p = { ...pc[i] };
-            p.choir_repertoire = p.choir_repertoire || { status: 'CAN_BE_SUNG' };
-            p.choir_repertoire.status = newStatus as any;
-            pc[i] = p;
-            this.pageCache.set(key, pc);
+    this.apiHelper.handleApiCall(
+      this.pieceService.updatePieceStatus(pieceId, newStatus),
+      {
+        successMessage: 'Status updated.',
+        successDuration: 2000,
+        onSuccess: () => {
+          // Update the currently displayed data so the change is visible without reload
+          const data = [...this.dataSource.data];
+          const idx = data.findIndex(p => p.id === pieceId);
+          if (idx !== -1) {
+            const piece = { ...data[idx] };
+            piece.choir_repertoire = piece.choir_repertoire || { status: 'CAN_BE_SUNG' };
+            piece.choir_repertoire.status = newStatus as any;
+            data[idx] = piece;
+            this.dataSource.data = data;
           }
-        });
 
-        this.snackBar.open('Status updated.', 'OK', { duration: 2000 });
-      },
-
-      error: (err) => {
-        const msg = err.error?.message || 'Could not update status.';
-        this.errorService.setError({
-          message: msg,
-          status: err.status,
-          stack: err.stack,
-          url: this.router.url
-        });
-
-        this.snackBar.open('Fehler: Status konnte nicht aktualisiert werden.', 'Schließen', { duration: 5000 });
-        // Revert changes by triggering a refresh
-        this.refresh$.next();
+          // Keep cached pages in sync
+          this.pageCache.forEach((arr, key) => {
+            const i = arr.findIndex(p => p.id === pieceId);
+            if (i !== -1) {
+              const pc = [...arr];
+              const p = { ...pc[i] };
+              p.choir_repertoire = p.choir_repertoire || { status: 'CAN_BE_SUNG' };
+              p.choir_repertoire.status = newStatus as any;
+              pc[i] = p;
+              this.pageCache.set(key, pc);
+            }
+          });
+        },
+        onError: (err) => {
+          const msg = err.error?.message || 'Could not update status.';
+          this.errorService.setError({
+            message: msg,
+            status: err.status,
+            stack: err.stack,
+            url: this.router.url
+          });
+          // Revert changes by triggering a refresh
+          this.refresh$.next();
+        },
+        errorMessage: 'Fehler: Status konnte nicht aktualisiert werden.'
       }
-    });
+    ).subscribe();
   }
 
   onRatingChange(newRating: number | null, pieceId: number): void {
-    this.pieceService.updatePieceRating(pieceId, newRating).subscribe(() => {
-      const data = [...this.dataSource.data];
-      const idx = data.findIndex(p => p.id === pieceId);
-      if (idx !== -1) {
-        const piece = { ...data[idx] };
-        const rep = piece.choir_repertoire ?? ({ status: 'CAN_BE_SUNG' } as any);
-        rep.rating = newRating ?? null;
-        piece.choir_repertoire = rep;
-        data[idx] = piece;
-        this.dataSource.data = data;
+    // Silent update - no notification needed for rating changes
+    this.apiHelper.handleApiCall(
+      this.pieceService.updatePieceRating(pieceId, newRating),
+      {
+        silent: true,
+        onSuccess: () => {
+          const data = [...this.dataSource.data];
+          const idx = data.findIndex(p => p.id === pieceId);
+          if (idx !== -1) {
+            const piece = { ...data[idx] };
+            const rep = piece.choir_repertoire ?? ({ status: 'CAN_BE_SUNG' } as any);
+            rep.rating = newRating ?? null;
+            piece.choir_repertoire = rep;
+            data[idx] = piece;
+            this.dataSource.data = data;
+          }
+        }
       }
-    });
+    ).subscribe();
   }
 
   get canRate(): boolean {
@@ -536,16 +533,17 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   }
 
   openEditPieceDialog(pieceId: number): void {
-    const dialogRef = this.dialog.open(PieceDialogComponent, {
-      width: '90vw',
-      maxWidth: '1000px',
-      data: { pieceId: pieceId }
-    });
-
-    dialogRef.afterClosed().subscribe(wasUpdated => {
+    this.dialogHelper.openDialog<PieceDialogComponent, boolean>(
+      PieceDialogComponent,
+      {
+        width: '90vw',
+        maxWidth: '1000px',
+        data: { pieceId: pieceId }
+      }
+    ).subscribe(wasUpdated => {
       if (wasUpdated) {
-        this.snackBar.open('Piece updated successfully!', 'OK', { duration: 3000 });
-        this.refresh$.next(); // Refresh the list to show changes
+        this.notification.success('Piece updated successfully!');
+        this.refresh$.next();
       }
     });
   }
@@ -616,12 +614,13 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   }
 
   saveCurrentPreset(): void {
-    const dialogRef = this.dialog.open<FilterPresetDialogComponent, FilterPresetDialogData, {name: string; visibility: 'personal' | 'local' | 'global'} | undefined>(FilterPresetDialogComponent, {
-      width: '400px',
-      data: { isAdmin: this.isAdmin, isChoirAdmin: this.isChoirAdmin }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
+    this.dialogHelper.openDialog<FilterPresetDialogComponent, {name: string; visibility: 'personal' | 'local' | 'global'} | undefined>(
+      FilterPresetDialogComponent,
+      {
+        width: '400px',
+        data: { isAdmin: this.isAdmin, isChoirAdmin: this.isChoirAdmin }
+      }
+    ).subscribe(result => {
       if (!result) return;
       const data = {
         composerIds: this.filterByComposerIds$.value,
@@ -669,15 +668,11 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.hoverX = event.clientX;
     this.hoverY = event.clientY;
     this.hoverTimeout = setTimeout(() => {
-      const cached = this.imageCache.get(piece.id);
-      if (cached !== undefined) {
-        this.hoverImage = cached;
-        return;
-      }
-      this.pieceService.getPieceImage(piece.id).subscribe(img => {
-        this.imageCache.set(piece.id, img);
-        this.hoverImage = img;
-      });
+      this.imageCacheService.getImage('piece', piece.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(img => {
+          this.hoverImage = img;
+        });
     }, 2000);
   }
 

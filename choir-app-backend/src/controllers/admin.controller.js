@@ -627,6 +627,32 @@ exports.updateMailTemplates = async (req, res) => {
     }
 };
 
+exports.getPdfTemplates = async (req, res) => {
+    try {
+        const templates = await db.pdf_template.findAll();
+        res.status(200).send(templates);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updatePdfTemplates = async (req, res) => {
+    try {
+        const updates = req.body;
+        for (const tpl of updates) {
+            const [template] = await db.pdf_template.findOrCreate({
+                where: { type: tpl.type },
+                defaults: tpl
+            });
+            await template.update(tpl);
+        }
+        const all = await db.pdf_template.findAll();
+        res.status(200).send(all);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 exports.getFrontendUrl = async (req, res) => {
     try {
         const setting = await db.system_setting.findByPk('FRONTEND_URL');

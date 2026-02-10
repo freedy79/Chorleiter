@@ -142,7 +142,7 @@
         gap: 0.5rem;
 
         .time-display {
-          font-size: 0.875rem;
+          font-size: 1rem;
           @include darkmode.text-color(#666, #aaa);
           white-space: nowrap;
         }
@@ -155,7 +155,7 @@
     }
 
     .file-size {
-      font-size: 0.875rem;
+      font-size: 1rem;
       @include darkmode.text-color(#666, #aaa);
     }
   }

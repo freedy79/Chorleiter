@@ -16,12 +16,15 @@
       <button mat-stroked-button (click)="fileInput.click()">
         <mat-icon>attach_file</mat-icon> CSV-Datei auswählen
       </button>
-      <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv">
+      <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept=".csv,text/csv,text/plain,application/csv">
       <span *ngIf="selectedFile" class="file-name">{{ selectedFile.name }}</span>
     </div>
     <mat-divider *ngIf="previewData.length > 0"></mat-divider>
     <div *ngIf="previewData.length > 0" class="preview-area">
     <p>Bitte prüfe, ob die Daten korrekt eingelesen werden.</p>
+    <p *ngIf="hasUnresolvedAmbiguities" class="warning-text">
+      Es gibt Mehrdeutigkeiten. Bitte wähle die passenden Einträge aus, bevor der Import startet.
+    </p>
     <mat-table [dataSource]="previewData">
       <ng-container matColumnDef="nummer">
         <mat-header-cell *matHeaderCellDef> Nummer </mat-header-cell>
@@ -39,6 +42,52 @@
         <mat-header-cell *matHeaderCellDef> Kategorie </mat-header-cell>
         <mat-cell *matCellDef="let row"> {{ row.kategorie || row.rubrik || row.category }} </mat-cell>
       </ng-container>
+      <ng-container matColumnDef="komponistMatch">
+        <mat-header-cell *matHeaderCellDef> Komponist (Match) </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <ng-container *ngIf="row.composerOptions?.length > 0; else composerNew">
+            <mat-form-field appearance="outline" class="match-select">
+              <mat-select
+                [value]="getComposerSelection(row)"
+                (selectionChange)="onComposerSelection(row.rowIndex, $event.value)"
+                placeholder="Komponist wählen">
+                <mat-option [value]="-1">
+                  <em>Neuen Komponisten anlegen</em>
+                </mat-option>
+                <mat-option *ngFor="let opt of row.composerOptions" [value]="opt.id">
+                  {{ opt.name }} <span class="score-badge">({{ opt.score | number:'1.2-2' }})</span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+          <ng-template #composerNew>
+            <span class="match-missing">Neu</span>
+          </ng-template>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="titelMatch">
+        <mat-header-cell *matHeaderCellDef> Titel (Match) </mat-header-cell>
+        <mat-cell *matCellDef="let row">
+          <ng-container *ngIf="row.titleOptions?.length > 0; else titleNew">
+            <mat-form-field appearance="outline" class="match-select">
+              <mat-select
+                [value]="getTitleSelection(row)"
+                (selectionChange)="onTitleSelection(row.rowIndex, $event.value)"
+                placeholder="Titel wählen">
+                <mat-option [value]="-1">
+                  <em>Neues Stück anlegen</em>
+                </mat-option>
+                <mat-option *ngFor="let opt of row.titleOptions" [value]="opt.id">
+                  {{ opt.title }}{{ opt.composerName ? ' — ' + opt.composerName : '' }} <span class="score-badge">({{ opt.score | number:'1.2-2' }})</span>
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </ng-container>
+          <ng-template #titleNew>
+            <span class="match-missing">Neu</span>
+          </ng-template>
+        </mat-cell>
+      </ng-container>
       <mat-header-row *matHeaderRowDef="previewColumns"></mat-header-row>
       <mat-row *matRowDef="let row; columns: previewColumns;"></mat-row>
     </mat-table>
@@ -54,7 +103,7 @@
 
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()" [disabled]="isImporting">Abbrechen</button>
-  <button mat-flat-button color="primary" (click)="onImport()" [disabled]="!selectedFile || isLoading || isImporting">
+  <button mat-flat-button color="primary" (click)="onImport()" [disabled]="!selectedFile || isLoading || isImporting || hasUnresolvedAmbiguities">
     <mat-icon>file_upload</mat-icon>
     Alle Zeilen importieren
   </button>

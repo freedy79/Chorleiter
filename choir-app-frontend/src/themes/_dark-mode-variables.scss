@@ -8,6 +8,8 @@
 // 4. Use highlights/gradients instead of shadows in dark mode
 // 5. Optimize typography for readability
 
+@use 'sass:map';
+
 // ============================================================================
 // LIGHT MODE COLORS (Default)
 // ============================================================================
@@ -94,6 +96,15 @@ $dark-mode-colors: (
 // MIXINS FOR DARK MODE SUPPORT
 // ============================================================================
 
+
+/// Mixin to apply styles only in dark theme mode
+/// Usage: @include dark-mode { color: white; }
+@mixin dark-mode {
+  .dark-theme & {
+    @content;
+  }
+}
+
 /// Use this mixin to apply different colors based on theme
 /// @param {String} $property - CSS property name
 /// @param {String} $light-value - Value for light mode
@@ -125,10 +136,10 @@ $dark-mode-colors: (
 /// @param {String} $property - CSS property name
 /// @param {String} $color-key - Key from color map (e.g., 'text-primary')
 @mixin apply-theme-var($property, $color-key) {
-  #{$property}: map-get($light-mode-colors, $color-key);
+  #{$property}: map.get($light-mode-colors, $color-key);
 
   .dark-theme & {
-    #{$property}: map-get($dark-mode-colors, $color-key);
+    #{$property}: map.get($dark-mode-colors, $color-key);
   }
 }
 
@@ -136,48 +147,48 @@ $dark-mode-colors: (
 /// Uses off-white text for body in dark mode
 @mixin readable-text {
   @include text-color(
-    map-get($light-mode-colors, 'text-primary'),
-    map-get($dark-mode-colors, 'text-primary')
+    map.get($light-mode-colors, 'text-primary'),
+    map.get($dark-mode-colors, 'text-primary')
   );
 }
 
 /// Mixin for secondary text (slightly lighter/grayer)
 @mixin secondary-text {
   @include text-color(
-    map-get($light-mode-colors, 'text-secondary'),
-    map-get($dark-mode-colors, 'text-secondary')
+    map.get($light-mode-colors, 'text-secondary'),
+    map.get($dark-mode-colors, 'text-secondary')
   );
 }
 
 /// Mixin for subtle text (hints, labels)
 @mixin subtle-text {
   @include text-color(
-    map-get($light-mode-colors, 'text-tertiary'),
-    map-get($dark-mode-colors, 'text-tertiary')
+    map.get($light-mode-colors, 'text-tertiary'),
+    map.get($dark-mode-colors, 'text-tertiary')
   );
 }
 
 /// Mixin for backgrounds with proper contrast
 @mixin surface-background {
   @include bg-color(
-    map-get($light-mode-colors, 'bg-secondary'),
-    map-get($dark-mode-colors, 'bg-secondary')
+    map.get($light-mode-colors, 'bg-secondary'),
+    map.get($dark-mode-colors, 'bg-secondary')
   );
 }
 
 /// Mixin for card/elevated backgrounds
 @mixin card-background {
   @include bg-color(
-    map-get($light-mode-colors, 'bg-card'),
-    map-get($dark-mode-colors, 'bg-card')
+    map.get($light-mode-colors, 'bg-card'),
+    map.get($dark-mode-colors, 'bg-card')
   );
 }
 
 /// Mixin for input/form field backgrounds
 @mixin input-background {
   @include bg-color(
-    map-get($light-mode-colors, 'bg-input'),
-    map-get($dark-mode-colors, 'bg-input')
+    map.get($light-mode-colors, 'bg-input'),
+    map.get($dark-mode-colors, 'bg-input')
   );
 }
 
@@ -185,64 +196,64 @@ $dark-mode-colors: (
 @mixin adaptive-border($width: 1px, $style: solid) {
   border: $width $style;
   @include border-color(
-    map-get($light-mode-colors, 'border-primary'),
-    map-get($dark-mode-colors, 'border-primary')
+    map.get($light-mode-colors, 'border-primary'),
+    map.get($dark-mode-colors, 'border-primary')
   );
 }
 
 /// Mixin for shadows in light mode, highlights in dark mode
 @mixin elevation-shadow($elevation: 1) {
   @if $elevation == 1 {
-    box-shadow: 0 2px 4px map-get($light-mode-colors, 'shadow-elevation-1');
+    box-shadow: 0 2px 4px map.get($light-mode-colors, 'shadow-elevation-1');
   } @else if $elevation == 2 {
-    box-shadow: 0 4px 8px map-get($light-mode-colors, 'shadow-elevation-2');
+    box-shadow: 0 4px 8px map.get($light-mode-colors, 'shadow-elevation-2');
   } @else if $elevation == 3 {
-    box-shadow: 0 8px 16px map-get($light-mode-colors, 'shadow-elevation-3');
+    box-shadow: 0 8px 16px map.get($light-mode-colors, 'shadow-elevation-3');
   }
 
   .dark-theme & {
     // In dark mode, use highlight glow instead of shadow
     @if $elevation == 1 {
-      box-shadow: 0 0 8px map-get($dark-mode-colors, 'highlight-glow'),
-                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+      box-shadow: 0 0 8px map.get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map.get($dark-mode-colors, 'highlight-border');
     } @else if $elevation == 2 {
-      box-shadow: 0 0 12px map-get($dark-mode-colors, 'highlight-glow'),
-                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+      box-shadow: 0 0 12px map.get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map.get($dark-mode-colors, 'highlight-border');
     } @else if $elevation == 3 {
-      box-shadow: 0 0 16px map-get($dark-mode-colors, 'highlight-glow'),
-                  inset 0 0 1px map-get($dark-mode-colors, 'highlight-border');
+      box-shadow: 0 0 16px map.get($dark-mode-colors, 'highlight-glow'),
+                  inset 0 0 1px map.get($dark-mode-colors, 'highlight-border');
     }
   }
 }
 
 /// Mixin for focus states with proper contrast
 @mixin focus-state {
-  outline: 2px solid map-get($light-mode-colors, 'border-focus');
+  outline: 2px solid map.get($light-mode-colors, 'border-focus');
   outline-offset: 2px;
 
   .dark-theme & {
-    outline-color: map-get($dark-mode-colors, 'border-focus');
+    outline-color: map.get($dark-mode-colors, 'border-focus');
   }
 }
 
 /// Mixin for placeholder text
 @mixin placeholder-text {
-  color: map-get($light-mode-colors, 'text-tertiary');
+  color: map.get($light-mode-colors, 'text-tertiary');
 
   .dark-theme & {
-    color: map-get($dark-mode-colors, 'text-tertiary');
+    color: map.get($dark-mode-colors, 'text-tertiary');
   }
 }
 
 /// Mixin for disabled state
 @mixin disabled-state {
   @include bg-color(
-    map-get($light-mode-colors, 'bg-disabled'),
-    map-get($dark-mode-colors, 'bg-disabled')
+    map.get($light-mode-colors, 'bg-disabled'),
+    map.get($dark-mode-colors, 'bg-disabled')
   );
   @include text-color(
-    map-get($light-mode-colors, 'text-disabled'),
-    map-get($dark-mode-colors, 'text-disabled')
+    map.get($light-mode-colors, 'text-disabled'),
+    map.get($dark-mode-colors, 'text-disabled')
   );
   cursor: not-allowed;
   opacity: 0.6;
@@ -251,17 +262,17 @@ $dark-mode-colors: (
 /// Utility mixin for hover/active states with proper contrast
 @mixin hover-state {
   @include bg-color(
-    map-get($light-mode-colors, 'bg-hover'),
-    map-get($dark-mode-colors, 'bg-hover')
+    map.get($light-mode-colors, 'bg-hover'),
+    map.get($dark-mode-colors, 'bg-hover')
   );
 }
 
 /// Mixin for overlay/modal backgrounds
 @mixin overlay {
-  background-color: map-get($light-mode-colors, 'overlay');
+  background-color: map.get($light-mode-colors, 'overlay');
 
   .dark-theme & {
-    background-color: map-get($dark-mode-colors, 'overlay');
+    background-color: map.get($dark-mode-colors, 'overlay');
   }
 }
 
@@ -285,3 +296,19 @@ $line-height-loose: 2;
 $letter-spacing-tight: -0.02em;
 $letter-spacing-normal: 0;
 $letter-spacing-wide: 0.05em;
+
+// ============================================================================
+// ADDITIONAL UTILITIES
+// ============================================================================
+
+/// Mixin für Suggestion/Autocomplete Highlights
+/// Verwendet für Suchergebnisse und Autocomplete-Matches
+@mixin suggestion-highlight {
+  background: rgba(255, 235, 59, 0.6);
+  padding: 0 2px;
+  border-radius: 2px;
+
+  .dark-theme & {
+    background: rgba(255, 193, 7, 0.6);
+  }
+}

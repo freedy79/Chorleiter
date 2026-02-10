@@ -1,0 +1,83 @@
+/**
+ * Form Field Utilities für NAK Chorleiter App
+ *
+ * Zentrale Mixins für Material Form Fields mit konsistentem
+ * Dark-Mode Support
+ */
+
+@use 'sass:map';
+@use 'breakpoints' as *;
+@use 'dark-mode-variables' as *;
+
+// ============================================================================
+// FORM FIELD UTILITIES
+// ============================================================================
+
+/// Mixin für Material Form Field Icons (Prefix/Suffix)
+/// Sorgt für korrekte Zentrierung der Icons
+@mixin form-field-icon {
+  align-items: center;
+  display: flex;
+
+  mat-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/// Mixin für Material Outlined Form Field Border
+/// Definiert Border-Farben für normal, hover und focus States
+/// mit korrektem Dark-Mode Support
+@mixin outlined-field-border {
+  ::ng-deep .mdc-notched-outline__leading,
+  ::ng-deep .mdc-notched-outline__notch,
+  ::ng-deep .mdc-notched-outline__trailing {
+    @include border-color(
+      rgba(0, 0, 0, 0.2),
+      rgba(255, 255, 255, 0.3)
+    );
+    @include smooth-transition(border-color);
+  }
+
+  // Hover State
+  &:hover:not(.mat-focused):not(.mat-form-field-disabled) {
+    ::ng-deep .mdc-notched-outline__leading,
+    ::ng-deep .mdc-notched-outline__notch,
+    ::ng-deep .mdc-notched-outline__trailing {
+      @include border-color(
+        rgba(0, 0, 0, 0.4),
+        rgba(255, 255, 255, 0.7)
+      );
+    }
+  }
+
+  // Focus State
+  &.mat-focused,
+  &.mat-form-field-focused {
+    ::ng-deep .mdc-notched-outline__leading,
+    ::ng-deep .mdc-notched-outline__notch,
+    ::ng-deep .mdc-notched-outline__trailing {
+      @include border-color(
+        rgba(0, 0, 0, 0.87),
+        rgba(255, 255, 255, 1)
+      );
+      border-width: 2px !important;
+    }
+  }
+}
+
+/// Mixin für Input Text Color mit Dark-Mode Support
+/// Setzt Textfarbe, Caret-Farbe und Placeholder
+@mixin input-text-color {
+  @include readable-text;
+  caret-color: map.get($light-mode-colors, 'text-primary');
+
+  .dark-theme & {
+    caret-color: map.get($dark-mode-colors, 'text-primary');
+  }
+
+  &::placeholder {
+    @include placeholder-text;
+  }
+}

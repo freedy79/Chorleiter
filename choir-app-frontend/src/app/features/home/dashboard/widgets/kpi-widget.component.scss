@@ -13,14 +13,14 @@
 }
 
 .metric .label{
-  font-size:12px;
+  font-size:0.75rem;
   color:#6b7280;
   margin-bottom: 4px;
 }
 
 .metric .value{
   font-weight:800;
-  font-size:20px;
+  font-size:1.25rem;
   line-height: 1.25;
 }
 
@@ -30,7 +30,7 @@
   }
 
   .metric .value {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .metric.hide-on-mobile {

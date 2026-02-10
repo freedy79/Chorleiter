@@ -1,125 +1,152 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
 import { User, GlobalRole } from 'src/app/core/models/user';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { NotificationService } from '@core/services/notification.service';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { AddToChoirDialogComponent } from './add-to-choir-dialog/add-to-choir-dialog.component';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { BaseListComponent } from '@shared/components/base-list.component';
+import { PaginatorService } from '@core/services/paginator.service';
+import { JoinPipe } from '@shared/pipes/join.pipe';
 
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, JoinPipe],
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })
-export class ManageUsersComponent implements OnInit {
-  users: User[] = [];
+export class ManageUsersComponent extends BaseListComponent<User> {
   displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'resetToken', 'actions'];
-  dataSource = new MatTableDataSource<User>();
   filterValue = '';
   isHandset$: Observable<boolean>;
 
   constructor(
+    paginatorService: PaginatorService,
     private api: ApiService,
-    private dialog: MatDialog,
-    private snack: MatSnackBar,
+    private dialogHelper: DialogHelperService,
+    private notification: NotificationService,
     private breakpointObserver: BreakpointObserver
   ) {
+    super(paginatorService);
     this.isHandset$ = this.breakpointObserver
       .observe([Breakpoints.Handset])
       .pipe(map(result => result.matches));
   }
 
-  ngOnInit(): void {
-    this.dataSource.filterPredicate = (data, filter) => {
-      const term = filter.trim().toLowerCase();
-      return (
-        (data.name && data.name.toLowerCase().includes(term)) ||
-        (data.firstName && data.firstName.toLowerCase().includes(term)) ||
-        data.email.toLowerCase().includes(term)
-      );
-    };
-    this.loadUsers();
+  get paginatorKey(): string {
+    return 'manage-users';
   }
 
-  loadUsers(): void {
-    this.api.getUsers().subscribe(data => {
-      this.users = data;
-      this.dataSource.data = data;
-    });
+  loadData(): Observable<User[]> {
+    return this.api.getUsers();
+  }
+
+  protected override customFilterPredicate(data: User, filter: string): boolean {
+    const term = filter.trim().toLowerCase();
+    return (
+      (data.name && data.name.toLowerCase().includes(term)) ||
+      (data.firstName && data.firstName.toLowerCase().includes(term)) ||
+      data.email.toLowerCase().includes(term)
+    );
   }
 
   addUser(): void {
-    const ref = this.dialog.open(UserDialogComponent, { width: '400px' });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.createUser(result).subscribe(() => this.loadUsers());
+    this.dialogHelper.openDialogWithApi(
+      UserDialogComponent,
+      (result) => this.api.createUser(result),
+      {
+        dialogConfig: { width: '400px' },
+        apiConfig: {
+          silent: true,
+          onSuccess: () => this.refresh()
+        }
       }
-    });
+    ).subscribe();
   }
 
   editUser(user: User): void {
-    const ref = this.dialog.open(UserDialogComponent, { width: '400px', data: user });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.updateUser(user.id, result).subscribe(() => this.loadUsers());
+    this.dialogHelper.openDialogWithApi(
+      UserDialogComponent,
+      (result) => this.api.updateUser(user.id, result),
+      {
+        dialogConfig: { width: '400px', data: user },
+        apiConfig: {
+          silent: true,
+          onSuccess: () => this.refresh()
+        }
       }
-    });
+    ).subscribe();
   }
 
   deleteUser(user: User): void {
-    if (confirm('Benutzer löschen?')) {
-      this.api.deleteUser(user.id).subscribe(() => this.loadUsers());
-    }
+    this.dialogHelper.confirmDelete(
+      { itemName: 'diesen Benutzer' },
+      () => this.api.deleteUser(user.id),
+      {
+        silent: true,
+        onSuccess: () => this.refresh()
+      }
+    ).subscribe();
   }
 
   addToChoir(user: User): void {
-    const ref = this.dialog.open(AddToChoirDialogComponent, { width: '400px' });
-    ref.afterClosed().subscribe(result => {
-      if (result) {
-        this.api.inviteUserToChoirAdmin(result.choirId, user.email, result.roles).subscribe(() => this.loadUsers());
+    this.dialogHelper.openDialogWithApi<
+      AddToChoirDialogComponent,
+      { choirId: number; roles: string[] },
+      { message: string }
+    >(
+      AddToChoirDialogComponent,
+      (result) => this.api.inviteUserToChoirAdmin(result.choirId, user.email, result.roles),
+      {
+        dialogConfig: { width: '400px' },
+        apiConfig: {
+          silent: true,
+          onSuccess: () => this.refresh()
+        }
+      }
+    ).subscribe();
+  }
+
+  sendReset(user: User): void {
+    this.dialogHelper.confirm({
+      title: 'Passwort-Reset senden?',
+      message: 'Passwort-Reset-E-Mail an diesen Benutzer senden?',
+      confirmButtonText: 'Senden',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.api.sendPasswordReset(user.id).subscribe(() => {
+          this.notification.success('E-Mail gesendet, falls der Benutzer existiert.');
+        });
       }
     });
   }
 
-  sendReset(user: User): void {
-    if (confirm('Passwort-Reset-E-Mail senden?')) {
-      this.api.sendPasswordReset(user.id).subscribe(() => {
-        this.snack.open('E-Mail gesendet, falls der Benutzer existiert.', 'OK', { duration: 3000 });
-      });
-    }
-  }
-
   clearReset(user: User): void {
-    if (confirm('Reset-Token löschen?')) {
-      this.api.clearResetToken(user.id).subscribe(() => {
-        user.resetToken = null;
-        user.resetTokenExpiry = null;
-        this.snack.open('Reset-Token gelöscht', 'OK', { duration: 3000 });
-      });
-    }
-  }
-
-  choirList(user: any): string {
-    if (!user.choirs) return '';
-    return user.choirs.map((c: any) => c.name).join(', ');
-  }
-
-  applyFilter(value: string): void {
-    this.filterValue = value;
-    this.dataSource.filter = value.trim().toLowerCase();
+    this.dialogHelper.confirm({
+      title: 'Reset-Token löschen?',
+      message: 'Möchten Sie den Reset-Token wirklich löschen?'
+    }).subscribe(confirmed => {
+      if (confirmed) {
+        this.api.clearResetToken(user.id).subscribe(() => {
+          user.resetToken = null;
+          user.resetTokenExpiry = null;
+          this.notification.success('Reset-Token gelöscht');
+        });
+      }
+    });
   }
 
   onFilterInput(event: Event): void {
     const value = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.filterValue = value;
     this.applyFilter(value);
   }
 
@@ -130,7 +157,7 @@ export class ManageUsersComponent implements OnInit {
     }
     this.api.updateUser(user.id, { roles: normalized }).subscribe(() => {
       user.roles = normalized;
-      this.snack.open('Rollen aktualisiert', 'OK', { duration: 3000 });
+      this.notification.success('Rollen aktualisiert');
     });
   }
 }

@@ -1,11 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog } from '@angular/material/dialog';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { LeaveChoirResponse, User, GlobalRole } from '@core/models/user';
 import { Choir } from '@core/models/choir';
 import { Observable, Subject } from 'rxjs';
@@ -13,7 +13,6 @@ import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
 /**
  * Validator für sichere Passwörter (Option 1: Neue Anforderungen)
@@ -100,9 +99,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
-    private snackBar: MatSnackBar,
+    private notification: NotificationService,
     private authService: AuthService,
-    private dialog: MatDialog
+    private dialogHelper: DialogHelperService
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.isDemo$ = this.authService.isDemo$;
@@ -160,7 +159,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
         });
         this.updateFormAccess();
         if (!user.congregation || !user.district) {
-          this.snackBar.open('Bitte ergänze dein Profil um Gemeinde und Bezirk.', 'OK', { duration: 10000, verticalPosition: 'top' });
+          this.notification.info('Bitte ergänze dein Profil um Gemeinde und Bezirk.', 10000);
         }
         this.isLoading = false;
       },
@@ -226,12 +225,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
           this.profileForm.patchValue({ email: oldEmail });
         }
         const msg = res?.message || 'Profil erfolgreich aktualisiert!';
-        this.snackBar.open(msg, 'OK', { duration: 3000, verticalPosition: 'top' });
+        this.notification.success(msg);
         this.profileForm.get('passwords')?.reset();
       },
       error: (err) => {
-        const errorMessage = err.error?.message || 'Profilaktualisierung fehlgeschlagen.';
-        this.snackBar.open(errorMessage, 'Schließen', { duration: 5000,  verticalPosition: 'top'  });
+        this.notification.error(err);
       }
     });
   }
@@ -241,24 +239,21 @@ export class ProfileComponent implements OnInit, OnDestroy {
       return;
     }
     const multipleChoirs = this.choirList.length > 1;
-    const dialogData: ConfirmDialogData = {
+    this.dialogHelper.confirm({
       title: 'Abmeldung bestätigen',
       message: multipleChoirs
         ? `Möchtest du dich wirklich vom Chor "${choir.name}" abmelden?`
         : `Wenn du dich vom Chor "${choir.name}" abmeldest, wird dein Profil vollständig gelöscht.`,
       confirmButtonText: 'Abmelden',
       cancelButtonText: 'Abbrechen'
-    };
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, { data: dialogData });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    }).subscribe(confirmed => {
       if (!confirmed) {
         return;
       }
       this.apiService.leaveChoir(choir.id).pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => this.handleMembershipChange(response, `Du hast den Chor ${choir.name} verlassen.`),
         error: (err) => {
-          const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
-          this.snackBar.open(message, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+          this.notification.error(err);
         }
       });
     });
@@ -268,23 +263,19 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (this.isDemoUser) {
       return;
     }
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: {
-        title: 'Vom System abmelden',
-        message: 'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird dauerhaft gelöscht.',
-        confirmButtonText: 'Profil löschen',
-        cancelButtonText: 'Abbrechen'
-      }
-    });
-    dialogRef.afterClosed().subscribe(confirmed => {
+    this.dialogHelper.confirm({
+      title: 'Vom System abmelden',
+      message: 'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird dauerhaft gelöscht.',
+      confirmButtonText: 'Profil löschen',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
       if (!confirmed) {
         return;
       }
       this.apiService.deleteMyAccount().pipe(takeUntil(this.destroy$)).subscribe({
         next: (response) => this.handleMembershipChange(response, 'Dein Profil wurde gelöscht.'),
         error: (err) => {
-          const message = err.error?.message || 'Abmeldung fehlgeschlagen.';
-          this.snackBar.open(message, 'Schließen', { duration: 5000, verticalPosition: 'top' });
+          this.notification.error(err);
         }
       });
     });
@@ -311,7 +302,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   private handleMembershipChange(response: LeaveChoirResponse, fallback: string): void {
     const message = response?.message || fallback;
     if (response?.accountDeleted) {
-      this.snackBar.open(message, 'OK', { duration: 5000, verticalPosition: 'top' });
+      this.notification.success(message, 5000);
       this.authService.logout();
       return;
     }
@@ -324,10 +315,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (user) => {
         this.authService.setCurrentUser(user);
         this.currentUser = user;
-        this.snackBar.open(message, 'OK', { duration: 4000, verticalPosition: 'top' });
+        this.notification.success(message, 4000);
       },
       error: () => {
-        this.snackBar.open(message, 'OK', { duration: 4000, verticalPosition: 'top' });
+        this.notification.success(message, 4000);
       }
     });
   }

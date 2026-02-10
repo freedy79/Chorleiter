@@ -4,13 +4,19 @@ const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
+const sanitizeHtml = require('sanitize-html');
 
 const ATTACHMENTS_DIR = path.join(__dirname, '../..', 'uploads', 'post-attachments');
 
 const REACTION_TYPES = ['like', 'celebrate', 'support', 'love', 'insightful', 'curious'];
 
 function stripHtml(text) {
-  return (text || '').replace(/<[^>]*>/g, '');
+  // Use sanitize-html to safely remove all HTML tags
+  return sanitizeHtml(text || '', {
+    allowedTags: [],
+    allowedAttributes: {},
+    disallowedTagsMode: 'discard'
+  });
 }
 
 async function isChoirAdmin(req) {

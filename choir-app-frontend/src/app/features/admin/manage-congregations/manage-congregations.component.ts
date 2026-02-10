@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { Congregation } from '@core/models/congregation';
 import { District } from '@core/models/district';
 import { MatTableDataSource } from '@angular/material/table';
@@ -23,7 +24,11 @@ export class ManageCongregationsComponent implements OnInit, OnDestroy {
   districts: District[] = [];
   private destroy$ = new Subject<void>();
 
-  constructor(private api: ApiService, private fb: FormBuilder) {
+  constructor(
+    private api: ApiService,
+    private fb: FormBuilder,
+    private dialogHelper: DialogHelperService
+  ) {
     this.form = this.fb.group({ name: [''], districtId: [null] });
   }
 
@@ -72,9 +77,14 @@ export class ManageCongregationsComponent implements OnInit, OnDestroy {
   }
 
   delete(c: Congregation): void {
-    if (confirm(`Gemeinde "${c.name}" löschen?`)) {
-      this.api.deleteCongregation(c.id).pipe(takeUntil(this.destroy$)).subscribe(() => this.load());
-    }
+    this.dialogHelper.confirmDelete(
+      { itemName: `Gemeinde "${c.name}"` },
+      () => this.api.deleteCongregation(c.id),
+      {
+        silent: true,
+        onSuccess: () => this.load()
+      }
+    ).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
   districtName(id: number): string {

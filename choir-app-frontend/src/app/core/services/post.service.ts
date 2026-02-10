@@ -1,11 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
 import { Poll } from '../models/poll';
 import { PostComment } from '../models/post-comment';
 import { ReactionInfo, ReactionType } from '../models/reaction';
+import { ImageCacheService } from './image-cache.service';
 
 export type PostPayload = {
   title: string;
@@ -24,7 +26,10 @@ export type PostPayload = {
 @Injectable({ providedIn: 'root' })
 export class PostService {
   private apiUrl = environment.apiUrl;
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private imageCacheService: ImageCacheService
+  ) {}
 
   getPosts(): Observable<Post[]> {
     return this.http.get<Post[]>(`${this.apiUrl}/posts`);
@@ -73,11 +78,15 @@ export class PostService {
   uploadAttachment(postId: number, file: File): Observable<Post> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<Post>(`${this.apiUrl}/posts/${postId}/attachment`, formData);
+    return this.http.post<Post>(`${this.apiUrl}/posts/${postId}/attachment`, formData).pipe(
+      tap(() => this.imageCacheService.invalidate(`post:${postId}`))
+    );
   }
 
   removeAttachment(postId: number): Observable<Post> {
-    return this.http.delete<Post>(`${this.apiUrl}/posts/${postId}/attachment`);
+    return this.http.delete<Post>(`${this.apiUrl}/posts/${postId}/attachment`).pipe(
+      tap(() => this.imageCacheService.invalidate(`post:${postId}`))
+    );
   }
 
   getAttachmentUrl(postId: number): string {

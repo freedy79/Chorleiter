@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 
 @Component({
@@ -16,7 +16,7 @@ import { PendingChanges } from '@core/guards/pending-changes.guard';
 export class AdminEmailSettingsComponent implements OnInit, PendingChanges {
   form: FormGroup;
 
-  constructor(private fb: FormBuilder, private api: ApiService, private snack: MatSnackBar) {
+  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
     this.form = this.fb.group({
       email: ['', Validators.email]
     });
@@ -34,7 +34,7 @@ export class AdminEmailSettingsComponent implements OnInit, PendingChanges {
   save(): void {
     if (this.form.invalid) return;
     this.api.updateSystemAdminEmail(this.form.value.email).subscribe(() => {
-      this.snack.open('Gespeichert', 'OK', { duration: 2000 });
+      this.notification.success('Gespeichert', 2000);
       this.form.markAsPristine();
     });
   }

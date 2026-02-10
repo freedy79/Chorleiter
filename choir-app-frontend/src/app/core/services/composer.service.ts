@@ -9,10 +9,10 @@ export class ComposerService extends CreatorService<Composer> {
   constructor(http: HttpClient) { super(http, 'composers'); }
 
   getComposers(): Observable<Composer[]> { return this.getAll(); }
-  createComposer(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+  createComposer(data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Composer> {
     return this.create(data, force);
   }
-  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+  updateComposer(id: number, data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Composer> {
     return this.update(id, data, force);
   }
   deleteComposer(id: number): Observable<any> { return this.delete(id); }

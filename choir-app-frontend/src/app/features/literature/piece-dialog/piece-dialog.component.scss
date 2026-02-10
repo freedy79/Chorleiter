@@ -21,12 +21,81 @@
 }
 
 
-.link-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
-    gap: 1rem;
+.links-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.link-item {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.02);
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .link-header {
+    display: flex;
     align-items: center;
+    gap: 1rem;
     margin-bottom: 1rem;
+
+    .type-field {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .delete-button {
+      flex-shrink: 0;
+    }
+  }
+
+  .description-field,
+  .url-field {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .file-upload-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+
+    button {
+      align-self: flex-start;
+    }
+
+    .file-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      background-color: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      border-left: 3px solid var(--primary-color, #1976d2);
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: var(--primary-color, #1976d2);
+      }
+
+      span {
+        font-size: 14px;
+        word-break: break-all;
+      }
+    }
+  }
+}
+
+.add-link-button {
+  margin-top: 1rem;
 }
 
 mat-sidenav-container.dialog-container {
@@ -53,8 +122,21 @@ mat-nav-list.mobile-nav {
     grid-template-columns: 1fr;
   }
 
-  .link-row {
-    grid-template-columns: 1fr;
+  .link-item {
+    padding: 0.75rem;
+
+    .link-header {
+      flex-direction: column;
+      align-items: stretch;
+
+      .type-field {
+        min-width: unset;
+      }
+
+      .delete-button {
+        align-self: flex-end;
+      }
+    }
   }
 
   mat-sidenav.desktop-nav {
@@ -89,6 +171,30 @@ mat-nav-list.mobile-nav {
       max-height: 150px;
       width: auto;
       object-fit: cover;
+    }
+  }
+}
+
+// Dark mode support
+:host-context(.dark-theme) {
+  .link-item {
+    border-color: rgba(255, 255, 255, 0.12);
+    background-color: rgba(255, 255, 255, 0.05);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .file-upload-section .file-info {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  .image-upload .dropzone {
+    border-color: rgba(255, 255, 255, 0.3);
+
+    &.dragover {
+      background-color: rgba(255, 255, 255, 0.08);
     }
   }
 }

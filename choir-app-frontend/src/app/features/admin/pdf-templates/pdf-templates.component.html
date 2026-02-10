@@ -1,0 +1,21 @@
+<form [formGroup]="form" class="pdf-form">
+  <mat-tab-group>
+    <mat-tab *ngFor="let meta of templateMeta" [label]="meta.label">
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Template JSON</mat-label>
+        <textarea
+          matInput
+          [formControlName]="meta.control"
+          rows="18"
+          spellcheck="false"
+        ></textarea>
+      </mat-form-field>
+      <p class="hint">
+        JSON-Konfiguration für Layout, Schriftgrößen, Abstände und Tabellen-Spalten.
+      </p>
+      <div class="actions">
+        <button mat-raised-button color="primary" type="button" (click)="save(meta.type)">Speichern</button>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</form>

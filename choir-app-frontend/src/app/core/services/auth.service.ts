@@ -270,6 +270,10 @@ export class AuthService {
     }
   }
 
+  signup(data: { firstName: string; name: string; email: string; choirName: string; password: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/signup`, data);
+  }
+
   login(credentials: any): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials, { withCredentials: true }).pipe(
       tap((user: User) => {

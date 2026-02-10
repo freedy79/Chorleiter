@@ -1,6 +1,6 @@
 {
   "name": "choir-app-frontend",
-  "version": "0.4.1",
+  "version": "0.5.2",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -23,7 +23,10 @@
     "lighthouse:build": "npm run build && node ./scripts/lighthouse-test-server.js",
     "pwa-health-check": "node ./scripts/pwa-health-check.js",
     "icons:convert": "node ./scripts/convert-svg-to-png.js",
-    "build:prod": "npm run generate-build-info && ng build --configuration production"
+    "build:prod": "npm run generate-build-info && ng build --configuration production",
+    "build:stats": "ng build --configuration production --named-chunks --stats-json",
+    "analyze": "npm run build:stats && node ./scripts/analyze-bundle.js",
+    "perf:check": "npm run lighthouse:mobile && npm run pwa-health-check"
   },
   "private": true,
   "dependencies": {

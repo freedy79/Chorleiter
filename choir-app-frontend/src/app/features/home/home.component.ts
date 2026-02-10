@@ -26,8 +26,8 @@ export class HomeComponent implements OnInit {
         // Wenn eingeloggt, zum Dashboard.
         this.router.navigate(['/dashboard']);
       } else {
-        // Wenn nicht eingeloggt, zum Login.
-        this.router.navigate(['/login']);
+        // Wenn nicht eingeloggt, zur Welcome-Seite.
+        this.router.navigate(['/']);
       }
     });
   }

@@ -22,13 +22,13 @@ import { Composer } from '@core/models/composer';
 import { BehaviorSubject, Observable, switchMap, map, of, startWith, forkJoin } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { PieceService } from '@core/services/piece.service';
+import { NotificationService } from '@core/services/notification.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
 import { Category } from '@core/models/category';
 import { CategoryDialogComponent } from '../../categories/category-dialog/category-dialog.component';
 import { Author } from '@core/models/author';
 import { Piece } from '@core/models/piece';
 import { AuthService } from '@core/services/auth.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 export function authorOrSourceValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -105,7 +105,7 @@ export class PieceDialogComponent implements OnInit {
         private apiService: ApiService,
         private pieceService: PieceService,
         private authService: AuthService,
-        private snackBar: MatSnackBar,
+        private notification: NotificationService,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId?: number | null; initialTitle?: string }
@@ -364,8 +364,11 @@ export class PieceDialogComponent implements OnInit {
         const linkGroup = this.linksFormArray.at(index) as FormGroup;
         this.pieceService.uploadPieceLinkFile(file).subscribe(res => {
             linkGroup.get('url')?.setValue(res.path);
-            linkGroup.get('description')?.setValue(file.name);
             linkGroup.get('downloadName')?.setValue(file.name);
+            // Only set description if it's empty
+            if (!linkGroup.get('description')?.value) {
+                linkGroup.get('description')?.setValue(file.name);
+            }
         });
     }
 
@@ -482,10 +485,9 @@ export class PieceDialogComponent implements OnInit {
 
     private handleFile(file: File): void {
         this.imageFile = file;
-        this.snackBar.open(
+        this.notification.warning(
             'Es ist urheberrechtlich untersagt, ganze Notenseiten oder vollständige Stücke abzulegen, wenn das Notenbild nicht rechtefrei ist.',
-            'Verstanden',
-            { duration: 10000 }
+            10000
         );
         const reader = new FileReader();
         reader.onload = () => (this.imagePreview = reader.result as string);

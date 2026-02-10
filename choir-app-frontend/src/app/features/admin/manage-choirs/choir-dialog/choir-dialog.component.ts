@@ -10,6 +10,7 @@ import { UserInChoir } from 'src/app/core/models/user';
 import { ApiService } from 'src/app/core/services/api.service';
 import { AddMemberDialogComponent } from '../add-member-dialog/add-member-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-choir-dialog',
@@ -18,32 +19,36 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
   templateUrl: './choir-dialog.component.html',
   styleUrls: ['./choir-dialog.component.scss']
 })
-export class ChoirDialogComponent implements OnInit {
-  form: FormGroup;
-  title = 'Chor hinzufügen';
+export class ChoirDialogComponent extends BaseFormDialog<Choir, Choir | null> implements OnInit {
+  title!: string;
   displayedColumns: string[] = ['name', 'email', 'role', 'organist', 'status', 'actions'];
   dataSource = new MatTableDataSource<UserInChoir>();
 
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ChoirDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: Choir | null,
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<ChoirDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: Choir | null,
     private api: ApiService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {
-    this.title = data ? 'Chor bearbeiten' : 'Chor hinzufügen';
-    this.form = this.fb.group({
-      name: [data?.name || '', Validators.required],
-      description: [data?.description || ''],
-      location: [data?.location || '']
-    });
+    super(fb, dialogRef, data);
+    this.title = this.getDialogTitle('Chor hinzufügen', 'Chor bearbeiten');
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
+    super.ngOnInit();
     if (this.data?.id) {
       this.loadMembers();
     }
+  }
+
+  protected buildForm(): FormGroup {
+    return this.fb.group({
+      name: [this.data?.name || '', Validators.required],
+      description: [this.data?.description || ''],
+      location: [this.data?.location || '']
+    });
   }
 
   private loadMembers(): void {
@@ -96,15 +101,5 @@ export class ChoirDialogComponent implements OnInit {
       next: () => user.membership!.rolesInChoir = updated,
       error: () => this.snackBar.open('Fehler beim Aktualisieren', 'Schließen')
     });
-  }
-
-  onCancel(): void {
-    this.dialogRef.close();
-  }
-
-  onSave(): void {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
-    }
   }
 }

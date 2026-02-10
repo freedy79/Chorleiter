@@ -7,7 +7,7 @@ import { MatTableDataSource, MatTable } from '@angular/material/table';
 import { MaterialModule } from '@modules/material.module';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { PieceService } from '@core/services/piece.service';
@@ -49,7 +49,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
 
   constructor(private composerService: ComposerService,
               private authorService: AuthorService,
-              private dialog: MatDialog,
+              private dialogHelper: DialogHelperService,
               private paginatorService: PaginatorService,
               private pieceService: PieceService) {
     this.pageSize = this.paginatorService.getPageSize('manage-creators', this.pageSizeOptions[0]);
@@ -123,11 +123,13 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   addPerson(): void {
-    const ref = this.dialog.open(ComposerDialogComponent, {
-      width: '500px',
-      data: { role: this.mode }
-    });
-    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+    this.dialogHelper.openDialog<ComposerDialogComponent, any>(
+      ComposerDialogComponent,
+      {
+        width: '500px',
+        data: { role: this.mode }
+      }
+    ).pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
           ? this.composerService.createComposer(result)
@@ -138,11 +140,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
             const question = this.mode === 'composer'
               ? 'Komponist existiert bereits. Trotzdem anlegen?'
               : 'Dichter existiert bereits. Trotzdem anlegen?';
-            if (err.status === 409 && confirm(question)) {
-              const forceReq = this.mode === 'composer'
-                ? this.composerService.createComposer(result, true)
-                : this.authorService.createAuthor(result, true);
-              forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
+            if (err.status === 409) {
+              this.dialogHelper.confirm({
+                title: 'Duplikat gefunden',
+                message: question,
+                confirmButtonText: 'Ja, anlegen',
+                cancelButtonText: 'Abbrechen'
+              }).subscribe(confirmed => {
+                if (confirmed) {
+                  const forceReq = this.mode === 'composer'
+                    ? this.composerService.createComposer(result, true)
+                    : this.authorService.createAuthor(result, true);
+                  forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
+                }
+              });
             }
           }
         });
@@ -151,11 +162,13 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   editPerson(person: Composer | Author): void {
-    const ref = this.dialog.open(ComposerDialogComponent, {
-      width: '500px',
-      data: { role: this.mode, record: person }
-    });
-    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+    this.dialogHelper.openDialog<ComposerDialogComponent, any>(
+      ComposerDialogComponent,
+      {
+        width: '500px',
+        data: { role: this.mode, record: person }
+      }
+    ).pipe(takeUntil(this.destroy$)).subscribe(result => {
       if (result) {
         const req = this.mode === 'composer'
           ? this.composerService.updateComposer(person.id, result)
@@ -166,11 +179,20 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
             const question = this.mode === 'composer'
               ? 'Komponist existiert bereits. Trotzdem speichern?'
               : 'Dichter existiert bereits. Trotzdem speichern?';
-            if (err.status === 409 && confirm(question)) {
-              const forceReq = this.mode === 'composer'
-                ? this.composerService.updateComposer(person.id, result, true)
-                : this.authorService.updateAuthor(person.id, result, true);
-              forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
+            if (err.status === 409) {
+              this.dialogHelper.confirm({
+                title: 'Duplikat gefunden',
+                message: question,
+                confirmButtonText: 'Ja, speichern',
+                cancelButtonText: 'Abbrechen'
+              }).subscribe(confirmed => {
+                if (confirmed) {
+                  const forceReq = this.mode === 'composer'
+                    ? this.composerService.updateComposer(person.id, result, true)
+                    : this.authorService.updateAuthor(person.id, result, true);
+                  forceReq.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData());
+                }
+              });
             }
           }
         });
@@ -180,13 +202,17 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
 
   deletePerson(person: Composer | Author): void {
     if (!person.canDelete) return;
-    const question = this.mode === 'composer' ? 'Komponist löschen?' : 'Dichter löschen?';
-    if (confirm(question)) {
-      const req = this.mode === 'composer'
+    const itemName = this.mode === 'composer' ? 'diesen Komponisten' : 'diesen Dichter';
+    this.dialogHelper.confirmDelete(
+      { itemName },
+      () => this.mode === 'composer'
         ? this.composerService.deleteComposer(person.id)
-        : this.authorService.deleteAuthor(person.id);
-      req.pipe(takeUntil(this.destroy$)).subscribe(() => this.loadData(undefined, false));
-    }
+        : this.authorService.deleteAuthor(person.id),
+      {
+        silent: true,
+        onSuccess: () => this.loadData(undefined, false)
+      }
+    ).subscribe();
   }
 
   enrichPerson(person: Composer | Author): void {
@@ -197,7 +223,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
       const idx = this.people.findIndex(p => p.id === person.id);
       if (idx !== -1) {
         this.people[idx] = { ...person, ...updated } as Composer | Author;
-        this.applyFilter();
+        this.applyFilter(false);
       }
     });
   }
@@ -212,13 +238,14 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
     event.preventDefault();
     event.stopPropagation();
     const expandedId = this.expandedPerson?.id;
-    const dialogRef = this.dialog.open(PieceDialogComponent, {
-      width: '90vw',
-      maxWidth: '1000px',
-      data: { pieceId }
-    });
-
-    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(wasUpdated => {
+    this.dialogHelper.openDialog<PieceDialogComponent, boolean>(
+      PieceDialogComponent,
+      {
+        width: '90vw',
+        maxWidth: '1000px',
+        data: { pieceId }
+      }
+    ).pipe(takeUntil(this.destroy$)).subscribe(wasUpdated => {
       if (wasUpdated) {
         this.loadData(expandedId);
       }

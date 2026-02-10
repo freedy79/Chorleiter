@@ -110,7 +110,7 @@ exports.downloadPdf = async (req, res) => {
     returnedAt: c.returnedAt
   }));
 
-  const pdf = lendingListPdf(collection.title, copies);
+  const pdf = await lendingListPdf(collection.title, copies);
   res.setHeader('Content-Type', 'application/pdf');
   res.status(200).send(pdf);
 };

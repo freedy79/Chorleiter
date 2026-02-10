@@ -32,4 +32,8 @@ export interface Program {
   startTime?: string;
   status: string;
   items: ProgramItem[];
+
+  // Draft system properties (added by backend when a published program has a draft)
+  hasDraft?: boolean;
+  draftId?: string;
 }

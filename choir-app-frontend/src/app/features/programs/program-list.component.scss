@@ -1,18 +1,23 @@
+@use '../../../themes/breakpoints' as *;
+@use '../../../themes/dark-mode-variables' as *;
+@use '../../../themes/cards' as *;
+@use '../../../themes/responsive-utilities' as *;
+
 table {
   width: 100%;
-  margin-top: 16px;
+  margin-top: $spacing-md;
 }
 
 button {
-  margin-bottom: 16px;
+  margin-bottom: $spacing-md;
 }
 
 .status-badge {
   display: inline-block;
-  margin-left: 8px;
-  padding: 4px 12px;
+  margin-left: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 500;
   text-transform: uppercase;
 
@@ -25,4 +30,62 @@ button {
     background-color: #ff9800;
     color: white;
   }
+}
+
+// Responsive Views
+.desktop-view {
+  @extend %desktop-only;
+}
+
+.mobile-view {
+  @extend %mobile-only;
+}
+
+// Mobile Card Styles
+.mobile-card-container {
+  margin-top: 1rem;
+  @include mobile-card-container;
+}
+
+.mobile-cards {
+  @include mobile-cards-grid;
+}
+
+.program-card {
+  @include mobile-card;
+}
+
+.card-header {
+  @include card-header;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+  @include readable-text;
+}
+
+.card-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  button {
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 2rem;
+  @include secondary-text;
 }

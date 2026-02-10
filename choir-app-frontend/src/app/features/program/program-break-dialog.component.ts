@@ -3,6 +3,17 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
+
+interface BreakData {
+  duration?: string | null;
+  note?: string | null;
+}
+
+interface BreakResult {
+  durationSec: number;
+  note: string;
+}
 
 @Component({
   selector: 'app-program-break-dialog',
@@ -11,42 +22,37 @@ import { MaterialModule } from '@modules/material.module';
   templateUrl: './program-break-dialog.component.html',
   styleUrls: ['./program-break-dialog.component.scss'],
 })
-export class ProgramBreakDialogComponent implements OnInit {
-  breakForm: FormGroup;
-
+export class ProgramBreakDialogComponent extends BaseFormDialog<BreakResult, BreakData | null> implements OnInit {
   constructor(
-    private fb: FormBuilder,
-    private dialogRef: MatDialogRef<ProgramBreakDialogComponent>,
-    @Inject(MAT_DIALOG_DATA)
-    public data: { duration?: string | null; note?: string | null } | null
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<ProgramBreakDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: BreakData | null
   ) {
-    this.breakForm = this.fb.group({
-      duration: ['', Validators.required],
-      note: [''],
+    super(fb, dialogRef, data);
+  }
+
+  protected buildForm(): FormGroup {
+    return this.fb.group({
+      duration: [this.data?.duration ?? '', Validators.required],
+      note: [this.data?.note ?? ''],
     });
   }
 
-  ngOnInit(): void {
-    if (this.data) {
-      this.breakForm.patchValue({
-        duration: this.data.duration ?? '',
-        note: this.data.note ?? '',
-      });
-    }
-  }
-
-  save() {
-    const { duration, note } = this.breakForm.value;
+  protected override beforeSubmit(): boolean {
+    const duration = this.form.value.duration;
     const match = /^\d{1,2}:\d{2}$/.test(duration);
     if (!match) {
-      return;
+      this.form.get('duration')?.setErrors({ pattern: true });
+      this.form.markAllAsTouched();
+      return false;
     }
-    const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
-    const durationSec = m * 60 + s;
-    this.dialogRef.close({ durationSec, note });
+    return true;
   }
 
-  cancel() {
-    this.dialogRef.close();
+  protected override getResult(): BreakResult {
+    const { duration, note } = this.form.value;
+    const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
+    const durationSec = m * 60 + s;
+    return { durationSec, note };
   }
 }

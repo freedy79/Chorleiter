@@ -1,13 +1,11 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableDataSource } from '@angular/material/table';
-import { MatSort } from '@angular/material/sort';
-import { MatPaginator } from '@angular/material/paginator';
 import { ApiService } from '@core/services/api.service';
+import { ApiHelperService } from '@core/services/api-helper.service';
+import { NotificationService } from '@core/services/notification.service';
 import { Collection } from '@core/models/collection';
-import { forkJoin, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
@@ -15,6 +13,9 @@ import { PaginatorService } from '@core/services/paginator.service';
 import { LibraryItem } from '@core/models/library-item';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
+import { BaseListComponent } from '@shared/components/base-list.component';
+import { ImageCacheService } from '@core/services/image-cache.service';
+import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 
 @Component({
   selector: 'app-collection-list',
@@ -22,61 +23,71 @@ import { NavigationStateService, ListViewState } from '@core/services/navigation
   imports: [
     CommonModule,
     MaterialModule,
-    RouterLink
+    RouterLink,
+    CachedImageDirective
   ],
   templateUrl: './collection-list.component.html',
   styleUrls: ['./collection-list.component.scss']
 })
-export class CollectionListComponent implements OnInit, AfterViewInit {
-  public dataSource = new MatTableDataSource<Collection>();
-  public isLoading = true;
+export class CollectionListComponent extends BaseListComponent<Collection> implements OnInit, AfterViewInit {
   public isDirector = false;
   public isChoirAdmin = false;
   public isAdmin = false;
   public viewMode: 'collections' | 'pieces' = 'collections';
-  public pageSizeOptions: number[] = [10, 25, 50];
-  public pageSize = 10;
-  private _sort!: MatSort;
-  @ViewChild(MatSort) set sort(sort: MatSort) {
-    if (sort) {
-      this._sort = sort;
-      this.dataSource.sort = this._sort;
-    }
-  }
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
   public displayedColumns: string[] = ['cover', 'status', 'title', 'titles', 'publisher', 'actions'];
   public libraryItemIds = new Set<number>();
   public isHandset$: Observable<boolean>;
   public selectedCollection: Collection | null = null;
+  public composerCache = new Map<number, string>();
   private readonly stateKey = 'collection-list';
   private initialState: ListViewState | null = null;
 
-  /**
-   * Cache for the composer names of single-edition collections.
-   * Keyed by the collection ID to avoid repeated API calls.
-   */
-  private composerCache = new Map<number, string>();
-
   constructor(
+    paginatorService: PaginatorService,
     public apiService: ApiService,
-    private snackBar: MatSnackBar,
+    private apiHelper: ApiHelperService,
+    private notification: NotificationService,
     private router: Router,
     private authService: AuthService,
-    private paginatorService: PaginatorService,
     private breakpointObserver: BreakpointObserver,
-    private navState: NavigationStateService
+    private navState: NavigationStateService,
+    private imageCacheService: ImageCacheService
   ) {
-    this.pageSize = this.paginatorService.getPageSize('collection-list', this.pageSizeOptions[0]);
+    super(paginatorService);
     this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
     // Update cached state when navigating with browser history
     this.navState.onPopState(this.stateKey, s => this.initialState = s);
   }
 
-  ngOnInit(): void {
+  get paginatorKey(): string {
+    return 'collection-list';
+  }
+
+  loadData(): Observable<Collection[]> {
+    return this.apiService.getCollections();
+  }
+
+  protected override onDataLoaded(collections: Collection[]): void {
+    // Prefetch cover images in background for better UX
+    const coversToPrefetch = collections
+      .filter(c => c.coverImage)
+      .map(c => ({ type: 'collection' as const, id: c.id }));
+
+    if (coversToPrefetch.length) {
+      this.imageCacheService.prefetch(coversToPrefetch, { priority: 'low' }).subscribe();
+    }
+
+    // Restore selected collection from navigation state
+    if (this.initialState) {
+      const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
+      if (sel) this.selectedCollection = sel;
+    }
+  }
+
+  override ngOnInit(): void {
     this.initialState = this.navState.getState(this.stateKey);
-    this.loadCollections();
+
+    // Load library items to show which collections are in library
     this.apiService.getLibraryItems().subscribe((items: LibraryItem[]) => {
       this.libraryItemIds.clear();
       items.forEach(i => {
@@ -86,25 +97,23 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
         }
       });
     });
+
+    // Subscribe to auth state
     this.authService.isChoirAdmin$.subscribe(v => this.isChoirAdmin = v);
     this.authService.isDirector$.subscribe(v => this.isDirector = v);
     this.authService.isAdmin$.subscribe(v => this.isAdmin = v);
+
+    // Call parent ngOnInit to trigger data loading
+    super.ngOnInit();
   }
 
-  ngAfterViewInit(): void {
-    if (this.paginator) {
-      this.paginator.pageSize = this.pageSize;
-      this.dataSource.paginator = this.paginator;
-      if (this.initialState) {
-        this.paginator.pageIndex = this.initialState.page;
-        const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
-        if (sel) this.selectedCollection = sel;
-      }
-      this.paginator.page.subscribe(e => {
-        this.paginatorService.setPageSize('collection-list', e.pageSize);
-        // Trigger re-filtering to update the view when page size changes
-        this.dataSource._updateChangeSubscription();
-      });
+  override ngAfterViewInit(): void {
+    // Call parent to setup sort/paginator
+    super.ngAfterViewInit();
+
+    // Restore page from navigation state
+    if (this.paginator && this.initialState) {
+      this.paginator.pageIndex = this.initialState.page;
     }
   }
 
@@ -112,77 +121,28 @@ export class CollectionListComponent implements OnInit, AfterViewInit {
     this.selectedCollection = this.selectedCollection === collection ? null : collection;
   }
 
-  loadCollections(): void {
-    this.isLoading = true;
-    this.apiService.getCollections().subscribe(collections => {
-      const coverRequests = collections
-        .filter(c => c.coverImage)
-        .map(c => this.apiService.getCollectionCover(c.id).pipe(map(data => ({ id: c.id, data }))));
-
-      if (coverRequests.length) {
-        forkJoin(coverRequests).subscribe(results => {
-          results.forEach(res => {
-            const col = collections.find(c => c.id === res.id);
-            if (col) col.coverImageData = res.data;
-          });
-          this.dataSource.data = collections;
-          if (this.initialState) {
-            const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
-            if (sel) this.selectedCollection = sel;
-          }
-          this.isLoading = false;
-        });
-      } else {
-        this.dataSource.data = collections;
-        if (this.initialState) {
-          const sel = this.dataSource.data.find(c => c.id === this.initialState!.selectedId);
-          if (sel) this.selectedCollection = sel;
-        }
-        this.isLoading = false;
-      }
-    });
-  }
-
-
   syncCollection(collection: Collection): void {
-    this.apiService.addCollectionsToChoir([collection.id]).subscribe({
-      next: () => {
-        const msg = collection.isAdded
+    this.apiHelper.handleApiCall(
+      this.apiService.addCollectionsToChoir([collection.id]),
+      {
+        successMessage: collection.isAdded
           ? `Sammlung '${collection.title}' wurde aktualisiert.`
-          : `Sammlung '${collection.title}' wurde zum Chorrepertoire hinzugefügt.`;
-        this.snackBar.open(msg, 'OK', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
-        this.loadCollections();
-      },
-      error: (err) => {
-        this.snackBar.open(`Fehler beim Aktualisieren der Sammlung: ${err.message}`, 'Schließen', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
+          : `Sammlung '${collection.title}' wurde zum Chorrepertoire hinzugefügt.`,
+        onSuccess: () => this.refresh()
       }
-    });
+    ).subscribe();
   }
 
   syncAllCollections(): void {
     const ids = this.dataSource.data.map(c => c.id);
     if (!ids.length) { return; }
-    this.apiService.addCollectionsToChoir(ids).subscribe({
-      next: () => {
-        this.snackBar.open('Alle Sammlungen wurden synchronisiert.', 'OK', {
-          duration: 3000,
-          verticalPosition: 'top'
-        });
-        this.loadCollections();
-      },
-      error: (err) => {
-        this.snackBar.open(`Fehler beim Aktualisieren der Sammlungen: ${err.message}`, 'Schließen', {
-          duration: 5000,
-          verticalPosition: 'top'
-        });
+    this.apiHelper.handleApiCall(
+      this.apiService.addCollectionsToChoir(ids),
+      {
+        successMessage: 'Alle Sammlungen wurden synchronisiert.',
+        onSuccess: () => this.refresh()
       }
-    });
+    ).subscribe();
   }
 
   openCollection(collection: Collection): void {

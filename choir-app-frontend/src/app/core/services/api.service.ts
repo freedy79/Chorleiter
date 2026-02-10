@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 // Import all the models your service will interact with
 import { Piece } from '../models/piece';
@@ -45,6 +47,7 @@ import { RepertoireFilter } from '../models/repertoire-filter';
 import { Donation } from '../models/donation';
 import { MailSettings } from '../models/mail-settings';
 import { MailTemplate } from '../models/mail-template';
+import { PdfTemplate } from '../models/pdf-template';
 import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
@@ -73,6 +76,7 @@ import { PayPalService } from './paypal.service';
 export class ApiService {
 
   constructor(
+              private http: HttpClient,
               private pieceService: PieceService,
               private composerService: ComposerService,
               private authorService: AuthorService,
@@ -187,6 +191,10 @@ export class ApiService {
     return this.pieceService.reportPiece(pieceId, category, reason);
   }
 
+  generateShareToken(pieceId: number): Observable<{ shareToken: string }> {
+    return this.pieceService.generateShareToken(pieceId);
+  }
+
   // --- Districts ---
 
   getDistricts(): Observable<District[]> {
@@ -276,11 +284,11 @@ export class ApiService {
     return this.composerService.getComposers();
   }
 
-  createComposer(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+  createComposer(data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Composer> {
     return this.composerService.createComposer(data, force);
   }
 
-  updateComposer(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Composer> {
+  updateComposer(id: number, data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Composer> {
     return this.composerService.updateComposer(id, data, force);
   }
 
@@ -296,11 +304,11 @@ export class ApiService {
     return this.authorService.getAuthors();
   }
 
-  createAuthor(data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+  createAuthor(data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Author> {
     return this.authorService.createAuthor(data, force);
   }
 
-  updateAuthor(id: number, data: { name: string; birthYear?: string; deathYear?: string }, force = false): Observable<Author> {
+  updateAuthor(id: number, data: { name: string; birthYear?: number | null; deathYear?: number | null }, force = false): Observable<Author> {
     return this.authorService.updateAuthor(id, data, force);
   }
 
@@ -544,8 +552,12 @@ export class ApiService {
     return this.importService.uploadCollectionCsv(collectionId, file, mode);
   }
 
-  startCollectionCsvImport(collectionId: number, file: File): Observable<{ jobId: string }> {
-    return this.importService.startCollectionCsvImport(collectionId, file);
+  startCollectionCsvImport(
+    collectionId: number,
+    file: File,
+    resolutions?: Record<number, { composerId?: number; pieceId?: number; createNewPiece?: boolean }>
+  ): Observable<{ jobId: string }> {
+    return this.importService.startCollectionCsvImport(collectionId, file, resolutions);
   }
 
   uploadEventCsv(file: File, type: 'REHEARSAL' | 'SERVICE', mode: 'preview' | 'import'): Observable<any> {
@@ -874,6 +886,14 @@ export class ApiService {
     return this.adminService.updateMailTemplates(data);
   }
 
+  getPdfTemplates(): Observable<PdfTemplate[]> {
+    return this.adminService.getPdfTemplates();
+  }
+
+  updatePdfTemplates(data: PdfTemplate[]): Observable<PdfTemplate[]> {
+    return this.adminService.updatePdfTemplates(data);
+  }
+
   getFrontendUrl(): Observable<FrontendUrl> {
     return this.adminService.getFrontendUrl();
   }
@@ -994,5 +1014,10 @@ export class ApiService {
 
   deleteRepertoireFilter(id: number): Observable<any> {
     return this.filterPresetService.deletePreset(id);
+  }
+
+  // --- Auth Methods ---
+  signup(data: { firstName: string; name: string; email: string; choirName: string; password: string }): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/signup`, data);
   }
 }

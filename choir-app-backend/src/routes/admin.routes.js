@@ -51,6 +51,8 @@ router.post('/mail-settings/test', role.requireNonDemo, wrap(controller.sendTest
 router.get('/mail-templates', wrap(controller.getMailTemplates));
 router.put('/mail-templates', role.requireNonDemo, wrap(controller.updateMailTemplates));
 router.post('/mail-templates/test/:type', role.requireNonDemo, wrap(controller.sendMailTemplateTest));
+router.get('/pdf-templates', wrap(controller.getPdfTemplates));
+router.put('/pdf-templates', role.requireNonDemo, wrap(controller.updatePdfTemplates));
 router.get('/frontend-url', wrap(controller.getFrontendUrl));
 router.put('/frontend-url', role.requireNonDemo, wrap(controller.updateFrontendUrl));
 router.get('/system-admin-email', wrap(controller.getSystemAdminEmail));

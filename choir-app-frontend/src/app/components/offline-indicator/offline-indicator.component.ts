@@ -50,7 +50,7 @@ import { takeUntil } from 'rxjs/operators';
 
     @media (max-width: 576px) {
       .offline-text {
-        font-size: 0.85rem;
+        font-size: 1rem;
       }
     }
   `],

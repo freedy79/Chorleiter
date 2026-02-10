@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { District } from '@core/models/district';
 import { MatTableDataSource } from '@angular/material/table';
 import { Subject, takeUntil } from 'rxjs';
@@ -21,7 +22,11 @@ export class ManageDistrictsComponent implements OnInit, OnDestroy {
   editing: District | null = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private api: ApiService, private fb: FormBuilder) {
+  constructor(
+    private api: ApiService,
+    private fb: FormBuilder,
+    private dialogHelper: DialogHelperService
+  ) {
     this.form = this.fb.group({ name: [''], code: [''] });
   }
 
@@ -69,8 +74,13 @@ export class ManageDistrictsComponent implements OnInit, OnDestroy {
   }
 
   delete(d: District): void {
-    if (confirm(`Bezirk "${d.name}" löschen?`)) {
-      this.api.deleteDistrict(d.id).pipe(takeUntil(this.destroy$)).subscribe(() => this.load());
-    }
+    this.dialogHelper.confirmDelete(
+      { itemName: `Bezirk "${d.name}"` },
+      () => this.api.deleteDistrict(d.id),
+      {
+        silent: true,
+        onSuccess: () => this.load()
+      }
+    ).pipe(takeUntil(this.destroy$)).subscribe();
   }
 }

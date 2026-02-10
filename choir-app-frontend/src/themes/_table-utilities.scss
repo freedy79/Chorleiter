@@ -1,0 +1,47 @@
+/**
+ * Table Utilities für NAK Chorleiter App
+ *
+ * Zentrale Mixins für konsistente Table-Styles mit Dark-Mode Support
+ */
+
+@use 'sass:map';
+@use 'breakpoints' as *;
+@use 'dark-mode-variables' as *;
+
+// ============================================================================
+// TABLE UTILITIES
+// ============================================================================
+
+/// Standard Table Row Hover Effect
+/// Wendet konsistente Hover-Farbe an (light/dark mode aware)
+@mixin table-row-hover {
+  cursor: pointer;
+  @include smooth-transition(background-color);
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+
+    .dark-theme & {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+/// Selected Table Row Style
+/// Wendet Selection-Highlighting an (Primary-Farbe mit Transparenz)
+@mixin table-row-selected {
+  background-color: rgba(25, 118, 210, 0.15);
+
+  .dark-theme & {
+    background-color: rgba(107, 127, 192, 0.25);
+  }
+}
+
+/// Table Cell Padding (konsistent)
+@mixin table-cell-padding {
+  padding: $spacing-sm $spacing-md;
+
+  @include handset {
+    padding: $spacing-xs $spacing-sm;
+  }
+}

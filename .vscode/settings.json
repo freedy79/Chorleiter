@@ -1,12 +1,12 @@
 {
     // Documentation Structure Enforcement
-    // All .md files MUST be stored in DOC/ directory:
-    // - DOC/project/ - Project-wide documentation
-    // - DOC/frontend/ - Frontend-specific docs
-    // - DOC/backend/ - Backend-specific docs
-    // - DOC/tasks/ - Implementation task files
-    // - DOC/claude/ - Temporary AI-generated files (git ignored)
-    // See DOC/README.md for details
+    // All .md files MUST be stored in doc/ directory:
+    // - doc/project/ - Project-wide documentation
+    // - doc/frontend/ - Frontend-specific docs
+    // - doc/backend/ - Backend-specific docs
+    // - doc/tasks/ - Implementation task files
+    // - doc/claude/ - Temporary AI-generated files (git ignored)
+    // See doc/README.md for details
 
     "editor.tabSize": 4,
     "editor.rulers": [

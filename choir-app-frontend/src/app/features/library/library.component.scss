@@ -1,7 +1,11 @@
+@use '../../../themes/breakpoints' as *;
+@use '../../../themes/dark-mode-variables' as *;
+@use '../../../themes/cards' as *;
+@use '../../../themes/responsive-utilities' as *;
+
 .library-text {
   margin-bottom: 1rem;
 }
-
 
 .list-header {
   display: flex;
@@ -18,14 +22,14 @@
 }
 
 .composer-hint {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-style: italic;
-  color: #000000;
+  @include readable-text;
 }
 
 .subtitle-hint {
-  font-size: 0.9rem;
-  color: #555;
+  font-size: 1rem;
+  @include subtle-text;
 }
 
 .cover-cell img {
@@ -36,4 +40,75 @@
 
 .delete-button {
   color: red;
+}
+
+// Responsive Views
+.desktop-view {
+  @extend %desktop-only;
+}
+
+.mobile-view {
+  @extend %mobile-only;
+}
+
+// Mobile Card Styles
+.mobile-card-container {
+  @include mobile-card-container;
+}
+
+.mobile-cards {
+  @include mobile-cards-grid;
+  margin-bottom: 1rem;
+}
+
+.library-card {
+  @include mobile-card;
+}
+
+.card-header {
+  @include card-header;
+}
+
+.card-cover {
+  width: 60px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.card-content {
+  @include card-content;
+  flex: 1;
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 1rem;
+  @include readable-text;
+}
+
+.card-composer {
+  font-size: 0.875rem;
+  @include secondary-text;
+}
+
+.card-subtitle {
+  font-size: 0.8125rem;
+  font-style: italic;
+  @include subtle-text;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  @include subtle-text;
+}
+
+.card-actions {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-xs;
 }

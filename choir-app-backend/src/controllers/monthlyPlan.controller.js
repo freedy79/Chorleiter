@@ -129,7 +129,7 @@ exports.downloadPdf = async (req, res) => {
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
-        const buffer = monthlyPlanPdf(plan.toJSON());
+        const buffer = await monthlyPlanPdf(plan.toJSON());
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="dienstplan-${plan.year}-${plan.month}.pdf"`);
         res.send(buffer);
@@ -169,7 +169,7 @@ exports.emailPdf = async (req, res) => {
             emails = users.map(u => u.email);
         }
         emails = emails.concat(extraEmails);
-        const buffer = monthlyPlanPdf(plan.toJSON());
+        const buffer = await monthlyPlanPdf(plan.toJSON());
         if (!emailDisabled()) {
             await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
         }

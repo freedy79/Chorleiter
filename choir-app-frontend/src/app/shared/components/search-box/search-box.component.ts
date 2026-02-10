@@ -155,7 +155,11 @@ export class SearchBoxComponent implements OnInit {
     }
   }
 
-  onOptionSelected(value: string): void {
+  onOptionSelected(value: string | null | undefined): void {
+    if (!value) {
+      return;
+    }
+
     if (value.startsWith('__history__')) {
       const query = value.substring('__history__'.length);
       this.searchCtrl.setValue(query, { emitEvent: true });

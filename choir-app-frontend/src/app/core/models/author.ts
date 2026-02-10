@@ -1,7 +1,7 @@
 export interface Author {
   id: number;
   name: string;
-  birthYear?: string;
-  deathYear?: string;
+  birthYear?: number | null;
+  deathYear?: number | null;
   canDelete?: boolean;
 }

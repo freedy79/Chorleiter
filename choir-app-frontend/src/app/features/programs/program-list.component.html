@@ -1,26 +1,64 @@
 <button mat-raised-button color="primary" routerLink="/programs/create">Neues Programm</button>
 
-<mat-table [dataSource]="programs" *ngIf="programs.length > 0">
-  <ng-container matColumnDef="title">
-    <mat-header-cell *matHeaderCellDef>Titel</mat-header-cell>
-    <mat-cell *matCellDef="let program">
-      <span>{{ program.title }}</span>
-      <span *ngIf="program.status === 'draft'" class="status-badge draft">Entwurf</span>
-      <span *ngIf="program.status === 'published'" class="status-badge published">Veröffentlicht</span>
-    </mat-cell>
-  </ng-container>
+<!-- Desktop View -->
+<div class="desktop-view">
+  <mat-table [dataSource]="programs" *ngIf="programs.length > 0">
+    <ng-container matColumnDef="title">
+      <mat-header-cell *matHeaderCellDef>Titel</mat-header-cell>
+      <mat-cell *matCellDef="let program">
+        <span>{{ program.title }}</span>
+        <span *ngIf="program.status === 'draft'" class="status-badge draft">Entwurf</span>
+        <span *ngIf="program.status === 'published'" class="status-badge published">Veröffentlicht</span>
+        <span *ngIf="program.hasDraft" class="status-badge draft">In Bearbeitung</span>
+      </mat-cell>
+    </ng-container>
 
-  <ng-container matColumnDef="actions">
-    <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
-    <mat-cell *matCellDef="let program">
-      <button mat-button [routerLink]="['/programs', program.id]">{{ program.status === 'draft' ? 'Bearbeiten' : 'Ansicht' }}</button>
-      <button mat-button (click)="publish(program)" *ngIf="program.status === 'draft'">Veröffentlichen</button>
-      <button mat-button color="warn" (click)="delete(program)">Löschen</button>
-    </mat-cell>
-  </ng-container>
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
+      <mat-cell *matCellDef="let program">
+        <button mat-button [routerLink]="['/programs', program.draftId || program.id]">{{ (program.status === 'draft' || program.hasDraft) ? 'Bearbeiten' : 'Ansicht' }}</button>
+        <button mat-button (click)="publish(program)" *ngIf="program.status === 'draft'">Veröffentlichen</button>
+        <button mat-button color="warn" (click)="delete(program)">Löschen</button>
+      </mat-cell>
+    </ng-container>
 
-  <mat-header-row *matHeaderRowDef="['title', 'actions']"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: ['title', 'actions']"></mat-row>
-</mat-table>
+    <mat-header-row *matHeaderRowDef="['title', 'actions']"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: ['title', 'actions']"></mat-row>
+  </mat-table>
 
-<p *ngIf="programs.length === 0">Keine Programme vorhanden.</p>
+  <p *ngIf="programs.length === 0">Keine Programme vorhanden.</p>
+</div>
+
+<!-- Mobile View: Cards -->
+<div class="mobile-view">
+  <div class="mobile-card-container" *ngIf="programs.length > 0">
+    <div class="mobile-cards">
+      <div class="program-card" *ngFor="let program of programs">
+        <div class="card-header">
+          <div class="card-title">{{ program.title }}</div>
+          <div class="card-badges">
+            <span *ngIf="program.status === 'draft'" class="status-badge draft">Entwurf</span>
+            <span *ngIf="program.status === 'published'" class="status-badge published">Veröffentlicht</span>
+            <span *ngIf="program.hasDraft" class="status-badge draft">In Bearbeitung</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button mat-stroked-button [routerLink]="['/programs', program.draftId || program.id]">
+            <mat-icon>{{ (program.status === 'draft' || program.hasDraft) ? 'edit' : 'visibility' }}</mat-icon>
+            {{ (program.status === 'draft' || program.hasDraft) ? 'Bearbeiten' : 'Ansicht' }}
+          </button>
+          <button mat-stroked-button color="accent" (click)="publish(program)" *ngIf="program.status === 'draft'">
+            <mat-icon>publish</mat-icon>
+            Veröffentlichen
+          </button>
+          <button mat-stroked-button color="warn" (click)="delete(program)">
+            <mat-icon>delete</mat-icon>
+            Löschen
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="no-data-message" *ngIf="programs.length === 0">Keine Programme vorhanden.</p>
+</div>
