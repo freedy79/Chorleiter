@@ -5,11 +5,11 @@
   </mat-button-toggle-group>
 </div>
 
-<div class="letter-filter">
-  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
-    {{ l }}
-  </button>
-</div>
+<app-alphabet-filter
+  [items]="pieces"
+  filterField="title"
+  (filtered)="onFilteredPieces($event)">
+</app-alphabet-filter>
 
 <ng-container *ngIf="(isHandset$ | async) !== true; else mobileView">
 <div class="table-wrapper mat-elevation-z8">

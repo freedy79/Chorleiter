@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
+import { parseDurationToSeconds } from '@shared/util/duration.utils';
 
 interface BreakData {
   duration?: string | null;
@@ -51,8 +52,7 @@ export class ProgramBreakDialogComponent extends BaseFormDialog<BreakResult, Bre
 
   protected override getResult(): BreakResult {
     const { duration, note } = this.form.value;
-    const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
-    const durationSec = m * 60 + s;
+    const durationSec = parseDurationToSeconds(duration) ?? 0;
     return { durationSec, note };
   }
 }

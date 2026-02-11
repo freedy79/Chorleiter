@@ -8,11 +8,11 @@
   </button>
 </div>
 
-<div class="letter-filter">
-  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">
-    {{ l }}
-  </button>
-</div>
+<app-alphabet-filter
+  [items]="people"
+  filterField="name"
+  (filtered)="onFilteredPeople($event)">
+</app-alphabet-filter>
 
 <mat-table [dataSource]="dataSource" class="mat-elevation-z8" multiTemplateDataRows>
   <ng-container matColumnDef="name">

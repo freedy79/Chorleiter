@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
+import { parseDurationToSeconds } from '@shared/util/duration.utils';
 
 interface SpeechData {
   title?: string;
@@ -49,13 +50,7 @@ export class ProgramSpeechDialogComponent extends BaseFormDialog<SpeechResult, S
 
   protected override getResult(): SpeechResult {
     const { duration, ...rest } = this.form.value;
-    let durationSec: number | undefined;
-
-    if (duration) {
-      const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
-      durationSec = m * 60 + s;
-    }
-
+    const durationSec = duration ? parseDurationToSeconds(duration) ?? undefined : undefined;
     return { ...rest, durationSec };
   }
 }

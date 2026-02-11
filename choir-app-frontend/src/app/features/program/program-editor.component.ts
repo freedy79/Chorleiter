@@ -18,6 +18,7 @@ import { AddItemTypeDialogComponent } from './add-item-type-dialog.component';
 import { FabComponent, FabAction } from '@shared/components/fab/fab.component';
 import { DurationPipe } from '@shared/pipes/duration.pipe';
 import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
+import { parseDurationToSeconds } from '@shared/util/duration.utils';
 
 @Component({
   selector: 'app-program-editor',
@@ -710,11 +711,7 @@ export class ProgramEditorComponent implements OnInit {
   }
 
   private parseDuration(value: string | undefined): number | null {
-    if (!value) return null;
-    const match = value.match(/^\d{1,2}:\d{2}$/);
-    if (!match) return null;
-    const [m, s] = value.split(':').map(v => parseInt(v, 10));
-    return m * 60 + s;
+    return parseDurationToSeconds(value);
   }
 
   private formatClockTime(date: Date): string {

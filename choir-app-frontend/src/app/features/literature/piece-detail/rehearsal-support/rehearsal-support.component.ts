@@ -5,6 +5,7 @@ import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { NotificationService } from '@core/services/notification.service';
 import { MidiPlaybackService } from './services/midi-playback.service';
+import { formatSecondsAsDuration } from '@shared/util/duration.utils';
 import {
   RehearsalData,
   MidiFileInfo,
@@ -278,8 +279,6 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
   }
 
   formatTime(seconds: number): string {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return formatSecondsAsDuration(seconds);
   }
 }

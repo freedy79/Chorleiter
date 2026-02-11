@@ -7,6 +7,7 @@ import { ApiService } from '@core/services/api.service';
 import { Composer } from '@core/models/composer';
 import { Observable, startWith, map } from 'rxjs';
 import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
+import { parseDurationToSeconds } from '@shared/util/duration.utils';
 
 interface FreePieceData {
   title?: string;
@@ -73,13 +74,7 @@ export class ProgramFreePieceDialogComponent extends BaseFormDialog<FreePieceRes
 
   protected override getResult(): FreePieceResult {
     const { duration, ...rest } = this.form.value;
-    let durationSec: number | undefined;
-
-    if (duration) {
-      const [m, s] = duration.split(':').map((v: string) => parseInt(v, 10));
-      durationSec = m * 60 + s;
-    }
-
+    const durationSec = duration ? parseDurationToSeconds(duration) ?? undefined : undefined;
     return { ...rest, durationSec };
   }
 }

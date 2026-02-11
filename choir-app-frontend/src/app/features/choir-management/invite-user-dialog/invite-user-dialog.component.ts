@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-invite-user-dialog',
@@ -10,27 +11,23 @@ import { MaterialModule } from '@modules/material.module';
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './invite-user-dialog.component.html',
 })
-export class InviteUserDialogComponent {
-  inviteForm: FormGroup;
-
+export class InviteUserDialogComponent extends BaseFormDialog implements OnInit {
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<InviteUserDialogComponent>
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<InviteUserDialogComponent>
   ) {
-    this.inviteForm = this.fb.group({
+    super(fb, dialogRef);
+  }
+
+  protected buildForm(): FormGroup {
+    return this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       roles: [['director'], Validators.required]
     });
   }
 
-  onCancel(): void {
-    this.dialogRef.close();
-  }
-
+  // Preserve original method name for template compatibility
   onInvite(): void {
-    if (this.inviteForm.valid) {
-      // Geben Sie das gesamte Formular-Objekt zurück
-      this.dialogRef.close(this.inviteForm.value);
-    }
+    this.onSave();
   }
 }

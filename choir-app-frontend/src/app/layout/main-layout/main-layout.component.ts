@@ -17,8 +17,8 @@ import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/
 import { NavItem } from '@shared/components/menu-list-item/nav-item';
 import { MenuListItemComponent } from '@shared/components/menu-list-item/menu-list-item.component';
 import { NavService } from '@shared/components/menu-list-item/nav-service';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { MatDrawer } from '@angular/material/sidenav';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { MatDialog } from '@angular/material/dialog';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { HelpWizardComponent } from '@shared/components/help-wizard/help-wizard.component';
@@ -110,7 +110,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   constructor(private authService: AuthService,
     private themeService: ThemeService,
     private navService: NavService,
-    private breakpointObserver: BreakpointObserver,
+    private responsive: ResponsiveService,
     private dialog: MatDialog,
     private bottomSheet: MatBottomSheet,
     private help: HelpService,
@@ -155,8 +155,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(u => (u?.firstName?.[0] || '') + (u?.name?.[0] || ''))
     );
 
-    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(
-      map(result => result.matches),
+    this.isHandset$ = this.responsive.isHandset$.pipe(
       tap(match => {
         this.isHandset = match;
         this.headerHeight = match ? 56 : 64;
@@ -165,9 +164,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
-    this.isSmallScreen$ = this.breakpointObserver.observe('(max-width: 600px)').pipe(
-      map(result => result.matches)
-    );
+    this.isSmallScreen$ = this.responsive.isMobile$;
 
     this.dienstplanVisible$ = this.restrictForDemo(this.menu.isVisible('dienstplan'));
 

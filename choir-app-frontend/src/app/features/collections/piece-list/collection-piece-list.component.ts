@@ -8,14 +8,14 @@ import { PieceService } from '@core/services/piece.service';
 import { Piece } from '@core/models/piece';
 import { Router } from '@angular/router';
 import { PaginatorService } from '@core/services/paginator.service';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { AlphabetFilterComponent } from '@shared/components/alphabet-filter/alphabet-filter.component';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-collection-piece-list',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, AlphabetFilterComponent],
   templateUrl: './collection-piece-list.component.html',
   styleUrls: ['./collection-piece-list.component.scss']
 })
@@ -23,8 +23,6 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   pieces: Piece[] = [];
   dataSource = new MatTableDataSource<Piece>();
   displayedColumns = ['title', 'composer', 'author', 'collections'];
-  letters: string[] = ['Alle','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-  selectedLetter = 'Alle';
   totalPieces = 0;
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
@@ -38,9 +36,9 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   constructor(private pieceService: PieceService,
               private router: Router,
               private paginatorService: PaginatorService,
-              private breakpointObserver: BreakpointObserver) {
+              private responsive: ResponsiveService) {
     this.pageSize = this.paginatorService.getPageSize('collection-piece-list', this.pageSizeOptions[0]);
-    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
+    this.isHandset$ = this.responsive.isHandset$;
   }
 
   ngOnInit(): void {
@@ -75,27 +73,17 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   loadPieces(): void {
     this.pieceService.getGlobalPieces().subscribe(pieces => {
       this.pieces = pieces;
-      this.applyFilter();
+      this.onFilteredPieces(pieces); // Initial load shows all pieces
     });
   }
 
-  applyFilter(): void {
-    let filtered = this.pieces;
-    if (this.selectedLetter !== 'Alle') {
-      const letter = this.selectedLetter.toUpperCase();
-      filtered = filtered.filter(p => p.title.toUpperCase().startsWith(letter));
-    }
-    this.dataSource.data = filtered;
-    this.totalPieces = filtered.length;
+  onFilteredPieces(filteredPieces: Piece[]): void {
+    this.dataSource.data = filteredPieces;
+    this.totalPieces = filteredPieces.length;
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
       this.paginator.firstPage();
     }
-  }
-
-  onLetterSelect(letter: string): void {
-    this.selectedLetter = letter;
-    this.applyFilter();
   }
 
   openPiece(piece: Piece): void {

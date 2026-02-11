@@ -8,9 +8,8 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { AddToChoirDialogComponent } from './add-to-choir-dialog/add-to-choir-dialog.component';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { BaseListComponent } from '@shared/components/base-list.component';
 import { PaginatorService } from '@core/services/paginator.service';
 import { JoinPipe } from '@shared/pipes/join.pipe';
@@ -32,12 +31,10 @@ export class ManageUsersComponent extends BaseListComponent<User> {
     private api: ApiService,
     private dialogHelper: DialogHelperService,
     private notification: NotificationService,
-    private breakpointObserver: BreakpointObserver
+    private responsive: ResponsiveService
   ) {
     super(paginatorService);
-    this.isHandset$ = this.breakpointObserver
-      .observe([Breakpoints.Handset])
-      .pipe(map(result => result.matches));
+    this.isHandset$ = this.responsive.isHandset$;
   }
 
   get paginatorKey(): string {

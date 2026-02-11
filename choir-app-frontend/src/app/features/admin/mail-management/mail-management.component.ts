@@ -4,9 +4,8 @@ import { MatTabChangeEvent } from '@angular/material/tabs';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { MailTemplatesHubComponent } from './mail-templates-hub.component';
 import { MailSettingsHubComponent } from './mail-settings-hub.component';
 import { MailLogsHubComponent } from './mail-logs-hub.component';
@@ -32,10 +31,8 @@ export class MailManagementComponent implements OnInit {
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
-  constructor(breakpointObserver: BreakpointObserver) {
-    this.isMobile$ = breakpointObserver.observe(Breakpoints.Handset).pipe(
-      map(result => result.matches)
-    );
+  constructor(responsive: ResponsiveService) {
+    this.isMobile$ = responsive.isHandset$;
   }
 
   ngOnInit(): void {}

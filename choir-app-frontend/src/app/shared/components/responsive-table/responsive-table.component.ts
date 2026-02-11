@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -54,10 +54,8 @@ export class ResponsiveTableComponent implements OnInit {
   currentPage = 0;
   Math = Math;
 
-  constructor(breakpointObserver: BreakpointObserver) {
-    this.isMobile$ = breakpointObserver.observe(Breakpoints.Handset).pipe(
-      map(result => result.matches)
-    );
+  constructor(private responsive: ResponsiveService) {
+    this.isMobile$ = this.responsive.isHandset$;
   }
 
   ngOnInit(): void {
@@ -70,7 +68,7 @@ export class ResponsiveTableComponent implements OnInit {
   }
 
   updateVisibleColumns(): void {
-    this.isMobile$.subscribe(isMobile => {
+    this.isMobile$.subscribe((isMobile: boolean) => {
       this.visibleColumns = this.columns.filter(col => !col.hideOnMobile || !isMobile);
     });
   }

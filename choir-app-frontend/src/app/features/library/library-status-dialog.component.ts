@@ -1,9 +1,10 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { LibraryItem } from '@core/models/library-item';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 @Component({
   selector: 'app-library-status-dialog',
@@ -11,24 +12,35 @@ import { LibraryItem } from '@core/models/library-item';
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule],
   templateUrl: './library-status-dialog.component.html'
 })
-export class LibraryStatusDialogComponent {
-  form: FormGroup;
-
+export class LibraryStatusDialogComponent extends BaseFormDialog<any, { item: LibraryItem }> implements OnInit {
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<LibraryStatusDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { item: LibraryItem }
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<LibraryStatusDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: { item: LibraryItem } | undefined
   ) {
-    const item = data.item;
-    const endDate = item.availableAt ? new Date(item.availableAt) : null;
+    super(fb, dialogRef, data);
+  }
+
+  protected buildForm(): FormGroup {
+    const item = this.data?.item;
+    const endDate = item?.availableAt ? new Date(item.availableAt) : null;
     const startDate = endDate ? new Date(endDate) : null;
     if (startDate) startDate.setMonth(startDate.getMonth() - 3);
-    this.form = this.fb.group({
+
+    return this.fb.group({
       borrower: [''],
-      status: [item.status],
+      status: [item?.status],
       startDate: [startDate],
       endDate: [endDate]
     });
+  }
+
+  protected override getResult(): any {
+    const { status, endDate } = this.form.value;
+    return {
+      status,
+      availableAt: endDate ? endDate.toISOString() : null
+    };
   }
 
   extendPeriod(): void {
@@ -37,18 +49,12 @@ export class LibraryStatusDialogComponent {
     this.form.patchValue({ endDate: current });
   }
 
+  // Preserve original method names for template compatibility
   save(): void {
-    if (this.form.valid) {
-      const { status, endDate } = this.form.value;
-      this.dialogRef.close({
-        status,
-        availableAt: endDate ? endDate.toISOString() : null
-      });
-    }
+    this.onSave();
   }
 
   cancel(): void {
-    this.dialogRef.close();
+    this.onCancel();
   }
 }
-

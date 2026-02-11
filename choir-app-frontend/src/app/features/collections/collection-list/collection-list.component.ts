@@ -11,10 +11,10 @@ import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
 import { LibraryItem } from '@core/models/library-item';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
-import { BaseListComponent } from '@shared/components/base-list.component';
-import { ImageCacheService } from '@core/services/image-cache.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
+ import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
+ import { BaseListComponent } from '@shared/components/base-list.component';
+ import { ImageCacheService } from '@core/services/image-cache.service';
 import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 
 @Component({
@@ -49,12 +49,12 @@ export class CollectionListComponent extends BaseListComponent<Collection> imple
     private notification: NotificationService,
     private router: Router,
     private authService: AuthService,
-    private breakpointObserver: BreakpointObserver,
+    private responsive: ResponsiveService,
     private navState: NavigationStateService,
     private imageCacheService: ImageCacheService
   ) {
     super(paginatorService);
-    this.isHandset$ = this.breakpointObserver.observe([Breakpoints.Handset]).pipe(map(result => result.matches));
+    this.isHandset$ = this.responsive.isHandset$;
     // Update cached state when navigating with browser history
     this.navState.onPopState(this.stateKey, s => this.initialState = s);
   }

@@ -2,6 +2,7 @@ import { Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { NotificationService } from '@core/services/notification.service';
+import { formatSecondsAsDuration } from '@shared/util/duration.utils';
 
 @Component({
   selector: 'app-audio-player',
@@ -92,8 +93,6 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
   }
 
   formatDuration(sec: number): string {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    return formatSecondsAsDuration(sec);
   }
 }

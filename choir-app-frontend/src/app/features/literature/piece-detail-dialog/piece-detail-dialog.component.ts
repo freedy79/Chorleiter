@@ -8,6 +8,7 @@ import { Piece } from '@core/models/piece';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { formatSecondsAsDuration } from '@shared/util/duration.utils';
 
 @Component({
   selector: 'app-piece-detail-dialog',
@@ -30,8 +31,6 @@ export class PieceDetailDialogComponent implements OnInit {
   }
 
   formatDuration(sec: number): string {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = Math.floor(sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    return formatSecondsAsDuration(sec);
   }
 }

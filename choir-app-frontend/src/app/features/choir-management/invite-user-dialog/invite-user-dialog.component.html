@@ -1,7 +1,7 @@
 <h1 mat-dialog-title>Neues Mitglied einladen</h1>
 <div mat-dialog-content>
   <p>E-Mail-Adresse eingeben und Rolle zuweisen.</p>
-  <form [formGroup]="inviteForm" id="invite-form" (ngSubmit)="onInvite()">
+  <form [formGroup]="form" id="invite-form" (ngSubmit)="onInvite()">
     <mat-form-field appearance="outline">
       <mat-label>E-Mail-Adresse</mat-label>
       <input matInput formControlName="email" type="email" cdkFocusInitial>
@@ -19,7 +19,7 @@
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-flat-button color="primary" type="submit" form="invite-form" [disabled]="inviteForm.invalid">
+  <button mat-flat-button color="primary" type="submit" form="invite-form" [disabled]="form.invalid">
     Einladung senden
   </button>
 </div>

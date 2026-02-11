@@ -1,4 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
+import { formatSecondsAsDuration } from '@shared/util/duration.utils';
 
 /**
  * Transforms a duration in seconds to a formatted string in "mm:ss" format.
@@ -27,17 +28,6 @@ export class DurationPipe implements PipeTransform {
    * @returns Formatted string "mm:ss" or empty string if input is null/undefined
    */
   transform(value: number | null | undefined): string {
-    if (value === null || value === undefined || typeof value !== 'number') {
-      return '';
-    }
-
-    const minutes = Math.floor(value / 60)
-      .toString()
-      .padStart(2, '0');
-    const seconds = Math.floor(value % 60)
-      .toString()
-      .padStart(2, '0');
-
-    return `${minutes}:${seconds}`;
+    return formatSecondsAsDuration(value);
   }
 }

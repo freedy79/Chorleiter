@@ -1,5 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { formatSecondsAsDuration, parseDurationToSeconds } from '@shared/util/duration.utils';
 import {
     ReactiveFormsModule,
     FormBuilder,
@@ -562,14 +563,11 @@ export class PieceDialogComponent implements OnInit {
         if (!value) return null;
         const match = value.match(/^\d{1,2}:\d{2}$/);
         if (!match) return null;
-        const [m, s] = value.split(':').map(v => parseInt(v, 10));
-        return m * 60 + s;
+        return parseDurationToSeconds(value) ?? 0;
     }
 
     private formatDuration(seconds: number): string {
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
+        return formatSecondsAsDuration(seconds);
     }
 
     onLicenseChange(license: string): void {

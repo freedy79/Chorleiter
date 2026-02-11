@@ -16,6 +16,7 @@ import { ComposerDialogComponent } from '@features/composers/composer-dialog/com
 import { PieceDialogComponent } from '@features/literature/piece-dialog/piece-dialog.component';
 import { RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
+import { AlphabetFilterComponent } from '@shared/components/alphabet-filter/alphabet-filter.component';
 @Component({
   selector: 'app-manage-creators',
   templateUrl: './manage-creators.component.html',
@@ -26,6 +27,7 @@ import { Subject, takeUntil } from 'rxjs';
     FormsModule,
     MaterialModule,
     RouterModule,
+    AlphabetFilterComponent,
   ]
 })
 export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -33,8 +35,6 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
   people: (Composer | Author)[] = [];
   displayedColumns = ['name', 'birthYear', 'deathYear', 'actions'];
   dataSource = new MatTableDataSource<Composer | Author>();
-  letters: string[] = ['Alle', 'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-  selectedLetter = 'Alle';
   totalPeople = 0;
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
@@ -63,7 +63,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
     if (this.paginator) {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
-      this.applyFilter();
+      this.onFilteredPeople(this.people); // Initial load
       this.paginator.page
         .pipe(takeUntil(this.destroy$))
         .subscribe(e => this.paginatorService.setPageSize('manage-creators', e.pageSize));
@@ -83,7 +83,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
 
     obs.pipe(takeUntil(this.destroy$)).subscribe((data) => {
       this.people = data;
-      this.applyFilter(resetPage);
+      this.onFilteredPeople(data, resetPage);
       if (!resetPage && this.paginator) {
         const maxPageIndex = Math.max(0, Math.ceil(this.totalPeople / this.paginator.pageSize) - 1);
         this.paginator.pageIndex = Math.min(currentIndex, maxPageIndex);
@@ -98,28 +98,18 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
     });
   }
 
-  applyFilter(resetPage = true): void {
-    let filtered = this.people;
-    if (this.selectedLetter !== 'Alle') {
-      const letter = this.selectedLetter.toUpperCase();
-      filtered = this.people.filter(p => p.name.toUpperCase().startsWith(letter));
-    }
-    this.dataSource.data = filtered;
-    this.totalPeople = filtered.length;
+  onFilteredPeople(filteredPeople: (Composer | Author)[], resetPage = true): void {
+    this.dataSource.data = filteredPeople;
+    this.totalPeople = filteredPeople.length;
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
       if (resetPage) {
         this.paginator.firstPage();
       } else {
-        const maxPageIndex = Math.max(0, Math.ceil(filtered.length / this.paginator.pageSize) - 1);
+        const maxPageIndex = Math.max(0, Math.ceil(filteredPeople.length / this.paginator.pageSize) - 1);
         this.paginator.pageIndex = Math.min(this.paginator.pageIndex, maxPageIndex);
       }
     }
-  }
-
-  onLetterSelect(letter: string): void {
-    this.selectedLetter = letter;
-    this.applyFilter();
   }
 
   addPerson(): void {
@@ -223,7 +213,7 @@ export class ManageCreatorsComponent implements OnInit, AfterViewInit, OnDestroy
       const idx = this.people.findIndex(p => p.id === person.id);
       if (idx !== -1) {
         this.people[idx] = { ...person, ...updated } as Composer | Author;
-        this.applyFilter(false);
+        this.onFilteredPeople(this.people, false);
       }
     });
   }

@@ -9,11 +9,12 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
 import { PublisherDialogComponent } from './publisher-dialog/publisher-dialog.component';
+import { AlphabetFilterComponent } from '@shared/components/alphabet-filter/alphabet-filter.component';
 
 @Component({
   selector: 'app-manage-publishers',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, AlphabetFilterComponent],
   templateUrl: './manage-publishers.component.html',
   styleUrls: ['./manage-publishers.component.scss']
 })
@@ -21,8 +22,6 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
   publishers: Publisher[] = [];
   displayedColumns = ['name', 'actions'];
   dataSource = new MatTableDataSource<Publisher>();
-  letters: string[] = ['Alle','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-  selectedLetter = 'Alle';
   totalPublishers = 0;
   pageSizeOptions: number[] = [10, 25, 50];
   pageSize = 10;
@@ -43,7 +42,7 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
     if (this.paginator) {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
-      this.applyFilter();
+      this.onFilteredPublishers(this.publishers); // Initial load
       this.paginator.page.subscribe(e => this.paginatorService.setPageSize('manage-publishers', e.pageSize));
     }
   }
@@ -51,27 +50,17 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
   loadPublishers(): void {
     this.publisherService.getPublishers().subscribe(data => {
       this.publishers = data;
-      this.applyFilter();
+      this.onFilteredPublishers(data);
     });
   }
 
-  applyFilter(): void {
-    let filtered = this.publishers;
-    if (this.selectedLetter !== 'Alle') {
-      const letter = this.selectedLetter.toUpperCase();
-      filtered = this.publishers.filter(p => p.name.toUpperCase().startsWith(letter));
-    }
-    this.dataSource.data = filtered;
-    this.totalPublishers = filtered.length;
+  onFilteredPublishers(filteredPublishers: Publisher[]): void {
+    this.dataSource.data = filteredPublishers;
+    this.totalPublishers = filteredPublishers.length;
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
       this.paginator.firstPage();
     }
-  }
-
-  onLetterSelect(letter: string): void {
-    this.selectedLetter = letter;
-    this.applyFilter();
   }
 
   addPublisher(): void {
@@ -85,7 +74,6 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
       {
         silent: true,
         onSuccess: () => {
-          this.selectedLetter = 'Alle';
           this.loadPublishers();
         }
       },
@@ -106,7 +94,6 @@ export class ManagePublishersComponent implements OnInit, AfterViewInit {
       {
         silent: true,
         onSuccess: () => {
-          this.selectedLetter = 'Alle';
           this.loadPublishers();
         }
       },

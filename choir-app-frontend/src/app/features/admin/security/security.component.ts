@@ -2,9 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
-import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { LoginAttemptsComponent } from '../login-attempts/login-attempts.component';
 import { ProtocolsComponent } from '../protocols/protocols.component';
 import { BackupComponent } from '../backup/backup.component';
@@ -29,10 +28,8 @@ export class SecurityComponent implements OnInit {
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
-  constructor(breakpointObserver: BreakpointObserver) {
-    this.isMobile$ = breakpointObserver.observe(Breakpoints.Handset).pipe(
-      map(result => result.matches)
-    );
+  constructor(responsive: ResponsiveService) {
+    this.isMobile$ = responsive.isHandset$;
   }
 
   ngOnInit(): void {}

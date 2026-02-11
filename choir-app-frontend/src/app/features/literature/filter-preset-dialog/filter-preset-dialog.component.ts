@@ -1,8 +1,9 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
+import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
 
 export interface FilterPresetDialogData {
   isAdmin: boolean;
@@ -15,27 +16,19 @@ export interface FilterPresetDialogData {
   imports: [CommonModule, ReactiveFormsModule, MaterialModule],
   templateUrl: './filter-preset-dialog.component.html',
 })
-export class FilterPresetDialogComponent {
-  form: FormGroup;
-
+export class FilterPresetDialogComponent extends BaseFormDialog<any, FilterPresetDialogData> implements OnInit {
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<FilterPresetDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: FilterPresetDialogData
+    fb: FormBuilder,
+    dialogRef: MatDialogRef<FilterPresetDialogComponent>,
+    @Inject(MAT_DIALOG_DATA) data: FilterPresetDialogData | undefined
   ) {
-    this.form = this.fb.group({
+    super(fb, dialogRef, data);
+  }
+
+  protected buildForm(): FormGroup {
+    return this.fb.group({
       name: ['', Validators.required],
       visibility: ['personal', Validators.required]
     });
-  }
-
-  onCancel(): void {
-    this.dialogRef.close();
-  }
-
-  onSave(): void {
-    if (this.form.valid) {
-      this.dialogRef.close(this.form.value);
-    }
   }
 }

@@ -5,7 +5,7 @@
       <mat-label>Filternamen</mat-label>
       <input matInput formControlName="name" cdkFocusInitial>
     </mat-form-field>
-    <ng-container *ngIf="data.isAdmin || data.isChoirAdmin">
+    <ng-container *ngIf="data?.isAdmin || data?.isChoirAdmin">
       <mat-form-field appearance="outline">
         <mat-label>Sichtbarkeit</mat-label>
         <mat-select formControlName="visibility">

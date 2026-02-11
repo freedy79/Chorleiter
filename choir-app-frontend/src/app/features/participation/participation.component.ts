@@ -10,6 +10,7 @@ import { parseDateOnly } from '@shared/util/date';
 import { combineLatest } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@shared/components/base.component';
+import { VOICE_DISPLAY_MAP, BASE_VOICE_MAP, VOICE_ORDER } from '@shared/constants/voices.constants';
 
 interface EventColumn {
   key: string;
@@ -212,55 +213,9 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     });
   }
 
-  private readonly voiceMap: Record<string, string> = {
-    'SOPRAN I': 'Sopran I',
-    'SOPRAN 1': 'Sopran I',
-    'SOPRAN II': 'Sopran II',
-    'SOPRAN 2': 'Sopran II',
-    SOPRAN: 'Sopran',
-    SOPRANO: 'Sopran',
-    'ALT I': 'Alt I',
-    'ALT 1': 'Alt I',
-    'ALT II': 'Alt II',
-    'ALT 2': 'Alt II',
-    ALT: 'Alt',
-    ALTO: 'Alt',
-    'TENOR I': 'Tenor I',
-    'TENOR 1': 'Tenor I',
-    'TENOR II': 'Tenor II',
-    'TENOR 2': 'Tenor II',
-    TENOR: 'Tenor',
-    'BASS I': 'Bass I',
-    'BASS 1': 'Bass I',
-    'BASS II': 'Bass II',
-    'BASS 2': 'Bass II',
-    BASS: 'Bass',
-  };
-
-  private readonly baseVoiceMap: Record<string, string> = {
-    'SOPRAN I': 'SOPRAN',
-    'SOPRAN 1': 'SOPRAN',
-    'SOPRAN II': 'SOPRAN',
-    'SOPRAN 2': 'SOPRAN',
-    SOPRAN: 'SOPRAN',
-    SOPRANO: 'SOPRAN',
-    'ALT I': 'ALT',
-    'ALT 1': 'ALT',
-    'ALT II': 'ALT',
-    'ALT 2': 'ALT',
-    ALT: 'ALT',
-    ALTO: 'ALT',
-    'TENOR I': 'TENOR',
-    'TENOR 1': 'TENOR',
-    'TENOR II': 'TENOR',
-    'TENOR 2': 'TENOR',
-    TENOR: 'TENOR',
-    'BASS I': 'BASS',
-    'BASS 1': 'BASS',
-    'BASS II': 'BASS',
-    'BASS 2': 'BASS',
-    BASS: 'BASS',
-  };
+  // Use centralized voice constants
+  private readonly voiceMap = VOICE_DISPLAY_MAP;
+  private readonly baseVoiceMap = BASE_VOICE_MAP;
 
   voiceOf(member: UserInChoir): string {
     const rawVoice = member.voice?.toUpperCase() ||
@@ -285,8 +240,12 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
 
   private sortByVoice(members: UserInChoir[]): UserInChoir[] {
     return members.sort((a, b) => {
-      const va = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(a).toUpperCase()));
-      const vb = this.voiceOrder.indexOf(this.baseVoice(this.voiceOf(b).toUpperCase()));
+      const voiceA = this.voiceOf(a).toUpperCase();
+      const voiceB = this.voiceOf(b).toUpperCase();
+      const baseVoiceA = this.baseVoice(voiceA);
+      const baseVoiceB = this.baseVoice(voiceB);
+      const va = this.voiceOrder.indexOf(baseVoiceA as any);
+      const vb = this.voiceOrder.indexOf(baseVoiceB as any);
       const aName = a.name ?? '';
       const bName = b.name ?? '';
       const aFirst = a.firstName ?? '';
@@ -310,7 +269,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     });
   }
 
-  private readonly voiceOrder = ['SOPRAN', 'ALT', 'TENOR', 'BASS'];
+  private readonly voiceOrder = VOICE_ORDER;
 
   private dateKey(date: string | Date): string {
     const d = parseDateOnly(date);
@@ -348,4 +307,3 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     });
   }
 }
-

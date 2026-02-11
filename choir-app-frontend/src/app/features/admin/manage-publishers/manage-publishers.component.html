@@ -1,9 +1,13 @@
 <div class="toolbar">
   <button mat-flat-button color="primary" (click)="addPublisher()" class="add-btn">Verlag hinzufügen</button>
 </div>
-<div class="letter-filter">
-  <button mat-button *ngFor="let l of letters" (click)="onLetterSelect(l)" [color]="selectedLetter === l ? 'primary' : undefined">{{ l }}</button>
-</div>
+
+<app-alphabet-filter
+  [items]="publishers"
+  filterField="name"
+  (filtered)="onFilteredPublishers($event)">
+</app-alphabet-filter>
+
 <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
