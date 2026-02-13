@@ -133,6 +133,7 @@ const districtRoutes = require("./routes/district.routes");
 const congregationRoutes = require("./routes/congregation.routes");
 const paypalRoutes = require("./routes/paypal.routes");
 const imprintRoutes = require("./routes/imprint.routes");
+const enrichmentRoutes = require("./routes/enrichment.routes");
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
 app.use("/api/events", eventRoutes);
@@ -169,6 +170,7 @@ app.use("/api/districts", districtRoutes);
 app.use("/api/congregations", congregationRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/imprint", imprintRoutes);
+app.use("/api/admin/enrichment", enrichmentRoutes);
 
 // Error Handling Middleware (must be AFTER all routes)
 // 1. Handle 404 for unknown routes
