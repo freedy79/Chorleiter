@@ -201,6 +201,7 @@
         "/^\\.\\\\deploy\\.ps1 2>&1$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "git checkout": true
     }
 }

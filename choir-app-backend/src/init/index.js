@@ -6,6 +6,7 @@ const { migrateRoles } = require('./migrateRoles');
 const { assignAdminRole } = require('./assignAdminRole');
 const { fixProgramPublishedFromIdColumn } = require('./fixProgramPublishedFromIdColumn');
 const { migrateUserNames } = require('./migrateUserNames');
+const { ensureDataEnrichmentTables } = require('./ensureDataEnrichmentTables');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = { alter: true } } = options;
@@ -17,6 +18,7 @@ async function init(options = {}) {
     await fixProgramPublishedFromIdColumn();
     await ensureMonthlyPlanIndexes();
     await ensureJoinHashes();
+    await ensureDataEnrichmentTables();
     // 3. Finally seed and assign roles
     await seedDatabase({ includeDemoData });
     await assignAdminRole();
@@ -31,4 +33,5 @@ module.exports = {
     assignAdminRole,
     fixProgramPublishedFromIdColumn,
     ensureMonthlyPlanIndexes,
+    ensureDataEnrichmentTables
 };
