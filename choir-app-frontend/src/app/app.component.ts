@@ -9,6 +9,7 @@ import { PwaUpdateNotificationComponent } from '@app/components/pwa-update-notif
 import { OfflineIndicatorComponent } from '@app/components/offline-indicator/offline-indicator.component';
 import { CommonModule } from '@angular/common';
 import { PushNotificationService } from '@core/services/push-notification.service';
+import { BackendStatusService } from '@core/services/backend-status.service';
 
 @Component({
   selector: 'app-root',
@@ -18,12 +19,14 @@ import { PushNotificationService } from '@core/services/push-notification.servic
 })
 export class AppComponent implements OnInit {
   backendAvailable = true;
+  allowWelcomeDuringOutage = false;
 
   constructor(
     private themeService: ThemeService,
     private api: ApiService,
     private swUpdateService: ServiceWorkerUpdateService,
-    private pushService: PushNotificationService
+    private pushService: PushNotificationService,
+    private backendStatusService: BackendStatusService
   ) {
     // Rufen Sie die Initialisierungsmethode auf, wenn die App startet.
     this.themeService.initializeTheme();
@@ -31,9 +34,13 @@ export class AppComponent implements OnInit {
     this.api.pingBackend().subscribe({
       next: () => {
         this.backendAvailable = true;
+        this.backendStatusService.setBackendAvailable(true);
+        this.backendStatusService.setComingFromUnavailableRedirect(false);
+        this.allowWelcomeDuringOutage = false;
       },
       error: () => {
         this.backendAvailable = false;
+        this.backendStatusService.setBackendAvailable(false);
       }
     });
   }
@@ -44,6 +51,10 @@ export class AppComponent implements OnInit {
       console.log('Service Worker wird unterstützt');
       // Der Service wird automatisch beim Konstruktor initialisiert
     }
+
+    this.backendStatusService.comingFromUnavailableRedirect$.subscribe(redirecting => {
+      this.allowWelcomeDuringOutage = redirecting;
+    });
 
     this.pushService.initializeNotificationClicks();
   }

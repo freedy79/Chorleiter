@@ -4,14 +4,14 @@
 
 const express = require('express');
 const router = express.Router();
-const enrichmentController = require('../../controllers/enrichment.controller');
-const { verifyToken, requireAdmin } = require('../../middleware/auth.middleware');
+const enrichmentController = require('../controllers/enrichment.controller');
+const authJwt = require('../middleware/auth.middleware');
 
 /**
  * All routes require authentication and admin role
  */
-router.use(verifyToken);
-router.use(requireAdmin);
+router.use(authJwt.verifyToken);
+router.use(authJwt.isAdmin);
 
 /**
  * Settings Management

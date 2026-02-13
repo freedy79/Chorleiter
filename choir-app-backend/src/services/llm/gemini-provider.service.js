@@ -41,7 +41,7 @@ class GeminiProvider extends LLMProvider {
                 const prompt = this.buildBatchEnrichmentPrompt(batch, enrichmentFields);
 
                 const response = await this.callAPI(prompt);
-                
+
                 const batchSuggestions = response.suggestions || [];
                 suggestions.push(...batchSuggestions);
 
@@ -192,7 +192,7 @@ Piece ${idx + 1}:
             .join('\n');
 
         return `
-You are a music metadata enrichment expert. Given information about multiple music pieces, 
+You are a music metadata enrichment expert. Given information about multiple music pieces,
 provide accurate metadata for missing or incomplete fields.
 
 Pieces to enrich:
@@ -201,7 +201,7 @@ ${piecesData}
 Fields to enrich (if missing or incomplete):
 ${fields}
 
-For EACH piece, provide metadata completion. Confidence should be high (0.8+) for well-known works, 
+For EACH piece, provide metadata completion. Confidence should be high (0.8+) for well-known works,
 medium (0.5-0.8) for reasonable guesses, and low (<0.5) for uncertain values.
 
 Format your response as JSON (DO NOT include markdown, just plain JSON):

@@ -85,6 +85,9 @@ app.get("/", (req, res) => {
 app.get(["/ping", "/api/ping"], (req, res) => {
     res.json({ message: "PONG" });
 });
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).

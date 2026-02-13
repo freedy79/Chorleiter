@@ -11,20 +11,77 @@ const db = require('../models');
 
 async function ensureDataEnrichmentTables() {
     try {
-        logger.info('[Migration] Creating Data Enrichment tables...');
-        
-        // Sync the new models to database
-        await db.data_enrichment_job.sync({ alter: true });
-        await db.data_enrichment_suggestion.sync({ alter: true });
-        await db.data_enrichment_setting.sync({ alter: true });
-        
+        logger.info('[Migration] Ensuring Data Enrichment tables...');
+
+        // First, drop and recreate without using Sequelize to avoid constraint issues
+        await fixDataEnrichmentConstraints();
+
         logger.info('[Migration] Data Enrichment tables created/updated successfully');
-        
+
         // Initialize default settings if they don't exist
         await initializeDefaultSettings();
-        
+
     } catch (error) {
         logger.error('[Migration] Error creating Data Enrichment tables:', error);
+        throw error;
+    }
+}
+
+async function fixDataEnrichmentConstraints() {
+    const sequelize = db.sequelize;
+
+    try {
+        logger.info('[Migration] Fixing data enrichment table constraints...');
+
+        // Drop the enrichment tables if they exist (created with wrong constraints by initial sync)
+        // Do this completely to ensure clean recreation
+        try {
+            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_suggestion" CASCADE', { raw: true });
+            logger.info('[Migration] Dropped table: data_enrichment_suggestion');
+        } catch (err) {
+            logger.debug('[Migration] Table data_enrichment_suggestion may not exist:', err.message);
+        }
+
+        try {
+            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_jobs" CASCADE', { raw: true });
+            logger.info('[Migration] Dropped table: data_enrichment_jobs');
+        } catch (err) {
+            logger.debug('[Migration] Table data_enrichment_jobs may not exist:', err.message);
+        }
+
+        try {
+            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_setting" CASCADE', { raw: true });
+            logger.info('[Migration] Dropped table: data_enrichment_setting');
+        } catch (err) {
+            logger.debug('[Migration] Table data_enrichment_setting may not exist:', err.message);
+        }
+
+        // Drop associated enums if they exist
+        try {
+            await sequelize.query('DROP TYPE IF EXISTS "enum_data_enrichment_jobs_jobType" CASCADE', { raw: true });
+            await sequelize.query('DROP TYPE IF EXISTS "enum_data_enrichment_jobs_status" CASCADE', { raw: true });
+            logger.info('[Migration] Dropped enrichment enums');
+        } catch (err) {
+            logger.debug('[Migration] Enums may not exist:', err.message);
+        }
+
+        // Now recreate all enrichment tables with force: true to ensure fresh creation
+        // FK constraints are defined in the models and will be created with the tables
+        logger.info('[Migration] Recreating enrichment tables...');
+
+        await db.data_enrichment_job.sync({ force: true });
+        logger.info('[Migration] Table data_enrichment_jobs created successfully');
+
+        await db.data_enrichment_suggestion.sync({ force: true });
+        logger.info('[Migration] Table data_enrichment_suggestion created successfully');
+
+        await db.data_enrichment_setting.sync({ force: true });
+        logger.info('[Migration] Table data_enrichment_setting created successfully');
+
+        logger.info('[Migration] All enrichment table constraints fixed');
+
+    } catch (error) {
+        logger.error('[Migration] Error in fixDataEnrichmentConstraints:', error.message);
         throw error;
     }
 }
@@ -87,18 +144,18 @@ async function initializeDefaultSettings() {
                 description: 'Cron schedule for automatic enrichment jobs (2 AM daily)'
             }
         ];
-        
+
         for (const setting of defaultSettings) {
             const [record, created] = await db.data_enrichment_setting.findOrCreate({
                 where: { settingKey: setting.settingKey },
                 defaults: setting
             });
-            
+
             if (created) {
                 logger.info(`[Migration] Created default setting: ${setting.settingKey}`);
             }
         }
-        
+
     } catch (error) {
         logger.error('[Migration] Error initializing default settings:', error);
         throw error;

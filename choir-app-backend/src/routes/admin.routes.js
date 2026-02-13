@@ -62,6 +62,10 @@ router.put('/paypal-settings', role.requireNonDemo, wrap(controller.updatePayPal
 router.get('/imprint-settings', wrap(controller.getImprintSettings));
 router.put('/imprint-settings', role.requireNonDemo, wrap(controller.updateImprintSettings));
 
+// PWA Configuration routes
+const pwaConfigRoutes = require('./pwaConfig.routes');
+router.use('/pwa-config', pwaConfigRoutes);
+
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));
 

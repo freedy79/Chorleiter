@@ -66,6 +66,7 @@ db.push_subscription = require("./pushSubscription.model.js")(sequelize, Sequeli
 db.data_enrichment_job = require("./data-enrichment-job.model.js")(sequelize, Sequelize);
 db.data_enrichment_suggestion = require("./data-enrichment-suggestion.model.js")(sequelize, Sequelize);
 db.data_enrichment_setting = require("./data-enrichment-setting.model.js")(sequelize, Sequelize);
+db.pwa_config = require("./pwa_config.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -264,17 +265,17 @@ db.search_history.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 
 // Data Enrichment relationships
-db.user.hasMany(db.data_enrichment_job, { as: 'enrichmentJobs', foreignKey: 'createdBy' });
-db.data_enrichment_job.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator' });
+db.user.hasMany(db.data_enrichment_job, { as: 'enrichmentJobs', foreignKey: 'createdBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_job.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 db.data_enrichment_job.hasMany(db.data_enrichment_suggestion, { as: 'suggestions', foreignKey: 'jobId', onDelete: 'CASCADE' });
 db.data_enrichment_suggestion.belongsTo(db.data_enrichment_job, { foreignKey: 'jobId', as: 'job' });
 
-db.user.hasMany(db.data_enrichment_suggestion, { as: 'reviewedSuggestions', foreignKey: 'reviewedBy' });
-db.data_enrichment_suggestion.belongsTo(db.user, { foreignKey: 'reviewedBy', as: 'reviewer' });
+db.user.hasMany(db.data_enrichment_suggestion, { as: 'reviewedSuggestions', foreignKey: 'reviewedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_suggestion.belongsTo(db.user, { foreignKey: 'reviewedBy', as: 'reviewer', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
-db.user.hasMany(db.data_enrichment_setting, { as: 'modifiedSettings', foreignKey: 'lastModifiedBy' });
-db.data_enrichment_setting.belongsTo(db.user, { foreignKey: 'lastModifiedBy', as: 'modifiedBy' });
+db.user.hasMany(db.data_enrichment_setting, { as: 'modifiedSettings', foreignKey: 'lastModifiedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_setting.belongsTo(db.user, { foreignKey: 'lastModifiedBy', as: 'modifiedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
 
 
 // Districts and congregations

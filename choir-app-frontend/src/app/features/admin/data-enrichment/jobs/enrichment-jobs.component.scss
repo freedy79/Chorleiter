@@ -1,0 +1,60 @@
+@use '../../../../../themes/breakpoints' as *;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.jobs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+
+  @include tablet {
+    grid-template-columns: 1fr;
+  }
+}
+
+.job-card {
+  padding: $spacing-md;
+  @include card-background;
+  @include adaptive-border(1px, solid);
+  @include elevation-shadow(1);
+}
+
+.job-form,
+.lookup-form {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.job-result {
+  margin-top: $spacing-md;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm;
+  border-radius: 8px;
+  background: rgba(76, 175, 80, 0.12);
+  color: #2e7d32;
+
+  .title {
+    font-weight: 600;
+  }
+
+  .subtitle {
+    font-size: 0.8125rem;
+  }
+}
+
+.job-details {
+  margin-top: $spacing-md;
+  display: grid;
+  gap: $spacing-sm;
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    @include secondary-text;
+
+    strong {
+      @include readable-text;
+    }
+  }
+}

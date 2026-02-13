@@ -1,0 +1,72 @@
+<div class="pwa-config">
+  <app-admin-page-header
+    title="PWA Konfiguration"
+    description="Progressive Web App Einstellungen: VAPID-Keys, Features, Service Worker und Cache">
+    <div class="header-actions">
+      <button mat-raised-button color="accent" (click)="initializeDefaults()" [disabled]="initializing">
+        <mat-icon>settings_backup_restore</mat-icon>
+        <span *ngIf="!initializing">Standardwerte initialisieren</span>
+        <span *ngIf="initializing">Initialisiere...</span>
+      </button>
+    </div>
+  </app-admin-page-header>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+
+    <!-- VAPID Keys Tab -->
+    <mat-tab label="VAPID Keys">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>vpn_key</mat-icon>
+        <span class="tab-label">VAPID Keys</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-pwa-vapid-keys></app-pwa-vapid-keys>
+      </div>
+    </mat-tab>
+
+    <!-- Features Tab -->
+    <mat-tab label="Features">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>toggle_on</mat-icon>
+        <span class="tab-label">Features</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-pwa-features></app-pwa-features>
+      </div>
+    </mat-tab>
+
+    <!-- Service Worker Tab -->
+    <mat-tab label="Service Worker">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>cached</mat-icon>
+        <span class="tab-label">Service Worker</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-pwa-service-worker></app-pwa-service-worker>
+      </div>
+    </mat-tab>
+
+    <!-- Cache Tab -->
+    <mat-tab label="Cache">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>storage</mat-icon>
+        <span class="tab-label">Cache</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-pwa-cache></app-pwa-cache>
+      </div>
+    </mat-tab>
+
+    <!-- All Configs Tab -->
+    <mat-tab label="Alle Einstellungen">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>list</mat-icon>
+        <span class="tab-label">Alle</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-pwa-all-configs></app-pwa-all-configs>
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+</div>

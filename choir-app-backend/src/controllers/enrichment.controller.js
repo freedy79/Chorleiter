@@ -4,9 +4,9 @@
  */
 
 const asyncHandler = require('express-async-handler');
-const logger = require('../../config/logger');
-const dataEnrichmentService = require('../../services/data-enrichment.service');
-const { dataEnrichmentSettingsService } = require('../../services/llm');
+const logger = require('../config/logger');
+const dataEnrichmentService = require('../services/data-enrichment.service');
+const { dataEnrichmentSettingsService } = require('../services/llm');
 
 /**
  * GET /api/admin/enrichment/settings
@@ -15,7 +15,7 @@ const { dataEnrichmentSettingsService } = require('../../services/llm');
 exports.getSettings = asyncHandler(async (req, res) => {
     try {
         const settings = await dataEnrichmentSettingsService.getAll();
-        
+
         res.json({
             success: true,
             settings
@@ -49,7 +49,7 @@ exports.updateSetting = asyncHandler(async (req, res) => {
             key,
             value,
             dataType || 'string',
-            req.user.id
+            req.userId
         );
 
         res.json({
@@ -95,7 +95,7 @@ exports.setApiKey = asyncHandler(async (req, res) => {
             settingKey,
             apiKey,
             'string',
-            req.user.id
+            req.userId
         );
 
         // Test connection
@@ -170,12 +170,12 @@ exports.createJob = asyncHandler(async (req, res) => {
 
     try {
         await dataEnrichmentService.initialize();
-        
+
         const result = await dataEnrichmentService.createEnrichmentJob(
             jobType,
             enrichmentFields,
             options || {},
-            req.user.id
+            req.userId
         );
 
         res.status(201).json({
@@ -263,7 +263,7 @@ exports.getSuggestions = asyncHandler(async (req, res) => {
 
     try {
         await dataEnrichmentService.initialize();
-        
+
         const filters = {
             status,
             minConfidence: minConfidence ? parseFloat(minConfidence) : undefined,
@@ -308,11 +308,11 @@ exports.reviewSuggestion = asyncHandler(async (req, res) => {
 
     try {
         await dataEnrichmentService.initialize();
-        
+
         const suggestion = await dataEnrichmentService.reviewSuggestion(
             suggestionId,
             status,
-            req.user.id
+            req.userId
         );
 
         res.json({
@@ -339,10 +339,10 @@ exports.applySuggestion = asyncHandler(async (req, res) => {
 
     try {
         await dataEnrichmentService.initialize();
-        
+
         const suggestion = await dataEnrichmentService.applySuggestion(
             suggestionId,
-            req.user.id
+            req.userId
         );
 
         res.json({
@@ -369,7 +369,7 @@ exports.getStatistics = asyncHandler(async (req, res) => {
 
     try {
         await dataEnrichmentService.initialize();
-        
+
         const filters = {
             dateFrom: dateFrom ? new Date(dateFrom) : undefined,
             dateTo: dateTo ? new Date(dateTo) : undefined

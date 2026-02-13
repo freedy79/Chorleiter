@@ -8,19 +8,16 @@ module.exports = (sequelize, DataTypes) => {
         settingKey: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
-            comment: 'Configuration key (e.g., "llm_provider", "budget_monthly", "api_key_gemini")'
+            unique: true
         },
         settingValue: {
             type: DataTypes.TEXT,
-            allowNull: true,
-            comment: 'Configuration value (may be encrypted for API keys)'
+            allowNull: true
         },
         isEncrypted: {
             type: DataTypes.BOOLEAN,
             allowNull: false,
-            defaultValue: false,
-            comment: 'Whether this value is encrypted (True for API keys)'
+            defaultValue: false
         },
         dataType: {
             type: DataTypes.ENUM('string', 'number', 'boolean', 'json'),
@@ -32,12 +29,14 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true
         },
         lastModifiedBy: {
-            type: DataTypes.UUID,
+            type: DataTypes.INTEGER,
             allowNull: true,
             references: {
                 model: 'users',
                 key: 'id'
-            }
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
         }
     }, {
         timestamps: true,

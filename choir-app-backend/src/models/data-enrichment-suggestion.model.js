@@ -58,20 +58,21 @@ module.exports = (sequelize, DataTypes) => {
         status: {
             type: DataTypes.ENUM('pending', 'approved', 'rejected', 'applied'),
             allowNull: false,
-            defaultValue: 'pending',
-            comment: 'Review status of this suggestion'
+            defaultValue: 'pending'
         },
         reviewedAt: {
             type: DataTypes.DATE,
             allowNull: true
         },
         reviewedBy: {
-            type: DataTypes.UUID,
+            type: DataTypes.INTEGER,
             allowNull: true,
             references: {
                 model: 'users',
                 key: 'id'
-            }
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
         },
         appliedAt: {
             type: DataTypes.DATE,

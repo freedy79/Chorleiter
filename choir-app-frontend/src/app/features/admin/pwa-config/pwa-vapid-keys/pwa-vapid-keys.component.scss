@@ -1,0 +1,47 @@
+.vapid-keys-config {
+  .full-width {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .info-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(33, 150, 243, 0.1);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+
+    mat-icon {
+      color: #2196F3;
+    }
+
+    code {
+      display: block;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      font-family: monospace;
+    }
+  }
+
+  mat-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    flex-wrap: wrap;
+
+    button {
+      mat-icon {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+}

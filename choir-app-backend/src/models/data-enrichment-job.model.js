@@ -7,8 +7,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         jobType: {
             type: DataTypes.ENUM('piece', 'composer', 'publisher'),
-            allowNull: false,
-            comment: 'Type of entity being enriched'
+            allowNull: false
         },
         status: {
             type: DataTypes.ENUM('pending', 'running', 'completed', 'failed', 'cancelled'),
@@ -77,12 +76,14 @@ module.exports = (sequelize, DataTypes) => {
             comment: 'Additional metadata (filters, options, etc.)'
         },
         createdBy: {
-            type: DataTypes.UUID,
+            type: DataTypes.INTEGER,
             allowNull: false,
             references: {
                 model: 'users',
                 key: 'id'
-            }
+            },
+            onDelete: 'CASCADE',
+            onUpdate: 'CASCADE'
         }
     }, {
         timestamps: true,

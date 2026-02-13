@@ -9,11 +9,23 @@
       </p>
 
       <div class="cta-buttons">
-        <a mat-raised-button color="primary" routerLink="/register" class="primary-cta">
+        <a mat-raised-button color="primary"
+           [routerLink]="isBackendAvailable ? '/register' : null"
+           [attr.aria-disabled]="!isBackendAvailable"
+           [class.disabled]="!isBackendAvailable"
+           [attr.tabindex]="!isBackendAvailable ? -1 : null"
+           (click)="!isBackendAvailable && $event.preventDefault()"
+           class="primary-cta">
           <mat-icon>person_add</mat-icon>
           Jetzt kostenlos registrieren
         </a>
-        <a mat-raised-button routerLink="/login" class="secondary-cta">
+        <a mat-raised-button
+           [routerLink]="isBackendAvailable ? '/login' : null"
+           [attr.aria-disabled]="!isBackendAvailable"
+           [class.disabled]="!isBackendAvailable"
+           [attr.tabindex]="!isBackendAvailable ? -1 : null"
+           (click)="!isBackendAvailable && $event.preventDefault()"
+           class="secondary-cta">
           Anmelden
         </a>
       </div>
@@ -55,7 +67,12 @@
         </div>
       </mat-card-content>
       <mat-card-actions align="end">
-        <a mat-button color="primary" routerLink="/login">
+        <a mat-button color="primary"
+           [routerLink]="isBackendAvailable ? '/login' : null"
+           [attr.aria-disabled]="!isBackendAvailable"
+           [class.disabled]="!isBackendAvailable"
+           [attr.tabindex]="!isBackendAvailable ? -1 : null"
+           (click)="!isBackendAvailable && $event.preventDefault()">
           <mat-icon>login</mat-icon>
           Demo-Account ausprobieren
         </a>
@@ -79,8 +96,13 @@
   <div class="register-cta-section">
     <h2>Bereit loszulegen?</h2>
     <p>Registrieren Sie sich jetzt kostenlos und verwalten Sie Ihren Chor professionell</p>
-    <a mat-raised-button color="primary" routerLink="/register" class="final-cta">
-      <mat-icon>person_add</mat-icon>
+    <a mat-raised-button color="primary"
+       [routerLink]="isBackendAvailable ? '/register' : null"
+       [attr.aria-disabled]="!isBackendAvailable"
+       [class.disabled]="!isBackendAvailable"
+       [attr.tabindex]="!isBackendAvailable ? -1 : null"
+       (click)="!isBackendAvailable && $event.preventDefault()"
+       class="final-cta">
       Kostenlos registrieren
     </a>
   </div>

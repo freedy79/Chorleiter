@@ -69,6 +69,13 @@
     mat-icon {
       margin-right: 8px;
     }
+
+    &.disabled,
+    &[aria-disabled='true'] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
   }
 
   .secondary-cta {
@@ -80,6 +87,13 @@
 
     &:hover {
       background: rgba(255, 255, 255, 0.3);
+    }
+
+    &.disabled,
+    &[aria-disabled='true'] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
   }
 }
@@ -105,6 +119,13 @@
       background-color: #005d9d;
       color: white;
     }
+  }
+
+  mat-card-actions a.disabled,
+  mat-card-actions a[aria-disabled='true'] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 }
 
@@ -296,6 +317,13 @@
 
     mat-icon {
       margin-right: 8px;
+    }
+
+    &.disabled,
+    &[aria-disabled='true'] {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
     }
   }
 }

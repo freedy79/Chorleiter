@@ -1,0 +1,85 @@
+<div class="jobs">
+  <mat-card class="job-card">
+    <mat-card-title>Neuen Job starten</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="jobForm" class="job-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Job-Typ</mat-label>
+          <mat-select formControlName="jobType">
+            <mat-option value="piece">Stücke</mat-option>
+            <mat-option value="composer">Komponisten</mat-option>
+            <mat-option value="publisher">Verlage</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Felder</mat-label>
+          <mat-select formControlName="fields" multiple>
+            <mat-option *ngFor="let field of fieldOptions" [value]="field.value">
+              {{ field.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Auto-Approve Schwelle</mat-label>
+          <input matInput type="number" min="0.5" max="1" step="0.01" formControlName="autoApproveThreshold" />
+        </mat-form-field>
+
+        <mat-slide-toggle formControlName="autoApprove">
+          Auto-Approve aktivieren
+        </mat-slide-toggle>
+
+        <button mat-raised-button color="primary" (click)="createJob()" [disabled]="creating">
+          <mat-icon>play_arrow</mat-icon>
+          Job starten
+        </button>
+      </form>
+
+      <div class="job-result" *ngIf="createdJob">
+        <mat-icon>check_circle</mat-icon>
+        <div>
+          <div class="title">Job gestartet</div>
+          <div class="subtitle">ID: {{ createdJob.jobId }}</div>
+          <div class="subtitle">Status: {{ createdJob.status }}</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="job-card">
+    <mat-card-title>Job-Details abrufen</mat-card-title>
+    <mat-card-content>
+      <form [formGroup]="lookupForm" class="lookup-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Job-ID</mat-label>
+          <input matInput formControlName="jobId" placeholder="z.B. 8f3c-..." />
+        </mat-form-field>
+
+        <button mat-stroked-button color="primary" (click)="loadJob()" [disabled]="loadingJob">
+          <mat-icon>search</mat-icon>
+          Laden
+        </button>
+      </form>
+
+      <div class="job-details" *ngIf="jobDetails">
+        <div class="detail-row">
+          <span>Status</span>
+          <strong>{{ jobDetails.status }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Items</span>
+          <strong>{{ jobDetails.totalItems }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Vorschläge</span>
+          <strong>{{ jobDetails.successCount }}</strong>
+        </div>
+        <div class="detail-row">
+          <span>Kosten</span>
+          <strong>€ {{ jobDetails.apiCosts | number:'1.2-2' }}</strong>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -152,7 +152,7 @@ class LLMRouter {
 
         // Second pass: For low-confidence results, use fallback provider
         const lowConfidenceSuggestions = suggestions.filter(s => s.confidence < 0.6);
-        
+
         if (lowConfidenceSuggestions.length > 0) {
             const fallbackProvider = this.getFallbackProvider();
             if (fallbackProvider.isAvailable()) {
@@ -164,7 +164,7 @@ class LLMRouter {
                 const piecesNeedingFallback = [...new Set(
                     lowConfidenceSuggestions.map(s => s.pieceId)
                 )];
-                const piecesToRefine = pieces.filter(p => 
+                const piecesToRefine = pieces.filter(p =>
                     piecesNeedingFallback.includes(p.id)
                 );
 
@@ -222,14 +222,14 @@ class LLMRouter {
             const fallbackProvider = this.getFallbackProvider();
             const lowConfidenceSuggestions = result.suggestions.filter(s => s.confidence < 0.7);
 
-            if (lowConfidenceSuggestions.length > 0 && 
+            if (lowConfidenceSuggestions.length > 0 &&
                 fallbackProvider.isAvailable() &&
                 (result.totalCost + (lowConfidenceSuggestions.length * 0.001)) <= remainingBudget) {
-                
+
                 const piecesNeedingFallback = [...new Set(
                     lowConfidenceSuggestions.map(s => s.pieceId)
                 )];
-                const piecesToRefine = pieces.filter(p => 
+                const piecesToRefine = pieces.filter(p =>
                     piecesNeedingFallback.includes(p.id)
                 );
 

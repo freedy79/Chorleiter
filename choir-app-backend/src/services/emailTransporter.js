@@ -1,7 +1,124 @@
 const nodemailer = require('nodemailer');
+const logger = require('../config/logger');
 
 function emailDisabled() {
   return process.env.DISABLE_EMAIL === 'true';
+}
+
+/**
+ * Checks if email content is empty or only contains whitespace/HTML tags
+ * @param {string} content - The email content (text or html)
+ * @returns {boolean} true if empty
+ */
+function isContentEmpty(content) {
+  if (!content) return true;
+  const stripped = content.replace(/<[^>]*>/g, '').trim();
+  return stripped.length === 0;
+}
+
+/**
+ * Validates if email has valid subject and body content
+ * @param {Object} mailOptions - The mail options object
+ * @returns {Object} { valid: boolean, reason: string }
+ */
+function validateEmailContent(mailOptions) {
+  const hasSubject = mailOptions.subject && mailOptions.subject.trim().length > 0;
+  const hasTextContent = !isContentEmpty(mailOptions.text);
+  const hasHtmlContent = !isContentEmpty(mailOptions.html);
+  const hasBody = hasTextContent || hasHtmlContent;
+
+  if (!hasSubject && !hasBody) {
+    return { valid: false, reason: 'Kein Betreff und kein Bodytext vorhanden' };
+  }
+  if (!hasSubject) {
+    return { valid: false, reason: 'Kein Betreff vorhanden' };
+  }
+  if (!hasBody) {
+    return { valid: false, reason: 'Kein Bodytext vorhanden' };
+  }
+  return { valid: true };
+}
+
+/**
+ * Notifies admins about prevented empty email
+ * @param {Object} mailOptions - The original mail options
+ * @param {string} reason - Why the email was blocked
+ * @param {string} callStack - Stack trace of the call
+ */
+async function notifyAdminsAboutEmptyEmail(mailOptions, reason, callStack) {
+  try {
+    const db = require('../models');
+
+    // Get all users and filter admins in-memory (works with both MySQL and SQLite)
+    const allUsers = await db.user.findAll({
+      attributes: ['email', 'roles']
+    });
+
+    const admins = allUsers.filter(user =>
+      Array.isArray(user.roles) && user.roles.includes('admin')
+    );
+
+    if (admins.length === 0) {
+      logger.warn('Leere E-Mail verhindert, aber keine Admins zum Benachrichtigen gefunden');
+      return;
+    }
+
+    const adminEmails = admins.map(a => a.email).filter(Boolean);
+    if (adminEmails.length === 0) return;
+
+    // Extract calling location from stack trace
+    const stackLines = callStack.split('\n');
+    const callerLine = stackLines.find(line =>
+      line.includes('.js:') &&
+      !line.includes('emailTransporter.js') &&
+      !line.includes('node_modules')
+    ) || stackLines[2] || 'Unbekannt';
+
+    const subject = '⚠️ Leere E-Mail wurde verhindert';
+    const html = `
+      <h2>Warnung: Leere E-Mail verhindert</h2>
+      <p><strong>Grund:</strong> ${reason}</p>
+      <p><strong>Empfänger:</strong> ${mailOptions.to || 'Nicht angegeben'}</p>
+      <p><strong>Betreff:</strong> ${mailOptions.subject || '(leer)'}</p>
+      <p><strong>Text:</strong> ${mailOptions.text || '(leer)'}</p>
+      <p><strong>HTML:</strong> ${mailOptions.html || '(leer)'}</p>
+      <hr>
+      <p><strong>Auslösende Stelle:</strong></p>
+      <pre>${callerLine.trim()}</pre>
+      <p><strong>Vollständiger Stack Trace:</strong></p>
+      <pre>${callStack}</pre>
+    `;
+    const text = `
+Warnung: Leere E-Mail verhindert
+
+Grund: ${reason}
+Empfänger: ${mailOptions.to || 'Nicht angegeben'}
+Betreff: ${mailOptions.subject || '(leer)'}
+Text: ${mailOptions.text || '(leer)'}
+HTML: ${mailOptions.html || '(leer)'}
+
+------ Auslösende Stelle ------
+${callerLine.trim()}
+
+------ Vollständiger Stack Trace ------
+${callStack}
+`;
+
+    // Send directly without validation to avoid recursion
+    const settings = await db.mail_setting.findByPk(1);
+    const transporter = await createTransporter(settings);
+    await transporter.sendMail({
+      from: getFromAddress(settings),
+      to: adminEmails,
+      subject,
+      html,
+      text
+    });
+
+    logger.info(`Admin-Benachrichtigung über leere E-Mail an ${adminEmails.join(', ')} gesendet`);
+  } catch (err) {
+    logger.error(`Fehler beim Benachrichtigen der Admins über leere E-Mail: ${err.message}`);
+  }
 }
 
 async function createTransporter(existingSettings) {
@@ -35,6 +152,20 @@ function getFromAddress(settings) {
 
 async function sendMail(options, overrideSettings) {
   if (emailDisabled()) return;
+
+  // Validate email content before sending
+  const validation = validateEmailContent(options);
+  if (!validation.valid) {
+    const callStack = new Error().stack;
+    logger.warn(`E-Mail-Versand verhindert: ${validation.reason}. Empfänger: ${options.to}`);
+
+    // Notify admins asynchronously (don't wait)
+    notifyAdminsAboutEmptyEmail(options, validation.reason, callStack)
+      .catch(err => logger.error(`Fehler bei Admin-Benachrichtigung: ${err.message}`));
+
+    return; // Don't send the email
+  }
+
   const settings = overrideSettings || await require('../models').mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
   const mailOptions = { from: getFromAddress(settings), ...options };

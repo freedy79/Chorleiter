@@ -4,8 +4,8 @@
  * Manages job execution, tracking, and suggestion storage
  */
 
-const logger = require('../../config/logger');
-const db = require('../../models');
+const logger = require('../config/logger');
+const db = require('../models');
 const { LLMRouter, dataEnrichmentSettingsService } = require('./llm');
 
 class DataEnrichmentService {

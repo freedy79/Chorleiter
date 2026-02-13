@@ -1,0 +1,44 @@
+<div class="pwa-features">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>PWA Feature-Flags</mat-card-title>
+      <mat-card-subtitle>
+        Aktivieren oder deaktivieren Sie Progressive Web App Features
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <div class="features-list" *ngIf="!loading">
+        <div class="feature-item" *ngFor="let feature of features">
+          <div class="feature-icon">
+            <mat-icon [class.enabled]="feature.enabled">{{ feature.icon }}</mat-icon>
+          </div>
+          <div class="feature-info">
+            <h3>{{ feature.label }}</h3>
+            <p>{{ feature.description }}</p>
+          </div>
+          <div class="feature-toggle">
+            <mat-slide-toggle
+              [checked]="feature.enabled"
+              (change)="toggleFeature(feature)"
+              [disabled]="saving"
+              color="primary">
+            </mat-slide-toggle>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" *ngIf="!loading">
+        <mat-icon>info</mat-icon>
+        <div>
+          <strong>Hinweis:</strong> Änderungen an diesen Features erfordern möglicherweise ein Neuladen der Anwendung
+          oder ein Update des Service Workers bei den Benutzern.
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

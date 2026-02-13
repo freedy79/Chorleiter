@@ -24,7 +24,7 @@ class LLMProvider {
     /**
      * Enrich a batch of entities with metadata and suggestions
      * Must be implemented by subclass
-     * 
+     *
      * @param {Array} pieces - Array of piece objects to enrich
      * @param {Array} enrichmentFields - Fields to enrich (e.g., ['opus', 'voicing', 'durationSec'])
      * @returns {Promise<Object>} { suggestions: [], costs: 0, tokensUsed: 0 }
@@ -105,7 +105,7 @@ class LLMProvider {
             .join('\n');
 
         return `
-You are a music metadata enrichment expert. Given information about a music piece, 
+You are a music metadata enrichment expert. Given information about a music piece,
 provide accurate metadata for missing or incomplete fields.
 
 Piece Information:

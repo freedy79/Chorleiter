@@ -58,6 +58,7 @@ import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
 import { AvailabilityService } from './availability.service';
 import { SearchService } from './search.service';
+import { PwaConfig, PwaConfigCreateRequest, PwaConfigUpdateRequest, PwaConfigInitializeResponse } from '../models/pwa-config';
 import { MonthlyPlanService } from './monthly-plan.service';
 import { PostService, PostPayload } from './post.service';
 import { LibraryService } from './library.service';
@@ -1042,5 +1043,34 @@ export class ApiService {
     return this.http.delete(`${environment.apiUrl}/notifications/unsubscribe`, {
       body: { endpoint, choirId }
     });
+  }
+
+  // --- PWA Configuration Methods ---
+  getAllPwaConfigs(): Observable<PwaConfig[]> {
+    return this.http.get<PwaConfig[]>(`${environment.apiUrl}/admin/pwa-config`);
+  }
+
+  getPwaConfigByKey(key: string): Observable<PwaConfig> {
+    return this.http.get<PwaConfig>(`${environment.apiUrl}/admin/pwa-config/${key}`);
+  }
+
+  getPwaConfigsByCategory(category: string): Observable<PwaConfig[]> {
+    return this.http.get<PwaConfig[]>(`${environment.apiUrl}/admin/pwa-config/category/${category}`);
+  }
+
+  createPwaConfig(data: PwaConfigCreateRequest): Observable<PwaConfig> {
+    return this.http.post<PwaConfig>(`${environment.apiUrl}/admin/pwa-config`, data);
+  }
+
+  updatePwaConfig(key: string, data: PwaConfigUpdateRequest): Observable<PwaConfig> {
+    return this.http.put<PwaConfig>(`${environment.apiUrl}/admin/pwa-config/${key}`, data);
+  }
+
+  deletePwaConfig(key: string): Observable<void> {
+    return this.http.delete<void>(`${environment.apiUrl}/admin/pwa-config/${key}`);
+  }
+
+  initializePwaConfigDefaults(): Observable<PwaConfigInitializeResponse> {
+    return this.http.post<PwaConfigInitializeResponse>(`${environment.apiUrl}/admin/pwa-config/initialize`, {});
   }
 }

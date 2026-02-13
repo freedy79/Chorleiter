@@ -1,0 +1,81 @@
+<div class="dashboard">
+  <div class="loading" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Dashboard wird geladen…</span>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <div class="stats-grid" *ngIf="!loading">
+    <app-enrichment-stats-card
+      title="Jobs gesamt"
+      [value]="stats.totalJobs"
+      icon="work"
+      subtitle="Abgeschlossene Jobs: {{ stats.completedJobs }}">
+    </app-enrichment-stats-card>
+
+    <app-enrichment-stats-card
+      title="Erfolgsrate"
+      [value]="completionRate + ' %'"
+      icon="check_circle"
+      subtitle="Fehlgeschlagen: {{ stats.failedJobs }}">
+    </app-enrichment-stats-card>
+
+    <app-enrichment-stats-card
+      title="Vorschläge"
+      [value]="stats.totalSuggestions"
+      icon="tips_and_updates"
+      subtitle="Angewendet: {{ stats.appliedSuggestions }}">
+    </app-enrichment-stats-card>
+
+    <app-enrichment-stats-card
+      title="Kosten (Monat)"
+      [value]="formatCurrency(stats.totalCosts)"
+      icon="payments"
+      subtitle="Budget: {{ formatCurrency(monthlyBudget) }}"
+      [highlight]="budgetUsedPercentage > 80">
+    </app-enrichment-stats-card>
+  </div>
+
+  <mat-card class="budget-card" *ngIf="!loading">
+    <div class="budget-header">
+      <div>
+        <div class="title">Monatsbudget</div>
+        <div class="subtitle">Verbraucht: {{ budgetUsedPercentage }}%</div>
+      </div>
+      <div class="amount">{{ formatCurrency(stats.totalCosts) }} / {{ formatCurrency(monthlyBudget) }}</div>
+    </div>
+    <mat-progress-bar [value]="budgetUsedPercentage" color="primary"></mat-progress-bar>
+  </mat-card>
+
+  <mat-card class="providers-card" *ngIf="!loading">
+    <div class="card-header">
+      <mat-icon>cloud</mat-icon>
+      <div>
+        <div class="title">Provider Status</div>
+        <div class="subtitle">Verfügbarkeit & Verbindung</div>
+      </div>
+    </div>
+
+    <div class="provider-list" *ngIf="providers.length; else noProviders">
+      <div class="provider-item" *ngFor="let provider of providers">
+        <div class="provider-name">{{ provider.pricing?.name || provider.name }}</div>
+        <div class="provider-meta">
+          <span class="badge" [class.ok]="provider.connection?.ok" [class.fail]="!provider.connection?.ok">
+            {{ provider.connection?.ok ? 'OK' : 'Offline' }}
+          </span>
+          <span class="detail" *ngIf="provider.pricing?.estimatedCostPerPiece as costPerPiece">
+            ~{{ costPerPiece | number:'1.4-4' }} € / Stück
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noProviders>
+      <div class="empty">Keine Provider-Konfiguration gefunden.</div>
+    </ng-template>
+  </mat-card>
+</div>

@@ -433,7 +433,8 @@ async function participationPdf(members, events, availabilities = []) {
     let x = left;
     cells.forEach((cell, i) => {
       if (i >= 5) {
-        doc.font('Helvetica').fontSize(table.rowFontSize || 9).text(cell, x + 2, y + 2, {
+        // Symbole in fetter Schrift und größer darstellen
+        doc.font('Helvetica-Bold').fontSize((table.rowFontSize || 9) + 2).text(cell, x + 2, y + 2, {
           width: columnWidths[i] - 4,
           align: 'center'
         });
@@ -471,7 +472,7 @@ async function participationPdf(members, events, availabilities = []) {
       let mark = '';
       if (status === 'AVAILABLE') mark = '✓';
       else if (status === 'MAYBE') mark = '?';
-      else if (status === 'UNAVAILABLE') mark = '-';
+      else if (status === 'UNAVAILABLE') mark = '–';  // Langes Minus (En Dash)
       row.push(mark);
     }
     drawRow(row);

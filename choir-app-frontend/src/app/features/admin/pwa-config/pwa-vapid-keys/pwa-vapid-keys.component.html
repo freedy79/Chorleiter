@@ -1,0 +1,70 @@
+<div class="vapid-keys-config">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>VAPID Schlüssel für Push-Benachrichtigungen</mat-card-title>
+      <mat-card-subtitle>
+        VAPID (Voluntary Application Server Identification) Keys werden für Web Push Notifications benötigt
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <form [formGroup]="form" *ngIf="!loading">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Public Key</mat-label>
+          <input matInput formControlName="publicKey" placeholder="BCr8...">
+          <mat-hint>Öffentlicher VAPID-Key (wird an Browser gesendet)</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Private Key</mat-label>
+          <input matInput
+                 formControlName="privateKey"
+                 [type]="showPrivateKey ? 'text' : 'password'"
+                 placeholder="Leave empty to keep existing">
+          <button mat-icon-button matSuffix (click)="showPrivateKey = !showPrivateKey" type="button">
+            <mat-icon>{{ showPrivateKey ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-hint>Privater VAPID-Key (wird geheim gehalten)</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Subject</mat-label>
+          <input matInput formControlName="subject" placeholder="mailto:admin@example.com">
+          <mat-hint>E-Mail-Adresse oder HTTPS-URL als Kontakt</mat-hint>
+          <mat-error *ngIf="form.get('subject')?.hasError('required')">
+            Subject ist erforderlich
+          </mat-error>
+        </mat-form-field>
+
+        <div class="info-box">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>VAPID-Keys generieren:</strong>
+            <code>npx web-push generate-vapid-keys</code>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary"
+              (click)="save()"
+              [disabled]="form.pristine || form.invalid || saving">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Speichere...' : 'Speichern' }}
+      </button>
+      <button mat-button (click)="generateKeys()">
+        <mat-icon>vpn_key</mat-icon>
+        Generierungsanleitung
+      </button>
+      <button mat-button (click)="testNotification()" [disabled]="form.pristine || form.invalid">
+        <mat-icon>notifications_active</mat-icon>
+        Test-Benachrichtigung
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

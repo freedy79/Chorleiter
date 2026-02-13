@@ -1,0 +1,42 @@
+<div class="cache-config">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Cache-Einstellungen</mat-card-title>
+      <mat-card-subtitle>
+        Konfiguration der Service Worker Cache-Strategie
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <form [formGroup]="form" *ngIf="!loading">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Maximales Cache-Alter (Stunden)</mat-label>
+          <input matInput type="number" formControlName="maxAgeHours" min="1" max="168">
+          <mat-hint>Wie lange gecachte Daten gültig bleiben (1-168 Stunden)</mat-hint>
+        </mat-form-field>
+
+        <div class="info-box">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>Hinweis:</strong> Die detaillierte Cache-Strategie wird in der
+            <code>ngsw-config.json</code> Datei konfiguriert. Diese Einstellung beeinflusst
+            die allgemeine Cache-Lebensdauer.
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary"
+              (click)="save()"
+              [disabled]="form.pristine || saving">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Speichere...' : 'Speichern' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

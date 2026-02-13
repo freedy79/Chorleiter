@@ -1,0 +1,65 @@
+@use '../../../../../themes/breakpoints' as *;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.loading,
+.error {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border-radius: 8px;
+  @include surface-background;
+  @include adaptive-border(1px, solid);
+  @include secondary-text;
+}
+
+mat-card {
+  padding: $spacing-md;
+  @include card-background;
+  @include adaptive-border(1px, solid);
+  @include elevation-shadow(1);
+}
+
+mat-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: $spacing-md;
+  @include readable-text;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+
+  @include tablet {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include handset {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+
+  @include handset {
+    justify-content: stretch;
+
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.api-key-form button {
+  margin-top: $spacing-sm;
+}

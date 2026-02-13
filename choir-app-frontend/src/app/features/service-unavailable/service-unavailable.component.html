@@ -1,8 +1,12 @@
 <div class="maintenance-container">
   <mat-card>
     <mat-card-content>
+      <mat-icon class="warning-icon">warning</mat-icon>
       <h2>Dienst nicht erreichbar</h2>
       <p>Am Dienst wird aktuell gearbeitet. Bitte versuche es später erneut.</p>
+      <div class="redirect-info">
+        <p>Du wirst in <strong>{{ secondsRemaining }}</strong> Sekunde(n) zur Startseite weitergeleitet...</p>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>

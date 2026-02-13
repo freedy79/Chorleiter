@@ -1,0 +1,108 @@
+<div class="settings">
+  <div class="loading" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Einstellungen werden geladen…</span>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <form [formGroup]="settingsForm" class="settings-form" *ngIf="!loading">
+    <mat-card>
+      <mat-card-title>Provider Konfiguration</mat-card-title>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Primärer Provider</mat-label>
+            <mat-select formControlName="primaryProvider">
+              <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                {{ provider.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fallback Provider</mat-label>
+            <mat-select formControlName="fallbackProvider">
+              <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                {{ provider.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Routing-Strategie</mat-label>
+            <mat-select formControlName="routingStrategy">
+              <mat-option value="primary">Nur primär</mat-option>
+              <mat-option value="dual">Primär + Fallback</mat-option>
+              <mat-option value="cost-optimized">Budget-optimiert</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-title>Budget & Planung</mat-card-title>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Monatliches Budget (€)</mat-label>
+            <input matInput type="number" formControlName="monthlyBudget" min="1" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Automatischer Zeitplan (Cron)</mat-label>
+            <input matInput formControlName="scheduleCron" placeholder="0 2 * * *" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Auto-Approve Schwelle</mat-label>
+            <input matInput type="number" formControlName="autoApproveThreshold" min="0.5" max="1" step="0.01" />
+          </mat-form-field>
+        </div>
+
+        <mat-slide-toggle formControlName="autoApproveEnabled">
+          Auto-Approve für hohe Konfidenz
+        </mat-slide-toggle>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="saveSettings()" [disabled]="saving">
+        <mat-icon>save</mat-icon>
+        Einstellungen speichern
+      </button>
+    </div>
+  </form>
+
+  <form [formGroup]="apiKeyForm" class="api-key-form" *ngIf="!loading">
+    <mat-card>
+      <mat-card-title>API-Key hinterlegen</mat-card-title>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Provider</mat-label>
+            <mat-select formControlName="provider">
+              <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                {{ provider.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>API-Key</mat-label>
+            <input matInput formControlName="apiKey" type="password" autocomplete="off" />
+          </mat-form-field>
+        </div>
+
+        <button mat-stroked-button color="primary" (click)="saveApiKey()">
+          <mat-icon>vpn_key</mat-icon>
+          API-Key speichern
+        </button>
+      </mat-card-content>
+    </mat-card>
+  </form>
+</div>

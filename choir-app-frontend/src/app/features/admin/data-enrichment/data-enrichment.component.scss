@@ -1,0 +1,45 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.data-enrichment {
+  padding: $spacing-lg;
+  max-width: 1400px;
+  margin: 0 auto;
+
+  @include handset {
+    padding: $spacing-md;
+  }
+}
+
+mat-tab-group {
+  ::ng-deep .mat-tab-labels {
+    margin-bottom: $spacing-md;
+  }
+
+  .tab-content {
+    padding: $spacing-md 0;
+
+    @include handset {
+      padding: $spacing-sm 0;
+    }
+  }
+
+  .tab-label {
+    margin-left: $spacing-xs;
+
+    @include handset {
+      display: none;
+    }
+  }
+}
+
+::ng-deep {
+  .data-enrichment .mat-tab-label {
+    min-width: 110px !important;
+
+    @include handset {
+      min-width: 56px !important;
+      padding: 0 $spacing-sm !important;
+    }
+  }
+}

@@ -1,0 +1,57 @@
+@use '../../../../../themes/breakpoints' as *;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.stats-card {
+  padding: $spacing-md;
+  border-radius: 12px;
+  @include card-background;
+  @include adaptive-border(1px, solid);
+  @include elevation-shadow(1);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  min-height: 120px;
+
+  &.highlight {
+    border-color: #1976d2;
+    box-shadow: 0 4px 16px rgba(25, 118, 210, 0.15);
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    .card-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
+      color: #1976d2;
+    }
+
+    .card-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      @include secondary-text;
+    }
+  }
+
+  .card-value {
+    font-size: 1.75rem;
+    font-weight: 600;
+    @include readable-text;
+  }
+
+  .card-subtitle {
+    font-size: 0.8125rem;
+    @include subtle-text;
+  }
+
+  @include handset {
+    min-height: 100px;
+
+    .card-value {
+      font-size: 1.5rem;
+    }
+  }
+}

@@ -401,6 +401,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
           { displayName: 'E-Mail Management', route: '/admin/mail-management', iconName: 'mail' },
           { displayName: 'PDF Templates', route: '/admin/pdf-templates', iconName: 'picture_as_pdf' },
           { displayName: 'Metadaten', route: '/admin/metadata', iconName: 'library_music' },
+          { displayName: 'Datenanreicherung', route: '/admin/data-enrichment', iconName: 'auto_fix_high' },
           { displayName: 'Sicherheit', route: '/admin/security', iconName: 'security' },
           { displayName: 'Systemeinstellungen', route: '/admin/system-settings', iconName: 'settings' },
           { displayName: '──────────', route: '', disabled: true }, // Divider

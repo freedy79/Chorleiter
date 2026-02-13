@@ -46,6 +46,16 @@ export const adminRoutes: Routes = [
         loadComponent: () => import('./system-settings/system-settings.component').then(m => m.SystemSettingsComponent),
         data: { title: 'Admin – Systemeinstellungen' }
       },
+      {
+        path: 'data-enrichment',
+        loadComponent: () => import('./data-enrichment/data-enrichment.component').then(m => m.DataEnrichmentComponent),
+        data: { title: 'Admin – Datenanreicherung' }
+      },
+      {
+        path: 'pwa-config',
+        loadComponent: () => import('./pwa-config/pwa-config.component').then(m => m.PwaConfigComponent),
+        data: { title: 'Admin – PWA Konfiguration' }
+      },
 
       // Legacy routes (kept for backward compatibility)
       { path: 'general', loadComponent: () => import('./general/general-settings.component').then(m => m.GeneralSettingsComponent), canDeactivate: [PendingChangesGuard], data: { title: 'Admin – Allgemein' } },

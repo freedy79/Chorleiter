@@ -198,7 +198,7 @@ class DataEnrichmentSettingsService {
             const result = await db.data_enrichment_setting.destroy({
                 where: { settingKey: key }
             });
-            
+
             logger.info(`[Settings] Setting deleted: ${key}`);
             return result > 0;
         } catch (error) {

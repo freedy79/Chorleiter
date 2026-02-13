@@ -39,7 +39,7 @@ class ClaudeProvider extends LLMProvider {
                 const prompt = this.buildBatchEnrichmentPrompt(batch, enrichmentFields);
 
                 const response = await this.callAPI(prompt);
-                
+
                 const batchSuggestions = response.suggestions || [];
                 suggestions.push(...batchSuggestions);
 
@@ -186,8 +186,8 @@ Piece ${idx + 1}:
             .join('\n');
 
         return `
-You are a music metadata enrichment expert. For the following pieces, provide accurate metadata 
-enrichment. Use your knowledge of music history, musicological databases (IMSLP, Wikidata, MusicBrainz), 
+You are a music metadata enrichment expert. For the following pieces, provide accurate metadata
+enrichment. Use your knowledge of music history, musicological databases (IMSLP, Wikidata, MusicBrainz),
 and standard music references.
 
 Pieces to enrich:

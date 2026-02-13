@@ -4,7 +4,7 @@
  */
 
 const axios = require('axios');
-const logger = require('../../config/logger');
+const logger = require('../config/logger');
 
 /**
  * IMSLP (International Music Score Library Project) Adapter
@@ -24,7 +24,7 @@ class IMSLPAdapter {
     async searchPiece(piece) {
         try {
             const query = `${piece.title} ${piece.composer?.name || ''}`.trim();
-            
+
             const response = await axios.get(this.baseUrl, {
                 params: {
                     q: query,
@@ -35,7 +35,7 @@ class IMSLPAdapter {
 
             // Parse results (IMSLP returns HTML)
             const enrichments = this.parseIMSLPResults(response.data, piece);
-            
+
             return {
                 source: 'IMSLP',
                 enrichments,
@@ -52,7 +52,7 @@ class IMSLPAdapter {
      */
     parseIMSLPResults(html, piece) {
         const enrichments = [];
-        
+
         // Basic parsing - in production would use proper HTML parser
         if (html.includes('Opus') || html.includes('opus')) {
             // Try to extract opus number pattern like "Op. 123"
@@ -92,7 +92,7 @@ class WikidataAdapter {
         try {
             // Search for composer first
             const composerData = await this.searchComposer(piece.composer?.name);
-            
+
             if (!composerData.composerId) {
                 return { source: 'Wikidata', enrichments: [], confidence: 0 };
             }
@@ -235,7 +235,7 @@ class MusicBrainzAdapter {
     async searchPiece(piece) {
         try {
             const query = `title:"${piece.title}"`;
-            const queryStr = piece.composer?.name 
+            const queryStr = piece.composer?.name
                 ? `${query} AND artist:"${piece.composer.name}"`
                 : query;
 

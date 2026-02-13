@@ -91,12 +91,28 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       category: 'content'
     },
     {
+      id: 'data-enrichment',
+      label: 'Datenanreicherung',
+      icon: 'auto_awesome',
+      route: '/admin/data-enrichment',
+      description: 'Metadaten automatisch prüfen & ergänzen',
+      category: 'content'
+    },
+    {
       id: 'security',
       label: 'Sicherheit & Monitoring',
       icon: 'security',
       route: '/admin/security',
       description: 'Login-Versuche, Protokolle, Backup',
       category: 'security'
+    },
+    {
+      id: 'pwa-config',
+      label: 'PWA Konfiguration',
+      icon: 'install_mobile',
+      route: '/admin/pwa-config',
+      description: 'VAPID Keys, Service Worker, Cache',
+      category: 'system'
     },
     {
       id: 'system',

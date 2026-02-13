@@ -1,0 +1,49 @@
+<div class="data-enrichment">
+  <app-admin-page-header
+    title="Datenanreicherung"
+    description="Automatische Validierung und Ergänzung von Literatur-, Komponisten- und Verlagsdaten."
+    backRoute="/admin/dashboard">
+  </app-admin-page-header>
+
+  <mat-tab-group (selectedTabChange)="onTabChange($event)">
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>dashboard</mat-icon>
+        <span class="tab-label">Dashboard</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-enrichment-dashboard></app-enrichment-dashboard>
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>tune</mat-icon>
+        <span class="tab-label">Einstellungen</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-enrichment-settings></app-enrichment-settings>
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>rule</mat-icon>
+        <span class="tab-label">Vorschläge</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-enrichment-suggestions></app-enrichment-suggestions>
+      </div>
+    </mat-tab>
+
+    <mat-tab>
+      <ng-template mat-tab-label>
+        <mat-icon>work_history</mat-icon>
+        <span class="tab-label">Jobs</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-enrichment-jobs></app-enrichment-jobs>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

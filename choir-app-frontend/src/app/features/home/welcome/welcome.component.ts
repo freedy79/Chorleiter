@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { AuthService } from '@core/services/auth.service';
+import { BackendStatusService } from '@core/services/backend-status.service';
 import { take } from 'rxjs/operators';
 
 @Component({
@@ -16,8 +17,15 @@ import { take } from 'rxjs/operators';
 export class WelcomeComponent implements OnInit {
   demoEmail = 'demo@nak-chorleiter.de';
   demoPassword = 'demo';
+  isBackendAvailable = true;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    private backendStatusService: BackendStatusService
+  ) {
+    this.isBackendAvailable = this.backendStatusService.isBackendAvailable();
+  }
 
   ngOnInit(): void {
     // Redirect logged-in users to dashboard
@@ -27,6 +35,15 @@ export class WelcomeComponent implements OnInit {
       if (isLoggedIn) {
         this.router.navigate(['/dashboard']);
       }
+    });
+
+    // Clear the unavailable redirect flag if coming from that page
+    if (this.backendStatusService.isComingFromUnavailableRedirect()) {
+      this.backendStatusService.setComingFromUnavailableRedirect(false);
+    }
+
+    this.backendStatusService.backendAvailable$.subscribe(available => {
+      this.isBackendAvailable = available;
     });
   }
 

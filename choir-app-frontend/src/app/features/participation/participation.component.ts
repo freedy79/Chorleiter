@@ -7,10 +7,13 @@ import { AuthService } from '@core/services/auth.service';
 import { UserInChoir } from '@core/models/user';
 import { MemberAvailability } from '@core/models/member-availability';
 import { parseDateOnly } from '@shared/util/date';
-import { combineLatest } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { combineLatest, Observable } from 'rxjs';
+import { takeUntil, finalize, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { BaseComponent } from '@shared/components/base.component';
 import { VOICE_DISPLAY_MAP, BASE_VOICE_MAP, VOICE_ORDER } from '@shared/constants/voices.constants';
+import { ResponsiveService } from '@shared/services/responsive.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface EventColumn {
   key: string;
@@ -46,10 +49,28 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
   startDate?: Date;
   endDate?: Date;
 
+  // Loading and Error States
+  isLoadingMembers = false;
+  isLoadingEvents = false;
+  isLoadingAvailability = false;
+  hasError = false;
+  errorMessage = '';
+  updatingStatus: { [key: string]: boolean } = {};
+
+  // Mobile detection
+  isMobile$!: Observable<boolean>;
+  isMobile = false;
+
   private availabilityMap: { [userId: number]: { [date: string]: string } } = {};
 
-  constructor(private api: ApiService, private auth: AuthService) {
+  constructor(
+    private responsive: ResponsiveService,
+    private api: ApiService,
+    private auth: AuthService,
+    private snackBar: MatSnackBar
+  ) {
     super(); // Call BaseComponent constructor
+    this.isMobile$ = this.responsive.isMobile$;
   }
 
   ngOnInit(): void {
@@ -60,21 +81,42 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
       const privilegedRoles = ['choir_admin', 'director'];
       this.isChoirAdmin = isAdmin || roles.some(role => privilegedRoles.includes(role));
     });
+
+    this.isMobile$.pipe(takeUntil(this.destroy$)).subscribe(isMobile => {
+      this.isMobile = isMobile;
+    });
+
     this.loadMembers();
     this.loadEvents();
   }
 
   private loadMembers(): void {
+    this.isLoadingMembers = true;
+    this.hasError = false;
     this.api.getChoirMembers().pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      finalize(() => this.isLoadingMembers = false),
+      catchError(_err => {
+        this.hasError = true;
+        this.errorMessage = 'Fehler beim Laden der Mitglieder.';
+        return of([]);
+      })
     ).subscribe(m => {
       this.members = this.sortMembers(m);
     });
   }
 
   loadEvents(): void {
+    this.isLoadingEvents = true;
+    this.hasError = false;
     this.api.getEvents(undefined, false, this.startDate, this.endDate).pipe(
-      takeUntil(this.destroy$)
+      takeUntil(this.destroy$),
+      finalize(() => this.isLoadingEvents = false),
+      catchError(_err => {
+        this.hasError = true;
+        this.errorMessage = 'Fehler beim Laden der Termine.';
+        return of([]);
+      })
     ).subscribe(events => {
       let filtered = events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       if (!this.startDate && !this.endDate) {
@@ -133,13 +175,23 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.availabilityMap = {};
     const requests = months.map(m => this.api.getMemberAvailabilities(m.year, m.month));
     if (requests.length === 0) return;
+    this.isLoadingAvailability = true;
+    let completed = 0;
     requests.forEach(req => {
       req.pipe(
-        takeUntil(this.destroy$)
+        takeUntil(this.destroy$),
+        catchError(_err => {
+          console.error('Fehler beim Laden der Verfügbarkeiten');
+          return of([]);
+        })
       ).subscribe((data: MemberAvailability[]) => {
         for (const a of data) {
           if (!this.availabilityMap[a.userId]) this.availabilityMap[a.userId] = {};
           this.availabilityMap[a.userId][a.date] = a.status;
+        }
+        completed++;
+        if (completed === requests.length) {
+          this.isLoadingAvailability = false;
         }
       });
     });
@@ -203,14 +255,57 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     }
   }
 
-  changeStatus(userId: number, date: string): void {
+  changeStatus(userId: number, date: string, event?: Event): void {
     if (!this.isChoirAdmin) return;
+    // Prevent row click when clicking status button
+    if (event) {
+      event.stopPropagation();
+    }
     const key = this.dateKey(date);
-    const next = this.nextStatus(this.status(userId, key));
-    this.api.setMemberAvailability(userId, key, next).subscribe(avail => {
-      if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
-      this.availabilityMap[userId][key] = avail.status!;
+    const statusKey = `${userId}-${key}`;
+    const current = this.status(userId, key);
+    const next = this.nextStatus(current);
+
+    this.updatingStatus[statusKey] = true;
+    this.api.setMemberAvailability(userId, key, next).pipe(
+      finalize(() => delete this.updatingStatus[statusKey]),
+      catchError(_err => {
+        this.snackBar.open('Fehler beim Aktualisieren des Status', 'OK', { duration: 3000 });
+        return of(null);
+      })
+    ).subscribe(avail => {
+      if (avail) {
+        if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
+        this.availabilityMap[userId][key] = avail.status!;
+        this.snackBar.open('Status aktualisiert', '', { duration: 1500 });
+      }
     });
+  }
+
+  isUpdating(userId: number, date: string): boolean {
+    const key = this.dateKey(date);
+    return this.updatingStatus[`${userId}-${key}`] ?? false;
+  }
+
+  getStatusAriaLabel(status: string | undefined, memberName: string, date: string): string {
+    const statusText = this.getStatusText(status);
+    return `${memberName} - ${date}: ${statusText}. Klicken zum Ändern.`;
+  }
+
+  getStatusText(status?: string): string {
+    switch (status) {
+      case 'AVAILABLE': return 'Verfügbar';
+      case 'MAYBE': return 'Vielleicht';
+      case 'UNAVAILABLE': return 'Nicht verfügbar';
+      default: return 'Unbekannt';
+    }
+  }
+
+  retryLoad(): void {
+    this.hasError = false;
+    this.errorMessage = '';
+    this.loadMembers();
+    this.loadEvents();
   }
 
   // Use centralized voice constants
@@ -296,14 +391,26 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString('de-DE', { month: 'long', year: 'numeric', timeZone: 'Europe/Berlin' });
   }
 
+  isDownloadingPdf = false;
+
   downloadPdf(): void {
-    this.api.downloadParticipationPdf({ startDate: this.startDate, endDate: this.endDate }).subscribe(blob => {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'beteiligung.pdf';
-      a.click();
-      window.URL.revokeObjectURL(url);
+    this.isDownloadingPdf = true;
+    this.api.downloadParticipationPdf({ startDate: this.startDate, endDate: this.endDate }).pipe(
+      finalize(() => this.isDownloadingPdf = false),
+      catchError(_err => {
+        this.snackBar.open('Fehler beim Erstellen der PDF', 'OK', { duration: 3000 });
+        return of(null);
+      })
+    ).subscribe(blob => {
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'beteiligung.pdf';
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.snackBar.open('PDF heruntergeladen', '', { duration: 2000 });
+      }
     });
   }
 }

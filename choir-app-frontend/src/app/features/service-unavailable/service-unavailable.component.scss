@@ -5,6 +5,8 @@
   height: 100vh;
   text-align: center;
   padding: 1rem;
+  background-color: #ffffff;
+  color: #333333;
 
   @media (prefers-color-scheme: dark) {
     background-color: #222222;
@@ -14,6 +16,7 @@
 
 :host-context(.light-theme) .maintenance-container {
   background-color: #ffffff;
+  color: #333333;
 }
 
 :host-context(.dark-theme) .maintenance-container {
@@ -24,12 +27,50 @@
 mat-card {
   max-width: 400px;
   width: 100%;
+  color: #333333;
 
   @media (prefers-color-scheme: dark) {
     color: #eeeeee;
   }
 }
 
+:host-context(.light-theme) mat-card {
+  color: #333333;
+}
+
 :host-context(.dark-theme) mat-card {
   color: #eeeeee;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #ff9800;
+  margin-bottom: 1rem;
+}
+
+.redirect-info {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+  font-size: 0.95rem;
+
+  :host-context(.dark-theme) & {
+    border-top-color: #444444;
+  }
+
+  p {
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  strong {
+    font-weight: 600;
+    color: #005d9d;
+
+    :host-context(.dark-theme) & {
+      color: #64b5f6;
+    }
+  }
 }

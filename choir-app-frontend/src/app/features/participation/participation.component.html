@@ -1,33 +1,136 @@
-<div class="controls" *ngIf="members.length > 0">
-  <div class="date-controls">
-  <mat-form-field appearance="fill">
-    <mat-label>Von</mat-label>
-    <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
-    <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-    <mat-datepicker #startPicker></mat-datepicker>
-  </mat-form-field>
-
-  <mat-form-field appearance="fill">
-    <mat-label>Bis</mat-label>
-    <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" />
-    <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-    <mat-datepicker #endPicker></mat-datepicker>
-  </mat-form-field>
-
-  <button mat-raised-button color="primary" (click)="loadEvents()">Aktualisieren</button>
-  </div>
-
-  <mat-form-field appearance="fill">
-    <mat-label>Sortierung</mat-label>
-    <mat-select [value]="sortMode" (selectionChange)="onSortModeChange($any($event.value))">
-      <mat-option value="voice">nach Stimme</mat-option>
-      <mat-option value="name">alphabetisch</mat-option>
-    </mat-select>
-  </mat-form-field>
-  <button mat-raised-button (click)="downloadPdf()">PDF</button>
+<!-- Loading Indicator -->
+<div class="loading-container" *ngIf="isLoadingMembers || isLoadingEvents">
+  <mat-spinner diameter="48"></mat-spinner>
+  <p class="loading-text">Lade Beteiligungsdaten...</p>
 </div>
 
-<div class="table-container mat-elevation-z4" *ngIf="members.length > 0">
+<!-- Error State -->
+<div class="error-container" *ngIf="hasError && !isLoadingMembers && !isLoadingEvents">
+  <mat-icon class="error-icon" aria-hidden="true">error_outline</mat-icon>
+  <h2>Fehler beim Laden</h2>
+  <p>{{ errorMessage }}</p>
+  <button mat-raised-button color="primary" (click)="retryLoad()">
+    <mat-icon>refresh</mat-icon>
+    Erneut versuchen
+  </button>
+</div>
+
+<!-- Empty State -->
+<div class="empty-container" *ngIf="!isLoadingMembers && !isLoadingEvents && !hasError && members.length === 0">
+  <mat-icon class="empty-icon" aria-hidden="true">people_outline</mat-icon>
+  <h2>Keine Mitglieder gefunden</h2>
+  <p>Es wurden noch keine Chormitglieder erfasst.</p>
+</div>
+
+<!-- Controls -->
+<div class="controls" *ngIf="!isLoadingMembers && !isLoadingEvents && !hasError && members.length > 0">
+  <div class="date-controls">
+    <mat-form-field appearance="fill">
+      <mat-label>Von</mat-label>
+      <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" aria-label="Startdatum für Filterung" />
+      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+      <mat-datepicker #startPicker></mat-datepicker>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Bis</mat-label>
+      <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" aria-label="Enddatum für Filterung" />
+      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+      <mat-datepicker #endPicker></mat-datepicker>
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="loadEvents()"
+      [disabled]="isLoadingEvents"
+      aria-label="Beteiligungsdaten mit ausgewähltem Datumsbereich aktualisieren">
+      <mat-icon>refresh</mat-icon>
+      Aktualisieren
+    </button>
+
+    <button
+      mat-stroked-button
+      (click)="startDate = undefined; endDate = undefined; loadEvents()"
+      [disabled]="!startDate && !endDate"
+      aria-label="Datumsfilter zurücksetzen">
+      <mat-icon>clear</mat-icon>
+      Filter zurücksetzen
+    </button>
+  </div>
+
+  <div class="view-controls">
+    <mat-form-field appearance="fill">
+      <mat-label>Sortierung</mat-label>
+      <mat-select [value]="sortMode" (selectionChange)="onSortModeChange($any($event.value))">
+        <mat-option value="voice">nach Stimme</mat-option>
+        <mat-option value="name">alphabetisch</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button
+      mat-raised-button
+      (click)="downloadPdf()"
+      [disabled]="isDownloadingPdf"
+      aria-label="Beteiligungsübersicht als PDF herunterladen">
+      <mat-spinner diameter="20" *ngIf="isDownloadingPdf" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isDownloadingPdf">picture_as_pdf</mat-icon>
+      {{ isDownloadingPdf ? 'Erstelle PDF...' : 'PDF herunterladen' }}
+    </button>
+  </div>
+</div>
+
+<!-- Mobile Card Layout -->
+<div class="mobile-cards" *ngIf="(isMobile$ | async) && !isLoadingMembers && !isLoadingEvents && !hasError && members.length > 0">
+  <mat-card *ngFor="let member of members" class="member-card">
+    <mat-card-header>
+      <mat-card-title>{{ member.name }}, {{ member.firstName }}</mat-card-title>
+      <mat-card-subtitle>{{ voiceOf(member) }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="event-list" *ngIf="displayMode === 'events'">
+        <div class="event-status-row" *ngFor="let col of eventColumns">
+          <span class="event-date">{{ col.label }}</span>
+          <button
+            mat-icon-button
+            class="status-button"
+            [ngClass]="classFor(status(member.id, col.key))"
+            [disabled]="!isChoirAdmin || isUpdating(member.id, col.key)"
+            [attr.aria-label]="getStatusAriaLabel(status(member.id, col.key), member.name + ', ' + member.firstName, col.label)"
+            (click)="changeStatus(member.id, col.key, $event)">
+            <mat-spinner diameter="24" *ngIf="isUpdating(member.id, col.key)"></mat-spinner>
+            <mat-icon *ngIf="!isUpdating(member.id, col.key)">
+              {{ iconFor(status(member.id, col.key)) }}
+            </mat-icon>
+          </button>
+          <span class="status-text">{{ getStatusText(status(member.id, col.key)) }}</span>
+        </div>
+      </div>
+      <div class="month-list" *ngIf="displayMode === 'months'">
+        <div class="event-status-row" *ngFor="let col of dateColumns">
+          <span class="event-date">{{ col.monthKey }} - {{ col.label }}</span>
+          <button
+            mat-icon-button
+            class="status-button"
+            [ngClass]="classFor(status(member.id, col.key))"
+            [disabled]="!isChoirAdmin || isUpdating(member.id, col.key)"
+            [attr.aria-label]="getStatusAriaLabel(status(member.id, col.key), member.name + ', ' + member.firstName, col.label)"
+            (click)="changeStatus(member.id, col.key, $event)">
+            <mat-spinner diameter="24" *ngIf="isUpdating(member.id, col.key)"></mat-spinner>
+            <mat-icon *ngIf="!isUpdating(member.id, col.key)">
+              {{ iconFor(status(member.id, col.key)) }}
+            </mat-icon>
+          </button>
+          <span class="status-text">{{ getStatusText(status(member.id, col.key)) }}</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<!-- Desktop Table Layout -->
+<div class="table-container mat-elevation-z4"
+     *ngIf="!(isMobile$ | async) && !isLoadingMembers && !isLoadingEvents && !hasError && members.length > 0">
   <mat-table
     [dataSource]="members"
     [ngClass]="{
@@ -49,25 +152,42 @@
 
     <ng-container *ngIf="displayMode === 'events'">
       <ng-container *ngFor="let col of eventColumns" [matColumnDef]="col.key">
-        <mat-header-cell *matHeaderCellDef class="date-column"><span class="date-label">{{ col.label }}</span></mat-header-cell>
+        <mat-header-cell *matHeaderCellDef class="date-column">
+          <span class="date-label">{{ col.label }}</span>
+        </mat-header-cell>
         <mat-cell *matCellDef="let m" class="date-column">
-          <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, col.key))" (click)="changeStatus(m.id, col.key)">
-            {{ iconFor(status(m.id, col.key)) }}
-          </mat-icon>
+          <button
+            mat-icon-button
+            class="status-button"
+            [ngClass]="classFor(status(m.id, col.key))"
+            [disabled]="!isChoirAdmin || isUpdating(m.id, col.key)"
+            [attr.aria-label]="getStatusAriaLabel(status(m.id, col.key), m.name + ', ' + m.firstName, col.label)"
+            (click)="changeStatus(m.id, col.key, $event)">
+            <mat-spinner diameter="20" *ngIf="isUpdating(m.id, col.key)"></mat-spinner>
+            <mat-icon *ngIf="!isUpdating(m.id, col.key)">
+              {{ iconFor(status(m.id, col.key)) }}
+            </mat-icon>
+          </button>
         </mat-cell>
         <mat-footer-cell *matFooterCellDef class="date-column">
-          <span class="summary-item">
-            <mat-icon class="status-icon available">check</mat-icon>{{ statusCount(col.key, 'AVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon maybe">check</mat-icon>{{ statusCount(col.key, 'MAYBE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unavailable">close</mat-icon>{{ statusCount(col.key, 'UNAVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unknown">help</mat-icon>{{ statusCount(col.key, 'UNKNOWN') }}
-          </span>
+          <div class="summary-grid">
+            <span class="summary-item" [attr.aria-label]="statusCount(col.key, 'AVAILABLE') + ' verfügbar'">
+              <mat-icon class="summary-icon available" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'AVAILABLE') }}</span>
+            </span>
+            <span class="summary-item" [attr.aria-label]="statusCount(col.key, 'MAYBE') + ' vielleicht'">
+              <mat-icon class="summary-icon maybe" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'MAYBE') }}</span>
+            </span>
+            <span class="summary-item" [attr.aria-label]="statusCount(col.key, 'UNAVAILABLE') + ' nicht verfügbar'">
+              <mat-icon class="summary-icon unavailable" aria-hidden="true">close</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'UNAVAILABLE') }}</span>
+            </span>
+            <span class="summary-item" [attr.aria-label]="statusCount(col.key, 'UNKNOWN') + ' unbekannt'">
+              <mat-icon class="summary-icon unknown" aria-hidden="true">help</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'UNKNOWN') }}</span>
+            </span>
+          </div>
         </mat-footer-cell>
       </ng-container>
     </ng-container>
@@ -76,64 +196,81 @@
       <ng-container *ngFor="let col of dateColumns" [matColumnDef]="col.key">
         <mat-header-cell *matHeaderCellDef class="date-column">{{ col.label }}</mat-header-cell>
         <mat-cell *matCellDef="let m" class="date-column">
-          <mat-icon class="status-icon" [ngClass]="classFor(status(m.id, col.key))" (click)="changeStatus(m.id, col.key)">
-            {{ iconFor(status(m.id, col.key)) }}
-          </mat-icon>
+          <button
+            mat-icon-button
+            class="status-button"
+            [ngClass]="classFor(status(m.id, col.key))"
+            [disabled]="!isChoirAdmin || isUpdating(m.id, col.key)"
+            [attr.aria-label]="getStatusAriaLabel(status(m.id, col.key), m.name + ', ' + m.firstName, col.label)"
+            (click)="changeStatus(m.id, col.key, $event)">
+            <mat-spinner diameter="20" *ngIf="isUpdating(m.id, col.key)"></mat-spinner>
+            <mat-icon *ngIf="!isUpdating(m.id, col.key)">
+              {{ iconFor(status(m.id, col.key)) }}
+            </mat-icon>
+          </button>
         </mat-cell>
         <mat-footer-cell *matFooterCellDef class="date-column">
-          <span class="summary-item">
-            <mat-icon class="status-icon available">check</mat-icon>{{ statusCount(col.key, 'AVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon maybe">check</mat-icon>{{ statusCount(col.key, 'MAYBE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unavailable">close</mat-icon>{{ statusCount(col.key, 'UNAVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unknown">help</mat-icon>{{ statusCount(col.key, 'UNKNOWN') }}
-          </span>
+          <div class="summary-grid">
+            <span class="summary-item">
+              <mat-icon class="summary-icon available" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'AVAILABLE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon maybe" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'MAYBE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon unavailable" aria-hidden="true">close</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'UNAVAILABLE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon unknown" aria-hidden="true">help</mat-icon>
+              <span class="summary-count">{{ statusCount(col.key, 'UNKNOWN') }}</span>
+            </span>
+          </div>
         </mat-footer-cell>
       </ng-container>
 
       <ng-container *ngFor="let month of monthColumns" [matColumnDef]="month.key">
         <mat-header-cell *matHeaderCellDef [attr.colspan]="month.dates.length">{{ month.label }}</mat-header-cell>
         <mat-footer-cell *matFooterCellDef>
-          <span class="summary-item">
-            <mat-icon class="status-icon available">check</mat-icon>{{ monthStatusCount(month, 'AVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon maybe">check</mat-icon>{{ monthStatusCount(month, 'MAYBE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unavailable">close</mat-icon>{{ monthStatusCount(month, 'UNAVAILABLE') }}
-          </span>
-          <span class="summary-item">
-            <mat-icon class="status-icon unknown">help</mat-icon>{{ monthStatusCount(month, 'UNKNOWN') }}
-          </span>
+          <div class="summary-grid">
+            <span class="summary-item">
+              <mat-icon class="summary-icon available" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ monthStatusCount(month, 'AVAILABLE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon maybe" aria-hidden="true">check</mat-icon>
+              <span class="summary-count">{{ monthStatusCount(month, 'MAYBE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon unavailable" aria-hidden="true">close</mat-icon>
+              <span class="summary-count">{{ monthStatusCount(month, 'UNAVAILABLE') }}</span>
+            </span>
+            <span class="summary-item">
+              <mat-icon class="summary-icon unknown" aria-hidden="true">help</mat-icon>
+              <span class="summary-count">{{ monthStatusCount(month, 'UNKNOWN') }}</span>
+            </span>
+          </div>
         </mat-footer-cell>
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="monthHeaderColumns"></mat-header-row>
       <mat-header-row *matHeaderRowDef="dateHeaderColumns"></mat-header-row>
     </ng-container>
+
     <ng-container *ngIf="displayMode === 'events'">
       <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
     </ng-container>
+
     <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
     <ng-container *ngIf="displayMode === 'months'">
       <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
       <mat-footer-row *matFooterRowDef="monthHeaderColumns"></mat-footer-row>
     </ng-container>
     <ng-container *ngIf="displayMode === 'events'">
       <mat-footer-row *matFooterRowDef="displayedColumns"></mat-footer-row>
-    </ng-container>
-    <ng-container matNoDataRow>
-      <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-          Keine Mitglieder gefunden.
-        </td>
-      </tr>
     </ng-container>
   </mat-table>
 </div>
