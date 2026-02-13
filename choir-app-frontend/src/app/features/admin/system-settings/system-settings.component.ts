@@ -8,6 +8,7 @@ import { FrontendUrlSettingsComponent } from '../frontend-url-settings/frontend-
 import { PayPalSettingsComponent } from '../paypal-settings/paypal-settings.component';
 import { ImprintSettingsComponent } from '../imprint-settings/imprint-settings.component';
 import { DevelopComponent } from '../develop/develop.component';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
   selector: 'app-system-settings',
@@ -18,6 +19,7 @@ import { DevelopComponent } from '../develop/develop.component';
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    AdminPageHeaderComponent,
     FrontendUrlSettingsComponent,
     PayPalSettingsComponent,
     ImprintSettingsComponent,
@@ -28,7 +30,7 @@ export class SystemSettingsComponent implements OnInit {
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
-  constructor(responsive: ResponsiveService) {
+  constructor(private responsive: ResponsiveService) {
     this.isMobile$ = responsive.isHandset$;
   }
 

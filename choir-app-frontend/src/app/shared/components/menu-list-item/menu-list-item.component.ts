@@ -19,7 +19,7 @@ import { Subject } from 'rxjs';
 import { MaterialModule } from '@modules/material.module';
 import { NavItem } from './nav-item';
 import { NavService } from './nav-service';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 
 @Component({
     selector: 'app-menu-list-item',
@@ -36,7 +36,7 @@ import { CommonModule } from '@angular/common';
             ),
         ]),
     ],
-    imports: [MaterialModule, CommonModule, RouterModule],
+    imports: [MaterialModule, CommonModule, NgIf, RouterModule],
 })
 export class MenuListItemComponent implements OnInit, OnDestroy {
     expanded: boolean = false;
@@ -92,6 +92,9 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
     }
 
     onItemSelected(item: NavItem) {
+        if (item.disabled) {
+            return;
+        }
         if (!item.children || !item.children.length) {
             if (item.route) {
                 this.router.navigate([item.route]).then(() => {

@@ -10,7 +10,7 @@ import { AdminGuard } from '@core/guards/admin-guard';
 import { LoginGuard } from '@core/guards/login.guard';
 import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
 import { ProgramGuard } from '@core/guards/program.guard';
-import { HomeComponent } from '@features/home/home.component';
+import { WelcomeComponent } from '@features/home/welcome/welcome.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
@@ -29,7 +29,7 @@ export const routes: Routes = [
             {
                 path: '',
                 pathMatch: 'full',
-                component: HomeComponent,
+                component: WelcomeComponent,
             },
             {
                 path: 'login',

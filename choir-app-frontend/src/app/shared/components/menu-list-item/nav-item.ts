@@ -12,5 +12,6 @@ export interface NavItem {
     svgIconName?: string;
     route?: string;
     page?: string;
+    disabled?: boolean;
     children?: NavItem[];
 }

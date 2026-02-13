@@ -11,6 +11,7 @@ import { PaginatorService } from '@core/services/paginator.service';
 import { AlphabetFilterComponent } from '@shared/components/alphabet-filter/alphabet-filter.component';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
+import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
 
 @Component({
   selector: 'app-collection-piece-list',
@@ -29,6 +30,8 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   viewMode: 'collections' | 'pieces' = 'pieces';
   isHandset$: Observable<boolean>;
   selectedPiece: Piece | null = null;
+  private readonly stateKey = 'collection-piece-list';
+  private initialState: ListViewState | null = null;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
@@ -36,12 +39,15 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   constructor(private pieceService: PieceService,
               private router: Router,
               private paginatorService: PaginatorService,
-              private responsive: ResponsiveService) {
+              private responsive: ResponsiveService,
+              private navState: NavigationStateService) {
     this.pageSize = this.paginatorService.getPageSize('collection-piece-list', this.pageSizeOptions[0]);
     this.isHandset$ = this.responsive.isHandset$;
+    this.navState.onPopState(this.stateKey, s => this.initialState = s);
   }
 
   ngOnInit(): void {
+    this.initialState = this.navState.getState(this.stateKey);
     this.loadPieces();
   }
 
@@ -49,6 +55,9 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
     if (this.paginator) {
       this.paginator.pageSize = this.pageSize;
       this.dataSource.paginator = this.paginator;
+      if (this.initialState) {
+        this.paginator.pageIndex = this.initialState.page;
+      }
       this.paginator.page.subscribe(e => {
         this.paginatorService.setPageSize('collection-piece-list', e.pageSize);
         // Trigger re-filtering to update the view when page size changes
@@ -80,13 +89,27 @@ export class CollectionPieceListComponent implements OnInit, AfterViewInit {
   onFilteredPieces(filteredPieces: Piece[]): void {
     this.dataSource.data = filteredPieces;
     this.totalPieces = filteredPieces.length;
+    if (this.initialState?.selectedId) {
+      const match = filteredPieces.find(p => p.id === this.initialState?.selectedId);
+      if (match) this.selectedPiece = match;
+    }
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
-      this.paginator.firstPage();
+      if (this.initialState) {
+        this.paginator.pageIndex = this.initialState.page;
+        this.dataSource._updateChangeSubscription();
+      } else {
+        this.paginator.firstPage();
+      }
     }
   }
 
   openPiece(piece: Piece): void {
+    if (!piece?.id) return;
+    const page = this.paginator ? this.paginator.pageIndex : 0;
+    this.selectedPiece = piece;
+    this.navState.saveState(this.stateKey, { page, selectedId: piece.id });
+    this.navState.pushPlaceholderState();
     this.router.navigate(['/pieces', piece.id]);
   }
 

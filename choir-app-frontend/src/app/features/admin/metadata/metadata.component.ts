@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { ManagePublishersComponent } from '../manage-publishers/manage-publishers.component';
 import { ManageCreatorsComponent } from '../manage-creators/manage-creators.component';
 import { ManageFilesComponent } from '../manage-files/manage-files.component';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
   selector: 'app-metadata',
@@ -17,6 +18,7 @@ import { ManageFilesComponent } from '../manage-files/manage-files.component';
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    AdminPageHeaderComponent,
     ManagePublishersComponent,
     ManageCreatorsComponent,
     ManageFilesComponent

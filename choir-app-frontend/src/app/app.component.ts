@@ -8,6 +8,7 @@ import { ServiceUnavailableComponent } from '@features/service-unavailable/servi
 import { PwaUpdateNotificationComponent } from '@app/components/pwa-update-notification/pwa-update-notification.component';
 import { OfflineIndicatorComponent } from '@app/components/offline-indicator/offline-indicator.component';
 import { CommonModule } from '@angular/common';
+import { PushNotificationService } from '@core/services/push-notification.service';
 
 @Component({
   selector: 'app-root',
@@ -21,7 +22,8 @@ export class AppComponent implements OnInit {
   constructor(
     private themeService: ThemeService,
     private api: ApiService,
-    private swUpdateService: ServiceWorkerUpdateService
+    private swUpdateService: ServiceWorkerUpdateService,
+    private pushService: PushNotificationService
   ) {
     // Rufen Sie die Initialisierungsmethode auf, wenn die App startet.
     this.themeService.initializeTheme();
@@ -42,5 +44,7 @@ export class AppComponent implements OnInit {
       console.log('Service Worker wird unterstützt');
       // Der Service wird automatisch beim Konstruktor initialisiert
     }
+
+    this.pushService.initializeNotificationClicks();
   }
 }

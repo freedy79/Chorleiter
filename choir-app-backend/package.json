@@ -36,6 +36,7 @@
     "sanitize-html": "^2.17.0",
     "sequelize": "^6.29.0",
     "sqlite3": "^5.1.7",
+    "web-push": "^3.6.7",
     "winston": "^3.17.0"
   },
   "devDependencies": {

@@ -1,10 +1,45 @@
-<form [formGroup]="form" (ngSubmit)="save()" class="frontend-form">
-  <mat-form-field appearance="fill">
-    <mat-label>Frontend URL</mat-label>
-    <input matInput formControlName="url" />
-    <mat-hint>Basisadresse des Frontend-Systems</mat-hint>
-  </mat-form-field>
-  <div class="actions">
-    <button mat-raised-button color="primary" type="submit">Speichern</button>
-  </div>
-</form>
+<div class="frontend-url-settings">
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Lade Frontend-URL...</p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="save()" class="frontend-form">
+      @if (error) {
+        <div class="error-banner">
+          <mat-icon>error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      }
+
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Frontend URL</mat-label>
+      <input matInput formControlName="url" placeholder="https://example.com" [disabled]="saving" />
+      <mat-icon matSuffix>language</mat-icon>
+      <mat-hint>Basisadresse des Frontend-Systems (z.B. für E-Mail-Links)</mat-hint>
+      @if (form.get('url')?.hasError('required')) {
+        <mat-error>
+          Frontend-URL ist erforderlich
+        </mat-error>
+      }
+    </mat-form-field>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" type="submit" [disabled]="saving || form.invalid || !form.dirty">
+        @if (!saving) {
+          <mat-icon>save</mat-icon>
+        }
+        @if (saving) {
+          <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+        }
+        {{ saving ? 'Wird gespeichert...' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+  }
+</div>

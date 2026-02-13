@@ -395,6 +395,15 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         route: 'admin',
         iconName: 'admin_panel_settings',
         children: [
+          { displayName: 'Dashboard', route: '/admin/dashboard', iconName: 'dashboard' },
+          { displayName: '──────────', route: '', disabled: true }, // Divider
+          { displayName: 'Organisationen', route: '/admin/organizations', iconName: 'account_balance' },
+          { displayName: 'E-Mail Management', route: '/admin/mail-management', iconName: 'mail' },
+          { displayName: 'PDF Templates', route: '/admin/pdf-templates', iconName: 'picture_as_pdf' },
+          { displayName: 'Metadaten', route: '/admin/metadata', iconName: 'library_music' },
+          { displayName: 'Sicherheit', route: '/admin/security', iconName: 'security' },
+          { displayName: 'Systemeinstellungen', route: '/admin/system-settings', iconName: 'settings' },
+          { displayName: '──────────', route: '', disabled: true }, // Divider
           { displayName: 'Allgemein', route: '/admin/general' },
           { displayName: 'Chöre', route: '/admin/choirs' },
           { displayName: 'Benutzer', route: '/admin/users' },

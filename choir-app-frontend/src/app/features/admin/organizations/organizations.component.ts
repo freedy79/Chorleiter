@@ -7,6 +7,7 @@ import { Observable } from 'rxjs';
 import { ManageDistrictsComponent } from '../manage-districts/manage-districts.component';
 import { ManageCongregationsComponent } from '../manage-congregations/manage-congregations.component';
 import { ManageChoirsComponent } from '../manage-choirs/manage-choirs.component';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
   selector: 'app-organizations',
@@ -17,6 +18,7 @@ import { ManageChoirsComponent } from '../manage-choirs/manage-choirs.component'
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    AdminPageHeaderComponent,
     ManageDistrictsComponent,
     ManageCongregationsComponent,
     ManageChoirsComponent

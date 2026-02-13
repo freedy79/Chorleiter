@@ -11,6 +11,23 @@
   cursor: pointer;
 }
 
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 120ms ease-in-out;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.selected-row {
+  background-color: rgba(63, 81, 181, 0.08);
+}
+
 .letter-filter {
   margin-bottom: 1rem;
   button {

@@ -1,8 +1,8 @@
 <div class="mail-management">
-  <div class="header">
-    <h1>E-Mail Management Hub</h1>
-    <p class="description">Zentrale Verwaltung von E-Mail-Templates, Logs und Einstellungen</p>
-  </div>
+  <app-admin-page-header
+    title="E-Mail Management Hub"
+    description="Zentrale Verwaltung von E-Mail-Templates, Logs und Einstellungen">
+  </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
 

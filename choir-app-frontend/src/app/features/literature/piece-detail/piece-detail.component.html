@@ -1,4 +1,8 @@
 <div class="piece-detail" *ngIf="piece">
+  <button mat-stroked-button type="button" (click)="goBack()" aria-label="Zurück zur vorherigen Ansicht">
+    <mat-icon aria-hidden="true">arrow_back</mat-icon>
+    Zurück
+  </button>
   <h2>
     {{ piece.title }}
     <button mat-icon-button color="primary" (click)="openEditPieceDialog()" aria-label="Stück bearbeiten">

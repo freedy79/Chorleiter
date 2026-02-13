@@ -1,4 +1,10 @@
-<form [formGroup]="form" class="pdf-form">
+<div class="pdf-templates-container">
+  <app-admin-page-header
+    title="PDF Templates"
+    description="Layout & Export-Templates für Programme, Dienstpläne und Ausleihlisten">
+  </app-admin-page-header>
+
+  <form [formGroup]="form" class="pdf-form">
   <mat-tab-group>
     <mat-tab *ngFor="let meta of templateMeta" [label]="meta.label">
       <mat-form-field appearance="fill" class="full-width">
@@ -19,3 +25,4 @@
     </mat-tab>
   </mat-tab-group>
 </form>
+</div>

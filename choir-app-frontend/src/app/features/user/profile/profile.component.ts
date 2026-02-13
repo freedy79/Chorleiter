@@ -13,6 +13,7 @@ import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '@core/services/auth.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
+import { PushNotificationService } from '@core/services/push-notification.service';
 
 /**
  * Validator für sichere Passwörter (Option 1: Neue Anforderungen)
@@ -56,6 +57,8 @@ export function passwordsMatchValidator(): ValidatorFn {
   };
 }
 
+type PushPermission = 'default' | 'denied' | 'granted' | string;
+
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -76,6 +79,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
   districts: District[] = [];
   congregations: Congregation[] = [];
   choirList: Choir[] = [];
+  pushSupported = false;
+  pushPermission: PushPermission = 'default';
+  pushStates: Record<number, boolean> = {};
+  isPushUpdating = false;
   private destroy$ = new Subject<void>();
 
   // Password validation helper methods for template
@@ -101,7 +108,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private apiService: ApiService,
     private notification: NotificationService,
     private authService: AuthService,
-    private dialogHelper: DialogHelperService
+    private dialogHelper: DialogHelperService,
+    private pushService: PushNotificationService
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.isDemo$ = this.authService.isDemo$;
@@ -136,7 +144,10 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.availableChoirs$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(choirs => this.choirList = Array.isArray(choirs) ? choirs : []);
+      .subscribe(choirs => {
+        this.choirList = Array.isArray(choirs) ? choirs : [];
+        this.refreshPushStates();
+      });
     this.apiService.getDistricts().pipe(takeUntil(this.destroy$)).subscribe(ds => this.districts = ds);
     this.apiService.getCongregations().pipe(takeUntil(this.destroy$)).subscribe(cs => this.congregations = cs);
     this.apiService.getCurrentUser().pipe(takeUntil(this.destroy$)).subscribe({
@@ -168,6 +179,9 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       }
     });
+
+    this.pushSupported = this.pushService.isSupported();
+    this.pushPermission = this.pushService.getPermission() as PushPermission;
   }
 
   ngOnDestroy(): void {
@@ -321,5 +335,78 @@ export class ProfileComponent implements OnInit, OnDestroy {
         this.notification.success(message, 4000);
       }
     });
+  }
+
+  async onRequestPushPermission(): Promise<void> {
+    try {
+      this.pushPermission = (await this.pushService.requestPermission()) as PushPermission;
+      if (this.pushPermission === 'granted') {
+        this.notification.success('Push-Benachrichtigungen sind aktiviert.');
+      } else if (this.pushPermission === 'denied') {
+        this.notification.warning('Push-Benachrichtigungen wurden im Browser blockiert.');
+      }
+    } catch (err) {
+      this.notification.error(err);
+    }
+  }
+
+  async onTogglePushMaster(enabled: boolean): Promise<void> {
+    if (!enabled) {
+      this.isPushUpdating = true;
+      try {
+        await this.pushService.clearAllSubscriptions();
+        this.refreshPushStates(true);
+        this.notification.info('Push-Benachrichtigungen wurden deaktiviert.');
+      } catch (err) {
+        this.notification.error(err);
+      } finally {
+        this.isPushUpdating = false;
+      }
+      return;
+    }
+
+    await this.onRequestPushPermission();
+  }
+
+  async onToggleChoirPush(choirId: number, enabled: boolean): Promise<void> {
+    if (!this.pushSupported) return;
+    if (this.pushPermission !== 'granted') {
+      await this.onRequestPushPermission();
+      if (this.pushPermission !== 'granted') {
+        this.refreshPushStates();
+        return;
+      }
+    }
+
+    this.isPushUpdating = true;
+    try {
+      if (enabled) {
+        await this.pushService.subscribeToChoir(choirId);
+        this.notification.success('Push-Benachrichtigungen aktiviert.');
+      } else {
+        await this.pushService.unsubscribeFromChoir(choirId);
+        this.notification.info('Push-Benachrichtigungen deaktiviert.');
+      }
+      this.refreshPushStates();
+    } catch (err) {
+      this.notification.error(err);
+      this.refreshPushStates();
+    } finally {
+      this.isPushUpdating = false;
+    }
+  }
+
+  private refreshPushStates(clearAll: boolean = false): void {
+    if (clearAll) {
+      this.pushStates = {};
+      return;
+    }
+
+    const enabledChoirs = new Set(this.pushService.getStoredChoirIds());
+    const next: Record<number, boolean> = {};
+    for (const choir of this.choirList) {
+      next[choir.id] = enabledChoirs.has(choir.id);
+    }
+    this.pushStates = next;
   }
 }

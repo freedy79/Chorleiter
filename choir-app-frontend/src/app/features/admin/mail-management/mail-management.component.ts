@@ -10,6 +10,7 @@ import { MailTemplatesHubComponent } from './mail-templates-hub.component';
 import { MailSettingsHubComponent } from './mail-settings-hub.component';
 import { MailLogsHubComponent } from './mail-logs-hub.component';
 import { AdminEmailSettingsHubComponent } from './admin-email-settings-hub.component';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
   selector: 'app-mail-management',
@@ -21,6 +22,7 @@ import { AdminEmailSettingsHubComponent } from './admin-email-settings-hub.compo
     MatTabsModule,
     MatIconModule,
     MatCardModule,
+    AdminPageHeaderComponent,
     MailTemplatesHubComponent,
     MailSettingsHubComponent,
     MailLogsHubComponent,

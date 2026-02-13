@@ -29,6 +29,7 @@ import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';
 import { Router, RouterModule } from '@angular/router';
+import { NavigationStateService, ListViewState } from '@core/services/navigation-state.service';
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ImageCacheService } from '@core/services/image-cache.service';
 import { ReferencePipe } from '@shared/pipes/reference.pipe';
@@ -84,6 +85,9 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   public isLoading = true;
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
+  public selectedPieceId: number | null = null;
+  private readonly stateKey = 'repertoire-list';
+  private initialState: ListViewState | null = null;
 
   // --- Filter Presets ---
   presets: RepertoireFilter[] = [];
@@ -131,13 +135,17 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     private errorService: ErrorService,
     private prefs: UserPreferencesService,
     private router: Router,
-    private imageCacheService: ImageCacheService
+    private imageCacheService: ImageCacheService,
+    private navState: NavigationStateService
   ) {
     super(); // Call BaseComponent constructor
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
+    this.navState.onPopState(this.stateKey, s => this.initialState = s);
   }
 
   ngOnInit(): void {
+    this.initialState = this.navState.getState(this.stateKey);
+    this.selectedPieceId = this.initialState?.selectedId ?? null;
     this.updateDisplayedColumns();
     // Pre-fetch data for the filter dropdowns - only collections present in the choir
     this.collections$ = this.apiService.getChoirCollections();
@@ -221,6 +229,10 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
 
   ngAfterViewInit(): void {
     this.dataSource.sort = this._sort;
+
+    if (this._paginator && this.initialState) {
+      this._paginator.pageIndex = this.initialState.page;
+    }
 
     const sort$ = this._sort.sortChange.pipe(tap(() => this._paginator.pageIndex = 0));
     const page$ = this._paginator.page.pipe(tap(e => this.paginatorService.setPageSize('literature-list', e.pageSize)));
@@ -686,6 +698,15 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.hoverImage = null;
   }
 
+  openPiece(piece: Piece): void {
+    if (!piece?.id) return;
+    const page = this._paginator ? this._paginator.pageIndex : 0;
+    this.selectedPieceId = piece.id;
+    this.navState.saveState(this.stateKey, { page, selectedId: piece.id });
+    this.navState.pushPlaceholderState();
+    this.router.navigate(['/pieces', piece.id]);
+  }
+
   private updateDisplayedColumns(): void {
     this.displayedColumns = ['title', 'composer', 'category', 'reference'];
     if (this.showLastSung) this.displayedColumns.push('lastSung');
@@ -722,5 +743,28 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       timesRehearsed: this.showTimesRehearsed
     };
     this.prefs.update({ repertoireColumns: prefs }).subscribe();
+  }
+
+  /**
+   * Check if any filters are currently active
+   * Used to distinguish between "no data" and "no results for filters"
+   */
+  hasActiveFilters(): boolean {
+    return (
+      this.filterByComposerIds$.value.length > 0 ||
+      this.filterByCollectionIds$.value.length > 0 ||
+      this.filterByCategoryIds$.value.length > 0 ||
+      this.status$.value.length > 0 ||
+      this.filterByLicense$.value.length > 0 ||
+      !!(this.searchControl.value && this.searchControl.value.trim().length > 0)
+    );
+  }
+
+  /**
+   * TrackBy function for ngFor to improve performance
+   * Prevents unnecessary re-rendering of unchanged items
+   */
+  trackByPieceId(index: number, piece: Piece): number {
+    return piece.id;
   }
 }

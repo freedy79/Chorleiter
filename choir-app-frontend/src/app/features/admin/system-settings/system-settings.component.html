@@ -1,8 +1,8 @@
 <div class="system-settings">
-  <div class="header">
-    <h1>Systemeinstellungen</h1>
-    <p class="description">PayPal, Frontend-URLs, Imprint und weitere Systemkonfigurationen</p>
-  </div>
+  <app-admin-page-header
+    title="Systemeinstellungen"
+    description="PayPal, Frontend-URLs, Imprint und weitere Systemkonfigurationen">
+  </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
 

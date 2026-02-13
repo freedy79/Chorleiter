@@ -62,6 +62,7 @@ db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
 db.post_comment = require("./post_comment.model.js")(sequelize, Sequelize);
 db.post_reaction = require("./post_reaction.model.js")(sequelize, Sequelize);
 db.search_history = require("./search_history.model.js")(sequelize, Sequelize);
+db.push_subscription = require("./pushSubscription.model.js")(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -70,6 +71,12 @@ db.user.belongsToMany(db.choir, { through: db.user_choir });
 db.choir.belongsToMany(db.user, { through: db.user_choir });
 db.user_choir.belongsTo(db.user);
 db.user_choir.belongsTo(db.choir);
+
+// Push subscriptions for notifications
+db.user.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'userId' });
+db.push_subscription.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.choir.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'choirId' });
+db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
 
 // A Choir has many Pieces
 db.choir.belongsToMany(db.piece, { through: db.choir_repertoire });

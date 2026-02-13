@@ -39,7 +39,15 @@
       </ng-container>
 
       <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openPiece(row)"></mat-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;"
+           class="clickable-row"
+           [class.selected-row]="row.id === selectedPiece?.id"
+           tabindex="0"
+           role="link"
+           [attr.aria-label]="'Stück öffnen: ' + row.title"
+           (click)="openPiece(row)"
+           (keydown.enter)="openPiece(row)"
+           (keydown.space)="openPiece(row); $event.preventDefault()"></mat-row>
       <ng-container matNoDataRow>
         <tr class="mat-row" *matNoDataRow>
           <td class="mat-cell" [attr.colspan]="displayedColumns.length">
@@ -55,14 +63,14 @@
 
 <ng-template #mobileView>
   <div class="mobile-list">
-    <div class="mobile-item" *ngFor="let piece of dataSource.data" (click)="toggleSelection(piece)">
+    <div class="mobile-item" *ngFor="let piece of dataSource.data" (click)="toggleSelection(piece)" [class.selected-row]="selectedPiece === piece">
       <div><strong>{{ piece.title }}</strong></div>
       <div class="subtitle-hint" *ngIf="piece.subtitle">{{ piece.subtitle }}</div>
       <div class="detail">Komponist/Ursprung: {{ piece.composer?.name || piece.origin || '-' }}</div>
       <div class="detail">Dichter: {{ piece.author?.name || '-' }}</div>
       <div class="detail">Anzahl in Sammlungen: {{ piece.collectionCount || 0 }}</div>
       <div class="mobile-actions" *ngIf="selectedPiece === piece">
-        <button mat-icon-button (click)="openPiece(piece); $event.stopPropagation()" matTooltip="Details">
+        <button mat-icon-button (click)="openPiece(piece); $event.stopPropagation()" matTooltip="Details" aria-label="Stück öffnen">
           <mat-icon>open_in_new</mat-icon>
         </button>
       </div>

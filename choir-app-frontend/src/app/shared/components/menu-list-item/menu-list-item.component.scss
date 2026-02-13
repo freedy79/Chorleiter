@@ -3,9 +3,6 @@
 
 //@include mat.button-color(nak.$nak-blue-palette, 50);
 
-.expanded-area {
-}
-
 :host {
   margin-right: 1rem;
   display: flex;
@@ -92,6 +89,20 @@
 
 mat-list-item {
   font-size: 1rem;
+}
+
+.menu-divider {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.divider-text {
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .routeIcon {

@@ -87,6 +87,12 @@ mat-card-actions button mat-icon {
   hyphens: auto;
 }
 
+.cover-cell img {
+  height: 48px;
+  width: auto;
+  object-fit: cover;
+}
+
 .mat-column-status {
   word-wrap: break-word !important;
   white-space: unset !important;
@@ -137,4 +143,44 @@ mat-card-actions button mat-icon {
   .title {
     font-weight: bold;
   }
+}
+
+.mobile-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mobile-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: background-color 120ms ease-in-out;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.mobile-item .cover-img {
+  max-width: 80px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 8px;
+}
+
+.detail {
+  font-size: 1rem;
+  color: #555;
+}
+
+.mobile-actions {
+  margin-top: 4px;
+  text-align: right;
 }

@@ -1,8 +1,8 @@
 <div class="security">
-  <div class="header">
-    <h1>Sicherheit & Monitoring</h1>
-    <p class="description">Login-Versuche, Protokolle, Datensicherung und Systemstatus</p>
-  </div>
+  <app-admin-page-header
+    title="Sicherheit & Monitoring"
+    description="Login-Versuche, Protokolle, Datensicherung und Systemstatus">
+  </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
 

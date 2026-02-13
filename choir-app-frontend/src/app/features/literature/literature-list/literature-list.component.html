@@ -1,7 +1,8 @@
 <mat-drawer-container class="drawer-container">
-  <mat-drawer #drawer position="start" mode="side" class="filter-drawer" [(opened)]="filtersExpanded">
-    <button mat-icon-button class="close-button" (click)="drawer.toggle()" aria-label="Filter ausblenden">
-      <mat-icon>chevron_left</mat-icon>
+  <mat-drawer #drawer position="start" mode="side" class="filter-drawer" [(opened)]="filtersExpanded"
+              role="region" aria-label="Filterbereich für Repertoire">
+    <button mat-icon-button class="close-button" (click)="drawer.toggle()" aria-label="Filterbereich schließen">
+      <mat-icon aria-hidden="true">chevron_left</mat-icon>
     </button>
     <div class="filter-controls">
       <mat-form-field appearance="outline">
@@ -46,75 +47,93 @@
           <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
         </mat-select>
       </mat-form-field>
-      <button mat-button class="desktop-only" (click)="clearFilters()">Filter löschen</button>
-      <button mat-icon-button class="mobile-only" (click)="clearFilters()" aria-label="Filter löschen" matTooltip="Filter löschen">
-        <mat-icon>filter_alt_off</mat-icon>
+      <button mat-button class="desktop-only" (click)="clearFilters()">Alle Filter zurücksetzen</button>
+      <button mat-icon-button class="mobile-only" (click)="clearFilters()" aria-label="Alle aktiven Filter zurücksetzen" matTooltip="Filter zurücksetzen">
+        <mat-icon aria-hidden="true">filter_alt_off</mat-icon>
       </button>
     </div>
   </mat-drawer>
   <mat-drawer-content>
     <div class="page">
       <div class="header-actions">
-        <button mat-flat-button color="primary" class="desktop-only" (click)="openAddPieceDialog()">
-          <mat-icon>add</mat-icon>
+        <button mat-flat-button color="primary" class="desktop-only" (click)="openAddPieceDialog()"
+                aria-label="Neues Stück zur Bibliothek hinzufügen">
+          <mat-icon aria-hidden="true">add</mat-icon>
           <span>Stück hinzufügen</span>
         </button>
-        <button mat-icon-button color="primary" class="mobile-only" (click)="openAddPieceDialog()" aria-label="Stück hinzufügen" matTooltip="Stück hinzufügen">
-          <mat-icon>add</mat-icon>
+        <button mat-icon-button color="primary" class="mobile-only" (click)="openAddPieceDialog()"
+                aria-label="Neues Stück zur Bibliothek hinzufügen" matTooltip="Stück hinzufügen">
+          <mat-icon aria-hidden="true">add</mat-icon>
         </button>
       </div>
       <div class="filter-bar">
         <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
-          <mat-icon>filter_list</mat-icon>
+          <mat-icon aria-hidden="true">filter_list</mat-icon>
         </button>
         <mat-form-field appearance="outline" class="preset-select dense">
           <mat-select placeholder="Filter" [value]="selectedPresetId" (selectionChange)="onPresetSelect($event.value)">
             <mat-option *ngFor="let p of presets" [value]="p.id">{{p.name}}</mat-option>
           </mat-select>
-          <button mat-icon-button matSuffix *ngIf="selectedPresetId && canDeleteSelectedPreset()" (click)="deleteSelectedPreset(); $event.stopPropagation()">
-            <mat-icon>delete</mat-icon>
+          <button mat-icon-button matSuffix *ngIf="selectedPresetId && canDeleteSelectedPreset()"
+                  (click)="deleteSelectedPreset(); $event.stopPropagation()"
+                  aria-label="Ausgewählten Filter löschen">
+            <mat-icon aria-hidden="true">delete</mat-icon>
           </button>
         </mat-form-field>
-        <button mat-icon-button (click)="saveCurrentPreset()" aria-label="Filter speichern">
-          <mat-icon>save</mat-icon>
+        <button mat-icon-button (click)="saveCurrentPreset()" aria-label="Aktuelle Filter speichern">
+          <mat-icon aria-hidden="true">save</mat-icon>
         </button>
-        <button mat-icon-button [matMenuTriggerFor]="columnMenu" aria-label="Spalten">
-          <mat-icon>view_column</mat-icon>
+        <button mat-icon-button [matMenuTriggerFor]="columnMenu" aria-label="Spalten anzeigen/ausblenden">
+          <mat-icon aria-hidden="true">view_column</mat-icon>
         </button>
         <mat-menu #columnMenu="matMenu">
           <button mat-menu-item (click)="toggleColumn('lastSung')">
-            <mat-icon *ngIf="showLastSung">check</mat-icon>
+            <mat-icon aria-hidden="true" *ngIf="showLastSung">check</mat-icon>
             <span>Zuletzt gesungen</span>
           </button>
           <button mat-menu-item (click)="toggleColumn('lastRehearsed')">
-            <mat-icon *ngIf="showLastRehearsed">check</mat-icon>
+            <mat-icon aria-hidden="true" *ngIf="showLastRehearsed">check</mat-icon>
             <span>Zuletzt geprobt</span>
           </button>
           <button mat-menu-item (click)="toggleColumn('timesSung')">
-            <mat-icon *ngIf="showTimesSung">check</mat-icon>
+            <mat-icon aria-hidden="true" *ngIf="showTimesSung">check</mat-icon>
             <span>Anzahl gesungen</span>
           </button>
           <button mat-menu-item (click)="toggleColumn('timesRehearsed')">
-            <mat-icon *ngIf="showTimesRehearsed">check</mat-icon>
+            <mat-icon aria-hidden="true" *ngIf="showTimesRehearsed">check</mat-icon>
             <span>Anzahl geprobt</span>
           </button>
         </mat-menu>
-        <button mat-icon-button (click)="reloadList()" aria-label="Neu laden" matTooltip="Tabelle neu laden">
-          <mat-icon>refresh</mat-icon>
+        <button mat-icon-button (click)="reloadList()" aria-label="Tabelle neu laden" matTooltip="Tabelle neu laden">
+          <mat-icon aria-hidden="true">refresh</mat-icon>
         </button>
       </div>
 
       <div class="table-wrapper mat-elevation-z8">
-        <!-- The table itself. It is always present in the DOM, but can be overlaid by the loading shade. -->
+        <!-- Desktop Table -->
         <div class="table-scroll-container desktop-view">
-          <mat-table [dataSource]="dataSource" matSort>
+          <!-- Loading skeleton overlay -->
+          <div class="skeleton-table" *ngIf="isLoading">
+            <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10]">
+              <div class="skeleton-cell skeleton-shimmer"></div>
+              <div class="skeleton-cell skeleton-shimmer"></div>
+              <div class="skeleton-cell skeleton-shimmer"></div>
+              <div class="skeleton-cell skeleton-shimmer"></div>
+              <div class="skeleton-cell skeleton-shimmer"></div>
+            </div>
+          </div>
+
+          <!-- Actual table (always rendered for ViewChild, hidden during loading) -->
+          <mat-table [dataSource]="dataSource" matSort [class.loading]="isLoading">
 
             <!-- Title Column -->
             <ng-container cdkColumnDef="title">
               <!-- mat-sort-header tells the table this column is sortable. 'title' must match the column name. -->
               <mat-header-cell *cdkHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
               <mat-cell *cdkCellDef="let piece">
-                <a [routerLink]="['/pieces', piece.id]" class="title-link">{{ piece.title }}</a>
+                <button mat-button class="title-link" type="button" (click)="openPiece(piece); $event.stopPropagation()">
+                  {{ piece.title }}
+                </button>
               </mat-cell>
             </ng-container>
 
@@ -195,8 +214,9 @@
             <ng-container cdkColumnDef="actions">
               <mat-header-cell *cdkHeaderCellDef></mat-header-cell>
               <mat-cell *cdkCellDef="let piece" class="actions-cell">
-                <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
-                  <mat-icon>edit</mat-icon>
+                <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id); $event.stopPropagation()"
+                        [attr.aria-label]="'Stück editieren: ' + piece.title">
+                  <mat-icon aria-hidden="true">edit</mat-icon>
                 </button>
               </mat-cell>
             </ng-container>
@@ -204,6 +224,14 @@
             <!-- Define the header and data rows -->
             <mat-header-row *cdkHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
             <mat-row *cdkRowDef="let row; columns: displayedColumns;"
+              class="clickable-row"
+              [class.selected-row]="row.id === selectedPieceId"
+              tabindex="0"
+              role="link"
+              [attr.aria-label]="'Stück öffnen: ' + row.title"
+              (click)="openPiece(row)"
+              (keydown.enter)="openPiece(row)"
+              (keydown.space)="openPiece(row); $event.preventDefault()"
                 (mouseenter)="onRowMouseEnter($event, row)"
                 (mousemove)="onRowMouseMove($event)"
                 (mouseleave)="onRowMouseLeave()"></mat-row>
@@ -212,7 +240,31 @@
             <ng-container matNoDataRow>
               <tr class="mat-row" *matNoDataRow>
                 <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                  Keine Stücke passend zu den Filtern gefunden.
+                  <div class="table-empty-state">
+                    <ng-container *ngIf="!isLoading">
+                      <!-- Empty state: No data at all -->
+                      <div class="empty-content" *ngIf="!hasActiveFilters()">
+                        <mat-icon class="empty-icon" aria-hidden="true">library_music</mat-icon>
+                        <h3>Willkommen in Ihrer Notenbibliothek</h3>
+                        <p>Fügen Sie Ihr erstes Stück hinzu, um loszulegen.</p>
+                        <button mat-flat-button color="primary" (click)="openAddPieceDialog()"
+                                aria-label="Erstes Stück zur Bibliothek hinzufügen">
+                          <mat-icon aria-hidden="true">add</mat-icon>
+                          Erstes Stück hinzufügen
+                        </button>
+                      </div>
+                      <!-- Empty state: No results for filters -->
+                      <div class="empty-content" *ngIf="hasActiveFilters()">
+                        <mat-icon class="empty-icon" aria-hidden="true">filter_alt_off</mat-icon>
+                        <h3>Keine passenden Stücke gefunden</h3>
+                        <p>Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.</p>
+                        <button mat-button (click)="clearFilters()" aria-label="Alle Filter zurücksetzen">
+                          <mat-icon aria-hidden="true">clear</mat-icon>
+                          Alle Filter zurücksetzen
+                        </button>
+                      </div>
+                    </ng-container>
+                  </div>
                 </td>
               </tr>
             </ng-container>
@@ -221,13 +273,33 @@
 
         <!-- Mobile View: Cards -->
         <div class="mobile-card-container mobile-view">
-          <ng-container *ngIf="dataSource.data.length; else mobileNoData">
+          <!-- Loading skeleton for mobile -->
+          <div class="skeleton-cards" *ngIf="isLoading">
+            <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5]">
+              <div class="skeleton-card-header">
+                <div class="skeleton-title skeleton-shimmer"></div>
+                <div class="skeleton-button skeleton-shimmer"></div>
+              </div>
+              <div class="skeleton-subtitle skeleton-shimmer"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-meta-item skeleton-shimmer"></div>
+                <div class="skeleton-meta-item skeleton-shimmer"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actual cards (hidden during loading) -->
+          <div [class.loading]="isLoading">
+            <ng-container *ngIf="dataSource.data.length; else mobileNoData">
             <div class="mobile-cards">
-              <div class="card" *ngFor="let piece of dataSource.data">
+              <div class="card" *ngFor="let piece of dataSource.data; trackBy: trackByPieceId">
                 <div class="card-header">
-                  <a [routerLink]="['/pieces', piece.id]" class="card-title">{{ piece.title }}</a>
-                  <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)">
-                    <mat-icon>edit</mat-icon>
+                  <button mat-button class="card-title" type="button" (click)="openPiece(piece)">
+                    {{ piece.title }}
+                  </button>
+                  <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)"
+                          [attr.aria-label]="'Stück editieren: ' + piece.title">
+                    <mat-icon aria-hidden="true">edit</mat-icon>
                   </button>
                 </div>
 
@@ -293,12 +365,34 @@
               </div>
             </div>
           </ng-container>
+
           <ng-template #mobileNoData>
             <div class="mobile-empty" *ngIf="!isLoading">
-              Keine Stücke passend zu den Filtern gefunden.
+              <!-- Empty state: No data at all -->
+              <div class="empty-content" *ngIf="!hasActiveFilters()">
+                <mat-icon class="empty-icon" aria-hidden="true">library_music</mat-icon>
+                <h3>Willkommen in Ihrer Notenbibliothek</h3>
+                <p>Fügen Sie Ihr erstes Stück hinzu, um loszulegen.</p>
+                <button mat-flat-button color="primary" (click)="openAddPieceDialog()"
+                        aria-label="Erstes Stück zur Bibliothek hinzufügen">
+                  <mat-icon aria-hidden="true">add</mat-icon>
+                  Erstes Stück hinzufügen
+                </button>
+              </div>
+              <!-- Empty state: No results for filters -->
+              <div class="empty-content" *ngIf="hasActiveFilters()">
+                <mat-icon class="empty-icon" aria-hidden="true">filter_alt_off</mat-icon>
+                <h3>Keine passenden Stücke gefunden</h3>
+                <p>Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.</p>
+                <button mat-button (click)="clearFilters()" aria-label="Alle Filter zurücksetzen">
+                  <mat-icon aria-hidden="true">clear</mat-icon>
+                  Alle Filter zurücksetzen
+                </button>
+              </div>
             </div>
           </ng-template>
-        </div>
+        </div> <!-- closes div with [class.loading] -->
+        </div> <!-- closes mobile-card-container -->
 
         <!-- The Paginator -->
         <mat-paginator [length]="totalPieces"

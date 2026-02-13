@@ -49,6 +49,12 @@ Root-level scripts orchestrate monorepo:
 - `npm run test:backend` → backend tests
 - `deploy.ps1` → PowerShell script for production deployment via SSH
 
+### Build Verification (Assistant Rule)
+- **When the user reports build problems and asks for fixes, always run a local build afterward** to verify the errors are resolved.
+
+### Evolving Best Practices (Assistant Rule)
+- **When new best practices or rules are identified during development, add them to this `copilot-instructions.md` when requested.**
+
 ## Project-Specific Conventions
 
 ### Backend
@@ -61,6 +67,7 @@ Root-level scripts orchestrate monorepo:
 ### Frontend
 - **Component Prefix**: `app-` (configured in angular.json).
 - **SCSS Structure**: Import breakpoints/dark-mode mixins at component level. Never hardcode media queries or colors.
+- **Mobile Typography**: All font sizes on mobile (handset) devices should be increased by ~10% for better readability. Use `@include responsive-font-size($desktop-size)` mixin from `_breakpoints.scss` for automatic scaling, or apply `bp.$mobile-font-scale` (1.1) to custom font sizes.
 - **ViewChild Pattern**: Use setters for `@ViewChild(MatSort)` and `@ViewChild(MatPaginator)` to handle timing issues - see `literature-list.component.ts:97-112`.
 - **File Structure**: Feature modules in `features/`, shared components in `shared/`, core services in `core/services/`.
 - **Build Info**: `scripts/generate-build-info.js` runs pre-build to inject Git commit/timestamp into app.
@@ -141,3 +148,46 @@ doc/
 - [choir-app-frontend/src/app/core/services/navigation-state.service.ts](choir-app-frontend/src/app/core/services/navigation-state.service.ts) - Pagination/selection persistence
 - [choir-app-frontend/src/themes/_breakpoints.scss](choir-app-frontend/src/themes/_breakpoints.scss) - Responsive design system
 - [choir-app-frontend/src/themes/_dark-mode-variables.scss](choir-app-frontend/src/themes/_dark-mode-variables.scss) - Theme variable system
+
+## Essential References for Agents & New Sessions
+
+**READ THESE DOCUMENTS FIRST** before implementing changes:
+
+### Comprehensive Architecture Guide
+- [doc/project/ARCHITECTURE.md](doc/project/ARCHITECTURE.md) - **Complete system architecture documentation** covering:
+  - Detailed backend & frontend architecture
+  - Database schema and relationships
+  - Security & authentication patterns
+  - Service layer design
+  - State management strategies
+  - Performance optimizations
+  - Testing patterns
+  - Deployment architecture
+
+### UI/UX Implementation Guidelines
+- [.github/agents/ui-ux-instructions.md](.github/agents/ui-ux-instructions.md) - **Mandatory UI/UX standards** for all component development:
+  - Accessibility requirements (keyboard, ARIA, contrast)
+  - Responsive design patterns
+  - Component state management (loading, error, empty states)
+  - Design token usage
+  - Animation and motion guidelines
+  - Form validation patterns
+
+### When to Consult These Documents
+
+**ARCHITECTURE.md**: Consult when:
+- Adding new features or modules
+- Modifying database schema
+- Implementing authentication/authorization
+- Working with services or state management
+- Setting up new API endpoints
+- Optimizing performance
+- Writing tests
+
+**ui-ux-instructions.md**: Consult when:
+- Creating or modifying Angular components
+- Working with templates, styles, or UI logic
+- Implementing forms, dialogs, or lists
+- Adding responsive layouts
+- Ensuring accessibility compliance
+- Applying dark mode theming

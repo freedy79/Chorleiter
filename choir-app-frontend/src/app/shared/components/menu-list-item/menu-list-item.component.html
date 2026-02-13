@@ -1,4 +1,4 @@
-<a *ngIf="isVisible && item" mat-list-item [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
+<a *ngIf="isVisible && item && !item.disabled" mat-list-item [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
   (click)="onItemSelected(item)" class="menu-list-item"
   [routerLink]="item.route || null" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
   [ngClass]="{'expanded': expanded}">
@@ -11,12 +11,15 @@
     {{item.displayName}}
   </div>
 
-  <span fxFlex *ngIf="item?.children && item?.children?.length" class="expandIcon">
+  <span fxFlex *ngIf="item.children && item.children.length" class="expandIcon">
     <mat-icon [@indicatorRotate]="expanded ? 'expanded': 'collapsed'">
       expand_more
     </mat-icon>
   </span>
 </a>
+<div *ngIf="isVisible && item?.disabled" class="menu-divider" [ngStyle]="{'padding-left': (depth * 36) + 'px'}" aria-hidden="true">
+  <span class="divider-text">{{ item?.displayName }}</span>
+</div>
 <div *ngIf="expanded && isVisible" class="expanded-area">
   <app-menu-list-item *ngFor="let child of item?.children" [item]="child" [depth]="depth+1"></app-menu-list-item>
 </div>

@@ -6,6 +6,7 @@ import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PdfTemplate } from '@core/models/pdf-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 interface PdfTemplateMeta {
   type: string;
@@ -16,7 +17,7 @@ interface PdfTemplateMeta {
 @Component({
   selector: 'app-pdf-templates',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, AdminPageHeaderComponent],
   templateUrl: './pdf-templates.component.html',
   styleUrls: ['./pdf-templates.component.scss']
 })
@@ -64,7 +65,7 @@ export class PdfTemplatesComponent implements OnInit, PendingChanges {
       if (!control || control.invalid) return;
       try {
         JSON.parse(control.value);
-      } catch (err) {
+      } catch {
         this.notification.error(`JSON für ${meta.label} ist ungültig.`);
         return;
       }

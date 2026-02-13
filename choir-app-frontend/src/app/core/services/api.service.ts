@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 // Import all the models your service will interact with
@@ -1019,5 +1020,27 @@ export class ApiService {
   // --- Auth Methods ---
   signup(data: { firstName: string; name: string; email: string; choirName: string; password: string }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/signup`, data);
+  }
+
+  // --- Push Notification Methods ---
+  getVAPIDPublicKey(): Observable<string> {
+    return this.http
+      .get<{ publicKey: string }>(`${environment.apiUrl}/notifications/vapid-public-key`)
+      .pipe(map(response => response.publicKey));
+  }
+
+  subscribePushNotification(subscription: PushSubscription, choirId: number): Observable<any> {
+    const json = subscription.toJSON();
+    return this.http.post(`${environment.apiUrl}/notifications/subscribe`, {
+      endpoint: json.endpoint || subscription.endpoint,
+      keys: json.keys,
+      choirId
+    });
+  }
+
+  unsubscribePushNotification(endpoint: string, choirId: number): Observable<any> {
+    return this.http.delete(`${environment.apiUrl}/notifications/unsubscribe`, {
+      body: { endpoint, choirId }
+    });
   }
 }

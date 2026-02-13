@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { RouterModule } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -69,7 +69,8 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
     private http: HttpClient,
     private titleService: Title,
     private logger: DebugLogService,
-    private clipboard: Clipboard
+    private clipboard: Clipboard,
+    private location: Location
   ) {}
 
   ngOnInit(): void {
@@ -269,5 +270,9 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
         console.error('Share error:', err);
       }
     });
+  }
+
+  goBack(): void {
+    this.location.back();
   }
 }

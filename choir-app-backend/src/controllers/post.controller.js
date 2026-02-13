@@ -1,6 +1,8 @@
 const db = require('../models');
 const Post = db.post;
 const emailService = require('../services/email.service');
+const pushNotificationService = require('../services/pushNotification.service');
+const logger = require('../config/logger');
 const { Op } = require('sequelize');
 const path = require('path');
 const fs = require('fs');
@@ -315,6 +317,20 @@ exports.create = async (req, res) => {
         const hasAttachment = !!full.attachmentFilename;
         await emailService.sendPostNotificationMail(emails, sanitizedTitle, sanitizedText, choir.name, replyTo, full.id, hasAttachment);
       }
+
+      if (choir) {
+        const url = `/posts/${full.id}`;
+        const payload = {
+          title: `Neuer Beitrag in ${choir.name}`,
+          body: sanitizedTitle,
+          icon: '/assets/icons/icon-192x192.png',
+          url,
+          data: { url }
+        };
+        pushNotificationService
+          .sendToChoirMembers(req.activeChoirId, payload, req.userId)
+          .catch(err => logger.warn(`Push notification send failed: ${err.message}`));
+      }
     } else if (sendTest) {
       const author = await db.user.findByPk(req.userId);
       if (author?.email) {
@@ -464,6 +480,21 @@ exports.publish = async (req, res) => {
       const replyTo = post.sendAsUser && author?.email ? author.email : undefined;
       const hasAttachment = !!full.attachmentFilename;
       await emailService.sendPostNotificationMail(emails, full.title, full.text, choir?.name, replyTo, full.id, hasAttachment);
+    }
+
+    const choir = await db.choir.findByPk(req.activeChoirId);
+    if (choir) {
+      const url = `/posts/${full.id}`;
+      const payload = {
+        title: `Neuer Beitrag in ${choir.name}`,
+        body: full.title,
+        icon: '/assets/icons/icon-192x192.png',
+        url,
+        data: { url }
+      };
+      pushNotificationService
+        .sendToChoirMembers(req.activeChoirId, payload, req.userId)
+        .catch(err => logger.warn(`Push notification send failed: ${err.message}`));
     }
     res.status(200).send(serializePost(full, req.userId));
   } catch (err) {

@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 @use 'themes/_nak-theme' as nak;
+@use 'themes/_breakpoints' as bp;
 
 // Include Angular Material core styles once.
 @include mat.core();
@@ -294,28 +295,65 @@ mat-card-header {
   margin-bottom: 1rem;
 }
 
-// Responsive typography
-@media (max-width: 768px) {
-  html, body {
-    font-size: 16px;  // Minimum 1rem for mobile readability
-  }
+// ========================================
+// RESPONSIVE TYPOGRAPHY - Mobile Font Scaling
+// ========================================
+// Mobile devices get ~10% larger fonts for better readability
+// Using systematic approach with bp.$mobile-font-scale = 1.1
 
-  h1 { font-size: 1.8rem; }
-  h2 { font-size: 1.5rem; }
-  h3 { font-size: 1.3rem; }
+html, body {
+  font-size: 14px; // Desktop base size
+
+  @include bp.handset {
+    font-size: calc(14px * #{bp.$mobile-font-scale}); // ~15.4px on mobile
+  }
 }
 
-@media (max-width: 480px) {
-  html, body {
-    font-size: 16px;  // Maintain 1rem minimum on small devices
+h1 {
+  @include bp.responsive-font-size(2rem); // 2rem desktop, 2.2rem mobile
+}
+
+h2 {
+  @include bp.responsive-font-size(1.5rem); // 1.5rem desktop, 1.65rem mobile
+}
+
+h3 {
+  @include bp.responsive-font-size(1.25rem); // 1.25rem desktop, 1.375rem mobile
+}
+
+h4 {
+  @include bp.responsive-font-size(1.1rem); // 1.1rem desktop, 1.21rem mobile
+}
+
+mat-form-field {
+  @include bp.handset {
+    font-size: calc(1rem * #{bp.$mobile-font-scale}); // ~10% larger on mobile
+  }
+}
+
+// Legacy table responsive styles
+@media (max-width: 768px) {
+  .mat-mdc-table {
+    display: block;
+    width: 100%;
   }
 
-  h1 { font-size: 1.6rem; }
-  h2 { font-size: 1.3rem; }
-  h3 { font-size: 1.15rem; }
+  .mat-mdc-header-row {
+    display: none;
+  }
 
-  mat-form-field {
-    font-size: 1.1rem;
+  .mat-mdc-row {
+    display: block;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 8px 0;
+  }
+
+  .mat-mdc-row .mat-mdc-cell {
+    display: block;
+    width: 100%;
+    padding: 4px 8px;
+    box-sizing: border-box;
+    word-break: break-word;
   }
 }
 
@@ -384,7 +422,7 @@ $choir-app-frontend-theme: mat.m2-define-light-theme((
 /* Zusätzliche mobile Styles */
 @media (max-width: 480px) {
   .hero .headline h1 {
-    font-size: 16px
+    font-size: calc(16px * #{bp.$mobile-font-scale}); // ~17.6px with 10% increase
   }
 
   .kpi {
@@ -431,7 +469,7 @@ $choir-app-frontend-theme: mat.m2-define-light-theme((
     display: flex;
     flex-direction: column;
     align-items: center;
-    font-size: 12px;
+    font-size: calc(12px * #{bp.$mobile-font-scale}); // ~13.2px with 10% increase
     color: #4b5563;
     text-decoration: none;
   }

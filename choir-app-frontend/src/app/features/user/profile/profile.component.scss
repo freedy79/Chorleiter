@@ -68,6 +68,42 @@
     min-height: 200px;
     color: #666;
 }
+
+.push-status {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+
+    mat-icon {
+        font-size: 24px;
+        color: #5c6bc0;
+    }
+
+    .status-line {
+        font-weight: 500;
+    }
+
+    .hint {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+}
+
+.push-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.choir-push-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
 // Passwort-Anforderungen Anzeige (Option 1: Sanfte Migration)
 .password-requirements {
   margin: 16px 0;

@@ -225,3 +225,35 @@ $animation-timing: cubic-bezier(0.4, 0, 0.2, 1); // Material Design Standard
   white-space: nowrap;
   border: 0;
 }
+
+// ========================================
+// MOBILE TYPOGRAPHY SCALING
+// ========================================
+
+// Mobile font scale factor (~10% increase for better readability on small screens)
+$mobile-font-scale: 1.1;
+
+// Mixin to apply mobile-optimized typography
+// Increases font sizes by ~10% for handset devices to improve readability
+@mixin mobile-typography {
+  @include handset {
+    font-size: calc(1em * #{$mobile-font-scale});
+  }
+}
+
+// Responsive font size mixin
+// Usage: @include responsive-font-size(16px, 18px)
+// First value is desktop, second is mobile (auto-scaled if not provided)
+@mixin responsive-font-size($desktop-size, $mobile-size: null) {
+  font-size: $desktop-size;
+
+  @if $mobile-size {
+    @include handset {
+      font-size: $mobile-size;
+    }
+  } @else {
+    @include handset {
+      font-size: calc(#{$desktop-size} * #{$mobile-font-scale});
+    }
+  }
+}

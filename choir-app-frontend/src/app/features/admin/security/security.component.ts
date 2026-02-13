@@ -8,6 +8,7 @@ import { LoginAttemptsComponent } from '../login-attempts/login-attempts.compone
 import { ProtocolsComponent } from '../protocols/protocols.component';
 import { BackupComponent } from '../backup/backup.component';
 import { LogViewerComponent } from '../log-viewer/log-viewer.component';
+import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
   selector: 'app-security',
@@ -18,6 +19,7 @@ import { LogViewerComponent } from '../log-viewer/log-viewer.component';
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    AdminPageHeaderComponent,
     LoginAttemptsComponent,
     ProtocolsComponent,
     BackupComponent,

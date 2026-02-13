@@ -1,8 +1,8 @@
 <div class="organizations">
-  <div class="header">
-    <h1>Organisationen verwalten</h1>
-    <p class="description">Zentrale Verwaltung von Bezirken, Gemeinden und Chören</p>
-  </div>
+  <app-admin-page-header
+    title="Organisationen verwalten"
+    description="Zentrale Verwaltung von Bezirken, Gemeinden und Chören">
+  </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
 
