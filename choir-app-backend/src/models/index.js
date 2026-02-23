@@ -3,6 +3,7 @@ const Sequelize = require("sequelize");
 
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
+  port: dbConfig.PORT,
   dialect: dbConfig.dialect,
   operatorsAliases: 0, // 0 instead of false
   pool: dbConfig.pool
@@ -61,8 +62,10 @@ db.poll_option = require("./poll_option.model.js")(sequelize, Sequelize);
 db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
 db.post_comment = require("./post_comment.model.js")(sequelize, Sequelize);
 db.post_reaction = require("./post_reaction.model.js")(sequelize, Sequelize);
+db.post_image = require("./post_image.model.js")(sequelize, Sequelize);
 db.search_history = require("./search_history.model.js")(sequelize, Sequelize);
 db.push_subscription = require("./pushSubscription.model.js")(sequelize, Sequelize);
+db.piece_audit_log = require("./piece_audit_log.model.js")(sequelize, Sequelize);
 db.data_enrichment_job = require("./data-enrichment-job.model.js")(sequelize, Sequelize);
 db.data_enrichment_suggestion = require("./data-enrichment-suggestion.model.js")(sequelize, Sequelize);
 db.data_enrichment_setting = require("./data-enrichment-setting.model.js")(sequelize, Sequelize);
@@ -194,6 +197,8 @@ db.user.hasMany(db.post_comment, { as: 'postComments', foreignKey: 'userId', onD
 db.post_comment.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 db.post_comment.hasMany(db.post_comment, { as: 'replies', foreignKey: 'parentId', onDelete: 'CASCADE' });
 db.post_comment.belongsTo(db.post_comment, { foreignKey: 'parentId', as: 'parent' });
+db.post.hasMany(db.post_image, { as: 'images', foreignKey: 'postId', onDelete: 'CASCADE' });
+db.post_image.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
 db.post.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'postId', onDelete: 'CASCADE' });
 db.post_reaction.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
 db.post_comment.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'commentId', onDelete: 'CASCADE' });

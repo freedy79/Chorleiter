@@ -25,7 +25,7 @@ class GeminiProvider extends LLMProvider {
      * @param {Array} enrichmentFields - Fields to enrich
      * @returns {Promise<Object>}
      */
-    async enrichPieces(pieces, enrichmentFields) {
+    async enrichPieces(pieces, enrichmentFields, progressCallback = null) {
         if (!this.isAvailable()) {
             throw new Error('Gemini API key not configured');
         }
@@ -34,6 +34,8 @@ class GeminiProvider extends LLMProvider {
             const suggestions = [];
             let totalCost = 0;
             let totalTokens = 0;
+            let samplePrompt = null;
+            let sampleResponse = null;
 
             // Process in batches
             for (let i = 0; i < pieces.length; i += this.config.batchSize) {
@@ -42,7 +44,21 @@ class GeminiProvider extends LLMProvider {
 
                 const response = await this.callAPI(prompt);
 
+                // Capture the first batch as sample for transparency
+                if (i === 0) {
+                    samplePrompt = prompt;
+                    sampleResponse = response.rawResponse || null;
+                }
+
                 const batchSuggestions = response.suggestions || [];
+                // Map pieceIndex → entityId using the actual batch items
+                batchSuggestions.forEach(s => {
+                    const item = batch[s.pieceIndex];
+                    if (item) {
+                        s.entityId = item.id;
+                        s.pieceId = item.id;
+                    }
+                });
                 suggestions.push(...batchSuggestions);
 
                 totalCost += response.estimatedCost || 0;
@@ -53,13 +69,24 @@ class GeminiProvider extends LLMProvider {
                     suggestionsFound: batchSuggestions.length,
                     cost: response.estimatedCost
                 });
+
+                if (progressCallback) {
+                    await progressCallback({
+                        processed: Math.min(i + this.config.batchSize, pieces.length),
+                        total: pieces.length,
+                        batchSuggestions: batchSuggestions.length,
+                        totalCostSoFar: totalCost
+                    });
+                }
             }
 
             return {
                 suggestions,
                 totalCost,
                 totalTokens,
-                provider: 'gemini'
+                provider: 'gemini',
+                samplePrompt,
+                sampleResponse
             };
         } catch (error) {
             logger.error('[Gemini] Error enriching pieces:', error);
@@ -70,15 +97,15 @@ class GeminiProvider extends LLMProvider {
     /**
      * Enrich composers
      */
-    async enrichComposers(composers, enrichmentFields) {
-        return this.enrichPieces(composers, enrichmentFields);
+    async enrichComposers(composers, enrichmentFields, progressCallback = null) {
+        return this.enrichPieces(composers, enrichmentFields, progressCallback);
     }
 
     /**
      * Enrich publishers
      */
-    async enrichPublishers(publishers, enrichmentFields) {
-        return this.enrichPieces(publishers, enrichmentFields);
+    async enrichPublishers(publishers, enrichmentFields, progressCallback = null) {
+        return this.enrichPieces(publishers, enrichmentFields, progressCallback);
     }
 
     /**
@@ -124,7 +151,8 @@ class GeminiProvider extends LLMProvider {
                 suggestions,
                 estimatedCost,
                 tokensUsed: inputTokens + outputTokens,
-                modelUsed: this.config.modelName
+                modelUsed: this.config.modelName,
+                rawResponse: responseText
             };
         } catch (error) {
             throw new Error(`Gemini API call failed: ${this.formatErrorMessage(error)}`);
@@ -158,6 +186,30 @@ class GeminiProvider extends LLMProvider {
     }
 
     /**
+     * Test connection with a specific API key (without changing the instance key)
+     * @param {string} apiKey - The API key to test
+     * @returns {Promise<Object>} { ok: boolean, message: string }
+     */
+    async testApiKeyDirect(apiKey) {
+        const url = `${this.config.baseUrl}/${this.config.modelName}:generateContent`;
+
+        try {
+            await axios.post(url, {
+                contents: [{ parts: [{ text: 'Respond with "OK" only.' }] }],
+                generationConfig: { maxOutputTokens: 10 }
+            }, {
+                params: { key: apiKey },
+                timeout: 15000
+            });
+
+            return { ok: true, message: 'Gemini API-Key ist gültig' };
+        } catch (error) {
+            const msg = error.response?.data?.error?.message || error.message;
+            return { ok: false, message: `Gemini API-Key ungültig: ${msg}` };
+        }
+    }
+
+    /**
      * Get pricing information
      */
     getPricing() {
@@ -174,58 +226,78 @@ class GeminiProvider extends LLMProvider {
     }
 
     /**
-     * Build batch enrichment prompt for multiple pieces
+     * Build compact batch enrichment prompt (pieces or composers)
+     * Only includes non-empty field values to minimize token usage
      */
     buildBatchEnrichmentPrompt(batch, enrichmentFields) {
-        const piecesData = batch.map((piece, idx) => `
-Piece ${idx + 1}:
-- Title: ${piece.title || 'unknown'}
-- Composer: ${piece.composer?.name || 'unknown'}
-- Key: ${piece.key || 'unknown'}
-- Voicing: ${piece.voicing || 'unknown'}
-- Duration: ${piece.durationSec || 'unknown'} seconds
-- Opus: ${piece.opus || 'unknown'}
-`).join('\n');
+        // Detect entity type from first item
+        const isComposer = batch[0] && batch[0].title === undefined && (batch[0].birthYear !== undefined || batch[0].deathYear !== undefined || (batch[0].name !== undefined && batch[0].composer === undefined));
 
-        const fields = enrichmentFields
-            .map(field => `- ${field}`)
-            .join('\n');
+        if (isComposer) {
+            return this.buildComposerEnrichmentPrompt(batch, enrichmentFields);
+        }
 
-        return `
-You are a music metadata enrichment expert. Given information about multiple music pieces,
-provide accurate metadata for missing or incomplete fields.
+        const FIELD_LABELS = { subtitle: 'Untertitel', lyrics: 'Liedtext', lyricsSource: 'Textquelle', key: 'Tonart', voicing: 'Besetzung', durationSec: 'Sekunden', opus: 'Opusnummer' };
 
-Pieces to enrich:
+        const piecesData = batch.map((piece, idx) => {
+            const attrs = [];
+            if (piece.composer?.name) attrs.push(`Composer: ${piece.composer.name}`);
+            if (piece.category?.name) attrs.push(`Category: ${piece.category.name}`);
+            if (piece.key) attrs.push(`Key: ${piece.key}`);
+            if (piece.voicing) attrs.push(`Voicing: ${piece.voicing}`);
+            if (piece.opus) attrs.push(`Opus: ${piece.opus}`);
+            if (piece.durationSec) attrs.push(`Duration: ${piece.durationSec}s`);
+            if (piece.subtitle) attrs.push(`Subtitle: ${piece.subtitle}`);
+            if (piece.lyrics) attrs.push(`HasLyrics: yes`);
+            if (piece.lyricsSource) attrs.push(`LyricsSource: ${piece.lyricsSource}`);
+            const attrStr = attrs.length > 0 ? `\n  ${attrs.join('\n  ')}` : '';
+            return `[${idx}] "${piece.title || '?'}"${attrStr}`;
+        }).join('\n');
+
+        const fieldHints = enrichmentFields
+            .filter(f => FIELD_LABELS[f])
+            .map(f => `${f}=${FIELD_LABELS[f]}`)
+            .join(', ');
+
+        return `Enrich music metadata. Only fill fields you know with high confidence (0.8+).
+
+Pieces:
 ${piecesData}
 
-Fields to enrich (if missing or incomplete):
-${fields}
+Fields to fill: ${enrichmentFields.join(', ')}${fieldHints ? `\n(${fieldHints})` : ''}
 
-For EACH piece, provide metadata completion. Confidence should be high (0.8+) for well-known works,
-medium (0.5-0.8) for reasonable guesses, and low (<0.5) for uncertain values.
-
-Format your response as JSON (DO NOT include markdown, just plain JSON):
-{
-  "enrichments": [
-    {
-      "pieceIndex": 0,
-      "fieldName": "opus",
-      "suggestedValue": "Op. 123",
-      "confidence": 0.95,
-      "source": "IMSLP",
-      "reasoning": "This piece is well-documented in IMSLP"
-    },
-    {
-      "pieceIndex": 0,
-      "fieldName": "voicing",
-      "suggestedValue": "SATB",
-      "confidence": 0.92,
-      "source": "Musicbrainz",
-      "reasoning": "Standard voicing for this work"
+JSON only, no markdown:
+{"enrichments":[{"pieceIndex":0,"fieldName":"opus","suggestedValue":"Op.9","confidence":0.95,"source":"IMSLP","reasoning":"brief reason"}]}`;
     }
-  ]
-}
-`;
+
+    /**
+     * Build compact composer enrichment prompt
+     */
+    buildComposerEnrichmentPrompt(batch, enrichmentFields) {
+        const FIELD_LABELS = { name: 'Name', birthYear: 'Geburtsjahr', deathYear: 'Todesjahr' };
+
+        const composersData = batch.map((composer, idx) => {
+            const attrs = [];
+            if (composer.birthYear) attrs.push(`Born: ${composer.birthYear}`);
+            if (composer.deathYear) attrs.push(`Died: ${composer.deathYear}`);
+            const attrStr = attrs.length > 0 ? `\n  ${attrs.join('\n  ')}` : '';
+            return `[${idx}] "${composer.name || '?'}"${attrStr}`;
+        }).join('\n');
+
+        const fieldHints = enrichmentFields
+            .filter(f => FIELD_LABELS[f])
+            .map(f => `${f}=${FIELD_LABELS[f]}`)
+            .join(', ');
+
+        return `Enrich composer metadata. Only fill fields you know with high confidence (0.8+).
+
+Composers:
+${composersData}
+
+Fields to fill: ${enrichmentFields.join(', ')}${fieldHints ? `\n(${fieldHints})` : ''}
+
+JSON only, no markdown:
+{"enrichments":[{"pieceIndex":0,"fieldName":"birthYear","suggestedValue":"1756","confidence":0.99,"source":"Wikipedia","reasoning":"brief reason"}]}`;
     }
 }
 

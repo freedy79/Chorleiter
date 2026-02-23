@@ -18,13 +18,13 @@ router.use(authJwt.verifyToken);
 
 router.get("/", wrap(controller.findAll));
 router.get("/:id", wrap(controller.findOne));
-router.post("/", role.requireNonDemo, createPieceValidation, validate, wrap(controller.create));
-router.put("/:id", role.requireNonDemo, updatePieceValidation, validate, wrap(controller.update));
-router.delete("/:id", role.requireNonDemo, wrap(controller.delete));
+router.post("/", role.requireNonDemo, role.requireNonSinger, createPieceValidation, validate, wrap(controller.create));
+router.put("/:id", role.requireNonDemo, role.requireNonSinger, updatePieceValidation, validate, wrap(controller.update));
+router.delete("/:id", role.requireNonDemo, role.requireNonSinger, wrap(controller.delete));
 router.post("/:id/report", role.requireNonDemo, wrap(controller.report));
-router.post("/:id/share-token", role.requireNonDemo, wrap(controller.generateShareToken));
-router.post("/:id/image", role.requireNonDemo, imageUpload.single('image'), wrap(controller.uploadImage));
-router.post("/link-file", role.requireNonDemo, fileUpload.single('file'), wrap(controller.uploadLinkFile));
-router.delete("/link-file", role.requireNonDemo, wrap(controller.deleteLinkFile));
+router.post("/:id/share-token", role.requireNonDemo, role.requireNonSinger, wrap(controller.generateShareToken));
+router.post("/:id/image", role.requireNonDemo, role.requireNonSinger, imageUpload.single('image'), wrap(controller.uploadImage));
+router.post("/link-file", role.requireNonDemo, role.requireNonSinger, fileUpload.single('file'), wrap(controller.uploadLinkFile));
+router.delete("/link-file", role.requireNonDemo, role.requireNonSinger, wrap(controller.deleteLinkFile));
 
 module.exports = router;

@@ -19,7 +19,7 @@
       <a [href]="getAttachmentUrl()" target="_blank"><mat-icon>attach_file</mat-icon> {{ post.attachmentOriginalName }}</a>
     </div>
     <div *ngIf="post.expiresAt" class="expires">Sichtbar bis {{ post.expiresAt | date:'shortDate' }}</div>
-    <app-post-poll *ngIf="post.poll" [post]="post" (pollChange)="onPollChange($event)"></app-post-poll>
+    <app-post-poll *ngIf="post.poll" [post]="post" [isAdmin]="isAdmin" [isChoirAdmin]="isChoirAdmin" (pollChange)="onPollChange($event)"></app-post-poll>
   </mat-card-content>
 
   <div class="social-counts" *ngIf="post.reactions?.total || (post.comments?.length || 0)">

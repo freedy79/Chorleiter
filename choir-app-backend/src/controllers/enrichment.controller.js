@@ -90,6 +90,19 @@ exports.setApiKey = asyncHandler(async (req, res) => {
     }
 
     try {
+        // Test the API key first before saving
+        await dataEnrichmentService.initialize();
+        const testResult = await dataEnrichmentService.testApiKeyDirect(provider.toLowerCase(), apiKey);
+
+        if (!testResult.ok) {
+            return res.status(400).json({
+                success: false,
+                message: testResult.message,
+                connectionTest: testResult
+            });
+        }
+
+        // Key is valid — save it
         const settingKey = `api_key_${provider.toLowerCase()}`;
         const result = await dataEnrichmentSettingsService.set(
             settingKey,
@@ -98,16 +111,13 @@ exports.setApiKey = asyncHandler(async (req, res) => {
             req.userId
         );
 
-        // Test connection
-        const testResult = await dataEnrichmentService.testProviders();
-
         res.json({
             success: true,
-            message: `API key for ${provider} saved and encrypted`,
+            message: `API-Key für ${provider} geprüft, gespeichert und verschlüsselt`,
             provider,
             saved: result.saved,
             encrypted: result.encrypted,
-            connectionTest: testResult[provider]
+            connectionTest: testResult
         });
     } catch (error) {
         logger.error('[EnrichmentController] Error setting API key:', error);
@@ -126,6 +136,8 @@ exports.setApiKey = asyncHandler(async (req, res) => {
 exports.getProviders = asyncHandler(async (req, res) => {
     try {
         await dataEnrichmentService.initialize();
+        // Load API keys from DB so provider status is accurate
+        await dataEnrichmentService.loadApiKeysIntoProviders();
         const providers = dataEnrichmentService.getAvailableProviders();
         const connectionTests = await dataEnrichmentService.testProviders();
 
@@ -185,9 +197,12 @@ exports.createJob = asyncHandler(async (req, res) => {
         });
     } catch (error) {
         logger.error('[EnrichmentController] Error creating job:', error);
-        res.status(500).json({
+
+        // Return specific error message for provider issues
+        const statusCode = error.message.includes('Kein LLM-Provider') ? 400 : 500;
+        res.status(statusCode).json({
             success: false,
-            message: 'Error creating enrichment job',
+            message: error.message || 'Error creating enrichment job',
             error: error.message
         });
     }
@@ -221,11 +236,18 @@ exports.getJob = asyncHandler(async (req, res) => {
                 processedItems: job.processedItems,
                 successCount: job.successCount,
                 errorCount: job.errorCount,
+                errorMessage: job.errorMessage || null,
                 apiCosts: job.apiCosts,
                 llmProvider: job.llmProvider,
+                metadata: job.metadata,
                 startedAt: job.startedAt,
                 completedAt: job.completedAt,
                 createdAt: job.createdAt,
+                creator: job.creator ? {
+                    id: job.creator.id,
+                    firstName: job.creator.firstName,
+                    name: job.creator.name
+                } : null,
                 suggestions: job.suggestions?.map(s => ({
                     id: s.id,
                     fieldName: s.fieldName,
@@ -243,6 +265,118 @@ exports.getJob = asyncHandler(async (req, res) => {
             success: false,
             message: 'Error retrieving job',
             error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/enrichment/jobs
+ * List all enrichment jobs with optional filtering
+ */
+exports.listJobs = asyncHandler(async (req, res) => {
+    const { status, jobType, limit, offset, sortBy, sortOrder } = req.query;
+
+    try {
+        await dataEnrichmentService.initialize();
+
+        const filters = {
+            status,
+            jobType,
+            limit: limit ? parseInt(limit) : 50,
+            offset: offset ? parseInt(offset) : 0,
+            sortBy: sortBy || 'createdAt',
+            sortOrder: sortOrder || 'DESC'
+        };
+
+        const result = await dataEnrichmentService.listJobs(filters);
+
+        res.json({
+            success: true,
+            jobs: result.jobs.map(job => ({
+                id: job.id,
+                jobType: job.jobType,
+                status: job.status,
+                totalItems: job.totalItems,
+                processedItems: job.processedItems,
+                successCount: job.successCount,
+                errorCount: job.errorCount,
+                errorMessage: job.errorMessage || null,
+                apiCosts: job.apiCosts,
+                llmProvider: job.llmProvider,
+                metadata: job.metadata,
+                startedAt: job.startedAt,
+                completedAt: job.completedAt,
+                createdAt: job.createdAt,
+                creator: job.creator ? {
+                    id: job.creator.id,
+                    firstName: job.creator.firstName,
+                    name: job.creator.name
+                } : null
+            })),
+            total: result.total
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error listing jobs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error listing jobs',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/admin/enrichment/jobs/:jobId/cancel
+ * Cancel a running or pending job
+ */
+exports.cancelJob = asyncHandler(async (req, res) => {
+    const { jobId } = req.params;
+
+    try {
+        await dataEnrichmentService.initialize();
+        const job = await dataEnrichmentService.cancelJob(jobId);
+
+        res.json({
+            success: true,
+            message: 'Job abgebrochen',
+            job: {
+                id: job.id,
+                status: job.status,
+                completedAt: job.completedAt
+            }
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error cancelling job:', error);
+        const statusCode = error.message.includes('nicht gefunden') ? 404 : 400;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message
+        });
+    }
+});
+
+/**
+ * DELETE /api/admin/enrichment/jobs/:jobId
+ * Delete a completed/failed/cancelled job and its suggestions
+ */
+exports.deleteJob = asyncHandler(async (req, res) => {
+    const { jobId } = req.params;
+
+    try {
+        await dataEnrichmentService.initialize();
+        const result = await dataEnrichmentService.deleteJob(jobId);
+
+        res.json({
+            success: true,
+            message: 'Job und zugehörige Vorschläge gelöscht',
+            deletedSuggestions: result.deletedSuggestions
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error deleting job:', error);
+        const statusCode = error.message.includes('nicht gefunden') ? 404 : 400;
+        res.status(statusCode).json({
+            success: false,
+            message: error.message
         });
     }
 });
@@ -355,6 +489,63 @@ exports.applySuggestion = asyncHandler(async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error applying suggestion',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * DELETE /api/admin/enrichment/api-keys/:provider
+ * Delete API key for a provider
+ */
+exports.deleteApiKey = asyncHandler(async (req, res) => {
+    const { provider } = req.params;
+
+    const allowedProviders = ['gemini', 'claude', 'openai'];
+    if (!allowedProviders.includes(provider.toLowerCase())) {
+        return res.status(400).json({
+            success: false,
+            message: `Invalid provider. Allowed: ${allowedProviders.join(', ')}`
+        });
+    }
+
+    try {
+        await dataEnrichmentService.initialize();
+        const deleted = await dataEnrichmentService.deleteApiKey(provider.toLowerCase());
+
+        res.json({
+            success: true,
+            message: `API-Key für ${provider} gelöscht`,
+            deleted
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error deleting API key:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting API key',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * GET /api/admin/enrichment/api-keys/status
+ * Get API key status for all providers (masked keys + availability)
+ */
+exports.getApiKeyStatus = asyncHandler(async (req, res) => {
+    try {
+        await dataEnrichmentService.initialize();
+        const status = await dataEnrichmentService.getApiKeyStatus();
+
+        res.json({
+            success: true,
+            apiKeys: status
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error getting API key status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error retrieving API key status',
             error: error.message
         });
     }

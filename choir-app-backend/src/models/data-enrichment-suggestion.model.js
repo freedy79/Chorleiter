@@ -19,9 +19,9 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false
         },
         entityId: {
-            type: DataTypes.UUID,
+            type: DataTypes.STRING,
             allowNull: false,
-            comment: 'Reference to piece, composer, or publisher'
+            comment: 'Reference to piece, composer, or publisher (stored as string to support both integer and UUID IDs)'
         },
         fieldName: {
             type: DataTypes.STRING,

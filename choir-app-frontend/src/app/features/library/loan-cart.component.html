@@ -26,16 +26,12 @@
   <div class="form-section" *ngIf="items.length > 0">
     <mat-form-field>
       <mat-label>Startdatum</mat-label>
-      <input matInput [matDatepicker]="picker1" [(ngModel)]="startDate">
-      <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-      <mat-datepicker #picker1></mat-datepicker>
+      <input matInput type="date" [(ngModel)]="startDate">
     </mat-form-field>
 
     <mat-form-field>
       <mat-label>Enddatum</mat-label>
-      <input matInput [matDatepicker]="picker2" [(ngModel)]="endDate">
-      <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-      <mat-datepicker #picker2></mat-datepicker>
+      <input matInput type="date" [(ngModel)]="endDate">
     </mat-form-field>
 
     <mat-form-field class="reason-field">

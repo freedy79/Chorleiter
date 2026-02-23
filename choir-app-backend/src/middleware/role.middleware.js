@@ -72,14 +72,37 @@ async function requireChoirAdmin(req, res, next) {
 }
 
 /**
+ * Middleware that allows choir admins or notenwarte for the active choir,
+ * as well as global admins and global librarians.
+ *
+ * Used for collection management and lending operations.
+ */
+async function requireChoirAdminOrNotenwart(req, res, next) {
+    if (['admin', 'librarian'].some(r => req.userRoles.includes(r))) {
+        return next();
+    }
+    try {
+        const hasRole = await userHasChoirRole(req, ['choir_admin', 'notenwart']);
+        if (hasRole) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Require Choir Admin or Notenwart Role!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
+}
+
+/**
  * Middleware that allows directors or choir admins of the active
- * choir as well as global librarians and admins.
+ * choir as well as global admins.
+ *
+ * Note: Global librarians do NOT get director-level access.
  *
  * Global access is validated through {@link req.userRoles}; choir-specific
  * permissions are read from {@link user_choir.rolesInChoir}.
  */
 async function requireDirector(req, res, next) {
-    if (['admin', 'librarian'].some(r => req.userRoles.includes(r))) {
+    if (req.userRoles.includes('admin')) {
         return next();
     }
     try {
@@ -94,13 +117,24 @@ async function requireDirector(req, res, next) {
 }
 
 /**
- * Middleware that allows only global librarians or admins.
+ * Middleware that allows global librarians, global admins, or choir-level
+ * notenwarte and choir admins.
+ *
+ * Combines global librarian access with choir-level notenwart/choir_admin access.
  */
-function requireLibrarian(req, res, next) {
+async function requireLibrarian(req, res, next) {
     if (['librarian', 'admin'].some(r => req.userRoles.includes(r))) {
         return next();
     }
-    return res.status(403).send({ message: 'Require Librarian Role!' });
+    try {
+        const hasRole = await userHasChoirRole(req, ['choir_admin', 'notenwart']);
+        if (hasRole) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Require Librarian Role!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
 }
 
 /**
@@ -125,4 +159,26 @@ async function requireDirectorOrHigher(req, res, next) {
     }
 }
 
-module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher };
+/**
+ * Middleware that allows any choir member except pure singers.
+ * Grants access to choir_admin, director, organist, and notenwart.
+ * Also allows global admins and global librarians.
+ *
+ * Used for write operations on shared data (pieces, repertoire).
+ */
+async function requireNonSinger(req, res, next) {
+    if (['admin', 'librarian'].some(r => req.userRoles.includes(r))) {
+        return next();
+    }
+    try {
+        const hasRole = await userHasChoirRole(req, ['choir_admin', 'director', 'organist', 'notenwart']);
+        if (hasRole) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Insufficient choir role for this action!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
+}
+
+module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireNonSinger };

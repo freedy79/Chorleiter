@@ -7,7 +7,7 @@ process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
 const { createUserWithRoles } = require('./utils/userFactory');
-const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireDirectorOrHigher } = require('../src/middleware/role.middleware');
+const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireLibrarian, requireNonSinger } = require('../src/middleware/role.middleware');
 
 async function sendRequest(middleware, context) {
   const app = express();
@@ -45,6 +45,18 @@ async function sendRequest(middleware, context) {
       email: 'oc@example.com',
       choirMemberships: [{ choirId: otherChoir.id, rolesInChoir: ['choir_admin'] }]
     });
+    const choirNotenwart = await createUserWithRoles(db, {
+      email: 'nw@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['notenwart'] }]
+    });
+    const choirOrganist = await createUserWithRoles(db, {
+      email: 'org@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['organist'] }]
+    });
+    const choirSinger = await createUserWithRoles(db, {
+      email: 'sing@example.com',
+      choirMemberships: [{ choirId: choir.id, rolesInChoir: ['singer'] }]
+    });
     await db.user_choir.findOrCreate({
       where: { userId: choirAdmin.id, choirId: choir.id },
       defaults: { rolesInChoir: ['choir_admin'] }
@@ -56,6 +68,18 @@ async function sendRequest(middleware, context) {
     await db.user_choir.findOrCreate({
       where: { userId: otherChoirAdmin.id, choirId: otherChoir.id },
       defaults: { rolesInChoir: ['choir_admin'] }
+    });
+    await db.user_choir.findOrCreate({
+      where: { userId: choirNotenwart.id, choirId: choir.id },
+      defaults: { rolesInChoir: ['notenwart'] }
+    });
+    await db.user_choir.findOrCreate({
+      where: { userId: choirOrganist.id, choirId: choir.id },
+      defaults: { rolesInChoir: ['organist'] }
+    });
+    await db.user_choir.findOrCreate({
+      where: { userId: choirSinger.id, choirId: choir.id },
+      defaults: { rolesInChoir: ['singer'] }
     });
 
     // requireNonDemo success
@@ -109,9 +133,9 @@ async function sendRequest(middleware, context) {
     res = await sendRequest(requireDirector, { userRoles: ['admin'], userId: admin.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 200, 'global admin should pass director middleware');
 
-    // requireDirector success as global librarian
+    // requireDirector failure as global librarian (librarian no longer grants director access)
     res = await sendRequest(requireDirector, { userRoles: ['librarian'], userId: normal.id, activeChoirId: choir.id });
-    assert.strictEqual(res.status, 200, 'librarian should pass director middleware');
+    assert.strictEqual(res.status, 403, 'librarian should NOT pass director middleware');
 
     // requireDirector success as choir admin via association
     res = await sendRequest(requireDirector, { userRoles: ['user'], userId: choirAdmin.id, activeChoirId: choir.id });
@@ -144,6 +168,87 @@ async function sendRequest(middleware, context) {
     // requireDirectorOrHigher failure
     res = await sendRequest(requireDirectorOrHigher, { userRoles: ['user'], userId: normal.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 403, 'non-director should be blocked');
+
+    // --- requireChoirAdminOrNotenwart tests ---
+    // success as global admin
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['admin'] });
+    assert.strictEqual(res.status, 200, 'admin should pass choirAdminOrNotenwart');
+
+    // success as global librarian
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['librarian'] });
+    assert.strictEqual(res.status, 200, 'librarian should pass choirAdminOrNotenwart');
+
+    // success as choir admin
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['user'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass choirAdminOrNotenwart');
+
+    // success as notenwart
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['user'], userId: choirNotenwart.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'notenwart should pass choirAdminOrNotenwart');
+
+    // failure as singer
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['user'], userId: choirSinger.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'singer should be blocked by choirAdminOrNotenwart');
+
+    // failure as regular user without choir membership
+    res = await sendRequest(requireChoirAdminOrNotenwart, { userRoles: ['user'], userId: normal.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'non-member should be blocked by choirAdminOrNotenwart');
+
+    // --- requireLibrarian tests (now includes choir-level notenwart) ---
+    // success as global librarian
+    res = await sendRequest(requireLibrarian, { userRoles: ['librarian'] });
+    assert.strictEqual(res.status, 200, 'global librarian should pass requireLibrarian');
+
+    // success as global admin
+    res = await sendRequest(requireLibrarian, { userRoles: ['admin'] });
+    assert.strictEqual(res.status, 200, 'global admin should pass requireLibrarian');
+
+    // success as choir notenwart
+    res = await sendRequest(requireLibrarian, { userRoles: ['user'], userId: choirNotenwart.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'notenwart should pass requireLibrarian');
+
+    // success as choir admin
+    res = await sendRequest(requireLibrarian, { userRoles: ['user'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass requireLibrarian');
+
+    // failure as singer
+    res = await sendRequest(requireLibrarian, { userRoles: ['user'], userId: choirSinger.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'singer should be blocked by requireLibrarian');
+
+    // --- requireNonSinger tests ---
+    // success as global admin
+    res = await sendRequest(requireNonSinger, { userRoles: ['admin'] });
+    assert.strictEqual(res.status, 200, 'admin should pass requireNonSinger');
+
+    // success as global librarian
+    res = await sendRequest(requireNonSinger, { userRoles: ['librarian'] });
+    assert.strictEqual(res.status, 200, 'librarian should pass requireNonSinger');
+
+    // success as choir director
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: choirDirector.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'director should pass requireNonSinger');
+
+    // success as choir admin
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass requireNonSinger');
+
+    // success as notenwart
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: choirNotenwart.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'notenwart should pass requireNonSinger');
+
+    // success as organist
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: choirOrganist.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'organist should pass requireNonSinger');
+
+    // failure as singer
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: choirSinger.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'singer should be blocked by requireNonSinger');
+
+    // failure as non-member
+    res = await sendRequest(requireNonSinger, { userRoles: ['user'], userId: normal.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'non-member should be blocked by requireNonSinger');
+
+    console.log('All role middleware tests passed!');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

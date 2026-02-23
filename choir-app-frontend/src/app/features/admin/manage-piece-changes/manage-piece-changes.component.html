@@ -1,30 +1,117 @@
-<h2>Änderungsvorschläge</h2>
-<mat-table [dataSource]="dataSource" class="mat-elevation-z8 full-width">
-    <ng-container matColumnDef="piece">
-        <mat-header-cell *matHeaderCellDef>Stück</mat-header-cell>
-        <mat-cell *matCellDef="let c">{{ c.piece?.title || ('Piece ' + c.pieceId) }}</mat-cell>
-    </ng-container>
+<div class="change-proposals">
+  <h2>Änderungsvorschläge</h2>
 
-    <ng-container matColumnDef="createdAt">
-        <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
-        <mat-cell *matCellDef="let c">{{ c.createdAt | date:'short' }}</mat-cell>
-    </ng-container>
+  <div class="loading" *ngIf="loading">
+    <mat-spinner diameter="32"></mat-spinner>
+    <span>Vorschläge werden geladen…</span>
+  </div>
 
-    <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let c">
-            <button mat-button color="primary" (click)="approve(c)">Übernehmen</button>
-            <button mat-button color="warn" (click)="decline(c)">Ablehnen</button>
-        </mat-cell>
-    </ng-container>
+  <div class="empty" *ngIf="!loading && !changes.length">
+    <mat-icon>check_circle_outline</mat-icon>
+    <span>Keine Vorschläge vorhanden.</span>
+  </div>
 
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-    <ng-container matNoDataRow>
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-            Keine Vorschläge vorhanden.
-          </td>
-        </tr>
-    </ng-container>
-</mat-table>
+  <div class="change-list" *ngIf="!loading && changes.length">
+    <mat-card class="change-card" *ngFor="let change of changes"
+             [class.expanded]="expandedId === change.id">
+
+      <!-- Card Header: piece title, proposer, date -->
+      <div class="card-header" (click)="toggleExpand(change)">
+        <div class="header-info">
+          <div class="piece-title">
+            <mat-icon class="expand-icon">{{ expandedId === change.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+            {{ change.piece?.title || ('Stück #' + change.pieceId) }}
+          </div>
+          <div class="meta">
+            <span class="proposer">
+              <mat-icon class="meta-icon">person</mat-icon>
+              {{ getProposerName(change) }}
+            </span>
+            <span class="date">
+              <mat-icon class="meta-icon">schedule</mat-icon>
+              {{ change.createdAt | date:'medium' }}
+            </span>
+          </div>
+        </div>
+        <mat-chip>{{ getChangedFields(change).length }} {{ getChangedFields(change).length === 1 ? 'Feld' : 'Felder' }}</mat-chip>
+      </div>
+
+      <!-- Expanded Detail: field-by-field diff -->
+      <div class="change-details" *ngIf="expandedId === change.id">
+        <div class="field-change" *ngFor="let fc of getChangedFields(change)">
+          <div class="field-label">{{ fc.label }}</div>
+
+          <!-- Scalar fields -->
+          <div class="values" *ngIf="fc.type === 'scalar'">
+            <div class="current">
+              <div class="value-label">Aktuell</div>
+              <div class="value-text">{{ fc.currentValue }}</div>
+            </div>
+            <div class="arrow">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+            <div class="proposed">
+              <div class="value-label">Vorschlag</div>
+              <div class="value-text highlight">{{ fc.proposedValue }}</div>
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div class="links-diff" *ngIf="fc.type === 'links'">
+            <div class="links-column">
+              <div class="value-label">Aktuell</div>
+              <div class="link-list" *ngIf="fc.currentLinks?.length; else noLinks">
+                <div class="link-item" *ngFor="let link of fc.currentLinks">
+                  <mat-icon class="link-type-icon">{{ link.type === 'FILE_DOWNLOAD' ? 'attach_file' : 'link' }}</mat-icon>
+                  <span class="link-desc">{{ link.description || link.url }}</span>
+                </div>
+              </div>
+              <ng-template #noLinks><span class="no-value">—</span></ng-template>
+            </div>
+            <div class="arrow links-arrow">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+            <div class="links-column">
+              <div class="value-label">Vorschlag</div>
+              <div class="link-list" *ngIf="fc.proposedLinks?.length; else noProposedLinks">
+                <div class="link-item highlight" *ngFor="let link of fc.proposedLinks">
+                  <mat-icon class="link-type-icon">{{ link.type === 'FILE_DOWNLOAD' ? 'attach_file' : 'link' }}</mat-icon>
+                  <span class="link-desc">{{ link.description || link.url }}</span>
+                </div>
+              </div>
+              <ng-template #noProposedLinks><span class="no-value">—</span></ng-template>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!getChangedFields(change).length" class="no-changes">
+          <mat-icon>info_outline</mat-icon>
+          Keine Änderungen gegenüber dem aktuellen Stand.
+        </div>
+
+        <div class="actions">
+          <button mat-raised-button color="primary" (click)="approve(change); $event.stopPropagation()">
+            <mat-icon>check</mat-icon>
+            Übernehmen
+          </button>
+          <button mat-stroked-button color="warn" (click)="decline(change); $event.stopPropagation()">
+            <mat-icon>close</mat-icon>
+            Ablehnen
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsed actions -->
+      <div class="collapsed-actions" *ngIf="expandedId !== change.id">
+        <button mat-icon-button color="primary" (click)="approve(change); $event.stopPropagation()"
+                matTooltip="Übernehmen">
+          <mat-icon>check</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="decline(change); $event.stopPropagation()"
+                matTooltip="Ablehnen">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </mat-card>
+  </div>
+</div>

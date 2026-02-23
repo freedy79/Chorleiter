@@ -63,6 +63,16 @@ Root-level scripts orchestrate monorepo:
 - **Logging**: Inject `logger` from `config/logger.js` (Winston). Use request context for user-aware logs.
 - **Environment Variables**: Loaded from `choir-app-backend/.env`. No example file exists - see README.md for required vars (`SMTP_*`, `RATE_LIMIT_MAX`, `JWT_SECRET`, `DB_*`).
 - **Cache**: Monthly plans have NodeCache (60s TTL default). Invalidate on plan modifications via service methods.
+- **Dependency Management (CRITICAL)**:
+  - **ALWAYS add `require()`'d packages to `package.json` `dependencies`** - locally installed packages in `node_modules`/`package-lock.json` are NOT deployed (deploy script excludes `node_modules` and runs `npm install` on server)
+  - **Native modules** (e.g., `sharp`, `bcrypt`) must be in `dependencies` so they compile for the Linux production server during `npm install`
+  - **Verify before deploying**: Run `npm ls <package>` to confirm the package is properly listed
+- **Database Migrations (CRITICAL)**:
+  - **NEVER use `sequelize.sync({ alter: true })` on production PostgreSQL databases** - it generates invalid SQL for ENUMs, constraints, and complex column changes
+  - **Create manual migration functions** in `src/init/` for all schema changes (follow pattern in `ensureDataEnrichmentTables.js`)
+  - **Pattern:** DROP table → `sync({ force: true })` → re-seed critical data
+  - **Unique constraints:** Define via `indexes: [{ unique: true, fields: ['column'] }]` in model options, NOT `column: { unique: true }`
+  - **See:** [doc/backend/DATABASE-MIGRATION-RULES.md](doc/backend/DATABASE-MIGRATION-RULES.md) for complete migration guide
 
 ### Frontend
 - **Component Prefix**: `app-` (configured in angular.json).

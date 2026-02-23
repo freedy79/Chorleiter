@@ -1,9 +1,30 @@
+@use '../../../../themes/breakpoints' as *;
+
 mat-selection-list {
   max-height: 300px;
   overflow: auto;
+
+  @include handset {
+    max-height: 50vh;
+
+    ::ng-deep .mat-mdc-list-item {
+      min-height: $touch-target-optimal;
+    }
+  }
 }
 
 .extra-emails {
   display: block;
   margin-top: 1rem;
+  width: 100%;
+}
+
+[mat-dialog-actions] {
+  @include handset {
+    padding: $spacing-sm $spacing-md;
+
+    button {
+      min-height: $touch-target-min;
+    }
+  }
 }

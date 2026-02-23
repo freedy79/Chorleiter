@@ -45,7 +45,7 @@ describe('MainLayoutComponent', () => {
     const isSingerOnly$ = combineLatest([globalRolesSubject.asObservable(), choirRolesSubject.asObservable()]).pipe(
       map(([globalRoles, choirRoles]) => {
         const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
-        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist'].includes(role));
+        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist', 'notenwart'].includes(role));
         return choirRoles.includes('singer') && !hasGlobalPrivilege && !hasChoirPrivilege;
       })
     );

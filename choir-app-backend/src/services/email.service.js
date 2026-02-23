@@ -4,6 +4,10 @@ const { getFrontendUrl } = require('../utils/frontend-url');
 const { buildTemplate } = require('./emailTemplateManager');
 const { sendMail, emailDisabled } = require('./emailTransporter');
 const { marked } = require('marked');
+const path = require('path');
+const fs = require('fs');
+
+const IMAGES_DIR = path.join(__dirname, '../..', 'uploads', 'post-images');
 
 const TIME_ZONE = process.env.TZ || 'Europe/Berlin';
 
@@ -49,6 +53,43 @@ async function buildPostEmail(text, choirName, postId, hasAttachment) {
       return title ? `[${title}](${linkBase}/pieces/${id})` : match;
     });
   }
+
+  // Embed inline images as CID attachments for full email client compatibility (Outlook etc.)
+  const attachments = [];
+  if (postId) {
+    const images = await db.post_image.findAll({
+      where: { postId },
+      attributes: ['id', 'publicToken', 'originalName', 'filename', 'mimeType']
+    });
+    if (images.length > 0) {
+      const imageMap = new Map(images.map(img => [img.id, img]));
+      replaced = replaced.replace(
+        /!\[([^\]]*)\]\(([^)]*\/api\/posts\/\d+\/images\/(\d+))\)/g,
+        (match, alt, url, imageIdStr) => {
+          const imageId = parseInt(imageIdStr, 10);
+          const img = imageMap.get(imageId);
+          if (img) {
+            const filePath = path.join(IMAGES_DIR, img.filename);
+            if (fs.existsSync(filePath)) {
+              const cid = `post-image-${img.id}@nak-chorleiter.de`;
+              attachments.push({
+                filename: img.originalName,
+                path: filePath,
+                cid,
+                contentType: img.mimeType
+              });
+              return `![${alt}](cid:${cid})`;
+            }
+            // Fallback: public URL with file extension if file missing on disk
+            const ext = (img.originalName || '').includes('.') ? img.originalName.substring(img.originalName.lastIndexOf('.')) : '.png';
+            return `![${alt}](${linkBase}/api/public/post-images/${img.publicToken}${ext})`;
+          }
+          return match;
+        }
+      );
+    }
+  }
+
   const body = marked.parse(replaced);
 
   // Build footer with post link and attachment notice
@@ -73,7 +114,7 @@ async function buildPostEmail(text, choirName, postId, hasAttachment) {
   const signatureHtml = footerHtml;
   const html = `${body}${signatureHtml}`;
   const plainText = `${replaced}${footerText}`;
-  return { html, text: plainText };
+  return { html, text: plainText, attachments };
 }
 
 exports.buildPostEmail = buildPostEmail;
@@ -233,8 +274,9 @@ exports.sendPieceChangeProposalMail = async (to, piece, proposer, link) => {
 exports.sendPostNotificationMail = async (recipients, title, text, choirName, replyTo, postId, hasAttachment) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
-    const { html, text: plainText } = await buildPostEmail(text, choirName, postId, hasAttachment);
+    const { html, text: plainText, attachments } = await buildPostEmail(text, choirName, postId, hasAttachment);
     const options = { to: recipients, subject: title, text: plainText, html };
+    if (attachments && attachments.length > 0) options.attachments = attachments;
     if (replyTo) options.replyTo = replyTo;
     await sendMail(options);
   } catch (err) {

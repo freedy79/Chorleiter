@@ -1,186 +1,178 @@
 @use "@angular/material" as mat;
 @use "../../../themes/_nak-theme" as nak;
+@use '../../../themes/breakpoints' as *;
+@use '../../../themes/dark-mode-variables' as *;
+@use '../../../themes/cards' as *;
+@use '../../../themes/responsive-utilities' as *;
 
-.actions {
-  margin-top: 1rem;
-  display: flex;
-  gap: 1rem;
-}
+// ============================================================================
+// HOST & LAYOUT
+// ============================================================================
 
-.assigned td {
-  font-weight: 600;
-}
+:host { display: block; padding: $spacing-md; @include handset { padding: $spacing-sm; } }
+mat-tab-group { width: 100%; }
 
-.counter-plan-table {
-  width: 100%;
-  border-collapse: collapse;
+// Responsive view utilities
+.desktop-only { @include handset { display: none !important; } }
+.mobile-only { display: none !important; @include handset { display: inline-flex !important; } }
+.desktop-view { @extend %desktop-only; }
+.mobile-view { @extend %mobile-only; }
 
-  th, td {
-    border: 1px solid #ddd;
-    padding: 4px;
-    text-align: center;
-  }
+// ============================================================================
+// MONTH NAVIGATION
+// ============================================================================
 
-  th:first-child, td:first-child {
-    background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, 50);
-  }
-}
-
-:host {
-  display: block;
-  padding: 16px;
-}
-
-mat-tab-group {
-  width: 100%;
-}
-
-.holiday {
-  font-style: italic;
-  color: #555;
-}
-
-.weekday {
-  font-weight: 600;
-  margin-right: 6px;
-}
-
-.date-value {
-  white-space: nowrap;
-}
-
-.warning-icon {
-  vertical-align: middle;
-  margin-left: 4px;
-}
+.manual-inputs { margin-bottom: 1rem; display: flex; flex-flow: row; max-width: 400px; }
 
 .month-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 1rem 0;
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+  display: flex; justify-content: space-between; align-items: center; margin: 1rem 0;
+  button { display: flex; align-items: center; gap: $spacing-xs; min-height: $touch-target-min;
+    @include handset { min-width: $touch-target-min; padding: $spacing-sm; }
   }
+}
+
+.month-label { font-weight: 600; font-size: 1rem; @include readable-text; }
+
+// ============================================================================
+// PLAN TITLE, CONTROLS, ACTIONS
+// ============================================================================
+
+.plan-title { font-size: 1.25rem; @include readable-text;
+  @include handset { text-align: center; margin-bottom: $spacing-sm; }
 }
 
 .plan-controls {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
+  display: flex; justify-content: flex-end; margin-bottom: 1rem;
+  button { display: flex; align-items: center; gap: $spacing-xs; min-height: $touch-target-min; }
+}
 
-  button {
-    display: flex;
-    align-items: center;
-    gap: 4px;
+.actions {
+  margin: 1rem 0; display: flex; gap: $spacing-sm; flex-wrap: wrap;
+  @include handset { justify-content: center; gap: $spacing-xs;
+    button[mat-icon-button] { min-width: $touch-target-optimal; min-height: $touch-target-optimal; }
   }
 }
 
-.spacer {
-  height: 30px;
-}
+// ============================================================================
+// TABLE SHARED
+// ============================================================================
 
-.load-metrics {
-  margin: 1rem 0 2rem;
+.assigned td, .assigned .mat-mdc-cell { font-weight: 600; }
+.weekday { font-weight: 600; margin-right: 6px; }
+.date-value { white-space: nowrap; }
+.holiday { font-style: italic; @include secondary-text; }
+.warning-icon { vertical-align: middle; margin-left: $spacing-xs; font-size: 1.125rem; width: 1.125rem; height: 1.125rem; }
+.person-option { display: inline-flex; align-items: center; gap: 6px; }
+.person-option--maybe { color: #c05600; font-weight: 600; @include dark-mode { color: #ffab40; } }
+.person-option__icon { font-size: 1.125rem; height: 1.125rem; width: 1.125rem; }
 
-  h3 {
-    margin-bottom: 0.5rem;
-  }
+// ============================================================================
+// MOBILE CARD VIEW
+// ============================================================================
 
-  .load-total {
-    margin: 0 0 0.5rem;
-  }
+.mobile-card-container { @include mobile-card-container; }
+.mobile-cards { @include mobile-cards-grid; }
 
-  .load-time {
-    font-weight: 600;
-  }
-
-  .load-error {
-    color: mat.m2-get-color-from-palette(nak.$choir-app-warn, 500);
-    margin-left: 0.5rem;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-
-    th, td {
-      padding: 4px 8px;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    th {
-      font-weight: 600;
-    }
+.plan-card {
+  @include card-background; @include adaptive-border(1px);
+  border-radius: 10px; padding: $spacing-md;
+  display: flex; flex-direction: column; gap: $spacing-sm;
+  &.assigned { border-left: 3px solid mat.m2-get-color-from-palette(nak.$choir-app-primary, 500);
+    @include dark-mode { border-left-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, 200); }
   }
 }
 
-.manual-inputs {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-flow: row;
-  max-width: 400px;
+.card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: $spacing-sm; }
+.card-date-block { display: flex; flex-direction: column; gap: 2px; }
+.card-weekday { font-weight: 700; font-size: 1.03rem; @include readable-text; }
+.card-date { font-size: 0.963rem; @include readable-text; }
+.card-holiday { font-style: italic; font-size: 0.894rem; @include secondary-text; }
+.card-actions { flex-shrink: 0;
+  button { min-width: $touch-target-optimal; min-height: $touch-target-optimal; }
 }
+.card-event-type { display: flex; align-items: center; gap: $spacing-xs; @include secondary-text; font-size: 0.963rem;
+  .card-icon { font-size: 1.125rem; width: 1.125rem; height: 1.125rem; }
+}
+.card-field { display: flex; flex-direction: column; gap: 2px; }
+.card-label { font-weight: 500; font-size: 0.825rem; @include subtle-text; text-transform: uppercase; letter-spacing: 0.5px; }
+.card-value { font-size: 0.963rem; @include readable-text; display: flex; align-items: center; }
+.card-select, .card-notes-field { width: 100%; }
 
-@media (max-width: 599px) {
+// ============================================================================
+// COUNTER PLAN
+// ============================================================================
 
-
-  .manual-inputs {
-    display: none;
-  }
-
-  .plan {
-    overflow-x: auto;
-  }
-
-  .plan table {
-    min-width: 600px;
-
-    tr {
-      margin-top: 2rem;
-      display: block;
-      margin-bottom: 7rem;
-      border-bottom:  1px solid #ddd;
-      border: none;
-    }
-    th, td {
-      min-height: 2.5rem;
-      border: none;
+.counter-plan-table {
+  width: 100%; overflow-x: auto;
+  table { width: 100%; border-collapse: collapse;
+    th, td { border: 1px solid var(--border-primary, #ddd); padding: $spacing-xs $spacing-sm; text-align: center; font-size: 0.875rem; }
+    th:first-child, td:first-child { text-align: left; background-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, 50);
+      @include dark-mode { background-color: rgba(255, 255, 255, 0.05); }
     }
   }
+}
 
-  .counter-plan {
-    overflow-x: auto;
+.counter-plan-mobile { margin-top: $spacing-lg;
+  h3 { font-size: 1rem; @include readable-text; margin-bottom: $spacing-sm; }
+}
+.counter-plan-cards { display: flex; flex-direction: column; gap: $spacing-sm; }
+.counter-card { @include card-background; @include adaptive-border(1px); border-radius: 8px; padding: $spacing-sm $spacing-md; }
+.counter-card-name { font-weight: 600; font-size: 0.875rem; @include readable-text; margin-bottom: $spacing-xs; }
+.counter-card-assignments { display: flex; flex-direction: column; gap: 2px; }
+.counter-assignment { display: flex; justify-content: space-between; align-items: center; padding: 2px 0;
+  .counter-date { font-size: 0.813rem; @include secondary-text; font-weight: 500; }
+  .counter-value { font-size: 0.813rem; @include readable-text; }
+}
+
+// ============================================================================
+// AVAILABILITY SECTION
+// ============================================================================
+
+.availability-section { padding: $spacing-sm 0;
+  h3 { font-size: 1rem; @include readable-text; }
+}
+.member-availabilities { margin-top: $spacing-lg; h3 { margin-bottom: $spacing-md; } }
+.member-availability-card {
+  @include card-background; @include adaptive-border(1px); border-radius: 8px; padding: $spacing-md; margin-bottom: $spacing-sm;
+  h4 { margin: 0 0 $spacing-sm; font-size: 0.938rem; @include readable-text; font-weight: 600; }
+}
+.availability-row { display: flex; align-items: flex-start; gap: $spacing-sm; padding: $spacing-xs 0; font-size: 0.875rem;
+  @include handset { flex-direction: column; gap: 2px; }
+}
+.status-icon { font-size: 1.125rem; width: 1.125rem; height: 1.125rem; flex-shrink: 0; margin-top: 2px;
+  &.available-icon { color: #388e3c; @include dark-mode { color: #66bb6a; } }
+  &.maybe-icon { color: #f9a825; @include dark-mode { color: #fdd835; } }
+  &.unavailable-icon { color: #d32f2f; @include dark-mode { color: #ef5350; } }
+}
+.status-label { font-weight: 500; white-space: nowrap; @include secondary-text; }
+.status-names { @include readable-text; }
+
+// ============================================================================
+// EMPTY STATE, LOADING, SPACER
+// ============================================================================
+
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: $spacing-xl $spacing-md; gap: $spacing-md;
+  .empty-icon { font-size: 3rem; width: 3rem; height: 3rem; @include subtle-text; }
+  .empty-text { margin: 0; text-align: center; @include secondary-text; font-size: 0.938rem; }
+}
+.loading { display: flex; justify-content: center; padding: $spacing-xl 0; }
+.spacer { height: 30px; @include handset { height: $spacing-md; } }
+
+// ============================================================================
+// DEVELOPER METRICS (desktop only)
+// ============================================================================
+
+.load-metrics { margin: 1rem 0 2rem;
+  h3 { margin-bottom: 0.5rem; }
+  .load-total { margin: 0 0 0.5rem; }
+  .load-time { font-weight: 600; }
+  .load-error { color: mat.m2-get-color-from-palette(nak.$choir-app-warn, 500); margin-left: 0.5rem; }
+  table { width: 100%; border-collapse: collapse;
+    th, td { padding: $spacing-xs $spacing-sm; text-align: left; border-bottom: 1px solid var(--border-primary, #e0e0e0); }
+    th { font-weight: 600; }
   }
-
-  .counter-plan table {
-    min-width: 600px;
-  }
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  padding: 2rem 0;
-}
-
-.person-option {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.person-option--maybe {
-  color: #c05600;
-  font-weight: 600;
-}
-
-.person-option__icon {
-  font-size: 1.125rem;
-  height: 1.125rem;
-  width: 1.125rem;
+@include handset {
+  .month-label, .plan-title { font-size: calc(1.25rem * #{$mobile-font-scale}); }
 }

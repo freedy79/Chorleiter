@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
+import { PostImage } from '../models/post-image';
 import { Poll } from '../models/poll';
 import { PostComment } from '../models/post-comment';
 import { ReactionInfo, ReactionType } from '../models/reaction';
@@ -91,5 +92,25 @@ export class PostService {
 
   getAttachmentUrl(postId: number): string {
     return `${this.apiUrl}/posts/${postId}/attachment`;
+  }
+
+  // ── Post Images ──────────────────────────────────────────────────────
+
+  uploadImage(postId: number, file: File): Observable<PostImage> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post<PostImage>(`${this.apiUrl}/posts/${postId}/images`, formData);
+  }
+
+  removeImage(postId: number, imageId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/posts/${postId}/images/${imageId}`);
+  }
+
+  getImages(postId: number): Observable<PostImage[]> {
+    return this.http.get<PostImage[]>(`${this.apiUrl}/posts/${postId}/images`);
+  }
+
+  getImageUrl(postId: number, imageId: number): string {
+    return `${this.apiUrl}/posts/${postId}/images/${imageId}`;
   }
 }

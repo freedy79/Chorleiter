@@ -9,10 +9,13 @@ const fs = require('fs/promises');
 const crypto = require('crypto');
 const fileService = require('../services/file.service');
 const pieceService = require('../services/piece.service');
+const mergeService = require('../services/merge.service');
+const asyncHandler = require('express-async-handler');
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Piece);
 const emailService = require('../services/email.service');
 const { getFrontendUrl } = require('../utils/frontend-url');
+const logger = require('../config/logger');
 
 /**
  * @description Create a new global piece.
@@ -218,23 +221,35 @@ exports.update = async (req, res) => {
 /**
  * @description Delete a global piece.
  * This is a destructive action and should be used with care, likely only by an admin.
- * The `beforeDelete` hook in the model would handle cascading deletes if set up.
+ * Checks if piece is referenced in any collections before allowing deletion.
  */
-exports.delete = async (req, res) => {
-    const id = req.params.id;
+exports.delete = asyncHandler(async (req, res) => {
+    const pieceId = req.params.id;
+    const userId = req.userId;
+    const choirId = req.query.choirId; // Admin context
 
-    const num = await base.service.delete(id);
+    logger.debug(`Delete request for piece ${pieceId} by user ${userId}`);
 
-    if (num == 1) {
-        res.send({
-            message: "Piece was deleted successfully!"
-        });
-    } else {
-        res.send({
-            message: `Cannot delete Piece with id=${id}. Maybe Piece was not found!`
+    // Validate piece can be deleted (not in any collections)
+    const validation = await mergeService.validatePieceDelete(pieceId);
+
+    if (!validation.canDelete) {
+        logger.warn(`Cannot delete piece ${pieceId}: it's in ${validation.affectedCollections.length} collections`);
+        return res.status(409).send({
+            message: 'Piece cannot be deleted because it is referenced in collections',
+            affectedCollections: validation.affectedCollections,
+            code: 'PIECE_IN_COLLECTIONS'
         });
     }
-};
+
+    // Delete with audit log
+    const result = await mergeService.deletePieceWithAudit(pieceId, userId, choirId);
+
+    res.status(200).send({
+        message: result.message,
+        pieceId: result.pieceId
+    });
+});
 
 exports.report = async (req, res) => {
     const { id } = req.params;

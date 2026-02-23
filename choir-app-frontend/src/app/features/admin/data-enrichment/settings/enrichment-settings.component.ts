@@ -8,6 +8,12 @@ import { NotificationService } from '@core/services/notification.service';
 interface ProviderOption {
   name: string;
   label: string;
+  free?: boolean;
+}
+
+interface ApiKeyInfo {
+  configured: boolean;
+  maskedKey: string | null;
 }
 
 @Component({
@@ -20,13 +26,19 @@ interface ProviderOption {
 export class EnrichmentSettingsComponent implements OnInit {
   loading = true;
   saving = false;
+  savingApiKey = false;
+  deletingApiKey: string | null = null;
   error: string | null = null;
+  apiKeyTestResult: { ok: boolean; message: string } | null = null;
 
   providers: ProviderOption[] = [
-    { name: 'gemini', label: 'Gemini (Empfohlen)' },
+    { name: 'gemini', label: 'Gemini' },
     { name: 'claude', label: 'Claude' },
     { name: 'openai', label: 'OpenAI' }
   ];
+
+  /** Tracks API key status per provider */
+  apiKeyStatus: Record<string, ApiKeyInfo> = {};
 
   settingsForm: FormGroup;
   apiKeyForm: FormGroup;
@@ -54,6 +66,7 @@ export class EnrichmentSettingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSettings();
+    this.loadApiKeyStatus();
   }
 
   loadSettings(): void {
@@ -80,6 +93,32 @@ export class EnrichmentSettingsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  loadApiKeyStatus(): void {
+    this.adminService.getEnrichmentApiKeyStatus().subscribe({
+      next: (response) => {
+        this.apiKeyStatus = response.apiKeys || {};
+      },
+      error: (err) => {
+        console.error('Error loading API key status:', err);
+      }
+    });
+  }
+
+  /** Check if a provider has a configured API key */
+  hasApiKey(providerName: string): boolean {
+    return !!this.apiKeyStatus[providerName]?.configured;
+  }
+
+  /** Get the masked key display for a provider */
+  getMaskedKey(providerName: string): string {
+    return this.apiKeyStatus[providerName]?.maskedKey || '';
+  }
+
+  /** Check if any provider has an API key */
+  get hasAnyApiKey(): boolean {
+    return Object.values(this.apiKeyStatus).some(v => v.configured);
   }
 
   saveSettings(): void {
@@ -130,15 +169,45 @@ export class EnrichmentSettingsComponent implements OnInit {
 
     const { provider, apiKey } = this.apiKeyForm.value;
 
+    this.savingApiKey = true;
+    this.apiKeyTestResult = null;
+
     this.adminService.setEnrichmentApiKey(provider, apiKey).subscribe({
-      next: () => {
-        this.notification.success('API-Key gespeichert und verschlüsselt', 3000);
-        this.apiKeyForm.reset({ provider, apiKey: '' });
+      next: (response) => {
+        this.savingApiKey = false;
+        this.apiKeyTestResult = response.connectionTest || { ok: true, message: '' };
+        this.notification.success('API-Key geprüft, gespeichert und verschlüsselt', 3000);
+        this.apiKeyForm.patchValue({ apiKey: '' });
+        // Refresh API key status
+        this.loadApiKeyStatus();
       },
       error: (err) => {
         console.error('Error saving API key:', err);
-        this.notification.error(err.error?.message || 'API-Key konnte nicht gespeichert werden.');
+        this.savingApiKey = false;
+        this.apiKeyTestResult = err.error?.connectionTest || { ok: false, message: err.error?.message || 'Unbekannter Fehler' };
+        this.notification.error(this.apiKeyTestResult!.message || 'API-Key konnte nicht gespeichert werden.');
       }
     });
+  }
+
+  deleteApiKey(providerName: string): void {
+    this.deletingApiKey = providerName;
+
+    this.adminService.deleteEnrichmentApiKey(providerName).subscribe({
+      next: () => {
+        this.deletingApiKey = null;
+        this.notification.success(`API-Key für ${this.getProviderLabel(providerName)} gelöscht`, 3000);
+        this.loadApiKeyStatus();
+      },
+      error: (err) => {
+        console.error('Error deleting API key:', err);
+        this.deletingApiKey = null;
+        this.notification.error('API-Key konnte nicht gelöscht werden.');
+      }
+    });
+  }
+
+  getProviderLabel(name: string): string {
+    return this.providers.find(p => p.name === name)?.label || name;
   }
 }

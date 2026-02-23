@@ -8,16 +8,12 @@
   <div class="date-fields">
     <mat-form-field appearance="fill">
       <mat-label>Startdatum</mat-label>
-      <input matInput [matDatepicker]="startPicker" formControlName="startDate" />
-      <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-      <mat-datepicker #startPicker></mat-datepicker>
+      <input matInput type="date" formControlName="startDate" />
     </mat-form-field>
 
     <mat-form-field appearance="fill">
       <mat-label>Enddatum</mat-label>
-      <input matInput [matDatepicker]="endPicker" formControlName="endDate" />
-      <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-      <mat-datepicker #endPicker></mat-datepicker>
+      <input matInput type="date" formControlName="endDate" />
     </mat-form-field>
 
     <button mat-stroked-button type="button" (click)="extendPeriod()">Entleihperiode verlängern</button>

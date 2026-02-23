@@ -1,6 +1,9 @@
 const { spawn } = require('child_process');
 
-const child = spawn('npx', ['ng', 'serve'], { stdio: ['inherit', 'pipe', 'pipe'] });
+const child = spawn('npx', ['ng', 'serve'], {
+  stdio: ['inherit', 'pipe', 'pipe'],
+  shell: true  // Required on Windows to find npx.cmd
+});
 
 function logWithTimestamp(prefix) {
   return data => {

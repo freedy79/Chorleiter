@@ -257,3 +257,21 @@ mat-card.post-card {
   font-size: 0.8125rem;
   color: #666;
 }
+
+// Inline images rendered from Markdown
+mat-card-content {
+  ::ng-deep img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.01);
+    }
+  }
+}

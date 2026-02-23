@@ -236,6 +236,14 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/admin/enrichment/api-keys`, { provider, apiKey });
   }
 
+  deleteEnrichmentApiKey(provider: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/enrichment/api-keys/${provider}`);
+  }
+
+  getEnrichmentApiKeyStatus(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/api-keys/status`);
+  }
+
   getEnrichmentProviders(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/providers`);
   }
@@ -246,6 +254,23 @@ export class AdminService {
 
   getEnrichmentJob(jobId: string): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}`);
+  }
+
+  listEnrichmentJobs(filters: { status?: string; jobType?: string; limit?: number; offset?: number } = {}): Observable<any> {
+    const params: any = {};
+    if (filters.status) params.status = filters.status;
+    if (filters.jobType) params.jobType = filters.jobType;
+    if (filters.limit !== undefined) params.limit = filters.limit;
+    if (filters.offset !== undefined) params.offset = filters.offset;
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs`, { params });
+  }
+
+  cancelEnrichmentJob(jobId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}/cancel`, {});
+  }
+
+  deleteEnrichmentJob(jobId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}`);
   }
 
   getEnrichmentSuggestions(jobId: string, filters: { status?: string; minConfidence?: number }): Observable<any> {

@@ -20,9 +20,7 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
         </mat-form-field>
         <mat-form-field>
           <mat-label>Kaufdatum</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="purchaseDate" />
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
+          <input matInput type="date" formControlName="purchaseDate" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Händler</mat-label>
@@ -81,7 +79,7 @@ export class PhysicalCopyDialogComponent extends BaseFormDialog<any, { copy?: Ph
     const c = this.data?.copy;
     return this.fb.group({
       quantity: [c?.quantity || 1, [Validators.required, Validators.min(1)]],
-      purchaseDate: [c?.purchaseDate ? new Date(c.purchaseDate) : null],
+      purchaseDate: [c?.purchaseDate ? c.purchaseDate.toString().split('T')[0] : null],
       vendor: [c?.vendor || ''],
       unitPrice: [c?.unitPrice || null],
       condition: [c?.condition || null],
@@ -91,9 +89,6 @@ export class PhysicalCopyDialogComponent extends BaseFormDialog<any, { copy?: Ph
 
   protected override getResult(): any {
     const val = this.form.value;
-    if (val.purchaseDate instanceof Date) {
-      val.purchaseDate = val.purchaseDate.toISOString().split('T')[0];
-    }
     return val;
   }
 }

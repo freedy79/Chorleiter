@@ -7,19 +7,28 @@ const { assignAdminRole } = require('./assignAdminRole');
 const { fixProgramPublishedFromIdColumn } = require('./fixProgramPublishedFromIdColumn');
 const { migrateUserNames } = require('./migrateUserNames');
 const { ensureDataEnrichmentTables } = require('./ensureDataEnrichmentTables');
+const { ensurePwaConfig } = require('./ensurePwaConfig');
+const { ensurePostImagePublicToken } = require('./ensurePostImagePublicToken');
+const { ensurePollIsAnonymous } = require('./ensurePollIsAnonymous');
 
 async function init(options = {}) {
-    const { includeDemoData = true, syncOptions = { alter: true } } = options;
-    // 1. Sync database first to create all tables
+    const { includeDemoData = true, syncOptions = {} } = options;
+    // 1. Run manual migrations first (these handle complex schema changes)
+    await ensurePwaConfig();
+    // 2. Sync database (only creates missing tables, doesn't alter existing)
     await syncDatabase(syncOptions);
-    // 2. Then run migrations on existing tables
+    // 3. Create tables that have FK dependencies on core tables (e.g. users)
+    await ensureDataEnrichmentTables();
+    // 3b. Ensure new columns on existing tables
+    await ensurePostImagePublicToken();
+    await ensurePollIsAnonymous();
+    // 4. Then run data migrations on existing tables
     await migrateUserNames();
     await migrateRoles();
     await fixProgramPublishedFromIdColumn();
     await ensureMonthlyPlanIndexes();
     await ensureJoinHashes();
-    await ensureDataEnrichmentTables();
-    // 3. Finally seed and assign roles
+    // 5. Finally seed and assign roles
     await seedDatabase({ includeDemoData });
     await assignAdminRole();
 }
@@ -33,5 +42,8 @@ module.exports = {
     assignAdminRole,
     fixProgramPublishedFromIdColumn,
     ensureMonthlyPlanIndexes,
-    ensureDataEnrichmentTables
+    ensureDataEnrichmentTables,
+    ensurePwaConfig,
+    ensurePostImagePublicToken,
+    ensurePollIsAnonymous
 };

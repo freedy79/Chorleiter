@@ -1,28 +1,58 @@
-<mat-table [dataSource]="availabilities" class="mat-elevation-z2">
-  <ng-container matColumnDef="date">
-    <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
-    <mat-cell *matCellDef="let a">
-      {{ a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}
-      <span class="holiday" *ngIf="a.holidayHint"> ({{ a.holidayHint }})</span>
-    </mat-cell>
-  </ng-container>
-  <ng-container matColumnDef="status">
-    <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
-    <mat-cell *matCellDef="let a" [ngClass]="cellClass(a.status)">
-      <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))">
+<!-- Desktop: Table View -->
+<div class="desktop-view">
+  <mat-table [dataSource]="availabilities" class="mat-elevation-z2">
+    <ng-container matColumnDef="date">
+      <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
+      <mat-cell *matCellDef="let a">
+        {{ a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}
+        <span class="holiday" *ngIf="a.holidayHint"> ({{ a.holidayHint }})</span>
+      </mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+      <mat-cell *matCellDef="let a" [ngClass]="cellClass(a.status)">
+        <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))">
+          <mat-option value="AVAILABLE">verfügbar</mat-option>
+          <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
+          <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
+        </mat-select>
+      </mat-cell>
+    </ng-container>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <ng-container matNoDataRow>
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" [attr.colspan]="displayedColumns.length">
+          Keine Ereignisse vorhanden.
+        </td>
+      </tr>
+    </ng-container>
+  </mat-table>
+</div>
+
+<!-- Mobile: Card View -->
+<div class="mobile-view">
+  <div class="availability-cards" *ngIf="availabilities.length > 0; else mobileNoData">
+    <div class="availability-card" *ngFor="let a of availabilities"
+         [ngClass]="'card-' + cellClass(a.status)"
+         role="article"
+         [attr.aria-label]="(a.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE')">
+      <div class="card-date-row">
+        <span class="card-date-text">{{ a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</span>
+        <span class="card-holiday" *ngIf="a.holidayHint">{{ a.holidayHint }}</span>
+      </div>
+      <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))"
+                  class="card-status-select" aria-label="Verfügbarkeit setzen">
         <mat-option value="AVAILABLE">verfügbar</mat-option>
         <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
         <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
       </mat-select>
-    </mat-cell>
-  </ng-container>
-  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-  <ng-container matNoDataRow>
-    <tr class="mat-row" *matNoDataRow>
-      <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-        Keine Ereignisse vorhanden.
-      </td>
-    </tr>
-  </ng-container>
-</mat-table>
+    </div>
+  </div>
+  <ng-template #mobileNoData>
+    <div class="empty-state">
+      <mat-icon class="empty-icon">event_busy</mat-icon>
+      <p class="empty-text">Keine Ereignisse vorhanden.</p>
+    </div>
+  </ng-template>
+</div>

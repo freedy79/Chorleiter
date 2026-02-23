@@ -4,11 +4,16 @@ const validate = require('../validators/validate');
 const { postValidation, pollVoteValidation, commentValidation, reactionValidation } = require('../validators/post.validation');
 const role = require('../middleware/role.middleware');
 const { handler: wrap } = require('../utils/async');
-const { diskUpload, createFileFilter, ALLOWED_ATTACHMENT_EXT, ALLOWED_ATTACHMENT_MIME } = require('../utils/upload');
+const { diskUpload, createFileFilter, ALLOWED_ATTACHMENT_EXT, ALLOWED_ATTACHMENT_MIME, ALLOWED_IMAGE_EXT, ALLOWED_IMAGE_MIME, IMAGE_FILE_SIZE } = require('../utils/upload');
 const router = require('express').Router();
 
 const attachmentUpload = diskUpload('post-attachments', {
   fileFilter: createFileFilter(ALLOWED_ATTACHMENT_EXT, ALLOWED_ATTACHMENT_MIME)
+});
+
+const imageUpload = diskUpload('post-images', {
+  limits: { fileSize: IMAGE_FILE_SIZE },
+  fileFilter: createFileFilter(ALLOWED_IMAGE_EXT, ALLOWED_IMAGE_MIME)
 });
 
 router.use(authJwt.verifyToken);
@@ -27,5 +32,9 @@ router.post('/:id/comments/:commentId/reactions', role.requireNonDemo, reactionV
 router.get('/:id/attachment', wrap(controller.downloadAttachment));
 router.post('/:id/attachment', role.requireNonDemo, attachmentUpload.single('file'), wrap(controller.uploadAttachment));
 router.delete('/:id/attachment', role.requireNonDemo, wrap(controller.removeAttachment));
+router.get('/:id/images', wrap(controller.getPostImages));
+router.get('/:id/images/:imageId', wrap(controller.getImage));
+router.post('/:id/images', role.requireNonDemo, imageUpload.single('image'), wrap(controller.uploadImage));
+router.delete('/:id/images/:imageId', role.requireNonDemo, wrap(controller.removeImage));
 
 module.exports = router;

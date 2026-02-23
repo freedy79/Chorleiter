@@ -1,3 +1,39 @@
+// Hardcoded fallback templates used when no DB template is found
+const DEFAULT_TEMPLATES = {
+  'invite': {
+    subject: 'Invitation to join {{choir}}',
+    body: '<p>You have been invited to join <b>{{choir}}</b>.<br>Click <a href="{{link}}">here</a> to complete your registration. This link is valid until {{expiry}}.</p>'
+  },
+  'reset': {
+    subject: 'Password Reset',
+    body: '<p>Click <a href="{{link}}">here</a> to set a new password.</p>'
+  },
+  'availability-request': {
+    subject: 'Verfügbarkeitsanfrage {{month}}/{{year}}',
+    body: '<p>Bitte teile uns deine Verfügbarkeit für {{month}}/{{year}} mit.</p>{{list}}<p><a href="{{link}}">Verfügbarkeit eintragen</a></p>'
+  },
+  'piece-change': {
+    subject: 'Neuer Änderungsvorschlag zu {{piece}}',
+    body: '<p>{{proposer}} hat eine Änderung zu <b>{{piece}}</b> vorgeschlagen.</p><p><a href="{{link}}">Änderung ansehen</a></p>'
+  },
+  'monthly-plan': {
+    subject: 'Dienstplan {{month}}/{{year}}',
+    body: '<p>Im Anhang befindet sich der aktuelle Dienstplan.</p><p><a href="{{link}}">Dienstplan online ansehen</a></p>'
+  },
+  'email-change': {
+    subject: 'Bestätige deine neue E-Mail-Adresse',
+    body: '<p>Hallo {{first_name}} {{surname}},</p><p>bitte bestätige deine neue E-Mail-Adresse über <a href="{{link}}">diesen Link</a>.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
+  },
+  'lending-borrowed': {
+    subject: 'Ausleihe: {{title}} (Nr. {{copyNumber}})',
+    body: '<p>Hallo {{first_name}} {{surname}},</p><p>dir wurde am {{borrowedAt}} {{title}} (Nr. {{copyNumber}}) ausgeliehen.</p>'
+  },
+  'lending-returned': {
+    subject: 'Rückgabe bestätigt: {{title}} (Nr. {{copyNumber}})',
+    body: '<p>Hallo {{first_name}} {{surname}},</p><p>die Rückgabe von {{title}} (Nr. {{copyNumber}}) wurde am {{returnedAt}} erfasst.</p>'
+  }
+};
+
 function replacePlaceholders(text, type, replacements) {
   let result = text;
   for (const [key, value] of Object.entries(replacements)) {
@@ -15,8 +51,9 @@ function replacePlaceholders(text, type, replacements) {
 }
 
 function buildTemplate(template, type, replacements) {
-  const subjectTemplate = template?.subject || '';
-  const bodyTemplate = template?.body || '';
+  const fallback = DEFAULT_TEMPLATES[type];
+  const subjectTemplate = template?.subject || fallback?.subject || '';
+  const bodyTemplate = template?.body || fallback?.body || '';
   const subject = replacePlaceholders(subjectTemplate, type, replacements);
   const html = replacePlaceholders(bodyTemplate, type, replacements);
   const text = html.replace(/<[^>]+>/g, ' ');

@@ -23,6 +23,7 @@ import { ChoirLog } from '../models/choir-log';
 import { PlanRule } from '@core/models/plan-rule';
 import { PieceChange } from '../models/piece-change';
 import { Post } from '../models/post';
+import { PostImage } from '../models/post-image';
 import { PostComment } from '../models/post-comment';
 import { Program } from '../models/program';
 import { LibraryItem } from '../models/library-item';
@@ -378,6 +379,10 @@ export class ApiService {
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
     return this.collectionService.uploadCollectionCover(id, file);
+  }
+
+  resizeCollectionCover(id: number, width: number): Observable<any> {
+    return this.collectionService.resizeCollectionCover(id, width);
   }
 
   getCollectionCover(id: number): Observable<string> {
@@ -997,6 +1002,18 @@ export class ApiService {
     return this.postService.getAttachmentUrl(postId);
   }
 
+  uploadPostImage(postId: number, file: File): Observable<PostImage> {
+    return this.postService.uploadImage(postId, file);
+  }
+
+  removePostImage(postId: number, imageId: number): Observable<void> {
+    return this.postService.removeImage(postId, imageId);
+  }
+
+  getPostImageUrl(postId: number, imageId: number): string {
+    return this.postService.getImageUrl(postId, imageId);
+  }
+
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {
     return this.programService.createProgram(data);
   }
@@ -1072,5 +1089,31 @@ export class ApiService {
 
   initializePwaConfigDefaults(): Observable<PwaConfigInitializeResponse> {
     return this.http.post<PwaConfigInitializeResponse>(`${environment.apiUrl}/admin/pwa-config/initialize`, {});
+  }
+
+  // --- Doublette / Merge Methods ---
+
+  getDoubletteThreshold(): Observable<{ threshold: number }> {
+    return this.http.get<{ threshold: number }>(`${environment.apiUrl}/system/doublette-threshold`);
+  }
+
+  checkDoublettesForCollection(choirId: number, collectionId: number, threshold: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/choirs/${choirId}/collections/${collectionId}/check-doublettes`, {
+      params: { threshold: threshold.toString() }
+    });
+  }
+
+  mergePieces(choirId: number, sourceId: number, targetId: number, metadata: any): Observable<any> {
+    return this.http.post<any>(`${environment.apiUrl}/choirs/${choirId}/pieces/merge`, {
+      sourceId, targetId, metadata
+    });
+  }
+
+  getPieceCollections(choirId: number, pieceId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/choirs/${choirId}/pieces/${pieceId}/collections`);
+  }
+
+  deletePiece(pieceId: number, _choirId?: number): Observable<any> {
+    return this.http.delete<any>(`${environment.apiUrl}/pieces/${pieceId}`);
   }
 }

@@ -9,6 +9,8 @@ const fs = require('fs');
 const sanitizeHtml = require('sanitize-html');
 
 const ATTACHMENTS_DIR = path.join(__dirname, '../..', 'uploads', 'post-attachments');
+const IMAGES_DIR = path.join(__dirname, '../..', 'uploads', 'post-images');
+const MAX_IMAGES_PER_POST = 5;
 
 const REACTION_TYPES = ['like', 'celebrate', 'support', 'love', 'insightful', 'curious'];
 
@@ -119,7 +121,8 @@ function sanitizePollPayload(poll) {
     : 1;
   const closesAt = poll.closesAt ? new Date(poll.closesAt) : null;
   const validClosesAt = closesAt && !isNaN(closesAt.getTime()) ? closesAt : null;
-  return { allowMultiple, maxSelections, closesAt: validClosesAt, options };
+  const isAnonymous = poll.isAnonymous !== undefined ? !!poll.isAnonymous : true;
+  return { allowMultiple, maxSelections, closesAt: validClosesAt, isAnonymous, options };
 }
 
 const pollInclude = {
@@ -129,37 +132,57 @@ const pollInclude = {
     {
       model: db.poll_option,
       as: 'options',
-      include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'] }]
+      include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'], include: [{ model: db.user, as: 'user', attributes: ['id', 'name'] }] }]
     }
   ]
 };
 
-const postIncludes = [authorInclude, pollInclude, postReactionInclude, commentInclude];
+const imageInclude = {
+  model: db.post_image,
+  as: 'images',
+  attributes: ['id', 'filename', 'originalName', 'mimeType', 'size', 'position', 'publicToken'],
+  required: false
+};
 
-function formatPoll(poll, currentUserId) {
+const postIncludes = [authorInclude, pollInclude, postReactionInclude, commentInclude, imageInclude];
+
+function formatPoll(poll, currentUserId, { isAdmin = false } = {}) {
   if (!poll) return null;
   const options = [...(poll.options || [])].sort((a, b) => a.position - b.position);
   const totalVotes = options.reduce((sum, option) => sum + (option.votes ? option.votes.length : 0), 0);
+  const isAnonymous = poll.isAnonymous !== false;
+  // Show voter names if poll is public (non-anonymous) OR if user is admin
+  const showVoters = !isAnonymous || isAdmin;
   return {
     id: poll.id,
     allowMultiple: !!poll.allowMultiple,
     maxSelections: poll.maxSelections || 1,
     closesAt: poll.closesAt,
+    isAnonymous,
     totalVotes,
-    options: options.map(option => ({
-      id: option.id,
-      label: option.label,
-      position: option.position,
-      votes: option.votes ? option.votes.length : 0,
-      selected: option.votes ? option.votes.some(v => v.userId === currentUserId) : false
-    }))
+    options: options.map(option => {
+      const result = {
+        id: option.id,
+        label: option.label,
+        position: option.position,
+        votes: option.votes ? option.votes.length : 0,
+        selected: option.votes ? option.votes.some(v => v.userId === currentUserId) : false
+      };
+      if (showVoters && option.votes) {
+        result.voters = option.votes.map(v => ({
+          id: v.userId,
+          name: v.user ? v.user.name : 'Unbekannt'
+        }));
+      }
+      return result;
+    })
   };
 }
 
-function serializePost(post, currentUserId) {
+function serializePost(post, currentUserId, { isAdmin = false } = {}) {
   if (!post) return null;
   const plain = post.toJSON();
-  plain.poll = formatPoll(plain.poll, currentUserId);
+  plain.poll = formatPoll(plain.poll, currentUserId, { isAdmin });
   plain.reactions = summarizeReactions(plain.reactions, currentUserId);
   const comments = Array.isArray(plain.comments) ? plain.comments : [];
   const seenComments = new Set();
@@ -172,6 +195,18 @@ function serializePost(post, currentUserId) {
     .map(comment => serializeComment(comment, currentUserId))
     .filter(Boolean)
     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  // Serialize images sorted by position
+  plain.images = (Array.isArray(plain.images) ? plain.images : [])
+    .sort((a, b) => (a.position || 0) - (b.position || 0))
+    .map(img => ({
+      id: img.id,
+      filename: img.filename,
+      originalName: img.originalName,
+      mimeType: img.mimeType,
+      size: img.size,
+      position: img.position,
+      publicToken: img.publicToken
+    }));
   return plain;
 }
 
@@ -218,7 +253,8 @@ async function upsertPoll(postId, pollPayload, transaction) {
     await existing.update({
       allowMultiple: pollPayload.allowMultiple,
       maxSelections: pollPayload.maxSelections,
-      closesAt: pollPayload.closesAt
+      closesAt: pollPayload.closesAt,
+      isAnonymous: pollPayload.isAnonymous
     }, { transaction });
 
     const sortedExisting = [...existing.options].sort((a, b) => a.position - b.position);
@@ -267,7 +303,8 @@ async function upsertPoll(postId, pollPayload, transaction) {
     postId,
     allowMultiple: pollPayload.allowMultiple,
     maxSelections: pollPayload.maxSelections,
-    closesAt: pollPayload.closesAt
+    closesAt: pollPayload.closesAt,
+    isAnonymous: pollPayload.isAnonymous
   }, { transaction });
   await db.poll_option.bulkCreate(
     pollPayload.options.map((label, index) => ({ pollId: poll.id, label, position: index })),
@@ -280,6 +317,7 @@ exports.create = async (req, res) => {
   const { title, text, expiresAt, sendTest, publish, sendAsUser, poll } = req.body;
   if (!title || !text) return res.status(400).send({ message: 'title and text required' });
   try {
+    const admin = await isChoirAdmin(req);
     const sanitizedTitle = stripHtml(title);
     const sanitizedText = stripHtml(text);
     const expDate = expiresAt ? new Date(expiresAt) : null;
@@ -343,7 +381,7 @@ exports.create = async (req, res) => {
       await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
     }
 
-    res.status(201).send(serializePost(full, req.userId));
+    res.status(201).send(serializePost(full, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -376,7 +414,7 @@ exports.findAll = async (req, res) => {
       order: [['createdAt', 'DESC']],
       distinct: true
     });
-    res.status(200).send(posts.map(p => serializePost(p, req.userId)));
+    res.status(200).send(posts.map(p => serializePost(p, req.userId, { isAdmin: admin })));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -408,7 +446,7 @@ exports.findLatest = async (req, res) => {
       include: postIncludes,
       order: [['createdAt', 'DESC']]
     });
-    res.status(200).send(serializePost(post, req.userId));
+    res.status(200).send(serializePost(post, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -455,7 +493,7 @@ exports.update = async (req, res) => {
         await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
       }
     }
-    res.status(200).send(serializePost(full, req.userId));
+    res.status(200).send(serializePost(full, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -496,7 +534,7 @@ exports.publish = async (req, res) => {
         .sendToChoirMembers(req.activeChoirId, payload, req.userId)
         .catch(err => logger.warn(`Push notification send failed: ${err.message}`));
     }
-    res.status(200).send(serializePost(full, req.userId));
+    res.status(200).send(serializePost(full, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -508,6 +546,20 @@ function deleteAttachmentFile(filename) {
   fs.unlink(filePath, () => {});
 }
 
+function deleteImageFile(filename) {
+  if (!filename) return;
+  const filePath = path.join(IMAGES_DIR, filename);
+  fs.unlink(filePath, () => {});
+}
+
+async function deleteAllPostImages(postId) {
+  const images = await db.post_image.findAll({ where: { postId } });
+  for (const img of images) {
+    deleteImageFile(img.filename);
+  }
+  await db.post_image.destroy({ where: { postId } });
+}
+
 exports.remove = async (req, res) => {
   const id = req.params.id;
   try {
@@ -516,6 +568,7 @@ exports.remove = async (req, res) => {
     const admin = await isChoirAdmin(req);
     if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
     deleteAttachmentFile(post.attachmentFilename);
+    await deleteAllPostImages(post.id);
     await post.destroy();
     res.status(204).send();
   } catch (err) {
@@ -568,9 +621,9 @@ exports.vote = async (req, res) => {
       }
     });
     const fresh = await db.poll.findByPk(post.poll.id, {
-      include: [{ model: db.poll_option, as: 'options', include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'] }] }]
+      include: [{ model: db.poll_option, as: 'options', include: [{ model: db.poll_vote, as: 'votes', attributes: ['userId'], include: [{ model: db.user, as: 'user', attributes: ['id', 'name'] }] }] }]
     });
-    res.status(200).send(formatPoll(fresh, req.userId));
+    res.status(200).send(formatPoll(fresh, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -700,7 +753,7 @@ exports.uploadAttachment = async (req, res) => {
       attachmentOriginalName: req.file.originalname
     });
     const full = await loadPostWithDetails(id);
-    res.status(200).send(serializePost(full, req.userId));
+    res.status(200).send(serializePost(full, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -716,7 +769,7 @@ exports.removeAttachment = async (req, res) => {
     deleteAttachmentFile(post.attachmentFilename);
     await post.update({ attachmentFilename: null, attachmentOriginalName: null });
     const full = await loadPostWithDetails(id);
-    res.status(200).send(serializePost(full, req.userId));
+    res.status(200).send(serializePost(full, req.userId, { isAdmin: admin }));
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -732,6 +785,149 @@ exports.downloadAttachment = async (req, res) => {
     const filePath = path.join(ATTACHMENTS_DIR, post.attachmentFilename);
     if (!fs.existsSync(filePath)) return res.status(404).send({ message: 'File not found' });
     res.download(filePath, post.attachmentOriginalName || post.attachmentFilename);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// ── Post Images ─────────────────────────────────────────────────────────
+
+exports.uploadImage = async (req, res) => {
+  const postId = req.params.id;
+  if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
+  try {
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
+
+    const imageCount = await db.post_image.count({ where: { postId } });
+    if (imageCount >= MAX_IMAGES_PER_POST) {
+      // Clean up the uploaded file
+      fs.unlink(req.file.path, () => {});
+      return res.status(400).send({ message: `Maximal ${MAX_IMAGES_PER_POST} Bilder pro Beitrag erlaubt.` });
+    }
+
+    const image = await db.post_image.create({
+      postId,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      position: imageCount
+    });
+
+    res.status(201).send({
+      id: image.id,
+      filename: image.filename,
+      originalName: image.originalName,
+      mimeType: image.mimeType,
+      size: image.size,
+      position: image.position,
+      publicToken: image.publicToken,
+      url: `/api/posts/${postId}/images/${image.id}`
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.removeImage = async (req, res) => {
+  const { id, imageId } = req.params;
+  try {
+    const post = await Post.findByPk(id);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    const admin = await isChoirAdmin(req);
+    if (post.userId !== req.userId && !admin) return res.status(403).send({ message: 'Not allowed' });
+
+    const image = await db.post_image.findOne({ where: { id: imageId, postId: id } });
+    if (!image) return res.status(404).send({ message: 'Image not found' });
+
+    deleteImageFile(image.filename);
+    await image.destroy();
+
+    // Re-order remaining images
+    const remaining = await db.post_image.findAll({ where: { postId: id }, order: [['position', 'ASC']] });
+    for (let i = 0; i < remaining.length; i++) {
+      if (remaining[i].position !== i) {
+        await remaining[i].update({ position: i });
+      }
+    }
+
+    res.status(200).send({ message: 'Image deleted' });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.getImage = async (req, res) => {
+  const { id, imageId } = req.params;
+  try {
+    const post = await Post.findByPk(id);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+
+    const image = await db.post_image.findOne({ where: { id: imageId, postId: id } });
+    if (!image) return res.status(404).send({ message: 'Image not found' });
+
+    const filePath = path.join(IMAGES_DIR, image.filename);
+    if (!fs.existsSync(filePath)) return res.status(404).send({ message: 'File not found' });
+
+    res.setHeader('Content-Type', image.mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.sendFile(filePath);
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+exports.getPostImages = async (req, res) => {
+  const postId = req.params.id;
+  try {
+    const post = await Post.findByPk(postId);
+    if (!post || post.choirId !== req.activeChoirId) return res.status(404).send({ message: 'Post not found' });
+    if (!(await canAccessPost(post, req))) return res.status(403).send({ message: 'Not allowed' });
+
+    const images = await db.post_image.findAll({
+      where: { postId },
+      order: [['position', 'ASC']],
+      attributes: ['id', 'filename', 'originalName', 'mimeType', 'size', 'position', 'publicToken']
+    });
+
+    res.status(200).send(images.map(img => ({
+      id: img.id,
+      filename: img.filename,
+      originalName: img.originalName,
+      mimeType: img.mimeType,
+      size: img.size,
+      position: img.position,
+      publicToken: img.publicToken,
+      url: `/api/posts/${postId}/images/${img.id}`
+    })));
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+// ── Public image access (no auth required, token-based) ──────────────
+
+exports.getImageByToken = async (req, res) => {
+  // Strip any file extension appended for email client compatibility
+  const token = (req.params.token || '').replace(/\.[a-zA-Z0-9]+$/, '');
+  if (!token || typeof token !== 'string' || token.length < 32) {
+    return res.status(400).send({ message: 'Invalid token' });
+  }
+  try {
+    const image = await db.post_image.findOne({ where: { publicToken: token } });
+    if (!image) return res.status(404).send({ message: 'Image not found' });
+
+    const filePath = path.join(IMAGES_DIR, image.filename);
+    if (!fs.existsSync(filePath)) return res.status(404).send({ message: 'File not found' });
+
+    res.setHeader('Content-Type', image.mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${image.originalName}"`);
+    res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days for public/email images
+    res.sendFile(filePath);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }

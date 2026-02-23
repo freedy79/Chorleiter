@@ -48,6 +48,15 @@ class DataEnrichmentService {
                 throw new Error(`Invalid job type: ${jobType}`);
             }
 
+            // Load API keys from DB into providers before checking availability
+            await this.loadApiKeysIntoProviders();
+
+            // Pre-validate: check provider availability before creating job
+            const availableProviders = this.getAvailableProviders().filter(p => p.available);
+            if (availableProviders.length === 0) {
+                throw new Error('Kein LLM-Provider verfügbar. Bitte hinterlegen Sie zunächst einen gültigen API-Key in den Einstellungen.');
+            }
+
             // Create job record
             const job = await db.data_enrichment_job.create({
                 jobType,
@@ -66,9 +75,15 @@ class DataEnrichmentService {
                 fields: enrichmentFields
             });
 
-            // Start async job execution
-            this.executeJob(job.id, jobType, enrichmentFields, options)
-                .catch(error => logger.error('[DataEnrichmentService] Job execution error:', error));
+            // Start async job execution (pass userId)
+            this.executeJob(job.id, jobType, enrichmentFields, options, userId)
+                .catch(error => {
+                    logger.error('[DataEnrichmentService] Job execution error:', {
+                        jobId: job.id,
+                        error: error.message,
+                        stack: error.stack
+                    });
+                });
 
             return {
                 jobId: job.id,
@@ -84,7 +99,7 @@ class DataEnrichmentService {
     /**
      * Execute enrichment job (async)
      */
-    async executeJob(jobId, jobType, enrichmentFields, options = {}) {
+    async executeJob(jobId, jobType, enrichmentFields, options = {}, userId = null) {
         const startTime = Date.now();
 
         try {
@@ -100,8 +115,37 @@ class DataEnrichmentService {
                 startedAt: new Date()
             });
 
+            // Ensure API keys are loaded from DB into providers
+            await this.loadApiKeysIntoProviders();
+
+            // Re-read provider settings from DB (user may have changed them since service init)
+            await this.router.initialize();
+
+            // Record which provider will be used so the UI can show it immediately
+            await job.update({
+                metadata: {
+                    ...job.metadata,
+                    activeProvider: this.router.primaryProviderName,
+                    strategy: this.router.strategy
+                }
+            });
+
             // Get items to enrich
             const items = await this.getItemsToEnrich(jobType, options);
+
+            if (items.length === 0) {
+                await job.update({
+                    status: 'completed',
+                    completedAt: new Date(),
+                    totalItems: 0,
+                    successCount: 0,
+                    errorCount: 0,
+                    errorMessage: 'Keine Einträge zum Anreichern gefunden'
+                });
+                logger.info(`[DataEnrichmentService] Job ${jobId}: No items to enrich`);
+                return;
+            }
+
             await job.update({ totalItems: items.length });
 
             logger.info(`[DataEnrichmentService] Starting job execution`, {
@@ -110,8 +154,21 @@ class DataEnrichmentService {
                 itemCount: items.length
             });
 
+            // Progress callback: updates processedItems in DB after each batch
+            let lastProgressUpdate = 0;
+            const progressCallback = async ({ processed, total, batchSuggestions, totalCostSoFar }) => {
+                const now = Date.now();
+                // Throttle DB writes: max one write per 3 seconds
+                if (now - lastProgressUpdate < 3000) return;
+                lastProgressUpdate = now;
+                await db.data_enrichment_job.update(
+                    { processedItems: processed },
+                    { where: { id: jobId } }
+                ).catch(() => {}); // ignore update errors during progress
+            };
+
             // Call LLM router
-            const result = await this.router.enrichPieces(items, enrichmentFields);
+            const result = await this.router.enrichPieces(items, enrichmentFields, progressCallback);
 
             // Store suggestions
             const suggestionsStored = await this.storeSuggestions(
@@ -119,6 +176,20 @@ class DataEnrichmentService {
                 jobType,
                 result.suggestions,
                 userId
+            );
+
+            // Save sample prompt/response to metadata for UI transparency
+            await db.data_enrichment_job.update(
+                {
+                    metadata: {
+                        ...job.metadata,
+                        activeProvider: this.router.primaryProviderName,
+                        strategy: this.router.strategy,
+                        samplePrompt: result.samplePrompt || null,
+                        sampleResponse: result.sampleResponse || null
+                    }
+                },
+                { where: { id: jobId } }
             );
 
             // Apply auto-approvals if enabled
@@ -146,16 +217,30 @@ class DataEnrichmentService {
             });
 
         } catch (error) {
-            logger.error(`[DataEnrichmentService] Job failed: ${jobId}`, error);
+            const errorDetails = {
+                jobId,
+                message: error.message,
+                stack: error.stack,
+                provider: this.router?.primaryProviderName || 'unknown'
+            };
+            logger.error(`[DataEnrichmentService] Job failed: ${jobId}`, errorDetails);
 
-            // Update job to failed state
+            // Update job to failed state with detailed error
             try {
                 const job = await db.data_enrichment_job.findByPk(jobId);
                 if (job) {
                     await job.update({
                         status: 'failed',
                         errorMessage: error.message,
-                        completedAt: new Date()
+                        completedAt: new Date(),
+                        metadata: {
+                            ...job.metadata,
+                            errorDetails: {
+                                message: error.message,
+                                provider: errorDetails.provider,
+                                timestamp: new Date().toISOString()
+                            }
+                        }
                     });
                 }
             } catch (updateError) {
@@ -291,6 +376,101 @@ class DataEnrichmentService {
             return job;
         } catch (error) {
             logger.error('[DataEnrichmentService] Error getting job:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * List all jobs with pagination and filtering
+     * @param {Object} filters - { status, jobType, limit, offset, sortBy, sortOrder }
+     * @returns {Promise<{jobs: Array, total: number}>}
+     */
+    async listJobs(filters = {}) {
+        try {
+            const where = {};
+            if (filters.status) where.status = filters.status;
+            if (filters.jobType) where.jobType = filters.jobType;
+
+            const order = [[filters.sortBy || 'createdAt', filters.sortOrder || 'DESC']];
+
+            const { count, rows } = await db.data_enrichment_job.findAndCountAll({
+                where,
+                order,
+                limit: filters.limit || 50,
+                offset: filters.offset || 0,
+                include: [
+                    { model: db.user, as: 'creator', attributes: ['id', 'firstName', 'name', 'email'] }
+                ]
+            });
+
+            return { jobs: rows, total: count };
+        } catch (error) {
+            logger.error('[DataEnrichmentService] Error listing jobs:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Cancel a running or pending job
+     * @param {string} jobId
+     * @returns {Promise<Object>} Updated job
+     */
+    async cancelJob(jobId) {
+        try {
+            const job = await db.data_enrichment_job.findByPk(jobId);
+            if (!job) {
+                throw new Error(`Job ${jobId} nicht gefunden`);
+            }
+
+            if (!['pending', 'running'].includes(job.status)) {
+                throw new Error(`Job kann nicht abgebrochen werden (Status: ${job.status})`);
+            }
+
+            await job.update({
+                status: 'cancelled',
+                completedAt: new Date(),
+                errorMessage: 'Job wurde manuell abgebrochen'
+            });
+
+            logger.info(`[DataEnrichmentService] Job cancelled: ${jobId}`);
+            return job;
+        } catch (error) {
+            logger.error('[DataEnrichmentService] Error cancelling job:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Delete a completed, failed, or cancelled job and its suggestions
+     * @param {string} jobId
+     * @returns {Promise<{deletedSuggestions: number}>}
+     */
+    async deleteJob(jobId) {
+        try {
+            const job = await db.data_enrichment_job.findByPk(jobId);
+            if (!job) {
+                throw new Error(`Job ${jobId} nicht gefunden`);
+            }
+
+            if (['pending', 'running'].includes(job.status)) {
+                throw new Error(`Laufende oder ausstehende Jobs können nicht gelöscht werden. Bitte zuerst abbrechen.`);
+            }
+
+            // Delete associated suggestions first
+            const deletedSuggestions = await db.data_enrichment_suggestion.destroy({
+                where: { jobId }
+            });
+
+            // Delete the job
+            await job.destroy();
+
+            logger.info(`[DataEnrichmentService] Job deleted: ${jobId}`, {
+                deletedSuggestions
+            });
+
+            return { deletedSuggestions };
+        } catch (error) {
+            logger.error('[DataEnrichmentService] Error deleting job:', error);
             throw error;
         }
     }
@@ -432,7 +612,7 @@ class DataEnrichmentService {
                 totalJobs: jobs.length,
                 completedJobs: jobs.filter(j => j.status === 'completed').length,
                 failedJobs: jobs.filter(j => j.status === 'failed').length,
-                totalCosts: jobs.reduce((sum, j) => sum + (j.apiCosts || 0), 0),
+                totalCosts: jobs.reduce((sum, j) => sum + (parseFloat(j.apiCosts) || 0), 0),
                 totalSuggestions: 0,
                 appliedSuggestions: 0
             };
@@ -440,14 +620,19 @@ class DataEnrichmentService {
             // Count suggestions
             const suggestions = await db.data_enrichment_suggestion.findAll({
                 where,
-                attributes: ['status'],
-                group: ['status']
+                attributes: [
+                    'status',
+                    [db.Sequelize.fn('COUNT', db.Sequelize.col('id')), 'count']
+                ],
+                group: ['status'],
+                raw: true
             });
 
             for (const data of suggestions) {
-                stats.totalSuggestions += data.count;
+                const count = parseInt(data.count, 10) || 0;
+                stats.totalSuggestions += count;
                 if (data.status === 'applied') {
-                    stats.appliedSuggestions += data.count;
+                    stats.appliedSuggestions += count;
                 }
             }
 
@@ -467,11 +652,108 @@ class DataEnrichmentService {
     }
 
     /**
+     * Test a specific API key directly against a provider
+     * @param {string} provider - Provider name ('gemini', 'claude')
+     * @param {string} apiKey - The raw API key to test
+     * @returns {Promise<Object>} { ok: boolean, message: string }
+     */
+    async testApiKeyDirect(provider, apiKey) {
+        if (!this.initialized) await this.initialize();
+
+        const providerInstance = this.router.providers[provider];
+        if (!providerInstance) {
+            return { ok: false, message: `Provider '${provider}' nicht verfügbar` };
+        }
+
+        if (typeof providerInstance.testApiKeyDirect !== 'function') {
+            return { ok: false, message: `Provider '${provider}' unterstützt keinen direkten API-Key-Test` };
+        }
+
+        return providerInstance.testApiKeyDirect(apiKey);
+    }
+
+    /**
      * Get available providers
      */
     getAvailableProviders() {
         if (!this.router) return [];
         return this.router.getAvailableProviders();
+    }
+
+    /**
+     * Load API keys from database into provider instances
+     * Bridges the gap between DB-stored keys and env-var-based providers
+     */
+    async loadApiKeysIntoProviders() {
+        if (!this.router) return;
+
+        const providerNames = Object.keys(this.router.providers);
+        for (const name of providerNames) {
+            try {
+                const apiKey = await dataEnrichmentSettingsService.get(`api_key_${name}`);
+                if (apiKey) {
+                    this.router.providers[name].apiKey = apiKey;
+                    this.router.providers[name].isConfigured = true;
+                    logger.debug(`[DataEnrichmentService] API key loaded from DB for provider: ${name}`);
+                }
+            } catch (error) {
+                logger.warn(`[DataEnrichmentService] Could not load API key for ${name}:`, error.message);
+            }
+        }
+    }
+
+    /**
+     * Delete API key for a provider
+     * @param {string} provider - Provider name
+     * @returns {Promise<boolean>}
+     */
+    async deleteApiKey(provider) {
+        const settingKey = `api_key_${provider.toLowerCase()}`;
+        const deleted = await dataEnrichmentSettingsService.delete(settingKey);
+
+        // Also clear from provider instance
+        if (this.router?.providers[provider.toLowerCase()]) {
+            this.router.providers[provider.toLowerCase()].apiKey = null;
+            this.router.providers[provider.toLowerCase()].isConfigured = false;
+        }
+
+        logger.info(`[DataEnrichmentService] API key deleted for provider: ${provider}`);
+        return deleted;
+    }
+
+    /**
+     * Get API key status for all providers
+     * Returns masked keys and availability status
+     * @returns {Promise<Object>}
+     */
+    async getApiKeyStatus() {
+        const status = {};
+        const providerNames = ['gemini', 'claude', 'openai'];
+
+        for (const name of providerNames) {
+            try {
+                const apiKey = await dataEnrichmentSettingsService.get(`api_key_${name}`);
+                status[name] = {
+                    configured: !!apiKey,
+                    maskedKey: apiKey ? this.maskApiKeyValue(apiKey) : null
+                };
+            } catch {
+                status[name] = { configured: false, maskedKey: null };
+            }
+        }
+
+        return status;
+    }
+
+    /**
+     * Mask an API key for display: show first 4 chars, rest as asterisks
+     * @param {string} key - The decrypted API key
+     * @returns {string}
+     */
+    maskApiKeyValue(key) {
+        if (!key || key.length <= 4) return '****';
+        const visibleChars = Math.min(4, Math.floor(key.length * 0.2));
+        return key.slice(0, visibleChars) + '*'.repeat(Math.min(key.length - visibleChars, 20));
     }
 }
 

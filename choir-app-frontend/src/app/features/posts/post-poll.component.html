@@ -2,6 +2,8 @@
   <div class="poll-header">
     <div>
       <strong>Abstimmung</strong>
+      <span class="poll-type" *ngIf="!poll.isAnonymous"> · öffentlich</span>
+      <span class="poll-type anonymous" *ngIf="poll.isAnonymous"> · anonym</span>
       <span *ngIf="poll.closesAt"> · offen bis {{ poll.closesAt | date:'short' }}</span>
       <span *ngIf="isClosed" class="closed">Abgeschlossen</span>
     </div>
@@ -21,8 +23,9 @@
           <mat-progress-bar mode="determinate" [value]="getPercentage(option)"></mat-progress-bar>
         </div>
       </div>
-      <div class="option-meta">
+      <div class="option-meta" [matTooltip]="showVoters ? getVoterNames(option) : ''" [matTooltipDisabled]="!showVoters || !getVoterNames(option)" matTooltipClass="voter-tooltip">
         <span class="votes">{{ option.votes }} Stimme{{ option.votes === 1 ? '' : 'n' }}</span>
+        <mat-icon *ngIf="showVoters && option.voters?.length" class="voter-icon">people</mat-icon>
       </div>
     </div>
     <div class="hint">Du kannst bis zu {{ poll.maxSelections }} Optionen auswählen.</div>
@@ -37,8 +40,9 @@
             <mat-progress-bar mode="determinate" [value]="getPercentage(option)"></mat-progress-bar>
           </div>
         </div>
-        <div class="option-meta">
+        <div class="option-meta" [matTooltip]="showVoters ? getVoterNames(option) : ''" [matTooltipDisabled]="!showVoters || !getVoterNames(option)" matTooltipClass="voter-tooltip">
           <span class="votes">{{ option.votes }} Stimme{{ option.votes === 1 ? '' : 'n' }}</span>
+          <mat-icon *ngIf="showVoters && option.voters?.length" class="voter-icon">people</mat-icon>
         </div>
       </div>
     </mat-radio-group>

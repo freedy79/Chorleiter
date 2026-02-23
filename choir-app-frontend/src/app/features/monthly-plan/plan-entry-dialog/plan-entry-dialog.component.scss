@@ -1,11 +1,29 @@
+@use '../../../../themes/breakpoints' as *;
+
 .form-row {
   display: flex;
   gap: 1rem;
   > * {
     flex: 1;
   }
+
+  @include handset {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 .full-width {
   width: 100%;
+}
+
+// Ensure dialog actions have proper touch targets on mobile
+[mat-dialog-actions] {
+  @include handset {
+    padding: $spacing-sm $spacing-md;
+
+    button {
+      min-height: $touch-target-min;
+    }
+  }
 }

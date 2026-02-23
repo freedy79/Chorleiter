@@ -155,24 +155,76 @@ export class SearchBoxComponent implements OnInit {
     }
   }
 
-  onOptionSelected(value: string | null | undefined): void {
+  displaySuggestion = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    return value.text || '';
+  };
+
+  onOptionSelected(value: any): void {
     if (!value) {
       return;
     }
 
-    if (value.startsWith('__history__')) {
-      const query = value.substring('__history__'.length);
-      this.searchCtrl.setValue(query, { emitEvent: true });
-      return;
-    }
+    // String values: history entries or show-all
+    if (typeof value === 'string') {
+      if (value.startsWith('__history__')) {
+        const query = value.substring('__history__'.length);
+        this.searchCtrl.setValue(query, { emitEvent: true });
+        return;
+      }
 
-    if (value === '__show_all__') {
+      if (value === '__show_all__') {
+        this.goToResults();
+        return;
+      }
+
+      this.searchCtrl.setValue(value, { emitEvent: false });
       this.goToResults();
+      this.showHistory = false;
       return;
     }
 
-    this.searchCtrl.setValue(value, { emitEvent: false });
-    this.goToResults();
+    // Suggestion object: navigate directly to the entity
+    const suggestion = value as SearchSuggestion;
+    this.navigateToSuggestion(suggestion);
+  }
+
+  private navigateToSuggestion(s: SearchSuggestion): void {
+    // Save to history
+    this.historyService.addToHistory({
+      query: s.text,
+      resultCount: 1
+    }).subscribe();
+
+    // Clear the search input
+    this.searchCtrl.setValue('', { emitEvent: false });
+    this.suggestions = [];
     this.showHistory = false;
+
+    switch (s.type) {
+      case 'piece':
+        this.router.navigate(['/pieces', s.id]);
+        break;
+      case 'collection':
+        this.router.navigate(['/collections/edit', s.id]);
+        break;
+      case 'composer':
+        this.navigateToRepertoireWithFilter({ composerIds: [s.id] });
+        break;
+      case 'category':
+        this.navigateToRepertoireWithFilter({ categoryIds: [s.id] });
+        break;
+      case 'author':
+      case 'publisher':
+        // For authors/publishers, search for their name in repertoire
+        this.router.navigate(['/search'], { queryParams: { q: s.text } });
+        break;
+    }
+  }
+
+  private navigateToRepertoireWithFilter(filter: Record<string, any>): void {
+    localStorage.setItem('repertoireFilters', JSON.stringify(filter));
+    this.router.navigate(['/repertoire']);
   }
 }

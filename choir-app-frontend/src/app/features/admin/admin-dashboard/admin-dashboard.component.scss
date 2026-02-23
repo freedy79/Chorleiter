@@ -27,20 +27,18 @@
 .admin-sidebar {
   width: 280px;
   @include card-background;
-  @include adaptive-border(1px, solid);
-  border-left: none;
-  border-top: none;
-  border-bottom: none;
+  border: none;
+  border-right: 1px solid;
+  @include apply-theme-var('border-right-color', 'border-primary');
   overflow-y: auto;
   padding: $spacing-md 0;
   @include elevation-shadow(1);
 
   .sidebar-header {
     padding: $spacing-md;
-    @include adaptive-border(1px, solid);
-    border-left: none;
-    border-right: none;
-    border-top: none;
+    border: none;
+    border-bottom: 1px solid;
+    @include apply-theme-var('border-bottom-color', 'border-primary');
     margin-bottom: $spacing-md;
     display: flex;
     justify-content: space-between;
@@ -72,63 +70,60 @@
     &:last-child {
       margin-bottom: 0;
     }
+  }
+}
 
-    .category-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      @include subtle-text;
-      text-transform: uppercase;
-      padding: $spacing-sm $spacing-md;
-      letter-spacing: 0.5px;
+.category-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  @include subtle-text;
+  text-transform: uppercase;
+  padding: $spacing-sm $spacing-md;
+  letter-spacing: 0.5px;
+}
+
+.section-button {
+  width: 100%;
+  margin-bottom: $spacing-xs;
+  @include secondary-text;
+  text-align: left;
+  height: $touch-target-min;
+  @include smooth-transition(background-color);
+
+  mat-icon {
+    margin-right: $spacing-sm;
+    color: inherit;
+  }
+
+  .label {
+    flex: 1;
+  }
+
+  .badge {
+    background: #ff5252;
+    color: white;
+    border-radius: 50%;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: $spacing-sm;
+  }
+
+  &.active {
+    @include hover-state;
+    color: #1976d2;
+    font-weight: 600;
+
+    mat-icon {
+      color: #1976d2;
     }
+  }
 
-    .section-button {
-      width: 100%;
-      justify-content: flex-start;
-      margin-bottom: $spacing-xs;
-      @include secondary-text;
-      text-align: left;
-      height: $touch-target-min;
-      position: relative;
-      @include smooth-transition(background-color);
-
-      mat-icon {
-        margin-right: $spacing-sm;
-        color: inherit;
-      }
-
-      .label {
-        flex: 1;
-      }
-
-      .badge {
-        background: #ff5252;
-        color: white;
-        border-radius: 50%;
-        min-width: 1.5rem;
-        height: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-left: $spacing-sm;
-      }
-
-      &.active {
-        @include hover-state;
-        color: #1976d2;
-        font-weight: 600;
-
-        mat-icon {
-          color: #1976d2;
-        }
-      }
-
-      &:hover {
-        @include hover-state;
-      }
-    }
+  &:hover {
+    @include hover-state;
   }
 }
 
@@ -138,16 +133,12 @@
 }
 
 .drawer-header {
-  padding: $spacing-md;
   font-weight: 600;
-  @include adaptive-border(1px, solid);
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  border: none;
+  border-bottom: 1px solid;
+  @include apply-theme-var('border-bottom-color', 'border-primary');
   font-size: 1rem;
-  justify-content: flex-start;
   padding: $spacing-sm $spacing-md;
-  height: auto;
 
   mat-icon {
     margin-right: $spacing-sm;
@@ -252,9 +243,8 @@
     height: 3.5rem;
     border-radius: 8px;
     @include surface-background;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     @include smooth-transition(all, $animation-slow);
     @include secondary-text;
 
@@ -285,10 +275,9 @@
 
   mat-card-footer {
     padding-top: $spacing-sm;
-    @include adaptive-border(1px, solid);
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
+    border: none;
+    border-top: 1px solid;
+    @include apply-theme-var('border-top-color', 'border-primary');
     text-align: right;
 
     .footer-badge {
@@ -302,41 +291,41 @@
 // ===== MOBILE TABS =====
 .mobile-tabs {
   margin-top: $spacing-md;
+}
 
-  .tab-content {
-    padding: $spacing-md;
+.tab-content {
+  padding: $spacing-md;
+}
+
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-sm;
+}
+
+.quick-button {
+  height: auto;
+  padding: $spacing-md $spacing-sm;
+  flex-direction: column;
+  white-space: normal;
+  line-height: 1.2;
+
+  mat-icon {
+    margin-bottom: $spacing-sm;
+    font-size: 2rem;
+    width: 2rem;
+    height: 2rem;
   }
 
-  .quick-access-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: $spacing-sm;
+  .button-label {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    margin-bottom: $spacing-xs;
+  }
 
-    .quick-button {
-      height: auto;
-      padding: $spacing-md $spacing-sm;
-      flex-direction: column;
-      white-space: normal;
-      line-height: 1.2;
-
-      mat-icon {
-        margin-bottom: $spacing-sm;
-        font-size: 2rem;
-        width: 2rem;
-        height: 2rem;
-      }
-
-      .button-label {
-        font-weight: 600;
-        font-size: 0.8125rem;
-        margin-bottom: $spacing-xs;
-      }
-
-      .button-desc {
-        font-size: 0.6875rem;
-        @include secondary-text;
-      }
-    }
+  .button-desc {
+    font-size: 0.6875rem;
+    @include secondary-text;
   }
 }
 
@@ -346,22 +335,12 @@
 }
 
 // ===== SCROLLBAR STYLING =====
-.admin-sidebar::-webkit-scrollbar,
-.main-content::-webkit-scrollbar {
-  width: 0.5rem;
-}
+.admin-sidebar,
+.main-content {
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
 
-.admin-sidebar::-webkit-scrollbar-track,
-.main-content::-webkit-scrollbar-track {
-  @include surface-background;
-}
-
-.admin-sidebar::-webkit-scrollbar-thumb,
-.main-content::-webkit-scrollbar-thumb {
-  @include border-color(#ddd, #555);
-  border-radius: 4px;
-
-  &:hover {
-    @include border-color(#bbb, #777);
+  .dark-theme & {
+    scrollbar-color: #555 transparent;
   }
 }

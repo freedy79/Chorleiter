@@ -46,8 +46,8 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
   dateHeaderColumns: string[] = [];
   displayedColumns: string[] = ['name', 'voice'];
   isChoirAdmin = false;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string;
+  endDate?: string;
 
   // Loading and Error States
   isLoadingMembers = false;
@@ -109,7 +109,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
   loadEvents(): void {
     this.isLoadingEvents = true;
     this.hasError = false;
-    this.api.getEvents(undefined, false, this.startDate, this.endDate).pipe(
+    this.api.getEvents(undefined, false, this.startDate ? new Date(this.startDate) : undefined, this.endDate ? new Date(this.endDate) : undefined).pipe(
       takeUntil(this.destroy$),
       finalize(() => this.isLoadingEvents = false),
       catchError(_err => {
@@ -395,7 +395,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
 
   downloadPdf(): void {
     this.isDownloadingPdf = true;
-    this.api.downloadParticipationPdf({ startDate: this.startDate, endDate: this.endDate }).pipe(
+    this.api.downloadParticipationPdf({ startDate: this.startDate ? new Date(this.startDate) : undefined, endDate: this.endDate ? new Date(this.endDate) : undefined }).pipe(
       finalize(() => this.isDownloadingPdf = false),
       catchError(_err => {
         this.snackBar.open('Fehler beim Erstellen der PDF', 'OK', { duration: 3000 });

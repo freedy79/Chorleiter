@@ -19,8 +19,8 @@ import { Observable } from 'rxjs';
 })
 export class LoanCartComponent {
   items$!: Observable<CartItem[]>;
-  startDate?: Date;
-  endDate?: Date;
+  startDate?: string;
+  endDate?: string;
   reason = '';
   choir$!: Observable<any>;
   user$!: Observable<any>;

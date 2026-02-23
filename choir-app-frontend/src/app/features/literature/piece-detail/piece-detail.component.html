@@ -11,6 +11,9 @@
     <button mat-icon-button color="primary" (click)="sharePiece()" aria-label="Stück teilen">
       <mat-icon>share</mat-icon>
     </button>
+    <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="deletePiece()" aria-label="Stück löschen">
+      <mat-icon>delete</mat-icon>
+    </button>
   </h2>
   <button mat-button color="warn" (click)="openReportDialog()">Stück melden</button>
   <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>

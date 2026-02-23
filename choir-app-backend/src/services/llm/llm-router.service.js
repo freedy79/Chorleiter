@@ -75,7 +75,7 @@ class LLMRouter {
      * @param {Array} enrichmentFields - Fields to enrich
      * @returns {Promise<Object>}
      */
-    async enrichPieces(pieces, enrichmentFields) {
+    async enrichPieces(pieces, enrichmentFields, progressCallback = null) {
         const startTime = Date.now();
 
         try {
@@ -89,16 +89,16 @@ class LLMRouter {
 
             switch (this.strategy) {
                 case 'primary':
-                    result = await this.enrichWithPrimary(pieces, enrichmentFields);
+                    result = await this.enrichWithPrimary(pieces, enrichmentFields, progressCallback);
                     break;
                 case 'dual':
-                    result = await this.enrichWithDual(pieces, enrichmentFields);
+                    result = await this.enrichWithDual(pieces, enrichmentFields, progressCallback);
                     break;
                 case 'cost-optimized':
-                    result = await this.enrichWithCostOptimized(pieces, enrichmentFields);
+                    result = await this.enrichWithCostOptimized(pieces, enrichmentFields, progressCallback);
                     break;
                 default:
-                    result = await this.enrichWithDual(pieces, enrichmentFields);
+                    result = await this.enrichWithDual(pieces, enrichmentFields, progressCallback);
             }
 
             const duration = Date.now() - startTime;
@@ -119,22 +119,22 @@ class LLMRouter {
     /**
      * Enrich using primary provider only
      */
-    async enrichWithPrimary(pieces, enrichmentFields) {
+    async enrichWithPrimary(pieces, enrichmentFields, progressCallback = null) {
         const primaryProvider = this.getPrimaryProvider();
 
         if (!primaryProvider.isAvailable()) {
             throw new Error(`Primary provider '${this.primaryProviderName}' is not configured`);
         }
 
-        return primaryProvider.enrichPieces(pieces, enrichmentFields);
+        return primaryProvider.enrichPieces(pieces, enrichmentFields, progressCallback);
     }
 
     /**
      * Enrich with dual strategy:
-     * - Primary (Gemini) for all pieces
-     * - Fallback (Claude) for low-confidence results from primary
+     * - Primary for all pieces
+     * - Fallback for low-confidence results from primary
      */
-    async enrichWithDual(pieces, enrichmentFields) {
+    async enrichWithDual(pieces, enrichmentFields, progressCallback = null) {
         const primaryProvider = this.getPrimaryProvider();
 
         if (!primaryProvider.isAvailable()) {
@@ -143,15 +143,16 @@ class LLMRouter {
             if (!fallbackProvider.isAvailable()) {
                 throw new Error('No providers are available');
             }
-            return fallbackProvider.enrichPieces(pieces, enrichmentFields);
+            return fallbackProvider.enrichPieces(pieces, enrichmentFields, progressCallback);
         }
 
         // First pass: Use primary provider
-        const primaryResult = await primaryProvider.enrichPieces(pieces, enrichmentFields);
+        const primaryResult = await primaryProvider.enrichPieces(pieces, enrichmentFields, progressCallback);
         let { suggestions, totalCost } = primaryResult;
 
         // Second pass: For low-confidence results, use fallback provider
         const lowConfidenceSuggestions = suggestions.filter(s => s.confidence < 0.6);
+        let fallbackUsed = false;
 
         if (lowConfidenceSuggestions.length > 0) {
             const fallbackProvider = this.getFallbackProvider();
@@ -160,7 +161,6 @@ class LLMRouter {
                     count: lowConfidenceSuggestions.length
                 });
 
-                // Get pieces that need fallback
                 const piecesNeedingFallback = [...new Set(
                     lowConfidenceSuggestions.map(s => s.pieceId)
                 )];
@@ -173,18 +173,24 @@ class LLMRouter {
                     enrichmentFields
                 );
 
-                // Merge results: prefer fallback suggestions for low-confidence fields
                 suggestions = this.mergeSuggestions(suggestions, fallbackResult.suggestions);
                 totalCost += fallbackResult.totalCost;
+                fallbackUsed = true;
             }
         }
+
+        const providerLabel = fallbackUsed
+            ? `${primaryProvider.providerName} + ${this.fallbackProviderName}`
+            : primaryProvider.providerName;
 
         return {
             suggestions,
             totalCost,
-            provider: 'dual (primary + fallback)',
+            provider: providerLabel,
             primaryProvider: primaryProvider.providerName,
-            fallbackUsed: lowConfidenceSuggestions.length > 0
+            fallbackUsed,
+            samplePrompt: primaryResult.samplePrompt || null,
+            sampleResponse: primaryResult.sampleResponse || null
         };
     }
 
@@ -192,7 +198,7 @@ class LLMRouter {
      * Cost-optimized strategy:
      * Budget-aware enrichment, stops when budget is exceeded
      */
-    async enrichWithCostOptimized(pieces, enrichmentFields) {
+    async enrichWithCostOptimized(pieces, enrichmentFields, progressCallback = null) {
         const monthlyBudget = await this.settingsService.get('enrichment_monthly_budget') || 50;
         const currentMonthCost = await this.getCurrentMonthCost();
         const remainingBudget = monthlyBudget - currentMonthCost;
@@ -215,7 +221,7 @@ class LLMRouter {
         }
 
         // Use primary provider (cheaper)
-        const result = await primaryProvider.enrichPieces(pieces, enrichmentFields);
+        const result = await primaryProvider.enrichPieces(pieces, enrichmentFields, progressCallback);
 
         // Check if we can use fallback
         if (result.totalCost <= remainingBudget) {

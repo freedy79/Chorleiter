@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { switchMap, map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import { ApiHelperService } from './api-helper.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import {
   ConfirmDialogComponent,
   ConfirmDialogData
@@ -196,8 +197,28 @@ export interface DeleteConfirmOptions extends Omit<ConfirmOptions, 'title' | 'co
 export class DialogHelperService {
   constructor(
     private dialog: MatDialog,
-    private apiHelper: ApiHelperService
+    private apiHelper: ApiHelperService,
+    private responsive: ResponsiveService
   ) {}
+
+  /**
+   * Applies mobile-fullscreen panelClass if on a mobile device.
+   * Merges with any existing panelClass config.
+   */
+  private applyMobileFullscreen<T>(config: Partial<MatDialogConfig<T>>): Partial<MatDialogConfig<T>> {
+    if (!this.responsive.checkMobile()) {
+      return config;
+    }
+    const existing = config.panelClass;
+    const classes = Array.isArray(existing) ? existing : existing ? [existing] : [];
+    return {
+      ...config,
+      panelClass: [...classes, 'fullscreen-mobile-dialog'],
+      width: '100vw',
+      maxWidth: '100vw',
+      height: '100vh',
+    };
+  }
 
   /**
    * Opens a generic dialog and returns the result as an Observable.
@@ -225,10 +246,11 @@ export class DialogHelperService {
     component: Type<TComponent>,
     config?: DialogConfig<TData>
   ): Observable<TResult | undefined> {
-    const dialogRef = this.dialog.open(component, {
+    const baseConfig = {
       width: config?.width || '600px',
       ...config
-    });
+    };
+    const dialogRef = this.dialog.open(component, this.applyMobileFullscreen(baseConfig));
 
     return dialogRef.afterClosed();
   }
@@ -294,10 +316,11 @@ export class DialogHelperService {
       apiConfig?: DialogApiConfig<TDialogResult, TApiResponse>;
     }
   ): Observable<TApiResponse | undefined> {
-    const dialogRef = this.dialog.open(component, {
+    const baseConfig = {
       width: options?.dialogConfig?.width || '600px',
       ...options?.dialogConfig
-    });
+    };
+    const dialogRef = this.dialog.open(component, this.applyMobileFullscreen(baseConfig));
 
     return dialogRef.afterClosed().pipe(
       switchMap((result: TDialogResult | null | undefined) => {

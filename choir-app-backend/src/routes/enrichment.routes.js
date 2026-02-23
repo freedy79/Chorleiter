@@ -18,7 +18,9 @@ router.use(authJwt.isAdmin);
  */
 router.get('/settings', enrichmentController.getSettings);
 router.post('/settings', enrichmentController.updateSetting);
+router.get('/api-keys/status', enrichmentController.getApiKeyStatus);
 router.post('/api-keys', enrichmentController.setApiKey);
+router.delete('/api-keys/:provider', enrichmentController.deleteApiKey);
 
 /**
  * Provider Management
@@ -28,8 +30,11 @@ router.get('/providers', enrichmentController.getProviders);
 /**
  * Job Management
  */
+router.get('/jobs', enrichmentController.listJobs);
 router.post('/jobs', enrichmentController.createJob);
 router.get('/jobs/:jobId', enrichmentController.getJob);
+router.post('/jobs/:jobId/cancel', enrichmentController.cancelJob);
+router.delete('/jobs/:jobId', enrichmentController.deleteJob);
 
 /**
  * Suggestion Management

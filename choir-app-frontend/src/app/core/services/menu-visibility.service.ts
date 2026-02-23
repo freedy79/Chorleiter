@@ -22,7 +22,7 @@ export enum MenuKey {
 
 const MENU_KEYS = Object.values(MenuKey);
 
-const CHOIR_ADMIN_ROLES = ['director', 'choir_admin', 'organist'] as const;
+const CHOIR_ADMIN_ROLES = ['director', 'choir_admin', 'organist', 'notenwart'] as const;
 const GLOBAL_ADMIN_ROLES = ['admin', 'librarian'] as const;
 const DEMO_RESTRICTED_KEYS = [
   MenuKey.DIENSTPLAN,

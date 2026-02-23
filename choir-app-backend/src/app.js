@@ -12,6 +12,7 @@ const emailService = require('./services/email.service');
 const { runWithRequestContext } = require('./config/request-context');
 const { errorHandler, notFoundHandler, sequelizeErrorHandler } = require('./middleware/error.middleware');
 const { csrfCookie, csrfProtection } = require('./middleware/csrf.middleware');
+const postController = require("./controllers/post.controller");
 
 app.set("trust proxy", 1);
 
@@ -28,7 +29,7 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN']
 }));
 app.use(helmet({
     contentSecurityPolicy: {
@@ -89,10 +90,14 @@ app.get("/api/health", (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+// Public post image access (no auth, token-based for email recipients)
+// URL may contain a file extension (e.g. .png) for email client compatibility – stripped in controller
+app.get("/api/public/post-images/:token", postController.getImageByToken);
+
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }
@@ -137,6 +142,7 @@ const congregationRoutes = require("./routes/congregation.routes");
 const paypalRoutes = require("./routes/paypal.routes");
 const imprintRoutes = require("./routes/imprint.routes");
 const enrichmentRoutes = require("./routes/enrichment.routes");
+const doubletteRoutes = require("./routes/doublette.routes");
 app.use("/api/auth", authRoutes);
 app.use("/api/pieces", pieceRoutes);
 app.use("/api/events", eventRoutes);
@@ -174,6 +180,7 @@ app.use("/api/congregations", congregationRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/imprint", imprintRoutes);
 app.use("/api/admin/enrichment", enrichmentRoutes);
+doubletteRoutes(app);
 
 // Error Handling Middleware (must be AFTER all routes)
 // 1. Handle 404 for unknown routes

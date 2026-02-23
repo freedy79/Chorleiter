@@ -1,8 +1,41 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+
+// ============================================================================
+// DIALOG TITLE BAR
+// ============================================================================
+
+.dialog-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: $spacing-sm;
+
+  h1[mat-dialog-title] {
+    flex: 1;
+    margin-bottom: 0;
+    @include responsive-font-size(1.25rem);
+  }
+
+  .dialog-close-btn {
+    flex-shrink: 0;
+  }
+}
+
+// ============================================================================
+// FORM LAYOUT
+// ============================================================================
+
 .form-row {
   display: flex;
   gap: 1rem;
   > * {
     flex: 1;
+  }
+
+  @include handset {
+    flex-direction: column;
+    gap: 0;
   }
 }
 
@@ -23,6 +56,15 @@ h3.mat-subheading-2 {
     gap: 0.5rem;
     width: 100%;
     align-items: center;
+
+    @include handset {
+      grid-template-columns: 4rem 1fr;
+
+      .col-composer,
+      .col-collection {
+        display: none;
+      }
+    }
 }
 
 .option-header {
@@ -36,16 +78,64 @@ h3.mat-subheading-2 {
 }
 
 
-// Styling für die Tabelle der ausgewählten Stücke
-.selected-pieces-table {
-    width: 100%;
-    margin-top: 1rem;
+// ============================================================================
+// SELECTED PIECES LIST
+// ============================================================================
+
+.selected-pieces-list {
+  margin-top: $spacing-sm;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.piece-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs $spacing-sm;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  @include adaptive-border(0);
+  min-height: 44px;
+
+  @include dark-mode {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.piece-info {
+  display: flex;
+  align-items: baseline;
+  gap: $spacing-sm;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.piece-reference {
+  font-style: italic;
+  font-size: 0.85rem;
+  @include subtle-text;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.piece-title {
+  @include readable-text;
+  font-size: 0.938rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .no-pieces-message {
-    font-style: italic;
-    color: #888;
-    margin-top: 1rem;
+  font-style: italic;
+  margin-top: $spacing-sm;
+  @include subtle-text;
 }
 
 // Neuer Container für die Stück-Suche

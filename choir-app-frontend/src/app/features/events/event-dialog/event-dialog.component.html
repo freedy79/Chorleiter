@@ -1,4 +1,9 @@
-<h1 mat-dialog-title>Neues Ereignis erstellen</h1>
+<div class="dialog-title-bar">
+  <h1 mat-dialog-title>{{ isEditMode ? 'Ereignis bearbeiten' : 'Neues Ereignis erstellen' }}</h1>
+  <button mat-icon-button class="dialog-close-btn" (click)="onCancel()" aria-label="Dialog schließen">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <div mat-dialog-content>
   <form [formGroup]="eventForm" id="event-form" (ngSubmit)="onSave()">
@@ -6,9 +11,7 @@
       <!-- Datepicker -->
       <mat-form-field appearance="outline">
         <mat-label>Datum</mat-label>
-        <input matInput [matDatepicker]="picker" formControlName="date">
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker #picker></mat-datepicker>
+        <input matInput type="date" formControlName="date">
       </mat-form-field>
 
       <!-- Event Type -->
@@ -67,37 +70,21 @@
       </div>
     </div>
 
-    <!-- Display Selected Pieces in a Table -->
-    <mat-table [dataSource]="selectedPiecesDataSource" class="selected-pieces-table">
-      <ng-container matColumnDef="reference">
-        <mat-header-cell *matHeaderCellDef>Ref</mat-header-cell>
-        <mat-cell *matCellDef="let piece">{{ piece.reference }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="title">
-        <mat-header-cell *matHeaderCellDef>Titel</mat-header-cell>
-        <mat-cell *matCellDef="let piece">{{ piece.title }}</mat-cell>
-      </ng-container>
-
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef></mat-header-cell>
-        <mat-cell *matCellDef="let piece">
-          <button mat-icon-button color="warn" (click)="remove(piece)">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
-
-      <mat-header-row *matHeaderRowDef="pieceColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: pieceColumns;"></mat-row>
-      <ng-container matNoDataRow>
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="pieceColumns.length">
-            Für dieses Ereignis wurden noch keine Stücke ausgewählt.
-          </td>
-        </tr>
-      </ng-container>
-    </mat-table>
+    <!-- Display Selected Pieces -->
+    <div class="selected-pieces-list" *ngIf="selectedPieces.length; else noPieces">
+      <div class="piece-item" *ngFor="let piece of selectedPieces">
+        <div class="piece-info">
+          <span class="piece-reference">{{ piece.reference }}</span>
+          <span class="piece-title">{{ piece.title }}</span>
+        </div>
+        <button mat-icon-button color="warn" (click)="remove(piece)" aria-label="Stück entfernen">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+    <ng-template #noPieces>
+      <p class="no-pieces-message">Für dieses Ereignis wurden noch keine Stücke ausgewählt.</p>
+    </ng-template>
 
   </form>
 </div>

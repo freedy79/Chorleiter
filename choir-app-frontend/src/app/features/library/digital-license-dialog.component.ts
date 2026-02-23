@@ -33,9 +33,7 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
         </mat-form-field>
         <mat-form-field>
           <mat-label>Kaufdatum</mat-label>
-          <input matInput [matDatepicker]="purchasePicker" formControlName="purchaseDate" />
-          <mat-datepicker-toggle matSuffix [for]="purchasePicker"></mat-datepicker-toggle>
-          <mat-datepicker #purchasePicker></mat-datepicker>
+          <input matInput type="date" formControlName="purchaseDate" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Händler</mat-label>
@@ -47,15 +45,11 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
         </mat-form-field>
         <mat-form-field>
           <mat-label>Gültig ab</mat-label>
-          <input matInput [matDatepicker]="fromPicker" formControlName="validFrom" />
-          <mat-datepicker-toggle matSuffix [for]="fromPicker"></mat-datepicker-toggle>
-          <mat-datepicker #fromPicker></mat-datepicker>
+          <input matInput type="date" formControlName="validFrom" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Gültig bis (leer = unbefristet)</mat-label>
-          <input matInput [matDatepicker]="untilPicker" formControlName="validUntil" />
-          <mat-datepicker-toggle matSuffix [for]="untilPicker"></mat-datepicker-toggle>
-          <mat-datepicker #untilPicker></mat-datepicker>
+          <input matInput type="date" formControlName="validUntil" />
         </mat-form-field>
         <mat-form-field>
           <mat-label>Notizen</mat-label>
@@ -98,23 +92,16 @@ export class DigitalLicenseDialogComponent extends BaseFormDialog<any, { license
       licenseNumber: [l?.licenseNumber || '', Validators.required],
       licenseType: [l?.licenseType || 'print', Validators.required],
       quantity: [l?.quantity || null],
-      purchaseDate: [l?.purchaseDate ? new Date(l.purchaseDate) : null],
+      purchaseDate: [l?.purchaseDate ? l.purchaseDate.toString().split('T')[0] : null],
       vendor: [l?.vendor || ''],
       unitPrice: [l?.unitPrice || null],
-      validFrom: [l?.validFrom ? new Date(l.validFrom) : null],
-      validUntil: [l?.validUntil ? new Date(l.validUntil) : null],
+      validFrom: [l?.validFrom ? l.validFrom.toString().split('T')[0] : null],
+      validUntil: [l?.validUntil ? l.validUntil.toString().split('T')[0] : null],
       notes: [l?.notes || '']
     });
   }
 
   protected override getResult(): any {
-    const val = this.form.value;
-    // Convert Date objects to ISO date strings
-    for (const key of ['purchaseDate', 'validFrom', 'validUntil']) {
-      if (val[key] instanceof Date) {
-        val[key] = val[key].toISOString().split('T')[0];
-      }
-    }
-    return val;
+    return this.form.value;
   }
 }

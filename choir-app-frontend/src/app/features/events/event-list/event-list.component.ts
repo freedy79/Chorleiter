@@ -20,6 +20,7 @@ import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { ResponsiveService } from '@shared/services/responsive.service';
 
 @Component({
   selector: 'app-event-list',
@@ -47,6 +48,11 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
+  isLoading = false;
+
+  // Mobile lazy rendering
+  private readonly MOBILE_PAGE_SIZE = 15;
+  mobileVisibleCount = this.MOBILE_PAGE_SIZE;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -56,7 +62,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private apiHelper: ApiHelperService,
               private notification: NotificationService,
               private paginatorService: PaginatorService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private responsive: ResponsiveService) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
   }
 
@@ -100,15 +107,28 @@ export class EventListComponent implements OnInit, AfterViewInit {
   }
 
   private loadEvents(): void {
+    this.isLoading = true;
+    this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
     const type = this.typeControl.value;
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
-      .subscribe(events => {
-        this.dataSource.data = events;
-        this.selectedEvent = null;
+      .subscribe({
+        next: events => {
+          this.dataSource.data = events;
+          this.selectedEvent = null;
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
+        }
       });
   }
 
   selectEvent(event: Event): void {
+    // On mobile: open edit dialog directly for editors, show detail for singers
+    if (this.responsive.checkMobile() && !this.isSingerOnly) {
+      this.editEvent(event);
+      return;
+    }
     this.apiService.getEventById(event.id).subscribe(e => this.selectedEvent = e);
   }
 
@@ -203,6 +223,22 @@ export class EventListComponent implements OnInit, AfterViewInit {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
     return numSelected === numRows && numRows > 0;
+  }
+
+  trackByEventId(index: number, event: Event): number {
+    return event.id;
+  }
+
+  get mobileVisibleEvents(): Event[] {
+    return this.dataSource.data.slice(0, this.mobileVisibleCount);
+  }
+
+  get hasMoreMobileEvents(): boolean {
+    return this.mobileVisibleCount < this.dataSource.data.length;
+  }
+
+  loadMoreMobile(): void {
+    this.mobileVisibleCount += this.MOBILE_PAGE_SIZE;
   }
 
   openAddEventDialog(): void {

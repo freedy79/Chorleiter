@@ -18,6 +18,7 @@ const controller = require('../src/controllers/piece.controller');
     const author = await db.author.create({ name: 'Test Author' });
     const user = await db.user.create({ email: 'user@example.com' });
     const admin = await db.user.create({ email: 'admin@example.com', roles: ['admin'] });
+    const choir = await db.choir.create({ name: 'Test Choir' });
 
     const req = {
       body: {
@@ -103,7 +104,7 @@ const controller = require('../src/controllers/piece.controller');
 
   // delete piece
   statusCode = undefined;
-  await controller.delete({ params: { id: created.id } }, res);
+  await controller.delete({ params: { id: created.id }, query: { choirId: choir.id }, userId: admin.id, userRoles: ['admin'] }, res);
   assert.strictEqual(res.data.message.includes('deleted'), true);
   const deleted = await db.piece.findByPk(created.id);
   assert.strictEqual(deleted, null);
@@ -114,4 +115,3 @@ const controller = require('../src/controllers/piece.controller');
     process.exit(1);
   }
 })();
-

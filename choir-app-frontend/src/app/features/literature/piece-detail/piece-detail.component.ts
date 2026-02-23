@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { PieceReportDialogComponent } from '../piece-report-dialog/piece-report-dialog.component';
+import { PieceDeleteDialogComponent } from '../piece-delete-dialog.component';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { LibraryItem } from '@core/models/library-item';
@@ -268,6 +269,56 @@ export class PieceDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.notification.error('Fehler beim Erstellen des Share-Links.');
         console.error('Share error:', err);
+      }
+    });
+  }
+
+  deletePiece(): void {
+    if (!this.piece) return;
+
+    const choirId = this.auth.activeChoir$.value?.id;
+    if (!choirId) {
+      this.notification.error('Chor-Kontext nicht verfügbar');
+      return;
+    }
+
+    // Store piece reference for use in callbacks
+    const piece = this.piece;
+
+    // First check if piece is in any collections
+    this.apiService.getPieceCollections(choirId, piece.id).subscribe({
+      next: (result: any) => {
+        if (result.affectedCollections && result.affectedCollections.length > 0) {
+          // Piece is in collections, show error
+          const collectionsList = result.affectedCollections
+            .map((c: any) => c.title)
+            .join(', ');
+
+          this.dialog.open(PieceDeleteDialogComponent, {
+            data: {
+              canDelete: false,
+              collections: result.affectedCollections
+            },
+            width: '500px'
+          });
+        } else {
+          // Piece is not in any collections, confirm deletion
+          if (confirm(`Möchten Sie das Stück "${piece.title}" wirklich löschen?`)) {
+            this.apiService.deletePiece(piece.id, choirId).subscribe({
+              next: () => {
+                this.notification.success('Stück wurde gelöscht');
+                this.location.back();
+              },
+              error: (err: any) => {
+                this.notification.error('Fehler beim Löschen: ' + (err.error?.message || err.message));
+              }
+            });
+          }
+        }
+      },
+      error: (err: any) => {
+        this.notification.error('Fehler beim Prüfen der Sammlungen');
+        console.error(err);
       }
     });
   }

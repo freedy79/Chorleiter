@@ -27,14 +27,14 @@ export class ThemeService {
     this.currentTheme = localTheme ?? storedTheme ?? 'system';
     localStorage.setItem(ThemeService.STORAGE_KEY, this.currentTheme);
 
-    console.log(`[ThemeService] Theme wird initialisiert: "${this.currentTheme}"`);
+    //console.log(`[ThemeService] Theme wird initialisiert: "${this.currentTheme}"`);
     this.applyTheme(this.currentTheme);
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
     // Dies ist nur relevant, wenn der Benutzer 'system' ausgewählt hat.
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (this.currentTheme === 'system') {
-        console.log(`[ThemeService] System-Theme hat sich geändert: prefers-dark=${e.matches}`);
+        //console.log(`[ThemeService] System-Theme hat sich geändert: prefers-dark=${e.matches}`);
         this.applySystemTheme();
       }
     });
@@ -64,10 +64,10 @@ export class ThemeService {
    */
   private applyTheme(theme: Theme): void {
     if (theme === 'system') {
-      console.log('[ThemeService] Theme "system" gewählt - Browser-Einstellung wird evaluiert');
+      //console.log('[ThemeService] Theme "system" gewählt - Browser-Einstellung wird evaluiert');
       this.applySystemTheme();
     } else {
-      console.log(`[ThemeService] Theme wird angewendet: "${theme}"`);
+      //console.log(`[ThemeService] Theme wird angewendet: "${theme}"`);
       this.updateBodyClass(theme);
     }
   }
@@ -78,7 +78,7 @@ export class ThemeService {
   private applySystemTheme(): void {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const effectiveTheme = prefersDark ? 'dark' : 'light';
-    console.log(`[ThemeService] System-Präferenz evaluiert: prefers-color-scheme=${prefersDark ? 'dark' : 'light'} → Angewendetes Theme: "${effectiveTheme}"`);
+    //console.log(`[ThemeService] System-Präferenz evaluiert: prefers-color-scheme=${prefersDark ? 'dark' : 'light'} → Angewendetes Theme: "${effectiveTheme}"`);
     this.updateBodyClass(effectiveTheme);
   }
 

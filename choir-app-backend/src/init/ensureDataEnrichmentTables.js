@@ -4,6 +4,9 @@
  * - data_enrichment_jobs: Track enrichment job execution
  * - data_enrichment_suggestions: Store AI-generated suggestions
  * - data_enrichment_settings: Store encrypted API keys and configuration
+ *
+ * IMPORTANT: Tables are only created if they don't exist yet.
+ * Existing data (especially API keys in settings) is preserved across restarts.
  */
 
 const logger = require('../config/logger');
@@ -13,12 +16,12 @@ async function ensureDataEnrichmentTables() {
     try {
         logger.info('[Migration] Ensuring Data Enrichment tables...');
 
-        // First, drop and recreate without using Sequelize to avoid constraint issues
-        await fixDataEnrichmentConstraints();
+        await createTablesIfNotExist();
+        await migrateEntityIdToString();
 
-        logger.info('[Migration] Data Enrichment tables created/updated successfully');
+        logger.info('[Migration] Data Enrichment tables ensured successfully');
 
-        // Initialize default settings if they don't exist
+        // Initialize default settings if they don't exist (uses findOrCreate, safe for existing data)
         await initializeDefaultSettings();
 
     } catch (error) {
@@ -27,62 +30,101 @@ async function ensureDataEnrichmentTables() {
     }
 }
 
-async function fixDataEnrichmentConstraints() {
+/**
+ * Check if each enrichment table exists and create only missing ones.
+ * Never drops existing tables - this preserves API keys and other user data.
+ */
+async function createTablesIfNotExist() {
     const sequelize = db.sequelize;
 
     try {
-        logger.info('[Migration] Fixing data enrichment table constraints...');
+        logger.info('[Migration] Checking data enrichment tables...');
 
-        // Drop the enrichment tables if they exist (created with wrong constraints by initial sync)
-        // Do this completely to ensure clean recreation
-        try {
-            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_suggestion" CASCADE', { raw: true });
-            logger.info('[Migration] Dropped table: data_enrichment_suggestion');
-        } catch (err) {
-            logger.debug('[Migration] Table data_enrichment_suggestion may not exist:', err.message);
+        const queryInterface = sequelize.getQueryInterface();
+        const existingTables = await queryInterface.showAllTables();
+
+        // Normalize table names for comparison (PostgreSQL returns lowercase)
+        const tableSet = new Set(existingTables.map(t => t.toLowerCase()));
+
+        // Create tables in dependency order: jobs first, then suggestions (FK to jobs), then settings
+        if (!tableSet.has('data_enrichment_jobs')) {
+            await db.data_enrichment_job.sync();
+            logger.info('[Migration] Created table: data_enrichment_jobs');
+        } else {
+            logger.info('[Migration] Table data_enrichment_jobs already exists - skipping');
         }
 
-        try {
-            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_jobs" CASCADE', { raw: true });
-            logger.info('[Migration] Dropped table: data_enrichment_jobs');
-        } catch (err) {
-            logger.debug('[Migration] Table data_enrichment_jobs may not exist:', err.message);
+        if (!tableSet.has('data_enrichment_suggestions') && !tableSet.has('data_enrichment_suggestion')) {
+            await db.data_enrichment_suggestion.sync();
+            logger.info('[Migration] Created table: data_enrichment_suggestions');
+        } else {
+            logger.info('[Migration] Table data_enrichment_suggestions already exists - skipping');
         }
 
-        try {
-            await sequelize.query('DROP TABLE IF EXISTS "data_enrichment_setting" CASCADE', { raw: true });
-            logger.info('[Migration] Dropped table: data_enrichment_setting');
-        } catch (err) {
-            logger.debug('[Migration] Table data_enrichment_setting may not exist:', err.message);
+        if (!tableSet.has('data_enrichment_settings') && !tableSet.has('data_enrichment_setting')) {
+            await db.data_enrichment_setting.sync();
+            logger.info('[Migration] Created table: data_enrichment_settings');
+        } else {
+            logger.info('[Migration] Table data_enrichment_settings already exists - skipping');
         }
 
-        // Drop associated enums if they exist
-        try {
-            await sequelize.query('DROP TYPE IF EXISTS "enum_data_enrichment_jobs_jobType" CASCADE', { raw: true });
-            await sequelize.query('DROP TYPE IF EXISTS "enum_data_enrichment_jobs_status" CASCADE', { raw: true });
-            logger.info('[Migration] Dropped enrichment enums');
-        } catch (err) {
-            logger.debug('[Migration] Enums may not exist:', err.message);
-        }
-
-        // Now recreate all enrichment tables with force: true to ensure fresh creation
-        // FK constraints are defined in the models and will be created with the tables
-        logger.info('[Migration] Recreating enrichment tables...');
-
-        await db.data_enrichment_job.sync({ force: true });
-        logger.info('[Migration] Table data_enrichment_jobs created successfully');
-
-        await db.data_enrichment_suggestion.sync({ force: true });
-        logger.info('[Migration] Table data_enrichment_suggestion created successfully');
-
-        await db.data_enrichment_setting.sync({ force: true });
-        logger.info('[Migration] Table data_enrichment_setting created successfully');
-
-        logger.info('[Migration] All enrichment table constraints fixed');
+        logger.info('[Migration] All enrichment tables ensured');
 
     } catch (error) {
-        logger.error('[Migration] Error in fixDataEnrichmentConstraints:', error.message);
+        logger.error('[Migration] Error in createTablesIfNotExist:', error.message);
         throw error;
+    }
+}
+
+/**
+ * Migration: Change entityId column from UUID to VARCHAR(255)
+ * Pieces, composers, and publishers use integer IDs, not UUIDs.
+ * This must run after createTablesIfNotExist() to ensure the table exists.
+ */
+async function migrateEntityIdToString() {
+    const sequelize = db.sequelize;
+    const queryInterface = sequelize.getQueryInterface();
+
+    // Detect the actual table name (Sequelize may pluralize)
+    const existingTables = await queryInterface.showAllTables();
+    const tableSet = new Set(existingTables.map(t => t.toLowerCase()));
+    const tableName = tableSet.has('data_enrichment_suggestions')
+        ? 'data_enrichment_suggestions'
+        : tableSet.has('data_enrichment_suggestion')
+            ? 'data_enrichment_suggestion'
+            : null;
+
+    if (!tableName) {
+        logger.warn('[Migration] data_enrichment_suggestions table not found, skipping entityId migration');
+        return;
+    }
+
+    try {
+        const tableDesc = await queryInterface.describeTable(tableName);
+        const entityIdCol = tableDesc['entityId'] || tableDesc['entityid'];
+
+        if (!entityIdCol) {
+            logger.warn('[Migration] entityId column not found in suggestions table');
+            return;
+        }
+
+        const colType = (entityIdCol.type || '').toUpperCase();
+
+        // Only migrate if currently UUID type
+        if (colType === 'UUID' || colType.includes('UUID')) {
+            logger.info('[Migration] Migrating entityId column from UUID to VARCHAR(255)...');
+
+            await sequelize.query(
+                `ALTER TABLE "${tableName}" ALTER COLUMN "entityId" TYPE VARCHAR(255) USING "entityId"::text`
+            );
+
+            logger.info('[Migration] entityId column migrated to VARCHAR(255) successfully');
+        } else {
+            logger.info(`[Migration] entityId column is already ${colType}, no migration needed`);
+        }
+    } catch (error) {
+        logger.error('[Migration] Error migrating entityId column:', error.message);
+        // Non-fatal: log but don't block startup if migration fails
     }
 }
 

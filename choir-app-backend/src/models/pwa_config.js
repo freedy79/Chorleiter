@@ -8,7 +8,6 @@ module.exports = (sequelize, DataTypes) => {
     key: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
       comment: 'Configuration key (e.g., vapid_public_key, push_enabled, sw_update_interval)'
     },
     value: {
@@ -47,7 +46,14 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'pwa_config',
-    timestamps: true
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ['key'],
+        name: 'pwa_config_key_unique'
+      }
+    ]
   });
 
   return PwaConfig;

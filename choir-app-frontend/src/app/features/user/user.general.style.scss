@@ -34,12 +34,12 @@
 }
 
 .login-page {
-  padding-top: 20px;
   display: flex;
   flex-direction: column;
   flex: 1;
   width: 100%;
-  justify-content: center;
+  padding-top: 40px;
+  //justify-content: center;
   align-items: center;
 
   .login-page-header {

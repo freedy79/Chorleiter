@@ -23,13 +23,13 @@ router.get("/logs", role.requireChoirAdmin, wrap(controller.getChoirLogs));
 router.get("/participation/pdf", role.requireChoirAdmin, wrap(controller.downloadParticipationPdf));
 // Sammlungen können von allen Mitgliedern eingesehen werden
 router.get("/collections", wrap(controller.getChoirCollections));
-router.get("/borrowings", wrap(lendingController.listForUser));
-router.get("/collections/copy-ids", role.requireChoirAdmin, wrap(lendingController.listCopyIds));
-router.delete("/collections/:id", role.requireNonDemo, role.requireChoirAdmin, wrap(controller.removeCollectionFromChoir));
-router.get("/collections/:id/copies", role.requireChoirAdmin, wrap(lendingController.list));
-router.get("/collections/:id/copies/pdf", role.requireChoirAdmin, wrap(lendingController.downloadPdf));
-router.post("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.init));
-router.put("/collections/:id/copies", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.setCount));
-router.put("/collections/copies/:id", role.requireChoirAdmin, role.requireNonDemo, wrap(lendingController.update));
+router.get("/borrowings", role.requireChoirAdminOrNotenwart, wrap(lendingController.listForUser));
+router.get("/collections/copy-ids", role.requireChoirAdminOrNotenwart, wrap(lendingController.listCopyIds));
+router.delete("/collections/:id", role.requireNonDemo, role.requireChoirAdminOrNotenwart, wrap(controller.removeCollectionFromChoir));
+router.get("/collections/:id/copies", role.requireChoirAdminOrNotenwart, wrap(lendingController.list));
+router.get("/collections/:id/copies/pdf", role.requireChoirAdminOrNotenwart, wrap(lendingController.downloadPdf));
+router.post("/collections/:id/copies", role.requireChoirAdminOrNotenwart, role.requireNonDemo, wrap(lendingController.init));
+router.put("/collections/:id/copies", role.requireChoirAdminOrNotenwart, role.requireNonDemo, wrap(lendingController.setCount));
+router.put("/collections/copies/:id", role.requireChoirAdminOrNotenwart, role.requireNonDemo, wrap(lendingController.update));
 
 module.exports = router;

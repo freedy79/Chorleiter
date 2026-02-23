@@ -199,5 +199,75 @@
         <button mat-raised-button color="primary" type="button" (click)="save('monthly-plan')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="Ausleihe">
+      <mat-form-field appearance="fill">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="lendingBorrowedSubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="lendingBorrowedHtmlMode"
+            (change)="toggleLendingBorrowedHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
+          [hidden]="lendingBorrowedHtmlMode"
+          formControlName="lendingBorrowedBody"
+        ></ckeditor>
+        <textarea
+          *ngIf="lendingBorrowedHtmlMode"
+          class="html-editor"
+          formControlName="lendingBorrowedBody"
+        ></textarea>
+        <p class="hint">
+          Folgende Platzhalter werden ersetzt:
+          {{'{{title}}'}}, {{'{{copyNumber}}'}}, {{'{{borrowedAt}}'}}, {{'{{borrowerName}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('lending-borrowed')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('lending-borrowed')">Speichern</button>
+      </div>
+    </mat-tab>
+    <mat-tab label="Rückgabe">
+      <mat-form-field appearance="fill">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="lendingReturnedSubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="lendingReturnedHtmlMode"
+            (change)="toggleLendingReturnedHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
+          [hidden]="lendingReturnedHtmlMode"
+          formControlName="lendingReturnedBody"
+        ></ckeditor>
+        <textarea
+          *ngIf="lendingReturnedHtmlMode"
+          class="html-editor"
+          formControlName="lendingReturnedBody"
+        ></textarea>
+        <p class="hint">
+          Folgende Platzhalter werden ersetzt:
+          {{'{{title}}'}}, {{'{{copyNumber}}'}}, {{'{{returnedAt}}'}}, {{'{{borrowerName}}'}}, {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{date}}'}}
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('lending-returned')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('lending-returned')">Speichern</button>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </form>

@@ -127,10 +127,11 @@ export class EnrichmentDashboardComponent implements OnInit, OnDestroy {
 
   get budgetUsedPercentage(): number {
     if (!this.monthlyBudget) return 0;
-    return Math.min(100, Math.round((this.stats.totalCosts / this.monthlyBudget) * 100));
+    return Math.min(100, Math.round((Number(this.stats.totalCosts) / this.monthlyBudget) * 100));
   }
 
-  formatCurrency(value: number): string {
-    return value ? `€ ${value.toFixed(2)}` : '€ 0.00';
+  formatCurrency(value: number | string): string {
+    const num = Number(value);
+    return num ? `€ ${num.toFixed(2)}` : '€ 0.00';
   }
 }

@@ -42,7 +42,6 @@
       <mat-icon>shopping_cart</mat-icon>
     </button>
 
-    <span class="user-name" [ngClass]="{'hide-on-handset': (isHandset$ | async)}" [matTooltip]="userRole$ | async">{{ userName$ | async }}</span>
 
     <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
       <mat-icon>person</mat-icon>

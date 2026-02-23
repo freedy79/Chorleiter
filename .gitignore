@@ -148,3 +148,7 @@ doc/tasks/
 tmpclaude-*
 *.report.html
 MOBILE-SEARCH-TESTS-REPORT.html
+
+backups/*
+nul
+test.html

@@ -43,7 +43,7 @@ export class HelpWizardComponent {
         if (!roles.includes('singer')) {
           return false;
         }
-        const privileged = ['choir_admin', 'director', 'organist'];
+        const privileged = ['choir_admin', 'director', 'organist', 'notenwart'];
         return !roles.some(role => privileged.includes(role));
       })
     );

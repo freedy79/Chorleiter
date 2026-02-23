@@ -242,6 +242,26 @@ mat-form-field {
 }
 
 // ============================================================================
+// FULLSCREEN MOBILE DIALOG
+// ============================================================================
+
+.fullscreen-mobile-dialog {
+  .mat-mdc-dialog-container {
+    border-radius: 0;
+  }
+
+  .mat-mdc-dialog-surface {
+    border-radius: 0 !important;
+  }
+
+  .mat-mdc-dialog-content {
+    max-height: none;
+    flex: 1;
+    overflow-y: auto;
+  }
+}
+
+// ============================================================================
 // MEDIA QUERIES FOR DARK MODE SUPPORT
 // ============================================================================
 
@@ -477,4 +497,11 @@ $choir-app-frontend-theme: mat.m2-define-light-theme((
   .bottom-nav a.active {
     color: var(--brand)
   }
+}
+
+// Voter tooltip for poll results
+.voter-tooltip {
+  white-space: pre-line;
+  max-width: 300px;
+  font-size: 0.8125rem;
 }

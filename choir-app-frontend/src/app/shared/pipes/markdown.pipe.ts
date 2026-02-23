@@ -30,7 +30,10 @@ export class MarkdownPipe implements PipeTransform {
           return title ? `[${title}](/pieces/${id})` : match;
         });
         const html = marked.parse(replaced) as string;
-        const sanitized = DOMPurify.sanitize(html);
+        const sanitized = DOMPurify.sanitize(html, {
+          ADD_TAGS: ['img'],
+          ADD_ATTR: ['src', 'alt', 'width', 'height', 'loading']
+        });
         return this.sanitizer.bypassSecurityTrustHtml(sanitized);
       })
     );

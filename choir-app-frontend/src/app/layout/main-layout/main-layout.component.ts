@@ -62,6 +62,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     singer: 'Sänger',
     librarian: 'Bibliothekar',
     organist: 'Organist',
+    notenwart: 'Notenwart',
     user: 'Mitglied'
   };
   currentTheme: Theme;

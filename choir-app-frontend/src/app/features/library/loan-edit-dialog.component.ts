@@ -27,8 +27,8 @@ export class LoanEditDialogComponent extends BaseFormDialog<any, { loan: Loan }>
   protected buildForm(): FormGroup {
     const loan = this.data?.loan;
     return this.fb.group({
-      startDate: [loan?.startDate ? new Date(loan.startDate) : null],
-      endDate: [loan?.endDate ? new Date(loan.endDate) : null],
+      startDate: [loan?.startDate ? loan.startDate.toString().split('T')[0] : null],
+      endDate: [loan?.endDate ? loan.endDate.toString().split('T')[0] : null],
       status: [loan?.status]
     });
   }
@@ -36,8 +36,8 @@ export class LoanEditDialogComponent extends BaseFormDialog<any, { loan: Loan }>
   protected override getResult(): any {
     const { startDate, endDate, status } = this.form.value;
     return {
-      startDate: startDate ? startDate.toISOString() : null,
-      endDate: endDate ? endDate.toISOString() : null,
+      startDate: startDate || null,
+      endDate: endDate || null,
       status
     };
   }

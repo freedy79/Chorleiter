@@ -7,7 +7,7 @@
     </mat-form-field>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Text</mat-label>
-      <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich" (keydown)="onTextKeyDown($event)"></textarea>
+      <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich" (keydown)="onTextKeyDown($event)" (focus)="onTextareaFocus($event)"></textarea>
     </mat-form-field>
     <mat-expansion-panel>
       <mat-expansion-panel-header>
@@ -19,6 +19,7 @@
       <p><code>`Code`</code> → <code>Code</code></p>
       <p><code>[Link](https://beispiel.de)</code></p>
       <p><code>- Liste</code></p>
+      <p><code>![Beschreibung](Bild-URL)</code> → Bild einfügen (siehe Bilder-Bereich unten)</p>
     </mat-expansion-panel>
     <h3>Vorschau</h3>
     <div class="preview" [innerHTML]="form.get('text')?.value | markdown | async"></div>
@@ -39,10 +40,11 @@
         </mat-form-field>
         <mat-form-field appearance="fill" class="full-width">
           <mat-label>Ablaufdatum der Abstimmung</mat-label>
-          <input matInput [matDatepicker]="pollPicker" formControlName="pollClosesAt">
-          <mat-datepicker-toggle matSuffix [for]="pollPicker"></mat-datepicker-toggle>
-          <mat-datepicker #pollPicker></mat-datepicker>
+          <input matInput type="date" formControlName="pollClosesAt">
         </mat-form-field>
+        <mat-checkbox formControlName="pollIsAnonymous">
+          Anonyme Abstimmung (Stimmen sind nicht namentlich sichtbar)
+        </mat-checkbox>
         <div cdkDropList (cdkDropListDropped)="dropPollOption($event)" class="poll-options">
           <div class="poll-option" *ngFor="let ctrl of pollOptions.controls; let i = index" cdkDrag>
             <mat-icon cdkDragHandle>drag_handle</mat-icon>
@@ -63,10 +65,34 @@
     </div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="expiresAt">
-      <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
+      <input matInput type="date" formControlName="expiresAt">
     </mat-form-field>
+    <div class="image-section">
+      <h3>Bilder <span class="image-count">({{ uploadedImages.length }}/{{ maxImages }})</span></h3>
+      <p class="hint">Lade Bilder hoch, die als <code>![...](url)</code> im Text eingefügt werden. Platziere den Cursor im Text, bevor du ein Bild hochlädst.</p>
+      <div class="image-thumbnails" *ngIf="uploadedImages.length > 0">
+        <div class="image-thumb" *ngFor="let img of uploadedImages">
+          <img [src]="getImageThumbnailUrl(img)" [alt]="img.originalName">
+          <div class="image-thumb-overlay">
+            <span class="image-name">{{ img.originalName }}</span>
+            <button mat-icon-button color="warn" (click)="removeImage(img)" matTooltip="Bild entfernen" class="remove-image-btn">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="imageUploading" class="image-uploading">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Bild wird hochgeladen…</span>
+      </div>
+      <button mat-stroked-button type="button" (click)="imageInput.click()"
+              *ngIf="canUploadMoreImages()" [disabled]="imageUploading">
+        <mat-icon>add_photo_alternate</mat-icon>
+        Bild hochladen
+      </button>
+      <input #imageInput type="file" hidden (change)="onImageSelected($event)"
+             accept=".jpg,.jpeg,.png,.gif,.webp">
+    </div>
     <div class="attachment-section">
       <h3>Anhang</h3>
       <div *ngIf="existingAttachment && !selectedFile" class="existing-attachment">

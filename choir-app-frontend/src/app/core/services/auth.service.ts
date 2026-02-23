@@ -37,6 +37,8 @@ export class AuthService {
   public isDemo$: Observable<boolean>;
   public isChoirAdmin$: Observable<boolean>;
   public isDirector$: Observable<boolean>;
+  public isNotenwart$: Observable<boolean>;
+  public isChoirAdminOrNotenwart$: Observable<boolean>;
   public isSinger$: Observable<boolean>;
   public isSingerOnly$: Observable<boolean>;
 
@@ -94,6 +96,17 @@ export class AuthService {
         }
         return choirRoles.includes('director');
       }),
+      distinctUntilChanged()
+    );
+
+    this.isNotenwart$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('notenwart')),
+      distinctUntilChanged()
+    );
+
+    this.isChoirAdminOrNotenwart$ = combineLatest([this.isAdmin$, this.isLibrarian$, this.choirRoles$]).pipe(
+      map(([isAdmin, isLibrarian, choirRoles]) =>
+        isAdmin || isLibrarian || choirRoles.includes('choir_admin') || choirRoles.includes('notenwart')),
       distinctUntilChanged()
     );
 
@@ -429,7 +442,7 @@ export class AuthService {
       return false;
     }
     const hasChoirPrivilege = choirRoles.some(role =>
-      role === 'choir_admin' || role === 'director' || role === 'organist');
+      role === 'choir_admin' || role === 'director' || role === 'organist' || role === 'notenwart');
     return !hasChoirPrivilege;
   }
 }

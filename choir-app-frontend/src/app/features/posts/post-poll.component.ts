@@ -16,6 +16,8 @@ import { ApiService } from '@core/services/api.service';
 })
 export class PostPollComponent implements OnChanges {
   @Input() post!: Post;
+  @Input() isAdmin = false;
+  @Input() isChoirAdmin = false;
   @Output() pollChange = new EventEmitter<Poll | null>();
   selectedOptionIds: number[] = [];
   voting = false;
@@ -80,6 +82,19 @@ export class PostPollComponent implements OnChanges {
   getPercentage(option: PollOption): number {
     if (!this.poll || !this.poll.totalVotes) return 0;
     return Math.round((option.votes / this.poll.totalVotes) * 100);
+  }
+
+  getVoterNames(option: PollOption): string {
+    if (!option.voters || option.voters.length === 0) return '';
+    return option.voters.map(v => v.name).join(', ');
+  }
+
+  get showVoters(): boolean {
+    if (!this.poll) return false;
+    // Public poll: everyone sees voters
+    if (!this.poll.isAnonymous) return true;
+    // Anonymous poll: only admins see voters
+    return this.isAdmin || this.isChoirAdmin;
   }
 
   private syncSelection(): void {

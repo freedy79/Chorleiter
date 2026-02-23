@@ -80,28 +80,65 @@
 
   <form [formGroup]="apiKeyForm" class="api-key-form" *ngIf="!loading">
     <mat-card>
-      <mat-card-title>API-Key hinterlegen</mat-card-title>
+      <mat-card-title>API-Keys</mat-card-title>
       <mat-card-content>
-        <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Provider</mat-label>
-            <mat-select formControlName="provider">
-              <mat-option *ngFor="let provider of providers" [value]="provider.name">
-                {{ provider.label }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>API-Key</mat-label>
-            <input matInput formControlName="apiKey" type="password" autocomplete="off" />
-          </mat-form-field>
+        <!-- Stored API keys display -->
+        <div class="api-keys-list" *ngIf="providers.length">
+          <div class="api-key-row" *ngFor="let provider of providers">
+            <div class="api-key-info">
+              <span class="provider-name">{{ provider.label }}</span>
+              <span class="masked-key" *ngIf="hasApiKey(provider.name)">
+                <mat-icon class="key-icon configured">vpn_key</mat-icon>
+                <code>{{ getMaskedKey(provider.name) }}</code>
+              </span>
+              <span class="no-key" *ngIf="!hasApiKey(provider.name)">
+                <mat-icon class="key-icon not-configured">vpn_key_off</mat-icon>
+                <em>Nicht konfiguriert</em>
+              </span>
+            </div>
+            <button mat-icon-button color="warn"
+                    (click)="deleteApiKey(provider.name)"
+                    [disabled]="deletingApiKey === provider.name"
+                    *ngIf="hasApiKey(provider.name)"
+                    matTooltip="API-Key löschen">
+              <mat-icon>{{ deletingApiKey === provider.name ? 'hourglass_top' : 'delete' }}</mat-icon>
+            </button>
+          </div>
         </div>
 
-        <button mat-stroked-button color="primary" (click)="saveApiKey()">
-          <mat-icon>vpn_key</mat-icon>
-          API-Key speichern
-        </button>
+        <mat-divider class="api-key-divider"></mat-divider>
+
+        <!-- Add new API key form -->
+        <div class="api-key-add-section">
+          <div class="section-subtitle">Neuen API-Key hinterlegen</div>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Provider</mat-label>
+              <mat-select formControlName="provider">
+                <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                  {{ provider.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>API-Key</mat-label>
+              <input matInput formControlName="apiKey" type="password" autocomplete="off" />
+            </mat-form-field>
+          </div>
+
+          <button mat-stroked-button color="primary" (click)="saveApiKey()" [disabled]="savingApiKey">
+            <mat-icon>{{ savingApiKey ? 'hourglass_top' : 'vpn_key' }}</mat-icon>
+            {{ savingApiKey ? 'Wird geprüft…' : 'API-Key speichern & testen' }}
+          </button>
+
+          <div class="api-key-test-result" *ngIf="apiKeyTestResult">
+            <mat-icon [class.success]="apiKeyTestResult.ok" [class.error]="!apiKeyTestResult.ok">
+              {{ apiKeyTestResult.ok ? 'check_circle' : 'error' }}
+            </mat-icon>
+            <span>{{ apiKeyTestResult.message }}</span>
+          </div>
+        </div>
       </mat-card-content>
     </mat-card>
   </form>

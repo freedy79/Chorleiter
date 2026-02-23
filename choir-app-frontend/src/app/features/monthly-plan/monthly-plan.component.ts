@@ -21,6 +21,7 @@ import { AvailabilityTableComponent } from './availability-table/availability-ta
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
 import { MonthNavigationService } from '@shared/services/month-navigation.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 import { MemberAvailability } from '@core/models/member-availability';
@@ -182,6 +183,23 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.entries.sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
   }
 
+  trackByEntryId(index: number, entry: PlanEntry): number {
+    return entry.id;
+  }
+
+  /** Returns dialog config for mobile-friendly fullscreen dialogs */
+  private mobileDialogConfig(extra: Record<string, unknown> = {}): Record<string, unknown> {
+    const isMobile = this.responsive.checkMobile();
+    return {
+      width: isMobile ? '100vw' : '600px',
+      maxWidth: isMobile ? '100vw' : '80vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : undefined,
+      panelClass: isMobile ? 'mobile-fullscreen-dialog' : '',
+      ...extra
+    };
+  }
+
 
   private loadAvailabilities(year: number, month: number, loadRequestId: number | null = null): void {
     if (!this.isChoirAdmin) {
@@ -255,7 +273,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   private hasRoleGreaterThanSinger(user: UserInChoir): boolean {
     const roles = user.membership?.rolesInChoir || [];
-    return roles.includes('director') || roles.includes('choir_admin') || roles.includes('organist');
+    return roles.includes('director') || roles.includes('choir_admin') || roles.includes('organist') || roles.includes('notenwart');
   }
 
   membersByAvailability(date: string, status: string): UserInChoir[] {
@@ -321,6 +339,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private router: Router,
               private route: ActivatedRoute,
               private monthNav: MonthNavigationService,
+              private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef,
             private logger: DebugLogService) {
     super(); // Call BaseComponent constructor
@@ -657,7 +676,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   openEmailDialog(): void {
     if (!this.plan) return;
-    const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
+    const ref = this.dialog.open(SendPlanDialogComponent, {
+      ...this.mobileDialogConfig(),
+      data: { members: this.members }
+    });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
     ).subscribe((result: { ids: number[]; emails: string[] }) => {
@@ -678,7 +700,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       m.membership?.rolesInChoir?.includes('director') ||
       m.membership?.rolesInChoir?.includes('choir_admin') ||
       m.membership?.rolesInChoir?.includes('organist'));
-    const ref = this.dialog.open(RequestAvailabilityDialogComponent, { data: { members: people } });
+    const ref = this.dialog.open(RequestAvailabilityDialogComponent, {
+      ...this.mobileDialogConfig(),
+      data: { members: people }
+    });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
     ).subscribe((ids: number[]) => {
@@ -694,7 +719,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   openAddEntryDialog(): void {
-    const dialogRef = this.dialog.open(PlanEntryDialogComponent, { width: '600px', disableClose: true });
+    const dialogRef = this.dialog.open(PlanEntryDialogComponent, {
+      ...this.mobileDialogConfig(),
+      disableClose: true
+    });
 
     dialogRef.afterClosed().pipe(
       takeUntil(this.destroy$)

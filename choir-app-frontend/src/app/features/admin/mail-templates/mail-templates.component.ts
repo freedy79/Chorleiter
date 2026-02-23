@@ -24,6 +24,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   changeHtmlMode = false;
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
+  lendingBorrowedHtmlMode = false;
+  lendingReturnedHtmlMode = false;
   public Editor = ClassicEditor as any;
   public editorConfig: any = {
     toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
@@ -42,7 +44,11 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       monthlySubject: ['', Validators.required],
       monthlyBody: ['', Validators.required],
       emailChangeSubject: ['', Validators.required],
-      emailChangeBody: ['', Validators.required]
+      emailChangeBody: ['', Validators.required],
+      lendingBorrowedSubject: ['', Validators.required],
+      lendingBorrowedBody: ['', Validators.required],
+      lendingReturnedSubject: ['', Validators.required],
+      lendingReturnedBody: ['', Validators.required]
     });
   }
 
@@ -59,6 +65,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       const change = templates.find(t => t.type === 'piece-change');
       const monthly = templates.find(t => t.type === 'monthly-plan');
       const emailChange = templates.find(t => t.type === 'email-change');
+      const lendingBorrowed = templates.find(t => t.type === 'lending-borrowed');
+      const lendingReturned = templates.find(t => t.type === 'lending-returned');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -76,6 +84,12 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       }
       if (emailChange) {
         this.form.patchValue({ emailChangeSubject: emailChange.subject, emailChangeBody: emailChange.body });
+      }
+      if (lendingBorrowed) {
+        this.form.patchValue({ lendingBorrowedSubject: lendingBorrowed.subject, lendingBorrowedBody: lendingBorrowed.body });
+      }
+      if (lendingReturned) {
+        this.form.patchValue({ lendingReturnedSubject: lendingReturned.subject, lendingReturnedBody: lendingReturned.body });
       }
       this.form.markAsPristine();
     });
@@ -104,6 +118,12 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     }
     if (!type || type === 'email-change') {
       templates.push({ type: 'email-change', subject: value.emailChangeSubject, body: value.emailChangeBody });
+    }
+    if (!type || type === 'lending-borrowed') {
+      templates.push({ type: 'lending-borrowed', subject: value.lendingBorrowedSubject, body: value.lendingBorrowedBody });
+    }
+    if (!type || type === 'lending-returned') {
+      templates.push({ type: 'lending-returned', subject: value.lendingReturnedSubject, body: value.lendingReturnedBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.notification.success('Gespeichert');
@@ -135,6 +155,14 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     this.emailChangeHtmlMode = !this.emailChangeHtmlMode;
   }
 
+  toggleLendingBorrowedHtml(): void {
+    this.lendingBorrowedHtmlMode = !this.lendingBorrowedHtmlMode;
+  }
+
+  toggleLendingReturnedHtml(): void {
+    this.lendingReturnedHtmlMode = !this.lendingReturnedHtmlMode;
+  }
+
   sendTest(type: string): void {
     this.api.sendTemplateTest(type).subscribe(() => {
       this.notification.success('Testmail verschickt');
@@ -159,6 +187,10 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
         return ['monthlySubject', 'monthlyBody'];
       case 'email-change':
         return ['emailChangeSubject', 'emailChangeBody'];
+      case 'lending-borrowed':
+        return ['lendingBorrowedSubject', 'lendingBorrowedBody'];
+      case 'lending-returned':
+        return ['lendingReturnedSubject', 'lendingReturnedBody'];
       default:
         return Object.keys(this.form.controls);
     }
