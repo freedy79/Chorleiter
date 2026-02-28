@@ -21,6 +21,21 @@ import { DonationSuccessComponent } from '@features/donations/donation-success.c
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
 
 export const routes: Routes = [
+    {
+        path: 'c/:slug',
+        loadComponent: () => import('./features/public-choir-page/public-choir-page.component').then(m => m.PublicChoirPageComponent),
+        data: { title: 'Chor-Vorstellung' }
+    },
+    {
+        path: 'shared-piece/:token',
+        loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
+        data: { title: 'Geteiltes Stück' }
+    },
+    {
+        path: 'poll-vote/:token',
+        loadComponent: () => import('./features/posts/poll-reminder-vote.component').then(m => m.PollReminderVoteComponent),
+        data: { title: 'Abstimmung' }
+    },
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
     {
         path: '',
@@ -30,11 +45,19 @@ export const routes: Routes = [
                 path: '',
                 pathMatch: 'full',
                 component: WelcomeComponent,
+                data: {
+                    title: 'Willkommen',
+                    description: 'NAK Chorleiter unterstützt Chöre bei Repertoire, Verfügbarkeiten, Kommunikation und Einsatzplanung.'
+                }
             },
             {
                 path: 'login',
                 component: LoginComponent,
                 canActivate: [LoginGuard],
+                data: {
+                    title: 'Login',
+                    description: 'Melde dich bei NAK Chorleiter an und verwalte deinen Chor digital und effizient.'
+                }
             },
             {
                 path: 'register/:token',
@@ -61,13 +84,6 @@ export const routes: Routes = [
             { path: 'donate', component: DonateComponent },
             { path: 'donation-success', component: DonationSuccessComponent },
             { path: 'donation-cancel', component: DonationCancelComponent },
-
-            // Shared Piece Route (öffentlich zugänglich mit Token, OHNE AuthGuard!)
-            {
-                path: 'shared-piece/:token',
-                loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
-                data: { title: 'Geteiltes Stück' }
-            },
 
             // --- Geschützte Routen (jede einzelne hat jetzt den Guard) ---
             {
@@ -107,6 +123,18 @@ export const routes: Routes = [
                 data: { title: 'Ereignisse' }
             },
             {
+                path: 'posts',
+                loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Beiträge', showChoirName: true }
+            },
+            {
+                path: 'chat',
+                loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Chat', showChoirName: true }
+            },
+            {
                 path: 'dienstplan',
                 loadComponent: () => import('./features/monthly-plan/monthly-plan.component').then(m => m.MonthlyPlanComponent),
                 canActivate: [AuthGuard],
@@ -117,12 +145,6 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/availability/availability.component').then(m => m.AvailabilityComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Verfügbarkeiten' }
-            },
-            {
-                path: 'posts',
-                loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
-                canActivate: [AuthGuard],
-                data: { title: 'Beiträge', showChoirName: true }
             },
             {
                 path: 'programs',
@@ -165,6 +187,18 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/literature/literature-list/literature-list.component').then(m => m.LiteratureListComponent),
                 canActivate: [AuthGuard],
                 data: { title: 'Repertoire' }
+            },
+            {
+                path: 'practice-lists',
+                loadComponent: () => import('./features/practice-lists/practice-lists.component').then(m => m.PracticeListsComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Meine Übungslisten' }
+            },
+            {
+                path: 'practice-lists/:id',
+                loadComponent: () => import('./features/practice-lists/practice-list-detail.component').then(m => m.PracticeListDetailComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Übungsliste' }
             },
             {
                 path: 'pieces/:id',

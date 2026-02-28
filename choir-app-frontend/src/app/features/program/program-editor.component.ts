@@ -43,6 +43,8 @@ export class ProgramEditorComponent implements OnInit {
   // Mobile selection
   selectedItemId: string | null = null;
 
+  readonly mobileDragStartDelay = { touch: 500, mouse: 0 };
+
   // Pipes for formatting
   private durationPipe = new DurationPipe();
   private composerYearsPipe = new ComposerYearsPipe();
@@ -475,8 +477,6 @@ export class ProgramEditorComponent implements OnInit {
     this.apiHelper.handleApiCall(
       this.programService.reorderItems(this.programId, this.items.map(i => i.id)),
       {
-        successMessage: 'Reihenfolge gespeichert',
-        successDuration: 2000,
         onSuccess: (items: ProgramItem[]) => {
           if (items.length) {
             this.updateProgramId(items[0].programId);

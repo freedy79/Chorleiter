@@ -7,7 +7,7 @@ import { NotificationService } from '@core/services/notification.service';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link } from 'ckeditor5';
 
 @Component({
   selector: 'app-mail-templates',
@@ -26,8 +26,10 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   emailChangeHtmlMode = false;
   lendingBorrowedHtmlMode = false;
   lendingReturnedHtmlMode = false;
-  public Editor = ClassicEditor as any;
-  public editorConfig: any = {
+  footerHtmlMode = false;
+  public Editor = ClassicEditor;
+  public editorConfig = {
+    plugins: [Essentials, Paragraph, Bold, Italic, Underline, Link],
     toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
   };
 
@@ -48,7 +50,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       lendingBorrowedSubject: ['', Validators.required],
       lendingBorrowedBody: ['', Validators.required],
       lendingReturnedSubject: ['', Validators.required],
-      lendingReturnedBody: ['', Validators.required]
+      lendingReturnedBody: ['', Validators.required],
+      footerBody: ['', Validators.required]
     });
   }
 
@@ -67,6 +70,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       const emailChange = templates.find(t => t.type === 'email-change');
       const lendingBorrowed = templates.find(t => t.type === 'lending-borrowed');
       const lendingReturned = templates.find(t => t.type === 'lending-returned');
+      const footer = templates.find(t => t.type === 'mail-footer');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -90,6 +94,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       }
       if (lendingReturned) {
         this.form.patchValue({ lendingReturnedSubject: lendingReturned.subject, lendingReturnedBody: lendingReturned.body });
+      }
+      if (footer) {
+        this.form.patchValue({ footerBody: footer.body });
       }
       this.form.markAsPristine();
     });
@@ -124,6 +131,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     }
     if (!type || type === 'lending-returned') {
       templates.push({ type: 'lending-returned', subject: value.lendingReturnedSubject, body: value.lendingReturnedBody });
+    }
+    if (!type || type === 'mail-footer') {
+      templates.push({ type: 'mail-footer', subject: '(Footer)', body: value.footerBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.notification.success('Gespeichert');
@@ -163,6 +173,10 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     this.lendingReturnedHtmlMode = !this.lendingReturnedHtmlMode;
   }
 
+  toggleFooterHtml(): void {
+    this.footerHtmlMode = !this.footerHtmlMode;
+  }
+
   sendTest(type: string): void {
     this.api.sendTemplateTest(type).subscribe(() => {
       this.notification.success('Testmail verschickt');
@@ -191,6 +205,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
         return ['lendingBorrowedSubject', 'lendingBorrowedBody'];
       case 'lending-returned':
         return ['lendingReturnedSubject', 'lendingReturnedBody'];
+      case 'mail-footer':
+        return ['footerBody'];
       default:
         return Object.keys(this.form.controls);
     }

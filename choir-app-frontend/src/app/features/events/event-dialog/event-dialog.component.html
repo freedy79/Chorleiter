@@ -30,6 +30,16 @@
       <textarea matInput formControlName="notes" rows="3"></textarea>
     </mat-form-field>
 
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Programm (optional)</mat-label>
+      <mat-select formControlName="programId">
+        <mat-option [value]="null">Kein Programm verknüpft</mat-option>
+        <mat-option *ngFor="let program of programs" [value]="program.id">
+          {{ program.title }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
     <!-- Piece Lookup -->
     <h3 class="mat-subheading-2">Stücke</h3>
     <div class="autocomplete-container">

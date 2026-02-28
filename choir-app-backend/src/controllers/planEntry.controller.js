@@ -28,8 +28,20 @@ async function validatePlanEntryRole(userId, choirId, allowedRoles, label) {
     return null;
 }
 
+async function validateProgramForChoir(programId, choirId) {
+    if (!programId) return null;
+    const program = await db.program.findOne({
+        where: { id: programId, choirId },
+        attributes: ['id', 'title', 'status']
+    });
+    if (!program) {
+        return 'Program not found for this choir.';
+    }
+    return null;
+}
+
 exports.create = async (req, res) => {
-    const { monthlyPlanId, date, notes, directorId, organistId } = req.body;
+    const { monthlyPlanId, date, notes, directorId, organistId, programId } = req.body;
     if (!monthlyPlanId || !date) {
         return res.status(400).send({ message: 'monthlyPlanId and date are required.' });
     }
@@ -43,12 +55,15 @@ exports.create = async (req, res) => {
     if (dirErr) return res.status(400).send({ message: dirErr });
     const orgErr = await validatePlanEntryRole(organistId, plan.choirId, ['organist'], 'Organist');
     if (orgErr) return res.status(400).send({ message: orgErr });
+    const progErr = await validateProgramForChoir(programId, plan.choirId);
+    if (progErr) return res.status(400).send({ message: progErr });
 
-    const entry = await PlanEntry.create({ monthlyPlanId, date, notes, directorId, organistId });
+    const entry = await PlanEntry.create({ monthlyPlanId, date, notes, directorId, organistId, programId: programId || null });
     const full = await PlanEntry.findByPk(entry.id, {
         include: [
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
-            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
         ]
     });
     await invalidateMonthlyPlanCacheById(monthlyPlanId);
@@ -61,7 +76,7 @@ exports.update = async (req, res) => {
     if (!entry) return res.status(404).send({ message: 'Entry not found.' });
 
     // Validate director/organist roles if they are being changed
-    const { directorId, organistId } = req.body;
+    const { directorId, organistId, programId } = req.body;
     if (directorId !== undefined || organistId !== undefined) {
         const plan = await MonthlyPlan.findByPk(entry.monthlyPlanId);
         if (!plan) {
@@ -75,10 +90,14 @@ exports.update = async (req, res) => {
             const orgErr = await validatePlanEntryRole(organistId, plan.choirId, ['organist'], 'Organist');
             if (orgErr) return res.status(400).send({ message: orgErr });
         }
+        if (programId !== undefined) {
+            const progErr = await validateProgramForChoir(programId || null, plan.choirId);
+            if (progErr) return res.status(400).send({ message: progErr });
+        }
     }
 
     // Whitelist allowed fields
-    const allowedFields = ['date', 'notes', 'directorId', 'organistId', 'monthlyPlanId'];
+    const allowedFields = ['date', 'notes', 'directorId', 'organistId', 'monthlyPlanId', 'programId'];
     const updateData = {};
     for (const key of allowedFields) {
         if (req.body[key] !== undefined) {
@@ -92,7 +111,8 @@ exports.update = async (req, res) => {
     const full = await PlanEntry.findByPk(id, {
         include: [
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
-            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
         ]
     });
     await invalidateMonthlyPlanCacheById(previousMonthlyPlanId);

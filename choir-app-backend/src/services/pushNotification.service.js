@@ -97,6 +97,36 @@ async function sendToChoirMembers(choirId, payload, excludeUserId) {
   });
 }
 
+async function sendToUsersInChoir(choirId, userIds, payload, excludeUserId) {
+  if (!choirId || !Array.isArray(userIds) || userIds.length === 0) return;
+
+  const uniqueUserIds = Array.from(new Set(userIds.map(id => Number(id)).filter(id => Number.isInteger(id) && id > 0)));
+  if (!uniqueUserIds.length) return;
+
+  const where = {
+    choirId,
+    userId: { [Op.in]: uniqueUserIds }
+  };
+
+  if (excludeUserId) {
+    where.userId = { [Op.in]: uniqueUserIds.filter(id => id !== excludeUserId) };
+  }
+
+  const subscriptions = await db.push_subscription.findAll({ where });
+  if (!subscriptions || subscriptions.length === 0) return;
+
+  const results = await Promise.allSettled(
+    subscriptions.map(subscription => sendNotification(subscription, payload))
+  );
+
+  results.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      const sub = subscriptions[index];
+      logger.warn(`Push notification failed for subscription ${sub?.id}: ${result.reason?.message || result.reason}`);
+    }
+  });
+}
+
 function setWebPushForTest(mockWebPush) {
   if (mockWebPush) {
     webpush = mockWebPush;
@@ -107,6 +137,7 @@ function setWebPushForTest(mockWebPush) {
 module.exports = {
   sendNotification,
   sendToChoirMembers,
+  sendToUsersInChoir,
   removeInvalidSubscription,
   setWebPushForTest
 };

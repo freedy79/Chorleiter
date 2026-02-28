@@ -4,6 +4,7 @@
       <div class="title-row">
         <mat-card-title>{{ post.title }}</mat-card-title>
         <div class="title-actions" *ngIf="canEdit()">
+          <button mat-icon-button color="primary" (click)="openPollReminderDialog()" *ngIf="canManagePollReminders()" matTooltip="Abstimmungs-Erinnerungen senden" class="small-icon-btn"><mat-icon>mark_email_unread</mat-icon></button>
           <button mat-icon-button color="accent" (click)="publishPost()" *ngIf="!post.published" matTooltip="Veröffentlichen" class="small-icon-btn"><mat-icon>publish</mat-icon></button>
           <button mat-icon-button (click)="editPost()" matTooltip="Bearbeiten" class="small-icon-btn"><mat-icon>edit</mat-icon></button>
           <button mat-icon-button (click)="deletePost()" matTooltip="Löschen" class="small-icon-btn"><mat-icon>delete</mat-icon></button>

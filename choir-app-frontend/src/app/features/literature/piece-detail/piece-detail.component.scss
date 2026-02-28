@@ -55,3 +55,57 @@ h3 {
 .file-item {
   margin-bottom: 0.5rem;
 }
+
+.file-group {
+  margin-bottom: 1rem;
+
+  h4 {
+    margin: 0.25rem 0 0.6rem;
+    font-size: 0.98rem;
+    color: #424242;
+
+    .dark-theme & {
+      color: #d0d0d0;
+    }
+  }
+}
+
+.files-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.file-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 0.6rem;
+
+  .dark-theme & {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
+.practice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.file-link-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+
+  button,
+  a {
+    min-height: 40px;
+  }
+}

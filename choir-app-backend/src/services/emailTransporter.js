@@ -153,11 +153,37 @@ function getFromAddress(settings) {
 async function sendMail(options, overrideSettings) {
   if (emailDisabled()) return;
 
+  let recipients = [];
+  if (Array.isArray(options.to)) {
+    recipients = options.to;
+  } else if (typeof options.to === 'string') {
+    recipients = options.to.split(',').map(r => r.trim()).filter(Boolean);
+  }
+
+  const logMailAttempt = async (status, errorMessage = null) => {
+    try {
+      const db = require('../models');
+      if (db && db.mail_log) {
+        await db.mail_log.create({
+          recipients: recipients.join(', '),
+          subject: options.subject,
+          body: options.text || options.html || '',
+          status,
+          errorMessage
+        }).catch(() => {});
+      }
+    } catch (err) {
+      // Ignore logging errors
+    }
+  };
+
   // Validate email content before sending
   const validation = validateEmailContent(options);
   if (!validation.valid) {
     const callStack = new Error().stack;
     logger.warn(`E-Mail-Versand verhindert: ${validation.reason}. Empfänger: ${options.to}`);
+
+    await logMailAttempt('BLOCKED', validation.reason);
 
     // Notify admins asynchronously (don't wait)
     notifyAdminsAboutEmptyEmail(options, validation.reason, callStack)
@@ -170,13 +196,6 @@ async function sendMail(options, overrideSettings) {
   const transporter = await createTransporter(settings);
   const mailOptions = { from: getFromAddress(settings), ...options };
 
-  let recipients = [];
-  if (Array.isArray(mailOptions.to)) {
-    recipients = mailOptions.to;
-  } else if (typeof mailOptions.to === 'string') {
-    recipients = mailOptions.to.split(',').map(r => r.trim()).filter(Boolean);
-  }
-
   if (recipients.length > 2) {
     const existingBcc = Array.isArray(mailOptions.bcc)
       ? mailOptions.bcc
@@ -185,22 +204,15 @@ async function sendMail(options, overrideSettings) {
     mailOptions.to = 'no-reply@nak-chorleiter.de';
   }
 
-  const result = await transporter.sendMail(mailOptions);
-
   try {
-    const db = require('../models');
-    if (db && db.mail_log) {
-      await db.mail_log.create({
-        recipients: recipients.join(', '),
-        subject: mailOptions.subject,
-        body: mailOptions.text || mailOptions.html || ''
-      }).catch(() => {});
-    }
+    const result = await transporter.sendMail(mailOptions);
+    await logMailAttempt('SENT', null);
+    return result;
   } catch (err) {
-    // Ignore logging errors
+    const message = err?.message || String(err);
+    await logMailAttempt('FAILED', message);
+    throw err;
   }
-
-  return result;
 }
 
 module.exports = { emailDisabled, createTransporter, getFromAddress, sendMail };

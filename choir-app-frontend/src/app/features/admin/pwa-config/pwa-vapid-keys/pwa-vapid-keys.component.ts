@@ -6,6 +6,14 @@ import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PwaConfig } from '@core/models/pwa-config';
 
+interface PushStatus {
+  vapidConfigured: boolean;
+  envConfigured: boolean;
+  totalSubscriptions: number;
+  uniqueUsers: number;
+  uniqueChoirs: number;
+}
+
 @Component({
   selector: 'app-pwa-vapid-keys',
   standalone: true,
@@ -17,8 +25,11 @@ export class PwaVapidKeysComponent implements OnInit {
   form: FormGroup;
   loading = false;
   saving = false;
+  generating = false;
   showPrivateKey = false;
+  showHelp = false;
   configs: PwaConfig[] = [];
+  pushStatus: PushStatus | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -34,6 +45,7 @@ export class PwaVapidKeysComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadConfigs();
+    this.loadPushStatus();
   }
 
   loadConfigs(): void {
@@ -57,6 +69,17 @@ export class PwaVapidKeysComponent implements OnInit {
         console.error('Error loading VAPID configs:', err);
         this.notification.error('Fehler beim Laden der VAPID-Konfiguration');
         this.loading = false;
+      }
+    });
+  }
+
+  loadPushStatus(): void {
+    this.api.getPushStatus().subscribe({
+      next: (status) => {
+        this.pushStatus = status;
+      },
+      error: () => {
+        // silently ignore - status is informational only
       }
     });
   }
@@ -91,13 +114,62 @@ export class PwaVapidKeysComponent implements OnInit {
   }
 
   generateKeys(): void {
-    this.notification.info(
-      'Um VAPID-Keys zu generieren, verwenden Sie: npx web-push generate-vapid-keys',
-      5000
-    );
+    const subject = this.form.value.subject || '';
+    if (!subject) {
+      this.notification.warning('Bitte geben Sie zuerst ein Subject (E-Mail) ein, bevor Sie Schlüssel generieren.');
+      return;
+    }
+
+    if (this.form.value.publicKey && !confirm(
+      'Es sind bereits VAPID-Schlüssel konfiguriert. Wenn Sie neue generieren, werden die bisherigen überschrieben. ' +
+      'Alle bestehenden Push-Abonnements der Benutzer werden dadurch ungültig und müssen erneuert werden.\n\n' +
+      'Möchten Sie fortfahren?'
+    )) {
+      return;
+    }
+
+    this.generating = true;
+    this.api.generateVapidKeys(true, subject).subscribe({
+      next: (result) => {
+        this.generating = false;
+        this.notification.success(result.message || 'VAPID-Schlüssel wurden generiert und gespeichert.');
+        this.loadConfigs();
+        this.loadPushStatus();
+      },
+      error: (err) => {
+        this.generating = false;
+        console.error('Error generating VAPID keys:', err);
+        this.notification.error(err.error?.message || 'Fehler beim Generieren der VAPID-Schlüssel');
+      }
+    });
   }
 
   testNotification(): void {
-    this.notification.info('Push-Notification-Test wird noch implementiert', 2000);
+    if (typeof Notification === 'undefined') {
+      this.notification.warning('Dieser Browser unterstützt keine Push-Benachrichtigungen.');
+      return;
+    }
+
+    if (Notification.permission === 'denied') {
+      this.notification.warning('Push-Benachrichtigungen wurden im Browser blockiert. Bitte erlauben Sie sie in den Browser-Einstellungen.');
+      return;
+    }
+
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        const testNotif = new Notification('Chorleiter – Test-Benachrichtigung', {
+          body: 'Push-Benachrichtigungen funktionieren! 🎵',
+          icon: '/assets/icons/icon-192x192.png'
+        });
+        testNotif.onclick = () => testNotif.close();
+        this.notification.success('Test-Benachrichtigung wurde gesendet');
+      } else {
+        this.notification.warning('Berechtigung für Benachrichtigungen wurde nicht erteilt.');
+      }
+    });
+  }
+
+  get hasVapidKeys(): boolean {
+    return !!(this.form.value.publicKey);
   }
 }

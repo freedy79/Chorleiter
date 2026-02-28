@@ -1,4 +1,8 @@
-<mat-toolbar color="primary" class="main-toolbar">
+<ng-container *ngIf="isFramelessRoute$ | async">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<mat-toolbar color="primary" class="main-toolbar" *ngIf="(isFramelessRoute$ | async) === false">
 
   <ng-container *ngIf="(isLoggedIn$ | async)">
     <button type="button" aria-label="Menü umschalten" class="sidenav-toggle" mat-icon-button (click)="toggleDrawer()">
@@ -11,7 +15,7 @@
   <!-- Search bar -->
   <ng-container *ngIf="isLoggedIn$ | async">
     <!-- Desktop Search - Always visible -->
-    <ng-container *ngIf="!(isSmallScreen$ | async)">
+    <ng-container *ngIf="(isSmallScreen$ | async) === false">
       <app-search-box class="search"></app-search-box>
     </ng-container>
   </ng-container>
@@ -37,6 +41,19 @@
   </ng-container>
 
   <ng-container *ngIf="isLoggedIn$ | async">
+    <button
+      mat-icon-button
+      class="chat-badge-button"
+      (click)="openChatFromHeader()"
+      matTooltip="Chat"
+      [matBadge]="(chatUnreadCount$ | async) ?? 0"
+      [matBadgeHidden]="((chatUnreadCount$ | async) ?? 0) === 0"
+      matBadgeColor="warn"
+      aria-label="Chat mit ungelesenen Nachrichten"
+    >
+      <mat-icon>forum</mat-icon>
+    </button>
+
     <button *ngIf="((cartCount$ | async) ?? 0) > 0" mat-icon-button routerLink="/library/request"
       [matBadge]="(cartCount$ | async) ?? 0" matBadgeColor="accent" matTooltip="Entleihkorb">
       <mat-icon>shopping_cart</mat-icon>
@@ -53,7 +70,7 @@
         <span>Profil</span>
       </a>
 
-      <button mat-menu-item [matMenuTriggerFor]="choirMenu" *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && !(isDemo$ | async)">
+      <button mat-menu-item [matMenuTriggerFor]="choirMenu" *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (isDemo$ | async) === false">
         <mat-icon>groups</mat-icon>
         <span>Chor wechseln</span>
       </button>
@@ -102,7 +119,7 @@
 
 </mat-toolbar>
 
-<mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async)">
+<mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
   <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
     [mode]="(isHandset$ | async) ? 'over' : 'side'" class="appDrawer" (backdropClick)="closeSidenav()">
 
@@ -130,14 +147,14 @@
   </mat-sidenav-content>
  </mat-sidenav-container>
 
-<main class="public-content" *ngIf="!(isLoggedIn$ | async)">
+<main class="public-content" *ngIf="((isLoggedIn$ | async) === false) && ((isFramelessRoute$ | async) === false)">
   <div class="container">
     <router-outlet></router-outlet>
   </div>
 </main>
 
 <!-- Bottom Navigation - Optimiert für Mobile -->
-<nav class="bottom-nav" *ngIf="(isLoggedIn$ | async)">
+<nav class="bottom-nav" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
   <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
     class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
     <mat-icon>home</mat-icon>
@@ -171,7 +188,11 @@
     <mat-icon>article</mat-icon>
     <span>Beiträge</span>
   </a>
-  <a mat-menu-item routerLink="/admin" *ngIf="(isAdmin$ | async) && !(isDemo$ | async)">
+  <a mat-menu-item routerLink="/chat">
+    <mat-icon>forum</mat-icon>
+    <span>Chat</span>
+  </a>
+  <a mat-menu-item routerLink="/admin" *ngIf="(isAdmin$ | async) && (isDemo$ | async) === false">
     <mat-icon>settings</mat-icon>
     <span>Admin</span>
   </a>
@@ -181,4 +202,4 @@
   </a>
 </mat-menu>
 
-<app-footer></app-footer>
+<app-footer *ngIf="(isFramelessRoute$ | async) === false"></app-footer>

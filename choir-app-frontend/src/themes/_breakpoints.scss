@@ -245,7 +245,9 @@ $mobile-font-scale: 1.1;
 // Usage: @include responsive-font-size(16px, 18px)
 // First value is desktop, second is mobile (auto-scaled if not provided)
 @mixin responsive-font-size($desktop-size, $mobile-size: null) {
-  font-size: $desktop-size;
+  & {
+    font-size: $desktop-size;
+  }
 
   @if $mobile-size {
     @include handset {

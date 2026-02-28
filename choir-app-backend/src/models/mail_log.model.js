@@ -11,6 +11,15 @@ module.exports = (sequelize, DataTypes) => {
     body: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    status: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'SENT'
+    },
+    errorMessage: {
+      type: DataTypes.TEXT,
+      allowNull: true
     }
   });
   return MailLog;

@@ -269,5 +269,39 @@
         <button mat-raised-button color="primary" type="button" (click)="save('lending-returned')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="Mail-Footer">
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Footer-Text (wird in jeder Mail angezeigt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="footerHtmlMode"
+            (change)="toggleFooterHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
+          [hidden]="footerHtmlMode"
+          formControlName="footerBody"
+        ></ckeditor>
+        <textarea
+          *ngIf="footerHtmlMode"
+          class="html-editor"
+          formControlName="footerBody"
+        ></textarea>
+        <p class="hint">
+          Folgende Platzhalter werden ersetzt:
+          {{'{{choir}}'}} (Chorname), {{'{{leave_link}}'}} (Link zum Profil/Austragen)
+        </p>
+        <p class="hint">
+          Der Footer wird automatisch in kleinerer Schrift am Ende jeder E-Mail angezeigt.
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('mail-footer')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('mail-footer')">Speichern</button>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </form>

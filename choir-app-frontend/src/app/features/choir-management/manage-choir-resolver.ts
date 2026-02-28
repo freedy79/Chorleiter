@@ -32,6 +32,7 @@ export class ManageChoirResolver implements Resolve<any> {
         const choirDetails$ = this.apiService.getMyChoirDetails(opts);
         const collections$ = this.apiService.getChoirCollections(opts);
         const planRules$ = this.apiService.getPlanRules(opts);
+        const publicPage$ = this.apiService.getMyPublicPage(opts);
 
         if (isAdmin) {
           const logs$ = this.apiService.getChoirLogs(opts);
@@ -40,6 +41,7 @@ export class ManageChoirResolver implements Resolve<any> {
             members: this.apiService.getChoirMembers(opts),
             collections: collections$,
             planRules: planRules$,
+            publicPage: publicPage$,
             logs: logs$,
             isChoirAdmin: of(true)
           });
@@ -54,6 +56,7 @@ export class ManageChoirResolver implements Resolve<any> {
               members: members$,
               collections: collections$,
               planRules: planRules$,
+              publicPage: publicPage$,
               logs: logs$,
               isChoirAdmin: of(isChoirAdmin)
             });

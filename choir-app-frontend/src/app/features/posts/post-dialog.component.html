@@ -23,45 +23,65 @@
     </mat-expansion-panel>
     <h3>Vorschau</h3>
     <div class="preview" [innerHTML]="form.get('text')?.value | markdown | async"></div>
+
+    <div class="add-content-toolbar">
+      <button mat-mini-fab color="primary" type="button" [matMenuTriggerFor]="extraContentMenu" aria-label="Zusatzinhalt hinzufügen">
+        <mat-icon>add</mat-icon>
+      </button>
+      <span class="add-content-label">Zusatzinhalt hinzufügen</span>
+    </div>
+    <mat-menu #extraContentMenu="matMenu">
+      <button mat-menu-item type="button" (click)="addAttachmentSection()" [disabled]="showAttachmentSection">
+        <mat-icon>attach_file</mat-icon>
+        <span>Anhang</span>
+      </button>
+      <button mat-menu-item type="button" (click)="addPollSection()" [disabled]="showPollSection">
+        <mat-icon>poll</mat-icon>
+        <span>Abstimmung</span>
+      </button>
+    </mat-menu>
+
     <mat-divider></mat-divider>
-    <div class="poll-section">
+
+    <div class="poll-section" *ngIf="showPollSection">
       <div class="poll-header">
         <h3>Abstimmung</h3>
-        <mat-slide-toggle formControlName="enablePoll">Abstimmung hinzufügen</mat-slide-toggle>
-      </div>
-      <ng-container *ngIf="form.get('enablePoll')?.value">
-        <p class="hint">Lege die Optionen an, sortiere sie und definiere, ob Mehrfachauswahl erlaubt ist.</p>
-        <mat-checkbox formControlName="pollAllowMultiple" (change)="toggleAllowMultiple($event.checked)">
-          Mehrfachauswahl erlauben
-        </mat-checkbox>
-        <mat-form-field appearance="fill" class="full-width" *ngIf="form.get('pollAllowMultiple')?.value">
-          <mat-label>Maximale Stimmen pro Person</mat-label>
-          <input matInput type="number" min="1" [max]="pollOptions.length" formControlName="pollMaxSelections">
-        </mat-form-field>
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Ablaufdatum der Abstimmung</mat-label>
-          <input matInput type="date" formControlName="pollClosesAt">
-        </mat-form-field>
-        <mat-checkbox formControlName="pollIsAnonymous">
-          Anonyme Abstimmung (Stimmen sind nicht namentlich sichtbar)
-        </mat-checkbox>
-        <div cdkDropList (cdkDropListDropped)="dropPollOption($event)" class="poll-options">
-          <div class="poll-option" *ngFor="let ctrl of pollOptions.controls; let i = index" cdkDrag>
-            <mat-icon cdkDragHandle>drag_handle</mat-icon>
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Option {{ i + 1 }}</mat-label>
-              <input matInput [formControl]="ctrl">
-            </mat-form-field>
-            <button mat-icon-button color="warn" (click)="removePollOption(i)" [disabled]="pollOptions.length <= 2" matTooltip="Option entfernen">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        </div>
-        <button mat-button color="primary" type="button" (click)="addPollOption()">
-          <mat-icon>add</mat-icon>
-          Option hinzufügen
+        <button mat-icon-button color="warn" type="button" (click)="removePollSection()" matTooltip="Abstimmung entfernen">
+          <mat-icon>close</mat-icon>
         </button>
-      </ng-container>
+      </div>
+      <p class="hint">Lege die Optionen an, sortiere sie und definiere, ob Mehrfachauswahl erlaubt ist.</p>
+      <p class="hint poll-model-note">Aktuell ist pro Beitrag eine Abstimmung möglich.</p>
+      <mat-checkbox formControlName="pollAllowMultiple" (change)="toggleAllowMultiple($event.checked)">
+        Mehrfachauswahl erlauben
+      </mat-checkbox>
+      <mat-form-field appearance="fill" class="full-width" *ngIf="form.get('pollAllowMultiple')?.value">
+        <mat-label>Maximale Stimmen pro Person</mat-label>
+        <input matInput type="number" min="1" [max]="pollOptions.length" formControlName="pollMaxSelections">
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Ablaufdatum der Abstimmung</mat-label>
+        <input matInput type="date" formControlName="pollClosesAt">
+      </mat-form-field>
+      <mat-checkbox formControlName="pollIsAnonymous">
+        Anonyme Abstimmung (Stimmen sind nicht namentlich sichtbar)
+      </mat-checkbox>
+      <div cdkDropList (cdkDropListDropped)="dropPollOption($event)" class="poll-options">
+        <div class="poll-option" *ngFor="let ctrl of pollOptions.controls; let i = index" cdkDrag>
+          <mat-icon cdkDragHandle>drag_handle</mat-icon>
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Option {{ i + 1 }}</mat-label>
+            <input matInput [formControl]="ctrl">
+          </mat-form-field>
+          <button mat-icon-button color="warn" type="button" (click)="removePollOption(i)" [disabled]="pollOptions.length <= 2" matTooltip="Option entfernen">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+      <button mat-button color="primary" type="button" (click)="addPollOption()">
+        <mat-icon>add</mat-icon>
+        Option hinzufügen
+      </button>
     </div>
     <mat-form-field appearance="fill" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
@@ -93,19 +113,22 @@
       <input #imageInput type="file" hidden (change)="onImageSelected($event)"
              accept=".jpg,.jpeg,.png,.gif,.webp">
     </div>
-    <div class="attachment-section">
+    <div class="attachment-section" *ngIf="showAttachmentSection">
       <h3>Anhang</h3>
+      <button mat-icon-button color="warn" type="button" (click)="removeAttachmentSection()" matTooltip="Anhang entfernen" class="remove-section-btn">
+        <mat-icon>close</mat-icon>
+      </button>
       <div *ngIf="existingAttachment && !selectedFile" class="existing-attachment">
         <mat-icon>attach_file</mat-icon>
         <span>{{ existingAttachment }}</span>
-        <button mat-icon-button color="warn" (click)="markRemoveAttachment()" matTooltip="Anhang entfernen">
+        <button mat-icon-button color="warn" type="button" (click)="markRemoveAttachment()" matTooltip="Datei entfernen">
           <mat-icon>close</mat-icon>
         </button>
       </div>
       <div *ngIf="selectedFile" class="selected-file">
         <mat-icon>attach_file</mat-icon>
         <span>{{ selectedFile.name }}</span>
-        <button mat-icon-button color="warn" (click)="clearSelectedFile()" matTooltip="Auswahl aufheben">
+        <button mat-icon-button color="warn" type="button" (click)="clearSelectedFile()" matTooltip="Auswahl aufheben">
           <mat-icon>close</mat-icon>
         </button>
       </div>

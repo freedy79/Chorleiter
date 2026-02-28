@@ -22,8 +22,13 @@ const emailService = require('../src/services/email.service');
     const makeReqRes = (email, password) => {
       const req = { body: { email, password }, ip: '127.0.0.1', get: () => '' };
       const res = {
+        cookies: {},
         status(code) { this.statusCode = code; return this; },
-        send(data) { this.data = data; }
+        send(data) { this.data = data; },
+        cookie(name, value, options) {
+          this.cookies[name] = { value, options };
+          return this;
+        }
       };
       return { req, res };
     };
@@ -92,4 +97,3 @@ const emailService = require('../src/services/email.service');
     process.exit(1);
   }
 })();
-

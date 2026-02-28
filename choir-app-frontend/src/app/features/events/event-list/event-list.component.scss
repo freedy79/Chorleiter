@@ -83,8 +83,6 @@
 }
 
 .event-card {
-  @include card-background;
-  @include adaptive-border(1px);
   border-radius: 4px;
   padding: $spacing-md;
   cursor: pointer;
@@ -92,6 +90,8 @@
   outline: none;
   position: relative;
   overflow: hidden;
+  @include card-background;
+  @include adaptive-border(1px);
 
   &.selected {
     border-left: 3px solid #1976d2;

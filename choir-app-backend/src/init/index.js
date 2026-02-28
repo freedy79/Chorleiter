@@ -10,6 +10,13 @@ const { ensureDataEnrichmentTables } = require('./ensureDataEnrichmentTables');
 const { ensurePwaConfig } = require('./ensurePwaConfig');
 const { ensurePostImagePublicToken } = require('./ensurePostImagePublicToken');
 const { ensurePollIsAnonymous } = require('./ensurePollIsAnonymous');
+const { ensureProgramLinks } = require('./ensureProgramLinks');
+const { ensureChoirPublicPageTables } = require('./ensureChoirPublicPageTables');
+const { ensureChatTables } = require('./ensureChatTables');
+const { ensureMailLogStatusColumns } = require('./ensureMailLogStatusColumns');
+const { ensurePracticeListTables } = require('./ensurePracticeListTables');
+const { ensurePollReminderTemplate } = require('./ensurePollReminderTemplate');
+const { ensureMailFooterTemplate } = require('./ensureMailFooterTemplate');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -22,6 +29,13 @@ async function init(options = {}) {
     // 3b. Ensure new columns on existing tables
     await ensurePostImagePublicToken();
     await ensurePollIsAnonymous();
+    await ensureProgramLinks();
+    await ensureChoirPublicPageTables();
+    await ensureChatTables();
+    await ensureMailLogStatusColumns();
+    await ensurePracticeListTables();
+    await ensurePollReminderTemplate();
+    await ensureMailFooterTemplate();
     // 4. Then run data migrations on existing tables
     await migrateUserNames();
     await migrateRoles();
@@ -45,5 +59,12 @@ module.exports = {
     ensureDataEnrichmentTables,
     ensurePwaConfig,
     ensurePostImagePublicToken,
-    ensurePollIsAnonymous
+    ensurePollIsAnonymous,
+    ensureProgramLinks,
+    ensureChoirPublicPageTables,
+    ensureChatTables,
+    ensureMailLogStatusColumns,
+    ensurePracticeListTables,
+    ensurePollReminderTemplate,
+    ensureMailFooterTemplate
 };

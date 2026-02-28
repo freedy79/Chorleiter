@@ -21,6 +21,7 @@ import { CollectionCopiesDialogComponent } from '../../collections/collection-co
 import { LibraryItem } from '@core/models/library-item';
 import { NotificationService } from '@core/services/notification.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { ChoirPublicAsset, ChoirPublicContentBlock } from '@core/models/choir-public-page';
 
 
 @Component({
@@ -35,6 +36,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   choirForm: FormGroup;
+  publicPageForm: FormGroup;
 
   isChoirAdmin = false;
   dienstplanEnabled = false;
@@ -81,9 +83,6 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   private weekdayRuleId: number | null = null;
 
 
-  choirInfoExpanded = true;
-  membersExpanded = true;
-  choirSettingsExpanded = false;
   joinLink = '';
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
@@ -105,6 +104,14 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   dataSource = new MatTableDataSource<UserInChoir>();
   dashboardContactUserIds: number[] = [];
 
+  publicBlocks: ChoirPublicContentBlock[] = [];
+  publicAssets: ChoirPublicAsset[] = [];
+  publicPageUrlPreview: string | null = null;
+  slugAvailability: boolean | null = null;
+  slugChecking = false;
+  uploadingPublicAsset = false;
+  selectedPublicImageFile: File | null = null;
+
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
@@ -118,6 +125,21 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       name: ['', Validators.required],
       description: [''],
       location: ['']
+    });
+
+    this.publicPageForm = this.fb.group({
+      isEnabled: [false],
+      isPublished: [false],
+      slug: [''],
+      templateKey: ['classic'],
+      headline: [''],
+      subheadline: [''],
+      contactEmail: [''],
+      contactPhone: [''],
+      websiteUrl: [''],
+      seoTitle: [''],
+      seoDescription: [''],
+      ogImageUrl: ['']
     });
   }
 
@@ -191,6 +213,28 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
         }
         if (!this.isChoirAdmin) {
           this.choirForm.disable();
+          this.publicPageForm.disable();
+        }
+
+        const publicPage = pageData.publicPage;
+        if (publicPage) {
+          this.publicPageForm.patchValue({
+            isEnabled: !!publicPage.isEnabled,
+            isPublished: !!publicPage.isPublished,
+            slug: publicPage.slug || '',
+            templateKey: publicPage.templateKey || 'classic',
+            headline: publicPage.headline || '',
+            subheadline: publicPage.subheadline || '',
+            contactEmail: publicPage.contactEmail || '',
+            contactPhone: publicPage.contactPhone || '',
+            websiteUrl: publicPage.websiteUrl || '',
+            seoTitle: publicPage.seoTitle || '',
+            seoDescription: publicPage.seoDescription || '',
+            ogImageUrl: publicPage.ogImageUrl || ''
+          });
+          this.publicBlocks = Array.isArray(publicPage.contentBlocks) ? [...publicPage.contentBlocks] : [];
+          this.publicAssets = Array.isArray(publicPage.assets) ? [...publicPage.assets] : [];
+          this.publicPageUrlPreview = publicPage.slug ? `${environment.baseUrl}/c/${publicPage.slug}` : null;
         }
         this.dataSource.data = pageData.members;
         this.pruneDashboardContactIds();
@@ -240,19 +284,142 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       this.apiService.getChoirLogs(opts).pipe(takeUntil(this.destroy$)).subscribe(logs => {
         this.logDataSource.data = logs;
       });
+      this.apiService.getMyPublicPage(opts).pipe(takeUntil(this.destroy$)).subscribe(publicPage => {
+        this.publicPageForm.patchValue({
+          isEnabled: !!publicPage.isEnabled,
+          isPublished: !!publicPage.isPublished,
+          slug: publicPage.slug || '',
+          templateKey: publicPage.templateKey || 'classic',
+          headline: publicPage.headline || '',
+          subheadline: publicPage.subheadline || '',
+          contactEmail: publicPage.contactEmail || '',
+          contactPhone: publicPage.contactPhone || '',
+          websiteUrl: publicPage.websiteUrl || '',
+          seoTitle: publicPage.seoTitle || '',
+          seoDescription: publicPage.seoDescription || '',
+          ogImageUrl: publicPage.ogImageUrl || ''
+        });
+        this.publicBlocks = Array.isArray(publicPage.contentBlocks) ? [...publicPage.contentBlocks] : [];
+        this.publicAssets = Array.isArray(publicPage.assets) ? [...publicPage.assets] : [];
+        this.publicPageUrlPreview = publicPage.slug ? `${environment.baseUrl}/c/${publicPage.slug}` : null;
+      });
     }
   }
 
-  toggleChoirInfo(): void {
-    this.choirInfoExpanded = !this.choirInfoExpanded;
+  addPublicTextBlock(): void {
+    this.publicBlocks = [
+      ...this.publicBlocks,
+      {
+        id: `block-${Date.now()}`,
+        type: 'text',
+        title: '',
+        text: ''
+      }
+    ];
   }
 
-  toggleChoirSetting(): void {
-    this.choirSettingsExpanded = !this.choirSettingsExpanded;
+  removePublicBlock(index: number): void {
+    this.publicBlocks = this.publicBlocks.filter((_, idx) => idx !== index);
   }
 
-  toggleMembers(): void {
-    this.membersExpanded = !this.membersExpanded;
+  checkPublicSlugAvailability(): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
+
+    const slug = String(this.publicPageForm.value.slug || '').trim();
+    if (!slug) {
+      this.slugAvailability = null;
+      return;
+    }
+
+    this.slugChecking = true;
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.checkPublicPageSlugAvailability(slug, opts).subscribe({
+      next: (result) => {
+        this.slugAvailability = result.available;
+        this.slugChecking = false;
+      },
+      error: () => {
+        this.slugAvailability = null;
+        this.slugChecking = false;
+        this.notification.error('Slug konnte nicht geprüft werden.');
+      }
+    });
+  }
+
+  onSelectPublicImage(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] || null;
+    this.selectedPublicImageFile = file;
+  }
+
+  uploadPublicImage(): void {
+    if (!this.isChoirAdmin || !this.selectedPublicImageFile) {
+      return;
+    }
+
+    this.uploadingPublicAsset = true;
+    const opts = this.adminChoirId
+      ? { choirId: this.adminChoirId, sortOrder: this.publicAssets.length }
+      : { sortOrder: this.publicAssets.length };
+
+    this.apiService.uploadPublicPageAsset(this.selectedPublicImageFile, opts).subscribe({
+      next: () => {
+        this.uploadingPublicAsset = false;
+        this.selectedPublicImageFile = null;
+        this.notification.success('Bild hochgeladen.');
+        this.reloadData();
+      },
+      error: () => {
+        this.uploadingPublicAsset = false;
+        this.notification.error('Bild konnte nicht hochgeladen werden.');
+      }
+    });
+  }
+
+  removePublicImage(assetId: number): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
+
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.deletePublicPageAsset(assetId, opts).subscribe({
+      next: () => {
+        this.notification.success('Bild entfernt.');
+        this.reloadData();
+      },
+      error: () => {
+        this.notification.error('Bild konnte nicht entfernt werden.');
+      }
+    });
+  }
+
+  savePublicPage(): void {
+    if (!this.isChoirAdmin) {
+      return;
+    }
+
+    const payload = {
+      ...this.publicPageForm.value,
+      contentBlocks: this.publicBlocks
+    };
+    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+    this.apiService.updateMyPublicPage(payload, opts).subscribe({
+      next: (response) => {
+        const savedSlug = response.page?.slug || this.publicPageForm.value.slug;
+        this.publicPageUrlPreview = savedSlug ? `${environment.baseUrl}/c/${savedSlug}` : null;
+        this.notification.success('Vorstellungsseite gespeichert.');
+        this.slugAvailability = null;
+      },
+      error: (err) => {
+        if (err?.status === 409) {
+          this.notification.error('Dieser Slug ist bereits vergeben.');
+          return;
+        }
+        this.notification.error('Fehler beim Speichern der Vorstellungsseite.');
+      }
+    });
   }
 
   copyEmailsToClipboard(): void {

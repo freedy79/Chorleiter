@@ -65,9 +65,11 @@
                             cardTitle="Letzter Gottesdienst" [event]="lastService">
             </app-event-card>
 
-            <app-current-program-widget *ngIf="vm.lastProgram as lastProgram" [program]="lastProgram"
-                cardTitle="Aktuelles Programm">
-            </app-current-program-widget>
+            <ng-container *ngIf="vm.lastProgram as lastProgram">
+              <app-current-program-widget *ngIf="isProgramCurrent(lastProgram)" [program]="lastProgram"
+                  cardTitle="Aktuelles Programm">
+              </app-current-program-widget>
+            </ng-container>
 
             <app-event-card *ngIf="vm.lastRehearsal as lastRehearsal"
                             cardTitle="Letzte Probe" [event]="lastRehearsal">
@@ -81,7 +83,7 @@
             </app-dashboard-contact-widget>
 
             <ng-container *ngIf="currentLoans$ | async as currentLoans">
-              <app-current-loans-widget [loans]="currentLoans"></app-current-loans-widget>
+              <app-current-loans-widget *ngIf="currentLoans.length > 0" [loans]="currentLoans"></app-current-loans-widget>
             </ng-container>
 
             <app-latest-post-widget

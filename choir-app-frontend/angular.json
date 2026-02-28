@@ -35,12 +35,19 @@
               "node_modules/bootstrap/dist/css/bootstrap.min.css"
             ],
             "allowedCommonJsDependencies": [
-              "@ckeditor/ckeditor5-build-classic",
               "@tonejs/midi",
-              "soundfont-player"
+              "soundfont-player",
+              "fuzzysort",
+              "es-toolkit/compat/isEqual",
+              "extend"
             ],
             "stylePreprocessorOptions": {
-              "includePaths": []
+              "includePaths": [],
+              "sass": {
+                "silenceDeprecations": [
+                  "mixed-decls"
+                ]
+              }
             }
           },
           "configurations": {
@@ -53,7 +60,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
+                  "maximumWarning": "8.6kB",
                   "maximumError": "12kB"
                 }
               ],
@@ -91,7 +98,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
+                  "maximumWarning": "8.6kB",
                   "maximumError": "12kB"
                 }
               ],

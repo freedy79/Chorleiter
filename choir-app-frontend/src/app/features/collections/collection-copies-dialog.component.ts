@@ -8,6 +8,7 @@ import { Lending } from '@core/models/lending';
 import { NotificationService } from '@core/services/notification.service';
 import { UserInChoir } from '@core/models/user';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
+import { ChoirDigitalLicense } from '@core/models/choir-digital-license';
 
 @Component({
   selector: 'app-collection-copies-dialog',
@@ -17,8 +18,19 @@ import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 })
 export class CollectionCopiesDialogComponent implements OnInit {
   copies: Lending[] = [];
+  digitalLicenses: ChoirDigitalLicense[] = [];
   members: UserInChoir[] = [];
   displayedColumns = ['number', 'name', 'borrowed', 'returned', 'actions'];
+  digitalDisplayedColumns = ['licenseNumber', 'licenseType', 'quantity', 'validity', 'document', 'actions'];
+  licenseTypes: Array<ChoirDigitalLicense['licenseType']> = ['print', 'display', 'stream', 'archive'];
+  newLicense: Partial<ChoirDigitalLicense> = {
+    licenseNumber: '',
+    licenseType: 'print',
+    quantity: null,
+    validFrom: null,
+    validUntil: null,
+    notes: null
+  };
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { collectionId: number },
@@ -34,6 +46,7 @@ export class CollectionCopiesDialogComponent implements OnInit {
 
   load(): void {
     this.api.getCollectionCopies(this.data.collectionId).subscribe(copies => (this.copies = copies));
+    this.api.getCollectionDigitalLicenses(this.data.collectionId).subscribe(licenses => (this.digitalLicenses = licenses));
   }
 
   save(copy: Lending): void {
@@ -100,6 +113,91 @@ export class CollectionCopiesDialogComponent implements OnInit {
       error: err => {
         this.notification.error(err.error?.message || 'Fehler beim Speichern');
       }
+    });
+  }
+
+  createDigitalLicense(): void {
+    if (!this.newLicense.licenseNumber || !this.newLicense.licenseType) {
+      this.notification.error('Lizenznummer und Lizenztyp sind erforderlich.');
+      return;
+    }
+
+    this.api.createCollectionDigitalLicense(this.data.collectionId, this.newLicense).subscribe({
+      next: () => {
+        this.notification.success('Digitale Lizenz angelegt');
+        this.newLicense = {
+          licenseNumber: '',
+          licenseType: 'print',
+          quantity: null,
+          validFrom: null,
+          validUntil: null,
+          notes: null
+        };
+        this.load();
+      },
+      error: () => this.notification.error('Fehler beim Anlegen der digitalen Lizenz')
+    });
+  }
+
+  saveDigitalLicense(license: ChoirDigitalLicense): void {
+    const payload: Partial<ChoirDigitalLicense> = {
+      licenseNumber: license.licenseNumber,
+      licenseType: license.licenseType,
+      quantity: license.quantity ?? null,
+      purchaseDate: license.purchaseDate ?? null,
+      vendor: license.vendor ?? null,
+      unitPrice: license.unitPrice ?? null,
+      validFrom: license.validFrom ?? null,
+      validUntil: license.validUntil ?? null,
+      notes: license.notes ?? null
+    };
+
+    this.api.updateCollectionDigitalLicense(license.id, payload).subscribe({
+      next: () => {
+        this.notification.success('Digitale Lizenz gespeichert');
+        this.load();
+      },
+      error: () => this.notification.error('Fehler beim Speichern der digitalen Lizenz')
+    });
+  }
+
+  deleteDigitalLicense(license: ChoirDigitalLicense): void {
+    this.api.deleteCollectionDigitalLicense(license.id).subscribe({
+      next: () => {
+        this.notification.success('Digitale Lizenz gelöscht');
+        this.load();
+      },
+      error: () => this.notification.error('Fehler beim Löschen der digitalen Lizenz')
+    });
+  }
+
+  uploadLicenseFile(license: ChoirDigitalLicense, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    this.api.uploadCollectionDigitalLicenseDocument(license.id, file).subscribe({
+      next: () => {
+        this.notification.success('Lizenz-PDF hochgeladen');
+        this.load();
+      },
+      error: () => this.notification.error('Fehler beim Upload der Lizenzdatei')
+    });
+
+    input.value = '';
+  }
+
+  downloadLicenseFile(license: ChoirDigitalLicense): void {
+    this.api.downloadCollectionDigitalLicenseDocument(license.id).subscribe({
+      next: blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = license.documentOriginalName || `lizenz-${license.id}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => this.notification.error('Fehler beim Download der Lizenzdatei')
     });
   }
 

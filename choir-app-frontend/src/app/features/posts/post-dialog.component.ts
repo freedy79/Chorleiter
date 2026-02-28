@@ -41,6 +41,8 @@ export class PostDialogComponent {
   form: FormGroup;
   isEdit = false;
   saving = false;
+  showAttachmentSection = false;
+  showPollSection = false;
   selectedFile: File | null = null;
   existingAttachment: string | null = null;
   removeExistingAttachment = false;
@@ -80,6 +82,7 @@ export class PostDialogComponent {
       this.isEdit = true;
       this.postId = data.post.id;
       this.existingAttachment = data.post.attachmentOriginalName || null;
+      this.showAttachmentSection = !!this.existingAttachment;
       this.uploadedImages = (data.post.images || []).map(img => ({
         ...img,
         url: this.api.getPostImageUrl(data.post!.id, img.id)
@@ -91,6 +94,7 @@ export class PostDialogComponent {
         sendAsUser: data.post.sendAsUser
       });
       if (data.post.poll) {
+        this.showPollSection = true;
         this.form.patchValue({
           enablePoll: true,
           pollAllowMultiple: data.post.poll.allowMultiple,
@@ -160,6 +164,38 @@ export class PostDialogComponent {
 
   clearSelectedFile(): void {
     this.selectedFile = null;
+  }
+
+  addAttachmentSection(): void {
+    this.showAttachmentSection = true;
+  }
+
+  removeAttachmentSection(): void {
+    if (this.existingAttachment) {
+      this.markRemoveAttachment();
+    } else {
+      this.clearSelectedFile();
+    }
+    this.showAttachmentSection = false;
+  }
+
+  addPollSection(): void {
+    this.showPollSection = true;
+    this.form.patchValue({ enablePoll: true });
+  }
+
+  removePollSection(): void {
+    this.showPollSection = false;
+    this.form.patchValue({
+      enablePoll: false,
+      pollAllowMultiple: false,
+      pollMaxSelections: 1,
+      pollClosesAt: null,
+      pollIsAnonymous: true
+    });
+    this.pollOptions.clear();
+    this.pollOptions.push(this.fb.control<string>(''));
+    this.pollOptions.push(this.fb.control<string>(''));
   }
 
   markRemoveAttachment(): void {

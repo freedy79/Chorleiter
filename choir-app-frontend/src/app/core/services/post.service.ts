@@ -5,7 +5,7 @@ import { tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
 import { PostImage } from '../models/post-image';
-import { Poll } from '../models/poll';
+import { Poll, PollReminderConsumeResponse, PollReminderSendResponse, PollReminderStatus } from '../models/poll';
 import { PostComment } from '../models/post-comment';
 import { ReactionInfo, ReactionType } from '../models/reaction';
 import { ImageCacheService } from './image-cache.service';
@@ -58,6 +58,18 @@ export class PostService {
 
   voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
     return this.http.post<Poll>(`${this.apiUrl}/posts/${id}/vote`, { optionIds });
+  }
+
+  getPollReminderStatus(id: number): Observable<PollReminderStatus> {
+    return this.http.get<PollReminderStatus>(`${this.apiUrl}/posts/${id}/poll/reminder-status`);
+  }
+
+  sendPollReminders(id: number, data: { userIds?: number[]; sendTestToSelf?: boolean }): Observable<PollReminderSendResponse> {
+    return this.http.post<PollReminderSendResponse>(`${this.apiUrl}/posts/${id}/poll/reminders`, data);
+  }
+
+  consumePollReminderToken(token: string): Observable<PollReminderConsumeResponse> {
+    return this.http.post<PollReminderConsumeResponse>(`${this.apiUrl}/public/poll-vote/${token}`, {});
   }
 
   addComment(postId: number, text: string, parentId?: number | null): Observable<PostComment> {

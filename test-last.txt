@@ -1,0 +1,686 @@
+﻿
+> test
+> npm test --prefix choir-app-frontend
+
+
+> choir-app-frontend@0.5.2 pretest
+> npm run generate-build-info
+
+
+> choir-app-frontend@0.5.2 generate-build-info
+> node ./scripts/generate-build-info.js
+
+Generated D:\Angular\Chorleiter\choir-app-frontend\src\environments\build-info.ts
+
+> choir-app-frontend@0.5.2 test
+> ng test --watch=false
+
+[33mÔØ»[39m Building...
+[32mÔ£ö[39m Building...
+Application bundle generation failed. [18.829 seconds] - 2026-02-25T23:11:34.534Z
+
+node.exe : [1m[33m[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1m7 
+repetitive deprecation warnings omitted.
+In C:\Program Files\nodejs\npm.ps1:29 Zeichen:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([1m[33m[33mÔ...rnings omitted. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Run in verbose mode to see all warnings.[0m [1m[35m[plugin angular-sass][0m
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  null
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1m19 repetitive deprecation 
+warnings omitted.
+Run in verbose mode to see all warnings.[0m [1m[35m[plugin angular-sass][0m
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  null
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1m20 repetitive deprecation 
+warnings omitted.
+Run in verbose mode to see all warnings.[0m [1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  null
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/collections/collection-list/collection-list.component.scss
+:16:2:
+[37m      16 Ôöé   [32m[37mmargin-top: -0.5rem;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/collections/collection-list/collection-list.component.scss
+:17:2:
+[37m      17 Ôöé   [32m[37mmargin-bottom: 2rem;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/collections/collection-list/collection-list.component.scss
+:48:2:
+[37m      48 Ôöé   [32m[37mborder-radius: 4px;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/collections/collection-list/collection-list.component.scss
+:48:2:
+[37m      48 Ôöé   [32m[37mborder-radius: 4px;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/collections/collection-list/collection-list.component.scss
+:48:2:
+[37m      48 Ôöé   [32m[37mborder-radius: 4px;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/collections/collection-list/collection-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./collection-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/events/event-dialog/event-dialog.component.scss:99:2:
+[37m      99 Ôöé   [32m[37mmin-height: 44px;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/events/event-dialog/event-dialog.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./event-dialog.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/events/event-dialog/event-dialog.component.scss:99:2:
+[37m      99 Ôöé   [32m[37mmin-height: 44px;
+         ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/events/event-dialog/event-dialog.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./event-dialog.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/literature/literature-list/literature-list.component.scss:
+295:2:
+[37m      295 Ôöé   [32m[37mborder-radius: 10px;
+          ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/literature/literature-list/literature-list.component.scss:
+295:2:
+[37m      295 Ôöé   [32m[37mborder-radius: 10px;
+          ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/literature/literature-list/literature-list.component.scss:
+295:2:
+[37m      295 Ôöé   [32m[37mborder-radius: 10px;
+          ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/literature/literature-list/literature-list.component.scss:
+296:2:
+[37m      296 Ôöé   [32m[37mpadding: 0.75rem;
+          ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/literature/literature-list/literature-list.component.scss:
+296:2:
+[37m      296 Ôöé   [32m[37mpadding: 0.75rem;
+          ÔòÁ   [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    
+src/app/features/literature/literature-list/literature-list.component.ts:3:33:
+[37m      3 Ôöé ...CE__1 from 
+[32m"angular:jit:style:file;./literature-list.component.s[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.scss:93:98:
+[37m      93 Ôöé ...r; gap: $spacing-xs; @include secondary-text; 
+[32m[37mfont-size: 0.963rem;
+         ÔòÁ                                                  [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.scss:97:75:
+[37m      97 Ôöé ...0.825rem; @include subtle-text; [32m[37mtext-transform: 
+uppercase; lett...
+         ÔòÁ                                    [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.scss:97:102:
+[37m      97 Ôöé ...e subtle-text; text-transform: uppercase; 
+[32m[37mletter-spacing: 0.5px; }
+         ÔòÁ                                              [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.scss:98:59:
+[37m      98 Ôöé ...963rem; @include readable-text; [32m[37mdisplay: flex; 
+align-items: cen...
+         ÔòÁ                                    [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33mÔû▓ [43;33m[[43;30mWARNING[43;33m][0m [1mDeprecation[0m 
+[1m[35m[plugin angular-sass][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.scss:98:74:
+[37m      98 Ôöé ...rem; @include readable-text; display: flex; 
+[32m[37malign-items: center; }
+         ÔòÁ                                                [32m^[0m
+
+
+  Sass's behavior for declarations that appear after nested
+  rules will be changing to match the behavior specified by CSS in an upcoming
+  version. To keep the existing behavior, move the declaration above the nested
+  rule. To opt into the new behavior, wrap the declaration in `& {}`.
+  
+  More info: [4mhttps://sass-lang.com/d/mixed-decls[0m
+
+  The plugin "angular-compiler" was triggered by this import
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:3:33:
+[37m      3 Ôöé ...RCE__1 from 
+[32m"angular:jit:style:file;./monthly-plan.component.scss"[37m;
+        ÔòÁ                
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2591: Cannot find 
+name 'require'. Do you need to install type definitions for node? Try `npm i 
+--save-dev @types/node` and then add 'node' to the types field in your 
+tsconfig.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:196:32:
+[37m      196 Ôöé ...      (source: any) => new 
+([32mrequire[37m('rxjs').Observable)((obser...
+          ÔòÁ                                [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:199:20:
+[37m      199 Ôöé                 if ([32moptions[37m.onSuccess) 
+options.onSuccess(val);
+          ÔòÁ                     [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:199:39:
+[37m      199 Ôöé                 if (options.onSuccess) 
+[32moptions[37m.onSuccess(val);
+          ÔòÁ                                        [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2591: Cannot find name 
+'require'. Do you need to install type definitions for node? Try `npm i 
+--save-dev @types/node` and then add 'node' to the types field in your 
+tsconfig.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:226:32:
+[37m      226 Ôöé ...      (source: any) => new 
+([32mrequire[37m('rxjs').Observable)((obser...
+          ÔòÁ                                [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:229:20:
+[37m      229 Ôöé                 if ([32moptions[37m.onSuccess) {
+          ÔòÁ                     [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:230:18:
+[37m      230 Ôöé                   [32moptions[37m.onSuccess(val);
+          ÔòÁ                   [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2591: Cannot find name 
+'require'. Do you need to install type definitions for node? Try `npm i 
+--save-dev @types/node` and then add 'node' to the types field in your 
+tsconfig.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:462:32:
+[37m      462 Ôöé ...      (source: any) => new 
+([32mrequire[37m('rxjs').Observable)((obser...
+          ÔòÁ                                [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:465:20:
+[37m      465 Ôöé                 if ([32moptions[37m.onSuccess) 
+options.onSuccess(val);
+          ÔòÁ                     [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS18048: 'options' is 
+possibly 'undefined'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/core/services/dialog-helper.service.spec.ts:465:39:
+[37m      465 Ôöé                 if (options.onSuccess) 
+[32moptions[37m.onSuccess(val);
+          ÔòÁ                                        [32m~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 12 
+arguments, but got 10.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/monthly-plan/monthly-plan.component.spec.ts:29:16:
+[37m      29 Ôöé     component = [32mnew MonthlyPlanComponent([37m
+         ÔòÁ                 [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  An argument for 'cdr' was not provided.
+
+    src/app/features/monthly-plan/monthly-plan.component.ts:365:14:
+[37m      365 Ôöé               [32mprivate cdr: ChangeDetectorRef[37m,
+          ÔòÁ               [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 4 arguments, 
+but got 2.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/participation/participation.component.spec.ts:7:22:
+[37m      7 Ôöé ...omponent = [32mnew ParticipationComponent({} as any, { 
+currentUser$:[37m...
+        ÔòÁ               
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  An argument for 'auth' was not provided.
+
+    src/app/features/participation/participation.component.ts:69:4:
+[37m      69 Ôöé     [32mprivate auth: AuthService[37m,
+         ÔòÁ     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 4 arguments, 
+but got 2.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/participation/participation.component.spec.ts:18:22:
+[37m      18 Ôöé ...mponent = [32mnew ParticipationComponent({} as any, { 
+currentUser$:[37m...
+         ÔòÁ              
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  An argument for 'auth' was not provided.
+
+    src/app/features/participation/participation.component.ts:69:4:
+[37m      69 Ôöé     [32mprivate auth: AuthService[37m,
+         ÔòÁ     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 4 arguments, 
+but got 2.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/participation/participation.component.spec.ts:39:22:
+[37m      39 Ôöé ...mponent = [32mnew ParticipationComponent({} as any, { 
+currentUser$:[37m...
+         ÔòÁ              
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  An argument for 'auth' was not provided.
+
+    src/app/features/participation/participation.component.ts:69:4:
+[37m      69 Ôöé     [32mprivate auth: AuthService[37m,
+         ÔòÁ     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2554: Expected 4 arguments, 
+but got 2.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/participation/participation.component.spec.ts:59:22:
+[37m      59 Ôöé ...mponent = [32mnew ParticipationComponent({} as any, { 
+currentUser$:[37m...
+         ÔòÁ              
+[32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+  An argument for 'auth' was not provided.
+
+    src/app/features/participation/participation.component.ts:69:4:
+[37m      69 Ôöé     [32mprivate auth: AuthService[37m,
+         ÔòÁ     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2540: Cannot assign to 
+'isEnabled' because it is a read-only property.[0m [1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/services/service-worker-update.service.spec.ts:18:17:
+[37m      18 Ôöé     swUpdateMock.[32misEnabled[37m = true;
+         ÔòÁ                  [32m~~~~~~~~~[0m
+
+
+[31mÔ£ÿ [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type 
+'Promise<void>' is not assignable to parameter of type 'Promise<boolean>'.
+  Type 'void' is not assignable to type 'boolean'.[0m [1m[35m[plugin 
+angular-compiler][0m
+
+    src/app/services/service-worker-update.service.spec.ts:53:48:
+[37m      53 Ôöé     
+swUpdateMock.activateUpdate.and.returnValue([32mPromise.resolve()[37m);
+         ÔòÁ                                                 
+[32m~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

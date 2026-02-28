@@ -126,7 +126,7 @@ export class AuthService {
         this.reloadUserFromServer();
         this.prefs.load().subscribe(p => {
           if (p.theme) {
-            this.theme.setTheme(p.theme);
+            this.theme.setTheme(p.theme, false);
           }
         });
       } else {
@@ -290,23 +290,29 @@ export class AuthService {
   login(credentials: any): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials, { withCredentials: true }).pipe(
       tap((user: User) => {
-        if (user.accessToken) {
-          const normalizedUser = this.withNormalizedChoirData(user);
-          localStorage.setItem(TOKEN_KEY, user.accessToken);
-          localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
-          this.loggedIn.next(true);
-          this.currentUserSubject.next(normalizedUser);
-          this.setActiveChoir(normalizedUser.activeChoir || null);
-          this.availableChoirs$.next(normalizedUser.availableChoirs || []);
-
-          this.prefs.load().subscribe(p => {
-            if (p.theme) {
-              this.theme.setTheme(p.theme);
-            }
-          });
-        }
+        this.establishSession(user);
       })
     );
+  }
+
+  establishSession(user: User | null | undefined): void {
+    if (!user?.accessToken) {
+      return;
+    }
+
+    const normalizedUser = this.withNormalizedChoirData(user);
+    localStorage.setItem(TOKEN_KEY, user.accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+    this.loggedIn.next(true);
+    this.currentUserSubject.next(normalizedUser);
+    this.setActiveChoir(normalizedUser.activeChoir || null);
+    this.availableChoirs$.next(normalizedUser.availableChoirs || []);
+
+    this.prefs.load().subscribe(p => {
+      if (p.theme) {
+        this.theme.setTheme(p.theme, false);
+      }
+    });
   }
 
   logout(reason?: string): void {

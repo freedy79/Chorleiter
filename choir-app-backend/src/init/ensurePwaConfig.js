@@ -43,7 +43,7 @@ async function initializeDefaultPwaSettings() {
                 type: 'string',
                 category: 'vapid',
                 description: 'VAPID public key for web push notifications',
-                isEditable: false,
+                isEditable: true,
                 isSecret: false
             },
             {
@@ -52,8 +52,17 @@ async function initializeDefaultPwaSettings() {
                 type: 'string',
                 category: 'vapid',
                 description: 'VAPID private key (server-side only)',
-                isEditable: false,
+                isEditable: true,
                 isSecret: true
+            },
+            {
+                key: 'vapid_subject',
+                value: process.env.VAPID_SUBJECT || '',
+                type: 'string',
+                category: 'vapid',
+                description: 'VAPID subject (typically a mailto: or https: URL)',
+                isEditable: true,
+                isSecret: false
             },
             {
                 key: 'push_enabled',

@@ -60,7 +60,7 @@
 <mat-tab-group [selectedIndex]="selectedTab" (selectedIndexChange)="tabChanged($event)">
 
   <mat-tab label="Dienstplan">
-    <div class="plan" *ngIf="plan && !isLoadingPlan; else planFallback">
+    <div class="plan" *ngIf="plan; else planFallback">
       <h2 class="plan-title">Dienstplan {{ plan.month }}/{{ plan.year }}</h2>
 
       <!-- Action buttons: Desktop (text) + Mobile (icons) -->
@@ -107,8 +107,30 @@
           </ng-container>
           <ng-container matColumnDef="event">
             <mat-header-cell *matHeaderCellDef>Ereignis</mat-header-cell>
+            <mat-cell *matCellDef="let ev"
+              [matTooltip]="eventTooltip(ev)"
+              [matTooltipDisabled]="!eventTooltip(ev)">
+              <ng-container *ngIf="(ev | eventShort) as eventType">
+                <span>{{ eventType }}</span>
+                <span *ngIf="eventTooltip(ev) && eventTooltip(ev) !== eventType"> · {{ eventTooltip(ev) }}</span>
+              </ng-container>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="program">
+            <mat-header-cell *matHeaderCellDef>Programm</mat-header-cell>
             <mat-cell *matCellDef="let ev">
-              {{ ev | eventShort }}
+              <ng-container *ngIf="isChoirAdmin && !plan.finalized; else programTextDesktop">
+                <mat-select [value]="ev.program?.id ?? null" (selectionChange)="updateProgram(ev, $event.value)">
+                  <mat-option [value]="null">--</mat-option>
+                  <mat-option *ngFor="let program of programs" [value]="program.id">
+                    {{ program.title }}
+                  </mat-option>
+                </mat-select>
+              </ng-container>
+              <ng-template #programTextDesktop>
+                <a *ngIf="ev.program" [routerLink]="['/programs', ev.program.id]">{{ ev.program.title }}</a>
+                <span *ngIf="!ev.program">—</span>
+              </ng-template>
             </mat-cell>
           </ng-container>
           <ng-container matColumnDef="director">
@@ -193,8 +215,7 @@
 
               <div class="card-header">
                 <div class="card-date-block">
-                  <span class="card-weekday">{{ ev.date | weekday }}</span>
-                  <span class="card-date">{{ ev.date | pureDate | date:'dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</span>
+                  <span class="card-weekday">{{ ev.date | weekday }} {{ ev.date | pureDate | date:'dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</span>
                   <span class="card-holiday" *ngIf="ev.holidayHint">{{ ev.holidayHint }}</span>
                 </div>
                 <div class="card-actions" *ngIf="isChoirAdmin && !plan.finalized">
@@ -204,7 +225,9 @@
                 </div>
               </div>
 
-              <div class="card-event-type" *ngIf="(ev | eventShort) as eventType">
+              <div class="card-event-type" *ngIf="(ev | eventShort) as eventType"
+                [matTooltip]="eventTooltip(ev)"
+                [matTooltipDisabled]="!eventTooltip(ev)">
                 <mat-icon class="card-icon">event</mat-icon>
                 <span>{{ eventType }}</span>
               </div>
@@ -264,6 +287,20 @@
                   <span class="card-value">{{ ev.notes }}</span>
                 </ng-template>
               </div>
+
+              <div class="card-field" *ngIf="isChoirAdmin && !plan.finalized; else programTextMobile">
+                <span class="card-label">Programm</span>
+                <mat-select [value]="ev.program?.id ?? null" (selectionChange)="updateProgram(ev, $event.value)" class="card-select">
+                  <mat-option [value]="null">--</mat-option>
+                  <mat-option *ngFor="let program of programs" [value]="program.id">{{ program.title }}</mat-option>
+                </mat-select>
+              </div>
+              <ng-template #programTextMobile>
+                <div class="card-field" *ngIf="ev.program">
+                  <span class="card-label">Programm</span>
+                  <a class="card-value" [routerLink]="['/programs', ev.program.id]">{{ ev.program.title }}</a>
+                </div>
+              </ng-template>
             </div>
           </div>
 

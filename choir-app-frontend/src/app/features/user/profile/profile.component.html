@@ -235,30 +235,40 @@
           </div>
           <div class="choir-entry" *ngFor="let choir of choirs">
             <div class="choir-name">{{ choir.name }}</div>
-            <button
-              mat-stroked-button
-              color="warn"
-              type="button"
-              (click)="onLeaveChoir(choir)"
-              [disabled]="isDemo$ | async"
-            >
-              Aus Chor abmelden
-            </button>
+            <span [matTooltip]="getLeaveChoirTooltip(choir.id)">
+              <button
+                mat-stroked-button
+                color="warn"
+                type="button"
+                (click)="onLeaveChoir(choir)"
+                [disabled]="(isDemo$ | async) || isLeaveChoirBlocked(choir.id)"
+              >
+                Aus Chor abmelden
+              </button>
+            </span>
+            <div class="choir-leave-hint" *ngIf="isLeaveChoirBlocked(choir.id)">
+              {{ getLeaveChoirTooltip(choir.id) }}
+            </div>
           </div>
           <div class="choir-hint" *ngIf="choirs.length === 1">
             Das Verlassen dieses Chors löscht dein Profil vollständig.
           </div>
         </mat-card-content>
         <mat-card-actions *ngIf="choirs.length > 1">
-          <button
-            mat-flat-button
-            color="warn"
-            type="button"
-            (click)="onDeleteAccount()"
-            [disabled]="isDemo$ | async"
-          >
-            Vom gesamten System abmelden
-          </button>
+          <span [matTooltip]="getDeleteAccountTooltip()">
+            <button
+              mat-flat-button
+              color="warn"
+              type="button"
+              (click)="onDeleteAccount()"
+              [disabled]="(isDemo$ | async) || isDeleteAccountBlocked()"
+            >
+              Vom gesamten System abmelden
+            </button>
+          </span>
+          <div class="choir-leave-hint" *ngIf="isDeleteAccountBlocked()">
+            {{ getDeleteAccountTooltip() }}
+          </div>
         </mat-card-actions>
       </mat-card>
 

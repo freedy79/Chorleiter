@@ -10,6 +10,12 @@ router.get('/', controller.getAllConfigs);
 // Initialize default configurations
 router.post('/initialize', controller.initializeDefaults);
 
+// Generate new VAPID keys
+router.post('/generate-vapid-keys', controller.generateVapidKeys);
+
+// Get push notification status
+router.get('/push-status', controller.getPushStatus);
+
 // Get configs by category
 router.get('/category/:category', controller.getConfigsByCategory);
 

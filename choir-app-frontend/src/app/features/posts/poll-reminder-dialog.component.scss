@@ -1,0 +1,45 @@
+.subtitle {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.summary {
+  display: flex;
+  gap: 1.2rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.status-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+
+  th,
+  td {
+    text-align: left;
+    padding: 0.45rem 0.35rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
+.open {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.done {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 0.75rem 0;
+  color: rgba(0, 0, 0, 0.68);
+}

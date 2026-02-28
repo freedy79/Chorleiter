@@ -47,7 +47,8 @@
         "/api/holidays/**",
         "/api/library/**",
         "/api/pieces/**",
-        "/api/collections/**"
+        "/api/collections/**",
+        "/api/practice-lists/**"
       ],
       "cacheConfig": {
         "strategy": "freshness",

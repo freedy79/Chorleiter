@@ -28,6 +28,9 @@
                   $any(ev).organist.name }}</span>
               </span>
             </div>
+            <div matLine *ngIf="$any(ev).program">
+              <a [routerLink]="['/programs', $any(ev).program.id]" class="event-link">Programm: {{ $any(ev).program.title }}</a>
+            </div>
             <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
           </ng-container>
           <ng-container *ngSwitchDefault>
@@ -37,6 +40,9 @@
                 {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' :
                 $any(ev).name) }}
               </a>
+            </div>
+            <div matLine *ngIf="$any(ev).program">
+              <a [routerLink]="['/programs', $any(ev).program.id]" class="event-link">Programm: {{ $any(ev).program.title }}</a>
             </div>
             <ng-template #holidayLabel>
               <div matLine>{{ $any(ev).name }}</div>

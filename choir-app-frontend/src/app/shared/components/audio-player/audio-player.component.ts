@@ -1,4 +1,4 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { NotificationService } from '@core/services/notification.service';
@@ -11,10 +11,11 @@ import { formatSecondsAsDuration } from '@shared/util/duration.utils';
   templateUrl: './audio-player.component.html',
   styleUrls: ['./audio-player.component.scss']
 })
-export class AudioPlayerComponent implements OnInit, OnDestroy {
+export class AudioPlayerComponent implements OnInit, OnChanges, OnDestroy {
   @Input() title = '';
   @Input() url = '';
   @Input() downloadName = '';
+  @Output() playbackEnded = new EventEmitter<void>();
 
   private audio: HTMLAudioElement | null = null;
   isPlaying = false;
@@ -28,14 +29,27 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
     this.initAudio();
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['url'] && !changes['url'].firstChange) {
+      this.initAudio();
+    }
+  }
+
   ngOnDestroy(): void {
     this.destroyAudio();
   }
 
   private initAudio(): void {
+    this.destroyAudio();
+    this.progress = 0;
+    this.duration = 0;
+    this.currentTime = 0;
+    this.isPlaying = false;
+
     if (!this.url) return;
 
     this.audio = new Audio(this.url);
+    this.audio.preload = 'metadata';
     this.audio.addEventListener('timeupdate', this.onTimeUpdate);
     this.audio.addEventListener('loadedmetadata', this.onLoadedMetadata);
     this.audio.addEventListener('ended', this.onEnded);
@@ -70,6 +84,7 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
     this.isPlaying = false;
     this.progress = 0;
     this.currentTime = 0;
+    this.playbackEnded.emit();
   };
 
   private onError = (e: Event): void => {
@@ -84,11 +99,13 @@ export class AudioPlayerComponent implements OnInit, OnDestroy {
       this.audio.pause();
       this.isPlaying = false;
     } else {
-      this.audio.play().catch(err => {
+      this.audio.play().then(() => {
+        this.isPlaying = true;
+      }).catch(err => {
         console.error('Play error:', err);
         this.notification.error('Fehler beim Abspielen');
+        this.isPlaying = false;
       });
-      this.isPlaying = true;
     }
   }
 

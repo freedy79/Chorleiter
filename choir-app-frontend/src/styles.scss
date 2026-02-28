@@ -1,6 +1,7 @@
 @use '@angular/material' as mat;
 @use 'themes/_nak-theme' as nak;
 @use 'themes/_breakpoints' as bp;
+@import 'ckeditor5/ckeditor5.css';
 
 // Include Angular Material core styles once.
 @include mat.core();

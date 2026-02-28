@@ -31,6 +31,17 @@ const controller = require('../src/controllers/availability.controller');
     const mayWithEvent = res.data.map(a => a.date);
     assert.ok(mayWithEvent.includes('2025-05-17'));
 
+    const adminViewUser = await db.user.create({ email: 'member@example.com', preferences: { defaultAvailability: 'AVAILABLE' } });
+    await controller.findByMonthForUser({
+      ...baseReq,
+      params: { year: 2025, month: 5, userId: adminViewUser.id }
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    const memberMayDates = res.data.map(a => a.date);
+    assert.ok(memberMayDates.includes('2025-05-17'));
+    assert.ok(res.data.length > 0);
+    assert.ok(res.data.every(a => a.status === 'AVAILABLE'));
+
     await user.update({ preferences: { defaultAvailability: 'MAYBE' } });
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 6 } }, res);
     assert.ok(res.data.every(a => a.status === 'MAYBE'));

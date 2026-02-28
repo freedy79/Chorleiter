@@ -1,0 +1,162 @@
+<section class="chat-page" aria-label="Teilnehmer-Chat">
+  <aside class="rooms" aria-label="Chat-Räume">
+    <div class="rooms-header">
+      <h2>Räume</h2>
+      <div class="rooms-header-actions">
+        <button
+          *ngIf="isChoirAdmin"
+          mat-mini-fab
+          color="primary"
+          type="button"
+          (click)="openCreateRoomDialog()"
+          [disabled]="roomMutationInProgress"
+          aria-label="Neuen Raum erstellen"
+        >
+          <mat-icon>add</mat-icon>
+        </button>
+        <mat-icon *ngIf="loadingRooms" aria-hidden="true">hourglass_top</mat-icon>
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="room-item"
+      *ngFor="let room of rooms"
+      [class.active]="room.id === selectedRoomId"
+      (click)="selectRoom(room.id)"
+      [attr.aria-label]="'Raum ' + room.title"
+    >
+      <span class="room-title">
+        {{ room.title }}
+        <mat-icon *ngIf="room.isPrivate" class="private-icon" aria-hidden="true">lock</mat-icon>
+      </span>
+      <span class="room-meta" *ngIf="room.unreadCount > 0" aria-live="polite">{{ room.unreadCount }}</span>
+    </button>
+  </aside>
+
+  <section class="chat-main" *ngIf="selectedRoomId; else noRoomSelected">
+    <header class="chat-header">
+      <div class="chat-header-top">
+        <h2>{{ selectedRoomTitle }}</h2>
+        <div class="chat-header-actions">
+          <button
+            *ngIf="canManageSelectedRoom"
+            mat-icon-button
+            type="button"
+            (click)="openEditSelectedRoomDialog()"
+            [disabled]="roomMutationInProgress"
+            aria-label="Raum bearbeiten"
+            matTooltip="Raum bearbeiten"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <span
+            class="transport-badge"
+            [class.sse]="currentTransport === 'sse'"
+            [class.polling]="currentTransport === 'polling'"
+            [class.connecting]="!currentTransport"
+            aria-live="polite"
+          >
+            {{ transportLabel }}
+          </span>
+        </div>
+      </div>
+      <small *ngIf="pollError" class="poll-warning" aria-live="polite">Verbindungsproblem – erneuter Versuch läuft.</small>
+    </header>
+
+    <div class="messages" *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite">
+      <article
+        class="message"
+        *ngFor="let message of messages; trackBy: trackMessage"
+        [attr.id]="'chat-message-' + message.id"
+        [class.own]="isOwnMessage(message)"
+        [class.deleted]="message.deleted"
+        [class.highlighted]="message.id === highlightedMessageId"
+      >
+        <div class="meta">
+          <strong>{{ message.author?.name || 'Unbekannt' }}</strong>
+          <span>{{ message.createdAt | date:'short' }}</span>
+        </div>
+
+        <div class="reply-preview" *ngIf="message.replyToMessageId">
+          ↪ {{ resolveReplyPreview(message) }}
+        </div>
+
+        <p class="text" *ngIf="!message.deleted; else deletedTemplate">{{ message.text }}</p>
+        <ng-template #deletedTemplate>
+          <p class="text deleted-text">Nachricht wurde gelöscht.</p>
+        </ng-template>
+
+        <a
+          class="attachment"
+          *ngIf="message.attachment"
+          [href]="message.attachment.url"
+          target="_blank"
+          rel="noopener"
+        >
+          📎 {{ message.attachment.originalName }}
+        </a>
+
+        <div class="actions" *ngIf="!message.deleted">
+          <button mat-stroked-button type="button" (click)="beginReply(message)">Antworten</button>
+          <button mat-button type="button" *ngIf="isOwnMessage(message)" (click)="deleteMessage(message)">Löschen</button>
+        </div>
+      </article>
+
+      <div class="empty" *ngIf="messages.length === 0">
+        <p>Noch keine Nachrichten in diesem Raum.</p>
+        <p>Starte die Unterhaltung mit deiner ersten Nachricht 👋</p>
+      </div>
+    </div>
+
+    <ng-template #loadingTemplate>
+      <div class="loading">
+        <mat-spinner diameter="28"></mat-spinner>
+        <span>Nachrichten werden geladen…</span>
+      </div>
+    </ng-template>
+
+    <footer class="composer">
+      <div class="reply-chip" *ngIf="replyTo">
+        <span>Antwort auf: {{ replyTo.text || 'Nachricht mit Anhang' }}</span>
+        <button mat-icon-button type="button" aria-label="Antwort abbrechen" (click)="cancelReply()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="attachment-row" *ngIf="selectedAttachment as file">
+        <span>📎 {{ file.name }}</span>
+        <button mat-button type="button" (click)="clearAttachment(fileInput)">Entfernen</button>
+      </div>
+
+      <mat-form-field appearance="outline" class="composer-field">
+        <mat-label>Nachricht</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [(ngModel)]="draftText"
+          placeholder="Schreibe eine Nachricht…"
+          aria-label="Nachrichtentext"
+        ></textarea>
+      </mat-form-field>
+
+      <div class="composer-actions">
+        <input #fileInput type="file" hidden (change)="onAttachmentSelected($event)" />
+        <button mat-stroked-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen">
+          <mat-icon>attach_file</mat-icon>
+          Anhang
+        </button>
+        <button mat-flat-button color="primary" type="button" (click)="sendMessage()" [disabled]="sending">
+          {{ sending ? 'Sende…' : 'Senden' }}
+        </button>
+      </div>
+    </footer>
+  </section>
+</section>
+
+<ng-template #noRoomSelected>
+  <div class="empty-state">
+    <h2>Kein Raum ausgewählt</h2>
+    <p>Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.</p>
+  </div>
+</ng-template>

@@ -31,6 +31,16 @@ const DEFAULT_TEMPLATES = {
   'lending-returned': {
     subject: 'Rückgabe bestätigt: {{title}} (Nr. {{copyNumber}})',
     body: '<p>Hallo {{first_name}} {{surname}},</p><p>die Rückgabe von {{title}} (Nr. {{copyNumber}}) wurde am {{returnedAt}} erfasst.</p>'
+  },
+  'poll-reminder': {
+    subject: 'Erinnerung: Abstimmung zu "{{post_title}}"',
+    body: '<p>Hallo {{first_name}} {{surname}},</p><p>für den Beitrag <b>{{post_title}}</b> liegt noch keine Abstimmung von dir vor.</p><p>{{poll_text}}</p><p>Bitte klicke auf eine der folgenden Optionen:</p>{{option_links}}<p>Viele Grüße<br>{{choir}}</p>'
+  },
+  'mail-footer': {
+    subject: '(Footer)',
+    body: '<p>Du erhältst diese Mail, weil du im Chor <strong>{{choir}}</strong> angemeldet bist. ' +
+          'Wenn du kein Interesse mehr am Chor hast und dich austragen möchtest, kannst du das ' +
+          '<a href="{{leave_link}}">hier</a> tun.</p>'
   }
 };
 

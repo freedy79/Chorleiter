@@ -5,8 +5,41 @@ const paypalSettingsService = require('../services/paypal-settings.service');
 const imprintSettingsService = require('../services/imprint-settings.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
-const { spawn } = require('child_process');
+const { spawn, exec } = require('child_process');
 const path = require('path');
+const { promisify } = require('util');
+
+const execAsync = promisify(exec);
+
+async function runShellCommand(command) {
+    try {
+        const { stdout, stderr } = await execAsync(command, {
+            timeout: 10000,
+            maxBuffer: 1024 * 1024
+        });
+        return {
+            ok: true,
+            stdout: (stdout || '').trim(),
+            stderr: (stderr || '').trim(),
+            code: 0
+        };
+    } catch (err) {
+        return {
+            ok: false,
+            stdout: (err.stdout || '').trim(),
+            stderr: (err.stderr || err.message || '').trim(),
+            code: typeof err.code === 'number' ? err.code : null
+        };
+    }
+}
+
+function tailLines(value, lineCount = 50) {
+    if (!value) return [];
+    return value
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .slice(-lineCount);
+}
 
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
 exports.getAll = (model) => async (req, res) => {
@@ -262,7 +295,21 @@ exports.getLoginAttempts = async (req, res) => {
 
 exports.getMailLogs = async (req, res) => {
     try {
-        const logs = await db.mail_log.findAll({ order: [['createdAt', 'DESC']] });
+        const status = typeof req.query.status === 'string' ? req.query.status.trim().toUpperCase() : null;
+        const onlyErrors = req.query.onlyErrors === 'true';
+
+        const where = {};
+        if (status && ['SENT', 'FAILED', 'BLOCKED'].includes(status)) {
+            where.status = status;
+        }
+        if (onlyErrors) {
+            where.status = { [Op.in]: ['FAILED', 'BLOCKED'] };
+        }
+
+        const logs = await db.mail_log.findAll({
+            where,
+            order: [['createdAt', 'DESC']]
+        });
         res.status(200).send(logs);
     } catch (err) {
         res.status(500).send({ message: err.message });
@@ -273,6 +320,63 @@ exports.clearMailLogs = async (req, res) => {
     try {
         await db.mail_log.destroy({ where: {} });
         res.status(200).send({ message: 'Deleted' });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.getMailDeliveryDiagnostics = async (req, res) => {
+    try {
+        if (process.platform !== 'linux') {
+            return res.status(200).send({
+                available: false,
+                platform: process.platform,
+                message: 'Postfix-Diagnose ist nur auf Linux verfügbar.'
+            });
+        }
+
+        const [tOnlineCheck, statusCheck, queueCheck] = await Promise.all([
+            runShellCommand("grep -i t-online /var/log/mail.log | tail -n 50"),
+            runShellCommand("grep -Ei 'status=deferred|status=bounced|status=sent|reject' /var/log/mail.log | tail -n 100"),
+            runShellCommand("postqueue -p || mailq")
+        ]);
+
+        const statusLines = tailLines(statusCheck.stdout, 100);
+        const counts = {
+            sent: statusLines.filter(line => /status=sent/i.test(line)).length,
+            deferred: statusLines.filter(line => /status=deferred/i.test(line)).length,
+            bounced: statusLines.filter(line => /status=bounced/i.test(line)).length,
+            rejected: statusLines.filter(line => /reject/i.test(line)).length
+        };
+
+        const queueOutput = queueCheck.stdout || queueCheck.stderr || '';
+        const queueEmpty = /mail queue is empty/i.test(queueOutput);
+
+        res.status(200).send({
+            available: true,
+            checkedAt: new Date().toISOString(),
+            counts,
+            queue: {
+                empty: queueEmpty,
+                raw: queueOutput
+            },
+            tOnline: {
+                ok: tOnlineCheck.ok,
+                lines: tailLines(tOnlineCheck.stdout, 50),
+                stderr: tOnlineCheck.stderr
+            },
+            statuses: {
+                ok: statusCheck.ok,
+                lines: statusLines,
+                stderr: statusCheck.stderr
+            },
+            hints: [
+                'status=sent: Postfix hat an den Ziel-MX ausgeliefert.',
+                'status=deferred: Temporärer Fehler (z. B. Greylisting/TLS/Rate-Limit).',
+                'status=bounced: Harter Fehler bei der Zustellung.',
+                'Queue nicht leer: Es gibt noch ausstehende oder problematische Zustellungen.'
+            ]
+        });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

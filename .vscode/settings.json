@@ -15,18 +15,27 @@
     "editor.renderWhitespace": "trailing",
     "editor.suggestSelection": "first",
     "editor.cursorSmoothCaretAnimation": "on",
+    "terminal.integrated.enablePersistentSessions": false,
     "terminal.integrated.defaultProfile.windows": "Command Prompt",
     "explorer.compactFolders": false,
     "explorer.confirmDragAndDrop": false,
     "explorer.confirmDelete": false,
     "explorer.copyRelativePathSeparator": "/",
     "files.autoSave": "onFocusChange",
+    "C_Cpp.files.exclude": {
+        "**/.vscode": true,
+        "**/.vs": true,
+        "**/.git": true,
+        "**/.svn": true,
+        "**/node_modules": true,
+        "**/dist": true,
+    },
     "files.insertFinalNewline": true,
     "files.trimFinalNewlines": true,
     "files.trimTrailingWhitespace": true,
     "workbench.editorAssociations": {
         "*.md": "vscode.markdown.preview.editor",
-        "*.svg": "svgPreviewer.customEditor"
+        "*.svg": "imagePreview.previewEditor"
     },
     "git.enableSmartCommit": true,
     "git.autofetch": true,
@@ -91,7 +100,11 @@
         "**/coverage/**": true,
         "**/tmpclaude-*/**": true,
         "**/backups/**": true,
-        "**/choir-app-backend/uploads/**": true
+        "**/choir-app-backend/uploads/**": true,
+        "**/choir-app-backend/logs/**": true,
+        "**/choir-app-frontend/.angular/**": true,
+        "**/choir-app-frontend/.cache/**": true,
+        "**/Extract/**": true
     },
     "search.exclude": {
         "**/node_modules/**": true,
@@ -100,11 +113,20 @@
         "**/coverage/**": true,
         "**/tmpclaude-*/**": true,
         "**/backups/**": true,
-        "**/choir-app-backend/uploads/**": true
+        "**/choir-app-backend/uploads/**": true,
+        "**/choir-app-backend/logs/**": true,
+        "**/choir-app-frontend/.angular/**": true,
+        "**/choir-app-frontend/.cache/**": true,
+        "**/Extract/**": true
     },
     "files.exclude": {
         "**/tmpclaude-*/": true,
-        "backups/": true
+        "backups/": true,
+        "**/node_modules/": true,
+        "**/dist/": true,
+        "choir-app-backend/logs/": true,
+        "choir-app-frontend/.angular/": true,
+        "Extract/": true,
     },
     "typescript.tsserver.maxTsServerMemory": 4096,
     "chat.tools.terminal.autoApprove": {

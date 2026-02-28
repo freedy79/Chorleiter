@@ -31,6 +31,8 @@ import { MaterialModule } from '@modules/material.module';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
+import { ProgramService } from '@core/services/program.service';
+import { Program } from '@core/models/program';
 
 @Component({
     selector: 'app-event-dialog',
@@ -56,12 +58,14 @@ export class EventDialogComponent implements OnInit {
 
     isEditMode = false;
     private editEventId: number | null = null;
+    programs: Program[] = [];
 
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
 
     constructor(
         private fb: FormBuilder,
         private apiService: ApiService,
+        private programService: ProgramService,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<EventDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { event?: Event } | null
@@ -70,6 +74,7 @@ export class EventDialogComponent implements OnInit {
             date: [new Date().toISOString().split('T')[0], Validators.required],
             type: ['', Validators.required],
             notes: [''],
+            programId: [null as string | null],
         });
 
         if (data && data.event) {
@@ -90,6 +95,10 @@ export class EventDialogComponent implements OnInit {
                 // ensure table is initialized
                 this.selectedPiecesDataSource.data = this.selectedPieces;
             }
+        });
+
+        this.programService.getPrograms().subscribe((programs) => {
+            this.programs = (programs || []).filter(p => p.status !== 'archived');
         });
     }
 
@@ -214,6 +223,7 @@ export class EventDialogComponent implements OnInit {
             date: event.date ? event.date.toString().split('T')[0] : '',
             type: event.type,
             notes: event.notes || '',
+            programId: event.program?.id || null,
         });
 
         this.selectedPieces = event.pieces.map((p) => ({

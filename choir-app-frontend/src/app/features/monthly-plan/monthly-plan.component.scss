@@ -74,9 +74,9 @@ mat-tab-group { width: 100%; }
 .mobile-cards { @include mobile-cards-grid; }
 
 .plan-card {
-  @include card-background; @include adaptive-border(1px);
   border-radius: 10px; padding: $spacing-md;
   display: flex; flex-direction: column; gap: $spacing-sm;
+  @include card-background; @include adaptive-border(1px);
   &.assigned { border-left: 3px solid mat.m2-get-color-from-palette(nak.$choir-app-primary, 500);
     @include dark-mode { border-left-color: mat.m2-get-color-from-palette(nak.$choir-app-primary, 200); }
   }

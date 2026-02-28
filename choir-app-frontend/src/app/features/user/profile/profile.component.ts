@@ -6,7 +6,7 @@ import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
-import { LeaveChoirResponse, User, GlobalRole } from '@core/models/user';
+import { LeaveChoirResponse, LeaveStatusResponse, ChoirLeaveInfo, User, GlobalRole } from '@core/models/user';
 import { Choir } from '@core/models/choir';
 import { Observable, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -83,6 +83,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   pushPermission: PushPermission = 'default';
   pushStates: Record<number, boolean> = {};
   isPushUpdating = false;
+  leaveStatus: LeaveStatusResponse | null = null;
   private destroy$ = new Subject<void>();
 
   // Password validation helper methods for template
@@ -182,6 +183,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
     this.pushSupported = this.pushService.isSupported();
     this.pushPermission = this.pushService.getPermission() as PushPermission;
+
+    this.apiService.getLeaveStatus().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (status) => this.leaveStatus = status,
+      error: () => this.leaveStatus = null
+    });
   }
 
   ngOnDestroy(): void {
@@ -248,16 +254,64 @@ export class ProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  getChoirLeaveInfo(choirId: number): ChoirLeaveInfo | null {
+    return this.leaveStatus?.choirs?.[choirId] ?? null;
+  }
+
+  isLeaveChoirBlocked(choirId: number): boolean {
+    const info = this.getChoirLeaveInfo(choirId);
+    return !!info && info.openBorrowings > 0;
+  }
+
+  isDeleteAccountBlocked(): boolean {
+    return !!this.leaveStatus && this.leaveStatus.totalOpenBorrowings > 0;
+  }
+
+  getLeaveChoirTooltip(choirId: number): string {
+    const info = this.getChoirLeaveInfo(choirId);
+    if (!info || info.openBorrowings === 0) {
+      return '';
+    }
+    const count = info.openBorrowings;
+    return count === 1
+      ? 'Du hast noch eine offene Notenausleihe in diesem Chor. Bitte gib die Noten zuerst zurück.'
+      : `Du hast noch ${count} offene Notenausleihen in diesem Chor. Bitte gib die Noten zuerst zurück.`;
+  }
+
+  getDeleteAccountTooltip(): string {
+    if (!this.leaveStatus || this.leaveStatus.totalOpenBorrowings === 0) {
+      return '';
+    }
+    const count = this.leaveStatus.totalOpenBorrowings;
+    return count === 1
+      ? 'Du hast noch eine offene Notenausleihe. Bitte gib die Noten zuerst zurück.'
+      : `Du hast noch ${count} offene Notenausleihen. Bitte gib die Noten zuerst zurück.`;
+  }
+
   onLeaveChoir(choir: Choir): void {
     if (this.isDemoUser) {
       return;
     }
     const multipleChoirs = this.choirList.length > 1;
+    const info = this.getChoirLeaveInfo(choir.id);
+    const parts: string[] = [];
+
+    if (multipleChoirs) {
+      parts.push(`Möchtest du dich wirklich vom Chor "${choir.name}" abmelden?`);
+    } else {
+      parts.push(`Wenn du dich vom Chor "${choir.name}" abmeldest, wird dein Profil vollständig gelöscht.`);
+    }
+
+    if (info && info.dutyAssignments > 0) {
+      const count = info.dutyAssignments;
+      parts.push(count === 1
+        ? 'Du bist noch für einen zukünftigen Eintrag im Dienstplan eingeteilt.'
+        : `Du bist noch für ${count} zukünftige Einträge im Dienstplan eingeteilt.`);
+    }
+
     this.dialogHelper.confirm({
       title: 'Abmeldung bestätigen',
-      message: multipleChoirs
-        ? `Möchtest du dich wirklich vom Chor "${choir.name}" abmelden?`
-        : `Wenn du dich vom Chor "${choir.name}" abmeldest, wird dein Profil vollständig gelöscht.`,
+      message: parts.join(' '),
       confirmButtonText: 'Abmelden',
       cancelButtonText: 'Abbrechen'
     }).subscribe(confirmed => {
@@ -277,9 +331,20 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (this.isDemoUser) {
       return;
     }
+    const parts: string[] = [
+      'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird umgehend deaktiviert – du erhältst keine Mails mehr und wirst aus allen Chören entfernt.'
+    ];
+
+    if (this.leaveStatus && this.leaveStatus.totalDutyAssignments > 0) {
+      const count = this.leaveStatus.totalDutyAssignments;
+      parts.push(count === 1
+        ? 'Du bist noch für einen zukünftigen Eintrag im Dienstplan eingeteilt.'
+        : `Du bist noch für ${count} zukünftige Einträge im Dienstplan eingeteilt.`);
+    }
+
     this.dialogHelper.confirm({
       title: 'Vom System abmelden',
-      message: 'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird dauerhaft gelöscht.',
+      message: parts.join(' '),
       confirmButtonText: 'Profil löschen',
       cancelButtonText: 'Abbrechen'
     }).subscribe(confirmed => {

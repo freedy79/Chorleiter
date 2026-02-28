@@ -1,0 +1,92 @@
+# Pre-commit hooks for Chorleiter project
+# Install with: pip install pre-commit
+# Run manually: pre-commit run --all-files
+# Install hooks: pre-commit install
+
+repos:
+  # General file quality checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+        exclude: ^choir-app-frontend/tsconfig.*\.json$
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+
+  # Secrets detection
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+
+  # Frontend-specific checks
+  - repo: local
+    hooks:
+      # TypeScript/JavaScript linting
+      - id: eslint-frontend
+        name: ESLint Frontend
+        entry: bash -c 'cd choir-app-frontend && npm run lint --if-present'
+        language: system
+        files: ^choir-app-frontend/.*\.(ts|js)$
+        pass_filenames: false
+
+      # Prettier formatting check
+      - id: prettier-frontend
+        name: Prettier Frontend
+        entry: bash -c 'cd choir-app-frontend && npx prettier --check src/'
+        language: system
+        files: ^choir-app-frontend/src/.*\.(ts|html|scss|css|json)$
+        pass_filenames: false
+
+  # Backend-specific checks
+  - repo: local
+    hooks:
+      # ESLint backend (if configured)
+      - id: eslint-backend
+        name: ESLint Backend
+        entry: bash -c 'cd choir-app-backend && npm run lint --if-present'
+        language: system
+        files: ^choir-app-backend/.*\.js$
+        pass_filenames: false
+
+      # Dangerous database patterns check
+      - id: check-dangerous-db-patterns
+        name: Check dangerous database patterns
+        entry:
+          bash -c 'if grep -r "sequelize\.sync.*alter.*true" choir-app-backend/src/;
+          then echo "ERROR sequelize.sync({ alter true }) is forbidden!"; exit 1; fi'
+        language: system
+        files: ^choir-app-backend/src/.*\.js$
+        pass_filenames: false
+
+      # Ensure dependencies are in package.json
+      - id: check-backend-require-statements
+        name: Check backend require() matches package.json
+        entry:
+          bash -c 'cd choir-app-backend && node scripts/check-dependencies.js || true'
+        language: system
+        files: ^choir-app-backend/(src/.*\.js|package\.json)$
+        pass_filenames: false
+
+  # Markdown linting
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: [--fix]
+
+  # YAML validation
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: [-d, '{extends: default, rules: {line-length: {max: 120}, document-start: disable}}']

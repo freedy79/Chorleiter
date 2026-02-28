@@ -38,8 +38,25 @@ async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     }
 }
 
+async function validateProgramForChoir(programId, choirId) {
+    if (!programId) {
+        return { valid: true, program: null };
+    }
+
+    const program = await db.program.findOne({
+        where: { id: programId, choirId },
+        attributes: ['id', 'title', 'status']
+    });
+
+    if (!program) {
+        return { valid: false, message: 'Linked program not found for active choir.' };
+    }
+
+    return { valid: true, program };
+}
+
 exports.create = async (req, res) => {
-    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId, programId } = req.body;
     const choirId = req.activeChoirId;
     const creatorId = req.userId;
 
@@ -48,6 +65,10 @@ exports.create = async (req, res) => {
     }
 
     const targetDate = parseDateOnly(date);
+        const programValidation = await validateProgramForChoir(programId, choirId);
+        if (!programValidation.valid) {
+            return res.status(400).send({ message: programValidation.message });
+        }
         const dateOnly = isoDateString(targetDate);
 
         // Prüfen, ob für diesen Chor an diesem Tag bereits Events existieren
@@ -84,7 +105,8 @@ exports.create = async (req, res) => {
             organistId: organistId || null,
             finalized: finalized || false,
             version: version || 1,
-            monthlyPlanId: monthlyPlanId || null
+            monthlyPlanId: monthlyPlanId || null,
+            programId: programId || null
         });
 
         // Unabhängig davon, ob neu oder aktualisiert, setzen Sie die Liste der Stücke neu.
@@ -98,7 +120,8 @@ exports.create = async (req, res) => {
             include: [
                 { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
                 { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false },
+                { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
             ]
         });
 
@@ -227,7 +250,8 @@ exports.findAll = async (req, res) => {
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
             { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
             { model: db.choir, as: 'choir', attributes: ['id', 'name'] },
-            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
         ]
     });
     res.status(200).send(events);
@@ -318,10 +342,59 @@ exports.findNext = async (req, res) => {
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
             { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
             { model: db.choir, as: 'choir', attributes: ['id', 'name'] },
-            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
         ]
     });
-    res.status(200).send(events);
+
+    // Fetch plan entries where the user is assigned as director or organist
+    const planEntries = await db.plan_entry.findAll({
+        where: {
+            date: { [Op.gte]: startOfToday },
+            [Op.or]: [
+                { directorId: req.userId },
+                { organistId: req.userId }
+            ]
+        },
+        include: [
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+            {
+                model: db.monthly_plan,
+                as: 'monthlyPlan',
+                attributes: ['id', 'year', 'month', 'finalized', 'version', 'choirId'],
+                where: { choirId: { [Op.in]: choirIds } },
+                include: [
+                    { model: db.choir, as: 'choir', attributes: ['id', 'name'] }
+                ]
+            },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+        ]
+    });
+
+    // Map plan entries to event-compatible shape
+    const planEntryEvents = planEntries.map(entry => ({
+        id: entry.id,
+        date: entry.date,
+        type: 'PLAN_ENTRY',
+        notes: entry.notes,
+        director: entry.director,
+        organist: entry.organist,
+        choirId: entry.monthlyPlan?.choirId,
+        choir: entry.monthlyPlan?.choir,
+        program: entry.program,
+        pieces: [],
+        monthlyPlan: entry.monthlyPlan
+            ? { year: entry.monthlyPlan.year, month: entry.monthlyPlan.month, finalized: entry.monthlyPlan.finalized, version: entry.monthlyPlan.version }
+            : null
+    }));
+
+    // Merge events and plan entries, sort by date, apply limit
+    const merged = [...events.map(e => e.toJSON()), ...planEntryEvents]
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, limit);
+
+    res.status(200).send(merged);
 };
 
 /**
@@ -350,7 +423,10 @@ exports.findOne = async (req, res) => {
                         }
                     }
                 ]
-            }, { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] }, { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }]
+            },
+            { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+            { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false },
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }]
         });
 
     if (!event) {
@@ -362,7 +438,7 @@ exports.findOne = async (req, res) => {
 
 exports.update = async (req, res) => {
     const id = req.params.id;
-    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId } = req.body;
+    const { date, type, notes, pieceIds, organistId, directorId, finalized, version, monthlyPlanId, programId } = req.body;
 
     const event = await Event.findOne({
             where: { id, choirId: req.activeChoirId },
@@ -375,25 +451,32 @@ exports.update = async (req, res) => {
 
         // Determine if anything has changed
         const targetDate = parseDateOnly(date);
+        const nextProgramId = programId !== undefined ? (programId || null) : event.programId;
+        const programValidation = await validateProgramForChoir(nextProgramId, req.activeChoirId);
+        if (!programValidation.valid) {
+            return res.status(400).send({ message: programValidation.message });
+        }
         const dateChanged = targetDate.getTime() !== new Date(event.date).getTime();
         const typeChanged = type !== event.type;
         const notesChanged = (notes || '') !== (event.notes || '');
+        const programChanged = nextProgramId !== (event.programId || null);
 
         const incomingPieces = Array.isArray(pieceIds) ? [...pieceIds].sort() : [];
         const existingPieces = event.pieces.map(p => p.id).sort();
         const piecesChanged = JSON.stringify(incomingPieces) !== JSON.stringify(existingPieces);
 
-        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged) {
+        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged && !programChanged) {
             const full = await Event.findByPk(id, {
                 include: [
                     { model: Piece, as: 'pieces', through: { attributes: [] } },
-                    { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] }
+                    { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
                 ]
             });
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId });
+        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -405,7 +488,8 @@ exports.update = async (req, res) => {
                 { model: Piece, as: 'pieces', through: { attributes: [] } },
                 { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
                 { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false }
+                { model: db.monthly_plan, as: 'monthlyPlan', attributes: ['month', 'year', 'finalized', 'version'], required: false },
+                { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
             ]
         });
     await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_updated', details: { eventId: id, type, date: targetDate } });

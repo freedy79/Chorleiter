@@ -26,9 +26,10 @@ mat-card.post-card {
 }
 
 .small-icon-btn {
+  --mdc-icon-button-state-layer-size: 2rem;
   width: 2rem !important;
   height: 2rem !important;
-  line-height: 2rem !important;
+  padding: 0 !important;
 
   .mat-icon {
     font-size: 1.125rem;

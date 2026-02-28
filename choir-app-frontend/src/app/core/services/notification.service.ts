@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 
 /**
@@ -24,6 +25,18 @@ export class NotificationService {
    */
   success(message: string, duration?: number): void {
     this.show(message, 'OK', {
+      duration: duration ?? this.DEFAULT_SUCCESS_DURATION,
+      panelClass: 'success-snackbar'
+    });
+  }
+
+  /**
+   * Displays a success message with a custom action button.
+   * Returns the snackbar reference so callers can react to the action click.
+   */
+  successWithAction(message: string, actionLabel: string, duration?: number): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, actionLabel, {
+      verticalPosition: 'top',
       duration: duration ?? this.DEFAULT_SUCCESS_DURATION,
       panelClass: 'success-snackbar'
     });
@@ -62,6 +75,18 @@ export class NotificationService {
    */
   info(message: string, duration?: number): void {
     this.show(message, 'OK', {
+      duration: duration ?? this.DEFAULT_INFO_DURATION,
+      panelClass: 'info-snackbar'
+    });
+  }
+
+  /**
+   * Displays an info message with a custom action button.
+   * Returns the snackbar reference so callers can react to the action click.
+   */
+  infoWithAction(message: string, actionLabel: string, duration?: number): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, actionLabel, {
+      verticalPosition: 'top',
       duration: duration ?? this.DEFAULT_INFO_DURATION,
       panelClass: 'info-snackbar'
     });

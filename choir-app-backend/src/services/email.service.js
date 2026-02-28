@@ -3,6 +3,7 @@ const logger = require('../config/logger');
 const { getFrontendUrl } = require('../utils/frontend-url');
 const { buildTemplate } = require('./emailTemplateManager');
 const { sendMail, emailDisabled } = require('./emailTransporter');
+const { wrapWithMailLayout, appendFooterText } = require('./emailLayout');
 const { marked } = require('marked');
 const path = require('path');
 const fs = require('fs');
@@ -30,7 +31,11 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings, m
     final.first_name = final.firstName || to.split('@')[0];
   }
 
-  const { subject, html, text } = buildTemplate(template, type, final);
+  const { subject, html: rawHtml, text: rawText } = buildTemplate(template, type, final);
+  const frontendUrl = await getFrontendUrl();
+  const choirName = final.choir || final.choirname || '';
+  const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
+  const text = appendFooterText(rawText, choirName);
   await sendMail({ to, subject, html, text, ...mailOptions }, overrideSettings);
 }
 
@@ -92,28 +97,28 @@ async function buildPostEmail(text, choirName, postId, hasAttachment) {
 
   const body = marked.parse(replaced);
 
-  // Build footer with post link and attachment notice
-  let footerHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a>`;
-  let footerText = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
+  // Build signature block (choir name + post link + attachment notice)
+  let signatureHtml = `<p>--<br>${choirName}<br><a href="https://nak-chorleiter.de">nak-chorleiter.de</a>`;
+  let signatureText = `\n\n--\n${choirName}\nhttps://nak-chorleiter.de`;
 
   // Add post link if postId is available
   if (postId) {
     const postLink = `${linkBase}/posts`;
-    footerHtml += `<br><br><a href="${postLink}">Zum Beitrag im System</a>`;
-    footerText += `\n\nZum Beitrag im System:\n${postLink}`;
+    signatureHtml += `<br><br><a href="${postLink}">Zum Beitrag im System</a>`;
+    signatureText += `\n\nZum Beitrag im System:\n${postLink}`;
   }
 
   // Add attachment notice if there are attachments
   if (hasAttachment) {
-    footerHtml += `<br><em>Anhänge können nur im Original-Beitrag heruntergeladen werden.</em>`;
-    footerText += `\n\nAnhänge können nur im Original-Beitrag heruntergeladen werden.`;
+    signatureHtml += `<br><em>Anhänge können nur im Original-Beitrag heruntergeladen werden.</em>`;
+    signatureText += `\n\nAnhänge können nur im Original-Beitrag heruntergeladen werden.`;
   }
 
-  footerHtml += `</p>`;
+  signatureHtml += `</p>`;
 
-  const signatureHtml = footerHtml;
-  const html = `${body}${signatureHtml}`;
-  const plainText = `${replaced}${footerText}`;
+  const rawHtml = `${body}${signatureHtml}`;
+  const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl: linkBase });
+  const plainText = appendFooterText(`${replaced}${signatureText}`, choirName);
   return { html, text: plainText, attachments };
 }
 
@@ -172,7 +177,9 @@ exports.sendTestMail = async (to, override, surname, firstName) => {
       first_name: firstName || surname || fallback,
       date: formatDate()
     };
-    const { html, text } = buildTemplate({ body: '<p>Dies ist eine Testmail.</p>' }, 'test', replacements);
+    const { html: rawHtml, text } = buildTemplate({ body: '<p>Dies ist eine Testmail.</p>' }, 'test', replacements);
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
     await sendMail({ to, subject: 'Testmail', html, text }, override);
   } catch (err) {
     logger.error(`Error sending test mail to ${to}: ${err.message}`);
@@ -192,6 +199,14 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
       surname,
       first_name: firstName
     };
+    if (type === 'mail-footer') {
+      // Send a sample mail that shows the footer in context
+      const rawHtml = '<p>Dies ist eine Beispielmail, um den Footer zu testen.</p>';
+      const frontendUrl = await getFrontendUrl();
+      const html = await wrapWithMailLayout(rawHtml, { choir: 'Beispielchor', frontendUrl });
+      await sendMail({ to, subject: 'Footer-Vorschau', html, text: 'Dies ist eine Beispielmail, um den Footer zu testen.' });
+      return;
+    }
     await sendTemplateMail(type, to, placeholders);
   } catch (err) {
     logger.error(`Error sending template preview mail to ${to}: ${err.message}`);
@@ -286,15 +301,44 @@ exports.sendPostNotificationMail = async (recipients, title, text, choirName, re
   }
 };
 
+exports.sendPollReminderMail = async (to, {
+  firstName,
+  surname,
+  postTitle,
+  pollText,
+  choirName,
+  optionLinksHtml,
+  optionLinksText
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    await sendTemplateMail('poll-reminder', to, {
+      first_name: firstName,
+      surname,
+      post_title: postTitle,
+      poll_text: pollText,
+      choir: choirName,
+      option_links: optionLinksHtml,
+      option_links_text: optionLinksText
+    });
+  } catch (err) {
+    logger.error(`Error sending poll reminder mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
 exports.sendPieceReportMail = async (recipients, piece, reporter, category, reason, link) => {
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
     const subject = `Meldung zu Stück: ${piece}`;
     const text = `${reporter} hat das Stück "${piece}" gemeldet.\nKategorie: ${category}\nBegründung: ${reason}\n${link}`;
-    const html = `<p>${reporter} hat das Stück "${piece}" gemeldet.</p>` +
+    const rawHtml = `<p>${reporter} hat das Stück "${piece}" gemeldet.</p>` +
       `<p><strong>Kategorie:</strong> ${category}</p>` +
       `<p><strong>Begründung:</strong><br>${reason.replace(/\n/g, '<br>')}</p>` +
       `<p><a href="${link}">Stück ansehen</a></p>`;
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
     await sendMail({ to: recipients, subject, text, html });
   } catch (err) {
     logger.error(`Error sending piece report mail: ${err.message}`);
@@ -357,8 +401,10 @@ exports.sendNewMemberNotification = async (choirId, member) => {
     if (!choirName || recipients.length === 0) return;
     const fullName = [member.firstName, member.name].filter(Boolean).join(' ');
     const subject = `Neues Mitglied im Chor ${choirName}`;
-    const text = `${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.`;
-    const html = `<p>${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.</p>`;
+    const text = appendFooterText(`${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.`, choirName);
+    const rawHtml = `<p>${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.</p>`;
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
     await sendMail({ to: recipients, subject, text, html });
   } catch (err) {
     logger.error(`Error sending new member notification mail: ${err.message}`);
@@ -391,8 +437,10 @@ exports.sendMemberLeftNotification = async (choirId, member, options = {}) => {
     if (options.accountDeleted) {
       lines.push('Das Profil wurde vollständig gelöscht.');
     }
-    const text = lines.join(' ');
-    const html = lines.map(line => `<p>${line}</p>`).join('');
+    const text = appendFooterText(lines.join(' '), choirName);
+    const rawHtml = lines.map(line => `<p>${line}</p>`).join('');
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
     await sendMail({ to: recipients, subject, text, html });
   } catch (err) {
     logger.error(`Error sending member left notification mail: ${err.message}`);

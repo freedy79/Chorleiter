@@ -56,13 +56,13 @@
 }
 
 .availability-card {
-  @include card-background;
-  @include adaptive-border(1px);
   border-radius: 8px;
   padding: $spacing-md;
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
+  @include card-background;
+  @include adaptive-border(1px);
 
   // Status indicator stripe on left border
   &.card-available {

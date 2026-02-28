@@ -25,6 +25,8 @@ router.put('/:id', role.requireNonDemo, postValidation, validate, wrap(controlle
 router.delete('/:id', role.requireNonDemo, wrap(controller.remove));
 router.post('/:id/publish', role.requireNonDemo, wrap(controller.publish));
 router.post('/:id/vote', role.requireNonDemo, pollVoteValidation, validate, wrap(controller.vote));
+router.get('/:id/poll/reminder-status', role.requireNonDemo, wrap(controller.getPollReminderStatus));
+router.post('/:id/poll/reminders', role.requireNonDemo, wrap(controller.sendPollReminders));
 router.post('/:id/comments', role.requireNonDemo, commentValidation, validate, wrap(controller.addComment));
 router.delete('/:id/comments/:commentId', role.requireNonDemo, wrap(controller.removeComment));
 router.post('/:id/reactions', role.requireNonDemo, reactionValidation, validate, wrap(controller.reactOnPost));

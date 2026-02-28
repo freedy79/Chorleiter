@@ -1,6 +1,7 @@
 const db = require('../models');
 const logger = require('../config/logger');
 const asyncHandler = require('express-async-handler');
+const webpush = require('web-push');
 
 /**
  * Get all PWA configuration settings
@@ -266,5 +267,92 @@ exports.initializeDefaults = asyncHandler(async (req, res) => {
     created,
     skipped,
     total: defaults.length
+  });
+});
+
+/**
+ * Generate new VAPID keys and optionally save them
+ * POST /api/admin/pwa-config/generate-vapid-keys
+ */
+exports.generateVapidKeys = asyncHandler(async (req, res) => {
+  const { save, subject } = req.body || {};
+
+  const vapidKeys = webpush.generateVAPIDKeys();
+
+  if (save) {
+    const vapidSubject = subject || process.env.VAPID_SUBJECT || '';
+
+    const updates = [
+      { key: 'vapid_public_key', value: vapidKeys.publicKey },
+      { key: 'vapid_private_key', value: vapidKeys.privateKey },
+    ];
+    if (vapidSubject) {
+      updates.push({ key: 'vapid_subject', value: vapidSubject });
+    }
+
+    for (const { key, value } of updates) {
+      const config = await db.pwa_config.findOne({ where: { key } });
+      if (config) {
+        await config.update({ value, isEditable: true });
+      } else {
+        await db.pwa_config.create({
+          key,
+          value,
+          type: 'string',
+          category: 'vapid',
+          description: key === 'vapid_public_key'
+            ? 'VAPID public key for push notifications'
+            : key === 'vapid_private_key'
+              ? 'VAPID private key for push notifications (kept secret)'
+              : 'VAPID subject (typically a mailto: or https: URL)',
+          isEditable: true,
+          isSecret: key === 'vapid_private_key'
+        });
+      }
+    }
+
+    logger.info('VAPID keys generated and saved to pwa_config', { userId: req.userId });
+
+    res.status(200).json({
+      message: 'VAPID-Schlüssel wurden generiert und gespeichert.',
+      publicKey: vapidKeys.publicKey,
+      saved: true
+    });
+  } else {
+    logger.info('VAPID keys generated (not saved)', { userId: req.userId });
+
+    res.status(200).json({
+      publicKey: vapidKeys.publicKey,
+      privateKey: vapidKeys.privateKey,
+      saved: false
+    });
+  }
+});
+
+/**
+ * Get push notification status/statistics
+ * GET /api/admin/pwa-config/push-status
+ */
+exports.getPushStatus = asyncHandler(async (req, res) => {
+  const totalSubscriptions = await db.push_subscription.count();
+  const uniqueUsers = await db.push_subscription.count({
+    distinct: true,
+    col: 'userId'
+  });
+  const uniqueChoirs = await db.push_subscription.count({
+    distinct: true,
+    col: 'choirId'
+  });
+
+  const vapidPublicKey = await db.pwa_config.findOne({ where: { key: 'vapid_public_key' } });
+  const vapidConfigured = !!(vapidPublicKey?.value);
+  const envConfigured = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+
+  res.status(200).json({
+    vapidConfigured,
+    envConfigured,
+    totalSubscriptions,
+    uniqueUsers,
+    uniqueChoirs
   });
 });

@@ -8,6 +8,7 @@ router.use(authJwt.verifyToken);
 
 router.get("/me", wrap(controller.getMe));
 router.put("/me", role.requireNonDemo, wrap(controller.updateMe));
+router.get("/me/leave-status", wrap(controller.leaveStatus));
 router.post("/me/donate", role.requireNonDemo, wrap(controller.registerDonation));
 router.get("/me/preferences", wrap(controller.getPreferences));
 router.put("/me/preferences", role.requireNonDemo, wrap(controller.updatePreferences));

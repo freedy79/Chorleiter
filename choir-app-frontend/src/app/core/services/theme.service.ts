@@ -44,11 +44,13 @@ export class ThemeService {
    * Wendet das ausgewählte Theme an und speichert die Auswahl.
    * @param theme - Das anzuwendende Theme: 'light', 'dark' oder 'system'.
    */
-  setTheme(theme: Theme): void {
-    console.log(`[ThemeService] Benutzer wählt Theme: "${theme}"`);
+  setTheme(theme: Theme, persist = true): void {
+    //console.log(`[ThemeService] Benutzer wählt Theme: "${theme}"`);
     this.currentTheme = theme;
     localStorage.setItem(ThemeService.STORAGE_KEY, theme);
-    this.prefs.update({ theme }).subscribe();
+    if (persist) {
+      this.prefs.update({ theme }).subscribe();
+    }
     this.applyTheme(theme);
   }
 
@@ -94,7 +96,7 @@ export class ThemeService {
     // Dann die gewünschte Klasse hinzufügen
     this.renderer.addClass(document.body, `${themeClass}-theme`);
 
-    console.log(`[ThemeService] Body-Klasse gesetzt: "${themeClass}-theme" (entfernt: "${oppositeClass}-theme")`);
-    console.log(`[ThemeService] Aktuelle Body-Klassen:`, document.body.className);
+    //console.log(`[ThemeService] Body-Klasse gesetzt: "${themeClass}-theme" (entfernt: "${oppositeClass}-theme")`);
+    //console.log(`[ThemeService] Aktuelle Body-Klassen:`, document.body.className);
   }
 }

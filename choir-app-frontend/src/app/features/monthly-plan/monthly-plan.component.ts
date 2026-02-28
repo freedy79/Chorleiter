@@ -20,6 +20,7 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MonthNavigationService } from '@shared/services/month-navigation.service';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
@@ -29,6 +30,8 @@ import { DebugLogService } from '@core/services/debug-log.service';
 import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
 import { EventShortPipe } from '@shared/pipes/event-short.pipe';
 import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
+import { ProgramService } from '@core/services/program.service';
+import { Program } from '@core/models/program';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -51,7 +54,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,13 +62,14 @@ interface LoadMetrics {
 export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'event', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
   members: UserInChoir[] = [];
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
+  programs: Program[] = [];
   currentUserId: number | null = null;
   availabilityMap: { [userId: number]: { [date: string]: string } } = {};
   selectedTab = 0;
@@ -174,8 +178,25 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return parseDateOnly(date).getTime().toString();
   }
 
+  eventTooltip(entry: PlanEntry): string {
+    const notes = entry.notes?.trim();
+    if (!notes) {
+      return '';
+    }
+
+    const normalizedNotes = notes.toLowerCase();
+    if (/\b(gottesdienst|gd)\b/.test(normalizedNotes)) {
+      return 'Gottesdienst';
+    }
+    if (/\b(chorprobe|probe|cp)\b/.test(normalizedNotes)) {
+      return 'Chorprobe';
+    }
+
+    return notes;
+  }
+
   private updateDisplayedColumns(): void {
-    const base = ['date', 'event', 'director', 'organist', 'notes'];
+    const base = ['date', 'event', 'program', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
   }
 
@@ -338,6 +359,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private notification: NotificationService,
               private router: Router,
               private route: ActivatedRoute,
+              private programService: ProgramService,
               private monthNav: MonthNavigationService,
               private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef,
@@ -363,6 +385,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.auth.isChoirAdmin$.pipe(take(1)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
+      if (isChoirAdmin) {
+        this.loadPrograms();
+      }
       this.loadPlan(this.selectedYear, this.selectedMonth);
     });
 
@@ -436,8 +461,18 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         this.availabilityRequestId = 0;
       }
       if (!wasAdmin && this.isChoirAdmin) {
+        this.loadPrograms();
         this.loadPlan(this.selectedYear, this.selectedMonth);
       }
+    });
+  }
+
+  private loadPrograms(): void {
+    this.programService.getPrograms().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(programs => {
+      this.programs = (programs || []).filter(p => p.status !== 'archived');
+      this.cdr.markForCheck();
     });
   }
 
@@ -639,6 +674,21 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.notes = updated.notes;
+    });
+  }
+
+  updateProgram(ev: PlanEntry, programId: string | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      notes: ev.notes || '',
+      directorId: ev.director?.id ?? undefined,
+      organistId: ev.organist?.id ?? undefined,
+      programId
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
+      ev.programId = updated.programId ?? null;
+      ev.program = updated.program ?? null;
     });
   }
 

@@ -1,0 +1,91 @@
+version: 2
+updates:
+  # Backend npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/choir-app-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # Group all production dependencies together
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@types/*"
+      # Separate group for development tools
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@types/*"
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+
+  # Frontend npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/choir-app-frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # Angular framework updates together
+      angular:
+        patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+      # Material UI together
+      material:
+        patterns:
+          - "@angular/material"
+          - "@angular/cdk"
+      # Other production dependencies
+      production-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@angular/*"
+          - "@angular-devkit/*"
+          - "eslint*"
+          - "prettier*"
+          - "@types/*"
+          - "karma*"
+          - "jasmine*"
+      # Dev dependencies
+      dev-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "eslint*"
+          - "prettier*"
+          - "@types/*"
+          - "karma*"
+          - "jasmine*"
+    commit-message:
+      prefix: "chore(frontend)"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+
+  # Docker if needed in the future
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore(docker)"
+      include: "scope"

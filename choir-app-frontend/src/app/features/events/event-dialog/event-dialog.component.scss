@@ -119,17 +119,17 @@ h3.mat-subheading-2 {
 .piece-reference {
   font-style: italic;
   font-size: 0.85rem;
-  @include subtle-text;
   white-space: nowrap;
   flex-shrink: 0;
+  @include subtle-text;
 }
 
 .piece-title {
-  @include readable-text;
   font-size: 0.938rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  @include readable-text;
 }
 
 .no-pieces-message {

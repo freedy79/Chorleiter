@@ -1,15 +1,20 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MaterialModule } from '@modules/material.module';
 import { AvailabilityTableComponent } from '../monthly-plan/availability-table/availability-table.component';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MonthNavigationService, MonthYear } from '@shared/services/month-navigation.service';
 import { ApiService } from '@core/services/api.service';
+import { AuthService } from '@core/services/auth.service';
 import { UserAvailability } from '@core/models/user-availability';
+import { MemberAvailability } from '@core/models/member-availability';
+import { UserInChoir } from '@core/models/user';
 import { getHolidayName } from '@shared/util/holiday';
 import { parseDateOnly } from '@shared/util/date';
-import { Subscription, firstValueFrom } from 'rxjs';
+import { Subscription, combineLatest, firstValueFrom } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 interface AvailabilityMonthGroup {
   period: MonthYear;
@@ -33,7 +38,14 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   isLoading = false;
   loadError = false;
   limitedToTen = false;
+
+  isChoirAdmin = false;
+  choirMembers: UserInChoir[] = [];
+  selectedUserId: number | null = null;
+  currentUserId: number | null = null;
+
   private paramSub?: Subscription;
+  private adminSub?: Subscription;
   private loadRequestId = 0;
   private destroyed = false;
   private skipNextParamLoad = false;
@@ -42,12 +54,32 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
               private router: Router,
               private monthNav: MonthNavigationService,
               private api: ApiService,
+              private auth: AuthService,
               private cdr: ChangeDetectorRef) {
     const now = new Date();
     this.selected = { year: now.getFullYear(), month: now.getMonth() + 1 };
   }
 
   ngOnInit(): void {
+    this.adminSub = combineLatest([this.auth.isChoirAdmin$, this.auth.currentUser$]).subscribe(
+      ([isAdmin, user]) => {
+        this.isChoirAdmin = isAdmin;
+        if (user && this.currentUserId !== user.id) {
+          this.currentUserId = user.id;
+          if (this.selectedUserId === null) {
+            this.selectedUserId = user.id;
+          }
+        }
+        if (isAdmin && this.choirMembers.length === 0) {
+          this.api.getChoirMembers().pipe(take(1)).subscribe(members => {
+            this.choirMembers = members;
+            this.cdr.markForCheck();
+          });
+        }
+        this.cdr.markForCheck();
+      }
+    );
+
     this.paramSub = this.route.queryParamMap.subscribe(params => {
       const y = Number(params.get('year'));
       const m = Number(params.get('month'));
@@ -64,7 +96,16 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.paramSub?.unsubscribe();
+    this.adminSub?.unsubscribe();
     this.destroyed = true;
+  }
+
+  onMemberChange(): void {
+    void this.loadAvailabilities();
+  }
+
+  memberDisplayName(member: UserInChoir): string {
+    return [member.firstName, member.name].filter(Boolean).join(' ');
   }
 
   monthChanged(): void {
@@ -106,6 +147,14 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
 
   trackByPeriod(_: number, group: AvailabilityMonthGroup): string {
     return `${group.period.year}-${group.period.month}`;
+  }
+
+  get isViewingOwnAvailability(): boolean {
+    return this.selectedUserId === null || this.selectedUserId === this.currentUserId;
+  }
+
+  get targetUserIdForEdit(): number | undefined {
+    return this.isViewingOwnAvailability ? undefined : (this.selectedUserId ?? undefined);
   }
 
   private async loadAvailabilities(): Promise<void> {
@@ -194,8 +243,45 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   }
 
   private async fetchMonth(period: MonthYear): Promise<UserAvailability[]> {
-    const data = await firstValueFrom(this.api.getAvailabilities(period.year, period.month));
+    let data: UserAvailability[];
+    if (!this.isViewingOwnAvailability && this.selectedUserId != null) {
+      try {
+        data = await firstValueFrom(
+          this.api.getUserAvailabilities(period.year, period.month, this.selectedUserId)
+        );
+      } catch (error) {
+        if (!this.isNotFoundError(error)) {
+          throw error;
+        }
+
+        data = await this.fetchMonthForSelectedUserLegacy(period, this.selectedUserId);
+      }
+    } else {
+      data = await firstValueFrom(this.api.getAvailabilities(period.year, period.month));
+    }
     return this.decorate(data);
+  }
+
+  private async fetchMonthForSelectedUserLegacy(period: MonthYear, selectedUserId: number): Promise<UserAvailability[]> {
+    const [monthDates, allMembers] = await Promise.all([
+      firstValueFrom(this.api.getAvailabilities(period.year, period.month)),
+      firstValueFrom(this.api.getMemberAvailabilities(period.year, period.month))
+    ]);
+
+    const statusByDate = new Map(
+      allMembers
+        .filter((a: MemberAvailability) => a.userId === selectedUserId)
+        .map((a: MemberAvailability) => [a.date, a.status])
+    );
+
+    return monthDates.map(entry => ({
+      ...entry,
+      status: statusByDate.get(entry.date) ?? undefined
+    }));
+  }
+
+  private isNotFoundError(error: unknown): boolean {
+    return error instanceof HttpErrorResponse && error.status === 404;
   }
 
   private decorate(data: UserAvailability[]): UserAvailability[] {

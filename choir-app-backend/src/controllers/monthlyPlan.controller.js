@@ -14,6 +14,7 @@ async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
     for (const rule of rules) {
         const dates = datesForRule(plan.year, plan.month, rule);
+        const ruleNotes = typeof rule.notes === 'string' && rule.notes.trim() ? rule.notes : 'Gottesdienst';
         for (const date of dates) {
             if (date.getUTCMonth() === 11 && date.getUTCDate() === 26 && date.getUTCDay() === 0) {
                 continue;
@@ -21,7 +22,7 @@ async function createEntriesFromRules(plan) {
             await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
-                notes: rule.notes || null
+                notes: ruleNotes
             });
         }
     }
@@ -30,7 +31,7 @@ async function createEntriesFromRules(plan) {
         const dec25 = new Date(Date.UTC(plan.year, 11, 25));
         const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
         if (!hasRuleForDec25) {
-            await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, notes: null });
+            await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, notes: 'Gottesdienst' });
         }
     }
 }
@@ -47,7 +48,8 @@ exports.findByMonth = async (req, res) => {
                     as: 'entries',
                     include: [
                         { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                        { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+                        { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+                        { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
                     ]
                 }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
                 order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -123,7 +125,8 @@ exports.downloadPdf = async (req, res) => {
                 as: 'entries',
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -153,7 +156,8 @@ exports.emailPdf = async (req, res) => {
                 as: 'entries',
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
-                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false }
+                    { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]

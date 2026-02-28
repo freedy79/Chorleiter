@@ -36,6 +36,7 @@ router.post("/users/:id/send-password-reset", role.requireNonDemo, wrap(controll
 router.delete("/users/:id/reset-token", role.requireNonDemo, wrap(controller.clearResetToken));
 router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/mail-logs', wrap(controller.getMailLogs));
+router.get('/mail-delivery-diagnostics', wrap(controller.getMailDeliveryDiagnostics));
 router.delete('/mail-logs', role.requireNonDemo, wrap(controller.clearMailLogs));
 router.get('/donations', wrap(controller.getDonations));
 router.post('/donations', role.requireNonDemo, wrap(controller.createDonation));

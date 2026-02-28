@@ -77,8 +77,8 @@
     mat-card-subtitle {
       margin-top: 0.5rem;
       font-size: 1rem;
-      @include readable-text;
       opacity: 0.7;
+      @include readable-text;
     }
   }
 }
@@ -100,8 +100,8 @@
     margin: 0 0 1rem 0;
     font-size: 1.1rem;
     font-weight: 500;
-    @include readable-text;
     color: var(--primary-color);
+    @include readable-text;
   }
 
   mat-form-field {
@@ -213,9 +213,9 @@
 }
 
 .info-card {
-  @include card-background;
   position: sticky;
   top: 2rem;
+  @include card-background;
 
   @include tablet {
     position: static;
@@ -246,9 +246,9 @@
 
     li {
       padding: 0.5rem 0;
-      @include readable-text;
       position: relative;
       padding-left: 1.75rem;
+      @include readable-text;
 
       &::before {
         content: '✓';

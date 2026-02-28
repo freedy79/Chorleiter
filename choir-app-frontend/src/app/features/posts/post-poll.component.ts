@@ -86,7 +86,14 @@ export class PostPollComponent implements OnChanges {
 
   getVoterNames(option: PollOption): string {
     if (!option.voters || option.voters.length === 0) return '';
-    return option.voters.map(v => v.name).join(', ');
+    return option.voters
+      .map(v => {
+        const firstName = v.firstName?.trim() || '';
+        const lastName = v.name?.trim() || '';
+        if (firstName && lastName) return `${firstName} ${lastName}`;
+        return firstName || lastName || 'Unbekannt';
+      })
+      .join(', ');
   }
 
   get showVoters(): boolean {

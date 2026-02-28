@@ -1,0 +1,64 @@
+<section class="practice-lists-page">
+  <h2>Meine Übungslisten</h2>
+
+  <mat-card class="create-card">
+    <mat-card-title>Neue Übungsliste</mat-card-title>
+    <mat-card-content>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Titel</mat-label>
+          <input matInput [(ngModel)]="newList.title" maxlength="120" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Zieldatum (optional)</mat-label>
+          <input matInput type="date" [(ngModel)]="newList.targetDate" />
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Beschreibung (optional)</mat-label>
+        <textarea matInput rows="2" [(ngModel)]="newList.description"></textarea>
+      </mat-form-field>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-flat-button color="primary" (click)="createList()" [disabled]="creating">
+        Erstellen
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <p class="storage-hint">
+    Lokaler Offline-Speicher: <strong>{{ storageUsageBytes | fileSize }}</strong>
+  </p>
+
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <div *ngIf="!loading && !lists.length" class="empty-state">
+    Noch keine Übungsliste vorhanden.
+  </div>
+
+  <div class="list-grid" *ngIf="!loading && lists.length">
+    <mat-card class="list-card" *ngFor="let list of lists" (click)="openList(list)">
+      <mat-card-title>{{ list.title }}</mat-card-title>
+      <mat-card-subtitle *ngIf="list.targetDate">Ziel: {{ list.targetDate | date:'dd.MM.yyyy' }}</mat-card-subtitle>
+      <mat-card-content>
+        <p class="description" *ngIf="list.description">{{ list.description }}</p>
+        <div class="chips-row">
+          <mat-chip-set>
+            <mat-chip>{{ list.itemCount || 0 }} Einträge</mat-chip>
+            <mat-chip color="primary" highlighted>{{ list.pinnedCount || 0 }} offline gepinnt</mat-chip>
+          </mat-chip-set>
+        </div>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button type="button" (click)="$event.stopPropagation(); renameList(list)">
+          Umbenennen
+        </button>
+        <button mat-button color="warn" type="button" (click)="$event.stopPropagation(); deleteList(list)">
+          Löschen
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</section>

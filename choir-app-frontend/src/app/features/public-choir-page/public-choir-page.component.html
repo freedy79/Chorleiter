@@ -1,0 +1,78 @@
+<div class="public-page" *ngIf="!loading && !notFound && pageData as data" [class.hero-template-page]="isHeroTemplate">
+  <ng-container *ngIf="isHeroTemplate; else classicTemplate">
+    <section class="hero-template">
+      <div class="hero-shell">
+        <div class="hero-left">
+          <p class="hero-badge">🎵 Chorvorstellung</p>
+          <h1>{{ data.page.headline || data.choir.name }}</h1>
+          <p class="hero-sub" *ngIf="data.page.subheadline">{{ data.page.subheadline }}</p>
+          <p class="hero-sub" *ngIf="!data.page.subheadline && data.choir.description">{{ data.choir.description }}</p>
+
+          <div class="hero-actions">
+            <a class="btn-primary" *ngIf="data.page.contactEmail" [href]="'mailto:' + data.page.contactEmail">Kontakt aufnehmen</a>
+            <a class="btn-secondary" *ngIf="data.page.websiteUrl" [href]="data.page.websiteUrl" target="_blank" rel="noopener noreferrer">Website öffnen</a>
+          </div>
+
+          <p class="hero-meta" *ngIf="data.choir.location">📍 {{ data.choir.location }}</p>
+          <p class="hero-meta" *ngIf="data.page.contactPhone">☎ {{ data.page.contactPhone }}</p>
+        </div>
+
+        <div class="hero-right" *ngIf="heroImageUrl; else noHeroImage">
+          <img [src]="heroImageUrl" [alt]="data.page.assets[0]?.altText || data.choir.name" />
+        </div>
+      </div>
+
+      <ng-template #noHeroImage>
+        <div class="hero-right hero-placeholder">
+          <div class="placeholder-card">
+            <h3>{{ data.choir.name }}</h3>
+            <p>Hier kann euer Chorbild erscheinen.</p>
+          </div>
+        </div>
+      </ng-template>
+
+      <section class="feature-grid" *ngIf="featureBlocks.length">
+        <article class="feature-card" *ngFor="let block of featureBlocks">
+          <h2 *ngIf="block.title">{{ block.title }}</h2>
+          <p *ngIf="block.text">{{ block.text }}</p>
+          <a *ngIf="block.ctaLabel && block.ctaUrl" [href]="block.ctaUrl" target="_blank" rel="noopener noreferrer">{{ block.ctaLabel }}</a>
+        </article>
+      </section>
+    </section>
+  </ng-container>
+
+  <ng-template #classicTemplate>
+    <header class="hero" [class.hero-alt]="data.page.templateKey !== 'classic'">
+      <h1>{{ data.page.headline || data.choir.name }}</h1>
+      <p *ngIf="data.page.subheadline">{{ data.page.subheadline }}</p>
+      <p class="location" *ngIf="data.choir.location">{{ data.choir.location }}</p>
+    </header>
+
+    <section class="assets" *ngIf="data.page.assets.length">
+      <img *ngFor="let asset of data.page.assets" [src]="asset.url" [alt]="asset.altText || 'Chorbild'" />
+    </section>
+
+    <section class="blocks" *ngIf="data.page.contentBlocks.length">
+      <article class="block" *ngFor="let block of data.page.contentBlocks">
+        <h2 *ngIf="block.title">{{ block.title }}</h2>
+        <p *ngIf="block.text">{{ block.text }}</p>
+        <img *ngIf="block.imageUrl" [src]="block.imageUrl" [alt]="block.imageAlt || block.title || 'Bild'" />
+        <a *ngIf="block.ctaLabel && block.ctaUrl" [href]="block.ctaUrl" target="_blank" rel="noopener noreferrer">{{ block.ctaLabel }}</a>
+      </article>
+    </section>
+  </ng-template>
+
+  <section class="contact" *ngIf="data.page.contactEmail || data.page.contactPhone || data.page.websiteUrl">
+    <h2>Kontakt</h2>
+    <p *ngIf="data.page.contactEmail">E-Mail: <a [href]="'mailto:' + data.page.contactEmail">{{ data.page.contactEmail }}</a></p>
+    <p *ngIf="data.page.contactPhone">Telefon: <a [href]="'tel:' + data.page.contactPhone">{{ data.page.contactPhone }}</a></p>
+    <p *ngIf="data.page.websiteUrl">Website: <a [href]="data.page.websiteUrl" target="_blank" rel="noopener noreferrer">{{ data.page.websiteUrl }}</a></p>
+  </section>
+
+  <footer>
+    <a routerLink="/">Zurück zur Startseite</a>
+  </footer>
+</div>
+
+<div class="state" *ngIf="loading">Seite wird geladen…</div>
+<div class="state" *ngIf="!loading && notFound">Diese Vorstellungsseite ist nicht verfügbar.</div>

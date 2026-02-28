@@ -40,8 +40,8 @@
 }
 
 .suggestion-meta {
-  @include subtle-text;
   margin-left: 4px;
+  @include subtle-text;
 }
 
 .loading-option {

@@ -136,7 +136,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.apiService.getEventById(event.id).subscribe(fullEvent => {
       this.dialogHelper.openDialogWithApi<
         EventDialogComponent,
-        { id: number; date: string; type: string; notes?: string; pieceIds: number[] },
+        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; programId?: string | null },
         Event
       >(
         EventDialogComponent,
@@ -244,7 +244,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   openAddEventDialog(): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
-      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number },
+      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
       CreateEventResponse
     >(
       EventDialogComponent,

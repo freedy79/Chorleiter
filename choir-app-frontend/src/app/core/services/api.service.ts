@@ -8,7 +8,7 @@ import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { Composer } from '../models/composer';
 import { Category } from '../models/category';
-import { LeaveChoirResponse, User, UserInChoir, GlobalRole } from '../models/user';
+import { LeaveChoirResponse, LeaveStatusResponse, User, UserInChoir, GlobalRole } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
 import { CreateEventResponse, Event } from '../models/event';
 import { MonthlyPlan } from '../models/monthly-plan';
@@ -26,6 +26,7 @@ import { Post } from '../models/post';
 import { PostImage } from '../models/post-image';
 import { PostComment } from '../models/post-comment';
 import { Program } from '../models/program';
+import { ChoirDigitalLicense } from '../models/choir-digital-license';
 import { LibraryItem } from '../models/library-item';
 import { LoanRequestPayload } from '../models/loan-request';
 import { Loan } from '../models/loan';
@@ -54,6 +55,7 @@ import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 import { MailLog } from '../models/mail-log';
+import { MailDeliveryDiagnostics } from '../models/mail-delivery-diagnostics';
 import { FilterPresetService } from './filter-preset.service';
 import { UserAvailability } from '../models/user-availability';
 import { MemberAvailability } from '../models/member-availability';
@@ -69,10 +71,54 @@ import { District } from '../models/district';
 import { DistrictService } from './district.service';
 import { Congregation } from '../models/congregation';
 import { CongregationService } from './congregation.service';
-import { Poll } from '../models/poll';
+import { Poll, PollReminderConsumeResponse, PollReminderSendResponse, PollReminderStatus } from '../models/poll';
 import { ReactionInfo, ReactionType } from '../models/reaction';
 import { PayPalService } from './paypal.service';
+import { ChoirPublicPage, PublicChoirPageResponse, SlugAvailabilityResponse } from '../models/choir-public-page';
+import { ChatRoom, ChatUnreadSummary } from '../models/chat-room';
+import { ChatMessage, ChatMessageListResponse } from '../models/chat-message';
+import { ChatService } from './chat.service';
 
+/**
+ * @deprecated ApiService is a legacy facade service that should no longer be used.
+ *
+ * **Migration Strategy:**
+ * Instead of injecting `ApiService`, inject the specific domain service you need:
+ * - For pieces: inject `PieceService`
+ * - For composers: inject `ComposerService`
+ * - For authors: inject `AuthorService`
+ * - For publishers: inject `PublisherService`
+ * - For categories: inject `CategoryService`
+ * - For collections: inject `CollectionService`
+ * - For events: inject `EventService`
+ * - For monthly plans: inject `MonthlyPlanService`
+ * - For plan entries: inject `PlanEntryService`
+ * - For users: inject `UserService`
+ * - For choirs: inject `ChoirService`
+ * - For library: inject `LibraryService`
+ * - For posts: inject `PostService`
+ * - For programs: inject `ProgramService`
+ * - For authentication: inject `AuthService`
+ * - For admin functions: inject `AdminService`
+ * - For system config: inject `SystemService`
+ * - For search: inject `SearchService`
+ * - For districts: inject `DistrictService`
+ * - For congregations: inject `CongregationService`
+ *
+ * **Benefits of using domain services directly:**
+ * - Smaller bundle size (tree-shaking works better)
+ * - Clearer dependencies (you see exactly what your component needs)
+ * - Better testability (mock only what you use)
+ * - Follows Single Responsibility Principle
+ * - Easier to navigate code (direct service names)
+ *
+ * **Migration Guide:**
+ * See `doc/frontend/API-SERVICE-MIGRATION-GUIDE.md` for step-by-step instructions.
+ *
+ * **Keeping for compatibility:**
+ * This service is kept for backward compatibility but will be removed in a future version.
+ * All new features MUST use domain services directly.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -99,6 +145,7 @@ export class ApiService {
               private searchService: SearchService,
               private monthlyPlanService: MonthlyPlanService,
               private postService: PostService,
+              private chatService: ChatService,
               private choirLendingService: ChoirLendingService,
               private libraryService: LibraryService,
               private programService: ProgramService,
@@ -421,7 +468,7 @@ export class ApiService {
    * Creates a new event (service or rehearsal) for the current choir.
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
-  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number, programId?: string | null }): Observable<CreateEventResponse> {
     return this.eventService.createEvent(eventData);
   }
 
@@ -442,7 +489,7 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
-  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number }): Observable<Event> {
+  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
 
@@ -455,11 +502,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number | null; organistId?: number | null }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number | null; organistId?: number | null }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -531,6 +578,10 @@ export class ApiService {
 
   getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
     return this.availabilityService.getMemberAvailabilities(year, month);
+  }
+
+  getUserAvailabilities(year: number, month: number, userId: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getUserAvailabilities(year, month, userId);
   }
 
   setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
@@ -675,6 +726,38 @@ export class ApiService {
     return this.choirLendingService.downloadCopiesPdf(id);
   }
 
+  getCollectionDigitalLicenses(collectionId: number): Observable<ChoirDigitalLicense[]> {
+    return this.choirLendingService.getDigitalLicenses(collectionId);
+  }
+
+  getCollectionViewableDigitalLicenses(collectionId: number): Observable<ChoirDigitalLicense[]> {
+    return this.choirLendingService.getViewableDigitalLicenses(collectionId);
+  }
+
+  createCollectionDigitalLicense(collectionId: number, data: Partial<ChoirDigitalLicense>): Observable<ChoirDigitalLicense> {
+    return this.choirLendingService.createDigitalLicense(collectionId, data);
+  }
+
+  updateCollectionDigitalLicense(licenseId: number, data: Partial<ChoirDigitalLicense>): Observable<ChoirDigitalLicense> {
+    return this.choirLendingService.updateDigitalLicense(licenseId, data);
+  }
+
+  deleteCollectionDigitalLicense(licenseId: number): Observable<void> {
+    return this.choirLendingService.deleteDigitalLicense(licenseId);
+  }
+
+  uploadCollectionDigitalLicenseDocument(licenseId: number, file: File): Observable<ChoirDigitalLicense> {
+    return this.choirLendingService.uploadDigitalLicenseDocument(licenseId, file);
+  }
+
+  downloadCollectionDigitalLicenseDocument(licenseId: number): Observable<Blob> {
+    return this.choirLendingService.downloadDigitalLicenseDocument(licenseId);
+  }
+
+  getCollectionDigitalLicenseInlineViewUrl(licenseId: number): string {
+    return this.choirLendingService.getDigitalLicenseInlineViewUrl(licenseId);
+  }
+
   getMyBorrowings(): Observable<Lending[]> {
     return this.choirLendingService.getMyBorrowings();
   }
@@ -767,6 +850,30 @@ export class ApiService {
     return this.choirService.removeCollectionFromChoir(collectionId, options?.choirId);
   }
 
+  getMyPublicPage(options?: { choirId?: number }): Observable<ChoirPublicPage> {
+    return this.choirService.getMyPublicPage(options?.choirId);
+  }
+
+  updateMyPublicPage(data: Partial<ChoirPublicPage>, options?: { choirId?: number }): Observable<{ message: string; page: ChoirPublicPage }> {
+    return this.choirService.updateMyPublicPage(data, options?.choirId);
+  }
+
+  checkPublicPageSlugAvailability(slug: string, options?: { choirId?: number }): Observable<SlugAvailabilityResponse> {
+    return this.choirService.checkPublicPageSlugAvailability(slug, options?.choirId);
+  }
+
+  uploadPublicPageAsset(file: File, options?: { choirId?: number; sortOrder?: number; altText?: string }): Observable<any> {
+    return this.choirService.uploadPublicPageAsset(file, options?.choirId, options?.sortOrder ?? 0, options?.altText);
+  }
+
+  deletePublicPageAsset(assetId: number, options?: { choirId?: number }): Observable<{ message: string }> {
+    return this.choirService.deletePublicPageAsset(assetId, options?.choirId);
+  }
+
+  getPublicPageBySlug(slug: string): Observable<PublicChoirPageResponse> {
+    return this.choirService.getPublicPageBySlug(slug);
+  }
+
   // --- Admin Methods ---
 
   getAdminChoirs(): Observable<Choir[]> {
@@ -845,8 +952,12 @@ export class ApiService {
     return this.adminService.deleteLog(filename);
   }
 
-  getMailLogs(): Observable<MailLog[]> {
-    return this.adminService.getMailLogs();
+  getMailLogs(onlyErrors = false): Observable<MailLog[]> {
+    return this.adminService.getMailLogs(onlyErrors);
+  }
+
+  getMailDeliveryDiagnostics(): Observable<MailDeliveryDiagnostics> {
+    return this.adminService.getMailDeliveryDiagnostics();
   }
 
   clearMailLogs(): Observable<any> {
@@ -937,6 +1048,10 @@ export class ApiService {
     return this.userService.deleteAccount();
   }
 
+  getLeaveStatus(): Observable<LeaveStatusResponse> {
+    return this.userService.getLeaveStatus();
+  }
+
   getDonations(): Observable<Donation[]> {
         return this.adminService.getDonations();
   }
@@ -972,6 +1087,18 @@ export class ApiService {
 
   voteOnPost(id: number, optionIds: number[]): Observable<Poll> {
     return this.postService.voteOnPost(id, optionIds);
+  }
+
+  getPollReminderStatus(id: number): Observable<PollReminderStatus> {
+    return this.postService.getPollReminderStatus(id);
+  }
+
+  sendPollReminders(id: number, data: { userIds?: number[]; sendTestToSelf?: boolean }): Observable<PollReminderSendResponse> {
+    return this.postService.sendPollReminders(id, data);
+  }
+
+  consumePollReminderToken(token: string): Observable<PollReminderConsumeResponse> {
+    return this.postService.consumePollReminderToken(token);
   }
 
   addPostComment(id: number, text: string, parentId?: number | null): Observable<PostComment> {
@@ -1012,6 +1139,39 @@ export class ApiService {
 
   getPostImageUrl(postId: number, imageId: number): string {
     return this.postService.getImageUrl(postId, imageId);
+  }
+
+  // --- Chat Methods ---
+  getChatRooms(): Observable<ChatRoom[]> {
+    return this.chatService.getRooms();
+  }
+
+  getChatMessages(roomId: number, query?: { before?: string; after?: string; limit?: number }): Observable<ChatMessageListResponse> {
+    return this.chatService.getMessages(roomId, query);
+  }
+
+  createChatMessage(roomId: number, payload: { text?: string; replyToMessageId?: number | null; attachment?: File | null }): Observable<ChatMessage> {
+    return this.chatService.sendMessage(roomId, payload);
+  }
+
+  updateChatMessage(messageId: number, text: string): Observable<ChatMessage> {
+    return this.chatService.editMessage(messageId, text);
+  }
+
+  deleteChatMessage(messageId: number): Observable<void> {
+    return this.chatService.deleteMessage(messageId);
+  }
+
+  markChatRoomRead(roomId: number, lastReadMessageId?: number): Observable<{ chatRoomId: number; lastReadMessageId: number | null; lastReadAt: string | null }> {
+    return this.chatService.markRoomRead(roomId, lastReadMessageId);
+  }
+
+  getChatUnreadSummary(): Observable<ChatUnreadSummary> {
+    return this.chatService.getUnreadSummary();
+  }
+
+  getChatAttachmentUrl(messageId: number): string {
+    return this.chatService.getAttachmentUrl(messageId);
   }
 
   createProgram(data: { title: string; description?: string; startTime?: string }): Observable<Program> {
@@ -1091,6 +1251,19 @@ export class ApiService {
     return this.http.post<PwaConfigInitializeResponse>(`${environment.apiUrl}/admin/pwa-config/initialize`, {});
   }
 
+  generateVapidKeys(save: boolean, subject?: string): Observable<{ publicKey: string; privateKey?: string; saved: boolean; message?: string }> {
+    return this.http.post<{ publicKey: string; privateKey?: string; saved: boolean; message?: string }>(
+      `${environment.apiUrl}/admin/pwa-config/generate-vapid-keys`,
+      { save, subject }
+    );
+  }
+
+  getPushStatus(): Observable<{ vapidConfigured: boolean; envConfigured: boolean; totalSubscriptions: number; uniqueUsers: number; uniqueChoirs: number }> {
+    return this.http.get<{ vapidConfigured: boolean; envConfigured: boolean; totalSubscriptions: number; uniqueUsers: number; uniqueChoirs: number }>(
+      `${environment.apiUrl}/admin/pwa-config/push-status`
+    );
+  }
+
   // --- Doublette / Merge Methods ---
 
   getDoubletteThreshold(): Observable<{ threshold: number }> {
@@ -1114,6 +1287,7 @@ export class ApiService {
   }
 
   deletePiece(pieceId: number, _choirId?: number): Observable<any> {
+    void _choirId;
     return this.http.delete<any>(`${environment.apiUrl}/pieces/${pieceId}`);
   }
 }

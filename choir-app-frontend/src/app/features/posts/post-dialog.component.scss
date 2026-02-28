@@ -12,6 +12,18 @@
   overflow: auto;
 }
 
+.add-content-toolbar {
+  margin: 12px 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-content-label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
 // Image section
 .image-section {
   margin: 16px 0;
@@ -102,10 +114,19 @@
 // Attachment section
 .attachment-section {
   margin: 16px 0;
+  position: relative;
+  padding-top: 4px;
 
   h3 {
     margin-bottom: 8px;
+    padding-right: 36px;
   }
+}
+
+.remove-section-btn {
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .existing-attachment,
@@ -126,6 +147,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.poll-model-note {
+  margin-top: -4px;
 }
 
 .poll-options {

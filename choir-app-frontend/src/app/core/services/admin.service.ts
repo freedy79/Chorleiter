@@ -14,6 +14,7 @@ import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 import { MailLog } from '../models/mail-log';
+import { MailDeliveryDiagnostics } from '../models/mail-delivery-diagnostics';
 import { Donation } from '../models/donation';
 
 @Injectable({ providedIn: 'root' })
@@ -108,12 +109,20 @@ export class AdminService {
     return this.http.delete(`${this.apiUrl}/admin/logs/${encodeURIComponent(filename)}`);
   }
 
-  getMailLogs(): Observable<MailLog[]> {
-    return this.http.get<MailLog[]>(`${this.apiUrl}/admin/mail-logs`);
+  getMailLogs(onlyErrors = false): Observable<MailLog[]> {
+    const params: any = {};
+    if (onlyErrors) {
+      params.onlyErrors = true;
+    }
+    return this.http.get<MailLog[]>(`${this.apiUrl}/admin/mail-logs`, { params });
   }
 
   clearMailLogs(): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/mail-logs`);
+  }
+
+  getMailDeliveryDiagnostics(): Observable<MailDeliveryDiagnostics> {
+    return this.http.get<MailDeliveryDiagnostics>(`${this.apiUrl}/admin/mail-delivery-diagnostics`);
   }
 
   listUploadFiles(): Observable<UploadOverview> {

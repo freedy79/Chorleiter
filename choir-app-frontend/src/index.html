@@ -4,11 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1976d2">
-  <meta name="description" content="NAK Chorleiter - Verwaltungsanwendung für Chöre mit Funktionen für Repertoire, Absenceverwaltung und Einsatzplanung">
+  <meta name="description" content="NAK Chorleiter - die Verwaltungsanwendung für Chöre mit Repertoire, Verfügbarkeiten, Kommunikation und Einsatzplanung.">
+  <meta name="robots" content="index,follow">
+  <meta name="author" content="NAK Chorleiter">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="NAK Chorleiter">
+  <meta property="og:title" content="NAK Chorleiter – Digitale Chorverwaltung">
+  <meta property="og:description" content="Organisiere Repertoire, Verfügbarkeiten und Einsätze in deinem Chor – einfach, sicher und mobil.">
+  <meta property="og:url" content="https://nak-chorleiter.de/">
+  <meta property="og:image" content="https://nak-chorleiter.de/assets/icons/icon-512x512.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NAK Chorleiter – Digitale Chorverwaltung">
+  <meta name="twitter:description" content="Organisiere Repertoire, Verfügbarkeiten und Einsätze in deinem Chor – einfach, sicher und mobil.">
+  <meta name="twitter:image" content="https://nak-chorleiter.de/assets/icons/icon-512x512.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="NAK Chorleiter">
   <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+  <link rel="canonical" href="https://nak-chorleiter.de/">
   <title>NAK Chorleiter</title>
   <base href="/">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -24,27 +38,48 @@
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
-  <div id="no-js-message" style="font-family: Roboto, 'Helvetica Neue', sans-serif; padding: 2rem; color:#000;">
-    <h1>NAK Chorleiter</h1>
-    <p>
-      Ihr Browser erlaubt aktuell keine Ausführung von JavaScript. Bitte aktivieren Sie
-      JavaScript in den Einstellungen oder erlauben Sie die Ausführung von Skripten,
-      damit die Anwendung korrekt geladen werden kann.
-    </p>
-  </div>
-  <app-root style="display: none;"></app-root>
-  <script>
-    const msg = document.getElementById('no-js-message');
-    if (msg) {
-      msg.style.display = 'none';
-    }
-    const appRoot = document.querySelector('app-root');
-    if (appRoot) {
-      appRoot.style.removeProperty('display');
-    }
-  </script>
-</body>
-</html>
-  </script>
+  <noscript>
+    <section aria-labelledby="noscript-title" style="font-family: Roboto, 'Helvetica Neue', sans-serif; line-height: 1.5; margin: 0 auto; max-width: 760px; padding: 2rem 1rem 3rem; color: #111827;">
+      <header>
+        <h1 id="noscript-title" style="margin-bottom: .5rem; color: #0f172a;">NAK Chorleiter</h1>
+        <p style="margin-top: 0; color: #334155;">Digitale Chorverwaltung für Repertoire, Verfügbarkeiten und Einsatzplanung.</p>
+      </header>
+
+      <div role="alert" style="border: 1px solid #cbd5e1; border-left: 4px solid #1976d2; border-radius: .5rem; padding: 1rem; background: #f8fafc; margin: 1rem 0 1.5rem;">
+        <h2 style="margin-top: 0; margin-bottom: .5rem; font-size: 1.1rem;">JavaScript ist deaktiviert</h2>
+        <p style="margin: 0;">Für Login und die vollständige Nutzung wird JavaScript benötigt. Bitte aktiviere JavaScript oder erlaube Skripte für diese Seite.</p>
+      </div>
+
+      <section aria-labelledby="noscript-login-title" style="margin-bottom: 1.5rem;">
+        <h2 id="noscript-login-title" style="font-size: 1.1rem; margin-bottom: .75rem;">Login (Grundansicht)</h2>
+        <form action="/login" method="get" aria-describedby="noscript-login-help" style="display: grid; gap: .75rem;">
+          <label for="noscript-email">E-Mail</label>
+          <input id="noscript-email" name="email" type="email" autocomplete="email" disabled style="padding: .65rem .75rem; border: 1px solid #cbd5e1; border-radius: .375rem;">
+
+          <label for="noscript-password">Passwort</label>
+          <input id="noscript-password" name="password" type="password" autocomplete="current-password" disabled style="padding: .65rem .75rem; border: 1px solid #cbd5e1; border-radius: .375rem;">
+
+          <p id="noscript-login-help" style="margin: 0; color: #475569;">Das Formular ist ohne JavaScript nicht nutzbar und dient als barrierearme Vorschau der Login-Funktion.</p>
+          <button type="submit" style="width: fit-content; border: 0; border-radius: .375rem; padding: .65rem 1rem; background: #1976d2; color: #fff; cursor: pointer;">Zur Login-Seite</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="noscript-help-title">
+        <h2 id="noscript-help-title" style="font-size: 1.1rem; margin-bottom: .75rem;">Hilfe &amp; Systemanforderungen</h2>
+        <ul style="padding-left: 1.25rem; margin-top: 0;">
+          <li>Aktueller Browser (Chrome, Edge, Firefox oder Safari in aktueller Version)</li>
+          <li>JavaScript aktiviert</li>
+          <li>Stabile Internetverbindung</li>
+        </ul>
+        <p style="margin-bottom: 0;">
+          <a href="/imprint">Kontakt &amp; Support</a>
+          · <a href="/privacy">Datenschutz</a>
+          · <a href="/api/health" rel="nofollow">Systemstatus (API)</a>
+        </p>
+      </section>
+    </section>
+  </noscript>
+
+  <app-root></app-root>
 </body>
 </html>

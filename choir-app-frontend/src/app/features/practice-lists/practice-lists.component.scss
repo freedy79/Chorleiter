@@ -1,0 +1,46 @@
+.practice-lists-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.create-card {
+  max-width: 900px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.storage-hint {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.list-card {
+  cursor: pointer;
+}
+
+.description {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.chips-row {
+  margin-top: 0.75rem;
+}
+
+.empty-state {
+  opacity: 0.8;
+}
