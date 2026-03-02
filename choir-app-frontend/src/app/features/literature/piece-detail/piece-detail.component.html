@@ -80,39 +80,60 @@
       <div *ngFor="let group of groupedFileLinks" class="file-group">
         <h4>{{ group.label }}</h4>
         <ul class="files-grid">
-          <li *ngFor="let link of group.links" class="file-item file-card">
-            <div class="practice-actions">
-              <button
-                *ngIf="!link.isMp3"
-                mat-icon-button
-                type="button"
-                matTooltip="Zur Übungsliste hinzufügen"
-                aria-label="Zur Übungsliste hinzufügen"
-                (click)="openAddToPracticeListDialog(link)"
-              >
-                <mat-icon>playlist_add</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="primary"
-                type="button"
-                matTooltip="Offline pinnen"
-                aria-label="Offline pinnen"
-                (click)="openAddToPracticeListDialog(link, true)"
-              >
-                <mat-icon>push_pin</mat-icon>
-              </button>
-              <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted>
+          <li *ngFor="let link of group.links" class="file-item file-card" [class.mp3-card]="link.isMp3">
+            <!-- MP3: pin + audio player inline -->
+            <ng-container *ngIf="link.isMp3; else nonMp3Actions">
+              <div class="mp3-row">
+                <div class="mp3-pin-actions">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    type="button"
+                    matTooltip="Offline pinnen"
+                    aria-label="Offline pinnen"
+                    (click)="openAddToPracticeListDialog(link, true)"
+                  >
+                    <mat-icon>push_pin</mat-icon>
+                  </button>
+                </div>
+                <app-audio-player
+                  [title]="link.description"
+                  [url]="getLinkUrl(link)"
+                  [downloadName]="link.downloadName || link.description">
+                </app-audio-player>
+              </div>
+              <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted class="mp3-pinned-chip">
                 Offline verfügbar
               </mat-chip>
-            </div>
+            </ng-container>
 
-            <app-audio-player
-              *ngIf="link.isMp3"
-              [title]="link.description"
-              [url]="getLinkUrl(link)"
-              [downloadName]="link.downloadName || link.description">
-            </app-audio-player>
+            <!-- Non-MP3: original practice actions block -->
+            <ng-template #nonMp3Actions>
+              <div class="practice-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  matTooltip="Zur Übungsliste hinzufügen"
+                  aria-label="Zur Übungsliste hinzufügen"
+                  (click)="openAddToPracticeListDialog(link)"
+                >
+                  <mat-icon>playlist_add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  matTooltip="Offline pinnen"
+                  aria-label="Offline pinnen"
+                  (click)="openAddToPracticeListDialog(link, true)"
+                >
+                  <mat-icon>push_pin</mat-icon>
+                </button>
+                <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted>
+                  Offline verfügbar
+                </mat-chip>
+              </div>
+            </ng-template>
 
             <div *ngIf="link.isImage">
               <p>{{ link.description }}</p>

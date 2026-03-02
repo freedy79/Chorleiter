@@ -1,5 +1,5 @@
 .piece-detail {
-  max-width: 600px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -86,6 +86,30 @@ h3 {
   .dark-theme & {
     border-color: rgba(255, 255, 255, 0.12);
     background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.mp3-card {
+    .mp3-row {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      .mp3-pin-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      app-audio-player {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    .mp3-pinned-chip {
+      margin-top: 0.25rem;
+    }
   }
 }
 
