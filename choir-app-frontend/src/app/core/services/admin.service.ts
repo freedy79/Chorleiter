@@ -303,4 +303,22 @@ export class AdminService {
     if (dateTo) params.dateTo = dateTo;
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/statistics`, { params });
   }
+
+  // --- Usage Statistics ---
+
+  getUsageStatsSummary(days = 30): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/summary`, { params: { days: days.toString() } });
+  }
+
+  getSharedPieceStats(days = 90): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/shared-pieces`, { params: { days: days.toString() } });
+  }
+
+  getEntityViews(category: string, entityId: number, days = 90): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/entity/${category}/${entityId}`, { params: { days: days.toString() } });
+  }
+
+  cleanupOldPageViews(retainDays = 365): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/usage-stats/cleanup`, { params: { retainDays: retainDays.toString() } });
+  }
 }

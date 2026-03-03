@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, Inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule, DOCUMENT, Location } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,8 +8,11 @@ import { MaterialModule } from '@modules/material.module';
 import { PracticeList, PracticeListItem } from '@core/models/practice-list';
 import { PracticeListService } from '@core/services/practice-list.service';
 import { NotificationService } from '@core/services/notification.service';
+import { ApiService } from '@core/services/api.service';
 import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
 import { PdfFullscreenDialogComponent } from '@shared/components/pdf-fullscreen-dialog/pdf-fullscreen-dialog.component';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 
 interface MappePieceGroup {
   pieceId: number;
@@ -17,6 +20,7 @@ interface MappePieceGroup {
   pdfItems: PracticeListItem[];
   audioItems: PracticeListItem[];
   showAllMedia: boolean;
+  collectionIds: number[];
 }
 
 @Component({
@@ -37,17 +41,32 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
   mappeActivePdfSafeUrl: SafeResourceUrl | null = null;
   mappeActivePdfRawUrl = '';
   mappeResolvingPdf = false;
+  mappeLicenseMode = false;
+  mappeLicenseSafeUrl: SafeResourceUrl | null = null;
   private previousBodyOverflow = '';
   selectedPdfByPiece = new Map<number, number>();
   selectedAudioByPiece = new Map<number, number>();
   localPinnedLinkIds = new Set<number>();
   resolvedMediaUrls = new Map<string, string>();
+  cachedAudioByItemId = new Map<number, PracticeListItem[]>();
+  cachedPdfByItemId = new Map<number, PracticeListItem[]>();
+  viewableLicenseByCollection: Record<number, number> = {};
+
+  // ── Cached mappe state (updated via updateMappeState()) ──
+  cachedPieceGroups: MappePieceGroup[] = [];
+  activeGroup: MappePieceGroup | null = null;
+  activeAudioItem: PracticeListItem | null = null;
+  mappePositionLabel = '0 / 0';
+  mappeShowLicenseToggle = false;
+  mappeShowAutoLicense = false;
+  mappeAutoLicenseSafeUrl: SafeResourceUrl | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private location: Location,
     private practiceListService: PracticeListService,
     private notification: NotificationService,
+    private apiService: ApiService,
     private dialog: MatDialog,
     private sanitizer: DomSanitizer,
     @Inject(DOCUMENT) private document: Document
@@ -67,6 +86,7 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.setMappeBodyScrollLock(false);
+    this.exitBrowserFullscreen();
   }
 
   loadData(): void {
@@ -84,8 +104,10 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     this.practiceListService.getItems(this.listId).subscribe({
       next: (items) => {
         this.items = [...items].sort((a, b) => a.orderIndex - b.orderIndex);
+        this.rebuildExpandedMediaCaches();
         this.ensureMappeCursorInBounds();
         this.loading = false;
+        this.loadViewableLicensesForItems();
         void this.refreshLocalPinnedState().then(() => this.hydrateResolvedMediaUrls());
       },
       error: () => {
@@ -177,10 +199,19 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     this.location.back();
   }
 
+  @HostListener('document:fullscreenchange')
+  onFullscreenChange(): void {
+    if (!this.document.fullscreenElement && this.mappeMode) {
+      this.mappeMode = false;
+      this.clearMappePdfViewer();
+      this.setMappeBodyScrollLock(false);
+    }
+  }
+
   toggleMappeMode(): void {
     if (!this.mappeMode) {
-      const groups = this.getMappePieceGroups();
-      if (!groups.length) {
+      this.cachedPieceGroups = this.getMappePieceGroups();
+      if (!this.cachedPieceGroups.length) {
         this.notification.warning('Mappe-Modus ist nur mit PDF- oder Audio-Dateien verfügbar.');
         this.mappeMode = false;
         return;
@@ -193,13 +224,16 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     this.ensureMappeCursorInBounds();
 
     if (this.mappeMode) {
+      this.updateMappeState();
       void this.syncMappePdfViewer();
       this.setMappeBodyScrollLock(true);
+      this.enterBrowserFullscreen();
       return;
     }
 
     this.clearMappePdfViewer();
     this.setMappeBodyScrollLock(false);
+    this.exitBrowserFullscreen();
   }
 
   isPdfItem(item: PracticeListItem): boolean {
@@ -249,7 +283,8 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
         title: item.piece?.title || `Stück #${pieceId}`,
         pdfItems: [],
         audioItems: [],
-        showAllMedia: pieceIdsWithWholePieceEntry.has(pieceId)
+        showAllMedia: pieceIdsWithWholePieceEntry.has(pieceId),
+        collectionIds: (item.piece?.collections || []).map(c => Number(c.id)).filter(id => Number.isFinite(id))
       };
 
       if (this.isPdfItem(item)) {
@@ -268,23 +303,11 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
   }
 
   getActiveMappePieceGroup(): MappePieceGroup | null {
-    const groups = this.getMappePieceGroups();
-    if (!groups.length) {
-      return null;
-    }
-    const clamped = Math.max(0, Math.min(this.mappeCursor, groups.length - 1));
-    if (clamped !== this.mappeCursor) {
-      this.mappeCursor = clamped;
-    }
-    return groups[clamped] || null;
+    return this.activeGroup;
   }
 
   getMappePositionLabel(): string {
-    const groups = this.getMappePieceGroups();
-    if (!groups.length) {
-      return '0 / 0';
-    }
-    return `${this.mappeCursor + 1} / ${groups.length}`;
+    return this.mappePositionLabel;
   }
 
   mappePrevPiece(): void {
@@ -292,16 +315,65 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
       return;
     }
     this.mappeCursor -= 1;
+    this.exitLicenseMode();
+    this.updateMappeState();
     void this.syncMappePdfViewer();
   }
 
   mappeNextPiece(): void {
-    const groups = this.getMappePieceGroups();
+    const groups = this.cachedPieceGroups;
     if (this.mappeCursor >= groups.length - 1) {
       return;
     }
     this.mappeCursor += 1;
+    this.exitLicenseMode();
+    this.updateMappeState();
     void this.syncMappePdfViewer();
+  }
+
+  private exitLicenseMode(): void {
+    this.mappeLicenseMode = false;
+    this.mappeLicenseSafeUrl = null;
+  }
+
+  /**
+   * Recompute all cached mappe state derived from the active group/cursor.
+   * Call this whenever mappeCursor, selectedAudioByPiece, or viewableLicenseByCollection changes.
+   */
+  updateMappeState(): void {
+    this.cachedPieceGroups = this.getMappePieceGroups();
+    const groups = this.cachedPieceGroups;
+    if (!groups.length) {
+      this.activeGroup = null;
+      this.activeAudioItem = null;
+      this.mappePositionLabel = '0 / 0';
+      this.mappeShowLicenseToggle = false;
+      this.mappeShowAutoLicense = false;
+      this.mappeAutoLicenseSafeUrl = null;
+      return;
+    }
+    const clamped = Math.max(0, Math.min(this.mappeCursor, groups.length - 1));
+    if (clamped !== this.mappeCursor) {
+      this.mappeCursor = clamped;
+    }
+    const group = groups[clamped];
+    this.activeGroup = group;
+    this.activeAudioItem = group ? this.getSelectedAudioItem(group) : null;
+    this.mappePositionLabel = `${this.mappeCursor + 1} / ${groups.length}`;
+    this.mappeShowLicenseToggle = group ? this.shouldShowLicenseToggle(group) : false;
+    this.mappeShowAutoLicense = group ? this.shouldAutoShowLicense(group) : false;
+    // Cache the auto-license URL to avoid creating a new SafeResourceUrl each CD cycle
+    if (this.mappeShowAutoLicense && group) {
+      const licenseIds = this.getViewableLicenseIdsForGroup(group);
+      if (licenseIds.length) {
+        const url = this.apiService.getCollectionDigitalLicenseInlineViewUrl(licenseIds[0]);
+        this.mappeAutoLicenseSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url + '#toolbar=0');
+      } else {
+        this.mappeAutoLicenseSafeUrl = null;
+      }
+    } else {
+      this.mappeAutoLicenseSafeUrl = null;
+    }
   }
 
   hasMultiplePdf(group: MappePieceGroup): boolean {
@@ -335,11 +407,15 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
   }
 
   getItemPdfItems(item: PracticeListItem): PracticeListItem[] {
-    return this.expandItemWithPieceMedia(item).filter(expanded => this.isPdfItem(expanded));
+    return this.cachedPdfByItemId.get(item.id) || [];
   }
 
   getItemAudioItems(item: PracticeListItem): PracticeListItem[] {
-    return this.expandItemWithPieceMedia(item).filter(expanded => this.isAudioItem(expanded));
+    return this.cachedAudioByItemId.get(item.id) || [];
+  }
+
+  trackByLinkId(_index: number, item: PracticeListItem): string {
+    return `${item.id}:${item.pieceLinkId ?? 0}`;
   }
 
   getSelectedPdfItem(group: MappePieceGroup): PracticeListItem | null {
@@ -391,6 +467,7 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
 
   selectAudioForPiece(group: MappePieceGroup, pieceLinkId: number): void {
     this.selectedAudioByPiece.set(group.pieceId, pieceLinkId);
+    this.updateMappeState();
   }
 
   async openActivePdfFullscreen(group: MappePieceGroup): Promise<void> {
@@ -421,7 +498,7 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
   }
 
   isLastMappePiece(): boolean {
-    const groups = this.getMappePieceGroups();
+    const groups = this.cachedPieceGroups;
     return !groups.length || this.mappeCursor >= groups.length - 1;
   }
 
@@ -587,6 +664,16 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     }));
   }
 
+  private rebuildExpandedMediaCaches(): void {
+    this.cachedAudioByItemId = new Map();
+    this.cachedPdfByItemId = new Map();
+    for (const item of this.items) {
+      const expanded = this.expandItemWithPieceMedia(item);
+      this.cachedPdfByItemId.set(item.id, expanded.filter(e => this.isPdfItem(e)));
+      this.cachedAudioByItemId.set(item.id, expanded.filter(e => this.isAudioItem(e)));
+    }
+  }
+
   private getMediaCacheKey(item: PracticeListItem): string {
     const linkId = item.pieceLinkId ?? 0;
     return `${item.id}:${linkId}`;
@@ -669,9 +756,131 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     if (enabled) {
       this.previousBodyOverflow = body.style.overflow || '';
       body.style.overflow = 'hidden';
+      body.classList.add('mappe-fullscreen-active');
       return;
     }
 
     body.style.overflow = this.previousBodyOverflow;
+    body.classList.remove('mappe-fullscreen-active');
+  }
+
+  private enterBrowserFullscreen(): void {
+    const elem = this.document?.documentElement;
+    if (elem?.requestFullscreen && !this.document.fullscreenElement) {
+      elem.requestFullscreen().catch(() => {
+        // Fullscreen may be blocked by browser policy – continue in overlay mode
+      });
+    }
+  }
+
+  private exitBrowserFullscreen(): void {
+    if (this.document?.fullscreenElement) {
+      this.document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  // ── Digital license support ──────────────────────────────
+
+  getViewableLicenseIdsForGroup(group: MappePieceGroup): number[] {
+    return group.collectionIds
+      .map(id => this.viewableLicenseByCollection[id])
+      .filter((id): id is number => !!id);
+  }
+
+  hasViewableLicenses(group: MappePieceGroup): boolean {
+    return this.getViewableLicenseIdsForGroup(group).length > 0;
+  }
+
+  getViewableLicenseCount(group: MappePieceGroup): number {
+    return this.getViewableLicenseIdsForGroup(group).length;
+  }
+
+  /**
+   * Returns true when the license toggle button should be shown.
+   * If the piece has no own PDF, the license is auto-displayed — no toggle needed.
+   * If the piece has a PDF AND a license, the toggle is needed.
+   */
+  shouldShowLicenseToggle(group: MappePieceGroup): boolean {
+    return group.pdfItems.length > 0 && this.hasViewableLicenses(group);
+  }
+
+  /**
+   * Returns true when the license PDF should be auto-displayed
+   * (piece has no own PDF but has a viewable license).
+   */
+  shouldAutoShowLicense(group: MappePieceGroup): boolean {
+    return group.pdfItems.length === 0 && this.hasViewableLicenses(group);
+  }
+
+  getAutoLicenseSafeUrl(group: MappePieceGroup): SafeResourceUrl | null {
+    const licenseIds = this.getViewableLicenseIdsForGroup(group);
+    if (!licenseIds.length) {
+      return null;
+    }
+    const url = this.apiService.getCollectionDigitalLicenseInlineViewUrl(licenseIds[0]);
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url + '#toolbar=0');
+  }
+
+  toggleLicenseView(group: MappePieceGroup): void {
+    if (this.mappeLicenseMode) {
+      this.mappeLicenseMode = false;
+      this.mappeLicenseSafeUrl = null;
+      return;
+    }
+
+    const licenseIds = this.getViewableLicenseIdsForGroup(group);
+    if (!licenseIds.length) {
+      this.notification.warning('Keine digitale Originallizenz verfügbar.');
+      return;
+    }
+
+    const licenseId = licenseIds[0];
+    const url = this.apiService.getCollectionDigitalLicenseInlineViewUrl(licenseId);
+    // Append #toolbar=0 to hide the browser PDF viewer toolbar (prevents download)
+    this.mappeLicenseSafeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url + '#toolbar=0');
+    this.mappeLicenseMode = true;
+  }
+
+  private loadViewableLicensesForItems(): void {
+    const collectionIds = new Set<number>();
+    for (const item of this.items) {
+      const collections = item.piece?.collections;
+      if (!Array.isArray(collections)) {
+        continue;
+      }
+      for (const c of collections) {
+        const id = Number(c.id);
+        if (Number.isFinite(id)) {
+          collectionIds.add(id);
+        }
+      }
+    }
+
+    const uniqueIds = Array.from(collectionIds);
+    if (!uniqueIds.length) {
+      this.viewableLicenseByCollection = {};
+      return;
+    }
+
+    forkJoin(
+      uniqueIds.map(collectionId =>
+        this.apiService.getCollectionViewableDigitalLicenses(collectionId).pipe(
+          catchError(() => of([]))
+        )
+      )
+    ).subscribe(responses => {
+      const next: Record<number, number> = {};
+      responses.forEach((licenses: any, idx) => {
+        const first = Array.isArray(licenses) ? licenses[0] : null;
+        if (first?.id) {
+          next[uniqueIds[idx]] = Number(first.id);
+        }
+      });
+      this.viewableLicenseByCollection = next;
+      // Refresh cached mappe state now that license data is available
+      if (this.mappeMode) {
+        this.updateMappeState();
+      }
+    });
   }
 }

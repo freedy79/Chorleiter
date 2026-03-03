@@ -197,12 +197,22 @@ export class PracticeListService {
 
   private toAbsoluteUrl(url: string): string {
     if (/^https?:\/\//i.test(url)) {
-      return url;
+      return this.appendNgswBypass(url);
     }
 
     const apiRoot = environment.apiUrl.replace(/\/api\/?$/, '');
     const normalizedPath = url.startsWith('/') ? url : `/${url}`;
     const fullPath = normalizedPath.startsWith('/api/') ? normalizedPath : `/api${normalizedPath}`;
-    return `${apiRoot}${fullPath}`;
+    return this.appendNgswBypass(`${apiRoot}${fullPath}`);
+  }
+
+  /**
+   * Append ngsw-bypass query parameter to prevent the Angular Service Worker
+   * from intercepting media file requests. The SW cannot handle Range requests
+   * used by audio/video elements, causing playback failures.
+   */
+  private appendNgswBypass(url: string): string {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}ngsw-bypass=true`;
   }
 }

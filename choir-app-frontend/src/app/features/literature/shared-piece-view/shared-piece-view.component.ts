@@ -125,7 +125,7 @@ export class SharedPieceViewComponent implements OnInit {
 
     // Check if it's an absolute URL
     if (/^https?:\/\//i.test(url)) {
-      return url;
+      return this.appendNgswBypass(url);
     }
 
     // Build relative URL path
@@ -133,7 +133,13 @@ export class SharedPieceViewComponent implements OnInit {
     const apiBase = apiUrlStr.replace(/\/api\/?$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
-    return `${apiBase}${fullPath}`;
+    return this.appendNgswBypass(`${apiBase}${fullPath}`);
+  }
+
+  /** Bypass the Angular Service Worker for media file requests (audio Range requests fail otherwise). */
+  private appendNgswBypass(url: string): string {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}ngsw-bypass=true`;
   }
 
   private groupAndSortFileLinks(links: DisplayFileLink[]): FileLinkGroup[] {

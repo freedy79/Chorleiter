@@ -20,7 +20,8 @@
     color="primary"
     matTooltip="Zu Übungsliste hinzufügen"
     aria-label="Zu Übungsliste hinzufügen"
-    (click)="openAddToPracticeListDialog()"
+    [matMenuTriggerFor]="practiceListMenu"
+    (click)="setPracticeListContext()"
   >
     <mat-icon>playlist_add</mat-icon>
   </button>
@@ -91,7 +92,8 @@
                     type="button"
                     matTooltip="Offline pinnen"
                     aria-label="Offline pinnen"
-                    (click)="openAddToPracticeListDialog(link, true)"
+                    [matMenuTriggerFor]="practiceListMenu"
+                    (click)="setPracticeListContext(link, true)"
                   >
                     <mat-icon>push_pin</mat-icon>
                   </button>
@@ -99,7 +101,12 @@
                 <app-audio-player
                   [title]="link.description"
                   [url]="getLinkUrl(link)"
-                  [downloadName]="link.downloadName || link.description">
+                  [downloadName]="link.downloadName || link.description"
+                  [markers]="link.markers || []"
+                  [canEditMarkers]="true"
+                  (markerCreate)="onMarkerCreate(link, $event)"
+                  (markerDelete)="onMarkerDelete(link, $event)"
+                  (markerUpdate)="onMarkerUpdate(link, $event)">
                 </app-audio-player>
               </div>
               <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted class="mp3-pinned-chip">
@@ -115,7 +122,8 @@
                   type="button"
                   matTooltip="Zur Übungsliste hinzufügen"
                   aria-label="Zur Übungsliste hinzufügen"
-                  (click)="openAddToPracticeListDialog(link)"
+                  [matMenuTriggerFor]="practiceListMenu"
+                  (click)="setPracticeListContext(link)"
                 >
                   <mat-icon>playlist_add</mat-icon>
                 </button>
@@ -125,7 +133,8 @@
                   type="button"
                   matTooltip="Offline pinnen"
                   aria-label="Offline pinnen"
-                  (click)="openAddToPracticeListDialog(link, true)"
+                  [matMenuTriggerFor]="practiceListMenu"
+                  (click)="setPracticeListContext(link, true)"
                 >
                   <mat-icon>push_pin</mat-icon>
                 </button>
@@ -232,3 +241,24 @@
     <p>Keine Einträge</p>
   </ng-template>
 </div>
+
+<!-- Shared practice-list menu for all "add to list" buttons -->
+<mat-menu #practiceListMenu="matMenu" class="practice-list-menu">
+  <ng-container *ngIf="practiceListsLoading">
+    <button mat-menu-item disabled>
+      <mat-icon><mat-spinner diameter="18"></mat-spinner></mat-icon>
+      <span>Laden…</span>
+    </button>
+  </ng-container>
+  <ng-container *ngIf="!practiceListsLoading">
+    <button mat-menu-item *ngFor="let list of practiceLists" (click)="addToPracticeList(list.id, list.title)">
+      <mat-icon>playlist_play</mat-icon>
+      <span>{{ list.title }}</span>
+    </button>
+    <mat-divider *ngIf="practiceLists.length"></mat-divider>
+    <button mat-menu-item (click)="openCreatePracticeListDialog()">
+      <mat-icon>add</mat-icon>
+      <span>Neue Liste anlegen</span>
+    </button>
+  </ng-container>
+</mat-menu>

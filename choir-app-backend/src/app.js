@@ -97,7 +97,7 @@ app.get("/api/public/post-images/:token", postController.getImageByToken);
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }

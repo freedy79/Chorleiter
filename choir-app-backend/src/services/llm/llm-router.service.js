@@ -17,6 +17,10 @@ class LLMRouter {
             claude: new ClaudeProvider()
             // Additional providers can be added here
         };
+        // Give each provider a back-reference to the router for web context access
+        for (const provider of Object.values(this.providers)) {
+            provider.router = this;
+        }
         this.initialize();
     }
 
@@ -75,14 +79,18 @@ class LLMRouter {
      * @param {Array} enrichmentFields - Fields to enrich
      * @returns {Promise<Object>}
      */
-    async enrichPieces(pieces, enrichmentFields, progressCallback = null) {
+    async enrichPieces(pieces, enrichmentFields, progressCallback = null, webContext = null) {
         const startTime = Date.now();
+
+        // Store web context so providers can access it during prompt building
+        this._webContext = webContext || new Map();
 
         try {
             logger.info('[LLMRouter] Starting enrichment', {
                 pieceCount: pieces.length,
                 fields: enrichmentFields,
-                strategy: this.strategy
+                strategy: this.strategy,
+                hasWebContext: this._webContext.size > 0
             });
 
             let result;
@@ -307,6 +315,14 @@ class LLMRouter {
             logger.warn('[LLMRouter] Could not get current month cost:', error);
             return 0;
         }
+    }
+
+    /**
+     * Get the current web context (for use by providers building prompts)
+     * @returns {Map}
+     */
+    getWebContext() {
+        return this._webContext || new Map();
     }
 
     /**

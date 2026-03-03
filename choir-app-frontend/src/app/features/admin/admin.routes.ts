@@ -52,6 +52,11 @@ export const adminRoutes: Routes = [
         data: { title: 'Admin – Datenanreicherung' }
       },
       {
+        path: 'usage-statistics',
+        loadComponent: () => import('./usage-statistics/usage-statistics.component').then(m => m.UsageStatisticsComponent),
+        data: { title: 'Admin – Nutzungsstatistiken' }
+      },
+      {
         path: 'pwa-config',
         loadComponent: () => import('./pwa-config/pwa-config.component').then(m => m.PwaConfigComponent),
         data: { title: 'Admin – PWA Konfiguration' }

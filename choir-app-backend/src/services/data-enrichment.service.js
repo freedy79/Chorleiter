@@ -6,11 +6,12 @@
 
 const logger = require('../config/logger');
 const db = require('../models');
-const { LLMRouter, dataEnrichmentSettingsService } = require('./llm');
+const { LLMRouter, dataEnrichmentSettingsService, WebEnrichmentProvider } = require('./llm');
 
 class DataEnrichmentService {
     constructor() {
         this.router = null;
+        this.webEnrichment = null;
         this.initialized = false;
     }
 
@@ -23,6 +24,7 @@ class DataEnrichmentService {
         try {
             this.router = new LLMRouter(dataEnrichmentSettingsService);
             await this.router.initialize();
+            this.webEnrichment = new WebEnrichmentProvider(dataEnrichmentSettingsService);
             this.initialized = true;
             logger.info('[DataEnrichmentService] Initialized');
         } catch (error) {
@@ -154,6 +156,32 @@ class DataEnrichmentService {
                 itemCount: items.length
             });
 
+            // ═══════════════ Phase 0: Web Enrichment (IMSLP, Musica International) ═══════════════
+            let webResult = { suggestions: [], webContext: new Map(), sourcesUsed: [] };
+            try {
+                if (this.webEnrichment) {
+                    logger.info(`[DataEnrichmentService] Phase 0: Web enrichment for ${items.length} items`);
+                    await db.data_enrichment_job.update(
+                        { metadata: { ...job.metadata, phase: 'web-enrichment' } },
+                        { where: { id: jobId } }
+                    ).catch(() => {});
+
+                    if (jobType === 'piece') {
+                        webResult = await this.webEnrichment.enrichPieces(items, enrichmentFields);
+                    } else if (jobType === 'composer') {
+                        webResult = await this.webEnrichment.enrichComposers(items, enrichmentFields);
+                    }
+
+                    logger.info(`[DataEnrichmentService] Phase 0 complete`, {
+                        webSuggestions: webResult.suggestions.length,
+                        sourcesUsed: webResult.sourcesUsed
+                    });
+                }
+            } catch (webError) {
+                logger.warn('[DataEnrichmentService] Web enrichment phase failed (continuing with LLM):', webError.message);
+            }
+
+            // ═══════════════ Phase 1: LLM Enrichment ═══════════════
             // Progress callback: updates processedItems in DB after each batch
             let lastProgressUpdate = 0;
             const progressCallback = async ({ processed, total, batchSuggestions, totalCostSoFar }) => {
@@ -167,14 +195,27 @@ class DataEnrichmentService {
                 ).catch(() => {}); // ignore update errors during progress
             };
 
-            // Call LLM router
-            const result = await this.router.enrichPieces(items, enrichmentFields, progressCallback);
+            await db.data_enrichment_job.update(
+                { metadata: { ...job.metadata, phase: 'llm-enrichment' } },
+                { where: { id: jobId } }
+            ).catch(() => {});
+
+            // Call LLM router (pass web context so providers can include it in prompts)
+            const result = await this.router.enrichPieces(
+                items, enrichmentFields, progressCallback, webResult.webContext
+            );
+
+            // ═══════════════ Phase 2: Merge & Store ═══════════════
+            // Merge web suggestions with LLM suggestions (web takes priority on same field)
+            const allSuggestions = this.mergeWebAndLLMSuggestions(
+                webResult.suggestions, result.suggestions
+            );
 
             // Store suggestions
             const suggestionsStored = await this.storeSuggestions(
                 jobId,
                 jobType,
-                result.suggestions,
+                allSuggestions,
                 userId
             );
 
@@ -183,10 +224,13 @@ class DataEnrichmentService {
                 {
                     metadata: {
                         ...job.metadata,
+                        phase: 'completed',
                         activeProvider: this.router.primaryProviderName,
                         strategy: this.router.strategy,
                         samplePrompt: result.samplePrompt || null,
-                        sampleResponse: result.sampleResponse || null
+                        sampleResponse: result.sampleResponse || null,
+                        webSources: webResult.sourcesUsed || [],
+                        webSuggestionsCount: webResult.suggestions.length
                     }
                 },
                 { where: { id: jobId } }
@@ -199,13 +243,17 @@ class DataEnrichmentService {
             }
 
             // Update job completion
+            const providerLabel = webResult.sourcesUsed.length > 0
+                ? `${webResult.sourcesUsed.join(', ')} + ${result.provider}`
+                : result.provider;
+
             await job.update({
                 status: 'completed',
                 completedAt: new Date(),
                 successCount: suggestionsStored.length,
                 errorCount: items.length - suggestionsStored.length,
                 apiCosts: result.totalCost,
-                llmProvider: result.provider
+                llmProvider: providerLabel
             });
 
             const duration = (Date.now() - startTime) / 1000;
@@ -288,6 +336,65 @@ class DataEnrichmentService {
             logger.error('[DataEnrichmentService] Error getting items:', error);
             throw error;
         }
+    }
+
+    /**
+     * Merge web-sourced suggestions with LLM suggestions.
+     * Web sources are preferred for the same entity+field combo due to
+     * higher factual reliability.
+     * @param {Array} webSuggestions - Suggestions from web scraping
+     * @param {Array} llmSuggestions - Suggestions from LLM providers
+     * @returns {Array} Merged and deduplicated suggestions
+     */
+    mergeWebAndLLMSuggestions(webSuggestions, llmSuggestions) {
+        const merged = new Map();
+
+        // Add web suggestions first (higher priority)
+        for (const s of webSuggestions) {
+            const key = `${s.entityId}:${s.fieldName}`;
+            merged.set(key, s);
+        }
+
+        // Add LLM suggestions only if no web suggestion exists for that field,
+        // or if LLM confidence is significantly higher (>0.1 difference)
+        for (const s of llmSuggestions) {
+            const key = `${s.entityId}:${s.fieldName}`;
+            const existing = merged.get(key);
+
+            if (!existing) {
+                merged.set(key, s);
+            } else if (s.confidence > existing.confidence + 0.1) {
+                // LLM is significantly more confident; mark source as combined
+                merged.set(key, {
+                    ...s,
+                    source: `${s.source} (überschreibt ${existing.source})`,
+                    reasoning: `${s.reasoning} | Web-Quelle: ${existing.suggestedValue} (${existing.source})`
+                });
+            }
+            // Otherwise keep the web suggestion (factual source preferred)
+        }
+
+        return Array.from(merged.values());
+    }
+
+    /**
+     * Get web enrichment source status
+     * @returns {Promise<Object>}
+     */
+    async getWebSourceStatus() {
+        if (!this.initialized) await this.initialize();
+        if (!this.webEnrichment) return { imslp: { enabled: false }, musicanet: { enabled: false } };
+        return this.webEnrichment.getSourceStatus();
+    }
+
+    /**
+     * Test web source connections
+     * @returns {Promise<Object>}
+     */
+    async testWebSources() {
+        if (!this.initialized) await this.initialize();
+        if (!this.webEnrichment) return { error: 'Web enrichment not initialized' };
+        return this.webEnrichment.testConnections();
     }
 
     /**

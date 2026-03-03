@@ -197,7 +197,14 @@ exports.getItems = async (req, res) => {
                 model: db.piece,
                 as: 'piece',
                 attributes: ['id', 'title', 'subtitle', 'durationSec'],
-                include: [{ model: db.piece_link, as: 'links', attributes: ['id', 'description', 'url', 'downloadName', 'type'] }]
+                include: [
+                    { model: db.piece_link, as: 'links', attributes: ['id', 'description', 'url', 'downloadName', 'type'] },
+                    {
+                        model: db.collection,
+                        through: { attributes: ['numberInCollection'] },
+                        attributes: ['id', 'prefix', 'title', 'singleEdition']
+                    }
+                ]
             },
             { model: db.piece_link, as: 'pieceLink', attributes: ['id', 'description', 'url', 'downloadName', 'type'] }
         ],

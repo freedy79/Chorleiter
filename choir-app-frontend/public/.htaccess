@@ -54,6 +54,14 @@
   RewriteEngine On
   RewriteBase /
 
+  # -----------------------------------------------
+  # Social-Media-Bot-Erkennung für geteilte Stücke
+  # WhatsApp, Facebook, Telegram etc. erhalten eine
+  # HTML-Seite mit Open Graph Meta-Tags vom Backend.
+  # -----------------------------------------------
+  RewriteCond %{HTTP_USER_AGENT} (WhatsApp|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Googlebot|bingbot|Applebot|Pinterestbot) [NC]
+  RewriteRule ^shared-piece/(.+)$ /api/pieces/shared/$1/og [R=302,L]
+
   # Keine Rewrite für existierende Dateien und Verzeichnisse
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

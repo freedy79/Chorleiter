@@ -17,6 +17,8 @@ const { ensureMailLogStatusColumns } = require('./ensureMailLogStatusColumns');
 const { ensurePracticeListTables } = require('./ensurePracticeListTables');
 const { ensurePollReminderTemplate } = require('./ensurePollReminderTemplate');
 const { ensureMailFooterTemplate } = require('./ensureMailFooterTemplate');
+const { ensureAudioMarkerTable } = require('./ensureAudioMarkerTable');
+const { ensurePageViewTable } = require('./ensurePageViewTable');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -36,6 +38,8 @@ async function init(options = {}) {
     await ensurePracticeListTables();
     await ensurePollReminderTemplate();
     await ensureMailFooterTemplate();
+    await ensureAudioMarkerTable();
+    await ensurePageViewTable();
     // 4. Then run data migrations on existing tables
     await migrateUserNames();
     await migrateRoles();
@@ -66,5 +70,7 @@ module.exports = {
     ensureMailLogStatusColumns,
     ensurePracticeListTables,
     ensurePollReminderTemplate,
-    ensureMailFooterTemplate
+    ensureMailFooterTemplate,
+    ensureAudioMarkerTable,
+    ensurePageViewTable
 };

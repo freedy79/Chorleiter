@@ -80,6 +80,8 @@ db.data_enrichment_setting = require("./data-enrichment-setting.model.js")(seque
 db.pwa_config = require("./pwa_config.js")(sequelize, Sequelize);
 db.choir_public_page = require('./choir_public_page.model.js')(sequelize, Sequelize);
 db.choir_public_asset = require('./choir_public_asset.model.js')(sequelize, Sequelize);
+db.audio_marker = require('./audio_marker.model.js')(sequelize, Sequelize);
+db.page_view = require('./page_view.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -163,6 +165,10 @@ db.composer.belongsToMany(db.piece, { through: db.piece_arranger, as: "arrangedP
 // Piece <> PieceLink -> One-to-Many
 db.piece.hasMany(db.piece_link, { as: "links", onDelete: 'CASCADE' });
 db.piece_link.belongsTo(db.piece, { foreignKey: "pieceId" });
+
+// PieceLink <> AudioMarker -> One-to-Many
+db.piece_link.hasMany(db.audio_marker, { as: 'markers', foreignKey: 'pieceLinkId', onDelete: 'CASCADE' });
+db.audio_marker.belongsTo(db.piece_link, { foreignKey: 'pieceLinkId' });
 
 // Proposed changes to a piece
 db.piece.hasMany(db.piece_change, { as: 'changeRequests' });

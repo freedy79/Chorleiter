@@ -39,6 +39,7 @@ const imprintRoutes = require('./imprint.routes');
 const enrichmentRoutes = require('./enrichment.routes');
 const doubletteRoutes = require('./doublette.routes');
 const publicRoutes = require('./public.routes');
+const pageViewRoutes = require('./page-view.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -81,6 +82,7 @@ const routeDefinitions = [
     ['/api/imprint', imprintRoutes],
     ['/api/admin/enrichment', enrichmentRoutes],
     ['/api/public', publicRoutes],
+    ['/api/page-views', pageViewRoutes],
 ];
 
 function registerRoutes(app) {

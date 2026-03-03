@@ -13,6 +13,8 @@ export interface PdfFullscreenDialogData {
   url: string;
   title?: string;
   allowOpenInNewTab?: boolean;
+  /** When false, hides download links and browser PDF toolbar. Defaults to true. */
+  allowDownload?: boolean;
   audioOptions?: PdfFullscreenDialogAudioOption[];
   initialAudioUrl?: string;
 }
@@ -66,12 +68,31 @@ export interface PdfFullscreenDialogData {
         </button>
       </header>
 
-      <iframe
-        class="pdf-frame"
-        [src]="safeUrl"
-        title="PDF Vollbild"
-        loading="eager"
-      ></iframe>
+      <div class="pdf-frame-container">
+        <iframe
+          class="pdf-frame"
+          [src]="safeUrl"
+          title="PDF Vollbild"
+          loading="eager"
+        ></iframe>
+
+        <div class="pdf-mobile-fallback" *ngIf="data.allowDownload !== false">
+          <mat-icon>picture_as_pdf</mat-icon>
+          <span>PDF wird nicht angezeigt?</span>
+          <a mat-stroked-button [href]="data.url" target="_blank" rel="noopener noreferrer">
+            <mat-icon>open_in_new</mat-icon>
+            In neuem Tab öffnen
+          </a>
+          <a mat-stroked-button [href]="data.url" [download]="data.title || 'dokument.pdf'">
+            <mat-icon>download</mat-icon>
+            Herunterladen
+          </a>
+        </div>
+        <div class="pdf-mobile-fallback pdf-mobile-fallback--license" *ngIf="data.allowDownload === false">
+          <mat-icon>verified</mat-icon>
+          <span>Lizenzierte Ausgabe – nur zur Ansicht</span>
+        </div>
+      </div>
     </div>
   `,
   styles: [`
@@ -139,11 +160,20 @@ export interface PdfFullscreenDialogData {
       display: none;
     }
 
+    .pdf-frame-container {
+      position: relative;
+      overflow: hidden;
+    }
+
     .pdf-frame {
       width: 100%;
       height: 100%;
       border: 0;
       background: #fff;
+    }
+
+    .pdf-mobile-fallback {
+      display: none;
     }
 
     @media (max-width: 900px) {
@@ -155,6 +185,31 @@ export interface PdfFullscreenDialogData {
 
       .audio-select {
         width: 170px;
+      }
+
+      .pdf-mobile-fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        background: rgba(0, 0, 0, 0.85);
+        color: #fff;
+        font-size: 0.85rem;
+        flex-wrap: wrap;
+      }
+
+      .pdf-mobile-fallback mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        opacity: 0.8;
+      }
+
+      .pdf-mobile-fallback a {
+        color: #90caf9;
+        text-decoration: none;
+        white-space: nowrap;
       }
     }
   `]
@@ -176,7 +231,9 @@ export class PdfFullscreenDialogComponent implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<PdfFullscreenDialogComponent>,
     sanitizer: DomSanitizer
   ) {
-    this.safeUrl = sanitizer.bypassSecurityTrustResourceUrl(data.url);
+    // Append #toolbar=0 to hide the browser PDF viewer toolbar (save/edit/annotate buttons)
+    const pdfUrl = data.url + (data.url.includes('#') ? '&toolbar=0' : '#toolbar=0');
+    this.safeUrl = sanitizer.bypassSecurityTrustResourceUrl(pdfUrl);
   }
 
   ngOnInit(): void {

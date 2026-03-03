@@ -27,7 +27,7 @@
   </ng-container>
 
   <div *ngIf="mappeMode" class="mappe-mode">
-    <div class="mappe-fullscreen" *ngIf="getActiveMappePieceGroup() as group; else noMappeItems">
+    <div class="mappe-fullscreen" *ngIf="activeGroup as group; else noMappeItems">
       <div class="mappe-topbar">
         <button
           mat-icon-button
@@ -42,16 +42,34 @@
         <div class="mappe-topbar-center">
           <div class="mappe-piece-heading">
             <strong>{{ group.title }}</strong>
-            <small>{{ getMappePositionLabel() }}</small>
+            <small>{{ mappePositionLabel }}</small>
           </div>
 
-          <app-audio-player
-            *ngIf="getSelectedAudioItem(group) as audioItem; else noAudioTopbar"
-            [title]="audioItem.pieceLink?.description || audioItem.piece?.title || 'Audio'"
-            [url]="getResolvedMediaUrl(audioItem)"
-            [downloadName]="audioItem.pieceLink?.downloadName || audioItem.pieceLink?.description || 'audio.mp3'"
-            (playbackEnded)="onMappeAudioEnded()"
-          ></app-audio-player>
+          <div class="mappe-audio-row" *ngIf="activeAudioItem as audioItem; else noAudioTopbar">
+            <app-audio-player
+              [title]="audioItem.pieceLink?.description || audioItem.piece?.title || 'Audio'"
+              [url]="getResolvedMediaUrl(audioItem)"
+              [downloadName]="audioItem.pieceLink?.downloadName || audioItem.pieceLink?.description || 'audio.mp3'"
+              (playbackEnded)="onMappeAudioEnded()"
+            ></app-audio-player>
+
+            <mat-form-field
+              *ngIf="group.audioItems.length > 1"
+              appearance="outline"
+              class="mappe-audio-select"
+            >
+              <mat-label>Stimme</mat-label>
+              <mat-select
+                [value]="activeAudioItem.pieceLinkId"
+                (selectionChange)="selectAudioForPiece(group, $event.value)"
+              >
+                <mat-option
+                  *ngFor="let ai of group.audioItems"
+                  [value]="ai.pieceLinkId"
+                >{{ ai.pieceLink?.description || ai.piece?.title || 'Audio' }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
 
           <ng-template #noAudioTopbar>
             <small class="mappe-no-audio">Keine MP3-Datei für dieses Stück.</small>
@@ -59,6 +77,18 @@
         </div>
 
         <div class="mappe-topbar-actions">
+          <button
+            *ngIf="mappeShowLicenseToggle"
+            mat-icon-button
+            type="button"
+            class="mappe-license-btn"
+            [class.mappe-license-btn--active]="mappeLicenseMode"
+            [matTooltip]="mappeLicenseMode ? 'Zurück zum Notenbild' : 'Digitale Originallizenz'"
+            (click)="toggleLicenseView(group)"
+          >
+            <mat-icon>{{ mappeLicenseMode ? 'music_note' : 'verified' }}</mat-icon>
+          </button>
+
           <button
             mat-icon-button
             type="button"
@@ -76,19 +106,57 @@
       </div>
 
       <div class="mappe-pdf-stage">
-        <mat-progress-bar *ngIf="mappeResolvingPdf" mode="indeterminate"></mat-progress-bar>
+        <!-- License PDF inline view (toggle mode) -->
+        <ng-container *ngIf="mappeLicenseMode && mappeLicenseSafeUrl; else autoLicenseCheck">
+          <iframe
+            class="mappe-pdf-frame"
+            [src]="mappeLicenseSafeUrl"
+            title="Digitale Originallizenz"
+            loading="eager"
+          ></iframe>
+        </ng-container>
 
-        <iframe
-          *ngIf="!mappeResolvingPdf && mappeActivePdfSafeUrl"
-          class="mappe-pdf-frame"
-          [src]="mappeActivePdfSafeUrl"
-          title="PDF Vollansicht"
-          loading="eager"
-        ></iframe>
+        <!-- Auto-show license when piece has no own PDFs but has a license -->
+        <ng-template #autoLicenseCheck>
+          <ng-container *ngIf="mappeShowAutoLicense && mappeAutoLicenseSafeUrl; else normalPdfView">
+            <iframe
+              class="mappe-pdf-frame"
+              [src]="mappeAutoLicenseSafeUrl"
+              title="Digitale Originallizenz"
+              loading="eager"
+            ></iframe>
+          </ng-container>
+        </ng-template>
 
-        <div class="mappe-empty-pdf" *ngIf="!mappeResolvingPdf && !mappeActivePdfSafeUrl">
-          Keine PDF-Datei für dieses Stück.
-        </div>
+        <!-- Normal piece PDF view -->
+        <ng-template #normalPdfView>
+          <mat-progress-bar *ngIf="mappeResolvingPdf" mode="indeterminate"></mat-progress-bar>
+
+          <iframe
+            *ngIf="!mappeResolvingPdf && mappeActivePdfSafeUrl"
+            class="mappe-pdf-frame"
+            [src]="mappeActivePdfSafeUrl"
+            title="PDF Vollansicht"
+            loading="eager"
+          ></iframe>
+
+          <div class="mappe-pdf-fallback" *ngIf="!mappeResolvingPdf && mappeActivePdfRawUrl">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>PDF wird nicht angezeigt?</span>
+            <a mat-stroked-button [href]="mappeActivePdfRawUrl" target="_blank" rel="noopener noreferrer">
+              <mat-icon>open_in_new</mat-icon>
+              In neuem Tab öffnen
+            </a>
+            <a mat-stroked-button [href]="mappeActivePdfRawUrl" download>
+              <mat-icon>download</mat-icon>
+              Herunterladen
+            </a>
+          </div>
+
+          <div class="mappe-empty-pdf" *ngIf="!mappeResolvingPdf && !mappeActivePdfSafeUrl">
+            Keine PDF-Datei für dieses Stück.
+          </div>
+        </ng-template>
       </div>
     </div>
 
@@ -129,7 +197,7 @@
       </mat-form-field>
 
       <div class="pdf-preview" *ngIf="getItemPdfItems(item).length">
-        <div class="pdf-actions" *ngFor="let pdfItem of getItemPdfItems(item)">
+        <div class="pdf-actions" *ngFor="let pdfItem of getItemPdfItems(item); trackBy: trackByLinkId">
           <span>{{ pdfItem.pieceLink?.description || ('PDF #' + pdfItem.id) }}</span>
           <button mat-stroked-button color="primary" type="button" (click)="openPdfFullscreen(pdfItem)">
             <mat-icon>fullscreen</mat-icon>
@@ -144,7 +212,7 @@
 
       <div class="audio-preview" *ngIf="getItemAudioItems(item).length">
         <app-audio-player
-          *ngFor="let audioItem of getItemAudioItems(item)"
+          *ngFor="let audioItem of getItemAudioItems(item); trackBy: trackByLinkId"
           [title]="audioItem.pieceLink?.description || audioItem.piece?.title || 'Audio'"
           [url]="getResolvedMediaUrl(audioItem)"
           [downloadName]="audioItem.pieceLink?.downloadName || audioItem.pieceLink?.description || 'audio.mp3'"

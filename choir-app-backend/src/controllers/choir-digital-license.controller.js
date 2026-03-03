@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 const db = require('../models');
+const logger = require('../config/logger');
 
 const ChoirDigitalLicense = db.choir_digital_license;
 
@@ -148,7 +150,7 @@ exports.listViewableForCollection = async (req, res) => {
   const choirId = req.activeChoirId;
 
   const collection = await ensureCollectionInActiveChoir(id, choirId);
-  if (!collection) return res.status(404).send({ message: 'Collection not found in active choir.' });
+  if (!collection) return res.status(200).send([]);
 
   const licenses = await ChoirDigitalLicense.findAll({
     where: {
@@ -182,6 +184,63 @@ exports.streamDocumentInline = async (req, res) => {
   const mime = license.documentMime || 'application/pdf';
   const fileName = (license.documentOriginalName || `license-${license.id}.pdf`).replace(/\"/g, '');
 
+  // For PDFs: add watermark and prevent download via Content-Disposition
+  if (mime === 'application/pdf') {
+    try {
+      // Fetch user and choir names for watermark
+      const [user, choir] = await Promise.all([
+        db.user.findByPk(req.userId, { attributes: ['firstName', 'name', 'email'] }),
+        db.choir.findByPk(choirId, { attributes: ['name'] })
+      ]);
+
+      const userName = user
+        ? [user.firstName, user.name].filter(Boolean).join(' ') || user.email
+        : `Benutzer #${req.userId}`;
+      const choirName = choir?.name || `Chor #${choirId}`;
+      const dateStr = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const watermarkText = `${userName} – ${choirName} – ${dateStr}`;
+
+      const existingPdfBytes = await fs.promises.readFile(absolutePath);
+      const pdfDoc = await PDFDocument.load(existingPdfBytes);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontSize = 8;
+      const pages = pdfDoc.getPages();
+
+      for (const page of pages) {
+        const { width } = page.getSize();
+        const textWidth = font.widthOfTextAtSize(watermarkText, fontSize);
+        const x = (width - textWidth) / 2;
+
+        page.drawText(watermarkText, {
+          x,
+          y: 12,
+          size: fontSize,
+          font,
+          color: rgb(0.5, 0.5, 0.5),
+          opacity: 0.6
+        });
+      }
+
+      const watermarkedBytes = await pdfDoc.save();
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+      res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Content-Length', watermarkedBytes.length);
+
+      return res.end(Buffer.from(watermarkedBytes));
+    } catch (err) {
+      logger.warn('Failed to add watermark to license PDF, serving original', {
+        licenseId,
+        error: err.message
+      });
+      // Fall through to serve the original file without watermark
+    }
+  }
+
+  // Non-PDF or watermark failed: serve original
   res.setHeader('Content-Type', mime);
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
   res.setHeader('Cache-Control', 'private, no-store, max-age=0');

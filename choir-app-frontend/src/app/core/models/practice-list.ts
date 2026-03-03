@@ -1,4 +1,4 @@
-import { Piece } from './piece';
+import { CollectionReference, Piece } from './piece';
 import { PieceLink } from './piece-link';
 
 export interface PracticeList {
@@ -24,6 +24,7 @@ export interface PracticeListItem {
   isPinnedOffline: boolean;
   piece?: Pick<Piece, 'id' | 'title' | 'subtitle' | 'durationSec'> & {
     links?: Array<Pick<PieceLink, 'id' | 'description' | 'url' | 'downloadName' | 'type'>>;
+    collections?: CollectionReference[];
   };
   pieceLink?: Pick<PieceLink, 'id' | 'description' | 'url' | 'downloadName' | 'type'>;
   createdAt?: string;

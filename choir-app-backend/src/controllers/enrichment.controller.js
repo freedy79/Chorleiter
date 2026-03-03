@@ -552,6 +552,52 @@ exports.getApiKeyStatus = asyncHandler(async (req, res) => {
 });
 
 /**
+ * GET /api/admin/enrichment/web-sources
+ * Get web enrichment source status (IMSLP, Musica International)
+ */
+exports.getWebSources = asyncHandler(async (req, res) => {
+    try {
+        await dataEnrichmentService.initialize();
+        const status = await dataEnrichmentService.getWebSourceStatus();
+
+        res.json({
+            success: true,
+            webSources: status
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error getting web source status:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error retrieving web source status',
+            error: error.message
+        });
+    }
+});
+
+/**
+ * POST /api/admin/enrichment/web-sources/test
+ * Test web source connections
+ */
+exports.testWebSources = asyncHandler(async (req, res) => {
+    try {
+        await dataEnrichmentService.initialize();
+        const results = await dataEnrichmentService.testWebSources();
+
+        res.json({
+            success: true,
+            results
+        });
+    } catch (error) {
+        logger.error('[EnrichmentController] Error testing web sources:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error testing web sources',
+            error: error.message
+        });
+    }
+});
+
+/**
  * GET /api/admin/enrichment/statistics
  * Get enrichment statistics
  */

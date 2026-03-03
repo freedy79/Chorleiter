@@ -67,6 +67,13 @@ router.put('/imprint-settings', role.requireNonDemo, wrap(controller.updateImpri
 const pwaConfigRoutes = require('./pwaConfig.routes');
 router.use('/pwa-config', pwaConfigRoutes);
 
+// Usage Statistics routes
+const pageViewController = require('../controllers/page-view.controller');
+router.get('/usage-stats/summary', wrap(pageViewController.getSummary));
+router.get('/usage-stats/shared-pieces', wrap(pageViewController.getSharedPieceStats));
+router.get('/usage-stats/entity/:category/:entityId', wrap(pageViewController.getEntityViews));
+router.delete('/usage-stats/cleanup', role.requireNonDemo, wrap(pageViewController.cleanup));
+
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));
 

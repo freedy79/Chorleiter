@@ -1,0 +1,170 @@
+<div class="usage-stats-container">
+  <div class="header-row">
+    <h2>Nutzungsstatistiken</h2>
+    <div class="controls">
+      <mat-form-field appearance="outline" class="days-select">
+        <mat-label>Zeitraum</mat-label>
+        <mat-select [(ngModel)]="selectedDays" (selectionChange)="onDaysChange()">
+          <mat-option *ngFor="let opt of dayOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-icon-button matTooltip="Alte Daten aufräumen" (click)="cleanupOldData()">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <span>Lade Statistiken...</span>
+  </div>
+
+  <ng-container *ngIf="!loading && summary">
+    <!-- KPI Cards -->
+    <div class="kpi-cards">
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">visibility</mat-icon>
+          <div class="kpi-value">{{ summary.totalViews | number }}</div>
+          <div class="kpi-label">Seitenaufrufe</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">people</mat-icon>
+          <div class="kpi-value">{{ summary.uniqueVisitors | number }}</div>
+          <div class="kpi-label">Unique Visitors</div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="kpi-card" *ngFor="let cat of summary.viewsByCategory">
+        <mat-card-content>
+          <mat-icon class="kpi-icon">{{ getCategoryIcon(cat.category) }}</mat-icon>
+          <div class="kpi-value">{{ cat.viewCount | number }}</div>
+          <div class="kpi-label">{{ getCategoryLabel(cat.category) }}</div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Tabs -->
+    <mat-tab-group [(selectedIndex)]="selectedTab" class="stats-tabs">
+
+      <!-- Tab: Verlauf -->
+      <mat-tab label="Tagesverlauf">
+        <div class="tab-content">
+          <div class="chart-container" *ngIf="summary.viewsByDay?.length">
+            <div class="bar-chart">
+              <div class="bar-row" *ngFor="let day of summary.viewsByDay">
+                <span class="bar-label">{{ formatDate(day.date) }}</span>
+                <div class="bar-track">
+                  <div class="bar-fill" [style.width.%]="getBarWidth(day.viewCount)"></div>
+                </div>
+                <span class="bar-value">{{ day.viewCount }}</span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="!summary.viewsByDay?.length" class="empty-state">
+            <mat-icon>insert_chart_outlined</mat-icon>
+            <p>Keine Daten für diesen Zeitraum vorhanden.</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab: Top-Stücke -->
+      <mat-tab label="Top-Stücke">
+        <div class="tab-content">
+          <table mat-table [dataSource]="summary.topPieces" class="stats-table" *ngIf="summary.topPieces?.length">
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+            </ng-container>
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Stück</th>
+              <td mat-cell *matCellDef="let item">{{ item.entityLabel || '(ID: ' + item.entityId + ')' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="views">
+              <th mat-header-cell *matHeaderCellDef>Aufrufe</th>
+              <td mat-cell *matCellDef="let item">{{ item.viewCount | number }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['rank', 'title', 'views']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['rank', 'title', 'views']"></tr>
+          </table>
+          <div *ngIf="!summary.topPieces?.length" class="empty-state">
+            <mat-icon>music_off</mat-icon>
+            <p>Keine Stücke-Aufrufe im gewählten Zeitraum.</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab: Geteilte Stücke -->
+      <mat-tab label="Geteilte Stücke">
+        <div class="tab-content">
+          <div *ngIf="sharedLoading" class="loading-container">
+            <mat-spinner diameter="32"></mat-spinner>
+          </div>
+          <table mat-table [dataSource]="sharedPieceStats" class="stats-table" *ngIf="!sharedLoading && sharedPieceStats?.length">
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+            </ng-container>
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Stück</th>
+              <td mat-cell *matCellDef="let item">{{ item.entityLabel || '(ID: ' + item.entityId + ')' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="totalViews">
+              <th mat-header-cell *matHeaderCellDef>Aufrufe</th>
+              <td mat-cell *matCellDef="let item">{{ item.totalViews | number }}</td>
+            </ng-container>
+            <ng-container matColumnDef="uniqueVisitors">
+              <th mat-header-cell *matHeaderCellDef>Unique</th>
+              <td mat-cell *matCellDef="let item">{{ item.uniqueVisitors | number }}</td>
+            </ng-container>
+            <ng-container matColumnDef="firstView">
+              <th mat-header-cell *matHeaderCellDef>Erster Aufruf</th>
+              <td mat-cell *matCellDef="let item">{{ formatDateTime(item.firstView) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="lastView">
+              <th mat-header-cell *matHeaderCellDef>Letzter Aufruf</th>
+              <td mat-cell *matCellDef="let item">{{ formatDateTime(item.lastView) }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['rank', 'title', 'totalViews', 'uniqueVisitors', 'firstView', 'lastView']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['rank', 'title', 'totalViews', 'uniqueVisitors', 'firstView', 'lastView']"></tr>
+          </table>
+          <div *ngIf="!sharedLoading && !sharedPieceStats?.length" class="empty-state">
+            <mat-icon>share</mat-icon>
+            <p>Keine geteilten Stücke im gewählten Zeitraum aufgerufen.</p>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab: Top-Seiten -->
+      <mat-tab label="Top-Seiten">
+        <div class="tab-content">
+          <table mat-table [dataSource]="summary.topPages" class="stats-table" *ngIf="summary.topPages?.length">
+            <ng-container matColumnDef="rank">
+              <th mat-header-cell *matHeaderCellDef>#</th>
+              <td mat-cell *matCellDef="let item; let i = index">{{ i + 1 }}</td>
+            </ng-container>
+            <ng-container matColumnDef="path">
+              <th mat-header-cell *matHeaderCellDef>Seite</th>
+              <td mat-cell *matCellDef="let item">{{ item.path }}</td>
+            </ng-container>
+            <ng-container matColumnDef="views">
+              <th mat-header-cell *matHeaderCellDef>Aufrufe</th>
+              <td mat-cell *matCellDef="let item">{{ item.viewCount | number }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['rank', 'path', 'views']"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['rank', 'path', 'views']"></tr>
+          </table>
+          <div *ngIf="!summary.topPages?.length" class="empty-state">
+            <mat-icon>web</mat-icon>
+            <p>Keine Seitenaufrufe im gewählten Zeitraum.</p>
+          </div>
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
+  </ng-container>
+</div>

@@ -29,9 +29,14 @@ import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
 import { FileSizePipe } from '@shared/pipes/file-size.pipe';
 import { Clipboard } from '@angular/cdk/clipboard';
 import { PracticeListService } from '@core/services/practice-list.service';
-import { AddToPracticeListDialogComponent, AddToPracticeListDialogResult } from './add-to-practice-list-dialog.component';
+import { PieceService } from '@core/services/piece.service';
+import { PracticeList } from '@core/models/practice-list';
+import { AudioMarker } from '@core/models/audio-marker';
+import { CreatePracticeListDialogComponent } from './create-practice-list-dialog.component';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { PdfFullscreenDialogAudioOption, PdfFullscreenDialogComponent } from '@shared/components/pdf-fullscreen-dialog/pdf-fullscreen-dialog.component';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { PageViewTrackingService } from '@core/services/page-view-tracking.service';
 
 type DisplayFileLink = PieceLink & {
   isPdf: boolean;
@@ -82,6 +87,9 @@ export class PieceDetailComponent implements OnInit {
   isDeveloper = false;
   localPinnedLinkIds = new Set<number>();
   viewableLicenseByCollection: Record<number, number> = {};
+  practiceLists: PracticeList[] = [];
+  practiceListsLoading = false;
+  private practiceListContext: { link?: PieceLink | null; pinOffline: boolean } = { pinOffline: false };
 
   get hasVisibleMp3Player(): boolean {
     return this.fileLinks.some(link => !!link.isMp3);
@@ -98,7 +106,10 @@ export class PieceDetailComponent implements OnInit {
     private logger: DebugLogService,
     private clipboard: Clipboard,
     private location: Location,
-    private practiceListService: PracticeListService
+    private practiceListService: PracticeListService,
+    private pieceService: PieceService,
+    private responsive: ResponsiveService,
+    private pageViewTracking: PageViewTrackingService
   ) {}
 
   ngOnInit(): void {
@@ -120,6 +131,14 @@ export class PieceDetailComponent implements OnInit {
     this.apiService.getRepertoirePiece(id).subscribe(p => {
       if (!p) return;
       this.piece = p;
+
+      // Track page view
+      this.pageViewTracking.track({
+        path: `/pieces/${p.id}`,
+        category: 'piece',
+        entityId: p.id,
+        entityLabel: p.title || undefined
+      });
 
       // Set page title
       const title = p.title ? `${p.title} - NAK Chorleiter` : 'NAK Chorleiter';
@@ -251,7 +270,8 @@ export class PieceDetailComponent implements OnInit {
       data: {
         url,
         title: 'Digitale Originallizenz',
-        allowOpenInNewTab: false
+        allowOpenInNewTab: false,
+        allowDownload: false
       },
       panelClass: 'pdf-fullscreen-dialog-panel',
       width: '100vw',
@@ -303,7 +323,7 @@ export class PieceDetailComponent implements OnInit {
 
     // Check if it's an absolute URL
     if (/^https?:\/\//i.test(url)) {
-      return url;
+      return this.appendNgswBypass(url);
     }
 
     // Build relative URL path
@@ -311,7 +331,13 @@ export class PieceDetailComponent implements OnInit {
     const apiBase = apiUrlStr.replace(/\/api\/?$/, '');
     const path = url.startsWith('/') ? url : `/${url}`;
     const fullPath = path.startsWith('/api/') ? path : `/api${path}`;
-    return `${apiBase}${fullPath}`;
+    return this.appendNgswBypass(`${apiBase}${fullPath}`);
+  }
+
+  /** Bypass the Angular Service Worker for media file requests (audio Range requests fail otherwise). */
+  private appendNgswBypass(url: string): string {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}ngsw-bypass=true`;
   }
 
   sharePiece(): void {
@@ -381,37 +407,92 @@ export class PieceDetailComponent implements OnInit {
   }
 
   openAddToPracticeListDialog(link?: PieceLink | null, preselectPinOffline = false): void {
+    // Kept as alias — now routes through the menu-based flow
+    this.setPracticeListContext(link, preselectPinOffline);
+  }
+
+  setPracticeListContext(link?: PieceLink | null, preselectPinOffline = false): void {
+    this.practiceListContext = { link: link ?? null, pinOffline: preselectPinOffline };
+    this.loadPracticeLists();
+  }
+
+  onPracticeListMenuOpened(): void {
+    // kept for compatibility; loading now happens via setPracticeListContext
+  }
+
+  addToPracticeList(listId: number, listTitle: string): void {
     if (!this.piece) return;
 
-    const dialogRef = this.dialog.open(AddToPracticeListDialogComponent, {
-      width: '500px',
-      data: {
-        pieceId: this.piece.id,
-        pieceTitle: this.piece.title,
-        pieceLinkId: link?.id ?? null,
-        pieceLinkDescription: link?.description || '',
-        preselectPinOffline
+    const link = this.practiceListContext.link;
+    const shouldPin = !!this.practiceListContext.pinOffline && !!link?.id;
+
+    this.practiceListService.addItem(listId, {
+      pieceId: this.piece.id,
+      pieceLinkId: link?.id ?? null,
+      isPinnedOffline: shouldPin
+    }).pipe(
+      switchMap((item) => {
+        if (!shouldPin) return of(item);
+        return this.practiceListService.pinItem(listId, item.id).pipe(
+          map(() => item),
+          catchError(() => of(item))
+        );
+      })
+    ).subscribe({
+      next: (item) => {
+        const snackBarRef = this.notification.successWithAction(
+          `Hinzugefügt zu: ${listTitle}`, 'Rückgängig', 7000
+        );
+        snackBarRef.onAction().subscribe(() => {
+          this.undoPracticeListAdds([{ listId, listTitle, itemId: Number(item.id) }]);
+        });
+
+        this.practiceListService.refreshOfflinePins().subscribe({
+          next: () => void this.refreshLocalPinnedState(),
+          error: () => void this.refreshLocalPinnedState()
+        });
+      },
+      error: () => {
+        this.notification.error('Eintrag konnte nicht hinzugefügt werden.');
       }
     });
+  }
 
-    dialogRef.afterClosed().subscribe((result?: AddToPracticeListDialogResult) => {
-      if (!result?.changed || !result.addedItems.length) {
-        return;
+  openCreatePracticeListDialog(): void {
+    if (!this.piece) return;
+
+    const dialogRef = this.dialog.open(CreatePracticeListDialogComponent, {
+      width: '400px',
+      autoFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((name?: string) => {
+      if (!name) return;
+
+      this.practiceListService.createList({ title: name }).subscribe({
+        next: (created) => {
+          this.notification.success(`Übungsliste „${created.title}" erstellt.`);
+          this.addToPracticeList(created.id, created.title);
+          this.practiceLists = [created, ...this.practiceLists];
+        },
+        error: () => {
+          this.notification.error('Die Übungsliste konnte nicht erstellt werden.');
+        }
+      });
+    });
+  }
+
+  private loadPracticeLists(): void {
+    this.practiceListsLoading = true;
+    this.practiceListService.getLists().subscribe({
+      next: (lists) => {
+        this.practiceLists = lists;
+        this.practiceListsLoading = false;
+      },
+      error: () => {
+        this.practiceLists = [];
+        this.practiceListsLoading = false;
       }
-
-      const addedListNames = Array.from(new Set(result.addedItems.map(item => item.listTitle))).filter(Boolean);
-      const message = addedListNames.length
-        ? `Hinzugefügt zu: ${addedListNames.join(', ')}`
-        : 'Zur Übungsliste hinzugefügt.';
-      const snackBarRef = this.notification.successWithAction(message, 'Rückgängig', 7000);
-      snackBarRef.onAction().subscribe(() => {
-        this.undoPracticeListAdds(result.addedItems);
-      });
-
-      this.practiceListService.refreshOfflinePins().subscribe({
-        next: () => void this.refreshLocalPinnedState(),
-        error: () => void this.refreshLocalPinnedState()
-      });
     });
   }
 
@@ -549,6 +630,42 @@ export class PieceDetailComponent implements OnInit {
         next: () => void this.refreshLocalPinnedState(),
         error: () => void this.refreshLocalPinnedState()
       });
+    });
+  }
+
+  // --- Audio Marker Methods ---
+
+  onMarkerCreate(link: DisplayFileLink, event: { timeSec: number; label: string }): void {
+    if (!this.piece) return;
+    this.pieceService.createMarker(this.piece.id, link.id, event.timeSec, event.label).subscribe({
+      next: (marker: AudioMarker) => {
+        if (!link.markers) link.markers = [];
+        link.markers = [...link.markers, marker];
+        this.notification.success(`Marker „${marker.label}" gesetzt.`);
+      },
+      error: () => this.notification.error('Marker konnte nicht erstellt werden.')
+    });
+  }
+
+  onMarkerDelete(link: DisplayFileLink, marker: AudioMarker): void {
+    if (!this.piece) return;
+    this.pieceService.deleteMarker(this.piece.id, link.id, marker.id).subscribe({
+      next: () => {
+        link.markers = (link.markers || []).filter(m => m.id !== marker.id);
+        this.notification.success('Marker gelöscht.');
+      },
+      error: () => this.notification.error('Marker konnte nicht gelöscht werden.')
+    });
+  }
+
+  onMarkerUpdate(link: DisplayFileLink, marker: AudioMarker): void {
+    if (!this.piece) return;
+    this.pieceService.updateMarker(this.piece.id, link.id, marker.id, { label: marker.label }).subscribe({
+      next: (updated: AudioMarker) => {
+        link.markers = (link.markers || []).map(m => m.id === updated.id ? updated : m);
+        this.notification.success('Marker aktualisiert.');
+      },
+      error: () => this.notification.error('Marker konnte nicht aktualisiert werden.')
     });
   }
 

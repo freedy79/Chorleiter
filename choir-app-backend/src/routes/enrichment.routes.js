@@ -28,6 +28,12 @@ router.delete('/api-keys/:provider', enrichmentController.deleteApiKey);
 router.get('/providers', enrichmentController.getProviders);
 
 /**
+ * Web Source Management (IMSLP, Musica International)
+ */
+router.get('/web-sources', enrichmentController.getWebSources);
+router.post('/web-sources/test', enrichmentController.testWebSources);
+
+/**
  * Job Management
  */
 router.get('/jobs', enrichmentController.listJobs);

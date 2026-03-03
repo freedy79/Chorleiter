@@ -79,6 +79,28 @@ mat-form-field {
 }
 
 // ============================================================================
+// ACCENT BUTTON CONTRAST FIX (Light Mode)
+// ============================================================================
+// NAK Gold (#ffc72c) as text color on white has only ~1.5:1 contrast ratio.
+// Override text-based accent buttons (stroked, basic, icon) to use a darker
+// gold (#9a6400, ~5:1 contrast on white) while keeping filled buttons unchanged.
+// Dark mode is unaffected – gold on dark backgrounds already has ~12:1 contrast.
+
+.mat-mdc-button.mat-accent,
+.mat-mdc-outlined-button.mat-accent,
+.mat-mdc-icon-button.mat-accent {
+  --mdc-text-button-label-text-color: #9a6400;
+  --mdc-outlined-button-label-text-color: #9a6400;
+  --mdc-outlined-button-outline-color: #c89600;
+  --mat-icon-button-icon-color: #9a6400;
+  color: #9a6400;
+
+  .mat-icon {
+    color: #9a6400;
+  }
+}
+
+// ============================================================================
 // DARK MODE STYLES - Following UX Design Institute Best Practices
 // ============================================================================
 // Apply dark theme when .dark-theme class is present on body
@@ -505,4 +527,35 @@ $choir-app-frontend-theme: mat.m2-define-light-theme((
   white-space: pre-line;
   max-width: 300px;
   font-size: 0.8125rem;
+}
+
+// Practice-list dropdown menu (rendered in overlay, needs global styles)
+.practice-list-menu {
+  max-height: 60vh;
+
+  .mat-mdc-menu-item {
+    min-height: 44px;
+  }
+
+  @media (max-width: bp.$breakpoint-handset-max) {
+    min-width: 70vw;
+
+    .mat-mdc-menu-item {
+      min-height: 48px;
+      font-size: 1rem;
+    }
+  }
+}
+
+// Hide the main toolbar and drawer when the Mappe (performance collection) fullscreen overlay is active
+body.mappe-fullscreen-active .main-toolbar {
+  display: none !important;
+}
+
+body.mappe-fullscreen-active .appDrawer {
+  display: none !important;
+}
+
+body.mappe-fullscreen-active .mat-drawer-backdrop {
+  display: none !important;
 }

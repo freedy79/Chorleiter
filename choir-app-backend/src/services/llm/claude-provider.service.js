@@ -271,7 +271,20 @@ class ClaudeProvider extends LLMProvider {
             .map(f => `${f}=${FIELD_LABELS[f]}`)
             .join(', ');
 
-        return `Enrich music metadata using IMSLP, Wikidata, and standard music references. Only fill fields you know with high confidence (0.8+).
+        // Include web context if available
+        let webContextBlock = '';
+        if (this.router) {
+            const webCtx = this.router.getWebContext();
+            if (webCtx && webCtx.size > 0) {
+                const WebEnrichmentProvider = require('./web-enrichment-provider.service');
+                webContextBlock = WebEnrichmentProvider.buildWebContextForPrompt(webCtx, batch);
+                if (webContextBlock) {
+                    webContextBlock = `\n\nWeb research results (use to validate/supplement your knowledge):\n${webContextBlock}\n`;
+                }
+            }
+        }
+
+        return `Enrich music metadata using IMSLP, Wikidata, and standard music references. Only fill fields you know with high confidence (0.8+).${webContextBlock}
 
 Pieces:
 ${piecesData}

@@ -54,7 +54,8 @@
                   *ngIf="link.isMp3"
                   [title]="link.description"
                   [url]="getLinkUrl(link)"
-                  [downloadName]="link.downloadName || link.description">
+                  [downloadName]="link.downloadName || link.description"
+                  [markers]="link.markers || []">
                 </app-audio-player>
 
                 <div *ngIf="link.isImage">

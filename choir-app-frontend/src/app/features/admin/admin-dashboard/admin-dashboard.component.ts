@@ -99,6 +99,14 @@ export class AdminDashboardComponent implements OnInit, OnDestroy {
       category: 'content'
     },
     {
+      id: 'usage-statistics',
+      label: 'Nutzungsstatistiken',
+      icon: 'bar_chart',
+      route: '/admin/usage-statistics',
+      description: 'Seitenaufrufe, geteilte Stücke, Trends',
+      category: 'system'
+    },
+    {
       id: 'security',
       label: 'Sicherheit & Monitoring',
       icon: 'security',
