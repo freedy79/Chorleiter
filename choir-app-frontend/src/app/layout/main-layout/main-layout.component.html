@@ -6,7 +6,7 @@
 
   <ng-container *ngIf="(isLoggedIn$ | async)">
     <button type="button" aria-label="Menü umschalten" class="sidenav-toggle" mat-icon-button (click)="toggleDrawer()">
-      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+      <mat-icon aria-label="Side nav toggle icon">{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
     </button>
   </ng-container>
 
@@ -21,13 +21,13 @@
   </ng-container>
 
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
-    *ngIf="(availableChoirs$ | async)?.length && ((isSmallScreen$ | async) !== true)">
+    *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
 
   <!-- Mobile: Choir Switcher als Bottom Sheet -->
   <button mat-icon-button class="choir-badge-mobile" (click)="openChoirSwitcher()" [disabled]="isDemo$ | async"
-    *ngIf="(availableChoirs$ | async)?.length && (isSmallScreen$ | async)"
+    *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (isSmallScreen$ | async)"
     matTooltip="{{ (activeChoir$ | async)?.name || 'Chor wählen' }}">
     <mat-icon>groups</mat-icon>
   </button>
@@ -119,9 +119,20 @@
 
 </mat-toolbar>
 
+<!-- Fullscreen Mobile Menu Overlay -->
+<div class="fullscreen-menu-overlay"
+     *ngIf="mobileMenuOpen && (isLoggedIn$ | async)"
+     (click)="closeFullscreenMenu()">
+  <div class="fullscreen-menu-content" (click)="$event.stopPropagation()">
+    <mat-nav-list (click)="closeFullscreenMenu()">
+      <app-menu-list-item *ngFor="let item of navItems" [item]="item"></app-menu-list-item>
+    </mat-nav-list>
+  </div>
+</div>
+
 <mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
-  <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'"
-    [mode]="(isHandset$ | async) ? 'over' : 'side'" class="appDrawer" (backdropClick)="closeSidenav()">
+  <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="'navigation'"
+    [mode]="'side'" class="appDrawer">
 
     <ng-container *ngIf="(isLoggedIn$ | async)">
       <mat-nav-list>

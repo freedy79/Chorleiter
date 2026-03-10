@@ -29,7 +29,7 @@ export class FileSizePipe implements PipeTransform {
    * @returns Formatted string with unit (kB or MB) or empty string if input is null/undefined
    */
   transform(value: number | null | undefined, decimals: number = 1): string {
-    if (value === null || value === undefined || typeof value !== 'number') {
+    if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
       return '';
     }
 

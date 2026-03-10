@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, of, combineLatest, EMPTY } from 'rxjs';
 import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
@@ -167,6 +167,37 @@ export class AuthService {
       }),
       catchError(() => of(null))
     ).subscribe();
+  }
+
+  /**
+   * Periodically callable method that refreshes user data from the server
+   * and returns any newly added choirs since the last check.
+   * Unlike reloadUserFromServer(), this can be called multiple times.
+   */
+  refreshUserAndCheckForNewChoirs(): Observable<{ newChoirs: Choir[] }> {
+    if (!this.getToken()) {
+      return EMPTY;
+    }
+    return this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
+      map(freshUser => {
+        const normalizedUser = this.withNormalizedChoirData(freshUser);
+        const currentChoirs = this.availableChoirs$.value;
+        const newAvailableChoirs = normalizedUser.availableChoirs || [];
+
+        // Find newly added choirs
+        const currentIds = new Set(currentChoirs.map(c => c.id));
+        const newChoirs = newAvailableChoirs.filter(c => !currentIds.has(c.id));
+
+        // Update state with fresh data
+        localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+        this.currentUserSubject.next(normalizedUser);
+        this.setActiveChoir(normalizedUser.activeChoir || null);
+        this.availableChoirs$.next(newAvailableChoirs);
+
+        return { newChoirs };
+      }),
+      catchError(() => of({ newChoirs: [] as Choir[] }))
+    );
   }
 
   private migrateStorage(): void {

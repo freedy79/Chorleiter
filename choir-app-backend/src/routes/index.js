@@ -40,6 +40,7 @@ const enrichmentRoutes = require('./enrichment.routes');
 const doubletteRoutes = require('./doublette.routes');
 const publicRoutes = require('./public.routes');
 const pageViewRoutes = require('./page-view.routes');
+const formRoutes = require('./form.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -83,6 +84,7 @@ const routeDefinitions = [
     ['/api/admin/enrichment', enrichmentRoutes],
     ['/api/public', publicRoutes],
     ['/api/page-views', pageViewRoutes],
+    ['/api/forms', formRoutes],
 ];
 
 function registerRoutes(app) {

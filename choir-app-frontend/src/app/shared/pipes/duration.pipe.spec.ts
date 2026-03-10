@@ -60,8 +60,8 @@ describe('DurationPipe', () => {
     });
 
     it('should handle negative numbers gracefully', () => {
-      // Math.floor of negative numbers rounds down (more negative)
-      expect(pipe.transform(-65)).toBe('-02:-05');
+      // Negative seconds: sign prefix with absolute value formatted as MM:SS
+      expect(pipe.transform(-65)).toBe('-01:05');
     });
   });
 

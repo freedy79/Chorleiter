@@ -20,9 +20,9 @@
                 <mat-icon>add</mat-icon>
                 <span>Neues Ereignis</span>
               </button>
-              <button mat-stroked-button color="accent" routerLink="/events" matTooltip="Alle Ereignisse" class="hide-on-mobile">
+              <button mat-stroked-button color="accent" routerLink="/events" matTooltip="Alle Termine" class="hide-on-mobile">
                 <mat-icon>list</mat-icon>
-                <span>Alle Ereignisse</span>
+                <span>Alle Termine</span>
               </button>
             </div>
           </div>
@@ -84,6 +84,10 @@
 
             <ng-container *ngIf="currentLoans$ | async as currentLoans">
               <app-current-loans-widget *ngIf="currentLoans.length > 0" [loans]="currentLoans"></app-current-loans-widget>
+            </ng-container>
+
+            <ng-container *ngIf="activeForms$ | async as activeForms">
+              <app-active-forms-widget *ngIf="activeForms.length > 0" [forms]="activeForms"></app-active-forms-widget>
             </ng-container>
 
             <app-latest-post-widget

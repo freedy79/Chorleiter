@@ -1,10 +1,19 @@
 import { ParticipationComponent } from './participation.component';
 import { UserInChoir } from '@core/models/user';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 
 describe('ParticipationComponent', () => {
+  function createComponent() {
+    return new ParticipationComponent(
+      { isMobile$: of(false) } as any,
+      {} as any,
+      { currentUser$: new BehaviorSubject<any>(null) } as any,
+      {} as any
+    );
+  }
+
   it('sortByVoice should handle null names', () => {
-    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    const component = createComponent();
     const members: UserInChoir[] = [
       { id: 1, name: null as any, email: '', voice: 'SOPRAN' },
       { id: 2, name: 'Alpha', email: '', voice: 'SOPRAN' }
@@ -15,7 +24,7 @@ describe('ParticipationComponent', () => {
   });
 
   it('statusCount counts all statuses', () => {
-    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    const component = createComponent();
     component.members = [
       { id: 1, name: 'A', email: '', voice: 'SOPRAN' },
       { id: 2, name: 'B', email: '', voice: 'ALT' },
@@ -36,7 +45,7 @@ describe('ParticipationComponent', () => {
   });
 
   it('monthStatusCount aggregates events', () => {
-    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    const component = createComponent();
     component.members = [
       { id: 1, name: 'A', email: '', voice: 'SOPRAN' },
       { id: 2, name: 'B', email: '', voice: 'ALT' }
@@ -56,7 +65,7 @@ describe('ParticipationComponent', () => {
   });
 
   it('monthStatusCount counts unique dates only once', () => {
-    const component = new ParticipationComponent({} as any, { currentUser$: new BehaviorSubject<any>(null) } as any);
+    const component = createComponent();
     component.members = [
       { id: 1, name: 'A', email: '', voice: 'SOPRAN' },
       { id: 2, name: 'B', email: '', voice: 'ALT' }

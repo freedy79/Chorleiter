@@ -58,16 +58,16 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     library: true,
   };
   menuOptions = [
-    { key: 'events', label: 'Ereignisse' },
+    { key: 'events', label: 'Termine' },
     { key: 'dienstplan', label: 'Dienstplan' },
     { key: 'availability', label: 'Verfügbarkeiten' },
-    { key: 'participation', label: 'Beteiligung' },
+    { key: 'participation', label: 'Anwesenheit' },
     { key: 'posts', label: 'Beiträge' },
     { key: 'stats', label: 'Statistik' },
-    { key: 'manageChoir', label: 'Mein Chor' },
-    { key: 'repertoire', label: 'Repertoire' },
+    { key: 'manageChoir', label: 'Choreinstellungen' },
+    { key: 'repertoire', label: 'Chor-Repertoire' },
     { key: 'collections', label: 'Sammlungen' },
-    { key: 'library', label: 'Bibliothek' },
+    { key: 'library', label: 'Notenbestand' },
   ];
 
   /**

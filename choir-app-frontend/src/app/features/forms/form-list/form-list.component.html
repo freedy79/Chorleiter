@@ -1,0 +1,68 @@
+<div class="form-list-container">
+  <div class="list-header">
+    <h1>Formulare</h1>
+    <button mat-flat-button color="primary" routerLink="/forms/new" *ngIf="isChoirAdmin">
+      <mat-icon>add</mat-icon> Neues Formular
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && forms.length === 0" class="empty-state">
+    <mat-icon class="empty-icon">description</mat-icon>
+    <h2>Keine Formulare vorhanden</h2>
+    <p *ngIf="isChoirAdmin">Erstelle ein neues Formular, um Umfragen oder Anmeldungen zu verwalten.</p>
+    <p *ngIf="!isChoirAdmin">Es sind aktuell keine Formulare verfügbar.</p>
+    <button *ngIf="isChoirAdmin" mat-flat-button color="primary" routerLink="/forms/new">
+      <mat-icon>add</mat-icon> Formular erstellen
+    </button>
+  </div>
+
+  <div class="forms-grid" *ngIf="!loading && forms.length > 0">
+    <mat-card *ngFor="let f of forms" class="form-card" [class.active]="isFormActive(f)"
+      (click)="navigateToForm(f)" tabindex="0" role="button">
+      <mat-card-header>
+        <mat-icon mat-card-avatar class="form-icon">{{ getStatusIcon(f.status) }}</mat-icon>
+        <mat-card-title>{{ f.title }}</mat-card-title>
+        <mat-card-subtitle>
+          <span class="status-chip" [class]="'status-' + f.status">{{ getStatusLabel(f.status) }}</span>
+          <span *ngIf="f.closeDate"> · Endet {{ f.closeDate | pureDate | date:'mediumDate' }}</span>
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <p class="description" *ngIf="f.description">{{ f.description }}</p>
+        <div class="form-meta">
+          <span class="submission-count" *ngIf="f.submissionCount != null" matTooltip="Abgaben">
+            <mat-icon>assignment_turned_in</mat-icon> {{ f.submissionCount }} Abgabe{{ f.submissionCount !== 1 ? 'n' : '' }}
+          </span>
+          <span class="max-submissions" *ngIf="f.maxSubmissions">
+            / max. {{ f.maxSubmissions }}
+          </span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end" *ngIf="isChoirAdmin">
+        <button mat-icon-button matTooltip="Ergebnisse" (click)="navigateToResults(f, $event)">
+          <mat-icon>bar_chart</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Duplizieren" (click)="duplicateForm(f, $event)">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Link teilen" (click)="copyLink(f, $event)"
+          *ngIf="f.status === 'published'">
+          <mat-icon>share</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Bearbeiten" [routerLink]="['/forms', f.id, 'edit']"
+          (click)="$event.stopPropagation()">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button matTooltip="Löschen" color="warn" (click)="deleteForm(f, $event)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

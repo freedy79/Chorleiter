@@ -25,9 +25,9 @@ describe('MainLayoutComponent - Mobile Search', () => {
   let breakpointMock: any;
 
   beforeEach(async () => {
-    const globalRolesSubject = new BehaviorSubject<string[]>(['user']);
+    const globalRolesSubject = new BehaviorSubject<string[]>(['user', 'admin']);
     const choirRolesSubject = new BehaviorSubject<string[]>(['singer']);
-    const currentUserSubject = new BehaviorSubject<any>({ roles: ['user'] });
+    const currentUserSubject = new BehaviorSubject<any>({ roles: ['user', 'admin'] });
     const activeChoirSubject = new BehaviorSubject<any>({
       modules: { singerMenu: { events: false, participation: false } },
       membership: { rolesInChoir: ['singer'] }
@@ -129,16 +129,15 @@ describe('MainLayoutComponent - Mobile Search', () => {
 
     const icon = searchButton.query(By.css('mat-icon'));
     expect(icon.nativeElement.textContent.trim()).toBe('search');
-
-    const label = searchButton.query(By.css('.nav-label'));
-    expect(label.nativeElement.textContent.trim()).toBe('Suche');
   });
 
   it('search button should be positioned before more menu', () => {
     const navItems = fixture.debugElement.queryAll(By.css('nav.bottom-nav > *'));
-    const searchIndex = navItems.findIndex(el =>
-      el.nativeElement.getAttribute('routerLink') === '/search'
-    );
+    const searchIndex = navItems.findIndex(el => {
+      // Check icon content since routerLink attribute may not be accessible via getAttribute
+      const icon = el.query(By.css('mat-icon'));
+      return icon && icon.nativeElement.textContent.trim() === 'search';
+    });
     const moreIndex = navItems.findIndex(el =>
       el.nativeElement.classList.contains('bottom-nav-more')
     );

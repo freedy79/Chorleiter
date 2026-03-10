@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { SearchService } from '@core/services/search.service';
 import { SearchResultsComponent } from './search-results.component';
 
@@ -12,6 +14,8 @@ describe('SearchResultsComponent', () => {
     await TestBed.configureTestingModule({
       imports: [SearchResultsComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: ActivatedRoute, useValue: { queryParamMap: of({ get: () => 'x' }) } },
         { provide: SearchService, useValue: searchSpy }
       ]

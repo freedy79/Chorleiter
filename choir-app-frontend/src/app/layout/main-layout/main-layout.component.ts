@@ -96,6 +96,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private readonly drawerWidth = 220;
   private readonly maxDrawerRatio = 0.4;
 
+  /** Whether the fullscreen mobile menu overlay is open */
+  mobileMenuOpen = false;
+
   headerHeight = 64;
   footerHeight = 56;
 
@@ -189,6 +192,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       shareReplay({ bufferSize: 1, refCount: true })
     );
 
+    // Ensure isHandset is always tracked even if not used in template
+    this.isHandset$.pipe(takeUntil(this.destroy$)).subscribe();
+
     this.isSmallScreen$ = this.responsive.isMobile$;
 
     this.dienstplanVisible$ = this.restrictForDemo(this.menu.isVisible('dienstplan'));
@@ -197,13 +203,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(roles => roles.includes('librarian'))
     );
 
-    this.hasMoreItems$ = combineLatest([
-      this.dienstplanVisible$,
-      this.isAdmin$,
-      this.isDemo$
-    ]).pipe(
-      map(([dienstplan, admin, demo]) => dienstplan || (!demo && admin))
-    );
+    // Always true: More menu contains Profile, Chat, Beiträge for all users
+    this.hasMoreItems$ = of(true);
 
     this.isLoggedIn$.pipe(
       switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null)),
@@ -273,7 +274,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       takeUntil(this.destroy$)
-    ).subscribe(() => this.closeSidenav());
+    ).subscribe(() => {
+      this.closeSidenav();
+      this.closeFullscreenMenu();
+    });
 
     this.isLoggedIn$.pipe(
       switchMap(loggedIn => {
@@ -348,7 +352,16 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   toggleDrawer() {
-    this._appDrawer?.toggle();
+    if (this.isHandset) {
+      this.mobileMenuOpen = !this.mobileMenuOpen;
+    } else {
+      this._appDrawer?.toggle();
+    }
+  }
+
+  /** Close the fullscreen mobile menu overlay */
+  closeFullscreenMenu() {
+    this.mobileMenuOpen = false;
   }
 
   switchChoir(id: number): void {

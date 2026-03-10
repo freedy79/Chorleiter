@@ -108,12 +108,7 @@ export class NotificationService {
         return error.error.message;
       }
 
-      // Fall back to status text or generic message
-      if (error.statusText && error.statusText !== 'Unknown Error') {
-        return `Fehler: ${error.statusText}`;
-      }
-
-      // Provide status-specific messages
+      // Provide status-specific messages first (German translations)
       switch (error.status) {
         case 0:
           return 'Fehler: Keine Verbindung zum Server.';
@@ -130,6 +125,10 @@ export class NotificationService {
         case 500:
           return 'Fehler: Interner Serverfehler.';
         default:
+          // Fall back to status text or generic message
+          if (error.statusText && error.statusText !== 'Unknown Error') {
+            return `Fehler: ${error.statusText}`;
+          }
           return `Fehler: Ein unerwarteter Fehler ist aufgetreten (${error.status}).`;
       }
     }

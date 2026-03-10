@@ -1,0 +1,161 @@
+<div class="results-container" *ngIf="!loading; else loadingTpl">
+  <div class="results-header">
+    <div>
+      <h1>{{ form?.title }} — Ergebnisse</h1>
+      <p class="subtitle">{{ submissions.length }} Abgabe{{ submissions.length !== 1 ? 'n' : '' }}</p>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="exportCsv()" [disabled]="submissions.length === 0">
+        <mat-icon>download</mat-icon> CSV-Export
+      </button>
+      <button mat-stroked-button routerLink="/forms/{{ formId }}/edit">
+        <mat-icon>edit</mat-icon> Bearbeiten
+      </button>
+      <button mat-button routerLink="/forms">
+        <mat-icon>arrow_back</mat-icon> Zurück
+      </button>
+    </div>
+  </div>
+
+  <!-- Tab navigation -->
+  <div class="tab-bar">
+    <button mat-button [class.active-tab]="activeTab === 'submissions'" (click)="switchTab('submissions')">
+      <mat-icon>list_alt</mat-icon> Abgaben
+    </button>
+    <button mat-button [class.active-tab]="activeTab === 'statistics'" (click)="switchTab('statistics')">
+      <mat-icon>bar_chart</mat-icon> Statistik
+    </button>
+  </div>
+
+  <!-- ═══════════════════════ SUBMISSIONS TAB ═══════════════════════ -->
+  <ng-container *ngIf="activeTab === 'submissions'">
+    <div *ngIf="submissions.length === 0" class="empty-state">
+      <mat-icon>inbox</mat-icon>
+      <h2>Noch keine Abgaben</h2>
+      <p>Sobald Teilnehmer das Formular ausfüllen, erscheinen die Ergebnisse hier.</p>
+    </div>
+
+    <!-- Table view -->
+    <div class="table-wrapper" *ngIf="viewMode === 'table' && submissions.length > 0">
+      <table mat-table [dataSource]="submissions" class="results-table">
+
+        <!-- Submitter column -->
+        <ng-container matColumnDef="submitter">
+          <th mat-header-cell *matHeaderCellDef>Teilnehmer</th>
+          <td mat-cell *matCellDef="let sub">{{ getSubmitterName(sub) }}</td>
+        </ng-container>
+
+        <!-- Date column -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Datum</th>
+          <td mat-cell *matCellDef="let sub">{{ sub.createdAt | pureDate | date:'short' }}</td>
+        </ng-container>
+
+        <!-- Dynamic field columns -->
+        <ng-container *ngFor="let field of getInteractiveFields()" [matColumnDef]="'field_' + field.id">
+          <th mat-header-cell *matHeaderCellDef>{{ field.label }}</th>
+          <td mat-cell *matCellDef="let sub">
+            <span class="cell-value">{{ getAnswerValue(sub, field.id!) }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Actions column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let sub">
+            <button mat-icon-button matTooltip="Details" (click)="selectSubmission(sub)">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Löschen" color="warn" (click)="deleteSubmission(sub, $event)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"
+          (click)="selectSubmission(row)" class="clickable-row"></tr>
+      </table>
+    </div>
+
+    <!-- Detail view -->
+    <div *ngIf="viewMode === 'detail' && selectedSubmission" class="detail-view">
+      <button mat-button (click)="backToTable()">
+        <mat-icon>arrow_back</mat-icon> Zurück zur Übersicht
+      </button>
+
+      <mat-card class="detail-card">
+        <mat-card-header>
+          <mat-card-title>Abgabe von {{ getSubmitterName(selectedSubmission) }}</mat-card-title>
+          <mat-card-subtitle>{{ selectedSubmission.createdAt | pureDate | date:'medium' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <div *ngFor="let field of getInteractiveFields()" class="answer-row">
+            <span class="answer-label">{{ field.label }}</span>
+            <span class="answer-value">{{ getAnswerValue(selectedSubmission, field.id!) }}</span>
+          </div>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="warn" (click)="deleteSubmission(selectedSubmission, $event)">
+            <mat-icon>delete</mat-icon> Abgabe löschen
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </ng-container>
+
+  <!-- ═══════════════════════ STATISTICS TAB ═══════════════════════ -->
+  <ng-container *ngIf="activeTab === 'statistics'">
+    <div *ngIf="statsLoading" class="loading-container">
+      <mat-spinner diameter="36"></mat-spinner>
+      <p>Statistik wird berechnet…</p>
+    </div>
+
+    <div *ngIf="!statsLoading && statistics.length === 0" class="empty-state">
+      <mat-icon>analytics</mat-icon>
+      <h2>Keine Statistik verfügbar</h2>
+      <p>Es müssen Abgaben vorhanden sein, um eine Statistik zu erstellen.</p>
+    </div>
+
+    <div *ngIf="!statsLoading && statistics.length > 0" class="statistics-grid">
+      <p class="stats-summary">Auswertung basierend auf {{ statsSubmissionCount }} Abgabe{{ statsSubmissionCount !== 1 ? 'n' : '' }}</p>
+
+      <mat-card *ngFor="let stat of statistics" class="stat-card">
+        <mat-card-header>
+          <mat-card-title>{{ stat.label }}</mat-card-title>
+          <mat-card-subtitle>{{ stat.total }} Antwort{{ stat.total !== 1 ? 'en' : '' }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+
+          <!-- Bar chart for chartable fields -->
+          <div *ngIf="isChartableField(stat)" class="bar-chart">
+            <div *ngFor="let entry of getStatEntries(stat)" class="bar-row">
+              <span class="bar-label">{{ entry.label }}</span>
+              <div class="bar-track">
+                <div class="bar-fill" [style.width.%]="entry.percentage"></div>
+              </div>
+              <span class="bar-count">{{ entry.count }} ({{ entry.percentage }}%)</span>
+            </div>
+          </div>
+
+          <!-- Text list for text fields -->
+          <div *ngIf="!isChartableField(stat)" class="text-answers">
+            <div *ngFor="let entry of getStatEntries(stat)" class="text-entry">
+              <span class="text-value">{{ entry.label }}</span>
+              <span class="text-count" *ngIf="entry.count > 1">×{{ entry.count }}</span>
+            </div>
+            <p *ngIf="getStatEntries(stat).length === 0" class="no-data">Keine Antworten</p>
+          </div>
+
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </ng-container>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Ergebnisse werden geladen…</p>
+  </div>
+</ng-template>

@@ -6,7 +6,10 @@
     "build": "npm run build --prefix choir-app-frontend",
     "test": "npm test --prefix choir-app-frontend",
     "test:backend": "npm test --prefix choir-app-backend",
-    "check-backend": "npm run check --prefix choir-app-backend"
+    "check-backend": "npm run check --prefix choir-app-backend",
+    "pre-check": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1",
+    "pre-check:backend": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1 -BackendOnly",
+    "pre-check:frontend": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1 -FrontendOnly"
   },
   "devDependencies": {
     "@angular-eslint/builder": "^20.2.0",

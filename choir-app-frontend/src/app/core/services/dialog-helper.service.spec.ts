@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Observable } from 'rxjs';
 import { DialogHelperService, DialogApiConfig, ConfirmOptions, DeleteConfirmOptions } from './dialog-helper.service';
 import { ApiHelperService } from './api-helper.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
@@ -191,12 +191,12 @@ describe('DialogHelperService', () => {
       const onSuccessSpy = jasmine.createSpy('onSuccess');
 
       dialogRefSpy.afterClosed.and.returnValue(of({ name: 'Test' }));
-      apiHelperSpy.handleApiCall.and.callFake((obs, options) => {
+      apiHelperSpy.handleApiCall.and.callFake((obs: any, options: any) => {
         return obs.pipe(
-          (source: any) => new (require('rxjs').Observable)((observer: any) => {
+          (source: any) => new Observable((observer: any) => {
             source.subscribe({
               next: (val: any) => {
-                if (options.onSuccess) options.onSuccess(val);
+                if (options?.onSuccess) options.onSuccess(val);
                 observer.next(val);
               },
               error: (err: any) => observer.error(err),
@@ -221,14 +221,13 @@ describe('DialogHelperService', () => {
       const callOrder: string[] = [];
 
       dialogRefSpy.afterClosed.and.returnValue(of({ name: 'Test' }));
-      apiHelperSpy.handleApiCall.and.callFake((obs, options) => {
+      apiHelperSpy.handleApiCall.and.callFake((obs: any, options: any) => {
         return obs.pipe(
-          (source: any) => new (require('rxjs').Observable)((observer: any) => {
+          (source: any) => new Observable((observer: any) => {
             source.subscribe({
               next: (val: any) => {
-                if (options.onSuccess) {
+                if (options?.onSuccess) {
                   options.onSuccess(val);
-                  callOrder.push('onSuccess');
                 }
                 observer.next(val);
               },
@@ -241,7 +240,7 @@ describe('DialogHelperService', () => {
 
       service.openDialogWithApi(mockComponent, mockApiCall, {
         apiConfig: {
-          onSuccess: () => {},
+          onSuccess: () => callOrder.push('onSuccess'),
           onRefresh: () => callOrder.push('onRefresh')
         }
       }).subscribe(() => {
@@ -457,12 +456,12 @@ describe('DialogHelperService', () => {
       const onRefreshSpy = jasmine.createSpy('onRefresh');
 
       dialogRefSpy.afterClosed.and.returnValue(of(true));
-      apiHelperSpy.handleApiCall.and.callFake((obs, options) => {
+      apiHelperSpy.handleApiCall.and.callFake((obs: any, options: any) => {
         return obs.pipe(
-          (source: any) => new (require('rxjs').Observable)((observer: any) => {
+          (source: any) => new Observable((observer: any) => {
             source.subscribe({
               next: (val: any) => {
-                if (options.onSuccess) options.onSuccess(val);
+                if (options?.onSuccess) options.onSuccess(val);
                 observer.next(val);
               },
               error: (err: any) => observer.error(err),

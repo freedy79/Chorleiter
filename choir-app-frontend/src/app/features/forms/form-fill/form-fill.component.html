@@ -1,0 +1,200 @@
+<div class="form-fill-container" *ngIf="!loading; else loadingTpl">
+
+  <!-- Preview Banner -->
+  <div *ngIf="isPreview" class="preview-banner">
+    <mat-icon>visibility</mat-icon>
+    <span>Vorschau-Modus – Eingaben werden nicht gespeichert</span>
+    <a mat-stroked-button [routerLink]="['/forms', formId, 'edit']">
+      <mat-icon>edit</mat-icon> Zurück zum Editor
+    </a>
+  </div>
+
+  <!-- Success state -->
+  <div *ngIf="submitted" class="success-state">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+    <h2>{{ confirmationText }}</h2>
+    <button mat-flat-button color="primary" routerLink="/forms" *ngIf="!isPublic">
+      Zurück zu Formularen
+    </button>
+  </div>
+
+  <!-- Form -->
+  <div *ngIf="!submitted && formData">
+    <div class="form-header">
+      <h1>{{ formData.title }}</h1>
+      <p class="description" *ngIf="formData.description">{{ formData.description }}</p>
+      <p class="deadline" *ngIf="formData.closeDate">
+        <mat-icon>schedule</mat-icon>
+        Abgabe bis {{ formData.closeDate | date:'mediumDate' }}
+      </p>
+    </div>
+
+    <form [formGroup]="fillForm" (ngSubmit)="submit()">
+
+      <!-- Public submitter info -->
+      <mat-card class="field-card" *ngIf="isPublic">
+        <mat-card-content>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Dein Name (optional)</mat-label>
+            <input matInput formControlName="submitterName">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Deine E-Mail (optional)</mat-label>
+            <input matInput formControlName="submitterEmail" type="email">
+            <mat-error *ngIf="fillForm.get('submitterEmail')?.hasError('email')">
+              Ungültige E-Mail-Adresse
+            </mat-error>
+          </mat-form-field>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Fields -->
+      <ng-container *ngFor="let field of getFields()">
+
+        <!-- Heading -->
+        <h2 class="field-heading" *ngIf="field.type === 'heading'">{{ field.label }}</h2>
+
+        <!-- Separator -->
+        <mat-divider *ngIf="field.type === 'separator'" class="field-separator"></mat-divider>
+
+        <!-- Input fields (with conditional visibility) -->
+        <mat-card class="field-card" *ngIf="field.type !== 'heading' && field.type !== 'separator' && isFieldVisible(field)">
+          <mat-card-content>
+
+            <!-- Short text -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'text_short'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <input matInput [formControlName]="'field_' + field.id" [placeholder]="field.placeholder || ''">
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+            </mat-form-field>
+
+            <!-- Long text -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'text_long'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <textarea matInput [formControlName]="'field_' + field.id" [placeholder]="field.placeholder || ''"
+                rows="4"></textarea>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+            </mat-form-field>
+
+            <!-- Number -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'number'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <input matInput type="number" [formControlName]="'field_' + field.id"
+                [placeholder]="field.placeholder || ''">
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('min')">Wert zu klein</mat-error>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('max')">Wert zu groß</mat-error>
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'email'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <input matInput type="email" [formControlName]="'field_' + field.id"
+                [placeholder]="field.placeholder || ''">
+              <mat-icon matSuffix>email</mat-icon>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('email')">Ungültige E-Mail-Adresse</mat-error>
+            </mat-form-field>
+
+            <!-- Checkbox -->
+            <div *ngIf="field.type === 'checkbox'" class="checkbox-field">
+              <mat-checkbox [formControlName]="'field_' + field.id">
+                {{ field.label }}<span *ngIf="field.required" class="required-star"> *</span>
+              </mat-checkbox>
+            </div>
+
+            <!-- Select / Dropdown -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'select'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <mat-select [formControlName]="'field_' + field.id"
+                [placeholder]="field.placeholder || 'Bitte wählen'">
+                <mat-option *ngFor="let opt of field.options" [value]="opt">{{ opt }}</mat-option>
+              </mat-select>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+            </mat-form-field>
+
+            <!-- Radio buttons -->
+            <div *ngIf="field.type === 'radio'" class="radio-field">
+              <label class="field-label">{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></label>
+              <mat-radio-group [formControlName]="'field_' + field.id" class="radio-group">
+                <mat-radio-button *ngFor="let opt of field.options" [value]="opt">{{ opt }}</mat-radio-button>
+              </mat-radio-group>
+              <mat-error *ngIf="getFieldControl(field)?.touched && getFieldControl(field)?.hasError('required')">
+                Pflichtfeld
+              </mat-error>
+            </div>
+
+            <!-- Multi-Checkbox -->
+            <div *ngIf="field.type === 'multi_checkbox'" class="multi-checkbox-field">
+              <label class="field-label">{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></label>
+              <div class="multi-checkbox-group">
+                <mat-checkbox *ngFor="let opt of field.options"
+                  [checked]="isOptionChecked(field, opt)"
+                  (change)="toggleCheckboxOption(field, opt)">
+                  {{ opt }}
+                </mat-checkbox>
+              </div>
+              <mat-error *ngIf="getFieldControl(field)?.touched && getFieldControl(field)?.hasError('required')">
+                Pflichtfeld
+              </mat-error>
+            </div>
+
+            <!-- Date -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'date'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <input matInput [matDatepicker]="picker" [formControlName]="'field_' + field.id">
+              <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+            </mat-form-field>
+
+            <!-- Time -->
+            <mat-form-field appearance="outline" class="full-width" *ngIf="field.type === 'time'">
+              <mat-label>{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></mat-label>
+              <input matInput type="time" [formControlName]="'field_' + field.id">
+              <mat-error *ngIf="getFieldControl(field)?.hasError('required')">Pflichtfeld</mat-error>
+            </mat-form-field>
+
+            <!-- Rating -->
+            <div *ngIf="field.type === 'rating'" class="rating-field">
+              <label class="rating-label">{{ field.label }}<span *ngIf="field.required" class="required-star"> *</span></label>
+              <div class="rating-stars">
+                <button type="button" *ngFor="let v of ratingValues" mat-icon-button
+                  (click)="setRating(field, v)"
+                  [class.active]="getRating(field) >= v"
+                  class="star-btn">
+                  <mat-icon>{{ getRating(field) >= v ? 'star' : 'star_border' }}</mat-icon>
+                </button>
+              </div>
+              <mat-error *ngIf="getFieldControl(field)?.touched && getFieldControl(field)?.hasError('required')">
+                Pflichtfeld
+              </mat-error>
+            </div>
+
+          </mat-card-content>
+        </mat-card>
+      </ng-container>
+
+      <div class="form-actions">
+        <button mat-button type="button" routerLink="/forms" *ngIf="!isPublic">Abbrechen</button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="submitting || isPreview">
+          <mat-icon>send</mat-icon>
+          {{ isPreview ? 'Vorschau' : (submitting ? 'Wird gesendet…' : 'Absenden') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div *ngIf="!submitted && !formData" class="error-state">
+    <mat-icon>error_outline</mat-icon>
+    <h2>Formular nicht verfügbar</h2>
+    <p>Das Formular existiert nicht oder ist nicht mehr aktiv.</p>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Formular wird geladen…</p>
+  </div>
+</ng-template>

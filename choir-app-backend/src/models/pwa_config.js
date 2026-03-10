@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
     key: {
       type: DataTypes.STRING,
       allowNull: false,
-      comment: 'Configuration key (e.g., vapid_public_key, push_enabled, sw_update_interval)'
+      comment: 'Configuration key (e.g., vapid_public_key, push_notifications_enabled, sw_update_check_interval)'
     },
     value: {
       type: DataTypes.TEXT,

@@ -2,34 +2,33 @@ const logger = require('../config/logger');
 const db = require('../models');
 
 /**
- * Migration: Fix pwa_config table
- * The table was created with sync({ alter: true }) which generates invalid SQL on PostgreSQL
- * for ENUM changes and constraint modifications.
+ * Migration: Ensure pwa_config table exists with correct schema.
  *
- * Solution: Drop and recreate table with correct schema
+ * Only creates the table if it doesn't already exist.
+ * Existing data (admin-edited VAPID keys, feature toggles) is preserved across restarts.
+ * Default settings are seeded via findOrCreate so they never overwrite existing values.
  */
 async function ensurePwaConfig() {
     try {
         logger.info('[Migration] Ensuring pwa_config table...');
 
-        // Drop existing table and ENUM if they exist
-        try {
-            await db.sequelize.query('DROP TABLE IF EXISTS "pwa_config" CASCADE', { raw: true });
-            await db.sequelize.query('DROP TYPE IF EXISTS "enum_pwa_config_type" CASCADE', { raw: true });
-            logger.info('[Migration] Dropped old pwa_config table and enum');
-        } catch (err) {
-            logger.debug('[Migration] pwa_config may not exist:', err.message);
+        const queryInterface = db.sequelize.getQueryInterface();
+        const existingTables = await queryInterface.showAllTables();
+        const tableSet = new Set(existingTables.map(t => t.toLowerCase()));
+
+        if (!tableSet.has('pwa_configs') && !tableSet.has('pwa_config')) {
+            // Table doesn't exist yet — create it fresh
+            await db.pwa_config.sync();
+            logger.info('[Migration] pwa_config table created successfully');
+        } else {
+            logger.info('[Migration] pwa_config table already exists - skipping');
         }
 
-        // Recreate with Sequelize model (force: true ensures clean creation)
-        await db.pwa_config.sync({ force: true });
-        logger.info('[Migration] pwa_config table created successfully');
-
-        // Initialize default PWA settings
+        // Initialize default PWA settings (findOrCreate — safe for existing data)
         await initializeDefaultPwaSettings();
 
     } catch (error) {
-        logger.error('[Migration] Error creating pwa_config:', error);
+        logger.error('[Migration] Error ensuring pwa_config:', error);
         throw error;
     }
 }
@@ -51,7 +50,7 @@ async function initializeDefaultPwaSettings() {
                 value: process.env.VAPID_PRIVATE_KEY || '',
                 type: 'string',
                 category: 'vapid',
-                description: 'VAPID private key (server-side only)',
+                description: 'VAPID private key for push notifications (kept secret)',
                 isEditable: true,
                 isSecret: true
             },
@@ -65,30 +64,57 @@ async function initializeDefaultPwaSettings() {
                 isSecret: false
             },
             {
-                key: 'push_enabled',
+                key: 'push_notifications_enabled',
                 value: 'true',
                 type: 'boolean',
-                category: 'notification',
-                description: 'Enable push notifications globally',
+                category: 'features',
+                description: 'Enable/disable push notifications globally',
                 isEditable: true,
                 isSecret: false
             },
             {
-                key: 'sw_update_interval',
+                key: 'sw_update_check_interval',
                 value: '3600000',
                 type: 'number',
                 category: 'service_worker',
-                description: 'Service worker update check interval in ms',
+                description: 'Service worker update check interval in milliseconds (default: 1 hour)',
                 isEditable: true,
                 isSecret: false
             },
             {
-                key: 'cache_version',
-                value: '1',
-                type: 'string',
+                key: 'cache_max_age_hours',
+                value: '24',
+                type: 'number',
                 category: 'cache',
-                description: 'Cache version for service worker',
-                isEditable: false,
+                description: 'Maximum cache age in hours',
+                isEditable: true,
+                isSecret: false
+            },
+            {
+                key: 'offline_mode_enabled',
+                value: 'true',
+                type: 'boolean',
+                category: 'features',
+                description: 'Enable offline mode with service worker caching',
+                isEditable: true,
+                isSecret: false
+            },
+            {
+                key: 'install_prompt_enabled',
+                value: 'true',
+                type: 'boolean',
+                category: 'features',
+                description: 'Show PWA install prompt to users',
+                isEditable: true,
+                isSecret: false
+            },
+            {
+                key: 'background_sync_enabled',
+                value: 'false',
+                type: 'boolean',
+                category: 'features',
+                description: 'Enable background sync for offline actions',
+                isEditable: true,
                 isSecret: false
             }
         ];

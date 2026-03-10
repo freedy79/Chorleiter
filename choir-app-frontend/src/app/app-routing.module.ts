@@ -36,6 +36,55 @@ export const routes: Routes = [
         loadComponent: () => import('./features/posts/poll-reminder-vote.component').then(m => m.PollReminderVoteComponent),
         data: { title: 'Abstimmung' }
     },
+    {
+        path: 'forms/public/:guid',
+        loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+        data: { title: 'Formular', isPublic: true }
+    },
+    // --- Formulare: eigene Seite mit eigenem Layout ---
+    {
+        path: 'forms',
+        loadComponent: () => import('./features/forms/form-layout/form-layout.component').then(m => m.FormLayoutComponent),
+        children: [
+            {
+                path: '',
+                pathMatch: 'full',
+                loadComponent: () => import('./features/forms/form-list/form-list.component').then(m => m.FormListComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Formulare' }
+            },
+            {
+                path: 'new',
+                loadComponent: () => import('./features/forms/form-editor/form-editor.component').then(m => m.FormEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Neues Formular' }
+            },
+            {
+                path: ':id/edit',
+                loadComponent: () => import('./features/forms/form-editor/form-editor.component').then(m => m.FormEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular bearbeiten' }
+            },
+            {
+                path: ':id/fill',
+                loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Formular ausfüllen' }
+            },
+            {
+                path: ':id/results',
+                loadComponent: () => import('./features/forms/form-results/form-results.component').then(m => m.FormResultsComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular-Ergebnisse' }
+            },
+            {
+                path: ':id/preview',
+                loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular-Vorschau', isPreview: true }
+            },
+        ],
+    },
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
     {
         path: '',
@@ -120,7 +169,7 @@ export const routes: Routes = [
                 path: 'events',
                 loadComponent: () => import('./features/events/event-list/event-list.component').then(m => m.EventListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Ereignisse' }
+                data: { title: 'Termine' }
             },
             {
                 path: 'posts',
@@ -150,7 +199,7 @@ export const routes: Routes = [
                 path: 'programs',
                 loadComponent: () => import('./features/programs/program-list.component').then(m => m.ProgramListComponent),
                 canActivate: [AuthGuard, ProgramGuard],
-                data: { title: 'Programme' }
+                data: { title: 'Programmplanung' }
             },
             {
                 path: 'programs/create',
@@ -180,13 +229,13 @@ export const routes: Routes = [
                 path: 'library',
                 loadComponent: () => import('./features/library/library.component').then(m => m.LibraryComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Bibliothek' }
+                data: { title: 'Notenbestand' }
             },
             {
                 path: 'repertoire',
                 loadComponent: () => import('./features/literature/literature-list/literature-list.component').then(m => m.LiteratureListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Repertoire' }
+                data: { title: 'Chor-Repertoire' }
             },
             {
                 path: 'practice-lists',
@@ -228,14 +277,14 @@ export const routes: Routes = [
                 path: 'participation',
                 loadComponent: () => import('./features/participation/participation.component').then(m => m.ParticipationComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Beteiligung' }
+                data: { title: 'Anwesenheit' }
             },
             {
                 path: 'manage-choir',
                 loadComponent: () => import('./features/choir-management/manage-choir/manage-choir.component').then(m => m.ManageChoirComponent),
                 canActivate: [AuthGuard],
                 resolve: {pageData: ManageChoirResolver },
-                data: { title: 'Mein Chor' }
+                data: { title: 'Choreinstellungen' }
             },
         ],
     },

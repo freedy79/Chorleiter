@@ -95,8 +95,8 @@ h3.mat-subheading-2 {
   justify-content: space-between;
   padding: $spacing-xs $spacing-sm;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-  @include adaptive-border(0);
   min-height: 44px;
+  @include adaptive-border(0);
 
   @include dark-mode {
     border-bottom-color: rgba(255, 255, 255, 0.08);

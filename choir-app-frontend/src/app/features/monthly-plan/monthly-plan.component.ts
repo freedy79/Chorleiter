@@ -477,6 +477,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   loadPlan(year: number, month: number): void {
+    // Always clear the service-level cache so we fetch fresh data from the
+    // server.  Without this, navigating back to a previously visited month
+    // would return stale cached entries (e.g. old notes, directors, etc.).
+    this.monthlyPlan.clearMonthlyPlanCache(year, month);
+
     const previousPlan = this.plan;
     const previousEntries = this.entries;
     const previousAvailabilityMap = this.availabilityMap;
@@ -577,7 +582,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   reloadPlan(): void {
-    this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+    // loadPlan() already clears the cache, so we can call it directly.
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
@@ -646,7 +651,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.director = updated.director;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
       this.updateCounterPlan();
+      this.cdr.markForCheck();
     });
   }
 
@@ -660,7 +667,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.organist = updated.organist;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
       this.updateCounterPlan();
+      this.cdr.markForCheck();
     });
   }
 
@@ -674,6 +683,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.notes = updated.notes;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+      this.cdr.markForCheck();
     });
   }
 
@@ -689,6 +700,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     ).subscribe(updated => {
       ev.programId = updated.programId ?? null;
       ev.program = updated.program ?? null;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+      this.cdr.markForCheck();
     });
   }
 
@@ -696,7 +709,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (this.plan) {
       this.monthlyPlan.finalizeMonthlyPlan(this.plan.id).pipe(
         takeUntil(this.destroy$)
-      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      ).subscribe(p => {
+        this.plan = p;
+        this.updateDisplayedColumns();
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -706,7 +723,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (this.plan) {
       this.monthlyPlan.reopenMonthlyPlan(this.plan.id).pipe(
         takeUntil(this.destroy$)
-      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      ).subscribe(p => {
+        this.plan = p;
+        this.updateDisplayedColumns();
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -819,6 +840,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(plan => {
       this.plan = plan;
+      this.entries = plan.entries || [];
+      this.updateDisplayedColumns();
+      this.cdr.markForCheck();
+      // Reload from server to get the full plan with all associations
       this.loadPlan(plan.year, plan.month);
     });
   }

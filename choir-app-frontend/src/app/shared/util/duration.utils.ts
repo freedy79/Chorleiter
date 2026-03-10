@@ -15,18 +15,20 @@
  * formatSecondsAsDuration(null) // ""
  */
 export function formatSecondsAsDuration(seconds: number | null | undefined): string {
-  if (seconds === null || seconds === undefined || typeof seconds !== 'number') {
+  if (seconds === null || seconds === undefined || typeof seconds !== 'number' || isNaN(seconds)) {
     return '';
   }
 
-  const minutes = Math.floor(seconds / 60)
+  const sign = seconds < 0 ? '-' : '';
+  const abs = Math.abs(seconds);
+  const minutes = Math.floor(abs / 60)
     .toString()
     .padStart(2, '0');
-  const remainingSeconds = Math.floor(seconds % 60)
+  const remainingSeconds = Math.floor(abs % 60)
     .toString()
     .padStart(2, '0');
 
-  return `${minutes}:${remainingSeconds}`;
+  return `${sign}${minutes}:${remainingSeconds}`;
 }
 
 /**

@@ -98,7 +98,7 @@ describe('NotificationService', () => {
       service.error(httpError);
 
       expect(snackBarSpy.open).toHaveBeenCalledWith(
-        'Fehler: Internal Server Error',
+        'Fehler: Interner Serverfehler.',
         'Schließen',
         jasmine.objectContaining({
           duration: 5000,

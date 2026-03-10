@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PwaUpdateNotificationComponent } from './pwa-update-notification.component';
 import { ServiceWorkerUpdateService } from '../../services/service-worker-update.service';
 import { of } from 'rxjs';
@@ -23,7 +23,7 @@ describe('PwaUpdateNotificationComponent', () => {
     swUpdateServiceMock.updating = of(false);
 
     await TestBed.configureTestingModule({
-      imports: [PwaUpdateNotificationComponent, BrowserAnimationsModule],
+      imports: [PwaUpdateNotificationComponent, NoopAnimationsModule],
       providers: [
         { provide: ServiceWorkerUpdateService, useValue: swUpdateServiceMock }
       ]
@@ -32,6 +32,7 @@ describe('PwaUpdateNotificationComponent', () => {
     swUpdateService = TestBed.inject(ServiceWorkerUpdateService) as jasmine.SpyObj<ServiceWorkerUpdateService>;
     fixture = TestBed.createComponent(PwaUpdateNotificationComponent);
     component = fixture.componentInstance;
+    fixture.detectChanges(); // trigger ngOnInit so subscriptions complete
   });
 
   it('sollte erstellt werden', () => {

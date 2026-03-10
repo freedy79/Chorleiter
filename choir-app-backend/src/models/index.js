@@ -82,6 +82,10 @@ db.choir_public_page = require('./choir_public_page.model.js')(sequelize, Sequel
 db.choir_public_asset = require('./choir_public_asset.model.js')(sequelize, Sequelize);
 db.audio_marker = require('./audio_marker.model.js')(sequelize, Sequelize);
 db.page_view = require('./page_view.model.js')(sequelize, Sequelize);
+db.form = require('./form.model.js')(sequelize, Sequelize);
+db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
+db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
+db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -100,6 +104,12 @@ db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' })
 // A Choir has many Pieces
 db.choir.belongsToMany(db.piece, { through: db.choir_repertoire });
 db.piece.belongsToMany(db.choir, { through: db.choir_repertoire });
+
+// Direct access to choir_repertoire junction table (needed for queries that filter by repertoire status)
+db.piece.hasMany(db.choir_repertoire, { foreignKey: 'pieceId' });
+db.choir_repertoire.belongsTo(db.piece, { foreignKey: 'pieceId' });
+db.choir.hasMany(db.choir_repertoire, { foreignKey: 'choirId' });
+db.choir_repertoire.belongsTo(db.choir, { foreignKey: 'choirId' });
 
 // A Choir has many Events
 db.choir.hasMany(db.event, { as: "events" });
@@ -374,5 +384,21 @@ db.choir.hasOne(db.choir_public_page, { as: 'publicPage', foreignKey: 'choirId',
 db.choir_public_page.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
 db.choir_public_page.hasMany(db.choir_public_asset, { as: 'assets', foreignKey: 'choirPublicPageId', onDelete: 'CASCADE' });
 db.choir_public_asset.belongsTo(db.choir_public_page, { as: 'page', foreignKey: 'choirPublicPageId' });
+
+// Forms (surveys)
+db.choir.hasMany(db.form, { as: 'forms', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.form.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.user.hasMany(db.form, { as: 'createdForms', foreignKey: 'createdBy' });
+db.form.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator' });
+db.form.hasMany(db.form_field, { as: 'fields', foreignKey: 'formId', onDelete: 'CASCADE' });
+db.form_field.belongsTo(db.form, { foreignKey: 'formId', as: 'form' });
+db.form.hasMany(db.form_submission, { as: 'submissions', foreignKey: 'formId', onDelete: 'CASCADE' });
+db.form_submission.belongsTo(db.form, { foreignKey: 'formId', as: 'form' });
+db.user.hasMany(db.form_submission, { as: 'formSubmissions', foreignKey: 'userId' });
+db.form_submission.belongsTo(db.user, { foreignKey: 'userId', as: 'submitter' });
+db.form_submission.hasMany(db.form_answer, { as: 'answers', foreignKey: 'submissionId', onDelete: 'CASCADE' });
+db.form_answer.belongsTo(db.form_submission, { foreignKey: 'submissionId', as: 'submission' });
+db.form_field.hasMany(db.form_answer, { as: 'answers', foreignKey: 'fieldId', onDelete: 'CASCADE' });
+db.form_answer.belongsTo(db.form_field, { foreignKey: 'fieldId', as: 'field' });
 
 module.exports = db;
