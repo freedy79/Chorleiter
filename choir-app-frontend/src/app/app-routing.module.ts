@@ -12,6 +12,7 @@ import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
 import { ProgramGuard } from '@core/guards/program.guard';
 import { WelcomeComponent } from '@features/home/welcome/welcome.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
+import { PublicPageEditorResolver } from '@features/choir-management/public-page-editor-resolver';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
@@ -285,6 +286,13 @@ export const routes: Routes = [
                 canActivate: [AuthGuard],
                 resolve: {pageData: ManageChoirResolver },
                 data: { title: 'Choreinstellungen' }
+            },
+            {
+                path: 'public-page',
+                loadComponent: () => import('./features/choir-management/public-page-editor/public-page-editor.component').then(m => m.PublicPageEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                resolve: { publicPage: PublicPageEditorResolver },
+                data: { title: 'Vorstellungsseite' }
             },
         ],
     },

@@ -5,12 +5,13 @@ import { ApiService } from '@core/services/api.service';
 import { UserAvailability } from '@core/models/user-availability';
 import { getHolidayName } from '@shared/util/holiday';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { parseDateOnly } from '@shared/util/date';
 
 @Component({
   selector: 'app-availability-table',
   standalone: true,
-  imports: [CommonModule, MaterialModule, PureDatePipe],
+  imports: [CommonModule, MaterialModule, PureDatePipe, EmptyStateComponent],
   templateUrl: './availability-table.component.html',
   styleUrls: ['./availability-table.component.scss']
 })

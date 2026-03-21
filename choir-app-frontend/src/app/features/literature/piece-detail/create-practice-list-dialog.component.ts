@@ -9,7 +9,7 @@ import { MaterialModule } from '@modules/material.module';
   standalone: true,
   imports: [CommonModule, FormsModule, MaterialModule, MatDialogModule],
   template: `
-    <h2 mat-dialog-title>Neue Übungsliste</h2>
+    <h1 mat-dialog-title>Neue Übungsliste</h1>
     <mat-dialog-content>
       <mat-form-field appearance="outline" class="full-width">
         <mat-label>Name der Liste</mat-label>

@@ -1,8 +1,13 @@
 const db = require('../models');
 const logger = require('../config/logger');
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const MAX_SUBSCRIPTIONS_PER_USER = Number(process.env.PUSH_MAX_SUBSCRIPTIONS_PER_USER) || 10;
+
+async function getVapidPublicKeyValue() {
+  if (process.env.VAPID_PUBLIC_KEY) return process.env.VAPID_PUBLIC_KEY;
+  const row = await db.pwa_config.findOne({ where: { key: 'vapid_public_key' } });
+  return row?.value || null;
+}
 
 async function ensureChoirMembership(userId, choirId) {
   if (!userId || !choirId) return false;
@@ -11,10 +16,11 @@ async function ensureChoirMembership(userId, choirId) {
 }
 
 exports.getVapidPublicKey = async (req, res) => {
-  if (!VAPID_PUBLIC_KEY) {
+  const publicKey = await getVapidPublicKeyValue();
+  if (!publicKey) {
     return res.status(500).send({ message: 'VAPID public key not configured.' });
   }
-  return res.status(200).send({ publicKey: VAPID_PUBLIC_KEY });
+  return res.status(200).send({ publicKey });
 };
 
 exports.subscribe = async (req, res) => {

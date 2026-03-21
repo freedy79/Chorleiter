@@ -36,6 +36,7 @@ const districtRoutes = require('./district.routes');
 const congregationRoutes = require('./congregation.routes');
 const paypalRoutes = require('./paypal.routes');
 const imprintRoutes = require('./imprint.routes');
+const privacyRoutes = require('./privacy.routes');
 const enrichmentRoutes = require('./enrichment.routes');
 const doubletteRoutes = require('./doublette.routes');
 const publicRoutes = require('./public.routes');
@@ -81,6 +82,7 @@ const routeDefinitions = [
     ['/api/congregations', congregationRoutes],
     ['/api/paypal', paypalRoutes],
     ['/api/imprint', imprintRoutes],
+    ['/api/privacy', privacyRoutes],
     ['/api/admin/enrichment', enrichmentRoutes],
     ['/api/public', publicRoutes],
     ['/api/page-views', pageViewRoutes],

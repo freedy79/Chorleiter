@@ -36,7 +36,7 @@ async function sendTemplateMail(type, to, replacements = {}, overrideSettings, m
   const choirName = final.choir || final.choirname || '';
   const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
   const text = appendFooterText(rawText, choirName);
-  await sendMail({ to, subject, html, text, ...mailOptions }, overrideSettings);
+  await sendMail({ to, subject, html, text, choirName: choirName || undefined, ...mailOptions }, overrideSettings);
 }
 
 function buildBorrowerNames(borrower = {}) {
@@ -290,7 +290,8 @@ exports.sendPostNotificationMail = async (recipients, title, text, choirName, re
   if (emailDisabled() || !Array.isArray(recipients) || recipients.length === 0) return;
   try {
     const { html, text: plainText, attachments } = await buildPostEmail(text, choirName, postId, hasAttachment);
-    const options = { to: recipients, subject: title, text: plainText, html };
+    const subject = choirName ? `[${choirName}] ${title}` : title;
+    const options = { to: recipients, subject, text: plainText, html, choirName };
     if (attachments && attachments.length > 0) options.attachments = attachments;
     if (replyTo) options.replyTo = replyTo;
     await sendMail(options);
@@ -405,7 +406,7 @@ exports.sendNewMemberNotification = async (choirId, member) => {
     const rawHtml = `<p>${fullName} (${member.email}) ist dem Chor ${choirName} beigetreten.</p>`;
     const frontendUrl = await getFrontendUrl();
     const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
-    await sendMail({ to: recipients, subject, text, html });
+    await sendMail({ to: recipients, subject, text, html, choirName });
   } catch (err) {
     logger.error(`Error sending new member notification mail: ${err.message}`);
     logger.error(err.stack);
@@ -441,7 +442,7 @@ exports.sendMemberLeftNotification = async (choirId, member, options = {}) => {
     const rawHtml = lines.map(line => `<p>${line}</p>`).join('');
     const frontendUrl = await getFrontendUrl();
     const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
-    await sendMail({ to: recipients, subject, text, html });
+    await sendMail({ to: recipients, subject, text, html, choirName });
   } catch (err) {
     logger.error(`Error sending member left notification mail: ${err.message}`);
     logger.error(err.stack);

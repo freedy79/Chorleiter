@@ -20,6 +20,8 @@
     </ng-container>
   </ng-container>
 
+  <span class="spacer"></span>
+
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
     *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}

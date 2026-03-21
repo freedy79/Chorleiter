@@ -6,19 +6,15 @@
     </button>
   </div>
 
-  <div *ngIf="loading" class="loading-container">
-    <mat-spinner diameter="48"></mat-spinner>
-  </div>
+  <app-inline-loading [loading]="loading" mode="spinner"></app-inline-loading>
 
-  <div *ngIf="!loading && forms.length === 0" class="empty-state">
-    <mat-icon class="empty-icon">description</mat-icon>
-    <h2>Keine Formulare vorhanden</h2>
+  <app-empty-state *ngIf="!loading && forms.length === 0" icon="description" title="Keine Formulare vorhanden">
     <p *ngIf="isChoirAdmin">Erstelle ein neues Formular, um Umfragen oder Anmeldungen zu verwalten.</p>
     <p *ngIf="!isChoirAdmin">Es sind aktuell keine Formulare verfügbar.</p>
     <button *ngIf="isChoirAdmin" mat-flat-button color="primary" routerLink="/forms/new">
       <mat-icon>add</mat-icon> Formular erstellen
     </button>
-  </div>
+  </app-empty-state>
 
   <div class="forms-grid" *ngIf="!loading && forms.length > 0">
     <mat-card *ngFor="let f of forms" class="form-card" [class.active]="isFormActive(f)"

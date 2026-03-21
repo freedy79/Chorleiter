@@ -30,6 +30,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             defaultValue: 'classic',
         },
+        colorScheme: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: 'elegant-light',
+        },
         headline: {
             type: DataTypes.STRING,
             allowNull: true,
@@ -39,6 +44,11 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: true,
         },
         contentBlocks: {
+            type: DataTypes.JSON,
+            allowNull: false,
+            defaultValue: [],
+        },
+        richBlocks: {
             type: DataTypes.JSON,
             allowNull: false,
             defaultValue: [],

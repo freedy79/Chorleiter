@@ -1,11 +1,11 @@
 <h1 mat-dialog-title>{{ isEdit ? 'Beitrag bearbeiten' : 'Neuer Beitrag' }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="form">
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Titel</mat-label>
       <input matInput formControlName="title">
     </mat-form-field>
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Text</mat-label>
       <textarea matInput rows="5" formControlName="text" placeholder="Markdown möglich" (keydown)="onTextKeyDown($event)" (focus)="onTextareaFocus($event)"></textarea>
     </mat-form-field>
@@ -55,11 +55,11 @@
       <mat-checkbox formControlName="pollAllowMultiple" (change)="toggleAllowMultiple($event.checked)">
         Mehrfachauswahl erlauben
       </mat-checkbox>
-      <mat-form-field appearance="fill" class="full-width" *ngIf="form.get('pollAllowMultiple')?.value">
+      <mat-form-field appearance="outline" class="full-width" *ngIf="form.get('pollAllowMultiple')?.value">
         <mat-label>Maximale Stimmen pro Person</mat-label>
         <input matInput type="number" min="1" [max]="pollOptions.length" formControlName="pollMaxSelections">
       </mat-form-field>
-      <mat-form-field appearance="fill" class="full-width">
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Ablaufdatum der Abstimmung</mat-label>
         <input matInput type="date" formControlName="pollClosesAt">
       </mat-form-field>
@@ -69,7 +69,7 @@
       <div cdkDropList (cdkDropListDropped)="dropPollOption($event)" class="poll-options">
         <div class="poll-option" *ngFor="let ctrl of pollOptions.controls; let i = index" cdkDrag>
           <mat-icon cdkDragHandle>drag_handle</mat-icon>
-          <mat-form-field appearance="fill" class="full-width">
+          <mat-form-field appearance="outline" class="full-width">
             <mat-label>Option {{ i + 1 }}</mat-label>
             <input matInput [formControl]="ctrl">
           </mat-form-field>
@@ -83,7 +83,7 @@
         Option hinzufügen
       </button>
     </div>
-    <mat-form-field appearance="fill" class="full-width">
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Ablaufdatum</mat-label>
       <input matInput type="date" formControlName="expiresAt">
     </mat-form-field>

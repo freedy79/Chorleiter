@@ -74,7 +74,7 @@
           <mat-label>Menge</mat-label>
           <input matInput type="number" [(ngModel)]="newLicense.quantity" />
         </mat-form-field>
-        <button mat-raised-button color="primary" (click)="createDigitalLicense()">Anlegen</button>
+        <button mat-flat-button color="primary" (click)="createDigitalLicense()">Anlegen</button>
       </div>
 
       <table mat-table [dataSource]="digitalLicenses" class="mat-elevation-z8">

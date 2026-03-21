@@ -24,55 +24,57 @@
 
 <!-- Controls -->
 <div class="controls" *ngIf="!isLoadingMembers && !isLoadingEvents && !hasError && members.length > 0">
-  <div class="date-controls">
-    <mat-form-field appearance="fill">
+  <div class="filter-row">
+    <mat-form-field appearance="outline" class="date-field">
       <mat-label>Von</mat-label>
       <input matInput type="date" [(ngModel)]="startDate" aria-label="Startdatum für Filterung" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline" class="date-field">
       <mat-label>Bis</mat-label>
       <input matInput type="date" [(ngModel)]="endDate" aria-label="Enddatum für Filterung" />
     </mat-form-field>
+
+    <button
+      mat-icon-button
+      (click)="startDate = undefined; endDate = undefined; loadEvents()"
+      [disabled]="!startDate && !endDate"
+      matTooltip="Filter zurücksetzen"
+      aria-label="Datumsfilter zurücksetzen">
+      <mat-icon>clear</mat-icon>
+    </button>
 
     <button
       mat-raised-button
       color="primary"
       (click)="loadEvents()"
       [disabled]="isLoadingEvents"
+      matTooltip="Aktualisieren"
       aria-label="Beteiligungsdaten mit ausgewähltem Datumsbereich aktualisieren">
       <mat-icon>refresh</mat-icon>
-      Aktualisieren
+      <span class="button-label">Aktualisieren</span>
     </button>
 
     <button
-      mat-stroked-button
-      (click)="startDate = undefined; endDate = undefined; loadEvents()"
-      [disabled]="!startDate && !endDate"
-      aria-label="Datumsfilter zurücksetzen">
-      <mat-icon>clear</mat-icon>
-      Filter zurücksetzen
+      mat-raised-button
+      (click)="downloadPdf()"
+      [disabled]="isDownloadingPdf"
+      matTooltip="PDF herunterladen"
+      aria-label="Beteiligungsübersicht als PDF herunterladen">
+      <mat-spinner diameter="20" *ngIf="isDownloadingPdf" class="button-spinner"></mat-spinner>
+      <mat-icon *ngIf="!isDownloadingPdf">picture_as_pdf</mat-icon>
+      <span class="button-label">{{ isDownloadingPdf ? 'Erstelle PDF...' : 'PDF herunterladen' }}</span>
     </button>
   </div>
 
-  <div class="view-controls">
-    <mat-form-field appearance="fill">
+  <div class="sort-row">
+    <mat-form-field appearance="outline">
       <mat-label>Sortierung</mat-label>
       <mat-select [value]="sortMode" (selectionChange)="onSortModeChange($any($event.value))">
         <mat-option value="voice">nach Stimme</mat-option>
         <mat-option value="name">alphabetisch</mat-option>
       </mat-select>
     </mat-form-field>
-
-    <button
-      mat-raised-button
-      (click)="downloadPdf()"
-      [disabled]="isDownloadingPdf"
-      aria-label="Beteiligungsübersicht als PDF herunterladen">
-      <mat-spinner diameter="20" *ngIf="isDownloadingPdf" class="button-spinner"></mat-spinner>
-      <mat-icon *ngIf="!isDownloadingPdf">picture_as_pdf</mat-icon>
-      {{ isDownloadingPdf ? 'Erstelle PDF...' : 'PDF herunterladen' }}
-    </button>
   </div>
 </div>
 

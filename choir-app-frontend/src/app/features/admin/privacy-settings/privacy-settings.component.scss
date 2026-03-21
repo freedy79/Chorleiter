@@ -1,0 +1,10 @@
+mat-card {
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.editor-container {
+  :host ::ng-deep .ck-editor__editable {
+    min-height: 400px;
+  }
+}

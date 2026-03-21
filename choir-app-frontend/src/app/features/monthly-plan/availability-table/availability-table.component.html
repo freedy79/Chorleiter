@@ -50,9 +50,6 @@
     </div>
   </div>
   <ng-template #mobileNoData>
-    <div class="empty-state">
-      <mat-icon class="empty-icon">event_busy</mat-icon>
-      <p class="empty-text">Keine Ereignisse vorhanden.</p>
-    </div>
+    <app-empty-state icon="event_busy" message="Keine Ereignisse vorhanden."></app-empty-state>
   </ng-template>
 </div>

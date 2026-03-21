@@ -8,6 +8,8 @@ import { Collection } from '@core/models/collection';
 import { Piece } from '@core/models/piece';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
 
 interface DoubletteCandidate {
   id: number;
@@ -26,7 +28,7 @@ interface DoubletteGroup {
 @Component({
   selector: 'app-doublettes-dialog',
   standalone: true,
-  imports: [CommonModule, MatDialogModule, MaterialModule, FormsModule, MatProgressSpinnerModule],
+  imports: [CommonModule, MatDialogModule, MaterialModule, FormsModule, MatProgressSpinnerModule, EmptyStateComponent, InlineLoadingComponent],
   templateUrl: './doublettes-dialog.component.html',
   styleUrls: ['./doublettes-dialog.component.scss']
 })

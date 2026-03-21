@@ -89,14 +89,46 @@ mat-form-field {
 .mat-mdc-button.mat-accent,
 .mat-mdc-outlined-button.mat-accent,
 .mat-mdc-icon-button.mat-accent {
+  // Material 20 CSS variables
+  --mat-button-text-label-text-color: #9a6400;
+  --mat-button-outlined-label-text-color: #9a6400;
+  --mat-button-outlined-outline-color: #c89600;
+  --mat-icon-button-icon-color: #9a6400;
+  // Legacy MDC variables (fallback)
   --mdc-text-button-label-text-color: #9a6400;
   --mdc-outlined-button-label-text-color: #9a6400;
   --mdc-outlined-button-outline-color: #c89600;
-  --mat-icon-button-icon-color: #9a6400;
   color: #9a6400;
 
   .mat-icon {
     color: #9a6400;
+  }
+}
+
+// ============================================================================
+// GLOBAL EMPTY TABLE STATE
+// ============================================================================
+// Centered placeholder text when a mat-table has no data rows.
+
+[matNoDataRow] td,
+tr[class*="mat-row"] *[matNoDataRow] ~ td {
+  text-align: center;
+}
+
+mat-table .mdc-data-table__content {
+  // Ensure table body stretches so the no-data row can center vertically
+  min-height: 200px;
+}
+
+.mat-mdc-no-data-row {
+  height: 200px;
+
+  td {
+    text-align: center !important;
+    vertical-align: middle;
+    color: #616161;
+    font-style: italic;
+    font-size: 0.95rem;
   }
 }
 
@@ -114,6 +146,10 @@ mat-form-field {
 .dark-theme {
   --page-header-bg-color: #1e1e1e;
   --header-title-color: #ffffff; // Dark mode: always white for header title
+
+  .mat-mdc-no-data-row td {
+    color: #9e9e9e;
+  }
 
   // Include dark theme colors
   @include mat.all-component-colors(nak.$nak-dark-theme);

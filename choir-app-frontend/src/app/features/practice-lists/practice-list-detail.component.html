@@ -19,11 +19,9 @@
       Mappe-Modus
     </button>
 
-    <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+    <app-inline-loading [loading]="loading"></app-inline-loading>
 
-    <div *ngIf="!loading && !items.length" class="empty-state">
-      Keine Einträge vorhanden. Öffne ein Stück und füge es zu dieser Übungsliste hinzu.
-    </div>
+    <app-empty-state *ngIf="!loading && !items.length" icon="queue_music" message="Keine Einträge vorhanden. Öffne ein Stück und füge es zu dieser Übungsliste hinzu."></app-empty-state>
   </ng-container>
 
   <div *ngIf="mappeMode" class="mappe-mode">

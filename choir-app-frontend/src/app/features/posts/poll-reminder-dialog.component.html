@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Erinnerungen zur Abstimmung</h2>
+<h1 mat-dialog-title>Erinnerungen zur Abstimmung</h1>
 
 <mat-dialog-content>
   <p class="subtitle">Beitrag: <strong>{{ data.postTitle }}</strong></p>
@@ -13,9 +13,7 @@
       <span>Offen: {{ status.pendingCount }}</span>
     </div>
 
-    <div *ngIf="members.length === 0" class="empty-state">
-      Keine Sänger im Chor gefunden.
-    </div>
+    <app-empty-state *ngIf="members.length === 0" icon="group" message="Keine Sänger im Chor gefunden."></app-empty-state>
 
     <table *ngIf="members.length > 0" class="status-table">
       <thead>

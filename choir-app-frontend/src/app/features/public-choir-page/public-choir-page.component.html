@@ -1,4 +1,5 @@
-<div class="public-page" *ngIf="!loading && !notFound && pageData as data" [class.hero-template-page]="isHeroTemplate">
+<div class="public-page-wrapper" *ngIf="!loading && !notFound && pageData as data" [ngStyle]="schemeVars">
+<div class="public-page" [class.hero-template-page]="isHeroTemplate">
   <ng-container *ngIf="isHeroTemplate; else classicTemplate">
     <section class="hero-template">
       <div class="hero-shell">
@@ -38,6 +39,10 @@
           <a *ngIf="block.ctaLabel && block.ctaUrl" [href]="block.ctaUrl" target="_blank" rel="noopener noreferrer">{{ block.ctaLabel }}</a>
         </article>
       </section>
+
+      <section class="rich-blocks" *ngIf="richBlocks.length">
+        <app-block-renderer *ngFor="let rBlock of richBlocks" [block]="rBlock"></app-block-renderer>
+      </section>
     </section>
   </ng-container>
 
@@ -60,6 +65,10 @@
         <a *ngIf="block.ctaLabel && block.ctaUrl" [href]="block.ctaUrl" target="_blank" rel="noopener noreferrer">{{ block.ctaLabel }}</a>
       </article>
     </section>
+
+    <section class="rich-blocks" *ngIf="richBlocks.length">
+      <app-block-renderer *ngFor="let rBlock of richBlocks" [block]="rBlock"></app-block-renderer>
+    </section>
   </ng-template>
 
   <section class="contact" *ngIf="data.page.contactEmail || data.page.contactPhone || data.page.websiteUrl">
@@ -72,6 +81,7 @@
   <footer>
     <a routerLink="/">Zurück zur Startseite</a>
   </footer>
+</div>
 </div>
 
 <div class="state" *ngIf="loading">Seite wird geladen…</div>

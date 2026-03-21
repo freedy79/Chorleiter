@@ -17,11 +17,12 @@ import { ChatMessage } from '@core/models/chat-message';
 import { ApiService } from '@core/services/api.service';
 import { UserInChoir } from '@core/models/user';
 import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialog.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })

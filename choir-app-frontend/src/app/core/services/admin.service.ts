@@ -232,6 +232,22 @@ export class AdminService {
     return this.http.put<any>(`${this.apiUrl}/admin/imprint-settings`, data);
   }
 
+  getPrivacyPolicy(): Observable<{ html: string }> {
+    return this.http.get<{ html: string }>(`${this.apiUrl}/admin/privacy-policy`);
+  }
+
+  updatePrivacyPolicy(data: { html: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/privacy-policy`, data);
+  }
+
+  getCkeditorLicenseKey(): Observable<{ value: string | null }> {
+    return this.http.get<{ value: string | null }>(`${this.apiUrl}/admin/ckeditor-license`);
+  }
+
+  updateCkeditorLicenseKey(data: { value: string }): Observable<{ value: string }> {
+    return this.http.put<{ value: string }>(`${this.apiUrl}/admin/ckeditor-license`, data);
+  }
+
   // Data Enrichment Admin API
   getEnrichmentSettings(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/settings`);

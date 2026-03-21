@@ -10,6 +10,8 @@ import { PracticeListService } from '@core/services/practice-list.service';
 import { NotificationService } from '@core/services/notification.service';
 import { ApiService } from '@core/services/api.service';
 import { AudioPlayerComponent } from '@shared/components/audio-player/audio-player.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
 import { PdfFullscreenDialogComponent } from '@shared/components/pdf-fullscreen-dialog/pdf-fullscreen-dialog.component';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -26,7 +28,7 @@ interface MappePieceGroup {
 @Component({
   selector: 'app-practice-list-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MaterialModule, AudioPlayerComponent],
+  imports: [CommonModule, FormsModule, RouterModule, MaterialModule, AudioPlayerComponent, EmptyStateComponent, InlineLoadingComponent],
   templateUrl: './practice-list-detail.component.html',
   styleUrls: ['./practice-list-detail.component.scss']
 })

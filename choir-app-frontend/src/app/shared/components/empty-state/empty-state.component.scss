@@ -1,0 +1,31 @@
+@use '../../../../themes/dark-mode-variables' as dm;
+@use '../../../../themes/breakpoints' as bp;
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: bp.$spacing-xl bp.$spacing-md;
+  gap: bp.$spacing-md;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    @include dm.subtle-text;
+  }
+
+  h2 {
+    margin: 0;
+    font-weight: 400;
+    @include bp.responsive-font-size(1.25rem);
+  }
+
+  .empty-text {
+    margin: 0;
+    @include dm.secondary-text;
+    @include bp.responsive-font-size(0.938rem);
+  }
+}

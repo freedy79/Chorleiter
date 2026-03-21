@@ -4,19 +4,38 @@ const { Op } = require('sequelize');
 
 let webpush = require('web-push');
 
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT;
+let vapidConfigured = false;
 
-function configureWebPush() {
-  if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && VAPID_SUBJECT) {
-    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-  } else {
-    logger.warn('Push notifications not configured: VAPID keys missing.');
+function configureWebPushFromValues(publicKey, privateKey, subject) {
+  if (publicKey && privateKey && subject) {
+    webpush.setVapidDetails(subject, publicKey, privateKey);
+    vapidConfigured = true;
   }
 }
 
-configureWebPush();
+// Try synchronous init from env vars
+configureWebPushFromValues(
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY,
+  process.env.VAPID_SUBJECT
+);
+if (!vapidConfigured) {
+  logger.warn('Push notifications not configured from env vars, will try DB on first use.');
+}
+
+async function ensureVapidConfigured() {
+  if (vapidConfigured) return true;
+  const rows = await db.pwa_config.findAll({
+    where: { key: ['vapid_public_key', 'vapid_private_key', 'vapid_subject'] }
+  });
+  const map = {};
+  for (const row of rows) { map[row.key] = row.value; }
+  configureWebPushFromValues(map.vapid_public_key, map.vapid_private_key, map.vapid_subject);
+  if (!vapidConfigured) {
+    logger.warn('Push notifications not configured: VAPID keys missing in env and DB.');
+  }
+  return vapidConfigured;
+}
 
 function isInvalidSubscriptionError(err) {
   const status = err?.statusCode || err?.status || err?.statusCode;
@@ -53,6 +72,11 @@ async function removeInvalidSubscription(subscriptionId) {
 
 async function sendNotification(subscription, payload) {
   if (!subscription || !subscription.endpoint) return;
+  const configured = await ensureVapidConfigured();
+  if (!configured) {
+    logger.error('Cannot send push notification: VAPID keys not configured.');
+    return;
+  }
   const keys = subscription.keys || {};
   const pushSubscription = {
     endpoint: subscription.endpoint,
@@ -130,7 +154,12 @@ async function sendToUsersInChoir(choirId, userIds, payload, excludeUserId) {
 function setWebPushForTest(mockWebPush) {
   if (mockWebPush) {
     webpush = mockWebPush;
-    configureWebPush();
+    vapidConfigured = false;
+    configureWebPushFromValues(
+      process.env.VAPID_PUBLIC_KEY,
+      process.env.VAPID_PRIVATE_KEY,
+      process.env.VAPID_SUBJECT
+    );
   }
 }
 

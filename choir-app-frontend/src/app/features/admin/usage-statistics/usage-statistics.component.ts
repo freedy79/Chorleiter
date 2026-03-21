@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 
@@ -53,7 +54,7 @@ interface UsageSummary {
 @Component({
   selector: 'app-usage-statistics',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule],
+  imports: [CommonModule, MaterialModule, FormsModule, EmptyStateComponent],
   templateUrl: './usage-statistics.component.html',
   styleUrls: ['./usage-statistics.component.scss']
 })

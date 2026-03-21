@@ -183,7 +183,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(u => (u?.firstName?.[0] || '') + (u?.name?.[0] || ''))
     );
 
-    this.isHandset$ = this.responsive.isHandset$.pipe(
+    this.isHandset$ = this.responsive.isMobile$.pipe(
       tap(match => {
         this.isHandset = match;
         this.headerHeight = match ? 56 : 64;
@@ -448,7 +448,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     };
     const events: NavItem = {
       key: 'events',
-      displayName: 'Ereignisse',
+      displayName: 'Termine',
       route: '/events',
       visibleSubject: this.menu.isVisible('events'),
       iconName: 'event',
@@ -520,7 +520,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     const participation: NavItem = {
       key: 'participation',
-      displayName: 'Beteiligung',
+      displayName: 'Anwesenheit',
       route: '/participation',
       visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
       iconName: 'group',
@@ -534,10 +534,19 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     };
     const manageChoir: NavItem = {
       key: 'manageChoir',
-      displayName: 'Mein Chor',
+      displayName: 'Choreinstellungen',
       route: '/manage-choir',
       visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
       iconName: 'settings',
+    };
+    const publicPage: NavItem = {
+      key: 'publicPage',
+      displayName: 'Vorstellungsseite',
+      route: '/public-page',
+      visibleSubject: combineLatest([this.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+        map(([isAdmin, isChoirAdmin]) => isAdmin || isChoirAdmin)
+      ),
+      iconName: 'web',
     };
 
     const administration: NavItem = {
@@ -572,20 +581,35 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       ]
     };
 
-    const todayAndCommunication = [dashboard, events, dienstplan, availability, chat, posts];
-    const musicAndRepertoire = [repertoire, practiceLists, programs, library, collections];
-    const analyticsAndOrganisation = [participation, stats, manageChoir];
+    const forms: NavItem = {
+      key: 'forms',
+      displayName: 'Formulare',
+      route: '/forms',
+      visibleSubject: this.restrictForDemo(of(true)),
+      iconName: 'assignment',
+    };
+    const members: NavItem = {
+      key: 'members',
+      displayName: 'Mitglieder',
+      route: '/members',
+      visibleSubject: this.restrictForDemo(of(true)),
+      iconName: 'people',
+    };
+
+    const aktuelles = [dashboard, events, dienstplan, availability, chat, posts, forms];
+    const notenUndMusik = [repertoire, practiceLists, library, collections, programs];
+    const chorUndAuswertung = [manageChoir, participation, stats, members, publicPage];
     const system = [administration];
 
     this.navItems = [
-      this.createSectionHeader('Heute & Kommunikation', todayAndCommunication),
-      ...todayAndCommunication,
+      this.createSectionHeader('Aktuelles', aktuelles),
+      ...aktuelles,
 
-      this.createSectionHeader('Musik & Repertoire', musicAndRepertoire),
-      ...musicAndRepertoire,
+      this.createSectionHeader('Noten & Musik', notenUndMusik),
+      ...notenUndMusik,
 
-      this.createSectionHeader('Auswertung & Organisation', analyticsAndOrganisation),
-      ...analyticsAndOrganisation,
+      this.createSectionHeader('Chor & Auswertung', chorUndAuswertung),
+      ...chorUndAuswertung,
 
       this.createSectionHeader('System', system),
       ...system,

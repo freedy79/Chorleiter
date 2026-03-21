@@ -1,10 +1,10 @@
 <!-- Month/Year Inputs (desktop only) -->
 <div class="manual-inputs desktop-only">
-  <mat-form-field appearance="fill">
+  <mat-form-field appearance="outline">
     <mat-label>Monat</mat-label>
     <input matInput type="number" [(ngModel)]="selectedMonth" min="1" max="12" (change)="monthChanged()" />
   </mat-form-field>
-  <mat-form-field appearance="fill">
+  <mat-form-field appearance="outline">
     <mat-label>Jahr</mat-label>
     <input matInput type="number" [(ngModel)]="selectedYear" (change)="monthChanged()" />
   </mat-form-field>
@@ -306,10 +306,7 @@
 
           <!-- Mobile empty state -->
           <ng-container *ngIf="entries.length === 0">
-            <div class="empty-state">
-              <mat-icon class="empty-icon">event_busy</mat-icon>
-              <p class="empty-text">Keine Einträge für diesen Monat.</p>
-            </div>
+            <app-empty-state icon="event_busy" message="Keine Einträge für diesen Monat."></app-empty-state>
           </ng-container>
         </div>
       </div>
@@ -392,11 +389,9 @@
   </ng-container>
 </ng-template>
 <ng-template #noPlan>
-  <div class="empty-state">
-    <mat-icon class="empty-icon">event_note</mat-icon>
-    <p class="empty-text">Kein Dienstplan für diesen Monat vorhanden.</p>
+  <app-empty-state icon="event_note" message="Kein Dienstplan für diesen Monat vorhanden.">
     <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">
       <mat-icon>add</mat-icon> Plan erstellen
     </button>
-  </div>
+  </app-empty-state>
 </ng-template>

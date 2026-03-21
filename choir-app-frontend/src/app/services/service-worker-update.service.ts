@@ -40,9 +40,9 @@ export class ServiceWorkerUpdateService {
   private initializeUpdateChecking(): void {
     // Überprüfe auf Updates im Service Worker
     if (this.swUpdate.isEnabled) {
-      // Initiiere Update-Check alle 30 Minuten
+      // Initiiere Update-Check alle 10 Minuten
       this.ngZone.runOutsideAngular(() => {
-        interval(30 * 60 * 1000)
+        interval(10 * 60 * 1000)
           .pipe(
             switchMap(() => this.swUpdate.checkForUpdate())
           )

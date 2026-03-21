@@ -1,16 +1,11 @@
 <div class="doublettes-dialog">
-  <h2 mat-dialog-title>Doubletten-Prüfung</h2>
+  <h1 mat-dialog-title>Doubletten-Prüfung</h1>
 
   <mat-dialog-content class="content">
-    <div *ngIf="isLoading" class="loading-container">
-      <mat-spinner diameter="50"></mat-spinner>
-      <p>Prüfe auf Doubletten...</p>
-    </div>
+    <app-inline-loading [loading]="isLoading" mode="spinner" [diameter]="50"></app-inline-loading>
+    <p *ngIf="isLoading">Prüfe auf Doubletten...</p>
 
-    <div *ngIf="!isLoading && groups.length === 0" class="empty-state">
-      <mat-icon>done_all</mat-icon>
-      <p>Keine Doubletten gefunden</p>
-    </div>
+    <app-empty-state *ngIf="!isLoading && groups.length === 0" icon="done_all" message="Keine Doubletten gefunden"></app-empty-state>
 
     <div *ngIf="!isLoading && groups.length > 0" class="groups-container">
       <div class="threshold-info">

@@ -104,11 +104,10 @@
     </div>
 
     <!-- Empty state -->
-    <div class="empty-state" *ngIf="!loadingJobs && jobs.length === 0">
-      <mat-icon>inbox</mat-icon>
+    <app-empty-state *ngIf="!loadingJobs && jobs.length === 0" icon="inbox">
       <p *ngIf="!statusFilter">Noch keine Jobs vorhanden. Starten Sie oben einen neuen Job.</p>
-      <p *ngIf="statusFilter">Keine Jobs mit Status „{{ statusLabels[statusFilter] }}" gefunden.</p>
-    </div>
+      <p *ngIf="statusFilter">Keine Jobs mit Status „{{ statusLabels[statusFilter] }}“ gefunden.</p>
+    </app-empty-state>
 
     <!-- Job list -->
     <div class="job-list" *ngIf="!loadingJobs && jobs.length > 0">

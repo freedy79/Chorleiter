@@ -7,7 +7,7 @@
   <form [formGroup]="form" class="pdf-form">
   <mat-tab-group>
     <mat-tab *ngFor="let meta of templateMeta" [label]="meta.label">
-      <mat-form-field appearance="fill" class="full-width">
+      <mat-form-field appearance="outline" class="full-width">
         <mat-label>Template JSON</mat-label>
         <textarea
           matInput

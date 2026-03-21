@@ -13,7 +13,7 @@ import { of } from 'rxjs';
 import { BaseComponent } from '@shared/components/base.component';
 import { VOICE_DISPLAY_MAP, BASE_VOICE_MAP, VOICE_ORDER } from '@shared/constants/voices.constants';
 import { ResponsiveService } from '@shared/services/responsive.service';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { NotificationService } from '@core/services/notification.service';
 
 interface EventColumn {
   key: string;
@@ -67,7 +67,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     private responsive: ResponsiveService,
     private api: ApiService,
     private auth: AuthService,
-    private snackBar: MatSnackBar
+    private notification: NotificationService
   ) {
     super(); // Call BaseComponent constructor
     this.isMobile$ = this.responsive.isMobile$;
@@ -270,14 +270,14 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.api.setMemberAvailability(userId, key, next).pipe(
       finalize(() => delete this.updatingStatus[statusKey]),
       catchError(_err => {
-        this.snackBar.open('Fehler beim Aktualisieren des Status', 'OK', { duration: 3000 });
+        this.notification.error('Fehler beim Aktualisieren des Status', 3000);
         return of(null);
       })
     ).subscribe(avail => {
       if (avail) {
         if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
         this.availabilityMap[userId][key] = avail.status!;
-        this.snackBar.open('Status aktualisiert', '', { duration: 1500 });
+        this.notification.success('Status aktualisiert', 1500);
       }
     });
   }
@@ -398,7 +398,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.api.downloadParticipationPdf({ startDate: this.startDate ? new Date(this.startDate) : undefined, endDate: this.endDate ? new Date(this.endDate) : undefined }).pipe(
       finalize(() => this.isDownloadingPdf = false),
       catchError(_err => {
-        this.snackBar.open('Fehler beim Erstellen der PDF', 'OK', { duration: 3000 });
+        this.notification.error('Fehler beim Erstellen der PDF', 3000);
         return of(null);
       })
     ).subscribe(blob => {
@@ -409,7 +409,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
         a.download = 'beteiligung.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
-        this.snackBar.open('PDF heruntergeladen', '', { duration: 2000 });
+        this.notification.success('PDF heruntergeladen', 2000);
       }
     });
   }

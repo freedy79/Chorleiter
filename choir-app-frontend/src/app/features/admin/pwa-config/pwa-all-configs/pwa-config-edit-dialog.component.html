@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Konfiguration bearbeiten</h2>
+<h1 mat-dialog-title>Konfiguration bearbeiten</h1>
 <mat-dialog-content>
   <form [formGroup]="form">
     <mat-form-field appearance="outline" class="full-width">
@@ -43,7 +43,7 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid || saving">
     {{ saving ? 'Speichere...' : 'Speichern' }}
   </button>
 </mat-dialog-actions>

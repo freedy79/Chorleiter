@@ -17,7 +17,7 @@ export interface CoverResizeDialogData {
   standalone: true,
   imports: [CommonModule, FormsModule, MaterialModule, MatDialogModule],
   template: `
-    <h2 mat-dialog-title>Coverbild anpassen</h2>
+    <h1 mat-dialog-title>Coverbild anpassen</h1>
 
     <mat-dialog-content>
       <p class="subtitle">

@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, Input, OnChanges, SimpleChanges } from '@
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Subject, timer } from 'rxjs';
@@ -28,7 +29,7 @@ interface EnrichmentJob {
 @Component({
   selector: 'app-enrichment-jobs',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, EmptyStateComponent],
   templateUrl: './enrichment-jobs.component.html',
   styleUrls: ['./enrichment-jobs.component.scss']
 })

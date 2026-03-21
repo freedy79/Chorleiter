@@ -59,7 +59,7 @@ import { BaseFormDialog } from '@shared/dialogs/base-form-dialog';
     </div>
     <div mat-dialog-actions align="end">
       <button mat-button (click)="onCancel()">Abbrechen</button>
-      <button mat-raised-button color="primary" type="submit" form="digital-license-form" [disabled]="form.invalid">Speichern</button>
+      <button mat-flat-button color="primary" type="submit" form="digital-license-form" [disabled]="form.invalid">Speichern</button>
     </div>
   `,
   styles: [`

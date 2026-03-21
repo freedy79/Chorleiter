@@ -31,9 +31,7 @@ describe('AppComponent', () => {
         { provide: ThemeService, useValue: { initializeTheme: () => {} } },
         { provide: PushNotificationService, useValue: { initializeNotificationClicks: () => {} } },
         { provide: BackendStatusService, useValue: {
-          setBackendAvailable: () => {},
-          setComingFromUnavailableRedirect: () => {},
-          comingFromUnavailableRedirect$: EMPTY
+          setBackendAvailable: () => {}
         }}
       ]
     }).compileComponents();

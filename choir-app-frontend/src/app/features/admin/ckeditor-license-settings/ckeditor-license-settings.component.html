@@ -1,0 +1,55 @@
+<div class="ckeditor-license-settings">
+  @if (loading) {
+    <div class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Lade CKEditor-Lizenzschlüssel...</p>
+    </div>
+  }
+
+  @if (!loading) {
+    <form [formGroup]="form" (ngSubmit)="save()" class="license-form">
+      @if (error) {
+        <div class="error-banner">
+          <mat-icon>error</mat-icon>
+          <span>{{ error }}</span>
+        </div>
+      }
+
+      <p class="info-text">
+        Der CKEditor-Lizenzschlüssel wird für den HTML-Editor in den E-Mail-Vorlagen benötigt.
+        Einen Schlüssel erhalten Sie unter
+        <a href="https://portal.ckeditor.com" target="_blank" rel="noopener noreferrer">portal.ckeditor.com</a>.
+        Für Open-Source-Projekte gibt es eine kostenlose Lizenz.
+      </p>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>CKEditor Lizenzschlüssel</mat-label>
+        <input matInput formControlName="licenseKey"
+               [type]="showKey ? 'text' : 'password'"
+               placeholder="Lizenzschlüssel eingeben"
+               [disabled]="saving" />
+        <button mat-icon-button matSuffix type="button" (click)="showKey = !showKey"
+                [attr.aria-label]="showKey ? 'Schlüssel verbergen' : 'Schlüssel anzeigen'">
+          <mat-icon>{{ showKey ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-hint>Lizenzschlüssel aus dem CKEditor-Portal</mat-hint>
+        @if (form.get('licenseKey')?.hasError('required')) {
+          <mat-error>Lizenzschlüssel ist erforderlich</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="actions">
+        <button mat-raised-button color="primary" type="submit"
+                [disabled]="saving || form.invalid || !form.dirty">
+          @if (!saving) {
+            <mat-icon>save</mat-icon>
+          }
+          @if (saving) {
+            <mat-spinner diameter="20" class="button-spinner"></mat-spinner>
+          }
+          {{ saving ? 'Wird gespeichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </form>
+  }
+</div>

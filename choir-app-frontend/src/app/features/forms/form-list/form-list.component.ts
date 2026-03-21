@@ -10,11 +10,13 @@ import { Form } from '@core/models/form';
 import { takeUntil } from 'rxjs/operators';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { DatePipe } from '@angular/common';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
 
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe],
+  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe, EmptyStateComponent, InlineLoadingComponent],
   templateUrl: './form-list.component.html',
   styleUrls: ['./form-list.component.scss'],
 })

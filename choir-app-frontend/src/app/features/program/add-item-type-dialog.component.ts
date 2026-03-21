@@ -14,7 +14,7 @@ interface ItemType {
   standalone: true,
   imports: [CommonModule, MaterialModule],
   template: `
-    <h2 mat-dialog-title>Element hinzufügen</h2>
+    <h1 mat-dialog-title>Element hinzufügen</h1>
     <mat-dialog-content>
       <div class="item-type-list">
         <button mat-button class="item-type-btn" *ngFor="let item of itemTypes" (click)="select(item.type)">

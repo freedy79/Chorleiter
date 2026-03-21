@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link } from 'ckeditor5';
+import { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, EditorConfig } from 'ckeditor5';
 
 @Component({
   selector: 'app-mail-templates',
@@ -28,12 +29,13 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   lendingReturnedHtmlMode = false;
   footerHtmlMode = false;
   public Editor = ClassicEditor;
-  public editorConfig = {
+  public editorConfig: EditorConfig = {
     plugins: [Essentials, Paragraph, Bold, Italic, Underline, Link],
-    toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
+    toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo'],
+    licenseKey: 'GPL'
   };
 
-  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
+  constructor(private fb: FormBuilder, private api: ApiService, private adminService: AdminService, private notification: NotificationService) {
     this.form = this.fb.group({
       inviteSubject: ['', Validators.required],
       inviteBody: ['', Validators.required],
@@ -56,8 +58,20 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   }
 
   ngOnInit(): void {
+    this.loadLicenseKey();
     this.load();
     setTimeout(() => this.form.markAsPristine());
+  }
+
+  loadLicenseKey(): void {
+    this.adminService.getCkeditorLicenseKey().subscribe({
+      next: (data) => {
+        if (data?.value) {
+          this.editorConfig = { ...this.editorConfig, licenseKey: data.value };
+        }
+      },
+      error: () => {}
+    });
   }
 
   load(): void {

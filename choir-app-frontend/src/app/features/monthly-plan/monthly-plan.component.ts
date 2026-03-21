@@ -30,6 +30,7 @@ import { DebugLogService } from '@core/services/debug-log.service';
 import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
 import { EventShortPipe } from '@shared/pipes/event-short.pipe';
 import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
 
@@ -54,7 +55,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

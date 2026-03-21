@@ -58,6 +58,110 @@ function sanitizeBlocks(input) {
     });
 }
 
+const ALLOWED_RICH_BLOCK_TYPES = new Set([
+    'rich-text', 'hero-banner', 'image', 'image-text', 'gallery',
+    'divider', 'spacer', 'quote', 'cta', 'embed',
+]);
+
+const RICH_TEXT_OPTS = {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h2', 'h3', 'h4', 'hr', 'u']),
+    allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        '*': ['style'],
+    },
+    allowedStyles: {
+        '*': { 'text-align': [/^left$/, /^right$/, /^center$/, /^justify$/] },
+    },
+};
+
+function sanitizeRichBlocks(input) {
+    if (!Array.isArray(input)) {
+        return [];
+    }
+
+    return input.slice(0, 50).map((block, index) => {
+        const type = sanitizeText(block?.type, 50);
+        if (!type || !ALLOWED_RICH_BLOCK_TYPES.has(type)) {
+            return null;
+        }
+
+        const base = {
+            id: sanitizeText(block?.id, 100) || `rblock-${index + 1}`,
+            type,
+        };
+
+        switch (type) {
+            case 'rich-text':
+                return { ...base, content: sanitizeHtml(String(block?.content || ''), RICH_TEXT_OPTS).substring(0, 50000) };
+            case 'hero-banner':
+                return {
+                    ...base,
+                    headline: sanitizeText(block?.headline, 200),
+                    subheadline: sanitizeText(block?.subheadline, 400),
+                    imageUrl: sanitizeUrl(block?.imageUrl),
+                    imageAlt: sanitizeText(block?.imageAlt, 200),
+                    ctaLabel: sanitizeText(block?.ctaLabel, 120),
+                    ctaUrl: sanitizeUrl(block?.ctaUrl),
+                    overlay: Boolean(block?.overlay),
+                };
+            case 'image':
+                return {
+                    ...base,
+                    imageUrl: sanitizeUrl(block?.imageUrl),
+                    imageAlt: sanitizeText(block?.imageAlt, 200),
+                    caption: sanitizeText(block?.caption, 500),
+                    alignment: ['left', 'center', 'right', 'full'].includes(block?.alignment) ? block.alignment : 'center',
+                };
+            case 'image-text':
+                return {
+                    ...base,
+                    imageUrl: sanitizeUrl(block?.imageUrl),
+                    imageAlt: sanitizeText(block?.imageAlt, 200),
+                    content: sanitizeHtml(String(block?.content || ''), RICH_TEXT_OPTS).substring(0, 50000),
+                    imagePosition: block?.imagePosition === 'right' ? 'right' : 'left',
+                };
+            case 'gallery': {
+                const images = Array.isArray(block?.images) ? block.images.slice(0, 20).map(img => ({
+                    url: sanitizeUrl(img?.url),
+                    alt: sanitizeText(img?.alt, 200),
+                    caption: sanitizeText(img?.caption, 500),
+                })) : [];
+                return {
+                    ...base,
+                    images,
+                    columns: [2, 3, 4].includes(block?.columns) ? block.columns : 3,
+                };
+            }
+            case 'divider':
+                return { ...base, style: ['solid', 'dashed', 'dotted', 'double'].includes(block?.style) ? block.style : 'solid' };
+            case 'spacer':
+                return { ...base, height: ['small', 'medium', 'large'].includes(block?.height) ? block.height : 'medium' };
+            case 'quote':
+                return {
+                    ...base,
+                    text: sanitizeText(block?.text, 2000),
+                    attribution: sanitizeText(block?.attribution, 200),
+                };
+            case 'cta':
+                return {
+                    ...base,
+                    label: sanitizeText(block?.label, 120),
+                    url: sanitizeUrl(block?.url),
+                    style: ['primary', 'secondary', 'outline'].includes(block?.style) ? block.style : 'primary',
+                    alignment: ['left', 'center', 'right'].includes(block?.alignment) ? block.alignment : 'center',
+                };
+            case 'embed':
+                return {
+                    ...base,
+                    url: sanitizeUrl(block?.url),
+                    caption: sanitizeText(block?.caption, 500),
+                };
+            default:
+                return null;
+        }
+    }).filter(Boolean);
+}
+
 async function getOrCreatePage(choirId) {
     const [page] = await db.choir_public_page.findOrCreate({
         where: { choirId },
@@ -116,6 +220,7 @@ exports.getPublicPageBySlug = async (req, res) => {
         page: {
             slug: page.slug,
             templateKey: page.templateKey,
+            colorScheme: page.colorScheme || 'elegant-light',
             headline: page.headline,
             subheadline: page.subheadline,
             contentBlocks: page.contentBlocks || [],
@@ -159,6 +264,11 @@ exports.getMyPublicPage = async (req, res) => {
             sortOrder: asset.sortOrder,
             createdAt: asset.createdAt,
         })),
+        choir: {
+            name: choir.name,
+            description: choir.description || null,
+            location: choir.location || null,
+        },
     });
 };
 
@@ -247,6 +357,13 @@ exports.updateMyPublicPage = async (req, res) => {
     }
     if (payload.contentBlocks !== undefined) {
         updateData.contentBlocks = sanitizeBlocks(payload.contentBlocks);
+    }
+    if (payload.richBlocks !== undefined) {
+        updateData.richBlocks = sanitizeRichBlocks(payload.richBlocks);
+    }
+    if (payload.colorScheme !== undefined) {
+        const scheme = sanitizeText(payload.colorScheme, 50) || 'elegant-light';
+        updateData.colorScheme = scheme;
     }
 
     updateData.updatedBy = req.userId;

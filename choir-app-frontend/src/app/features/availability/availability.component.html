@@ -8,11 +8,11 @@
 </mat-form-field>
 
 <div class="manual-inputs">
-  <mat-form-field appearance="fill">
+  <mat-form-field appearance="outline">
     <mat-label>Monat</mat-label>
     <input matInput type="number" [(ngModel)]="selected.month" min="1" max="12" (change)="monthChanged()" />
   </mat-form-field>
-  <mat-form-field appearance="fill">
+  <mat-form-field appearance="outline">
     <mat-label>Jahr</mat-label>
     <input matInput type="number" [(ngModel)]="selected.year" (change)="monthChanged()" />
   </mat-form-field>

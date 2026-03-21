@@ -5,6 +5,7 @@ import { PollReminderMemberStatus, PollReminderStatus } from '@core/models/poll'
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MaterialModule } from '@modules/material.module';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 export interface PollReminderDialogData {
   postId: number;
@@ -14,7 +15,7 @@ export interface PollReminderDialogData {
 @Component({
   selector: 'app-poll-reminder-dialog',
   standalone: true,
-  imports: [CommonModule, MaterialModule],
+  imports: [CommonModule, MaterialModule, EmptyStateComponent],
   templateUrl: './poll-reminder-dialog.component.html',
   styleUrls: ['./poll-reminder-dialog.component.scss']
 })

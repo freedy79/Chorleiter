@@ -9,11 +9,12 @@ import { Form, FormSubmission, FormField, FormFieldStatistic } from '@core/model
 import { takeUntil } from 'rxjs/operators';
 import { DatePipe } from '@angular/common';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-form-results',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe],
+  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe, EmptyStateComponent],
   templateUrl: './form-results.component.html',
   styleUrls: ['./form-results.component.scss'],
 })

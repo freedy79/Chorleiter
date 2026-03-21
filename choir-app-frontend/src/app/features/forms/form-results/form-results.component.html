@@ -29,11 +29,7 @@
 
   <!-- ═══════════════════════ SUBMISSIONS TAB ═══════════════════════ -->
   <ng-container *ngIf="activeTab === 'submissions'">
-    <div *ngIf="submissions.length === 0" class="empty-state">
-      <mat-icon>inbox</mat-icon>
-      <h2>Noch keine Abgaben</h2>
-      <p>Sobald Teilnehmer das Formular ausfüllen, erscheinen die Ergebnisse hier.</p>
-    </div>
+    <app-empty-state *ngIf="submissions.length === 0" icon="inbox" title="Noch keine Abgaben" message="Sobald Teilnehmer das Formular ausfüllen, erscheinen die Ergebnisse hier."></app-empty-state>
 
     <!-- Table view -->
     <div class="table-wrapper" *ngIf="viewMode === 'table' && submissions.length > 0">
@@ -111,11 +107,7 @@
       <p>Statistik wird berechnet…</p>
     </div>
 
-    <div *ngIf="!statsLoading && statistics.length === 0" class="empty-state">
-      <mat-icon>analytics</mat-icon>
-      <h2>Keine Statistik verfügbar</h2>
-      <p>Es müssen Abgaben vorhanden sein, um eine Statistik zu erstellen.</p>
-    </div>
+    <app-empty-state *ngIf="!statsLoading && statistics.length === 0" icon="analytics" title="Keine Statistik verfügbar" message="Es müssen Abgaben vorhanden sein, um eine Statistik zu erstellen."></app-empty-state>
 
     <div *ngIf="!statsLoading && statistics.length > 0" class="statistics-grid">
       <p class="stats-summary">Auswertung basierend auf {{ statsSubmissionCount }} Abgabe{{ statsSubmissionCount !== 1 ? 'n' : '' }}</p>

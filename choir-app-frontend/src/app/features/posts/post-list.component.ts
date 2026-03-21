@@ -9,11 +9,12 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { PostComponent } from './post.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PostComponent, EmptyStateComponent],
   templateUrl: './post-list.component.html',
   styleUrls: ['./post-list.component.scss']
 })

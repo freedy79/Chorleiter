@@ -13,7 +13,7 @@ interface Collection {
   standalone: true,
   imports: [CommonModule, MatDialogModule, MaterialModule],
   template: `
-    <h2 mat-dialog-title>Stück löschen</h2>
+    <h1 mat-dialog-title>Stück löschen</h1>
 
     <mat-dialog-content>
       <div *ngIf="data.canDelete" class="delete-confirmation">

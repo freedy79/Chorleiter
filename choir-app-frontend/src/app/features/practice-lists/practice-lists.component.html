@@ -32,11 +32,9 @@
     Lokaler Offline-Speicher: <strong>{{ storageUsageBytes | fileSize }}</strong>
   </p>
 
-  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+  <app-inline-loading [loading]="loading"></app-inline-loading>
 
-  <div *ngIf="!loading && !lists.length" class="empty-state">
-    Noch keine Übungsliste vorhanden.
-  </div>
+  <app-empty-state *ngIf="!loading && !lists.length" icon="playlist_add" message="Noch keine Übungsliste vorhanden."></app-empty-state>
 
   <div class="list-grid" *ngIf="!loading && lists.length">
     <mat-card class="list-card" *ngFor="let list of lists" (click)="openList(list)">

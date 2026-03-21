@@ -20,6 +20,7 @@ const { ensureMailFooterTemplate } = require('./ensureMailFooterTemplate');
 const { ensureAudioMarkerTable } = require('./ensureAudioMarkerTable');
 const { ensurePageViewTable } = require('./ensurePageViewTable');
 const { ensureFormTables } = require('./ensureFormTables');
+const { ensureSystemSettingValueText } = require('./ensureSystemSettingValueText');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -42,6 +43,7 @@ async function init(options = {}) {
     await ensureAudioMarkerTable();
     await ensurePageViewTable();
     await ensureFormTables();
+    await ensureSystemSettingValueText();
     // 4. Then run data migrations on existing tables
     await migrateUserNames();
     await migrateRoles();

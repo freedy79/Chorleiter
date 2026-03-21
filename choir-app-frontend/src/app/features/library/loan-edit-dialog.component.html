@@ -1,17 +1,17 @@
 <h1 mat-dialog-title>Ausleihe bearbeiten</h1>
 <div mat-dialog-content>
   <form [formGroup]="form">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Startdatum</mat-label>
       <input matInput type="date" formControlName="startDate" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Enddatum</mat-label>
       <input matInput type="date" formControlName="endDate" />
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Status</mat-label>
       <mat-select formControlName="status">
         <mat-option *ngFor="let s of statuses" [value]="s">{{ s | loanStatusLabel }}</mat-option>
@@ -21,5 +21,5 @@
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" (click)="save()">Speichern</button>
+  <button mat-flat-button color="primary" (click)="save()">Speichern</button>
 </div>

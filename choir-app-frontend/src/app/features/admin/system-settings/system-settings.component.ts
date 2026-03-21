@@ -7,7 +7,9 @@ import { Observable } from 'rxjs';
 import { FrontendUrlSettingsComponent } from '../frontend-url-settings/frontend-url-settings.component';
 import { PayPalSettingsComponent } from '../paypal-settings/paypal-settings.component';
 import { ImprintSettingsComponent } from '../imprint-settings/imprint-settings.component';
+import { PrivacySettingsComponent } from '../privacy-settings/privacy-settings.component';
 import { DevelopComponent } from '../develop/develop.component';
+import { CkeditorLicenseSettingsComponent } from '../ckeditor-license-settings/ckeditor-license-settings.component';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 
 @Component({
@@ -23,7 +25,9 @@ import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page
     FrontendUrlSettingsComponent,
     PayPalSettingsComponent,
     ImprintSettingsComponent,
-    DevelopComponent
+    PrivacySettingsComponent,
+    DevelopComponent,
+    CkeditorLicenseSettingsComponent
   ]
 })
 export class SystemSettingsComponent implements OnInit {

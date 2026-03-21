@@ -7,7 +7,7 @@ import { MaterialModule } from '@modules/material.module';
   standalone: true,
   imports: [CommonModule, MaterialModule],
   template: `
-    <h2 mat-dialog-title>Passwort zurücksetzen</h2>
+    <h1 mat-dialog-title>Passwort zurücksetzen</h1>
     <div mat-dialog-content>
       <p>Du hast dein Passwort dreimal falsch eingegeben. Wir haben dir eine E-Mail geschickt, mit der du dein Passwort zurücksetzen kannst. Bis dahin ist kein Login möglich.</p>
     </div>

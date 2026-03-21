@@ -65,10 +65,7 @@
               </div>
             </div>
           </div>
-          <div *ngIf="!summary.viewsByDay?.length" class="empty-state">
-            <mat-icon>insert_chart_outlined</mat-icon>
-            <p>Keine Daten für diesen Zeitraum vorhanden.</p>
-          </div>
+          <app-empty-state *ngIf="!summary.viewsByDay?.length" icon="insert_chart_outlined" message="Keine Daten für diesen Zeitraum vorhanden."></app-empty-state>
         </div>
       </mat-tab>
 
@@ -91,10 +88,7 @@
             <tr mat-header-row *matHeaderRowDef="['rank', 'title', 'views']"></tr>
             <tr mat-row *matRowDef="let row; columns: ['rank', 'title', 'views']"></tr>
           </table>
-          <div *ngIf="!summary.topPieces?.length" class="empty-state">
-            <mat-icon>music_off</mat-icon>
-            <p>Keine Stücke-Aufrufe im gewählten Zeitraum.</p>
-          </div>
+          <app-empty-state *ngIf="!summary.topPieces?.length" icon="music_off" message="Keine Stücke-Aufrufe im gewählten Zeitraum."></app-empty-state>
         </div>
       </mat-tab>
 
@@ -132,10 +126,7 @@
             <tr mat-header-row *matHeaderRowDef="['rank', 'title', 'totalViews', 'uniqueVisitors', 'firstView', 'lastView']"></tr>
             <tr mat-row *matRowDef="let row; columns: ['rank', 'title', 'totalViews', 'uniqueVisitors', 'firstView', 'lastView']"></tr>
           </table>
-          <div *ngIf="!sharedLoading && !sharedPieceStats?.length" class="empty-state">
-            <mat-icon>share</mat-icon>
-            <p>Keine geteilten Stücke im gewählten Zeitraum aufgerufen.</p>
-          </div>
+          <app-empty-state *ngIf="!sharedLoading && !sharedPieceStats?.length" icon="share" message="Keine geteilten Stücke im gewählten Zeitraum aufgerufen."></app-empty-state>
         </div>
       </mat-tab>
 
@@ -158,10 +149,7 @@
             <tr mat-header-row *matHeaderRowDef="['rank', 'path', 'views']"></tr>
             <tr mat-row *matRowDef="let row; columns: ['rank', 'path', 'views']"></tr>
           </table>
-          <div *ngIf="!summary.topPages?.length" class="empty-state">
-            <mat-icon>web</mat-icon>
-            <p>Keine Seitenaufrufe im gewählten Zeitraum.</p>
-          </div>
+          <app-empty-state *ngIf="!summary.topPages?.length" icon="web" message="Keine Seitenaufrufe im gewählten Zeitraum."></app-empty-state>
         </div>
       </mat-tab>
 

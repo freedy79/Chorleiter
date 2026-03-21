@@ -7,11 +7,13 @@ import { PracticeList, PracticeListCreatePayload } from '@core/models/practice-l
 import { PracticeListService } from '@core/services/practice-list.service';
 import { NotificationService } from '@core/services/notification.service';
 import { FileSizePipe } from '@shared/pipes/file-size.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
 
 @Component({
   selector: 'app-practice-lists',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, MaterialModule, FileSizePipe],
+  imports: [CommonModule, FormsModule, RouterModule, MaterialModule, FileSizePipe, EmptyStateComponent, InlineLoadingComponent],
   templateUrl: './practice-lists.component.html',
   styleUrls: ['./practice-lists.component.scss']
 })

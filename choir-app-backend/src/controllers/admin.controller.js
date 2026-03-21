@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const paypalSettingsService = require('../services/paypal-settings.service');
 const imprintSettingsService = require('../services/imprint-settings.service');
+const privacySettingsService = require('../services/privacy-settings.service');
 const { Op } = require('sequelize');
 const logger = require("../config/logger");
 const { spawn, exec } = require('child_process');
@@ -803,6 +804,29 @@ exports.updateSystemAdminEmail = async (req, res) => {
     }
 };
 
+exports.getCkeditorLicenseKey = async (req, res) => {
+    try {
+        const setting = await db.system_setting.findByPk('CKEDITOR_LICENSE_KEY');
+        res.status(200).send({ value: setting?.value || null });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updateCkeditorLicenseKey = async (req, res) => {
+    try {
+        const { value } = req.body;
+        const [setting] = await db.system_setting.findOrCreate({
+            where: { key: 'CKEDITOR_LICENSE_KEY' },
+            defaults: { value }
+        });
+        await setting.update({ value });
+        res.status(200).send({ value: setting.value });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 /**
  * Lädt das aktuelle Git-Repository und startet optional das Deploy-Skript.
  * Übergabe von `deploy=true` im Body oder Query startet das Skript nach dem Pull.
@@ -939,6 +963,35 @@ exports.updateImprintSettings = async (req, res) => {
         res.status(200).send({ message: 'Imprint settings saved successfully' });
     } catch (err) {
         logger.error('Error updating imprint settings', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
+};
+
+// Privacy Policy Settings
+exports.getPrivacyPolicy = async (req, res) => {
+    try {
+        const html = await privacySettingsService.getPrivacyPolicyHtml();
+        res.status(200).send({ html });
+    } catch (err) {
+        logger.error('Error getting privacy policy', { error: err.message });
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.updatePrivacyPolicy = async (req, res) => {
+    try {
+        const { html } = req.body;
+
+        if (html === undefined || html === null) {
+            return res.status(400).send({ message: 'HTML-Inhalt fehlt' });
+        }
+
+        await privacySettingsService.savePrivacyPolicyHtml(html);
+
+        logger.info('Privacy policy updated successfully');
+        res.status(200).send({ message: 'Privacy policy saved successfully' });
+    } catch (err) {
+        logger.error('Error updating privacy policy', { error: err.message });
         res.status(500).send({ message: err.message });
     }
 };

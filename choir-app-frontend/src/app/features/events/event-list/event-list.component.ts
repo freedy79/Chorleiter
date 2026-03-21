@@ -21,6 +21,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-event-list',
@@ -31,13 +32,15 @@ import { ResponsiveService } from '@shared/services/responsive.service';
     MaterialModule,
     EventCardComponent,
     EventTypeLabelPipe,
-    PureDatePipe
+    PureDatePipe,
+    EmptyStateComponent
   ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
 export class EventListComponent implements OnInit, AfterViewInit {
   typeControl = new FormControl('ALL');
+  timeControl = new FormControl('FUTURE');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
@@ -49,6 +52,9 @@ export class EventListComponent implements OnInit, AfterViewInit {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
   isLoading = false;
+
+  // Dynamic past-year filter options
+  pastYears: number[] = [];
 
   // Mobile lazy rendering
   private readonly MOBILE_PAGE_SIZE = 15;
@@ -80,6 +86,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
       this.apiService.getEventById(eventId).subscribe(e => this.selectedEvent = e);
     }
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
+    this.timeControl.valueChanges.subscribe(() => this.applyTimeFilter());
     this.authService.isChoirAdmin$.subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
@@ -106,6 +113,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.displayedColumns = this.isAdmin ? ['select', ...base] : base;
   }
 
+  private allEvents: Event[] = [];
+
   private loadEvents(): void {
     this.isLoading = true;
     this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
@@ -113,7 +122,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
       .subscribe({
         next: events => {
-          this.dataSource.data = events;
+          this.allEvents = events;
+          this.applyTimeFilter();
           this.selectedEvent = null;
           this.isLoading = false;
         },
@@ -121,6 +131,52 @@ export class EventListComponent implements OnInit, AfterViewInit {
           this.isLoading = false;
         }
       });
+  }
+
+  private applyTimeFilter(): void {
+    const time = this.timeControl.value;
+    if (time === 'ALL') {
+      this.dataSource.data = this.allEvents;
+      this.updatePastYears();
+      return;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (time === 'FUTURE') {
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+      });
+    } else if (time === 'PAST') {
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate < today;
+      });
+    } else if (time?.startsWith('YEAR_')) {
+      const year = parseInt(time.substring(5), 10);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        return eventDate.getFullYear() === year && eventDate < today;
+      });
+    }
+    this.updatePastYears();
+    this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
+  }
+
+  private updatePastYears(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const years = new Set<number>();
+    this.allEvents.forEach(ev => {
+      const eventDate = new Date(ev.date);
+      if (eventDate < today) {
+        years.add(eventDate.getFullYear());
+      }
+    });
+    this.pastYears = Array.from(years).sort((a, b) => b - a);
   }
 
   selectEvent(event: Event): void {

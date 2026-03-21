@@ -62,6 +62,10 @@ router.get('/paypal-settings', wrap(controller.getPayPalSettings));
 router.put('/paypal-settings', role.requireNonDemo, wrap(controller.updatePayPalSettings));
 router.get('/imprint-settings', wrap(controller.getImprintSettings));
 router.put('/imprint-settings', role.requireNonDemo, wrap(controller.updateImprintSettings));
+router.get('/privacy-policy', wrap(controller.getPrivacyPolicy));
+router.put('/privacy-policy', role.requireNonDemo, wrap(controller.updatePrivacyPolicy));
+router.get('/ckeditor-license', wrap(controller.getCkeditorLicenseKey));
+router.put('/ckeditor-license', role.requireNonDemo, wrap(controller.updateCkeditorLicenseKey));
 
 // PWA Configuration routes
 const pwaConfigRoutes = require('./pwaConfig.routes');

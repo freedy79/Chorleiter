@@ -28,7 +28,7 @@ export interface AddToPracticeListDialogResult {
   standalone: true,
   imports: [CommonModule, FormsModule, MaterialModule, MatDialogModule],
   template: `
-    <h2 mat-dialog-title>Zu Übungsliste hinzufügen</h2>
+    <h1 mat-dialog-title>Zu Übungsliste hinzufügen</h1>
     <mat-dialog-content class="dialog-content">
       <p><strong>{{ data.pieceTitle }}</strong></p>
       <p *ngIf="data.pieceLinkDescription">Medium: {{ data.pieceLinkDescription }}</p>

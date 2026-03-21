@@ -5,21 +5,21 @@
       <mat-slide-toggle [(ngModel)]="globalMode" (change)="onModeChange()">Alle Chöre</mat-slide-toggle>
     </div>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Von</mat-label>
       <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
       <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
       <mat-datepicker #startPicker></mat-datepicker>
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Bis</mat-label>
       <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" />
       <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
       <mat-datepicker #endPicker></mat-datepicker>
     </mat-form-field>
 
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Aktive Monate</mat-label>
       <input matInput type="number" [(ngModel)]="activeMonths" />
     </mat-form-field>

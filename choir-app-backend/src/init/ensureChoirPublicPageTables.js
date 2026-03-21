@@ -19,6 +19,30 @@ async function ensureChoirPublicPageTables() {
             logger.info('[Migration] Created table: choir_public_assets');
         }
 
+        // Ensure colorScheme column exists on existing tables
+        try {
+            const tableName = db.choir_public_page.getTableName();
+            const tableDesc = await queryInterface.describeTable(tableName);
+            if (!tableDesc.colorScheme) {
+                await queryInterface.addColumn(tableName, 'colorScheme', {
+                    type: db.Sequelize.DataTypes.STRING,
+                    allowNull: true,
+                    defaultValue: 'elegant-light',
+                });
+                logger.info('[Migration] Added colorScheme column to ' + tableName);
+            }
+            if (!tableDesc.richBlocks) {
+                await queryInterface.addColumn(tableName, 'richBlocks', {
+                    type: db.Sequelize.DataTypes.JSON,
+                    allowNull: false,
+                    defaultValue: [],
+                });
+                logger.info('[Migration] Added richBlocks column to ' + tableName);
+            }
+        } catch (colErr) {
+            logger.warn('[Migration] Could not check/add colorScheme column:', colErr.message);
+        }
+
         logger.info('[Migration] Choir public page tables ensured successfully');
     } catch (error) {
         logger.error('[Migration] Error ensuring choir public page tables:', error);

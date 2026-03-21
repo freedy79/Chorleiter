@@ -135,19 +135,24 @@ async function createTransporter(existingSettings) {
   });
 }
 
-function getFromAddress(settings) {
+function getFromAddress(settings, choirName) {
   const address = settings?.fromAddress || process.env.EMAIL_FROM || 'no-reply@nak-chorleiter.de';
 
-  // If address contains '@', it's already a full email address
+  let name;
   if (address.includes('@')) {
-    // Extract the local part before @ as the name (or use a sensible default)
     const localPart = address.split('@')[0];
-    const name = localPart.replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    return { name: name || 'NAK Chorleiter', address };
+    name = localPart.replace(/[._-]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'NAK Chorleiter';
+  } else {
+    name = address;
   }
 
-  // If it doesn't contain '@', treat it as a name and use default email
-  return { name: address, address: 'no-reply@nak-chorleiter.de' };
+  const emailAddress = address.includes('@') ? address : 'no-reply@nak-chorleiter.de';
+
+  if (choirName) {
+    name = `nak-chorleiter.de im Auftrag von ${choirName}`;
+  }
+
+  return { name, address: emailAddress };
 }
 
 async function sendMail(options, overrideSettings) {
@@ -194,7 +199,8 @@ async function sendMail(options, overrideSettings) {
 
   const settings = overrideSettings || await require('../models').mail_setting.findByPk(1);
   const transporter = await createTransporter(settings);
-  const mailOptions = { from: getFromAddress(settings), ...options };
+  const { choirName, ...mailOpts } = options;
+  const mailOptions = { from: getFromAddress(settings, choirName), ...mailOpts };
 
   if (recipients.length > 2) {
     const existingBcc = Array.isArray(mailOptions.bcc)

@@ -25,6 +25,7 @@ export interface ChoirPublicPage {
   isPublished: boolean;
   slug?: string | null;
   templateKey: 'classic' | 'hero' | 'gallery' | string;
+  colorScheme?: string | null;
   headline?: string | null;
   subheadline?: string | null;
   contentBlocks: ChoirPublicContentBlock[];
@@ -35,6 +36,7 @@ export interface ChoirPublicPage {
   seoDescription?: string | null;
   ogImageUrl?: string | null;
   assets: ChoirPublicAsset[];
+  choir?: { name: string; description?: string | null; location?: string | null };
 }
 
 export interface PublicChoirPageResponse {
