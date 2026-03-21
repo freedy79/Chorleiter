@@ -298,7 +298,9 @@ const findPieceMatch = async (title, composerId) => {
         ).values()];
     }
 
-    const options = rankCandidates(trimmed, allCandidates, cand => cand.title, { minScore: 0.6, maxResults: 10 });
+    // Be conservative when auto-matching piece titles to avoid linking similarly
+    // named but distinct works (e.g. "Piece A" vs "Piece B").
+    const options = rankCandidates(trimmed, allCandidates, cand => cand.title, { minScore: 0.85, maxResults: 10 });
     const match = pickBestMatch(options);
     const ambiguous = !match && options.length > 1;
 
