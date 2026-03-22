@@ -1,12 +1,15 @@
 const dbConfig = require("../config/db.config.js");
 const Sequelize = require("sequelize");
 
+const isTest = process.env.NODE_ENV === 'test' || dbConfig.dialect === 'sqlite';
+
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   port: dbConfig.PORT,
   dialect: dbConfig.dialect,
   operatorsAliases: 0, // 0 instead of false
-  pool: dbConfig.pool
+  pool: dbConfig.pool,
+  logging: isTest ? false : console.log,
 });
 
 const db = {};
@@ -86,6 +89,7 @@ db.form = require('./form.model.js')(sequelize, Sequelize);
 db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
 db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
 db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
+db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -400,5 +404,11 @@ db.form_submission.hasMany(db.form_answer, { as: 'answers', foreignKey: 'submiss
 db.form_answer.belongsTo(db.form_submission, { foreignKey: 'submissionId', as: 'submission' });
 db.form_field.hasMany(db.form_answer, { as: 'answers', foreignKey: 'fieldId', onDelete: 'CASCADE' });
 db.form_answer.belongsTo(db.form_field, { foreignKey: 'fieldId', as: 'field' });
+
+// One-time access tokens
+db.user.hasMany(db.one_time_token, { as: 'createdOtaTokens', foreignKey: 'createdByUserId' });
+db.one_time_token.belongsTo(db.user, { foreignKey: 'createdByUserId', as: 'createdBy' });
+db.user.hasMany(db.one_time_token, { as: 'targetOtaTokens', foreignKey: 'targetUserId' });
+db.one_time_token.belongsTo(db.user, { foreignKey: 'targetUserId', as: 'targetUser' });
 
 module.exports = db;

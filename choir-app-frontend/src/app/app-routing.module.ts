@@ -38,6 +38,11 @@ export const routes: Routes = [
         data: { title: 'Abstimmung' }
     },
     {
+        path: 'ota/:token',
+        loadComponent: () => import('./features/user/ota-login/ota-login.component').then(m => m.OtaLoginComponent),
+        data: { title: 'Einmal-Zugang' }
+    },
+    {
         path: 'forms/public/:guid',
         loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
         data: { title: 'Formular', isPublic: true }

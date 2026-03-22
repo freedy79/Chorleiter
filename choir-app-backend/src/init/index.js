@@ -21,6 +21,7 @@ const { ensureAudioMarkerTable } = require('./ensureAudioMarkerTable');
 const { ensurePageViewTable } = require('./ensurePageViewTable');
 const { ensureFormTables } = require('./ensureFormTables');
 const { ensureSystemSettingValueText } = require('./ensureSystemSettingValueText');
+const { ensureOtaTable } = require('./ensureOtaTable');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -44,6 +45,7 @@ async function init(options = {}) {
     await ensurePageViewTable();
     await ensureFormTables();
     await ensureSystemSettingValueText();
+    await ensureOtaTable();
     // 4. Then run data migrations on existing tables
     await migrateUserNames();
     await migrateRoles();

@@ -9,6 +9,7 @@ import { ProtocolsComponent } from '../protocols/protocols.component';
 import { BackupComponent } from '../backup/backup.component';
 import { LogViewerComponent } from '../log-viewer/log-viewer.component';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
+import { OtaTokensComponent } from '../ota-tokens/ota-tokens.component';
 
 @Component({
   selector: 'app-security',
@@ -23,7 +24,8 @@ import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page
     LoginAttemptsComponent,
     ProtocolsComponent,
     BackupComponent,
-    LogViewerComponent
+    LogViewerComponent,
+    OtaTokensComponent
   ]
 })
 export class SecurityComponent implements OnInit {

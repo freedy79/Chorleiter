@@ -1,0 +1,76 @@
+.ota-tokens {
+  padding: 16px 0;
+
+  .description {
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    margin-bottom: 16px;
+  }
+
+  .generate-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+    .label-field {
+      flex: 1 1 250px;
+      max-width: 400px;
+    }
+  }
+
+  .generated-link-card {
+    background: var(--card-background, #f5f5f5);
+    border: 1px solid var(--border-color, #e0e0e0);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+
+    .link-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .link-value {
+      font-family: monospace;
+      font-size: 13px;
+      word-break: break-all;
+      background: var(--code-background, #e8e8e8);
+      padding: 8px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    .link-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .link-warning {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--warn-color, #f44336);
+      font-size: 13px;
+      margin-top: 8px;
+      margin-bottom: 0;
+    }
+  }
+
+  .token-table {
+    width: 100%;
+  }
+
+  .used-info {
+    font-size: 12px;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    padding: 32px 0;
+  }
+}

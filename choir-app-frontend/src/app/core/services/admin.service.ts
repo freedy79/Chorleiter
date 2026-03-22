@@ -337,4 +337,24 @@ export class AdminService {
   cleanupOldPageViews(retainDays = 365): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/admin/usage-stats/cleanup`, { params: { retainDays: retainDays.toString() } });
   }
+
+  // --- One-Time Access Tokens ---
+
+  generateOtaToken(label?: string): Observable<{ token: string; expiresAt: string; targetUser: string; label: string | null }> {
+    return this.http.post<{ token: string; expiresAt: string; targetUser: string; label: string | null }>(
+      `${this.apiUrl}/ota/generate`, { label }
+    );
+  }
+
+  listOtaTokens(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ota`);
+  }
+
+  revokeOtaToken(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/ota/${id}`);
+  }
+
+  consumeOtaToken(token: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ota/consume/${token}`, {}, { withCredentials: true });
+  }
 }

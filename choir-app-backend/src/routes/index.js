@@ -42,6 +42,7 @@ const doubletteRoutes = require('./doublette.routes');
 const publicRoutes = require('./public.routes');
 const pageViewRoutes = require('./page-view.routes');
 const formRoutes = require('./form.routes');
+const otaRoutes = require('./ota.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -87,6 +88,7 @@ const routeDefinitions = [
     ['/api/public', publicRoutes],
     ['/api/page-views', pageViewRoutes],
     ['/api/forms', formRoutes],
+    ['/api/ota', otaRoutes],
 ];
 
 function registerRoutes(app) {

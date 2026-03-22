@@ -119,17 +119,20 @@ export class ResponsiveService {
         APP_BREAKPOINTS.DESKTOP,
       ])
       .pipe(
-        map(result => ({
-          isXs: result.breakpoints[APP_BREAKPOINTS.XS],
-          isSm: result.breakpoints[APP_BREAKPOINTS.SM],
-          isMd: result.breakpoints[APP_BREAKPOINTS.MD],
-          isLg: result.breakpoints[APP_BREAKPOINTS.LG],
-          isHandset: result.breakpoints[APP_BREAKPOINTS.HANDSET],
-          isTablet: result.breakpoints[APP_BREAKPOINTS.TABLET],
-          isTabletAndUp: result.breakpoints[APP_BREAKPOINTS.TABLET_AND_UP],
-          isMobile: result.breakpoints[APP_BREAKPOINTS.DESKTOP] === false,
-          isDesktop: result.breakpoints[APP_BREAKPOINTS.DESKTOP],
-        })),
+        map(result => {
+          const bp = result.breakpoints ?? {};
+          return {
+            isXs: bp[APP_BREAKPOINTS.XS] ?? false,
+            isSm: bp[APP_BREAKPOINTS.SM] ?? false,
+            isMd: bp[APP_BREAKPOINTS.MD] ?? false,
+            isLg: bp[APP_BREAKPOINTS.LG] ?? false,
+            isHandset: bp[APP_BREAKPOINTS.HANDSET] ?? false,
+            isTablet: bp[APP_BREAKPOINTS.TABLET] ?? false,
+            isTabletAndUp: bp[APP_BREAKPOINTS.TABLET_AND_UP] ?? false,
+            isMobile: bp[APP_BREAKPOINTS.DESKTOP] === false,
+            isDesktop: bp[APP_BREAKPOINTS.DESKTOP] ?? false,
+          };
+        }),
         startWith({
           isXs: false,
           isSm: false,
