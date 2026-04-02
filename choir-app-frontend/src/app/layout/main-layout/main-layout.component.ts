@@ -28,6 +28,7 @@ import { SearchBoxComponent } from '@shared/components/search-box/search-box.com
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { NotificationService } from '@core/services/notification.service';
+import { PushNotificationService } from '@core/services/push-notification.service';
 import { Choir } from '@core/models/choir';
 import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
 import { ChatService } from '@core/services/chat.service';
@@ -130,6 +131,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private installNotificationShown = false;
   private readonly installPromptCooldownKey = 'pwa-install-prompt-dismissed-at';
   private readonly installPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
+  private pushPromptShown = false;
+  private readonly pushPromptCooldownKey = 'push-prompt-dismissed-at';
+  private readonly pushPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
 
 
   constructor(private authService: AuthService,
@@ -147,7 +151,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private titleService: Title,
     private metaService: Meta,
     private chatService: ChatService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private pushService: PushNotificationService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -302,6 +307,17 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       this.latestChatOverview = overview;
       this.chatUnreadCount$.next(overview.totalUnread || 0);
       this.maybeNotifyAboutNewestUnread(overview);
+    });
+
+    // Auto-prompt for push notifications after login
+    this.isLoggedIn$.pipe(
+      filter(loggedIn => loggedIn),
+      switchMap(() => this.availableChoirs$),
+      filter(choirs => choirs.length > 0),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(choirs => {
+      setTimeout(() => this.tryShowPushPrompt(choirs), 5000);
     });
   }
 
@@ -839,5 +855,69 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   private markInstallPromptDismissed(): void {
     localStorage.setItem(this.installPromptCooldownKey, Date.now().toString());
+  }
+
+  private tryShowPushPrompt(choirs: Choir[]): void {
+    if (this.pushPromptShown) {
+      return;
+    }
+
+    if (!this.pushService.isSupported()) {
+      return;
+    }
+
+    const permission = this.pushService.getPermission();
+    if (permission !== 'default') {
+      // Already granted or denied — auto-subscribe if granted but not stored
+      if (permission === 'granted') {
+        const storedIds = this.pushService.getStoredChoirIds();
+        const missingIds = choirs.map(c => c.id).filter(id => !storedIds.includes(id));
+        if (missingIds.length > 0) {
+          this.pushService.subscribeToAllChoirs(missingIds).catch(() => {});
+        }
+      }
+      return;
+    }
+
+    if (this.isPushPromptInCooldown()) {
+      return;
+    }
+
+    this.pushPromptShown = true;
+
+    const snackBarRef = this.notification.infoWithAction(
+      'Möchtest du Push-Benachrichtigungen für Chat, Beiträge und Dienste aktivieren?',
+      'Aktivieren',
+      15000
+    );
+
+    snackBarRef.onAction().pipe(take(1)).subscribe(() => {
+      const choirIds = choirs.map(c => c.id);
+      this.pushService.subscribeToAllChoirs(choirIds).catch(() => {});
+    });
+
+    snackBarRef.afterDismissed().pipe(take(1)).subscribe(result => {
+      if (!result.dismissedByAction) {
+        this.markPushPromptDismissed();
+      }
+    });
+  }
+
+  private isPushPromptInCooldown(): boolean {
+    const rawTimestamp = localStorage.getItem(this.pushPromptCooldownKey);
+    if (!rawTimestamp) {
+      return false;
+    }
+
+    const timestamp = Number(rawTimestamp);
+    if (Number.isNaN(timestamp)) {
+      return false;
+    }
+
+    return Date.now() - timestamp < this.pushPromptCooldownMs;
+  }
+
+  private markPushPromptDismissed(): void {
+    localStorage.setItem(this.pushPromptCooldownKey, Date.now().toString());
   }
 }

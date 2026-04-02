@@ -64,6 +64,15 @@ async function ensureFormColumns(queryInterface) {
             });
             logger.info('[Migration] Added column forms.notifyOnSubmission');
         }
+
+        if (!columns.confirmationText) {
+            await queryInterface.addColumn('forms', 'confirmationText', {
+                type: db.Sequelize.TEXT,
+                allowNull: true,
+                defaultValue: null,
+            });
+            logger.info('[Migration] Added column forms.confirmationText');
+        }
     } catch (err) {
         logger.warn('[Migration] Error checking/adding form columns:', err.message);
     }

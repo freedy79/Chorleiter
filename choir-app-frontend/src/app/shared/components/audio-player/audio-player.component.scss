@@ -10,6 +10,7 @@ $_accent: var(--player-accent, var(--mat-primary, #3f51b5));
 .audio-player {
   display: grid;
   grid-template-columns: 1fr auto;
+  align-items: center;
   gap: 1rem;
   padding: 0.75rem;
   background: #f5f5f5;
@@ -45,8 +46,7 @@ $_accent: var(--player-accent, var(--mat-primary, #3f51b5));
         flex: 1;
         display: flex;
         align-items: center;
-        flex-direction: column;
-        height: 48px;
+        gap: 0.5rem;
 
         .time-display {
           font-size: 1rem;
@@ -297,16 +297,28 @@ $_accent: var(--player-accent, var(--mat-primary, #3f51b5));
 
 // --- Responsive: narrow host element (via ResizeObserver class) ---
 .audio-player.narrow {
-  grid-template-columns: 1fr;
   gap: 0.5rem;
   padding: 0.5rem;
 
   .audio-player-content .audio-title {
     font-size: 0.875rem;
+    padding-right: 2rem;
   }
 
-  .download-icon {
-    justify-self: end;
+  .audio-player-content .marker-add .marker-add-btn {
+    min-width: 40px;
+    padding: 0 8px;
+
+    mat-icon {
+      font-size: 22px;
+      width: 22px;
+      height: 22px;
+      margin-right: 0;
+    }
+
+    .marker-add-label {
+      display: none;
+    }
   }
 
   .marker-add .marker-add-inline .marker-label-input {
@@ -332,14 +344,40 @@ $_accent: var(--player-accent, var(--mat-primary, #3f51b5));
 // --- Breakpoint-based responsive fallback ---
 @include bp.handset {
   .audio-player {
-    grid-template-columns: 1fr;
+    // Keep download button inline (right of progress bar) on mobile
+    gap: 0.5rem;
+    padding: 0.5rem;
 
-    .download-icon {
-      justify-self: end;
+    .audio-player-content {
+      .audio-title {
+        font-size: 0.875rem;
+        padding-right: 2rem; // space for parent pin overlay
+      }
+
+      .marker-add .marker-add-btn {
+        // Icon-only on mobile: hide text, enlarge icon
+        min-width: 40px;
+        padding: 0 8px;
+
+        mat-icon {
+          font-size: 22px;
+          width: 22px;
+          height: 22px;
+          margin-right: 0;
+        }
+
+        .marker-add-label {
+          display: none;
+        }
+      }
+
+      .marker-add .marker-add-inline .marker-label-input {
+        width: 140px;
+      }
     }
 
-    .audio-player-content .marker-add .marker-add-inline .marker-label-input {
-      width: 140px;
+    .download-icon {
+      align-self: center;
     }
   }
 }

@@ -32,7 +32,7 @@ export class XsrfInterceptor implements HttpInterceptor {
     }
 
     // Clone request and add header
-    console.log('[XsrfInterceptor] Adding token to', request.method, request.url);
+    //console.log('[XsrfInterceptor] Adding token to', request.method, request.url);
     const updated = request.clone({
       setHeaders: { [this.headerName]: token },
       withCredentials: true

@@ -1,3 +1,5 @@
+@use '../../../../themes/breakpoints' as bp;
+
 .piece-detail {
   max-width: 900px;
   width: 75vw;
@@ -90,6 +92,8 @@ h3 {
   }
 
   &.mp3-card {
+    position: relative;
+
     .mp3-row {
       display: flex;
       align-items: center;
@@ -132,5 +136,31 @@ h3 {
   button,
   a {
     min-height: 40px;
+  }
+}
+
+// Mobile: pin icon as overlay in top-right corner of mp3-card
+@include bp.handset {
+  .file-card.mp3-card {
+    .mp3-row {
+      .mp3-pin-actions {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        z-index: 2;
+
+        button {
+          width: 32px;
+          height: 32px;
+          padding: 0;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
   }
 }

@@ -22,6 +22,7 @@ const { ensurePageViewTable } = require('./ensurePageViewTable');
 const { ensureFormTables } = require('./ensureFormTables');
 const { ensureSystemSettingValueText } = require('./ensureSystemSettingValueText');
 const { ensureOtaTable } = require('./ensureOtaTable');
+const { encryptUserPersonalData } = require('./encryptUserPersonalData');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -47,6 +48,7 @@ async function init(options = {}) {
     await ensureSystemSettingValueText();
     await ensureOtaTable();
     // 4. Then run data migrations on existing tables
+    await encryptUserPersonalData();
     await migrateUserNames();
     await migrateRoles();
     await fixProgramPublishedFromIdColumn();

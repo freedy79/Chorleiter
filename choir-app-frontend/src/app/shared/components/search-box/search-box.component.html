@@ -46,7 +46,7 @@
   <ng-container *ngIf="!isLoading && groupedSuggestions.length">
     <ng-container *ngFor="let group of groupedSuggestions">
       <mat-optgroup [label]="group.label">
-        <mat-option *ngFor="let s of group.items" [value]="s">
+        <mat-option *ngFor="let s of group.items" [value]="s.text" (onSelectionChange)="onSuggestionSelection($event, s)">
           <mat-icon class="type-icon">{{ typeIcons[s.type] }}</mat-icon>
           <span class="suggestion-text" [innerHTML]="highlight(s.text, currentQuery)"></span>
           <span class="suggestion-subtitle" *ngIf="s.subtitle"> – {{ s.subtitle }}</span>

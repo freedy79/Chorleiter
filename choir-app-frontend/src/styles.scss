@@ -79,6 +79,17 @@ mat-form-field {
 }
 
 // ============================================================================
+// GLOBAL BULLET POINT STYLING – Blue Squares
+// ============================================================================
+ul {
+  list-style-type: square;
+
+  li::marker {
+    color: #007fde;
+  }
+}
+
+// ============================================================================
 // ACCENT BUTTON CONTRAST FIX (Light Mode)
 // ============================================================================
 // NAK Gold (#ffc72c) as text color on white has only ~1.5:1 contrast ratio.

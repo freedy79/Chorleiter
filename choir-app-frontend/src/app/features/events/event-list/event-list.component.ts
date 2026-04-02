@@ -40,7 +40,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 })
 export class EventListComponent implements OnInit, AfterViewInit {
   typeControl = new FormControl('ALL');
-  timeControl = new FormControl('FUTURE');
+  timeControl = new FormControl('RECENT');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
@@ -143,7 +143,17 @@ export class EventListComponent implements OnInit, AfterViewInit {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    if (time === 'FUTURE') {
+    if (time === 'RECENT') {
+      const pastLimit = new Date(today);
+      pastLimit.setDate(pastLimit.getDate() - 10);
+      const futureLimit = new Date(today);
+      futureLimit.setDate(futureLimit.getDate() + 10);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= pastLimit && eventDate <= futureLimit;
+      });
+    } else if (time === 'FUTURE') {
       this.dataSource.data = this.allEvents.filter(ev => {
         const eventDate = new Date(ev.date);
         eventDate.setHours(0, 0, 0, 0);

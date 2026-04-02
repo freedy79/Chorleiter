@@ -8,7 +8,7 @@
         [color]="isPlaying ? 'primary' : ''"
         (click)="togglePlay()"
         matTooltip="Play/Pause">
-        <mat-icon>{{ isPlaying ? 'pause_circle' : 'play_circle' }}</mat-icon>
+        <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
       </button>
 
       <div class="audio-controls" *ngIf="duration">
@@ -97,7 +97,7 @@
             matTooltip="Marker an aktueller Position setzen"
           >
             <mat-icon>add_location</mat-icon>
-            Marker ({{ formatDuration(currentTime) }})
+            <span class="marker-add-label">Marker ({{ formatDuration(currentTime) }})</span>
           </button>
         </ng-container>
         <ng-template #addMarkerInput>

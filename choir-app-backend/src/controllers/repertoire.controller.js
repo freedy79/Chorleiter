@@ -447,7 +447,7 @@ exports.findOne = async (req, res) => {
                 { model: db.category, as: 'category' },
                 { model: db.author, as: 'author' },
                 { model: db.composer, as: 'arrangers' },
-                { model: db.piece_link, as: 'links' },
+                { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] },
                 {
                     model: db.collection,
                     as: 'collections',

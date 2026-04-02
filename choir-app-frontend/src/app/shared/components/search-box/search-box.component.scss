@@ -1,3 +1,4 @@
+@use 'sass:map';
 @use "@angular/material" as mat;
 @use "../../../../themes/_nak-theme" as nak;
 @use "../../../../themes/dark-mode-variables" as *;
@@ -87,7 +88,8 @@
   color: #ffffff;
 
   // Icon styling
-  ::ng-deep .mat-mdc-form-field-icon-prefix {
+  ::ng-deep .mat-mdc-form-field-icon-prefix,
+  ::ng-deep .mat-mdc-form-field-icon-suffix {
     color: #ffffff;
     align-items: center;
     display: flex;
@@ -143,4 +145,103 @@ input {
 
 :host-context(.dark-theme) .clear-history-option {
   color: rgba(255, 255, 255, 0.7);
+}
+
+// ============================================================================
+// SEARCH RESULTS PAGE VARIANT
+// When the search-box is used on the search-results page (light background),
+// override the toolbar-centric white-on-dark styles.
+// ============================================================================
+
+:host-context(app-search-results) {
+  display: block;
+  max-width: 600px;
+  margin-bottom: 1rem;
+
+  .search-box {
+    color: map.get($light-mode-colors, text-primary);
+
+    ::ng-deep .mat-mdc-form-field-icon-prefix,
+    ::ng-deep .mat-mdc-form-field-icon-suffix {
+      color: map.get($light-mode-colors, text-secondary);
+    }
+
+    ::ng-deep .mdc-notched-outline__leading,
+    ::ng-deep .mdc-notched-outline__notch,
+    ::ng-deep .mdc-notched-outline__trailing {
+      border-color: map.get($light-mode-colors, border-primary) !important;
+      border-width: 2px !important;
+    }
+
+    &:hover:not(.mat-focused):not(.mat-form-field-disabled) {
+      ::ng-deep .mdc-notched-outline__leading,
+      ::ng-deep .mdc-notched-outline__notch,
+      ::ng-deep .mdc-notched-outline__trailing {
+        border-color: map.get($light-mode-colors, border-focus) !important;
+      }
+    }
+
+    &.mat-focused,
+    &.mat-form-field-focused {
+      ::ng-deep .mdc-notched-outline__leading,
+      ::ng-deep .mdc-notched-outline__notch,
+      ::ng-deep .mdc-notched-outline__trailing {
+        border-color: map.get($light-mode-colors, border-focus) !important;
+      }
+    }
+  }
+
+  input {
+    color: map.get($light-mode-colors, text-primary) !important;
+    caret-color: map.get($light-mode-colors, text-primary);
+
+    &::placeholder {
+      color: map.get($light-mode-colors, text-tertiary);
+    }
+  }
+}
+
+// Dark theme on search results page
+:host-context(.dark-theme) :host-context(app-search-results) {
+  .search-box {
+    color: map.get($dark-mode-colors, text-primary);
+
+    ::ng-deep .mat-mdc-form-field-icon-prefix,
+    ::ng-deep .mat-mdc-form-field-icon-suffix {
+      color: map.get($dark-mode-colors, text-secondary);
+    }
+
+    ::ng-deep .mdc-notched-outline__leading,
+    ::ng-deep .mdc-notched-outline__notch,
+    ::ng-deep .mdc-notched-outline__trailing {
+      border-color: map.get($dark-mode-colors, border-primary) !important;
+      border-width: 2px !important;
+    }
+
+    &:hover:not(.mat-focused):not(.mat-form-field-disabled) {
+      ::ng-deep .mdc-notched-outline__leading,
+      ::ng-deep .mdc-notched-outline__notch,
+      ::ng-deep .mdc-notched-outline__trailing {
+        border-color: map.get($dark-mode-colors, border-focus) !important;
+      }
+    }
+
+    &.mat-focused,
+    &.mat-form-field-focused {
+      ::ng-deep .mdc-notched-outline__leading,
+      ::ng-deep .mdc-notched-outline__notch,
+      ::ng-deep .mdc-notched-outline__trailing {
+        border-color: map.get($dark-mode-colors, border-focus) !important;
+      }
+    }
+  }
+
+  input {
+    color: map.get($dark-mode-colors, text-primary) !important;
+    caret-color: map.get($dark-mode-colors, text-primary);
+
+    &::placeholder {
+      color: map.get($dark-mode-colors, text-tertiary);
+    }
+  }
 }

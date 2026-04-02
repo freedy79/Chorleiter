@@ -1,4 +1,4 @@
-<app-search-box class="search"></app-search-box>
+<app-search-box class="search" [initialQuery]="query"></app-search-box>
 
 <h2 *ngIf="query">Suchergebnisse für "{{ query }}"</h2>
 <p *ngIf="!query">Bitte einen Suchbegriff eingeben.</p>
@@ -14,6 +14,22 @@
       </div>
     </li>
   </ul>
+  <button *ngIf="hasMorePieces" mat-stroked-button (click)="loadMore('pieces')" [disabled]="loadingMore.pieces" class="load-more-btn">
+    <mat-spinner *ngIf="loadingMore.pieces" diameter="18" class="inline-spinner"></mat-spinner>
+    Mehr anzeigen ({{ remainingPieces() }} weitere)
+  </button>
+</section>
+
+<section *ngFor="let cp of results.composerPieces">
+  <h3>Stücke von {{ cp.composer.name }}</h3>
+  <ul>
+    <li *ngFor="let p of cp.pieces">
+      <a [routerLink]="['/pieces', p.id]">{{ p.title }}</a>
+      <div>
+        {{ p.category?.name }}<span *ngIf="getCollectionRef(p) as ref">, {{ ref }}</span>
+      </div>
+    </li>
+  </ul>
 </section>
 
 <section *ngIf="results.events.length">
@@ -21,14 +37,32 @@
   <ul>
     <li *ngFor="let e of results.events">{{ e.type }} {{ e.date | date }}</li>
   </ul>
+  <button *ngIf="hasMoreEvents" mat-stroked-button (click)="loadMore('events')" [disabled]="loadingMore.events" class="load-more-btn">
+    <mat-spinner *ngIf="loadingMore.events" diameter="18" class="inline-spinner"></mat-spinner>
+    Mehr anzeigen ({{ remainingEvents() }} weitere)
+  </button>
 </section>
 
 <section *ngIf="results.collections.length">
   <h3>Sammlungen</h3>
   <ul>
     <li *ngFor="let c of results.collections">
-      <a [routerLink]="['/collections/edit', c.id]"
-         [attr.ng-reflect-router-link]="'/collections/edit,' + c.id">
+      <a [routerLink]="['/collections/edit', c.id]">
+        {{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span>
+      </a>
+    </li>
+  </ul>
+  <button *ngIf="hasMoreCollections" mat-stroked-button (click)="loadMore('collections')" [disabled]="loadingMore.collections" class="load-more-btn">
+    <mat-spinner *ngIf="loadingMore.collections" diameter="18" class="inline-spinner"></mat-spinner>
+    Mehr anzeigen ({{ remainingCollections() }} weitere)
+  </button>
+</section>
+
+<section *ngFor="let pc of results.publisherCollections">
+  <h3>Sammlungen von {{ pc.publisher.name }}</h3>
+  <ul>
+    <li *ngFor="let c of pc.collections">
+      <a [routerLink]="['/collections/edit', c.id]">
         {{ c.title }}<span *ngIf="c.subtitle"> – {{ c.subtitle }}</span>
       </a>
     </li>
