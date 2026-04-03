@@ -11,6 +11,7 @@ import { ApiService } from '@core/services/api.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
 import { LoanCartService } from '@core/services/loan-cart.service';
+import { PushNotificationService } from '@core/services/push-notification.service';
 import { BehaviorSubject, of, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -70,6 +71,7 @@ describe('MainLayoutComponent - Mobile Search', () => {
 
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
+    const pushMock = { isSupported: () => false, getPermission: () => 'denied', subscribeToChoir: () => Promise.resolve(), notificationClicks$: of() };
 
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
@@ -84,6 +86,7 @@ describe('MainLayoutComponent - Mobile Search', () => {
         { provide: BreakpointObserver, useValue: breakpointMock },
         { provide: ThemeService, useValue: themeMock },
         { provide: LoanCartService, useValue: cartMock },
+        { provide: PushNotificationService, useValue: pushMock },
         MenuVisibilityService
       ]
     }).compileComponents();

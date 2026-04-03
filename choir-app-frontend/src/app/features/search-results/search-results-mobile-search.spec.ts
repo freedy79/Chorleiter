@@ -8,6 +8,8 @@ import { SearchResultsComponent } from './search-results.component';
 import { By } from '@angular/platform-browser';
 import { DebugElement } from '@angular/core';
 
+const emptyResult = { pieces: [], totalPieces: 0, events: [], totalEvents: 0, collections: [], totalCollections: 0, composerPieces: [], publisherCollections: [] };
+
 describe('SearchResultsComponent - Mobile Search Page', () => {
   let searchSpy: jasmine.SpyObj<SearchService>;
   let activatedRouteMock: any;
@@ -37,27 +39,27 @@ describe('SearchResultsComponent - Mobile Search Page', () => {
   }
 
   it('should create', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
     const { component } = createComponent();
     expect(component).toBeTruthy();
   });
 
   it('should render search box component at the top', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
     const { fixture } = createComponent();
     const searchBox = fixture.debugElement.query(By.css('app-search-box'));
     expect(searchBox).toBeTruthy();
   });
 
   it('should render search box with class "search"', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
     const { fixture } = createComponent();
     const searchBox = fixture.debugElement.query(By.css('app-search-box.search'));
     expect(searchBox).toBeTruthy();
   });
 
   it('should show query in heading when query parameter exists', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
     const { fixture, component } = createComponent();
 
     // Manually set the query (simulating ngOnInit subscription)
@@ -72,7 +74,7 @@ describe('SearchResultsComponent - Mobile Search Page', () => {
   it('should show empty state message when no query parameter', () => {
     // Mock empty query param
     activatedRouteMock.queryParamMap = of(new Map());
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
 
     const { fixture, component } = createComponent();
     component.query = '';
@@ -84,11 +86,7 @@ describe('SearchResultsComponent - Mobile Search Page', () => {
   });
 
   it('should fetch search results when query changes', () => {
-    searchSpy.searchAll.and.returnValue(of({
-      pieces: [],
-      events: [],
-      collections: []
-    }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
 
     const { component } = createComponent();
     expect(searchSpy.searchAll).toHaveBeenCalled();
@@ -137,7 +135,8 @@ describe('SearchResultsComponent - Mobile Search Page', () => {
 
     const collectionLink = fixture.debugElement.queryAll(By.css('section ul li a')).pop();
     expect(collectionLink).toBeTruthy();
-    expect(collectionLink!.nativeElement.getAttribute('ng-reflect-router-link')).toContain('/collections/edit');
+    const href = collectionLink!.nativeElement.getAttribute('ng-reflect-router-link') || collectionLink!.nativeElement.getAttribute('href');
+    expect(href).toContain('/collections/edit');
   });
 
   it('should display collection subtitle if available', () => {

@@ -6,6 +6,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { SearchService } from '@core/services/search.service';
 import { SearchResultsComponent } from './search-results.component';
 
+const emptyResult = { pieces: [], totalPieces: 0, events: [], totalEvents: 0, collections: [], totalCollections: 0, composerPieces: [], publisherCollections: [] };
+
 describe('SearchResultsComponent', () => {
   let searchSpy: jasmine.SpyObj<SearchService>;
 
@@ -30,13 +32,13 @@ describe('SearchResultsComponent', () => {
   }
 
   it('should create', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [] }));
+    searchSpy.searchAll.and.returnValue(of(emptyResult));
     const { component } = createComponent();
     expect(component).toBeTruthy();
   });
 
   it('should render collection results as links', () => {
-    searchSpy.searchAll.and.returnValue(of({ pieces: [], events: [], collections: [{ id: 1, title: 'Test' }] }));
+    searchSpy.searchAll.and.returnValue(of({ ...emptyResult, collections: [{ id: 1, title: 'Test' }], totalCollections: 1 } as any));
     const { fixture } = createComponent();
     fixture.detectChanges();
     const link: HTMLAnchorElement | null = fixture.nativeElement.querySelector('section ul li a');
