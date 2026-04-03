@@ -12,6 +12,7 @@ const emailService = require('./services/email.service');
 const { runWithRequestContext } = require('./config/request-context');
 const { errorHandler, notFoundHandler, sequelizeErrorHandler } = require('./middleware/error.middleware');
 const { csrfCookie, csrfProtection } = require('./middleware/csrf.middleware');
+const postController = require("./controllers/post.controller");
 
 app.set("trust proxy", 1);
 
@@ -28,7 +29,7 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN']
 }));
 app.use(helmet({
     contentSecurityPolicy: {
@@ -69,7 +70,7 @@ const limiter = RateLimit({
     max: RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
-    handler: (req, res, _next) => {
+    handler: (req, res) => {
         logger.warn(`429 - Too Many Requests - ${req.originalUrl} - ${req.method} - ${req.ip}`);
         res.status(429).send({
             message: "Too many requests, please try again later.",
@@ -85,11 +86,18 @@ app.get("/", (req, res) => {
 app.get(["/ping", "/api/ping"], (req, res) => {
     res.json({ message: "PONG" });
 });
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Public post image access (no auth, token-based for email recipients)
+// URL may contain a file extension (e.g. .png) for email client compatibility – stripped in controller
+app.get("/api/public/post-images/:token", postController.getImageByToken);
 
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }
@@ -97,78 +105,8 @@ app.use('/api', (req, res, next) => {
 });
 
 // --- Routes ---
-const authRoutes = require("./routes/auth.routes");
-const pieceRoutes = require("./routes/piece.routes");
-const eventRoutes = require("./routes/event.routes");
-const userRoutes = require("./routes/user.routes");
-const composerRoutes = require("./routes/composer.routes");
-const categoryRoutes = require("./routes/category.routes");
-const repertoireRoutes = require("./routes/repertoire.routes");
-const collectionRoutes = require("./routes/collection.routes");
-const importRoutes = require("./routes/import.routes");
-const authorRoutes = require("./routes/author.routes");
-const publisherRoutes = require("./routes/publisher.routes");
-const pieceChangeRoutes = require("./routes/piece-change.routes");
-const adminRoutes = require("./routes/admin.routes");
-const backupRoutes = require("./routes/backup.routes");
-const choirManagementRoutes = require("./routes/choir-management.routes");
-const invitationRoutes = require("./routes/invitation.routes");
-const joinRoutes = require("./routes/join.routes");
-const statsRoutes = require("./routes/stats.routes");
-const searchRoutes = require("./routes/search.routes");
-const searchHistoryRoutes = require("./routes/search-history.routes");
-const passwordResetRoutes = require("./routes/password-reset.routes");
-const emailChangeRoutes = require("./routes/email-change.routes");
-const repertoireFilterRoutes = require("./routes/repertoire-filter.routes");
-const monthlyPlanRoutes = require("./routes/monthlyPlan.routes");
-const planRuleRoutes = require("./routes/planRule.routes");
-const planEntryRoutes = require("./routes/planEntry.routes");
-const availabilityRoutes = require("./routes/availability.routes");
-const clientErrorRoutes = require("./routes/client-error.routes");
-const postRoutes = require("./routes/post.routes");
-const notificationRoutes = require("./routes/notification.routes");
-const libraryRoutes = require("./routes/library.routes");
-const programRoutes = require("./routes/program.routes");
-const districtRoutes = require("./routes/district.routes");
-const congregationRoutes = require("./routes/congregation.routes");
-const paypalRoutes = require("./routes/paypal.routes");
-const imprintRoutes = require("./routes/imprint.routes");
-app.use("/api/auth", authRoutes);
-app.use("/api/pieces", pieceRoutes);
-app.use("/api/events", eventRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/composers", composerRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/repertoire", repertoireRoutes);
-app.use("/api/collections", collectionRoutes);
-app.use("/api/import", importRoutes);
-app.use("/api/authors", authorRoutes);
-app.use("/api/publishers", publisherRoutes);
-app.use("/api/piece-changes", pieceChangeRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/backup", backupRoutes);
-app.use("/api/choir-management", choirManagementRoutes);
-app.use("/api/invitations", invitationRoutes);
-app.use("/api/join", joinRoutes);
-app.use("/api/stats", statsRoutes);
-app.use("/api/search-history", searchHistoryRoutes);
-app.use("/api/search", searchRoutes);
-app.use("/api/password-reset", passwordResetRoutes);
-app.use("/api/email-change", emailChangeRoutes);
-app.use("/api/repertoire-filters", repertoireFilterRoutes);
-app.use("/api/monthly-plans", monthlyPlanRoutes);
-app.use("/api/plan-rules", planRuleRoutes);
-app.use("/api/plan-entries", planEntryRoutes);
-app.use("/api/availabilities", availabilityRoutes);
-app.use("/api/client-errors", clientErrorRoutes);
-app.use("/api/posts", postRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/library", libraryRoutes);
-app.use("/api/programs", programRoutes);
-app.use("/api/districts", districtRoutes);
-app.use("/api/congregations", congregationRoutes);
-app.use("/api/paypal", paypalRoutes);
-app.use("/api/imprint", imprintRoutes);
+const { registerRoutes } = require('./routes');
+registerRoutes(app);
 
 // Error Handling Middleware (must be AFTER all routes)
 // 1. Handle 404 for unknown routes

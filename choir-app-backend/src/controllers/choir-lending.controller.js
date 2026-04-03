@@ -103,6 +103,11 @@ exports.downloadPdf = async (req, res) => {
     order: [['copyNumber', 'ASC']]
   });
 
+  const digitalLicenses = await db.choir_digital_license.findAll({
+    where: { collectionId: id, choirId: req.activeChoirId },
+    order: [['licenseNumber', 'ASC']]
+  });
+
   const copies = rawCopies.map(c => ({
     copyNumber: c.copyNumber,
     borrowerName: c.borrowerName || (c.borrower ? c.borrower.name : ''),
@@ -110,7 +115,14 @@ exports.downloadPdf = async (req, res) => {
     returnedAt: c.returnedAt
   }));
 
-  const pdf = await lendingListPdf(collection.title, copies);
+  const digitalRows = digitalLicenses.map(l => ({
+    copyNumber: `D-${l.licenseNumber}`,
+    borrowerName: `Digitale Lizenz (${l.licenseType}${l.quantity ? `, ${l.quantity}x` : ''})`,
+    borrowedAt: l.validFrom,
+    returnedAt: l.validUntil
+  }));
+
+  const pdf = await lendingListPdf(collection.title, [...copies, ...digitalRows]);
   res.setHeader('Content-Type', 'application/pdf');
   res.status(200).send(pdf);
 };

@@ -3,6 +3,9 @@ const User = db.user;
 const Choir = db.choir;
 const UserChoir = db.user_choir;
 const Lending = db.lending;
+const PlanEntry = db.plan_entry;
+const Event = db.event;
+const MonthlyPlan = db.monthly_plan;
 const ChoirLog = db.choir_log;
 const bcrypt = require("bcryptjs");
 const crypto = require('crypto');
@@ -12,6 +15,55 @@ const emailService = require('../services/email.service');
 
 async function countOpenBorrowings(userId) {
     return Lending.count({ where: { borrowerId: userId, status: 'borrowed' } });
+}
+
+async function countOpenBorrowingsForChoir(userId, choirId) {
+    return Lending.count({
+        where: { borrowerId: userId, status: 'borrowed' },
+        include: [{
+            model: db.collection,
+            as: 'collection',
+            required: true,
+            include: [{
+                model: db.choir,
+                where: { id: choirId },
+                required: true
+            }]
+        }]
+    });
+}
+
+async function countUpcomingDutyAssignments(userId, choirId) {
+    const now = new Date();
+
+    const planEntryCount = await PlanEntry.count({
+        where: {
+            [Op.or]: [
+                { directorId: userId },
+                { organistId: userId }
+            ],
+            date: { [Op.gte]: now }
+        },
+        include: [{
+            model: MonthlyPlan,
+            as: 'monthlyPlan',
+            required: true,
+            where: { choirId }
+        }]
+    });
+
+    const eventCount = await Event.count({
+        where: {
+            choirId,
+            [Op.or]: [
+                { directorId: userId },
+                { organistId: userId }
+            ],
+            date: { [Op.gte]: now }
+        }
+    });
+
+    return planEntryCount + eventCount;
 }
 
 async function isLastChoirAdmin(userId, choirId) {
@@ -390,6 +442,36 @@ exports.deleteMe = async (req, res) => {
         await user.destroy();
 
         res.status(200).send({ message: 'Dein Profil wurde gelöscht.', accountDeleted: true });
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.leaveStatus = async (req, res) => {
+    try {
+        const memberships = await UserChoir.findAll({
+            where: { userId: req.userId },
+            include: [{ model: Choir, attributes: ['id', 'name'] }]
+        });
+
+        const choirs = {};
+        let totalOpenBorrowings = 0;
+        let totalDutyAssignments = 0;
+
+        for (const membership of memberships) {
+            const choirId = membership.choirId;
+            const openBorrowings = await countOpenBorrowingsForChoir(req.userId, choirId);
+            const dutyAssignments = await countUpcomingDutyAssignments(req.userId, choirId);
+            totalOpenBorrowings += openBorrowings;
+            totalDutyAssignments += dutyAssignments;
+            choirs[choirId] = {
+                name: membership.choir?.name || '',
+                openBorrowings,
+                dutyAssignments
+            };
+        }
+
+        res.status(200).send({ choirs, totalOpenBorrowings, totalDutyAssignments });
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

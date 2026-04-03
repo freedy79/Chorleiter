@@ -1,0 +1,111 @@
+<div class="doublettes-dialog">
+  <h1 mat-dialog-title>Doubletten-Prüfung</h1>
+
+  <mat-dialog-content class="content">
+    <app-inline-loading [loading]="isLoading" mode="spinner" [diameter]="50"></app-inline-loading>
+    <p *ngIf="isLoading">Prüfe auf Doubletten...</p>
+
+    <app-empty-state *ngIf="!isLoading && groups.length === 0" icon="done_all" message="Keine Doubletten gefunden"></app-empty-state>
+
+    <div *ngIf="!isLoading && groups.length > 0" class="groups-container">
+      <div class="threshold-info">
+        <p class="info-text">Ähnlichkeitsschwelle: <strong>{{ threshold }}%</strong></p>
+      </div>
+
+      <mat-accordion class="groups-list">
+        <mat-expansion-panel
+          *ngFor="let group of groups; let i = index"
+          [expanded]="selectedGroupIndex === i"
+          (opened)="selectGroup(i)">
+
+          <mat-expansion-panel-header>
+            <mat-panel-title class="group-title">
+              <span class="group-label">{{ group.matchType }}</span>
+              <span class="group-count">({{ group.candidates.length }} Stücke)</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <div class="group-content">
+            <div class="candidates-grid">
+              <div
+                *ngFor="let candidate of group.candidates"
+                class="candidate-card"
+                [class.selected-source]="selectedSourceId === candidate.id"
+                [class.selected-target]="selectedTargetId === candidate.id">
+
+                <div class="candidate-header">
+                  <h4 class="title">{{ candidate.title }}</h4>
+                  <span
+                    *ngIf="candidate.similarity !== undefined && candidate.similarity < 100"
+                    class="similarity-badge"
+                    [style.background-color]="getSimilarityColor(candidate.similarity)">
+                    {{ candidate.similarity }}%
+                  </span>
+                </div>
+
+                <div class="candidate-details">
+                  <p class="composers">
+                    <strong>Komponisten:</strong> {{ getComposerNames(candidate.composers) }}
+                  </p>
+                  <p class="match-type" *ngIf="candidate.matchType">
+                    <strong>Treffer:</strong> {{ candidate.matchType }}
+                  </p>
+                </div>
+
+                <div class="candidate-actions">
+                  <button
+                    mat-stroked-button
+                    [color]="selectedSourceId === candidate.id ? 'warn' : ''"
+                    (click)="selectSourcePiece(candidate.id)">
+                    {{ selectedSourceId === candidate.id ? '✓ Als Duplikat' : 'Als Duplikat' }}
+                  </button>
+                  <button
+                    mat-stroked-button
+                    [color]="selectedTargetId === candidate.id ? 'primary' : ''"
+                    (click)="selectTargetPiece(candidate.id)">
+                    {{ selectedTargetId === candidate.id ? '✓ Behalten' : 'Behalten' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Merge Preview -->
+            <div class="merge-preview" *ngIf="selectedSourceId && selectedTargetId && selectedSourceId !== selectedTargetId">
+              <h4>Zusammenführungs-Details</h4>
+
+              <div class="merge-options">
+                <mat-checkbox [(ngModel)]="mergeComposers">
+                  Komponisten zusammenführen
+                </mat-checkbox>
+                <mat-checkbox [(ngModel)]="mergeCategories">
+                  Kategorien zusammenführen
+                </mat-checkbox>
+                <mat-checkbox [(ngModel)]="mergeFiles">
+                  Dateiattribute zusammenführen
+                </mat-checkbox>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="merge-action">
+                <button
+                  mat-flat-button
+                  color="primary"
+                  (click)="merge()"
+                  [disabled]="isMerging">
+                  <mat-icon *ngIf="!isMerging">merge_type</mat-icon>
+                  <mat-spinner *ngIf="isMerging" diameter="20"></mat-spinner>
+                  {{ isMerging ? 'Wird zusammengeführt...' : 'Zusammenführen' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="closeDialog()">Schließen</button>
+  </mat-dialog-actions>
+</div>

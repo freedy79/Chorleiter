@@ -16,13 +16,13 @@
 /// Standard Mobile Card (für Listen-Ansichten)
 /// Verwendet konsistente Farben, Borders, Shadows und Transitions
 @mixin mobile-card {
-  @include card-background;
-  @include adaptive-border(1px);
   border-radius: 10px;
   padding: $spacing-md;
-  @include elevation-shadow(1);
   cursor: pointer;
   @include smooth-transition(transform);
+  @include card-background;
+  @include adaptive-border(1px);
+  @include elevation-shadow(1);
 
   &:active {
     transform: scale(0.98);
@@ -31,19 +31,19 @@
 
 /// Desktop Card (größeres Padding für Desktop-Ansichten)
 @mixin desktop-card {
-  @include card-background;
-  @include adaptive-border(1px);
   border-radius: 12px;
   padding: $spacing-lg;
+  @include card-background;
+  @include adaptive-border(1px);
   @include elevation-shadow(2);
 }
 
 /// Compact Card (kleineres Padding für verdichtete Ansichten)
 @mixin compact-card {
-  @include card-background;
-  @include adaptive-border(1px);
   border-radius: 8px;
   padding: $spacing-sm;
+  @include card-background;
+  @include adaptive-border(1px);
   @include elevation-shadow(1);
 }
 

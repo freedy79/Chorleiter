@@ -3,9 +3,10 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { BehaviorSubject, of } from 'rxjs';
+import { BehaviorSubject, of, EMPTY } from 'rxjs';
 import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
+import { PushNotificationService } from '@core/services/push-notification.service';
 
 import { ProfileComponent } from './profile.component';
 
@@ -16,6 +17,7 @@ class MockApiService {
   updateCurrentUser() { return of({}); }
   getDistricts() { return of([]); }
   getCongregations() { return of([]); }
+  getLeaveStatus() { return of(null); }
 }
 
 describe('ProfileComponent', () => {
@@ -40,7 +42,21 @@ describe('ProfileComponent', () => {
         { provide: MatDialog, useValue: {} },
         { provide: MatSnackBar, useValue: { open: () => {} } },
         { provide: ApiService, useClass: MockApiService },
-        { provide: AuthService, useValue: authServiceMock }
+        { provide: AuthService, useValue: authServiceMock },
+        { provide: PushNotificationService, useValue: {
+          isSupported: () => false,
+          getPermission: () => 'default',
+          getSubscriptionState: () => of(null),
+          requestPermission: () => Promise.resolve('default'),
+          subscribe: () => of(null),
+          unsubscribe: () => of(null),
+          clearAllSubscriptions: () => Promise.resolve(),
+          subscribeToChoir: () => Promise.resolve(),
+          unsubscribeFromChoir: () => Promise.resolve(),
+          getStoredChoirIds: () => [],
+          notificationClicks$: EMPTY,
+          initializeNotificationClicks: () => {}
+        }}
       ]
     })
     .compileComponents();

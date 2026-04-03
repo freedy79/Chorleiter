@@ -1,4 +1,4 @@
-const ALLOWED_CHOIR_ROLES = ['director', 'choir_admin', 'organist', 'singer'];
+const ALLOWED_CHOIR_ROLES = ['director', 'choir_admin', 'organist', 'singer', 'notenwart'];
 
 function normalizeChoirRoles(value) {
     if (!Array.isArray(value)) {

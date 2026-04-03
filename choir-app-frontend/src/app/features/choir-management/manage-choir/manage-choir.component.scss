@@ -1,45 +1,27 @@
 .manage-container {
   max-width: 1200px;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
 }
 
-.form-card, .table-card {
-  position: relative; // Für den Lade-Spinner
-}
-
-mat-card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.manage-tabs {
   width: 100%;
 }
 
-.collapsible-header {
-  cursor: pointer;
-}
-
-.header-controls {
+.tab-content {
+  padding: 1.5rem 1rem;
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-mat-card-content form {
+// Chorinfo form grid
+.choir-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-}
 
-@media (max-width: 599px) {
-  mat-card-content form {
+  @media (max-width: 599px) {
     grid-template-columns: 1fr;
-  }
-
-  .weekday-row {
-    flex-direction: column;
   }
 }
 
@@ -52,13 +34,15 @@ mat-card-content form {
   text-align: right;
 }
 
-.table-wrapper {
-  border-radius: 4px;
-  overflow: hidden;
-}
+// Settings sections
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 
-.actions-cell {
-  text-align: right;
+  h3 {
+    margin: 0 0 0.25rem 0;
+  }
 }
 
 .service-settings {
@@ -70,39 +54,75 @@ mat-card-content form {
 .weekday-row {
   display: flex;
   gap: 1rem;
+
+  @media (max-width: 599px) {
+    flex-direction: column;
+  }
 }
 
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.7);
-  z-index: 10;
+// Menu options grid (2 columns on wider screens)
+.menu-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+
+  @media (max-width: 599px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inline-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+
+// Members tab action buttons
+.tab-actions-bar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-divider-title {
+  margin: 1rem 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 1rem;
+}
+
+// Tables
+.table-wrapper {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.actions-cell {
+  text-align: right;
+}
+
+.contact-column-header,
+.contact-column-cell {
+  width: 90px;
+  text-align: center;
+}
+
+.contact-column-cell {
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.title-link {
-  cursor: pointer;
-  color: #3f51b5;
-  text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  .loading-overlay {
-    background: rgba(0, 0, 0, 0.5);
-  }
 }
 
 .library-icon {
   margin-left: 8px;
 }
 
+// Dashboard contact preview
 .dashboard-contact-settings {
-  margin-top: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -150,16 +170,9 @@ mat-card-content form {
   }
 }
 
-.contact-column-header,
-.contact-column-cell {
-  width: 90px;
-  text-align: center;
-}
-
-.contact-column-cell {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+// Muted text
+.muted {
+  color: rgba(0, 0, 0, 0.54);
 }
 
 .contact-preview-entry .muted,
@@ -167,11 +180,12 @@ mat-card-content form {
   color: rgba(0, 0, 0, 0.54);
 }
 
-.muted {
-  color: rgba(0, 0, 0, 0.54);
-}
-
 @media (prefers-color-scheme: dark) {
+  .section-divider-title {
+    color: rgba(255, 255, 255, 0.6);
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
   .contact-preview-entry {
     border-top-color: rgba(255, 255, 255, 0.12);
   }

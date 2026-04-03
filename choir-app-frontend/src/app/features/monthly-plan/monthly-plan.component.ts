@@ -20,7 +20,9 @@ import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/co
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { MonthNavigationService } from '@shared/services/month-navigation.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { parseDateOnly } from '@shared/util/date';
 import { MemberAvailability } from '@core/models/member-availability';
@@ -28,6 +30,9 @@ import { DebugLogService } from '@core/services/debug-log.service';
 import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
 import { EventShortPipe } from '@shared/pipes/event-short.pipe';
 import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { ProgramService } from '@core/services/program.service';
+import { Program } from '@core/models/program';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -50,7 +55,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -58,13 +63,14 @@ interface LoadMetrics {
 export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'event', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
   members: UserInChoir[] = [];
   directors: UserInChoir[] = [];
   organists: UserInChoir[] = [];
+  programs: Program[] = [];
   currentUserId: number | null = null;
   availabilityMap: { [userId: number]: { [date: string]: string } } = {};
   selectedTab = 0;
@@ -173,13 +179,47 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return parseDateOnly(date).getTime().toString();
   }
 
+  eventTooltip(entry: PlanEntry): string {
+    const notes = entry.notes?.trim();
+    if (!notes) {
+      return '';
+    }
+
+    const normalizedNotes = notes.toLowerCase();
+    if (/\b(gottesdienst|gd)\b/.test(normalizedNotes)) {
+      return 'Gottesdienst';
+    }
+    if (/\b(chorprobe|probe|cp)\b/.test(normalizedNotes)) {
+      return 'Chorprobe';
+    }
+
+    return notes;
+  }
+
   private updateDisplayedColumns(): void {
-    const base = ['date', 'event', 'director', 'organist', 'notes'];
+    const base = ['date', 'event', 'program', 'director', 'organist', 'notes'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
   }
 
   private sortEntries(): void {
     this.entries.sort((a, b) => parseDateOnly(a.date).getTime() - parseDateOnly(b.date).getTime());
+  }
+
+  trackByEntryId(index: number, entry: PlanEntry): number {
+    return entry.id;
+  }
+
+  /** Returns dialog config for mobile-friendly fullscreen dialogs */
+  private mobileDialogConfig(extra: Record<string, unknown> = {}): Record<string, unknown> {
+    const isMobile = this.responsive.checkMobile();
+    return {
+      width: isMobile ? '100vw' : '600px',
+      maxWidth: isMobile ? '100vw' : '80vw',
+      height: isMobile ? '100vh' : undefined,
+      maxHeight: isMobile ? '100vh' : undefined,
+      panelClass: isMobile ? 'mobile-fullscreen-dialog' : '',
+      ...extra
+    };
   }
 
 
@@ -255,7 +295,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   private hasRoleGreaterThanSinger(user: UserInChoir): boolean {
     const roles = user.membership?.rolesInChoir || [];
-    return roles.includes('director') || roles.includes('choir_admin') || roles.includes('organist');
+    return roles.includes('director') || roles.includes('choir_admin') || roles.includes('organist') || roles.includes('notenwart');
   }
 
   membersByAvailability(date: string, status: string): UserInChoir[] {
@@ -320,7 +360,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private notification: NotificationService,
               private router: Router,
               private route: ActivatedRoute,
+              private programService: ProgramService,
               private monthNav: MonthNavigationService,
+              private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef,
             private logger: DebugLogService) {
     super(); // Call BaseComponent constructor
@@ -344,6 +386,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.auth.isChoirAdmin$.pipe(take(1)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
+      if (isChoirAdmin) {
+        this.loadPrograms();
+      }
       this.loadPlan(this.selectedYear, this.selectedMonth);
     });
 
@@ -417,12 +462,27 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         this.availabilityRequestId = 0;
       }
       if (!wasAdmin && this.isChoirAdmin) {
+        this.loadPrograms();
         this.loadPlan(this.selectedYear, this.selectedMonth);
       }
     });
   }
 
+  private loadPrograms(): void {
+    this.programService.getPrograms().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(programs => {
+      this.programs = (programs || []).filter(p => p.status !== 'archived');
+      this.cdr.markForCheck();
+    });
+  }
+
   loadPlan(year: number, month: number): void {
+    // Always clear the service-level cache so we fetch fresh data from the
+    // server.  Without this, navigating back to a previously visited month
+    // would return stale cached entries (e.g. old notes, directors, etc.).
+    this.monthlyPlan.clearMonthlyPlanCache(year, month);
+
     const previousPlan = this.plan;
     const previousEntries = this.entries;
     const previousAvailabilityMap = this.availabilityMap;
@@ -523,7 +583,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   reloadPlan(): void {
-    this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+    // loadPlan() already clears the cache, so we can call it directly.
     this.loadPlan(this.selectedYear, this.selectedMonth);
   }
 
@@ -592,7 +652,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.director = updated.director;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
       this.updateCounterPlan();
+      this.cdr.markForCheck();
     });
   }
 
@@ -606,7 +668,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.organist = updated.organist;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
       this.updateCounterPlan();
+      this.cdr.markForCheck();
     });
   }
 
@@ -620,6 +684,25 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(updated => {
       ev.notes = updated.notes;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+      this.cdr.markForCheck();
+    });
+  }
+
+  updateProgram(ev: PlanEntry, programId: string | null): void {
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      notes: ev.notes || '',
+      directorId: ev.director?.id ?? undefined,
+      organistId: ev.organist?.id ?? undefined,
+      programId
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
+      ev.programId = updated.programId ?? null;
+      ev.program = updated.program ?? null;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+      this.cdr.markForCheck();
     });
   }
 
@@ -627,7 +710,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (this.plan) {
       this.monthlyPlan.finalizeMonthlyPlan(this.plan.id).pipe(
         takeUntil(this.destroy$)
-      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      ).subscribe(p => {
+        this.plan = p;
+        this.updateDisplayedColumns();
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -637,7 +724,11 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (this.plan) {
       this.monthlyPlan.reopenMonthlyPlan(this.plan.id).pipe(
         takeUntil(this.destroy$)
-      ).subscribe(p => { this.plan = p; this.updateDisplayedColumns(); });
+      ).subscribe(p => {
+        this.plan = p;
+        this.updateDisplayedColumns();
+        this.cdr.markForCheck();
+      });
     }
   }
 
@@ -657,7 +748,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   openEmailDialog(): void {
     if (!this.plan) return;
-    const ref = this.dialog.open(SendPlanDialogComponent, { data: { members: this.members } });
+    const ref = this.dialog.open(SendPlanDialogComponent, {
+      ...this.mobileDialogConfig(),
+      data: { members: this.members }
+    });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
     ).subscribe((result: { ids: number[]; emails: string[] }) => {
@@ -678,7 +772,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       m.membership?.rolesInChoir?.includes('director') ||
       m.membership?.rolesInChoir?.includes('choir_admin') ||
       m.membership?.rolesInChoir?.includes('organist'));
-    const ref = this.dialog.open(RequestAvailabilityDialogComponent, { data: { members: people } });
+    const ref = this.dialog.open(RequestAvailabilityDialogComponent, {
+      ...this.mobileDialogConfig(),
+      data: { members: people }
+    });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
     ).subscribe((ids: number[]) => {
@@ -694,7 +791,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   openAddEntryDialog(): void {
-    const dialogRef = this.dialog.open(PlanEntryDialogComponent, { width: '600px', disableClose: true });
+    const dialogRef = this.dialog.open(PlanEntryDialogComponent, {
+      ...this.mobileDialogConfig(),
+      disableClose: true
+    });
 
     dialogRef.afterClosed().pipe(
       takeUntil(this.destroy$)
@@ -741,6 +841,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(plan => {
       this.plan = plan;
+      this.entries = plan.entries || [];
+      this.updateDisplayedColumns();
+      this.cdr.markForCheck();
+      // Reload from server to get the full plan with all associations
       this.loadPlan(plan.year, plan.month);
     });
   }

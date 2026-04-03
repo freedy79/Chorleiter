@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Post } from '../models/post';
-import { Poll } from '../models/poll';
+import { PostImage } from '../models/post-image';
+import { Poll, PollReminderConsumeResponse, PollReminderSendResponse, PollReminderStatus } from '../models/poll';
 import { PostComment } from '../models/post-comment';
 import { ReactionInfo, ReactionType } from '../models/reaction';
 import { ImageCacheService } from './image-cache.service';
@@ -59,6 +60,18 @@ export class PostService {
     return this.http.post<Poll>(`${this.apiUrl}/posts/${id}/vote`, { optionIds });
   }
 
+  getPollReminderStatus(id: number): Observable<PollReminderStatus> {
+    return this.http.get<PollReminderStatus>(`${this.apiUrl}/posts/${id}/poll/reminder-status`);
+  }
+
+  sendPollReminders(id: number, data: { userIds?: number[]; sendTestToSelf?: boolean }): Observable<PollReminderSendResponse> {
+    return this.http.post<PollReminderSendResponse>(`${this.apiUrl}/posts/${id}/poll/reminders`, data);
+  }
+
+  consumePollReminderToken(token: string): Observable<PollReminderConsumeResponse> {
+    return this.http.post<PollReminderConsumeResponse>(`${this.apiUrl}/public/poll-vote/${token}`, {});
+  }
+
   addComment(postId: number, text: string, parentId?: number | null): Observable<PostComment> {
     return this.http.post<PostComment>(`${this.apiUrl}/posts/${postId}/comments`, { text, parentId: parentId ?? null });
   }
@@ -91,5 +104,25 @@ export class PostService {
 
   getAttachmentUrl(postId: number): string {
     return `${this.apiUrl}/posts/${postId}/attachment`;
+  }
+
+  // ── Post Images ──────────────────────────────────────────────────────
+
+  uploadImage(postId: number, file: File): Observable<PostImage> {
+    const formData = new FormData();
+    formData.append('image', file);
+    return this.http.post<PostImage>(`${this.apiUrl}/posts/${postId}/images`, formData);
+  }
+
+  removeImage(postId: number, imageId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/posts/${postId}/images/${imageId}`);
+  }
+
+  getImages(postId: number): Observable<PostImage[]> {
+    return this.http.get<PostImage[]>(`${this.apiUrl}/posts/${postId}/images`);
+  }
+
+  getImageUrl(postId: number, imageId: number): string {
+    return `${this.apiUrl}/posts/${postId}/images/${imageId}`;
   }
 }

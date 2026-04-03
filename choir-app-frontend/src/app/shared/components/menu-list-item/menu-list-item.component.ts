@@ -95,15 +95,12 @@ export class MenuListItemComponent implements OnInit, OnDestroy {
         if (item.disabled) {
             return;
         }
-        if (!item.children || !item.children.length) {
-            if (item.route) {
-                this.router.navigate([item.route]).then(() => {
-                    this.navService.closeNav();
-                });
-            }
-        }
-        if (item.children && item.children.length) {
+        if (item.children?.length) {
             this.expanded = !this.expanded;
+        } else {
+            // routerLink on the <a> element handles navigation.
+            // Close the drawer for non-submenu items on mobile.
+            this.navService.closeNav();
         }
     }
 }

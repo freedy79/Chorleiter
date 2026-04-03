@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
+import { MatDialog } from '@angular/material/dialog';
 import { ApiService } from '@core/services/api.service';
 import { ApiHelperService } from '@core/services/api-helper.service';
 import { NotificationService } from '@core/services/notification.service';
@@ -16,6 +17,7 @@ import { ResponsiveService } from '@shared/services/responsive.service';
  import { BaseListComponent } from '@shared/components/base-list.component';
  import { ImageCacheService } from '@core/services/image-cache.service';
 import { CachedImageDirective } from '@shared/directives/cached-image.directive';
+import { DoublettesDialogComponent } from '../doublettes-dialog.component';
 
 @Component({
   selector: 'app-collection-list',
@@ -51,7 +53,8 @@ export class CollectionListComponent extends BaseListComponent<Collection> imple
     private authService: AuthService,
     private responsive: ResponsiveService,
     private navState: NavigationStateService,
-    private imageCacheService: ImageCacheService
+    private imageCacheService: ImageCacheService,
+    private dialog: MatDialog
   ) {
     super(paginatorService);
     this.isHandset$ = this.responsive.isHandset$;
@@ -134,12 +137,15 @@ export class CollectionListComponent extends BaseListComponent<Collection> imple
   }
 
   syncAllCollections(): void {
-    const ids = this.dataSource.data.map(c => c.id);
-    if (!ids.length) { return; }
+    const ids = this.dataSource.data.filter(c => c.isAdded).map(c => c.id);
+    if (!ids.length) {
+      this.notification.info('Keine Sammlungen zum Aktualisieren vorhanden.');
+      return;
+    }
     this.apiHelper.handleApiCall(
       this.apiService.addCollectionsToChoir(ids),
       {
-        successMessage: 'Alle Sammlungen wurden synchronisiert.',
+        successMessage: `${ids.length} Sammlung(en) wurden aktualisiert.`,
         onSuccess: () => this.refresh()
       }
     ).subscribe();
@@ -173,5 +179,33 @@ export class CollectionListComponent extends BaseListComponent<Collection> imple
       });
     }
     return '';
+  }
+
+  checkCollectionDoublettes(): void {
+    if (!this.selectedCollection) {
+      this.notification.warning('Bitte wählen Sie eine Sammlung aus');
+      return;
+    }
+
+    const choirId = this.authService.activeChoir$.value?.id;
+    if (!choirId) {
+      this.notification.error('Choir context not available');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DoublettesDialogComponent, {
+      data: {
+        collectionId: this.selectedCollection.id,
+        choirId: choirId
+      },
+      width: '90vw',
+      maxWidth: '900px'
+    });
+
+    dialogRef.afterClosed().subscribe(merged => {
+      if (merged) {
+        this.refresh();
+      }
+    });
   }
 }

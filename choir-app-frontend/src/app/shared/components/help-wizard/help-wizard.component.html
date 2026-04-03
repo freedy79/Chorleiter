@@ -29,14 +29,14 @@
           <li *ngIf="menuVisible('dashboard') | async">Dashboard</li>
           <li *ngIf="menuVisible('dienstplan') | async">Dienstplan</li>
           <li *ngIf="menuVisible('posts') | async">Beiträge</li>
-          <li *ngIf="menuVisible('repertoire') | async">Repertoire</li>
+          <li *ngIf="menuVisible('repertoire') | async">Chor-Repertoire</li>
           <li *ngIf="menuVisible('collections') | async">Sammlungen</li>
-          <li *ngIf="menuVisible('library') | async">Bibliothek</li>
+          <li *ngIf="menuVisible('library') | async">Notenbestand</li>
         </ul>
       </ng-container>
       <ng-template #otherNavigation>
-        <p>Im linken Men&uuml; findest du Dashboard, Ereignisse, Statistik, Mein Chor, Repertoire und Sammlungen.</p>
-        <p>Dort gelangst du zu allen wichtigen Funktionen der Anwendung. Die wichtigsten Funktionen sind die Ereignisse, um Daten zu Gottesdiensten und Proben einzugeben.</p>
+        <p>Im linken Men&uuml; findest du Home, Termine, Statistik, Choreinstellungen, Chor-Repertoire und Notenarchiv.</p>
+        <p>Dort gelangst du zu allen wichtigen Funktionen der Anwendung. Die wichtigsten Funktionen sind die Termine, um Daten zu Gottesdiensten und Proben einzugeben.</p>
       </ng-template>
       <div>
         <button mat-button matStepperPrevious>Zur&uuml;ck</button>

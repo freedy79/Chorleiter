@@ -1,0 +1,9 @@
+@if (loading) {
+  @if (mode === 'bar') {
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  } @else {
+    <div class="loading-container">
+      <mat-spinner [diameter]="diameter"></mat-spinner>
+    </div>
+  }
+}

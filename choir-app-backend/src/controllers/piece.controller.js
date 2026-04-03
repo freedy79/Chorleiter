@@ -9,10 +9,14 @@ const fs = require('fs/promises');
 const crypto = require('crypto');
 const fileService = require('../services/file.service');
 const pieceService = require('../services/piece.service');
+const mergeService = require('../services/merge.service');
+const asyncHandler = require('express-async-handler');
 const BaseCrudController = require('./baseCrud.controller');
 const base = new BaseCrudController(Piece);
+const pageViewService = require('../services/page-view.service');
 const emailService = require('../services/email.service');
 const { getFrontendUrl } = require('../utils/frontend-url');
+const logger = require('../config/logger');
 
 /**
  * @description Create a new global piece.
@@ -83,7 +87,7 @@ exports.create = async (req, res) => {
             { model: Composer, as: 'composer', attributes: ['id', 'name'] },
             { model: Category, as: 'category', attributes: ['id', 'name'] },
             { model: Author, as: 'author', attributes: ['id', 'name'] },
-            { model: db.piece_link, as: 'links' }
+            { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] }
         ]
     });
 
@@ -118,7 +122,7 @@ exports.findAll = async (req, res) => {
                 { model: Composer, as: 'composers', through: { attributes: ['type'] } },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
                 { model: Author, as: 'author', attributes: ['id', 'name'] },
-                { model: db.piece_link, as: 'links' }
+                { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] }
             ],
             order: [['title', 'ASC']]
         });
@@ -138,7 +142,7 @@ exports.findOne = async (req, res) => {
                 { model: Composer, as: 'composers', through: { attributes: ['type'] } },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
                 { model: Author, as: 'author', attributes: ['id', 'name'] },
-                { model: db.piece_link, as: 'links' }
+                { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] }
             ]
         });
 
@@ -218,23 +222,35 @@ exports.update = async (req, res) => {
 /**
  * @description Delete a global piece.
  * This is a destructive action and should be used with care, likely only by an admin.
- * The `beforeDelete` hook in the model would handle cascading deletes if set up.
+ * Checks if piece is referenced in any collections before allowing deletion.
  */
-exports.delete = async (req, res) => {
-    const id = req.params.id;
+exports.delete = asyncHandler(async (req, res) => {
+    const pieceId = req.params.id;
+    const userId = req.userId;
+    const choirId = req.query.choirId; // Admin context
 
-    const num = await base.service.delete(id);
+    logger.debug(`Delete request for piece ${pieceId} by user ${userId}`);
 
-    if (num == 1) {
-        res.send({
-            message: "Piece was deleted successfully!"
-        });
-    } else {
-        res.send({
-            message: `Cannot delete Piece with id=${id}. Maybe Piece was not found!`
+    // Validate piece can be deleted (not in any collections)
+    const validation = await mergeService.validatePieceDelete(pieceId);
+
+    if (!validation.canDelete) {
+        logger.warn(`Cannot delete piece ${pieceId}: it's in ${validation.affectedCollections.length} collections`);
+        return res.status(409).send({
+            message: 'Piece cannot be deleted because it is referenced in collections',
+            affectedCollections: validation.affectedCollections,
+            code: 'PIECE_IN_COLLECTIONS'
         });
     }
-};
+
+    // Delete with audit log
+    const result = await mergeService.deletePieceWithAudit(pieceId, userId, choirId);
+
+    res.status(200).send({
+        message: result.message,
+        pieceId: result.pieceId
+    });
+});
 
 exports.report = async (req, res) => {
     const { id } = req.params;
@@ -360,7 +376,7 @@ exports.getByShareToken = async (req, res) => {
             { model: Composer, as: 'composer', attributes: ['id', 'name'] },
             { model: Category, as: 'category', attributes: ['id', 'name'] },
             { model: Author, as: 'author', attributes: ['id', 'name'] },
-            { model: db.piece_link, as: 'links' }
+            { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] }
         ]
     });
 
@@ -368,5 +384,133 @@ exports.getByShareToken = async (req, res) => {
         return res.status(404).send({ message: 'Piece not found with this share token.' });
     }
 
+    // Track shared piece view (fire-and-forget)
+    pageViewService.trackPageView({
+        path: `/shared-piece/${token}`,
+        category: 'shared-piece',
+        entityId: piece.id,
+        entityLabel: piece.title || piece.name || null,
+        shareToken: token,
+        userId: null,
+        choirId: null,
+        req
+    });
+
     res.status(200).send(piece);
+};
+
+/**
+ * @description Serve a raw piece image file (for OG meta tags / social previews).
+ * Unlike getImage which returns base64 JSON, this returns the actual image file.
+ */
+exports.getImageRaw = async (req, res) => {
+    const id = req.params.id;
+    const piece = await Piece.findByPk(id);
+
+    if (!piece || !piece.imageIdentifier) {
+        return res.status(404).send();
+    }
+
+    const filePath = path.join(__dirname, '../../uploads/piece-images', piece.imageIdentifier);
+
+    try {
+        await fs.access(filePath);
+    } catch (err) {
+        return res.status(404).send();
+    }
+
+    const ext = path.extname(filePath).slice(1) || 'jpeg';
+    const mimeType = 'image/' + ext;
+    res.set('Content-Type', mimeType);
+    res.set('Cache-Control', 'public, max-age=86400');
+    const fileData = await fs.readFile(filePath);
+    res.send(fileData);
+};
+
+/**
+ * @description Serve an HTML page with Open Graph meta tags for a shared piece.
+ * Used by social media crawlers (WhatsApp, Facebook, Telegram, etc.) to generate
+ * rich link previews with title, composer, category and sheet music image.
+ */
+exports.getShareOgPage = async (req, res) => {
+    const { token } = req.params;
+
+    const piece = await Piece.findOne({
+        where: { shareToken: token },
+        include: [
+            { model: Composer, as: 'composer', attributes: ['id', 'name'] },
+            { model: Category, as: 'category', attributes: ['id', 'name'] },
+        ]
+    });
+
+    if (!piece) {
+        return res.status(404).send('<html><body><h1>Stück nicht gefunden</h1></body></html>');
+    }
+
+    const frontendUrl = await getFrontendUrl();
+    const canonicalUrl = `${frontendUrl}/shared-piece/${token}`;
+
+    const title = piece.title || 'Geteiltes Stück';
+    const composerName = piece.composer?.name || piece.origin || '';
+    const categoryName = piece.category?.name || '';
+    const subtitle = piece.subtitle || '';
+
+    // Build description from available metadata
+    const descParts = [];
+    if (composerName) descParts.push(composerName);
+    if (categoryName) descParts.push(categoryName);
+    if (piece.voicing) descParts.push(`Besetzung: ${piece.voicing}`);
+    if (piece.key) descParts.push(`Tonart: ${piece.key}`);
+    const description = descParts.length > 0
+        ? descParts.join(' · ')
+        : 'Ein Stück aus der NAK Chorleiter Repertoire-Verwaltung';
+
+    // Use raw image endpoint if piece has an image, otherwise use the app icon
+    const ogImage = piece.imageIdentifier
+        ? `${frontendUrl}/api/pieces/${piece.id}/image/raw`
+        : `${frontendUrl}/assets/icons/icon-512x512.png`;
+
+    // Escape HTML entities to prevent XSS
+    const esc = (str) => String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(title)}${subtitle ? ' – ' + esc(subtitle) : ''} - NAK Chorleiter</title>
+  <link rel="canonical" href="${esc(canonicalUrl)}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:site_name" content="NAK Chorleiter">
+  <meta property="og:title" content="${esc(title)}${subtitle ? ' – ' + esc(subtitle) : ''}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:url" content="${esc(canonicalUrl)}">
+  <meta property="og:image" content="${esc(ogImage)}">
+  <meta property="og:image:alt" content="${piece.imageIdentifier ? esc(title + ' – Notenbild') : 'NAK Chorleiter'}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="${piece.imageIdentifier ? 'summary_large_image' : 'summary'}">
+  <meta name="twitter:title" content="${esc(title)}">
+  <meta name="twitter:description" content="${esc(description)}">
+  <meta name="twitter:image" content="${esc(ogImage)}">
+
+  <!-- Redirect real users to the SPA -->
+  <meta http-equiv="refresh" content="0;url=${esc(canonicalUrl)}">
+</head>
+<body>
+  <p>Weiterleitung zu <a href="${esc(canonicalUrl)}">${esc(title)} – NAK Chorleiter</a>...</p>
+  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
+</body>
+</html>`;
+
+    res.set('Content-Type', 'text/html; charset=utf-8');
+    res.set('Cache-Control', 'public, max-age=300');
+    res.send(html);
 };

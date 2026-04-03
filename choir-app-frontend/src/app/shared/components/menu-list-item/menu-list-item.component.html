@@ -1,6 +1,6 @@
 <a *ngIf="isVisible && item && !item.disabled" mat-list-item [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
   (click)="onItemSelected(item)" class="menu-list-item"
-  [routerLink]="item.route || null" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+  [routerLink]="item.children?.length ? null : (item.route || null)" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
   [ngClass]="{'expanded': expanded}">
 
   <div class="menu-item-content">
@@ -17,8 +17,20 @@
     </mat-icon>
   </span>
 </a>
-<div *ngIf="isVisible && item?.disabled" class="menu-divider" [ngStyle]="{'padding-left': (depth * 36) + 'px'}" aria-hidden="true">
-  <span class="divider-text">{{ item?.displayName }}</span>
+<div
+  *ngIf="isVisible && item?.disabled"
+  class="menu-divider"
+  [ngClass]="{ 'menu-section-header': item?.isSectionHeader }"
+  [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
+  aria-hidden="true"
+>
+  <ng-container *ngIf="item?.isSectionHeader; else defaultDividerText">
+    <span class="section-title">{{ item?.displayName }}</span>
+    <span class="section-line"></span>
+  </ng-container>
+  <ng-template #defaultDividerText>
+    <span class="divider-text">{{ item?.displayName }}</span>
+  </ng-template>
 </div>
 <div *ngIf="expanded && isVisible" class="expanded-area">
   <app-menu-list-item *ngFor="let child of item?.children" [item]="child" [depth]="depth+1"></app-menu-list-item>

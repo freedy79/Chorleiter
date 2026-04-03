@@ -1,0 +1,102 @@
+@use '../../../../../themes/breakpoints' as *;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.filter-card,
+.suggestion-card {
+  @include card-background;
+  @include adaptive-border(1px, solid);
+  @include elevation-shadow(1);
+  padding: $spacing-md;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: $spacing-md;
+  align-items: center;
+
+  @include tablet {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @include handset {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loading,
+.error,
+.empty {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  @include secondary-text;
+}
+
+.suggestion-list {
+  display: grid;
+  gap: $spacing-md;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+
+  .field-name {
+    font-weight: 600;
+  }
+
+  .source {
+    font-size: 0.8125rem;
+    @include subtle-text;
+  }
+}
+
+.values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+
+  .label {
+    font-size: 0.75rem;
+    @include subtle-text;
+    margin-bottom: $spacing-xs;
+  }
+
+  .value {
+    font-weight: 500;
+  }
+
+  .highlight {
+    color: #1976d2;
+  }
+
+  @include handset {
+    grid-template-columns: 1fr;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+}
+
+.status {
+  margin-top: $spacing-sm;
+  font-size: 0.8125rem;
+  @include subtle-text;
+
+  &.applied {
+    color: #2e7d32;
+  }
+}

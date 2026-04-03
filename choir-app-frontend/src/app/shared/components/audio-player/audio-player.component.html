@@ -1,6 +1,6 @@
-<div class="audio-player">
+<div class="audio-player" [class.narrow]="hostWidth > 0 && hostWidth < 360">
   <div class="audio-player-content">
-    <div class="audio-title">{{ title }}</div>
+    <div class="audio-title" *ngIf="title">{{ title }}</div>
 
     <div class="audio-player-row">
       <button
@@ -8,23 +8,123 @@
         [color]="isPlaying ? 'primary' : ''"
         (click)="togglePlay()"
         matTooltip="Play/Pause">
-        <mat-icon>{{ isPlaying ? 'pause_circle' : 'play_circle' }}</mat-icon>
+        <mat-icon>{{ isPlaying ? 'pause' : 'play_arrow' }}</mat-icon>
       </button>
 
       <div class="audio-controls" *ngIf="duration">
-        <mat-progress-bar
-          mode="determinate"
-          [value]="progress"
-          class="audio-progress">
-        </mat-progress-bar>
-        <span class="time-display">
+        <div class="seek-container" *ngIf="showProgress">
+          <input
+            type="range"
+            class="audio-seek"
+            min="0"
+            [max]="duration"
+            step="0.1"
+            [value]="currentTime"
+            (input)="onSeek($event)"
+            aria-label="Fortschritt"
+          />
+          <!-- Marker dots on the seek bar -->
+          <div
+            *ngFor="let marker of sortedMarkers"
+            class="marker-dot"
+            [style.left.%]="getMarkerPosition(marker)"
+            [matTooltip]="marker.label + ' (' + formatDuration(marker.timeSec) + ')'"
+            (click)="seekToMarker(marker)"
+          ></div>
+        </div>
+        <span class="time-display" *ngIf="showTime">
           {{ formatDuration(currentTime) }} / {{ formatDuration(duration) }}
         </span>
       </div>
     </div>
+
+    <!-- Marker chips row -->
+    <div class="marker-row" *ngIf="sortedMarkers.length || canEditMarkers">
+      <div class="marker-chips" *ngIf="sortedMarkers.length">
+        <ng-container *ngFor="let marker of sortedMarkers">
+          <!-- Editing mode for this marker -->
+          <ng-container *ngIf="editingMarker?.id === marker.id; else markerChip">
+            <div class="marker-edit-inline">
+              <input
+                class="marker-edit-input"
+                [(ngModel)]="editingMarkerLabel"
+                (keydown.enter)="confirmEditMarker()"
+                (keydown.escape)="cancelEditMarker()"
+                placeholder="Bezeichnung"
+                autofocus
+              />
+              <button mat-icon-button class="marker-inline-btn" (click)="confirmEditMarker()" matTooltip="Speichern">
+                <mat-icon>check</mat-icon>
+              </button>
+              <button mat-icon-button class="marker-inline-btn" (click)="cancelEditMarker()" matTooltip="Abbrechen">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </ng-container>
+          <ng-template #markerChip>
+            <button
+              class="marker-chip"
+              (click)="seekToMarker(marker)"
+              [matTooltip]="'Springe zu ' + formatDuration(marker.timeSec)"
+            >
+              <mat-icon class="marker-chip-icon">flag</mat-icon>
+              <span class="marker-chip-label">{{ marker.label }}</span>
+              <span class="marker-chip-time">{{ formatDuration(marker.timeSec) }}</span>
+              <mat-icon
+                *ngIf="canEditMarkers"
+                class="marker-chip-edit"
+                (click)="startEditMarker(marker, $event)"
+                matTooltip="Bearbeiten"
+              >edit</mat-icon>
+              <mat-icon
+                *ngIf="canEditMarkers"
+                class="marker-chip-delete"
+                (click)="removeMarker(marker, $event)"
+                matTooltip="Löschen"
+              >close</mat-icon>
+            </button>
+          </ng-template>
+        </ng-container>
+      </div>
+
+      <!-- Add marker button / input -->
+      <div class="marker-add" *ngIf="canEditMarkers && duration">
+        <ng-container *ngIf="!showAddMarkerInput; else addMarkerInput">
+          <button
+            mat-stroked-button
+            class="marker-add-btn"
+            (click)="openAddMarker()"
+            matTooltip="Marker an aktueller Position setzen"
+          >
+            <mat-icon>add_location</mat-icon>
+            <span class="marker-add-label">Marker ({{ formatDuration(currentTime) }})</span>
+          </button>
+        </ng-container>
+        <ng-template #addMarkerInput>
+          <div class="marker-add-inline">
+            <span class="marker-add-time">{{ formatDuration(currentTime) }}</span>
+            <input
+              class="marker-label-input"
+              [(ngModel)]="newMarkerLabel"
+              placeholder="Bezeichnung (z.B. Vers 2)"
+              (keydown.enter)="confirmAddMarker()"
+              (keydown.escape)="cancelAddMarker()"
+              autofocus
+            />
+            <button mat-icon-button color="primary" (click)="confirmAddMarker()" [disabled]="!newMarkerLabel.trim()" matTooltip="Marker speichern">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button mat-icon-button (click)="cancelAddMarker()" matTooltip="Abbrechen">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </ng-template>
+      </div>
+    </div>
   </div>
 
-  <a [href]="url"
+  <a *ngIf="showDownload"
+     [href]="url"
      [attr.download]="downloadName || title"
      mat-icon-button
      class="download-icon"

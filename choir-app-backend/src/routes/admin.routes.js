@@ -36,6 +36,7 @@ router.post("/users/:id/send-password-reset", role.requireNonDemo, wrap(controll
 router.delete("/users/:id/reset-token", role.requireNonDemo, wrap(controller.clearResetToken));
 router.get("/login-attempts", wrap(controller.getLoginAttempts));
 router.get('/mail-logs', wrap(controller.getMailLogs));
+router.get('/mail-delivery-diagnostics', wrap(controller.getMailDeliveryDiagnostics));
 router.delete('/mail-logs', role.requireNonDemo, wrap(controller.clearMailLogs));
 router.get('/donations', wrap(controller.getDonations));
 router.post('/donations', role.requireNonDemo, wrap(controller.createDonation));
@@ -61,6 +62,21 @@ router.get('/paypal-settings', wrap(controller.getPayPalSettings));
 router.put('/paypal-settings', role.requireNonDemo, wrap(controller.updatePayPalSettings));
 router.get('/imprint-settings', wrap(controller.getImprintSettings));
 router.put('/imprint-settings', role.requireNonDemo, wrap(controller.updateImprintSettings));
+router.get('/privacy-policy', wrap(controller.getPrivacyPolicy));
+router.put('/privacy-policy', role.requireNonDemo, wrap(controller.updatePrivacyPolicy));
+router.get('/ckeditor-license', wrap(controller.getCkeditorLicenseKey));
+router.put('/ckeditor-license', role.requireNonDemo, wrap(controller.updateCkeditorLicenseKey));
+
+// PWA Configuration routes
+const pwaConfigRoutes = require('./pwaConfig.routes');
+router.use('/pwa-config', pwaConfigRoutes);
+
+// Usage Statistics routes
+const pageViewController = require('../controllers/page-view.controller');
+router.get('/usage-stats/summary', wrap(pageViewController.getSummary));
+router.get('/usage-stats/shared-pieces', wrap(pageViewController.getSharedPieceStats));
+router.get('/usage-stats/entity/:category/:entityId', wrap(pageViewController.getEntityViews));
+router.delete('/usage-stats/cleanup', role.requireNonDemo, wrap(pageViewController.cleanup));
 
 // Entwicklertools
 router.get('/develop/deploy', wrap(controller.pullAndDeploy));

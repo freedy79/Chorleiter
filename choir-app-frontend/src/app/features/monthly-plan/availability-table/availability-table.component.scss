@@ -1,21 +1,132 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+@use '../../../../themes/cards' as *;
+@use '../../../../themes/responsive-utilities' as *;
+
 :host {
   display: block;
   margin-top: 1em;
 }
 
+// ============================================================================
+// RESPONSIVE VIEW UTILITIES
+// ============================================================================
+
+.desktop-view {
+  @extend %desktop-only;
+}
+
+.mobile-view {
+  @extend %mobile-only;
+}
+
+// ============================================================================
+// DESKTOP TABLE: STATUS COLORS
+// ============================================================================
+
 .available {
   background-color: #c8e6c9;
+  @include dark-mode { background-color: rgba(76, 175, 80, 0.2); }
 }
 
 .maybe {
   background-color: #fff9c4;
+  @include dark-mode { background-color: rgba(255, 235, 59, 0.15); }
 }
 
 .unavailable {
   background-color: #ffcdd2;
+  @include dark-mode { background-color: rgba(244, 67, 54, 0.2); }
 }
 
 .holiday {
   font-style: italic;
-  color: #555;
+  @include secondary-text;
+}
+
+// ============================================================================
+// MOBILE CARD VIEW
+// ============================================================================
+
+.availability-cards {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+}
+
+.availability-card {
+  border-radius: 8px;
+  padding: $spacing-md;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  @include card-background;
+  @include adaptive-border(1px);
+
+  // Status indicator stripe on left border
+  &.card-available {
+    border-left: 3px solid #388e3c;
+    @include dark-mode { border-left-color: #66bb6a; }
+  }
+
+  &.card-maybe {
+    border-left: 3px solid #f9a825;
+    @include dark-mode { border-left-color: #fdd835; }
+  }
+
+  &.card-unavailable {
+    border-left: 3px solid #d32f2f;
+    @include dark-mode { border-left-color: #ef5350; }
+  }
+}
+
+.card-date-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-date-text {
+  font-weight: 600;
+  @include responsive-font-size(0.938rem);
+  @include readable-text;
+}
+
+.card-holiday {
+  font-style: italic;
+  @include responsive-font-size(0.813rem);
+  @include secondary-text;
+}
+
+.card-status-select {
+  width: 100%;
+  min-height: $touch-target-min;
+}
+
+// ============================================================================
+// EMPTY STATE
+// ============================================================================
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl $spacing-md;
+  gap: $spacing-md;
+
+  .empty-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    @include subtle-text;
+  }
+
+  .empty-text {
+    margin: 0;
+    text-align: center;
+    @include secondary-text;
+    @include responsive-font-size(0.938rem);
+  }
 }

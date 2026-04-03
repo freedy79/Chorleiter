@@ -35,8 +35,46 @@ exports.create = async (req, res) => {
 
 exports.findAll = async (req, res) => {
     try {
-        const changes = await PieceChange.findAll({ include: [{ model: Piece, as: 'piece' }] });
-        res.status(200).send(changes);
+        const changes = await PieceChange.findAll({
+            include: [
+                {
+                    model: Piece, as: 'piece',
+                    include: [
+                        { model: db.composer, as: 'composer', attributes: ['id', 'name'] },
+                        { model: db.category, as: 'category', attributes: ['id', 'name'] },
+                        { model: db.author, as: 'author', attributes: ['id', 'name'] },
+                        { model: db.piece_link, as: 'links' }
+                    ]
+                },
+                { model: db.user, as: 'proposer', attributes: ['id', 'name', 'firstName', 'email'] }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        // Resolve FK IDs in proposed data to human-readable names
+        const fkResolvers = {
+            composerId: { model: db.composer, field: 'name' },
+            categoryId: { model: db.category, field: 'name' },
+            authorId:   { model: db.author,   field: 'name' }
+        };
+
+        const results = await Promise.all(changes.map(async (change) => {
+            const json = change.toJSON();
+            const resolvedNames = {};
+            for (const [fkField, { model, field }] of Object.entries(fkResolvers)) {
+                const proposedId = json.data?.[fkField];
+                if (proposedId != null) {
+                    const record = await model.findByPk(proposedId, { attributes: ['id', field] });
+                    if (record) {
+                        resolvedNames[fkField] = record[field];
+                    }
+                }
+            }
+            json.resolvedNames = resolvedNames;
+            return json;
+        }));
+
+        res.status(200).send(results);
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

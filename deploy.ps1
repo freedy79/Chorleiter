@@ -1,12 +1,28 @@
 param(
-    [switch]$Verbose
+    [switch]$Verbose,
+    [switch]$Frontend,
+    [switch]$Backend,
+    [switch]$Upload
 )
+
+# Determine what to build (default: all)
+$buildFrontend = $Frontend.IsPresent
+$buildBackend = $Backend.IsPresent
+$uploadOnly = $Upload.IsPresent
+
+# If no specific flags provided, build everything
+if (-not $buildFrontend -and -not $buildBackend -and -not $uploadOnly) {
+    $buildFrontend = $true
+    $buildBackend = $true
+    $uploadOnly = $true
+}
 
 $ErrorActionPreference = 'Stop'
 $VerboseLogging = $Verbose.IsPresent
 
 if ($VerboseLogging) {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting deployment script in verbose mode"
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Options: Frontend=$buildFrontend Backend=$buildBackend Upload=$uploadOnly"
 } else {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Starting deployment script"
 }
@@ -37,50 +53,57 @@ $FrontendDest = "/usr/local/lsws/ChorStatistik/html"
 $script:DeployFailed = $false
 
 try {
-# Ensure remote repository is up to date
-Write-Host "Checking git status..."
-git fetch | Out-Null
-$status = git status -uno
+if ($buildFrontend -or $buildBackend) {
+    # Ensure remote repository is up to date
+    Write-Host "Checking git status..."
+    git fetch | Out-Null
+    $status = git status -uno
 
-# Only ask to pull if remote is ahead, ignore local changes
-if ($status -match 'behind') {
-    $update = Read-Host "Remote repository is ahead. Pull latest changes before deploying? (y/N)"
-    if ($update -match '^[Yy]') {
-        git pull --rebase
+    # Only ask to pull if remote is ahead, ignore local changes
+    if ($status -match 'behind') {
+        $update = Read-Host "Remote repository is ahead. Pull latest changes before deploying? (y/N)"
+        if ($update -match '^[Yy]') {
+            git pull --rebase
+        } else {
+            Write-Host "Continuing with current repository state."
+        }
     } else {
-        Write-Host "Continuing with current repository state."
+        Write-Host "Local repository is up to date with remote."
     }
-} else {
-    Write-Host "Local repository is up to date with remote."
 }
 
-# Build Angular frontend
-Write-Host "Building Angular frontend..."
-npm --prefix choir-app-frontend run build
-if ($LASTEXITCODE -ne 0) {
-    throw "Build failed. Aborting deployment."
+if ($buildFrontend) {
+    # Build Angular frontend
+    Write-Host "Building Angular frontend..."
+    npm --prefix choir-app-frontend run build
+    if ($LASTEXITCODE -ne 0) {
+        throw "Build failed. Aborting deployment."
+    }
+
+    Write-Host "Build finished."
 }
 
-Write-Host "Build finished."
-
-# Verify backend can start by syntax checking server.js
-npm --prefix choir-app-backend run check
+if ($buildBackend) {
+    # Verify backend can start by syntax checking server.js
+    npm --prefix choir-app-backend run check
+}
 
 # Determine authentication method
 $sshUseAgent = $false
 $sshUsePlink = $false
 
-if (Get-Command ssh-add -ErrorAction SilentlyContinue) {
-    try {
-        $keys = ssh-add -L 2>$null
-        if ($LASTEXITCODE -eq 0 -and $keys) {
-            $sshUseAgent = $true
-            Write-Host "Using ssh-agent for authentication."
+if ($uploadOnly) {
+    if (Get-Command ssh-add -ErrorAction SilentlyContinue) {
+        try {
+            $keys = ssh-add -L 2>$null
+            if ($LASTEXITCODE -eq 0 -and $keys) {
+                $sshUseAgent = $true
+                Write-Host "Using ssh-agent for authentication."
+            }
+        } catch {
+            # ignore errors from ssh-add
         }
-    } catch {
-        # ignore errors from ssh-add
     }
-}
 
 if (-not $sshUseAgent) {
     if (Get-Command plink -ErrorAction SilentlyContinue) {
@@ -259,22 +282,61 @@ Write-VerboseLog "Database backup completed."
 
 # Ensure backend dependencies are installed
 Write-Host "Installing backend dependencies..."
-Invoke-Ssh "cd '$BackendDest' && npm install"
+$installResult = Invoke-Ssh "cd '$BackendDest' && npm install 2>&1; echo EXIT_CODE:`$?"
+Write-VerboseLog "npm install output: $installResult"
+# Extract exit code from last line
+$exitCodeLine = ($installResult -split "`n")[-1]
+if ($exitCodeLine -notmatch 'EXIT_CODE:0$') {
+    Write-Host "npm install failed on server!" -ForegroundColor Red
+    Write-Host $installResult
+    throw "npm install failed"
+}
 Write-VerboseLog "Dependencies installed."
+
+# Archive old logs
+Write-Host "Archiving old logs..."
+$archiveResult = Invoke-Ssh "cd '$BackendDest' && npm run archive-logs 2>&1"
+Write-VerboseLog "Archive logs output: $archiveResult"
 
 # Restart backend
 Write-Host "Restarting backend service..."
 Invoke-Ssh "pm2 restart chorleiter-api"
 Write-VerboseLog "Backend restart command sent."
 
+Write-Host "Waiting 10 seconds for backend to start..."
+Start-Sleep -Seconds 10
+
 # Verify backend started
+Write-Host "Checking PM2 status..."
 $pm2Status = Invoke-Ssh "pm2 describe chorleiter-api | grep -i status" 2>$null
 if ($pm2Status -notmatch 'online') {
-    Write-Host "Backend failed to start. Recent log output:" -ForegroundColor Red
+    Write-Host "Backend process failed to start. Recent log output:" -ForegroundColor Red
+    Write-Host "=== PM2 Logs ===" -ForegroundColor Yellow
+    Invoke-Ssh "pm2 logs chorleiter-api --lines 30 --nostream 2>/dev/null || echo 'No PM2 logs available'"
+    Write-Host "=== Exception Log ===" -ForegroundColor Yellow
     Invoke-Ssh "tail -n 20 '$BackendDest/logs/exceptions.log' 2>/dev/null || echo 'No exceptions log found'"
     Remove-Item $BackendArchive
     Remove-Item $FrontendArchive
     throw "Backend failed to start."
+}
+
+# Verify HTTP endpoint is responding
+Write-Host "Checking HTTP endpoint..."
+$httpCheck = Invoke-Ssh "curl -f -s http://localhost:8088/api/health >/dev/null 2>&1; echo `$?" 2>$null
+if ($httpCheck -notmatch '^0') {
+    Write-Host "Backend is running but not responding to HTTP requests!" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "=== Checking .env Configuration ===" -ForegroundColor Yellow
+    $envCheck = Invoke-Ssh "cd '$BackendDest' && if [ -f .env ]; then echo 'ADDRESS='`$(grep '^ADDRESS=' .env 2>/dev/null || echo 'NOT SET'); echo 'PORT='`$(grep '^PORT=' .env 2>/dev/null || echo 'NOT SET'); echo 'DB_DIALECT='`$(grep '^DB_DIALECT=' .env 2>/dev/null || echo 'NOT SET'); echo ''; ADDRESS_VALUE=`$(grep '^ADDRESS=' .env | cut -d'=' -f2); if [ `"`$ADDRESS_VALUE`" = 'localhost' ]; then echo 'WARNING: ADDRESS is set to localhost - server may not be accessible from outside!'; echo 'Consider changing to ADDRESS=0.0.0.0 in $BackendDest/.env'; fi; else echo '.env file not found!'; fi"
+    Write-Host $envCheck
+    Write-Host ""
+    Write-Host "=== PM2 Logs ===" -ForegroundColor Yellow
+    Invoke-Ssh "pm2 logs chorleiter-api --lines 30 --nostream 2>/dev/null || echo 'No PM2 logs available'"
+    Write-Host "=== Exception Log ===" -ForegroundColor Yellow
+    Invoke-Ssh "tail -n 20 '$BackendDest/logs/exceptions.log' 2>/dev/null || echo 'No exceptions log found'"
+    Remove-Item $BackendArchive
+    Remove-Item $FrontendArchive
+    throw "Backend HTTP endpoint not responding."
 }
 
 Remove-Item $BackendArchive
@@ -286,6 +348,10 @@ Write-Host "Deployment completed."
 if (-not $sshUsePlink) {
     Write-VerboseLog "Closing SSH connection..."
     & ssh -O exit $Remote 2>$null
+}
+
+} else {
+    Write-Host "Build completed. Skipped deployment (use -Upload flag to deploy to server)."
 }
 
 Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Successully deployed"

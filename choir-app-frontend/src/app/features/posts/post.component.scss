@@ -26,9 +26,10 @@ mat-card.post-card {
 }
 
 .small-icon-btn {
+  --mdc-icon-button-state-layer-size: 2rem;
   width: 2rem !important;
   height: 2rem !important;
-  line-height: 2rem !important;
+  padding: 0 !important;
 
   .mat-icon {
     font-size: 1.125rem;
@@ -256,4 +257,22 @@ mat-card.post-card {
   margin-top: 8px;
   font-size: 0.8125rem;
   color: #666;
+}
+
+// Inline images rendered from Markdown
+mat-card-content {
+  ::ng-deep img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 8px 0;
+    display: block;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.01);
+    }
+  }
 }

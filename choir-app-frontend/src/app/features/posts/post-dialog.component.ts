@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormArray, FormBuilder, FormControl, FormGroup, Va
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { Post } from '@core/models/post';
+import { PostImage } from '@core/models/post-image';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 import { ApiService } from '@core/services/api.service';
@@ -17,29 +18,42 @@ type PostDialogAction = 'created' | 'updated';
 type PostFormValue = {
   title: string;
   text: string;
-  expiresAt: Date | null;
+  expiresAt: string | null;
   sendTest: boolean;
   sendAsUser: boolean;
   enablePoll: boolean;
   pollAllowMultiple: boolean;
   pollMaxSelections: number;
-  pollClosesAt: Date | null;
+  pollClosesAt: string | null;
+  pollIsAnonymous: boolean;
 };
+
+const MAX_IMAGES = 5;
 
 @Component({
   selector: 'app-post-dialog',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, MatDialogModule, MaterialModule, MarkdownPipe],
-  templateUrl: './post-dialog.component.html'
+  templateUrl: './post-dialog.component.html',
+  styleUrls: ['./post-dialog.component.scss']
 })
 export class PostDialogComponent {
   form: FormGroup;
   isEdit = false;
   saving = false;
+  showAttachmentSection = false;
+  showPollSection = false;
   selectedFile: File | null = null;
   existingAttachment: string | null = null;
   removeExistingAttachment = false;
   private placeholderStart: number | null = null;
+
+  // Image management
+  uploadedImages: PostImage[] = [];
+  imageUploading = false;
+  readonly maxImages = MAX_IMAGES;
+  private postId: number | null = null;
+  private textareaRef: HTMLTextAreaElement | null = null;
   constructor(
     private fb: FormBuilder,
     private dialog: MatDialog,
@@ -58,6 +72,7 @@ export class PostDialogComponent {
       pollAllowMultiple: [false],
       pollMaxSelections: [1, [Validators.min(1)]],
       pollClosesAt: [null],
+      pollIsAnonymous: [true],
       pollOptions: this.fb.array<FormControl<string | null>>([
         this.fb.control<string>(''),
         this.fb.control<string>('')
@@ -65,19 +80,27 @@ export class PostDialogComponent {
     });
     if (data?.post) {
       this.isEdit = true;
+      this.postId = data.post.id;
       this.existingAttachment = data.post.attachmentOriginalName || null;
+      this.showAttachmentSection = !!this.existingAttachment;
+      this.uploadedImages = (data.post.images || []).map(img => ({
+        ...img,
+        url: this.api.getPostImageUrl(data.post!.id, img.id)
+      }));
       this.form.patchValue({
         title: data.post.title,
         text: data.post.text,
-        expiresAt: data.post.expiresAt ? new Date(data.post.expiresAt) : null,
+        expiresAt: data.post.expiresAt ? data.post.expiresAt.toString().split('T')[0] : null,
         sendAsUser: data.post.sendAsUser
       });
       if (data.post.poll) {
+        this.showPollSection = true;
         this.form.patchValue({
           enablePoll: true,
           pollAllowMultiple: data.post.poll.allowMultiple,
           pollMaxSelections: data.post.poll.maxSelections,
-          pollClosesAt: data.post.poll.closesAt ? new Date(data.post.poll.closesAt) : null
+          pollClosesAt: data.post.poll.closesAt ? data.post.poll.closesAt.toString().split('T')[0] : null,
+          pollIsAnonymous: data.post.poll.isAnonymous !== false
         });
         this.pollOptions.clear();
         data.post.poll.options
@@ -143,10 +166,168 @@ export class PostDialogComponent {
     this.selectedFile = null;
   }
 
+  addAttachmentSection(): void {
+    this.showAttachmentSection = true;
+  }
+
+  removeAttachmentSection(): void {
+    if (this.existingAttachment) {
+      this.markRemoveAttachment();
+    } else {
+      this.clearSelectedFile();
+    }
+    this.showAttachmentSection = false;
+  }
+
+  addPollSection(): void {
+    this.showPollSection = true;
+    this.form.patchValue({ enablePoll: true });
+  }
+
+  removePollSection(): void {
+    this.showPollSection = false;
+    this.form.patchValue({
+      enablePoll: false,
+      pollAllowMultiple: false,
+      pollMaxSelections: 1,
+      pollClosesAt: null,
+      pollIsAnonymous: true
+    });
+    this.pollOptions.clear();
+    this.pollOptions.push(this.fb.control<string>(''));
+    this.pollOptions.push(this.fb.control<string>(''));
+  }
+
   markRemoveAttachment(): void {
     this.removeExistingAttachment = true;
     this.existingAttachment = null;
     this.selectedFile = null;
+  }
+
+  // ── Image upload methods ──────────────────────────────────────────────
+
+  onTextareaFocus(event: FocusEvent): void {
+    this.textareaRef = event.target as HTMLTextAreaElement;
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const file = input.files[0];
+    input.value = ''; // Allow re-selecting same file
+
+    if (this.uploadedImages.length >= this.maxImages) {
+      this.notification.warning(`Maximal ${this.maxImages} Bilder erlaubt.`);
+      return;
+    }
+
+    if (!file.type.match(/^image\/(jpeg|png|gif|webp)$/)) {
+      this.notification.error('Nur JPG, PNG, GIF oder WebP erlaubt.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      this.notification.error('Bild darf maximal 2 MB groß sein.');
+      return;
+    }
+
+    // If editing an existing post, upload immediately
+    if (this.postId) {
+      this.uploadImageToPost(this.postId, file);
+    } else {
+      // For new posts: auto-save as draft first, then upload
+      this.autoSaveAsDraft(file);
+    }
+  }
+
+  private autoSaveAsDraft(pendingFile: File): void {
+    const value = this.form.getRawValue() as PostFormValue;
+    const payload = {
+      title: value.title || 'Entwurf',
+      text: value.text || ' ',
+      expiresAt: value.expiresAt || null,
+      sendAsUser: value.sendAsUser
+    };
+    this.imageUploading = true;
+    this.api.createPost(payload).subscribe({
+      next: (post) => {
+        this.postId = post.id;
+        this.isEdit = true;
+        this.uploadImageToPost(post.id, pendingFile);
+      },
+      error: () => {
+        this.imageUploading = false;
+        this.notification.error('Beitrag konnte nicht gespeichert werden.');
+      }
+    });
+  }
+
+  private uploadImageToPost(postId: number, file: File): void {
+    this.imageUploading = true;
+    this.api.uploadPostImage(postId, file).subscribe({
+      next: (image: PostImage) => {
+        const imageWithUrl: PostImage = {
+          ...image,
+          url: this.api.getPostImageUrl(postId, image.id)
+        };
+        this.uploadedImages.push(imageWithUrl);
+        this.insertImageMarkdown(imageWithUrl);
+        this.imageUploading = false;
+      },
+      error: (err: any) => {
+        this.imageUploading = false;
+        const msg = err?.error?.message || 'Fehler beim Hochladen des Bildes';
+        this.notification.error(msg);
+      }
+    });
+  }
+
+  private insertImageMarkdown(image: PostImage): void {
+    const markdown = `![${image.originalName}](${image.url})`;
+    const textCtrl = this.form.get('text')!;
+    const currentText = textCtrl.value || '';
+    const textarea = this.textareaRef;
+
+    if (textarea) {
+      const pos = textarea.selectionStart || currentText.length;
+      const before = currentText.slice(0, pos);
+      const after = currentText.slice(pos);
+      const newLine = before.length > 0 && !before.endsWith('\n') ? '\n' : '';
+      const newText = before + newLine + markdown + '\n' + after;
+      textCtrl.setValue(newText);
+      setTimeout(() => {
+        textarea.focus();
+        const cursor = (before + newLine + markdown + '\n').length;
+        textarea.selectionStart = textarea.selectionEnd = cursor;
+      });
+    } else {
+      const newLine = currentText.length > 0 && !currentText.endsWith('\n') ? '\n' : '';
+      textCtrl.setValue(currentText + newLine + markdown + '\n');
+    }
+  }
+
+  removeImage(image: PostImage): void {
+    if (!this.postId) return;
+    this.api.removePostImage(this.postId, image.id).subscribe({
+      next: () => {
+        this.uploadedImages = this.uploadedImages.filter(i => i.id !== image.id);
+        // Remove the Markdown reference from text
+        const textCtrl = this.form.get('text')!;
+        const currentText = textCtrl.value || '';
+        const pattern = `![${image.originalName}](${image.url})`;
+        textCtrl.setValue(currentText.replace(pattern, '').replace(/\n{3,}/g, '\n\n').trim());
+        this.notification.success('Bild entfernt');
+      },
+      error: () => this.notification.error('Fehler beim Entfernen des Bildes')
+    });
+  }
+
+  getImageThumbnailUrl(image: PostImage): string {
+    return image.url || '';
+  }
+
+  canUploadMoreImages(): boolean {
+    return this.uploadedImages.length < this.maxImages && !this.imageUploading;
   }
 
   save(): void {
@@ -154,7 +335,7 @@ export class PostDialogComponent {
       return;
     }
     const value = this.form.getRawValue() as PostFormValue;
-    const expiresAt = value.expiresAt ? value.expiresAt.toISOString() : null;
+    const expiresAt = value.expiresAt || null;
     const pollPayload = this.buildPollPayload();
     if (pollPayload === false) {
       return;
@@ -167,11 +348,12 @@ export class PostDialogComponent {
       sendAsUser: value.sendAsUser,
       poll: pollPayload
     };
-    const request$ = this.isEdit && this.data?.post
-      ? this.api.updatePost(this.data.post.id, payload)
+    // If auto-saved as draft (postId set via image upload), use update
+    const request$ = this.postId
+      ? this.api.updatePost(this.postId, payload)
       : this.api.createPost(payload);
-    const action: PostDialogAction = this.isEdit ? 'updated' : 'created';
-    const errorMessage = this.isEdit ? 'Fehler beim Aktualisieren' : 'Fehler beim Speichern';
+    const action: PostDialogAction = (this.isEdit || this.postId) ? 'updated' : 'created';
+    const errorMessage = (this.isEdit || this.postId) ? 'Fehler beim Aktualisieren' : 'Fehler beim Speichern';
     this.saving = true;
     this.dialogRef.disableClose = true;
     request$
@@ -227,7 +409,7 @@ export class PostDialogComponent {
     }
   }
 
-  private buildPollPayload(): { options: string[]; allowMultiple: boolean; maxSelections: number; closesAt: string | null } | null | false {
+  private buildPollPayload(): { options: string[]; allowMultiple: boolean; maxSelections: number; closesAt: string | null; isAnonymous: boolean } | null | false {
     if (!this.form.get('enablePoll')?.value) {
       return null;
     }
@@ -245,12 +427,14 @@ export class PostDialogComponent {
       return false;
     }
     maxSelections = Math.min(maxSelections, options.length);
-    const closes = this.form.get('pollClosesAt')?.value as Date | null;
+    const closes = this.form.get('pollClosesAt')?.value as string | null;
+    const isAnonymous = this.form.get('pollIsAnonymous')?.value !== false;
     return {
       options,
       allowMultiple,
       maxSelections,
-      closesAt: closes ? closes.toISOString() : null
+      closesAt: closes || null,
+      isAnonymous
     };
   }
 }

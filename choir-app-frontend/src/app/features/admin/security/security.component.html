@@ -49,5 +49,16 @@
         <app-log-viewer></app-log-viewer>
       </div>
     </mat-tab>
+
+    <!-- OTA Tokens Tab -->
+    <mat-tab label="Zugangstoken">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>vpn_key</mat-icon>
+        <span class="tab-label">Zugangstoken</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-ota-tokens></app-ota-tokens>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </div>

@@ -67,6 +67,7 @@ export class PieceDialogComponent implements OnInit {
     imagePreview: string | null = null;
     imageFile: File | null = null;
     isDragOver = false;
+    isLinksDragOver = false;
     removedLinkPaths: string[] = [];
 
     licenseOptions = [
@@ -382,6 +383,89 @@ export class PieceDialogComponent implements OnInit {
         }
         linkGroup.get('url')?.setValue('');
         linkGroup.get('downloadName')?.setValue('');
+    }
+
+    onLinksDragOver(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isLinksDragOver = true;
+    }
+
+    onLinksDragLeave(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isLinksDragOver = false;
+    }
+
+    onLinksDrop(event: DragEvent): void {
+        event.preventDefault();
+        event.stopPropagation();
+        this.isLinksDragOver = false;
+
+        const files = event.dataTransfer?.files;
+        const droppedUrl = event.dataTransfer?.getData('text/uri-list')
+            || event.dataTransfer?.getData('text/plain');
+
+        if (files && files.length > 0) {
+            this.addFilesAsLinks(Array.from(files));
+        } else if (droppedUrl && this.looksLikeUrl(droppedUrl)) {
+            this.addUrlAsLink(droppedUrl.trim());
+        }
+    }
+
+    onMultiFileSelected(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const files = input.files;
+        if (files && files.length > 0) {
+            this.addFilesAsLinks(Array.from(files));
+        }
+        input.value = '';
+    }
+
+    private addFilesAsLinks(files: File[]): void {
+        for (const file of files) {
+            const linkGroup = this.fb.group({
+                description: [file.name, Validators.required],
+                url: ['', Validators.required],
+                type: ['FILE_DOWNLOAD', Validators.required],
+                downloadName: [file.name],
+            });
+            this.linksFormArray.push(linkGroup);
+            const index = this.linksFormArray.length - 1;
+            this.pieceService.uploadPieceLinkFile(file).subscribe(res => {
+                const group = this.linksFormArray.at(index) as FormGroup;
+                group.get('url')?.setValue(res.path);
+            });
+        }
+    }
+
+    private addUrlAsLink(url: string): void {
+        const linkGroup = this.fb.group({
+            description: [this.guessDescriptionFromUrl(url), Validators.required],
+            url: [url, Validators.required],
+            type: ['EXTERNAL', Validators.required],
+            downloadName: [''],
+        });
+        this.linksFormArray.push(linkGroup);
+    }
+
+    private looksLikeUrl(text: string): boolean {
+        const trimmed = text.trim();
+        return /^https?:\/\//i.test(trimmed);
+    }
+
+    private guessDescriptionFromUrl(url: string): string {
+        try {
+            const parsed = new URL(url);
+            const path = parsed.pathname;
+            const filename = path.substring(path.lastIndexOf('/') + 1);
+            if (filename) {
+                return decodeURIComponent(filename);
+            }
+            return parsed.hostname;
+        } catch {
+            return url;
+        }
     }
 
     private initializeComposerAutocomplete(): void {

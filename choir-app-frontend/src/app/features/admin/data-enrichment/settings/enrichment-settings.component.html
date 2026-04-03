@@ -1,0 +1,145 @@
+<div class="settings">
+  <div class="loading" *ngIf="loading">
+    <mat-icon>hourglass_top</mat-icon>
+    <span>Einstellungen werden geladen…</span>
+  </div>
+
+  <div class="error" *ngIf="error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+  </div>
+
+  <form [formGroup]="settingsForm" class="settings-form" *ngIf="!loading">
+    <mat-card>
+      <mat-card-title>Provider Konfiguration</mat-card-title>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Primärer Provider</mat-label>
+            <mat-select formControlName="primaryProvider">
+              <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                {{ provider.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Fallback Provider</mat-label>
+            <mat-select formControlName="fallbackProvider">
+              <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                {{ provider.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Routing-Strategie</mat-label>
+            <mat-select formControlName="routingStrategy">
+              <mat-option value="primary">Nur primär</mat-option>
+              <mat-option value="dual">Primär + Fallback</mat-option>
+              <mat-option value="cost-optimized">Budget-optimiert</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card>
+      <mat-card-title>Budget & Planung</mat-card-title>
+      <mat-card-content>
+        <div class="form-grid">
+          <mat-form-field appearance="outline">
+            <mat-label>Monatliches Budget (€)</mat-label>
+            <input matInput type="number" formControlName="monthlyBudget" min="1" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Automatischer Zeitplan (Cron)</mat-label>
+            <input matInput formControlName="scheduleCron" placeholder="0 2 * * *" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Auto-Approve Schwelle</mat-label>
+            <input matInput type="number" formControlName="autoApproveThreshold" min="0.5" max="1" step="0.01" />
+          </mat-form-field>
+        </div>
+
+        <mat-slide-toggle formControlName="autoApproveEnabled">
+          Auto-Approve für hohe Konfidenz
+        </mat-slide-toggle>
+      </mat-card-content>
+    </mat-card>
+
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="saveSettings()" [disabled]="saving">
+        <mat-icon>save</mat-icon>
+        Einstellungen speichern
+      </button>
+    </div>
+  </form>
+
+  <form [formGroup]="apiKeyForm" class="api-key-form" *ngIf="!loading">
+    <mat-card>
+      <mat-card-title>API-Keys</mat-card-title>
+      <mat-card-content>
+        <!-- Stored API keys display -->
+        <div class="api-keys-list" *ngIf="providers.length">
+          <div class="api-key-row" *ngFor="let provider of providers">
+            <div class="api-key-info">
+              <span class="provider-name">{{ provider.label }}</span>
+              <span class="masked-key" *ngIf="hasApiKey(provider.name)">
+                <mat-icon class="key-icon configured">vpn_key</mat-icon>
+                <code>{{ getMaskedKey(provider.name) }}</code>
+              </span>
+              <span class="no-key" *ngIf="!hasApiKey(provider.name)">
+                <mat-icon class="key-icon not-configured">vpn_key_off</mat-icon>
+                <em>Nicht konfiguriert</em>
+              </span>
+            </div>
+            <button mat-icon-button color="warn"
+                    (click)="deleteApiKey(provider.name)"
+                    [disabled]="deletingApiKey === provider.name"
+                    *ngIf="hasApiKey(provider.name)"
+                    matTooltip="API-Key löschen">
+              <mat-icon>{{ deletingApiKey === provider.name ? 'hourglass_top' : 'delete' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <mat-divider class="api-key-divider"></mat-divider>
+
+        <!-- Add new API key form -->
+        <div class="api-key-add-section">
+          <div class="section-subtitle">Neuen API-Key hinterlegen</div>
+          <div class="form-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Provider</mat-label>
+              <mat-select formControlName="provider">
+                <mat-option *ngFor="let provider of providers" [value]="provider.name">
+                  {{ provider.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>API-Key</mat-label>
+              <input matInput formControlName="apiKey" type="password" autocomplete="off" />
+            </mat-form-field>
+          </div>
+
+          <button mat-stroked-button color="primary" (click)="saveApiKey()" [disabled]="savingApiKey">
+            <mat-icon>{{ savingApiKey ? 'hourglass_top' : 'vpn_key' }}</mat-icon>
+            {{ savingApiKey ? 'Wird geprüft…' : 'API-Key speichern & testen' }}
+          </button>
+
+          <div class="api-key-test-result" *ngIf="apiKeyTestResult">
+            <mat-icon [class.success]="apiKeyTestResult.ok" [class.error]="!apiKeyTestResult.ok">
+              {{ apiKeyTestResult.ok ? 'check_circle' : 'error' }}
+            </mat-icon>
+            <span>{{ apiKeyTestResult.message }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </form>
+</div>

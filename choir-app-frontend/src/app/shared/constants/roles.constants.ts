@@ -22,7 +22,8 @@ export const CHOIR_ROLES = {
   DIRECTOR: 'director',
   CHOIR_ADMIN: 'choir_admin',
   ORGANIST: 'organist',
-  SINGER: 'singer'
+  SINGER: 'singer',
+  NOTENWART: 'notenwart'
 } as const;
 
 /**
@@ -42,7 +43,8 @@ export const CHOIR_ROLE_LABELS: Record<string, string> = {
   [CHOIR_ROLES.DIRECTOR]: 'Dirigent',
   [CHOIR_ROLES.CHOIR_ADMIN]: 'Chor-Admin',
   [CHOIR_ROLES.ORGANIST]: 'Organist',
-  [CHOIR_ROLES.SINGER]: 'Sänger'
+  [CHOIR_ROLES.SINGER]: 'Sänger',
+  [CHOIR_ROLES.NOTENWART]: 'Notenwart'
 };
 
 /**
@@ -103,6 +105,26 @@ export function isDirector(choirRoles: string[]): boolean {
  */
 export function isChoirAdmin(choirRoles: string[]): boolean {
   return choirRoles.includes(CHOIR_ROLES.CHOIR_ADMIN);
+}
+
+/**
+ * Checks if a user is a notenwart (music librarian) in a choir.
+ *
+ * @param choirRoles - Array of choir-specific roles
+ * @returns true if user is notenwart
+ */
+export function isNotenwart(choirRoles: string[]): boolean {
+  return choirRoles.includes(CHOIR_ROLES.NOTENWART);
+}
+
+/**
+ * Checks if a user is a choir admin or notenwart.
+ *
+ * @param choirRoles - Array of choir-specific roles
+ * @returns true if user is choir admin or notenwart
+ */
+export function isChoirAdminOrNotenwart(choirRoles: string[]): boolean {
+  return choirRoles.includes(CHOIR_ROLES.CHOIR_ADMIN) || choirRoles.includes(CHOIR_ROLES.NOTENWART);
 }
 
 /**

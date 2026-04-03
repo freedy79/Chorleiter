@@ -1,5 +1,6 @@
 import { Poll } from './poll';
 import { PostComment } from './post-comment';
+import { PostImage } from './post-image';
 import { ReactionInfo } from './reaction';
 
 export interface Post {
@@ -18,4 +19,5 @@ export interface Post {
   poll?: Poll | null;
   reactions?: ReactionInfo;
   comments?: PostComment[];
+  images?: PostImage[];
 }

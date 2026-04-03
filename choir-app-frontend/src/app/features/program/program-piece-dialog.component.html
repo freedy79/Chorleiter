@@ -4,11 +4,11 @@
     Nur Repertoire dieses Chors
   </mat-slide-toggle>
   <form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="search-form">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Titel</mat-label>
       <input matInput formControlName="title" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Komponist</mat-label>
       <input type="text" matInput [formControl]="composerCtrl" [matAutocomplete]="autoComposer" />
       <mat-autocomplete #autoComposer="matAutocomplete">
@@ -17,12 +17,12 @@
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Tags</mat-label>
       <input matInput formControlName="tags" />
     </mat-form-field>
     <mat-checkbox formControlName="hasDuration">Dauer vorhanden?</mat-checkbox>
-    <button mat-raised-button color="primary" type="submit">Suchen</button>
+    <button mat-flat-button color="primary" type="submit">Suchen</button>
   </form>
   <mat-list>
     <mat-list-item *ngFor="let piece of pieces" (click)="selectPiece(piece)">

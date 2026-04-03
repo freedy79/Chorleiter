@@ -1,6 +1,6 @@
 <div class="header-row">
   <div class="filter-row">
-    <mat-form-field appearance="outline" class="dense">
+    <mat-form-field appearance="outline" class="dense" subscriptSizing="dynamic">
       <mat-label>Typ</mat-label>
       <mat-select [formControl]="typeControl">
         <mat-option value="ALL">Alle</mat-option>
@@ -8,21 +8,45 @@
         <mat-option value="REHEARSAL">Proben</mat-option>
       </mat-select>
     </mat-form-field>
+    <mat-form-field appearance="outline" class="dense" subscriptSizing="dynamic">
+      <mat-label>Zeitraum</mat-label>
+      <mat-select [formControl]="timeControl">
+        <mat-option value="RECENT">±10 Tage</mat-option>
+        <mat-option value="ALL">Alle Zeiten</mat-option>
+        <mat-option value="FUTURE">Zukünftige</mat-option>
+        <mat-optgroup label="Vergangene" *ngIf="pastYears.length">
+          <mat-option value="PAST">Alle Vergangenen</mat-option>
+          <mat-option *ngFor="let year of pastYears" [value]="'YEAR_' + year">{{ year }}</mat-option>
+        </mat-optgroup>
+        <mat-option value="PAST" *ngIf="!pastYears.length">Vergangene</mat-option>
+      </mat-select>
+    </mat-form-field>
   </div>
   <span class="spacer"></span>
   <ng-container *ngIf="isAdmin || isDirector || isChoirAdmin">
-  <button *ngIf="!isSingerOnly" mat-flat-button color="primary" (click)="openAddEventDialog()">
-    <mat-icon>add</mat-icon>
-    <span>Neues Ereignis</span>
-  </button>
-  <button *ngIf="!isSingerOnly" mat-stroked-button color="accent" (click)="openImportDialog()" style="margin-left:8px;">
-    <mat-icon>upload_file</mat-icon>
-    <span>Import</span>
-  </button>
-  <button *ngIf="isAdmin" mat-stroked-button color="warn" (click)="deleteSelectedEvents()" [disabled]="selection.isEmpty()" style="margin-left:8px;">
-    <mat-icon>delete</mat-icon>
-    <span>Löschen</span>
-  </button>
+    <!-- Desktop: text buttons -->
+    <button *ngIf="!isSingerOnly" mat-flat-button color="primary" (click)="openAddEventDialog()" class="desktop-only">
+      <mat-icon>add</mat-icon>
+      <span>Neues Ereignis</span>
+    </button>
+    <button *ngIf="!isSingerOnly" mat-stroked-button color="accent" (click)="openImportDialog()" class="desktop-only" style="margin-left:8px;">
+      <mat-icon>upload_file</mat-icon>
+      <span>Import</span>
+    </button>
+    <button *ngIf="isAdmin" mat-stroked-button color="warn" (click)="deleteSelectedEvents()" [disabled]="selection.isEmpty()" class="desktop-only" style="margin-left:8px;">
+      <mat-icon>delete</mat-icon>
+      <span>Löschen</span>
+    </button>
+    <!-- Mobile: icon-only buttons -->
+    <button *ngIf="!isSingerOnly" mat-icon-button color="primary" (click)="openAddEventDialog()" class="mobile-only" aria-label="Neues Ereignis erstellen">
+      <mat-icon>add</mat-icon>
+    </button>
+    <button *ngIf="!isSingerOnly" mat-icon-button (click)="openImportDialog()" class="mobile-only" aria-label="Ereignisse importieren">
+      <mat-icon>upload_file</mat-icon>
+    </button>
+    <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="deleteSelectedEvents()" [disabled]="selection.isEmpty()" class="mobile-only" aria-label="Ausgewählte Ereignisse löschen">
+      <mat-icon>delete</mat-icon>
+    </button>
   </ng-container>
 </div>
 
@@ -62,10 +86,10 @@
       <ng-container matColumnDef="actions">
         <mat-header-cell *matHeaderCellDef></mat-header-cell>
         <mat-cell *matCellDef="let ev" class="actions-cell">
-          <button *ngIf="!isSingerOnly" mat-icon-button (click)="editEvent(ev); $event.stopPropagation()">
+          <button *ngIf="!isSingerOnly" mat-icon-button (click)="editEvent(ev); $event.stopPropagation()" aria-label="Ereignis bearbeiten">
             <mat-icon>edit</mat-icon>
           </button>
-          <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">
+          <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()" aria-label="Ereignis löschen">
             <mat-icon>delete</mat-icon>
           </button>
         </mat-cell>
@@ -90,52 +114,84 @@
   <!-- Mobile View: Cards -->
   <div class="mobile-view">
     <div class="mobile-card-container">
-      <ng-container *ngIf="dataSource.data.length; else mobileNoData">
+      <!-- Skeleton Loading -->
+      <ng-container *ngIf="isLoading">
         <div class="mobile-cards">
-          <div class="event-card" *ngFor="let ev of dataSource.data" (click)="selectEvent(ev)">
-            <div class="card-header">
-              <div class="card-main">
-                <div class="card-date">{{ ev.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE' }}</div>
-                <div class="card-type">
-                  <mat-icon class="type-icon">{{ ev.type === 'SERVICE' ? 'event' : 'school' }}</mat-icon>
-                  <span>{{ ev.type | eventTypeLabel }}</span>
-                </div>
-              </div>
-              <mat-checkbox (click)="$event.stopPropagation()" (change)="toggleEvent(ev)" [checked]="selection.isSelected(ev)"></mat-checkbox>
-            </div>
-
-            <div class="card-meta" *ngIf="ev.director?.name">
-              <span class="label">Leiter:</span>
-              <span class="value">{{ ev.director?.name }}</span>
-            </div>
-
-            <div class="card-meta">
-              <span class="label">Geändert:</span>
-              <span class="value">{{ ev.updatedAt | date:'short':'Europe/Berlin':'de-DE' }}</span>
-            </div>
-
-            <div class="card-actions">
-              <button *ngIf="!isSingerOnly" mat-stroked-button (click)="editEvent(ev); $event.stopPropagation()">
-                <mat-icon>edit</mat-icon>
-                Bearbeiten
-              </button>
-              <button *ngIf="isChoirAdmin || isAdmin" mat-stroked-button color="warn" (click)="deleteEvent(ev); $event.stopPropagation()">
-                <mat-icon>delete</mat-icon>
-                Löschen
-              </button>
-            </div>
+          <div class="event-card skeleton-card" *ngFor="let i of [1,2,3,4]">
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-line skeleton-subtitle"></div>
+            <div class="skeleton-line skeleton-meta"></div>
           </div>
         </div>
       </ng-container>
-      <ng-template #mobileNoData>
-        <div class="no-data-message">Keine Ereignisse gefunden.</div>
-      </ng-template>
-    </div>
 
-    <mat-paginator [pageSizeOptions]="pageSizeOptions"
-                   [pageSize]="pageSize"
-                   showFirstLastButtons></mat-paginator>
+      <!-- Data -->
+      <ng-container *ngIf="!isLoading">
+        <ng-container *ngIf="dataSource.data.length; else mobileNoData">
+          <div class="mobile-cards">
+            <div class="event-card"
+                 *ngFor="let ev of mobileVisibleEvents; trackBy: trackByEventId"
+                 [class.selected]="selectedEvent?.id === ev.id"
+                 matRipple
+                 role="button"
+                 tabindex="0"
+                 [attr.aria-label]="(ev.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE') + ' \u2013 ' + (ev.type | eventTypeLabel)"
+                 (click)="selectEvent(ev)"
+                 (keydown.enter)="selectEvent(ev)">
+              <div class="card-header">
+                <div class="card-main">
+                  <div class="card-date">{{ ev.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE' }}</div>
+                  <div class="card-type">
+                    <mat-icon class="type-icon">{{ ev.type === 'SERVICE' ? 'event' : 'school' }}</mat-icon>
+                    <span>{{ ev.type | eventTypeLabel }}</span>
+                  </div>
+                </div>
+                <div class="card-header-actions">
+                  <mat-checkbox *ngIf="isAdmin"
+                                (click)="$event.stopPropagation()"
+                                (change)="toggleEvent(ev)"
+                                [checked]="selection.isSelected(ev)"
+                                aria-label="Ereignis auswählen">
+                  </mat-checkbox>
+                </div>
+              </div>
+
+              <div class="card-meta" *ngIf="ev.director?.name">
+                <span class="label">Leiter:</span>
+                <span class="value">{{ ev.director?.name }}</span>
+              </div>
+
+              <div class="card-meta">
+                <span class="label">Geändert:</span>
+                <span class="value">{{ ev.updatedAt | date:'short':'Europe/Berlin':'de-DE' }}</span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-template #mobileNoData>
+          <app-empty-state icon="event_busy">
+            <p *ngIf="typeControl.value === 'ALL' && timeControl.value === 'ALL'">Noch keine Ereignisse vorhanden.</p>
+            <p *ngIf="typeControl.value !== 'ALL' || timeControl.value !== 'ALL'">Keine Ereignisse für diesen Filter gefunden.</p>
+            <button *ngIf="typeControl.value !== 'ALL' || timeControl.value !== 'ALL'" mat-stroked-button (click)="typeControl.setValue('ALL'); timeControl.setValue('FUTURE')">
+              Filter zurücksetzen
+            </button>
+            <button *ngIf="!isSingerOnly && typeControl.value === 'ALL'" mat-flat-button color="primary" (click)="openAddEventDialog()">
+              <mat-icon>add</mat-icon>
+              Erstes Ereignis erstellen
+            </button>
+          </app-empty-state>
+        </ng-template>
+      </ng-container>
+
+      <!-- Load more -->
+      <div class="load-more" *ngIf="!isLoading && hasMoreMobileEvents">
+        <button mat-stroked-button (click)="loadMoreMobile()" class="load-more-btn">
+          Weitere laden ({{ dataSource.data.length - mobileVisibleCount }} verbleibend)
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
-<app-event-card *ngIf="selectedEvent" cardTitle="Gesungene Literatur" [event]="selectedEvent"></app-event-card>
+<app-event-card *ngIf="selectedEvent" cardTitle="Gesungene Literatur" [event]="selectedEvent" class="desktop-only"></app-event-card>

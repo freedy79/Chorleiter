@@ -188,7 +188,7 @@ const rankCandidates = (input, candidates, nameAccessor, options = {}) => {
 
 const pickBestMatch = (options) => {
     if (!options.length) return null;
-    if (options.length === 1 && options[0].score >= 0.6) return options[0].candidate;
+    if (options.length === 1 && options[0].score >= 0.9) return options[0].candidate;
     const top = options[0];
     const second = options[1];
     if (top.score >= 0.9 && (!second || (top.score - second.score) >= 0.1)) {

@@ -39,6 +39,17 @@
       </div>
     </mat-tab>
 
+    <!-- Privacy Policy Tab -->
+    <mat-tab label="Datenschutz">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>shield</mat-icon>
+        <span class="tab-label">Datenschutz</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-privacy-settings></app-privacy-settings>
+      </div>
+    </mat-tab>
+
     <!-- Entwicklung Tab -->
     <mat-tab label="Entwicklung">
       <ng-template mat-tab-label>
@@ -47,6 +58,17 @@
       </ng-template>
       <div class="tab-content">
         <app-develop></app-develop>
+      </div>
+    </mat-tab>
+
+    <!-- CKEditor License Tab -->
+    <mat-tab label="CKEditor">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>vpn_key</mat-icon>
+        <span class="tab-label">CKEditor</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-ckeditor-license-settings></app-ckeditor-license-settings>
       </div>
     </mat-tab>
   </mat-tab-group>

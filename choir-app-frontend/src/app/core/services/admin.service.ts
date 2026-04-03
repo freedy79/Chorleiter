@@ -14,6 +14,7 @@ import { FrontendUrl } from '../models/frontend-url';
 import { SystemAdminEmail } from '../models/system-admin-email';
 import { UploadOverview } from '../models/backend-file';
 import { MailLog } from '../models/mail-log';
+import { MailDeliveryDiagnostics } from '../models/mail-delivery-diagnostics';
 import { Donation } from '../models/donation';
 
 @Injectable({ providedIn: 'root' })
@@ -108,12 +109,20 @@ export class AdminService {
     return this.http.delete(`${this.apiUrl}/admin/logs/${encodeURIComponent(filename)}`);
   }
 
-  getMailLogs(): Observable<MailLog[]> {
-    return this.http.get<MailLog[]>(`${this.apiUrl}/admin/mail-logs`);
+  getMailLogs(onlyErrors = false): Observable<MailLog[]> {
+    const params: any = {};
+    if (onlyErrors) {
+      params.onlyErrors = true;
+    }
+    return this.http.get<MailLog[]>(`${this.apiUrl}/admin/mail-logs`, { params });
   }
 
   clearMailLogs(): Observable<any> {
     return this.http.delete(`${this.apiUrl}/admin/mail-logs`);
+  }
+
+  getMailDeliveryDiagnostics(): Observable<MailDeliveryDiagnostics> {
+    return this.http.get<MailDeliveryDiagnostics>(`${this.apiUrl}/admin/mail-delivery-diagnostics`);
   }
 
   listUploadFiles(): Observable<UploadOverview> {
@@ -221,5 +230,131 @@ export class AdminService {
 
   updateImprintSettings(data: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/admin/imprint-settings`, data);
+  }
+
+  getPrivacyPolicy(): Observable<{ html: string }> {
+    return this.http.get<{ html: string }>(`${this.apiUrl}/admin/privacy-policy`);
+  }
+
+  updatePrivacyPolicy(data: { html: string }): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/admin/privacy-policy`, data);
+  }
+
+  getCkeditorLicenseKey(): Observable<{ value: string | null }> {
+    return this.http.get<{ value: string | null }>(`${this.apiUrl}/admin/ckeditor-license`);
+  }
+
+  updateCkeditorLicenseKey(data: { value: string }): Observable<{ value: string }> {
+    return this.http.put<{ value: string }>(`${this.apiUrl}/admin/ckeditor-license`, data);
+  }
+
+  // Data Enrichment Admin API
+  getEnrichmentSettings(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/settings`);
+  }
+
+  updateEnrichmentSetting(key: string, value: any, dataType: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/settings`, { key, value, dataType });
+  }
+
+  setEnrichmentApiKey(provider: string, apiKey: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/api-keys`, { provider, apiKey });
+  }
+
+  deleteEnrichmentApiKey(provider: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/enrichment/api-keys/${provider}`);
+  }
+
+  getEnrichmentApiKeyStatus(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/api-keys/status`);
+  }
+
+  getEnrichmentProviders(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/providers`);
+  }
+
+  createEnrichmentJob(jobType: string, enrichmentFields: string[], options: any = {}): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/jobs`, { jobType, enrichmentFields, options });
+  }
+
+  getEnrichmentJob(jobId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}`);
+  }
+
+  listEnrichmentJobs(filters: { status?: string; jobType?: string; limit?: number; offset?: number } = {}): Observable<any> {
+    const params: any = {};
+    if (filters.status) params.status = filters.status;
+    if (filters.jobType) params.jobType = filters.jobType;
+    if (filters.limit !== undefined) params.limit = filters.limit;
+    if (filters.offset !== undefined) params.offset = filters.offset;
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs`, { params });
+  }
+
+  cancelEnrichmentJob(jobId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}/cancel`, {});
+  }
+
+  deleteEnrichmentJob(jobId: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}`);
+  }
+
+  getEnrichmentSuggestions(jobId: string, filters: { status?: string; minConfidence?: number }): Observable<any> {
+    const params: any = { jobId };
+    if (filters?.status) params.status = filters.status;
+    if (filters?.minConfidence !== undefined) params.minConfidence = filters.minConfidence;
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/suggestions`, { params });
+  }
+
+  reviewEnrichmentSuggestion(suggestionId: string, status: 'approved' | 'rejected'): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/suggestions/${suggestionId}/review`, { status });
+  }
+
+  applyEnrichmentSuggestion(suggestionId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/admin/enrichment/suggestions/${suggestionId}/apply`, {});
+  }
+
+  getEnrichmentStatistics(dateFrom?: string, dateTo?: string): Observable<any> {
+    const params: any = {};
+    if (dateFrom) params.dateFrom = dateFrom;
+    if (dateTo) params.dateTo = dateTo;
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/statistics`, { params });
+  }
+
+  // --- Usage Statistics ---
+
+  getUsageStatsSummary(days = 30): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/summary`, { params: { days: days.toString() } });
+  }
+
+  getSharedPieceStats(days = 90): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/shared-pieces`, { params: { days: days.toString() } });
+  }
+
+  getEntityViews(category: string, entityId: number, days = 90): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/usage-stats/entity/${category}/${entityId}`, { params: { days: days.toString() } });
+  }
+
+  cleanupOldPageViews(retainDays = 365): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/admin/usage-stats/cleanup`, { params: { retainDays: retainDays.toString() } });
+  }
+
+  // --- One-Time Access Tokens ---
+
+  generateOtaToken(label?: string): Observable<{ token: string; expiresAt: string; targetUser: string; label: string | null }> {
+    return this.http.post<{ token: string; expiresAt: string; targetUser: string; label: string | null }>(
+      `${this.apiUrl}/ota/generate`, { label }
+    );
+  }
+
+  listOtaTokens(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/ota`);
+  }
+
+  revokeOtaToken(id: number): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(`${this.apiUrl}/ota/${id}`);
+  }
+
+  consumeOtaToken(token: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ota/consume/${token}`, {}, { withCredentials: true });
   }
 }

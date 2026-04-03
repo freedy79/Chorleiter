@@ -1,5 +1,8 @@
+@use '../../../../themes/breakpoints' as bp;
+
 .piece-detail {
-  max-width: 600px;
+  max-width: 900px;
+  width: 75vw;
   margin: 0 auto;
 }
 
@@ -54,4 +57,110 @@ h3 {
 
 .file-item {
   margin-bottom: 0.5rem;
+}
+
+.file-group {
+  margin-bottom: 1rem;
+
+  h4 {
+    margin: 0.25rem 0 0.6rem;
+    font-size: 0.98rem;
+    color: #424242;
+
+    .dark-theme & {
+      color: #d0d0d0;
+    }
+  }
+}
+
+.files-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.file-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.02);
+  padding: 0.65rem 0.8rem;
+  margin-bottom: 0.6rem;
+
+  .dark-theme & {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.mp3-card {
+    position: relative;
+
+    .mp3-row {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+
+      .mp3-pin-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+      }
+
+      app-audio-player {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    .mp3-pinned-chip {
+      margin-top: 0.25rem;
+    }
+  }
+}
+
+.practice-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.file-link-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+
+  button,
+  a {
+    min-height: 40px;
+  }
+}
+
+// Mobile: pin icon as overlay in top-right corner of mp3-card
+@include bp.handset {
+  .file-card.mp3-card {
+    .mp3-row {
+      .mp3-pin-actions {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        z-index: 2;
+
+        button {
+          width: 32px;
+          height: 32px;
+          padding: 0;
+
+          mat-icon {
+            font-size: 18px;
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
+  }
 }

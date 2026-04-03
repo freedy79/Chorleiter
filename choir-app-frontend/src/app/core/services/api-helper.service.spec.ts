@@ -89,21 +89,22 @@ describe('ApiHelperService', () => {
       });
     });
 
-    it('should handle loading indicator on success', (done) => {
+    it('should handle loading indicator on success', () => {
       const loadingIndicator = new BehaviorSubject<boolean>(false);
       const observable$ = of({ success: true });
 
       expect(loadingIndicator.value).toBe(false);
 
+      let nextCalled = false;
       service.handleApiCall(observable$, {
         loadingIndicator
       }).subscribe({
-        next: () => {
-          // Should be set back to false after completion
-          expect(loadingIndicator.value).toBe(false);
-          done();
-        }
+        next: () => { nextCalled = true; }
       });
+
+      // finalize() runs after subscriber callbacks, so check after subscribe
+      expect(nextCalled).toBe(true);
+      expect(loadingIndicator.value).toBe(false);
     });
 
     it('should show error notification on failure', (done) => {
@@ -186,20 +187,21 @@ describe('ApiHelperService', () => {
       });
     });
 
-    it('should handle loading indicator on failure', (done) => {
+    it('should handle loading indicator on failure', () => {
       const loadingIndicator = new BehaviorSubject<boolean>(false);
       const httpError = new HttpErrorResponse({ status: 500 });
       const observable$ = throwError(() => httpError);
 
+      let errorCalled = false;
       service.handleApiCall(observable$, {
         loadingIndicator
       }).subscribe({
-        error: () => {
-          // Should be set back to false after error
-          expect(loadingIndicator.value).toBe(false);
-          done();
-        }
+        error: () => { errorCalled = true; }
       });
+
+      // finalize() runs after subscriber callbacks, so check after subscribe
+      expect(errorCalled).toBe(true);
+      expect(loadingIndicator.value).toBe(false);
     });
 
     it('should use custom durations for notifications', (done) => {
@@ -271,32 +273,36 @@ describe('ApiHelperService', () => {
   });
 
   describe('withLoading', () => {
-    it('should manage loading state without notifications', (done) => {
+    it('should manage loading state without notifications', () => {
       const loadingIndicator = new BehaviorSubject<boolean>(false);
       const observable$ = of({ success: true });
 
+      let nextCalled = false;
       service.withLoading(observable$, loadingIndicator).subscribe({
-        next: () => {
-          expect(loadingIndicator.value).toBe(false);
-          expect(notificationServiceSpy.success).not.toHaveBeenCalled();
-          expect(notificationServiceSpy.error).not.toHaveBeenCalled();
-          done();
-        }
+        next: () => { nextCalled = true; }
       });
+
+      // finalize() runs after subscriber callbacks, so check after subscribe
+      expect(nextCalled).toBe(true);
+      expect(loadingIndicator.value).toBe(false);
+      expect(notificationServiceSpy.success).not.toHaveBeenCalled();
+      expect(notificationServiceSpy.error).not.toHaveBeenCalled();
     });
 
-    it('should set loading to false even after error', (done) => {
+    it('should set loading to false even after error', () => {
       const loadingIndicator = new BehaviorSubject<boolean>(false);
       const httpError = new HttpErrorResponse({ status: 500 });
       const observable$ = throwError(() => httpError);
 
+      let errorCalled = false;
       service.withLoading(observable$, loadingIndicator).subscribe({
-        error: () => {
-          expect(loadingIndicator.value).toBe(false);
-          expect(notificationServiceSpy.error).not.toHaveBeenCalled();
-          done();
-        }
+        error: () => { errorCalled = true; }
       });
+
+      // finalize() runs after subscriber callbacks, so check after subscribe
+      expect(errorCalled).toBe(true);
+      expect(loadingIndicator.value).toBe(false);
+      expect(notificationServiceSpy.error).not.toHaveBeenCalled();
     });
   });
 });

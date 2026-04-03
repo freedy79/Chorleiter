@@ -8,10 +8,10 @@ const { handler: wrap } = require("../utils/async");
 router.use(authJwt.verifyToken);
 
 router.get("/", wrap(controller.findMyRepertoire));
-router.put("/status", role.requireNonDemo, wrap(controller.updateStatus));
+router.put("/status", role.requireNonDemo, role.requireDirectorOrHigher, wrap(controller.updateStatus));
 router.put("/notes", role.requireNonDemo, wrap(controller.updateNotes));
 router.put("/rating", role.requireNonDemo, role.requireDirectorOrHigher, wrap(controller.updateRating));
-router.post("/add-piece", role.requireNonDemo, wrap(controller.addPieceToRepertoire));
+router.post("/add-piece", role.requireNonDemo, role.requireChoirAdminOrNotenwart, wrap(controller.addPieceToRepertoire));
 router.get("/lookup", wrap(controller.lookup));
 router.get("/:id", wrap(controller.findOne));
 router.get("/:id/notes", wrap(noteController.findForPiece));

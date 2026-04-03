@@ -1,0 +1,247 @@
+<div class="jobs-container">
+
+  <!-- Create Job Section -->
+  <mat-card class="create-job-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>add_circle</mat-icon>
+      <mat-card-title>Neuen Job starten</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <!-- Warning: No API keys configured -->
+      <div class="no-api-keys-warning" *ngIf="!loadingApiKeys && !hasApiKeys">
+        <mat-icon>warning</mat-icon>
+        <div>
+          <div class="warning-title">Kein API-Key konfiguriert</div>
+          <div class="warning-message">
+            Bitte hinterlegen Sie zuerst einen API-Key in den <strong>Einstellungen</strong>, um Jobs starten zu können.
+          </div>
+        </div>
+      </div>
+
+      <form [formGroup]="jobForm" class="job-form">
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Job-Typ</mat-label>
+            <mat-select formControlName="jobType">
+              <mat-option value="piece">Stücke</mat-option>
+              <mat-option value="composer">Komponisten</mat-option>
+              <mat-option value="publisher">Verlage</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Felder</mat-label>
+            <mat-select formControlName="fields" multiple>
+              <mat-option *ngFor="let field of fieldOptions" [value]="field.value">
+                {{ field.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="limit-field">
+            <mat-label>Max. Anzahl Einträge</mat-label>
+            <input matInput type="number" min="1" max="2000" step="1" formControlName="limit" />
+            <mat-hint>1–2000</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="threshold-field">
+            <mat-label>Auto-Approve Schwelle</mat-label>
+            <input matInput type="number" min="0.5" max="1" step="0.01" formControlName="autoApproveThreshold" />
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <mat-slide-toggle formControlName="autoApprove">
+            Auto-Approve aktivieren
+          </mat-slide-toggle>
+
+          <button mat-raised-button color="primary" (click)="createJob()"
+                  [disabled]="creating || !hasApiKeys"
+                  [matTooltip]="!hasApiKeys ? 'Kein API-Key konfiguriert' : ''">
+            <mat-icon>play_arrow</mat-icon>
+            Job starten
+          </button>
+        </div>
+      </form>
+
+      <!-- Job creation error -->
+      <div class="job-error" *ngIf="jobError">
+        <mat-icon>error</mat-icon>
+        <div>
+          <div class="error-title">Fehler beim Starten</div>
+          <div class="error-message">{{ jobError }}</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Job Overview Section -->
+  <div class="jobs-overview">
+    <div class="overview-header">
+      <h3>
+        <mat-icon>list</mat-icon>
+        Job-Übersicht
+        <span class="job-count" *ngIf="!loadingJobs">({{ totalJobs }})</span>
+      </h3>
+      <div class="overview-actions">
+        <mat-button-toggle-group [value]="statusFilter" (change)="filterByStatus($event.value || null)">
+          <mat-button-toggle [value]="null">Alle</mat-button-toggle>
+          <mat-button-toggle value="running">Aktiv</mat-button-toggle>
+          <mat-button-toggle value="completed">Fertig</mat-button-toggle>
+          <mat-button-toggle value="failed">Fehler</mat-button-toggle>
+          <mat-button-toggle value="cancelled">Abgebr.</mat-button-toggle>
+        </mat-button-toggle-group>
+        <button mat-icon-button (click)="loadJobs()" matTooltip="Aktualisieren"
+                [disabled]="loadingJobs">
+          <mat-icon [class.spin]="loadingJobs">refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-container" *ngIf="loadingJobs">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+
+    <!-- Empty state -->
+    <app-empty-state *ngIf="!loadingJobs && jobs.length === 0" icon="inbox">
+      <p *ngIf="!statusFilter">Noch keine Jobs vorhanden. Starten Sie oben einen neuen Job.</p>
+      <p *ngIf="statusFilter">Keine Jobs mit Status „{{ statusLabels[statusFilter] }}“ gefunden.</p>
+    </app-empty-state>
+
+    <!-- Job list -->
+    <div class="job-list" *ngIf="!loadingJobs && jobs.length > 0">
+      <mat-card class="job-item" *ngFor="let job of jobs; trackBy: trackByJobId"
+                [class.status-running]="job.status === 'running'"
+                [class.status-pending]="job.status === 'pending'">
+
+        <!-- Job header -->
+        <div class="job-header">
+          <div class="job-status-icon" [ngClass]="'status-' + job.status">
+            <mat-icon [class.spin]="job.status === 'running'">{{ statusIcons[job.status] }}</mat-icon>
+          </div>
+          <div class="job-title">
+            <span class="job-type">{{ jobTypeLabels[job.jobType] || job.jobType }}</span>
+            <span class="job-status-badge" [ngClass]="'badge-' + job.status">
+              {{ statusLabels[job.status] || job.status }}
+            </span>
+          </div>
+          <div class="job-id" [matTooltip]="job.id" matTooltipPosition="above">
+            {{ shortId(job.id) }}…
+          </div>
+        </div>
+
+        <!-- Progress bar for running jobs -->
+        <mat-progress-bar *ngIf="job.status === 'running' && job.totalItems > 0"
+                          mode="determinate"
+                          [value]="getProgress(job)"
+                          class="job-progress">
+        </mat-progress-bar>
+
+        <!-- Live status for running jobs -->
+        <div class="job-live-status" *ngIf="job.status === 'running'">
+          <mat-icon class="live-icon">sensors</mat-icon>
+          <span>
+            {{ job.processedItems }} / {{ job.totalItems }} verarbeitet
+            <span *ngIf="job.totalItems > 0">({{ getProgress(job) }}%)</span>
+            &nbsp;·&nbsp; Provider: <strong>{{ getDisplayProvider(job) }}</strong>
+            &nbsp;·&nbsp; Strategie: {{ job.metadata?.strategy ?? '–' }}
+          </span>
+        </div>
+
+        <!-- Job details -->
+        <div class="job-details">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Erstellt</span>
+              <span class="detail-value">{{ job.createdAt | date:'dd.MM.yy HH:mm' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="job.completedAt">
+              <span class="detail-label">Beendet</span>
+              <span class="detail-value">{{ job.completedAt | date:'dd.MM.yy HH:mm' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Items</span>
+              <span class="detail-value">
+                <span *ngIf="job.status === 'running'">{{ job.processedItems }} / </span>{{ job.totalItems }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Vorschläge</span>
+              <span class="detail-value">{{ job.successCount }}</span>
+            </div>
+            <div class="detail-item" *ngIf="job.errorCount > 0">
+              <span class="detail-label">Fehler</span>
+              <span class="detail-value error-count">{{ job.errorCount }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Kosten</span>
+              <span class="detail-value">{{ job.apiCosts | number:'1.4-4' }} $</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Provider</span>
+              <span class="detail-value">{{ getDisplayProvider(job) }}</span>
+            </div>
+            <div class="detail-item" *ngIf="job.creator">
+              <span class="detail-label">Ersteller</span>
+              <span class="detail-value">{{ job.creator.firstName }} {{ job.creator.name }}</span>
+            </div>
+          </div>
+
+          <!-- Enrichment fields -->
+          <div class="job-fields" *ngIf="getFields(job).length > 0">
+            <mat-chip-set>
+              <mat-chip *ngFor="let field of getFields(job)" [disableRipple]="true">
+                {{ getFieldLabel(field) }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <!-- Error message -->
+          <div class="job-error-inline" *ngIf="job.errorMessage">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ job.errorMessage }}</span>
+          </div>
+
+          <!-- Sample prompt (first batch) -->
+          <details class="job-debug-section" *ngIf="job.metadata?.samplePrompt">
+            <summary>
+              <mat-icon class="debug-icon">send</mat-icon>
+              Gesendete Anfrage (Batch 1)
+            </summary>
+            <pre class="debug-content">{{ job.metadata?.samplePrompt }}</pre>
+          </details>
+
+          <!-- Sample response (first batch) -->
+          <details class="job-debug-section" *ngIf="job.metadata?.sampleResponse">
+            <summary>
+              <mat-icon class="debug-icon">reply</mat-icon>
+              Erhaltene Antwort (Batch 1)
+            </summary>
+            <pre class="debug-content">{{ job.metadata?.sampleResponse }}</pre>
+          </details>
+        </div>
+
+        <!-- Job actions -->
+        <div class="job-actions">
+          <button mat-stroked-button color="warn" *ngIf="canCancel(job)"
+                  (click)="cancelJob(job)"
+                  [disabled]="actionInProgress[job.id]"
+                  matTooltip="Job abbrechen">
+            <mat-icon>stop</mat-icon>
+            Abbrechen
+          </button>
+          <button mat-stroked-button color="warn" *ngIf="canDelete(job)"
+                  (click)="deleteJob(job)"
+                  [disabled]="actionInProgress[job.id]"
+                  matTooltip="Job und Vorschläge löschen">
+            <mat-icon>delete</mat-icon>
+            Löschen
+          </button>
+        </div>
+
+      </mat-card>
+    </div>
+  </div>
+
+</div>

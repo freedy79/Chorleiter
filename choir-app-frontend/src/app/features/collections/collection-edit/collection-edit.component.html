@@ -76,6 +76,16 @@
             <img *ngIf="coverPreview" [src]="coverPreview" alt="Cover preview" loading="lazy" />
           </div>
           <input type="file" #fileInput accept="image/*" hidden (change)="onFileSelected($event)" />
+          <div class="cover-actions" *ngIf="coverPreview">
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="openResizeCoverDialog()"
+              class="resize-button">
+              <mat-icon>crop</mat-icon>
+              Größe anpassen
+            </button>
+          </div>
         </div>
       </mat-card-content>
     </mat-card>

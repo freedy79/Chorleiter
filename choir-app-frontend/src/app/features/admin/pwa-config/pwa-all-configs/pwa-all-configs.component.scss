@@ -1,0 +1,64 @@
+.all-configs {
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .table-container {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .configs-table {
+    width: 100%;
+
+    code {
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      color: white;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+  }
+
+  td {
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  mat-paginator {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+  }
+}
+
+@media (max-width: 960px) {
+  .all-configs {
+    .configs-table {
+      th:nth-child(5),
+      td:nth-child(5) {
+        display: none; // Hide description on smaller screens
+      }
+    }
+  }
+}

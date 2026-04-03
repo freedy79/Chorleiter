@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment';
 import { Piece } from '../models/piece';
 import { LookupPiece } from '../models/lookup-piece';
 import { PieceChange } from '../models/piece-change';
+import { AudioMarker } from '../models/audio-marker';
 import { ImageCacheService } from './image-cache.service';
 
 @Injectable({
@@ -179,5 +180,23 @@ export class PieceService {
 
   generateShareToken(pieceId: number): Observable<{ shareToken: string }> {
     return this.http.post<{ shareToken: string }>(`${this.apiUrl}/pieces/${pieceId}/share-token`, {});
+  }
+
+  // --- Audio Markers ---
+
+  getMarkers(pieceId: number, linkId: number): Observable<AudioMarker[]> {
+    return this.http.get<AudioMarker[]>(`${this.apiUrl}/pieces/${pieceId}/links/${linkId}/markers`);
+  }
+
+  createMarker(pieceId: number, linkId: number, timeSec: number, label: string): Observable<AudioMarker> {
+    return this.http.post<AudioMarker>(`${this.apiUrl}/pieces/${pieceId}/links/${linkId}/markers`, { timeSec, label });
+  }
+
+  updateMarker(pieceId: number, linkId: number, markerId: number, data: Partial<AudioMarker>): Observable<AudioMarker> {
+    return this.http.put<AudioMarker>(`${this.apiUrl}/pieces/${pieceId}/links/${linkId}/markers/${markerId}`, data);
+  }
+
+  deleteMarker(pieceId: number, linkId: number, markerId: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/pieces/${pieceId}/links/${linkId}/markers/${markerId}`);
   }
 }

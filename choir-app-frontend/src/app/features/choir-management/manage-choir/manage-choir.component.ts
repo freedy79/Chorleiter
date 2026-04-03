@@ -56,16 +56,16 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     library: true,
   };
   menuOptions = [
-    { key: 'events', label: 'Ereignisse' },
+    { key: 'events', label: 'Termine' },
     { key: 'dienstplan', label: 'Dienstplan' },
     { key: 'availability', label: 'Verfügbarkeiten' },
-    { key: 'participation', label: 'Beteiligung' },
+    { key: 'participation', label: 'Anwesenheit' },
     { key: 'posts', label: 'Beiträge' },
     { key: 'stats', label: 'Statistik' },
-    { key: 'manageChoir', label: 'Mein Chor' },
-    { key: 'repertoire', label: 'Repertoire' },
+    { key: 'manageChoir', label: 'Choreinstellungen' },
+    { key: 'repertoire', label: 'Chor-Repertoire' },
     { key: 'collections', label: 'Sammlungen' },
-    { key: 'library', label: 'Bibliothek' },
+    { key: 'library', label: 'Notenbestand' },
   ];
 
   /**
@@ -81,9 +81,6 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   private weekdayRuleId: number | null = null;
 
 
-  choirInfoExpanded = true;
-  membersExpanded = true;
-  choirSettingsExpanded = false;
   joinLink = '';
 
   displayedCollectionColumns: string[] = ['title', 'publisher', 'actions'];
@@ -192,6 +189,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
         if (!this.isChoirAdmin) {
           this.choirForm.disable();
         }
+
         this.dataSource.data = pageData.members;
         this.pruneDashboardContactIds();
         this.collectionDataSource.data = pageData.collections;
@@ -241,18 +239,6 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
         this.logDataSource.data = logs;
       });
     }
-  }
-
-  toggleChoirInfo(): void {
-    this.choirInfoExpanded = !this.choirInfoExpanded;
-  }
-
-  toggleChoirSetting(): void {
-    this.choirSettingsExpanded = !this.choirSettingsExpanded;
-  }
-
-  toggleMembers(): void {
-    this.membersExpanded = !this.membersExpanded;
   }
 
   copyEmailsToClipboard(): void {

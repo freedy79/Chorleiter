@@ -15,7 +15,7 @@ describe('ServiceWorkerUpdateService', () => {
       'checkForUpdate',
       'activateUpdate'
     ]);
-    swUpdateMock.isEnabled = true;
+    Object.defineProperty(swUpdateMock, 'isEnabled', { value: true, writable: true });
     Object.defineProperty(swUpdateMock, 'versionUpdates', {
       get: () => versionUpdatesSubject.asObservable()
     });
@@ -50,11 +50,14 @@ describe('ServiceWorkerUpdateService', () => {
   });
 
   it('sollte initiateUpdate() aufrufen können', async () => {
-    swUpdateMock.activateUpdate.and.returnValue(Promise.resolve());
+    swUpdateMock.activateUpdate.and.returnValue(Promise.resolve(true));
+    // Spy on the protected reloadPage method to prevent actual page reload
+    spyOn(service as any, 'reloadPage');
 
     await service.activateUpdate();
 
     expect(swUpdateMock.activateUpdate).toHaveBeenCalled();
+    expect((service as any).reloadPage).toHaveBeenCalled();
   });
 
   it('sollte checkForUpdates() aufrufen können', async () => {

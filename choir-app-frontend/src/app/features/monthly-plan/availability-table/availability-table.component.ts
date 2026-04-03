@@ -5,12 +5,13 @@ import { ApiService } from '@core/services/api.service';
 import { UserAvailability } from '@core/models/user-availability';
 import { getHolidayName } from '@shared/util/holiday';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { parseDateOnly } from '@shared/util/date';
 
 @Component({
   selector: 'app-availability-table',
   standalone: true,
-  imports: [CommonModule, MaterialModule, PureDatePipe],
+  imports: [CommonModule, MaterialModule, PureDatePipe, EmptyStateComponent],
   templateUrl: './availability-table.component.html',
   styleUrls: ['./availability-table.component.scss']
 })
@@ -18,6 +19,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
   @Input() year!: number;
   @Input() month!: number;
   @Input() availabilitiesData?: UserAvailability[] | null;
+  @Input() targetUserId?: number;
   availabilities: UserAvailability[] = [];
   displayedColumns = ['date', 'status'];
   private useExternalData = false;
@@ -97,7 +99,11 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
     const i = this.availabilities.findIndex(v => v.date === date);
     if (i >= 0) this.availabilities[i].status = status;
 
-    this.api.setAvailability(date, status).subscribe(updated => {
+    const save$ = this.targetUserId != null
+      ? this.api.setMemberAvailability(this.targetUserId, date, status)
+      : this.api.setAvailability(date, status);
+
+    save$.subscribe(updated => {
         if (i >= 0) this.availabilities[i] = {
           ...updated,
           holidayHint: getHolidayName(parseDateOnly(updated.date)) || undefined

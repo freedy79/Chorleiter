@@ -1,8 +1,8 @@
-import { Component, OnInit, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, filter, switchMap, tap } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SearchService, SearchSuggestion, SearchSuggestionType } from '@core/services/search.service';
@@ -21,6 +21,13 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 export class SearchBoxComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   searchCtrl = new FormControl('');
+
+  @Input() set initialQuery(value: string) {
+    if (value && value !== this.searchCtrl.value) {
+      this.searchCtrl.setValue(value, { emitEvent: false });
+      this.currentQuery = value;
+    }
+  }
   historyEntries: SearchHistoryEntry[] = [];
   showHistory = false;
   suggestions: SearchSuggestion[] = [];
@@ -28,6 +35,7 @@ export class SearchBoxComponent implements OnInit {
   isLoading = false;
   noResults = false;
   currentQuery = '';
+  private pendingSuggestion: SearchSuggestion | null = null;
 
   readonly typeLabels: Record<SearchSuggestionType, string> = {
     piece: 'Stücke',
@@ -58,15 +66,30 @@ export class SearchBoxComponent implements OnInit {
     this.loadHistory();
 
     this.searchCtrl.valueChanges.pipe(
+      tap(val => {
+        // Immediately clear stale suggestions when input changes
+        const strVal = typeof val === 'string' ? val : '';
+        if (strVal !== this.currentQuery && this.suggestions.length) {
+          this.suggestions = [];
+          this.noResults = false;
+        }
+      }),
+      // Filter out special autocomplete option values written by MatAutocomplete
+      filter(val => typeof val === 'string' && !val.startsWith('__')),
       debounceTime(300),
       distinctUntilChanged(),
       tap(val => {
-        this.currentQuery = (val || '').toString();
-        this.isLoading = !!this.currentQuery;
+        const strVal = typeof val === 'string' ? val : '';
+        this.currentQuery = strVal;
+        this.isLoading = !!strVal;
         this.noResults = false;
         this.showHistory = false;
       }),
-      switchMap(val => val ? this.search.searchSuggestions(val) : of({ suggestions: [], total: 0 })),
+      switchMap(val => (val && typeof val === 'string')
+        ? this.search.searchSuggestions(val).pipe(
+            catchError(() => of({ suggestions: [] as SearchSuggestion[], total: 0 }))
+          )
+        : of({ suggestions: [] as SearchSuggestion[], total: 0 })),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((res) => {
       this.suggestions = res.suggestions || [];
@@ -130,8 +153,12 @@ export class SearchBoxComponent implements OnInit {
 
   highlight(text: string, query: string): SafeHtml {
     if (!query) return this.sanitizer.bypassSecurityTrustHtml(text);
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(`(${escaped})`, 'ig');
+    // Split query into words, ignoring punctuation, so highlighting works
+    // even when the user omits punctuation (e.g. "Halleluja komm" highlights "Halleluja, komm!")
+    const words = query.split(/[\s,.!?;:'"()\-\u2013\u2014\/\\]+/).filter(w => w.length > 0);
+    if (!words.length) return this.sanitizer.bypassSecurityTrustHtml(text);
+    const pattern = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s,.!?\'\"();:\\-\u2013\u2014\\/\\\\]*');
+    const regex = new RegExp(`(${pattern})`, 'ig');
     const result = text.replace(regex, '<mark>$1</mark>');
     return this.sanitizer.bypassSecurityTrustHtml(result);
   }
@@ -155,24 +182,91 @@ export class SearchBoxComponent implements OnInit {
     }
   }
 
-  onOptionSelected(value: string | null | undefined): void {
+  displaySuggestion = (value: any): string => {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      if (value === '__show_all__') return this.currentQuery;
+      if (value.startsWith('__history__')) return value.substring('__history__'.length);
+      return value;
+    }
+    return value.text || '';
+  };
+
+  onSuggestionSelection(event: any, s: SearchSuggestion): void {
+    if (event.isUserInput) {
+      this.pendingSuggestion = s;
+    }
+  }
+
+  onOptionSelected(value: any): void {
+    // Check for pending suggestion from onSelectionChange
+    if (this.pendingSuggestion) {
+      const s = this.pendingSuggestion;
+      this.pendingSuggestion = null;
+      this.navigateToSuggestion(s);
+      return;
+    }
+
     if (!value) {
       return;
     }
 
-    if (value.startsWith('__history__')) {
-      const query = value.substring('__history__'.length);
-      this.searchCtrl.setValue(query, { emitEvent: true });
-      return;
-    }
+    // String values: history entries or show-all
+    if (typeof value === 'string') {
+      if (value.startsWith('__history__')) {
+        const query = value.substring('__history__'.length);
+        this.searchCtrl.setValue(query, { emitEvent: true });
+        return;
+      }
 
-    if (value === '__show_all__') {
+      if (value === '__show_all__') {
+        this.searchCtrl.setValue(this.currentQuery, { emitEvent: false });
+        this.goToResults();
+        return;
+      }
+
+      this.searchCtrl.setValue(value, { emitEvent: false });
       this.goToResults();
+      this.showHistory = false;
       return;
     }
+  }
 
-    this.searchCtrl.setValue(value, { emitEvent: false });
-    this.goToResults();
+  private navigateToSuggestion(s: SearchSuggestion): void {
+    // Save to history
+    this.historyService.addToHistory({
+      query: s.text,
+      resultCount: 1
+    }).subscribe();
+
+    // Clear the search input (emit to cancel any pending debounce from autocomplete)
+    this.searchCtrl.setValue('', { emitEvent: true });
+    this.suggestions = [];
     this.showHistory = false;
+
+    switch (s.type) {
+      case 'piece':
+        this.router.navigate(['/pieces', s.id]);
+        break;
+      case 'collection':
+        this.router.navigate(['/collections/edit', s.id]);
+        break;
+      case 'composer':
+        this.navigateToRepertoireWithFilter({ composerIds: [s.id] });
+        break;
+      case 'category':
+        this.navigateToRepertoireWithFilter({ categoryIds: [s.id] });
+        break;
+      case 'author':
+      case 'publisher':
+        // For authors/publishers, search for their name in repertoire
+        this.router.navigate(['/search'], { queryParams: { q: s.text } });
+        break;
+    }
+  }
+
+  private navigateToRepertoireWithFilter(filter: Record<string, any>): void {
+    localStorage.setItem('repertoireFilters', JSON.stringify(filter));
+    this.router.navigate(['/repertoire']);
   }
 }

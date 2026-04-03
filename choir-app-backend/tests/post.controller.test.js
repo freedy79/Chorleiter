@@ -1,7 +1,10 @@
 const assert = require('assert');
+const crypto = require('crypto');
 
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
+process.env.DISABLE_EMAIL = 'true';
 
 const db = require('../src/models');
 const controller = require('../src/controllers/post.controller');
@@ -13,6 +16,9 @@ const controller = require('../src/controllers/post.controller');
     const user1 = await db.user.create({ email: 'u1@example.com', roles: ['user'] });
     const user2 = await db.user.create({ email: 'u2@example.com', roles: ['user'] });
     const user3 = await db.user.create({ email: 'u3@example.com', roles: ['user'] });
+    await db.user_choir.create({ userId: user1.id, choirId: choir.id, rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' });
+    await db.user_choir.create({ userId: user2.id, choirId: choir.id, rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' });
+    await db.user_choir.create({ userId: user3.id, choirId: choir.id, rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' });
 
     const now = new Date();
     const future = new Date(now.getTime() + 86400000);
@@ -164,6 +170,152 @@ const controller = require('../src/controllers/post.controller');
       userRoles: []
     }, res);
     assert.strictEqual(res.statusCode, 400);
+
+    // create open poll for reminder workflow tests
+    await controller.create({
+      body: {
+        title: 'Erinnerungstest',
+        text: 'Bitte noch abstimmen',
+        poll: { options: ['Ja', 'Nein'], allowMultiple: true, maxSelections: 2 },
+        publish: true
+      },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 201);
+    const reminderPost = res.data;
+
+    // one user already voted -> no reminder for that user even on multi-vote poll
+    await controller.vote({
+      params: { id: reminderPost.id },
+      body: { optionIds: [reminderPost.poll.options[0].id] },
+      activeChoirId: choir.id,
+      userId: user2.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+
+    await controller.getPollReminderStatus({
+      params: { id: reminderPost.id },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.totalSingerCount, 3);
+    assert.strictEqual(res.data.pendingCount, 2);
+    const user2Status = res.data.members.find(m => m.userId === user2.id);
+    assert.ok(user2Status.hasVoted);
+
+    await controller.sendPollReminders({
+      params: { id: reminderPost.id },
+      body: {},
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    // only pending singers should receive reminder links (2 users x 2 options)
+    const pollEntity = await db.poll.findOne({ where: { postId: reminderPost.id } });
+    const createdTokens = await db.poll_vote_reminder_token.count({ where: { pollId: pollEntity.id } });
+    assert.strictEqual(createdTokens, 4);
+
+    // test-mail override should work even for author
+    await controller.sendPollReminders({
+      params: { id: reminderPost.id },
+      body: { sendTestToSelf: true },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: ['admin']
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.testSent, true);
+    assert.strictEqual(res.data.sentCount, 1);
+
+    const tokensAfterSelfTest = await db.poll_vote_reminder_token.count({ where: { pollId: pollEntity.id } });
+    assert.strictEqual(tokensAfterSelfTest, 6);
+
+    // consume one token on multi-vote poll; sibling link should stay valid
+    const optionA = await db.poll_option.findOne({ where: { pollId: pollEntity.id, label: 'Ja' } });
+    const optionB = await db.poll_option.findOne({ where: { pollId: pollEntity.id, label: 'Nein' } });
+    const rawTokenA = 'token-a';
+    const rawTokenB = 'token-b';
+    const hashA = crypto.createHash('sha256').update(rawTokenA).digest('hex');
+    const hashB = crypto.createHash('sha256').update(rawTokenB).digest('hex');
+
+    await db.poll_vote_reminder_token.create({
+      pollId: pollEntity.id,
+      pollOptionId: optionA.id,
+      userId: user3.id,
+      tokenHash: hashA,
+      expiresAt: new Date(Date.now() + 3600000)
+    });
+    await db.poll_vote_reminder_token.create({
+      pollId: pollEntity.id,
+      pollOptionId: optionB.id,
+      userId: user3.id,
+      tokenHash: hashB,
+      expiresAt: new Date(Date.now() + 3600000)
+    });
+
+    const tokenRes = {
+      status(code) { this.statusCode = code; return this; },
+      send(data) { this.data = data; },
+      cookie(name, value) { this.cookieName = name; this.cookieValue = value; }
+    };
+    await controller.consumeReminderVote({ params: { token: rawTokenA } }, tokenRes);
+    assert.strictEqual(tokenRes.statusCode, 200);
+    assert.strictEqual(tokenRes.cookieName, 'auth-token');
+
+    const user3Votes = await db.poll_vote.findAll({ where: { pollId: pollEntity.id, userId: user3.id } });
+    assert.strictEqual(user3Votes.length, 1);
+    assert.strictEqual(user3Votes[0].pollOptionId, optionA.id);
+
+    const siblingToken = await db.poll_vote_reminder_token.findOne({ where: { tokenHash: hashB } });
+    assert.strictEqual(siblingToken.invalidatedAt, null);
+
+    // single-choice poll should invalidate sibling links after one click
+    await controller.create({
+      body: {
+        title: 'Single-Choice-Linktest',
+        text: 'Bitte eine Option',
+        poll: { options: ['A', 'B'], allowMultiple: false },
+        publish: true
+      },
+      activeChoirId: choir.id,
+      userId: user1.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 201);
+    const singlePost = res.data;
+    const singlePoll = await db.poll.findOne({ where: { postId: singlePost.id } });
+    const singleA = await db.poll_option.findOne({ where: { pollId: singlePoll.id, label: 'A' } });
+    const singleB = await db.poll_option.findOne({ where: { pollId: singlePoll.id, label: 'B' } });
+
+    const rawSingleA = 'single-token-a';
+    const rawSingleB = 'single-token-b';
+    const hashSingleA = crypto.createHash('sha256').update(rawSingleA).digest('hex');
+    const hashSingleB = crypto.createHash('sha256').update(rawSingleB).digest('hex');
+    await db.poll_vote_reminder_token.create({
+      pollId: singlePoll.id,
+      pollOptionId: singleA.id,
+      userId: user3.id,
+      tokenHash: hashSingleA,
+      expiresAt: new Date(Date.now() + 3600000)
+    });
+    await db.poll_vote_reminder_token.create({
+      pollId: singlePoll.id,
+      pollOptionId: singleB.id,
+      userId: user3.id,
+      tokenHash: hashSingleB,
+      expiresAt: new Date(Date.now() + 3600000)
+    });
+
+    await controller.consumeReminderVote({ params: { token: rawSingleA } }, tokenRes);
+    assert.strictEqual(tokenRes.statusCode, 200);
+    const singleSibling = await db.poll_vote_reminder_token.findOne({ where: { tokenHash: hashSingleB } });
+    assert.ok(singleSibling.invalidatedAt);
 
     // comments can be added and replied to
     await controller.addComment({

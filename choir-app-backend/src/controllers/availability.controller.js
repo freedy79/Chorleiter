@@ -4,10 +4,8 @@ const { datesForRule, isoDateString } = require('../utils/date.utils');
 
 const { isPublicHoliday } = require('../services/holiday.service');
 
-
-exports.findByMonth = async (req, res) => {
-    const { year, month } = req.params;
-    const rules = await db.plan_rule.findAll({ where: { choirId: req.activeChoirId } });
+async function buildAvailabilitiesForUser({ choirId, userId, year, month }) {
+    const rules = await db.plan_rule.findAll({ where: { choirId } });
     const dateSet = new Set();
     for (const rule of rules) {
         for (const d of datesForRule(year, month, rule)) {
@@ -29,12 +27,13 @@ exports.findByMonth = async (req, res) => {
             dateSet.delete(isoDateString(dec26));
         }
     }
+
     const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
     const firstDate = `${year}-${String(month).padStart(2,'0')}-01`;
     const lastDate = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
     const events = await db.event.findAll({
         where: {
-            choirId: req.activeChoirId,
+            choirId,
             date: { [Op.between]: [firstDate, lastDate] }
         },
         attributes: ['date']
@@ -42,20 +41,43 @@ exports.findByMonth = async (req, res) => {
     for (const ev of events) {
         dateSet.add(isoDateString(ev.date));
     }
+
     const dates = Array.from(dateSet).sort();
     const avail = await db.user_availability.findAll({
         where: {
-            userId: req.userId,
-            choirId: req.activeChoirId,
+            userId,
+            choirId,
             date: { [Op.between]: [ firstDate, lastDate ] }
         }
     });
     const map = Object.fromEntries(avail.map(a => [a.date, a]));
-    const user = await db.user.findByPk(req.userId);
+    const user = await db.user.findByPk(userId);
     const defaultStatus = user?.preferences?.defaultAvailability;
-    const result = dates.map(d => {
+    return dates.map(d => {
         if (map[d]) return map[d];
         return defaultStatus ? { date: d, status: defaultStatus } : { date: d };
+    });
+}
+
+
+exports.findByMonth = async (req, res) => {
+    const { year, month } = req.params;
+    const result = await buildAvailabilitiesForUser({
+        choirId: req.activeChoirId,
+        userId: req.userId,
+        year,
+        month
+    });
+    res.status(200).send(result);
+};
+
+exports.findByMonthForUser = async (req, res) => {
+    const { year, month, userId } = req.params;
+    const result = await buildAvailabilitiesForUser({
+        choirId: req.activeChoirId,
+        userId,
+        year,
+        month
     });
     res.status(200).send(result);
 };

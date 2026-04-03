@@ -17,7 +17,7 @@ export class PlanEntryDialogComponent {
   constructor(private fb: FormBuilder,
               public dialogRef: MatDialogRef<PlanEntryDialogComponent>) {
     this.form = this.fb.group({
-      date: [new Date(), Validators.required],
+      date: [new Date().toISOString().split('T')[0], Validators.required],
       notes: ['']
     });
   }

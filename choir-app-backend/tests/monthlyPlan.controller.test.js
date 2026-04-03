@@ -21,6 +21,7 @@ const controller = require('../src/controllers/monthlyPlan.controller');
 
     const entries = await db.plan_entry.findAll({ where: { monthlyPlanId: planId } });
     assert.ok(entries.length > 0);
+    assert.ok(entries.every(e => e.notes === 'Gottesdienst'));
 
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 7 } }, res);
     assert.strictEqual(res.statusCode, 200);
@@ -50,6 +51,8 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     const dates = entries2021.map(e => e.date.toISOString().split('T')[0]);
     assert.ok(dates.includes('2021-12-25'));
     assert.ok(!dates.includes('2021-12-26'));
+    const dec25Entry = entries2021.find(e => e.date.toISOString().startsWith('2021-12-25'));
+    assert.strictEqual(dec25Entry?.notes, 'Gottesdienst');
     await db.sequelize.close();
   } catch (err) {
     console.error(err);

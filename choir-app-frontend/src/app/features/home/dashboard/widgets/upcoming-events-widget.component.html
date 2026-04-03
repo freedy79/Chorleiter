@@ -10,7 +10,7 @@
         <div class="timeline-content">
           <div class="timeline-primary">
             <strong class="date">{{ (ev?.date) | pureDate | date:'dd.MM.yy':'Europe/Berlin':'de-DE' }}</strong>
-            <span class="type">{{ ev.type === 'SERVICE' ? 'Gottesdienst' : 'Probe' }}</span>
+            <span class="type">{{ ev.type === 'SERVICE' ? 'Gottesdienst' : ev.type === 'REHEARSAL' ? 'Probe' : 'Dienstplan' }}</span>
           </div>
           <div class="timeline-secondary">
             {{ ev.choir?.name || '—' }}

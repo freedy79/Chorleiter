@@ -37,6 +37,9 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { DashboardContactWidgetComponent } from './widgets/dashboard-contact-widget.component';
 import { DashboardContact } from '@core/models/dashboard-contact';
 import { CurrentLoansWidgetComponent } from './widgets/current-loans-widget.component';
+import { ActiveFormsWidgetComponent } from '@features/forms/active-forms-widget.component';
+import { FormService } from '@core/services/form.service';
+import { Form } from '@core/models/form';
 
 type VM = {
   activeChoir: any | null;
@@ -69,6 +72,7 @@ type VM = {
     CurrentProgramWidgetComponent,
     DashboardContactWidgetComponent,
     CurrentLoansWidgetComponent,
+    ActiveFormsWidgetComponent,
     PureDatePipe,
   ],
   templateUrl: './dashboard.component.html',
@@ -94,6 +98,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   borrowedItems$!: Observable<LibraryItem[]>;
   dashboardContacts$!: Observable<DashboardContact[]>;
   currentLoans$!: Observable<Lending[]>;
+  activeForms$!: Observable<Form[]>;
   performableCount$!: Observable<number>;
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
@@ -111,6 +116,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
     private notification: NotificationService, // Zum Anzeigen von Benachrichtigungen
     private help: HelpService,
     private userService: UserService,
+    private formService: FormService,
     private router: Router
   ) {
     super(); // Call BaseComponent constructor
@@ -183,6 +189,11 @@ export class DashboardComponent extends BaseComponent implements OnInit {
 
     this.currentLoans$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getMyBorrowings()),
+      shareReplay(1)
+    );
+
+    this.activeForms$ = this.refresh$.pipe(
+      switchMap(() => this.formService.getActiveForms()),
       shareReplay(1)
     );
 
@@ -269,6 +280,14 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   }
 
   openEvent(ev: Event): void {
+    if (ev.type === 'PLAN_ENTRY') {
+      if (ev.monthlyPlan) {
+        this.router.navigate(['/dienstplan'], {
+          queryParams: { year: ev.monthlyPlan.year, month: ev.monthlyPlan.month }
+        });
+      }
+      return;
+    }
     this.isSingerOnly$.pipe(take(1)).subscribe(isSinger => {
       if (isSinger) {
         const d = new Date(ev.date);
@@ -346,6 +365,25 @@ export class DashboardComponent extends BaseComponent implements OnInit {
       return 'vor 1 Tag';
     }
     return `vor ${diffDays} Tagen`;
+  }
+
+  isProgramCurrent(program: Program | null | undefined): boolean {
+    if (!program?.startTime) {
+      return false;
+    }
+
+    const programDate = new Date(program.startTime);
+    if (Number.isNaN(programDate.getTime())) {
+      return false;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const normalizedProgramDate = new Date(programDate);
+    normalizedProgramDate.setHours(0, 0, 0, 0);
+
+    return today.getTime() <= normalizedProgramDate.getTime();
   }
 
   /**

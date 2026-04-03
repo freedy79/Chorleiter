@@ -1,3 +1,5 @@
+const { encryptPiiField, decryptPiiField, PII_FIELDS } = require('../init/encryptUserPersonalData');
+
 const DEFAULT_ROLES = ['user'];
 const ALLOWED_GLOBAL_ROLES = ['admin', 'librarian', 'user', 'demo'];
 
@@ -111,5 +113,31 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: true
     }
   });
+  // Encrypt PII fields before persisting
+  User.addHook('beforeCreate', (user) => {
+    for (const field of PII_FIELDS) {
+      if (user[field]) user[field] = encryptPiiField(user[field]);
+    }
+  });
+
+  User.addHook('beforeUpdate', (user) => {
+    for (const field of PII_FIELDS) {
+      if (user.changed(field) && user[field]) {
+        user[field] = encryptPiiField(user[field]);
+      }
+    }
+  });
+
+  // Decrypt PII fields after fetching
+  User.addHook('afterFind', (result) => {
+    if (!result) return;
+    const users = Array.isArray(result) ? result : [result];
+    for (const u of users) {
+      for (const field of PII_FIELDS) {
+        if (u[field]) u[field] = decryptPiiField(u[field]);
+      }
+    }
+  });
+
   return User;
 };

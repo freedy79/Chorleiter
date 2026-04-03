@@ -44,8 +44,9 @@ export class EventShortPipe implements PipeTransform {
 
     const notes = value.notes.toLowerCase();
 
-    // Check for Gottesdienst (service)
-    if (/\b(gottesdienst|gd)\b/.test(notes)) {
+    // Check for Gottesdienst (service) - suffix match for German compounds
+    // (Hauptgottesdienst, Abendgottesdienst, Festgottesdienst, Sonntagsgottesdienst, etc.)
+    if (/gottesdienst\b/.test(notes) || /\bgd\b/.test(notes)) {
       return 'GD';
     }
 

@@ -1,0 +1,230 @@
+<div class="form-editor-container" *ngIf="!loading; else loadingTpl">
+  <div class="editor-header">
+    <h1>{{ isEdit ? 'Formular bearbeiten' : 'Neues Formular' }}</h1>
+    <div class="header-actions">
+      <span class="status-badge" [class]="'status-' + form.get('status')?.value">
+        {{ form.get('status')?.value === 'draft' ? 'Entwurf' : form.get('status')?.value === 'published' ? 'Veröffentlicht' : 'Geschlossen' }}
+      </span>
+      <a mat-stroked-button [routerLink]="['/forms', formId, 'preview']" *ngIf="isEdit"
+        matTooltip="Vorschau anzeigen" target="_blank">
+        <mat-icon>visibility</mat-icon> Vorschau
+      </a>
+      <button mat-stroked-button (click)="duplicateForm()" *ngIf="isEdit" matTooltip="Formular duplizieren">
+        <mat-icon>content_copy</mat-icon> Duplizieren
+      </button>
+      <button mat-stroked-button (click)="copyPublicLink()" *ngIf="isEdit && form.get('status')?.value === 'published'"
+        matTooltip="Öffentlichen Link kopieren">
+        <mat-icon>share</mat-icon> Teilen
+      </button>
+      <button mat-stroked-button color="primary" (click)="publishForm()"
+        *ngIf="isEdit && form.get('status')?.value === 'draft'">
+        <mat-icon>publish</mat-icon> Veröffentlichen
+      </button>
+      <button mat-stroked-button color="warn" (click)="closeForm()"
+        *ngIf="isEdit && form.get('status')?.value === 'published'">
+        <mat-icon>lock</mat-icon> Schließen
+      </button>
+    </div>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()">
+
+    <!-- Basic Info Card -->
+    <mat-card class="section-card">
+      <mat-card-header>
+        <mat-card-title>Allgemeine Informationen</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Formulartitel</mat-label>
+          <input matInput formControlName="title" placeholder="z.B. Anmeldung Chorfreizeit">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Beschreibung (optional)</mat-label>
+          <textarea matInput formControlName="description" rows="3"
+            placeholder="Kurze Beschreibung oder Einleitung zum Formular"></textarea>
+        </mat-form-field>
+
+        <div class="date-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Öffnungsdatum</mat-label>
+            <input matInput [matDatepicker]="openPicker" formControlName="openDate">
+            <mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle>
+            <mat-datepicker #openPicker></mat-datepicker>
+            <mat-hint>Leer lassen für sofortige Verfügbarkeit</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Schließungsdatum</mat-label>
+            <input matInput [matDatepicker]="closePicker" formControlName="closeDate">
+            <mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle>
+            <mat-datepicker #closePicker></mat-datepicker>
+            <mat-hint>Leer lassen für unbegrenzt</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="checkbox-row">
+          <mat-checkbox formControlName="allowAnonymous">Anonyme Teilnahme erlauben</mat-checkbox>
+          <mat-checkbox formControlName="allowMultipleSubmissions">Mehrfach-Abgabe erlauben</mat-checkbox>
+          <mat-checkbox formControlName="notifyOnSubmission">E-Mail-Benachrichtigung bei Abgabe</mat-checkbox>
+        </div>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Max. Abgaben (optional)</mat-label>
+          <input matInput type="number" formControlName="maxSubmissions" min="1" placeholder="Unbegrenzt">
+          <mat-hint>Leer lassen für unbegrenzte Abgaben</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Bestätigungstext nach Absenden</mat-label>
+          <input matInput formControlName="confirmationText">
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Fields Editor -->
+    <mat-card class="section-card fields-card">
+      <mat-card-header>
+        <mat-card-title>Formularfelder</mat-card-title>
+        <mat-card-subtitle>Ziehe Felder um die Reihenfolge zu ändern</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="fields-list" cdkDropList (cdkDropListDropped)="dropField($event)">
+          <div *ngFor="let field of fields.controls; let i = index" cdkDrag class="field-item" [formGroupName]="i"
+            formArrayName="fields">
+            <div class="drag-handle" cdkDragHandle>
+              <mat-icon>drag_indicator</mat-icon>
+            </div>
+
+            <div class="field-content" [formGroup]="$any(field)">
+              <div class="field-header">
+                <mat-icon class="field-type-icon">{{ getFieldTypeIcon($any(field).get('type').value) }}</mat-icon>
+                <span class="field-type-label">{{ getFieldTypeLabel($any(field).get('type').value) }}</span>
+
+                <mat-form-field appearance="outline" class="type-select">
+                  <mat-label>Typ</mat-label>
+                  <mat-select formControlName="type">
+                    <mat-option *ngFor="let t of fieldTypes" [value]="t.value">
+                      <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <span class="spacer"></span>
+
+                <mat-checkbox formControlName="required" *ngIf="!isDecorativeField($any(field).get('type').value)">
+                  Pflichtfeld
+                </mat-checkbox>
+
+                <button mat-icon-button color="warn" type="button" (click)="removeField(i)" matTooltip="Feld entfernen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+
+              <mat-form-field appearance="outline" class="full-width"
+                *ngIf="!isDecorativeField($any(field).get('type').value)">
+                <mat-label>Feldbezeichnung</mat-label>
+                <input matInput formControlName="label" placeholder="z.B. Dein Name">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width"
+                *ngIf="isDecorativeField($any(field).get('type').value) && $any(field).get('type').value === 'heading'">
+                <mat-label>Überschrift</mat-label>
+                <input matInput formControlName="label" placeholder="Abschnittsüberschrift">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width"
+                *ngIf="!isDecorativeField($any(field).get('type').value)">
+                <mat-label>Platzhalter (optional)</mat-label>
+                <input matInput formControlName="placeholder">
+              </mat-form-field>
+
+              <!-- Options for Select/Radio/Multi-Checkbox fields -->
+              <div *ngIf="needsOptions($any(field).get('type').value)" class="options-section">
+                <h4>Auswahloptionen</h4>
+                <div *ngFor="let opt of getOptions(i); let oi = index" class="option-row">
+                  <mat-form-field appearance="outline" class="option-input">
+                    <mat-label>Option {{ oi + 1 }}</mat-label>
+                    <input matInput [value]="opt" (input)="updateOption(i, oi, $any($event.target).value)">
+                  </mat-form-field>
+                  <button mat-icon-button color="warn" type="button" (click)="removeOption(i, oi)">
+                    <mat-icon>remove_circle</mat-icon>
+                  </button>
+                </div>
+                <button mat-stroked-button type="button" (click)="addOption(i)">
+                  <mat-icon>add</mat-icon> Option hinzufügen
+                </button>
+              </div>
+
+              <!-- Conditional Visibility (showIf) -->
+              <div *ngIf="i > 0 && !isDecorativeField($any(field).get('type').value)" class="show-if-section">
+                <mat-checkbox [checked]="!!$any(field).get('showIf').value"
+                  (change)="toggleShowIf(i, $event.checked)">
+                  Bedingte Sichtbarkeit
+                </mat-checkbox>
+                <div *ngIf="$any(field).get('showIf').value" class="show-if-config">
+                  <span class="show-if-label">Zeige dieses Feld nur wenn</span>
+                  <mat-form-field appearance="outline" class="show-if-field-select">
+                    <mat-label>Feld</mat-label>
+                    <mat-select [value]="$any(field).get('showIf').value?.fieldId"
+                      (selectionChange)="updateShowIf(i, 'fieldId', $event.value)">
+                      <mat-option *ngFor="let f of getPreviousFields(i)" [value]="f.id ?? f.sortOrder">
+                        {{ f.label || '(Ohne Bezeichnung)' }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="show-if-operator">
+                    <mat-label>Bedingung</mat-label>
+                    <mat-select [value]="$any(field).get('showIf').value?.operator"
+                      (selectionChange)="updateShowIf(i, 'operator', $event.value)">
+                      <mat-option value="equals">ist gleich</mat-option>
+                      <mat-option value="not_equals">ist nicht gleich</mat-option>
+                      <mat-option value="contains">enthält</mat-option>
+                      <mat-option value="not_empty">ist nicht leer</mat-option>
+                      <mat-option value="is_empty">ist leer</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="show-if-value"
+                    *ngIf="$any(field).get('showIf').value?.operator !== 'not_empty' && $any(field).get('showIf').value?.operator !== 'is_empty'">
+                    <mat-label>Wert</mat-label>
+                    <input matInput [value]="$any(field).get('showIf').value?.value || ''"
+                      (input)="updateShowIf(i, 'value', $any($event.target).value)">
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add field buttons -->
+        <div class="add-field-section">
+          <p class="add-label">Feld hinzufügen:</p>
+          <div class="add-field-buttons">
+            <button *ngFor="let t of fieldTypes" mat-stroked-button type="button"
+              (click)="addField(t.value)" class="add-field-btn" [matTooltip]="t.label">
+              <mat-icon>{{ t.icon }}</mat-icon>
+              <span class="btn-label">{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button mat-button type="button" routerLink="/forms">Abbrechen</button>
+      <button mat-flat-button color="primary" type="submit" [disabled]="saving">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Speichern…' : (isEdit ? 'Speichern' : 'Erstellen') }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Formular wird geladen…</p>
+  </div>
+</ng-template>

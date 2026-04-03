@@ -1,9 +1,71 @@
 <div class="mail-logs">
-  <button mat-raised-button color="warn" (click)="clearLogs()" *ngIf="logs.length">Logs löschen</button>
+  <div class="toolbar">
+    <button
+      mat-stroked-button
+      color="primary"
+      [disabled]="showOnlyErrors"
+      (click)="toggleErrorFilter(true)">
+      Nur Fehler
+    </button>
+    <button
+      mat-stroked-button
+      [disabled]="!showOnlyErrors"
+      (click)="toggleErrorFilter(false)">
+      Alle Einträge
+    </button>
+    <button mat-stroked-button (click)="loadDeliveryDiagnostics()" [disabled]="diagnosticsLoading">
+      {{ diagnosticsLoading ? 'Prüfe Server...' : 'Server-Maildiagnose aktualisieren' }}
+    </button>
+    <button mat-raised-button color="warn" (click)="clearLogs()" *ngIf="logs.length">Logs löschen</button>
+  </div>
+
+  <div class="diagnostics" *ngIf="diagnostics">
+    <h3>Server-Maildiagnose</h3>
+
+    <p *ngIf="diagnostics.checkedAt"><strong>Zuletzt geprüft:</strong> {{ diagnostics.checkedAt | date:'short' }}</p>
+    <p *ngIf="diagnostics.message" class="diagnostics-message">{{ diagnostics.message }}</p>
+    <p *ngIf="diagnosticsError" class="diagnostics-error">{{ diagnosticsError }}</p>
+
+    <div class="summary" *ngIf="diagnostics.counts as counts">
+      <span>sent: <strong>{{ counts.sent }}</strong></span>
+      <span>deferred: <strong>{{ counts.deferred }}</strong></span>
+      <span>bounced: <strong>{{ counts.bounced }}</strong></span>
+      <span>reject: <strong>{{ counts.rejected }}</strong></span>
+      <span *ngIf="diagnostics.queue">Queue: <strong>{{ diagnostics.queue.empty ? 'leer' : 'Einträge vorhanden' }}</strong></span>
+    </div>
+
+    <details *ngIf="diagnostics.statuses?.lines?.length">
+      <summary>Postfix Status-Logs (letzte Treffer)</summary>
+      <pre>{{ diagnostics.statuses?.lines?.join('\n') }}</pre>
+    </details>
+
+    <details *ngIf="diagnostics.tOnline?.lines?.length">
+      <summary>t-online Treffer</summary>
+      <pre>{{ diagnostics.tOnline?.lines?.join('\n') }}</pre>
+    </details>
+
+    <details *ngIf="diagnostics.queue?.raw">
+      <summary>Queue-Ausgabe</summary>
+      <pre>{{ diagnostics.queue?.raw }}</pre>
+    </details>
+
+    <ul *ngIf="diagnostics.hints?.length" class="hints">
+      <li *ngFor="let hint of diagnostics.hints">{{ hint }}</li>
+    </ul>
+  </div>
+
   <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
     <ng-container matColumnDef="createdAt">
       <th mat-header-cell *matHeaderCellDef>Datum</th>
       <td mat-cell *matCellDef="let log">{{ log.createdAt | date:'short' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="status">
+      <th mat-header-cell *matHeaderCellDef>Status</th>
+      <td mat-cell *matCellDef="let log">
+        <span class="status-pill" [class.failed]="log.status === 'FAILED'" [class.blocked]="log.status === 'BLOCKED'">
+          {{ log.status || 'SENT' }}
+        </span>
+      </td>
     </ng-container>
     <ng-container matColumnDef="recipients">
       <th mat-header-cell *matHeaderCellDef>Empfänger</th>
@@ -12,6 +74,10 @@
     <ng-container matColumnDef="subject">
       <th mat-header-cell *matHeaderCellDef>Betreff</th>
       <td mat-cell *matCellDef="let log">{{ log.subject }}</td>
+    </ng-container>
+    <ng-container matColumnDef="errorMessage">
+      <th mat-header-cell *matHeaderCellDef>Fehler</th>
+      <td mat-cell *matCellDef="let log" class="error-cell">{{ log.errorMessage || '—' }}</td>
     </ng-container>
     <ng-container matColumnDef="body">
       <th mat-header-cell *matHeaderCellDef>Inhalt</th>

@@ -1,0 +1,268 @@
+.doublettes-dialog {
+  min-width: 600px;
+  max-width: 900px;
+
+  .content {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    gap: 16px;
+
+    p {
+      margin: 0;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+
+    mat-icon {
+      font-size: 48px;
+      width: 48px;
+      height: 48px;
+      color: #4caf50;
+      margin-bottom: 16px;
+    }
+
+    p {
+      margin: 0;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+
+  .groups-container {
+    .threshold-info {
+      margin-bottom: 16px;
+      padding: 12px;
+      background-color: rgba(25, 103, 210, 0.05);
+      border-radius: 4px;
+
+      .info-text {
+        margin: 0;
+        color: rgba(0, 0, 0, 0.87);
+        font-size: 14px;
+      }
+    }
+
+    .groups-list {
+      margin-bottom: 16px;
+    }
+  }
+
+  .group-title {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .group-label {
+      font-weight: 500;
+      padding: 4px 8px;
+      background-color: rgba(25, 103, 210, 0.1);
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .group-count {
+      color: rgba(0, 0, 0, 0.54);
+      font-size: 13px;
+    }
+  }
+
+  .group-content {
+    padding: 16px;
+
+    .candidates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .candidate-card {
+      border: 2px solid rgba(0, 0, 0, 0.12);
+      border-radius: 4px;
+      padding: 16px;
+      transition: all 0.3s ease;
+      background-color: #fafafa;
+
+      &:hover {
+        border-color: rgba(25, 103, 210, 0.3);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      &.selected-source {
+        border-color: #f44336;
+        background-color: rgba(244, 67, 54, 0.05);
+      }
+
+      &.selected-target {
+        border-color: #2196f3;
+        background-color: rgba(33, 150, 243, 0.05);
+      }
+
+      .candidate-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 500;
+          flex: 1;
+          line-height: 1.3;
+        }
+
+        .similarity-badge {
+          padding: 4px 8px;
+          border-radius: 4px;
+          color: white;
+          font-size: 12px;
+          font-weight: 600;
+          white-space: nowrap;
+          flex-shrink: 0;
+
+          &[style*="primary"],
+          &[style*="accent"],
+          &[style*="warn"] {
+            background: inherit;
+          }
+        }
+      }
+
+      .candidate-details {
+        margin-bottom: 16px;
+        font-size: 13px;
+
+        p {
+          margin: 0 0 8px 0;
+          color: rgba(0, 0, 0, 0.7);
+
+          strong {
+            color: rgba(0, 0, 0, 0.87);
+            display: inline-block;
+            min-width: 120px;
+          }
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+
+      .candidate-actions {
+        display: flex;
+        gap: 8px;
+
+        button {
+          flex: 1;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .merge-preview {
+    background-color: rgba(33, 150, 243, 0.05);
+    border: 1px solid rgba(33, 150, 243, 0.2);
+    border-radius: 4px;
+    padding: 16px;
+    margin-top: 20px;
+
+    h4 {
+      margin: 0 0 12px 0;
+      color: rgba(0, 0, 0, 0.87);
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .merge-options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+
+      mat-checkbox {
+        display: block;
+      }
+    }
+
+    mat-divider {
+      margin: 16px 0;
+    }
+
+    .merge-action {
+      display: flex;
+      gap: 8px;
+
+      button {
+        flex: 1;
+        min-height: 40px;
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .doublettes-dialog {
+    .threshold-info {
+      background-color: rgba(255, 255, 255, 0.05);
+
+      .info-text {
+        color: rgba(255, 255, 255, 0.87);
+      }
+    }
+
+    .group-label {
+      background-color: rgba(144, 202, 249, 0.2);
+    }
+
+    .candidate-card {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.12);
+
+      &.selected-source {
+        background-color: rgba(244, 67, 54, 0.1);
+      }
+
+      &.selected-target {
+        background-color: rgba(33, 150, 243, 0.1);
+      }
+
+      .candidate-details p {
+        color: rgba(255, 255, 255, 0.7);
+
+        strong {
+          color: rgba(255, 255, 255, 0.87);
+        }
+      }
+    }
+
+    .merge-preview {
+      background-color: rgba(33, 150, 243, 0.1);
+      border-color: rgba(33, 150, 243, 0.3);
+
+      h4 {
+        color: rgba(255, 255, 255, 0.87);
+      }
+    }
+  }
+}

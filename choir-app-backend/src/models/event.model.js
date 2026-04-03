@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
       monthlyPlanId: {
         type: DataTypes.INTEGER,
         allowNull: true
+      },
+      programId: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        field: 'program_id'
       }
     });
     return Event;

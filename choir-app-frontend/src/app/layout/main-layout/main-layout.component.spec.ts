@@ -11,6 +11,7 @@ import { ApiService } from '@core/services/api.service';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
 import { LoanCartService } from '@core/services/loan-cart.service';
+import { PushNotificationService } from '@core/services/push-notification.service';
 import { BehaviorSubject, of, firstValueFrom, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -45,7 +46,7 @@ describe('MainLayoutComponent', () => {
     const isSingerOnly$ = combineLatest([globalRolesSubject.asObservable(), choirRolesSubject.asObservable()]).pipe(
       map(([globalRoles, choirRoles]) => {
         const hasGlobalPrivilege = globalRoles.some(role => role === 'admin' || role === 'librarian');
-        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist'].includes(role));
+        const hasChoirPrivilege = choirRoles.some(role => ['choir_admin', 'director', 'organist', 'notenwart'].includes(role));
         return choirRoles.includes('singer') && !hasGlobalPrivilege && !hasChoirPrivilege;
       })
     );
@@ -73,6 +74,7 @@ describe('MainLayoutComponent', () => {
     const breakpointMock = { observe: () => of({ matches: false }) };
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
+    const pushMock = { isSupported: () => false, getPermission: () => 'denied', subscribeToChoir: () => Promise.resolve(), notificationClicks$: of() };
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
       providers: [
@@ -86,6 +88,7 @@ describe('MainLayoutComponent', () => {
         { provide: BreakpointObserver, useValue: breakpointMock },
         { provide: ThemeService, useValue: themeMock },
         { provide: LoanCartService, useValue: cartMock },
+        { provide: PushNotificationService, useValue: pushMock },
         MenuVisibilityService
       ]
     })

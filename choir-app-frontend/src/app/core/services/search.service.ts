@@ -7,6 +7,27 @@ import { Piece } from '../models/piece';
 import { Event } from '../models/event';
 import { Collection } from '../models/collection';
 
+export interface ComposerPieces {
+  composer: { id: number; name: string };
+  pieces: Piece[];
+}
+
+export interface PublisherCollections {
+  publisher: { id: number | null; name: string };
+  collections: Collection[];
+}
+
+export interface SearchAllResult {
+  pieces: Piece[];
+  totalPieces: number;
+  events: Event[];
+  totalEvents: number;
+  collections: Collection[];
+  totalCollections: number;
+  composerPieces: ComposerPieces[];
+  publisherCollections: PublisherCollections[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class SearchService {
   private apiUrl = environment.apiUrl;
@@ -16,9 +37,12 @@ export class SearchService {
 
   constructor(private http: HttpClient) {}
 
-  searchAll(term: string): Observable<{ pieces: Piece[]; events: Event[]; collections: Collection[] }> {
-    const params = new HttpParams().set('q', term);
-    return this.http.get<{ pieces: Piece[]; events: Event[]; collections: Collection[] }>(`${this.apiUrl}/search`, { params });
+  searchAll(term: string, offsets?: { offsetPieces?: number; offsetEvents?: number; offsetCollections?: number }): Observable<SearchAllResult> {
+    let params = new HttpParams().set('q', term);
+    if (offsets?.offsetPieces) params = params.set('offsetPieces', offsets.offsetPieces.toString());
+    if (offsets?.offsetEvents) params = params.set('offsetEvents', offsets.offsetEvents.toString());
+    if (offsets?.offsetCollections) params = params.set('offsetCollections', offsets.offsetCollections.toString());
+    return this.http.get<SearchAllResult>(`${this.apiUrl}/search`, { params });
   }
 
   searchSuggestions(query: string, type?: SearchSuggestionType | null): Observable<SearchSuggestionsResponse> {

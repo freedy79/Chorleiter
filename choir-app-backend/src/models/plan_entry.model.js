@@ -7,6 +7,11 @@ module.exports = (sequelize, DataTypes) => {
         notes: {
             type: DataTypes.TEXT,
             allowNull: true
+        },
+        programId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            field: 'program_id'
         }
     }, {
         indexes: [

@@ -1,0 +1,24 @@
+@use '../../../themes/breakpoints' as bp;
+
+.room-dialog-content {
+  min-width: min(92vw, 520px);
+  display: grid;
+  gap: bp.$spacing-sm;
+  padding-top: 4px;
+
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+.default-hint {
+  margin: 0;
+  color: rgba(127, 127, 127, 0.95);
+  @include bp.responsive-font-size(0.85rem);
+}
+
+.dialog-error {
+  margin: 0;
+  color: #c62828;
+  @include bp.responsive-font-size(0.85rem);
+}

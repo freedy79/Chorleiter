@@ -131,6 +131,24 @@ mat-card-actions button mat-icon {
       object-fit: cover;
     }
   }
+
+  .cover-actions {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+
+    .resize-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+
+      mat-icon {
+        font-size: 18px;
+      }
+    }
+  }
 }
 
 .spinner-overlay {

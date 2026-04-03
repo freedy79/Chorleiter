@@ -5,6 +5,8 @@
   height: 100vh;
   text-align: center;
   padding: 1rem;
+  background-color: #ffffff;
+  color: #333333;
 
   @media (prefers-color-scheme: dark) {
     background-color: #222222;
@@ -14,6 +16,7 @@
 
 :host-context(.light-theme) .maintenance-container {
   background-color: #ffffff;
+  color: #333333;
 }
 
 :host-context(.dark-theme) .maintenance-container {
@@ -22,14 +25,106 @@
 }
 
 mat-card {
-  max-width: 400px;
+  max-width: 480px;
   width: 100%;
+  color: #333333;
 
   @media (prefers-color-scheme: dark) {
     color: #eeeeee;
   }
 }
 
+:host-context(.light-theme) mat-card {
+  color: #333333;
+}
+
 :host-context(.dark-theme) mat-card {
   color: #eeeeee;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  color: #ff9800;
+  margin-bottom: 1rem;
+}
+
+.causes-list {
+  text-align: left;
+  margin: 0.5rem auto;
+  max-width: 320px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+
+  li {
+    margin-bottom: 0.25rem;
+  }
+}
+
+.retry-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+
+  :host-context(.dark-theme) & {
+    border-top-color: #444444;
+  }
+
+  button {
+    min-width: 200px;
+
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+  }
+
+  .auto-retry-info {
+    margin-top: 0.75rem;
+    margin-bottom: 0;
+    font-size: 0.9rem;
+    opacity: 0.75;
+
+    strong {
+      font-weight: 600;
+      color: #005d9d;
+
+      :host-context(.dark-theme) & {
+        color: #64b5f6;
+      }
+    }
+  }
+
+  .retry-count {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+}
+
+.additional-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+
+  :host-context(.dark-theme) & {
+    border-top-color: #444444;
+  }
+
+  button {
+    min-width: 200px;
+    font-size: 0.85rem;
+
+    mat-icon {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+      height: 1.1rem;
+      width: 1.1rem;
+    }
+  }
 }

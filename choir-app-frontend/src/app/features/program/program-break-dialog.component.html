@@ -1,11 +1,11 @@
 <h1 mat-dialog-title>Pause</h1>
 <mat-dialog-content>
   <form [formGroup]="form" class="break-form" id="break-form" (ngSubmit)="onSave()">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Dauer (mm:ss)</mat-label>
       <input matInput formControlName="duration" placeholder="05:00" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Notiz</mat-label>
       <input matInput formControlName="note" />
     </mat-form-field>
@@ -13,5 +13,5 @@
 </mat-dialog-content>
 <mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" type="submit" form="break-form" [disabled]="form.invalid">Speichern</button>
+  <button mat-flat-button color="primary" type="submit" form="break-form" [disabled]="form.invalid">Speichern</button>
 </mat-dialog-actions>

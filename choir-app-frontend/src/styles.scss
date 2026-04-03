@@ -1,6 +1,7 @@
 @use '@angular/material' as mat;
 @use 'themes/_nak-theme' as nak;
 @use 'themes/_breakpoints' as bp;
+@import 'ckeditor5/ckeditor5.css';
 
 // Include Angular Material core styles once.
 @include mat.core();
@@ -78,6 +79,71 @@ mat-form-field {
 }
 
 // ============================================================================
+// GLOBAL BULLET POINT STYLING – Blue Squares
+// ============================================================================
+ul {
+  list-style-type: square;
+
+  li::marker {
+    color: #007fde;
+  }
+}
+
+// ============================================================================
+// ACCENT BUTTON CONTRAST FIX (Light Mode)
+// ============================================================================
+// NAK Gold (#ffc72c) as text color on white has only ~1.5:1 contrast ratio.
+// Override text-based accent buttons (stroked, basic, icon) to use a darker
+// gold (#9a6400, ~5:1 contrast on white) while keeping filled buttons unchanged.
+// Dark mode is unaffected – gold on dark backgrounds already has ~12:1 contrast.
+
+.mat-mdc-button.mat-accent,
+.mat-mdc-outlined-button.mat-accent,
+.mat-mdc-icon-button.mat-accent {
+  // Material 20 CSS variables
+  --mat-button-text-label-text-color: #9a6400;
+  --mat-button-outlined-label-text-color: #9a6400;
+  --mat-button-outlined-outline-color: #c89600;
+  --mat-icon-button-icon-color: #9a6400;
+  // Legacy MDC variables (fallback)
+  --mdc-text-button-label-text-color: #9a6400;
+  --mdc-outlined-button-label-text-color: #9a6400;
+  --mdc-outlined-button-outline-color: #c89600;
+  color: #9a6400;
+
+  .mat-icon {
+    color: #9a6400;
+  }
+}
+
+// ============================================================================
+// GLOBAL EMPTY TABLE STATE
+// ============================================================================
+// Centered placeholder text when a mat-table has no data rows.
+
+[matNoDataRow] td,
+tr[class*="mat-row"] *[matNoDataRow] ~ td {
+  text-align: center;
+}
+
+mat-table .mdc-data-table__content {
+  // Ensure table body stretches so the no-data row can center vertically
+  min-height: 200px;
+}
+
+.mat-mdc-no-data-row {
+  height: 200px;
+
+  td {
+    text-align: center !important;
+    vertical-align: middle;
+    color: #616161;
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+}
+
+// ============================================================================
 // DARK MODE STYLES - Following UX Design Institute Best Practices
 // ============================================================================
 // Apply dark theme when .dark-theme class is present on body
@@ -91,6 +157,10 @@ mat-form-field {
 .dark-theme {
   --page-header-bg-color: #1e1e1e;
   --header-title-color: #ffffff; // Dark mode: always white for header title
+
+  .mat-mdc-no-data-row td {
+    color: #9e9e9e;
+  }
 
   // Include dark theme colors
   @include mat.all-component-colors(nak.$nak-dark-theme);
@@ -238,6 +308,26 @@ mat-form-field {
     &:visited {
       color: #9981c8; // Muted purple
     }
+  }
+}
+
+// ============================================================================
+// FULLSCREEN MOBILE DIALOG
+// ============================================================================
+
+.fullscreen-mobile-dialog {
+  .mat-mdc-dialog-container {
+    border-radius: 0;
+  }
+
+  .mat-mdc-dialog-surface {
+    border-radius: 0 !important;
+  }
+
+  .mat-mdc-dialog-content {
+    max-height: none;
+    flex: 1;
+    overflow-y: auto;
   }
 }
 
@@ -477,4 +567,42 @@ $choir-app-frontend-theme: mat.m2-define-light-theme((
   .bottom-nav a.active {
     color: var(--brand)
   }
+}
+
+// Voter tooltip for poll results
+.voter-tooltip {
+  white-space: pre-line;
+  max-width: 300px;
+  font-size: 0.8125rem;
+}
+
+// Practice-list dropdown menu (rendered in overlay, needs global styles)
+.practice-list-menu {
+  max-height: 60vh;
+
+  .mat-mdc-menu-item {
+    min-height: 44px;
+  }
+
+  @media (max-width: bp.$breakpoint-handset-max) {
+    min-width: 70vw;
+
+    .mat-mdc-menu-item {
+      min-height: 48px;
+      font-size: 1rem;
+    }
+  }
+}
+
+// Hide the main toolbar and drawer when the Mappe (performance collection) fullscreen overlay is active
+body.mappe-fullscreen-active .main-toolbar {
+  display: none !important;
+}
+
+body.mappe-fullscreen-active .appDrawer {
+  display: none !important;
+}
+
+body.mappe-fullscreen-active .mat-drawer-backdrop {
+  display: none !important;
 }

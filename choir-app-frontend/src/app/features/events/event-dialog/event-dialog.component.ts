@@ -28,13 +28,11 @@ import { Piece } from 'src/app/core/models/piece';
 import { Event } from 'src/app/core/models/event';
 
 import { MaterialModule } from '@modules/material.module';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { LookupPiece } from '@core/models/lookup-piece';
 import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
-   import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
-import { parseDateOnly } from '@shared/util/date';
+import { ProgramService } from '@core/services/program.service';
+import { Program } from '@core/models/program';
 
 @Component({
     selector: 'app-event-dialog',
@@ -43,10 +41,9 @@ import { parseDateOnly } from '@shared/util/date';
         CommonModule,
         ReactiveFormsModule,
         MaterialModule,
-        MatDatepickerModule,
         MatAutocompleteModule,
     ],
-    providers: [MatDatepickerModule, MatNativeDateModule],
+    providers: [],
     templateUrl: './event-dialog.component.html',
     styleUrls: ['./event-dialog.component.scss'],
 })
@@ -61,23 +58,23 @@ export class EventDialogComponent implements OnInit {
 
     isEditMode = false;
     private editEventId: number | null = null;
+    programs: Program[] = [];
 
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
 
     constructor(
-        @Inject(MAT_DATE_LOCALE) private _locale: string,
-        private _adapter: DateAdapter<any>,
         private fb: FormBuilder,
         private apiService: ApiService,
+        private programService: ProgramService,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<EventDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { event?: Event } | null
     ) {
-        this._adapter.setLocale(_locale);
         this.eventForm = this.fb.group({
-            date: [new Date(), Validators.required],
+            date: [new Date().toISOString().split('T')[0], Validators.required],
             type: ['', Validators.required],
             notes: [''],
+            programId: [null as string | null],
         });
 
         if (data && data.event) {
@@ -98,6 +95,10 @@ export class EventDialogComponent implements OnInit {
                 // ensure table is initialized
                 this.selectedPiecesDataSource.data = this.selectedPieces;
             }
+        });
+
+        this.programService.getPrograms().subscribe((programs) => {
+            this.programs = (programs || []).filter(p => p.status !== 'archived');
         });
     }
 
@@ -219,9 +220,10 @@ export class EventDialogComponent implements OnInit {
 
     private populateFromEvent(event: Event): void {
         this.eventForm.patchValue({
-            date: parseDateOnly(event.date),
+            date: event.date ? event.date.toString().split('T')[0] : '',
             type: event.type,
             notes: event.notes || '',
+            programId: event.program?.id || null,
         });
 
         this.selectedPieces = event.pieces.map((p) => ({
@@ -252,9 +254,7 @@ export class EventDialogComponent implements OnInit {
     onSave(): void {
         if (this.eventForm.valid) {
             const formValue = this.eventForm.value;
-            const dateStr = formValue.date
-                ? formValue.date.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
-                : undefined;
+            const dateStr = formValue.date || undefined;
             const payload = {
                 ...formValue,
                 date: dateStr,

@@ -9,5 +9,6 @@ exports.createEventValidation = [
   body('directorId').optional({ nullable: true }).isInt().withMessage('directorId must be an integer'),
   body('finalized').optional().isBoolean(),
   body('version').optional().isInt(),
-  body('monthlyPlanId').optional({ nullable: true }).isInt()
+  body('monthlyPlanId').optional({ nullable: true }).isInt(),
+  body('programId').optional({ nullable: true }).isUUID().withMessage('programId must be a UUID')
 ];

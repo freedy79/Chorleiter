@@ -1,0 +1,232 @@
+<section class="practice-list-detail-page" *ngIf="list">
+  <ng-container *ngIf="!mappeMode">
+    <button mat-stroked-button type="button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Zurück
+    </button>
+
+    <div class="title-row">
+      <h2>{{ list.title }}</h2>
+      <button mat-icon-button (click)="updateListTitle()" aria-label="Titel bearbeiten">
+        <mat-icon>edit</mat-icon>
+      </button>
+    </div>
+
+    <p *ngIf="list.description" class="description">{{ list.description }}</p>
+
+    <button mat-flat-button color="primary" type="button" (click)="toggleMappeMode()">
+      <mat-icon>library_books</mat-icon>
+      Mappe-Modus
+    </button>
+
+    <app-inline-loading [loading]="loading"></app-inline-loading>
+
+    <app-empty-state *ngIf="!loading && !items.length" icon="queue_music" message="Keine Einträge vorhanden. Öffne ein Stück und füge es zu dieser Übungsliste hinzu."></app-empty-state>
+  </ng-container>
+
+  <div *ngIf="mappeMode" class="mappe-mode">
+    <div class="mappe-fullscreen" *ngIf="activeGroup as group; else noMappeItems">
+      <div class="mappe-topbar">
+        <button
+          mat-icon-button
+          type="button"
+          matTooltip="Vorheriges Stück"
+          [disabled]="isFirstMappePiece()"
+          (click)="mappePrevPiece()"
+        >
+          <mat-icon>arrow_back_ios</mat-icon>
+        </button>
+
+        <div class="mappe-topbar-center">
+          <div class="mappe-piece-heading">
+            <strong>{{ group.title }}</strong>
+            <small>{{ mappePositionLabel }}</small>
+          </div>
+
+          <div class="mappe-audio-row" *ngIf="activeAudioItem as audioItem; else noAudioTopbar">
+            <app-audio-player
+              [title]="audioItem.pieceLink?.description || audioItem.piece?.title || 'Audio'"
+              [url]="getResolvedMediaUrl(audioItem)"
+              [downloadName]="audioItem.pieceLink?.downloadName || audioItem.pieceLink?.description || 'audio.mp3'"
+              (playbackEnded)="onMappeAudioEnded()"
+            ></app-audio-player>
+
+            <mat-form-field
+              *ngIf="group.audioItems.length > 1"
+              appearance="outline"
+              class="mappe-audio-select"
+            >
+              <mat-label>Stimme</mat-label>
+              <mat-select
+                [value]="activeAudioItem.pieceLinkId"
+                (selectionChange)="selectAudioForPiece(group, $event.value)"
+              >
+                <mat-option
+                  *ngFor="let ai of group.audioItems"
+                  [value]="ai.pieceLinkId"
+                >{{ ai.pieceLink?.description || ai.piece?.title || 'Audio' }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <ng-template #noAudioTopbar>
+            <small class="mappe-no-audio">Keine MP3-Datei für dieses Stück.</small>
+          </ng-template>
+        </div>
+
+        <div class="mappe-topbar-actions">
+          <button
+            *ngIf="mappeShowLicenseToggle"
+            mat-icon-button
+            type="button"
+            class="mappe-license-btn"
+            [class.mappe-license-btn--active]="mappeLicenseMode"
+            [matTooltip]="mappeLicenseMode ? 'Zurück zum Notenbild' : 'Digitale Originallizenz'"
+            (click)="toggleLicenseView(group)"
+          >
+            <mat-icon>{{ mappeLicenseMode ? 'music_note' : 'verified' }}</mat-icon>
+          </button>
+
+          <button
+            mat-icon-button
+            type="button"
+            matTooltip="Nächstes Stück"
+            [disabled]="isLastMappePiece()"
+            (click)="mappeNextPiece()"
+          >
+            <mat-icon>arrow_forward_ios</mat-icon>
+          </button>
+
+          <button mat-icon-button type="button" matTooltip="Mappe-Modus beenden" (click)="toggleMappeMode()">
+            <mat-icon>close_fullscreen</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="mappe-pdf-stage">
+        <!-- License PDF inline view (toggle mode) -->
+        <ng-container *ngIf="mappeLicenseMode && mappeLicenseSafeUrl; else autoLicenseCheck">
+          <iframe
+            class="mappe-pdf-frame"
+            [src]="mappeLicenseSafeUrl"
+            title="Digitale Originallizenz"
+            loading="eager"
+          ></iframe>
+        </ng-container>
+
+        <!-- Auto-show license when piece has no own PDFs but has a license -->
+        <ng-template #autoLicenseCheck>
+          <ng-container *ngIf="mappeShowAutoLicense && mappeAutoLicenseSafeUrl; else normalPdfView">
+            <iframe
+              class="mappe-pdf-frame"
+              [src]="mappeAutoLicenseSafeUrl"
+              title="Digitale Originallizenz"
+              loading="eager"
+            ></iframe>
+          </ng-container>
+        </ng-template>
+
+        <!-- Normal piece PDF view -->
+        <ng-template #normalPdfView>
+          <mat-progress-bar *ngIf="mappeResolvingPdf" mode="indeterminate"></mat-progress-bar>
+
+          <iframe
+            *ngIf="!mappeResolvingPdf && mappeActivePdfSafeUrl"
+            class="mappe-pdf-frame"
+            [src]="mappeActivePdfSafeUrl"
+            title="PDF Vollansicht"
+            loading="eager"
+          ></iframe>
+
+          <div class="mappe-pdf-fallback" *ngIf="!mappeResolvingPdf && mappeActivePdfRawUrl">
+            <mat-icon>picture_as_pdf</mat-icon>
+            <span>PDF wird nicht angezeigt?</span>
+            <a mat-stroked-button [href]="mappeActivePdfRawUrl" target="_blank" rel="noopener noreferrer">
+              <mat-icon>open_in_new</mat-icon>
+              In neuem Tab öffnen
+            </a>
+            <a mat-stroked-button [href]="mappeActivePdfRawUrl" download>
+              <mat-icon>download</mat-icon>
+              Herunterladen
+            </a>
+          </div>
+
+          <div class="mappe-empty-pdf" *ngIf="!mappeResolvingPdf && !mappeActivePdfSafeUrl">
+            Keine PDF-Datei für dieses Stück.
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <ng-template #noMappeItems>
+      <mat-card class="mappe-card">
+        <mat-card-content>
+          Keine PDF- oder Audio-Dateien in dieser Übungsliste.
+          <br />
+          <button mat-button type="button" (click)="toggleMappeMode()">Mappe-Modus beenden</button>
+        </mat-card-content>
+      </mat-card>
+    </ng-template>
+  </div>
+
+  <ng-container *ngIf="!mappeMode">
+  <mat-card class="item-card" *ngFor="let item of items; let i = index">
+    <mat-card-title>{{ item.piece?.title || ('Stück #' + item.pieceId) }}</mat-card-title>
+    <mat-card-subtitle>
+      <span *ngIf="item.pieceLink">{{ item.pieceLink.description }}</span>
+      <span *ngIf="!item.pieceLink">Gesamtes Stück</span>
+    </mat-card-subtitle>
+
+    <mat-card-content>
+      <div class="chips-row">
+        <mat-chip-set>
+          <mat-chip [highlighted]="item.isPinnedOffline" color="primary">
+            {{ item.isPinnedOffline ? 'Gepinnt' : 'Nicht gepinnt' }}
+          </mat-chip>
+          <mat-chip *ngIf="item.pieceLinkId && localPinnedLinkIds.has(item.pieceLinkId)" color="accent" highlighted>
+            Offline verfügbar
+          </mat-chip>
+        </mat-chip-set>
+      </div>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notiz</mat-label>
+        <textarea matInput rows="2" [(ngModel)]="item.note"></textarea>
+      </mat-form-field>
+
+      <div class="pdf-preview" *ngIf="getItemPdfItems(item).length">
+        <div class="pdf-actions" *ngFor="let pdfItem of getItemPdfItems(item); trackBy: trackByLinkId">
+          <span>{{ pdfItem.pieceLink?.description || ('PDF #' + pdfItem.id) }}</span>
+          <button mat-stroked-button color="primary" type="button" (click)="openPdfFullscreen(pdfItem)">
+            <mat-icon>fullscreen</mat-icon>
+            PDF Vollbild
+          </button>
+          <button mat-button type="button" (click)="openPdfInNewTab(pdfItem)">
+            <mat-icon>open_in_new</mat-icon>
+            Neuer Tab
+          </button>
+        </div>
+      </div>
+
+      <div class="audio-preview" *ngIf="getItemAudioItems(item).length">
+        <app-audio-player
+          *ngFor="let audioItem of getItemAudioItems(item); trackBy: trackByLinkId"
+          [title]="audioItem.pieceLink?.description || audioItem.piece?.title || 'Audio'"
+          [url]="getResolvedMediaUrl(audioItem)"
+          [downloadName]="audioItem.pieceLink?.downloadName || audioItem.pieceLink?.description || 'audio.mp3'"
+        ></app-audio-player>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button type="button" (click)="saveNote(item)">Notiz speichern</button>
+      <button mat-button type="button" (click)="togglePin(item)">
+        {{ item.isPinnedOffline ? 'Unpin' : 'Offline pinnen' }}
+      </button>
+      <button mat-button type="button" (click)="moveItemUp(i)" [disabled]="i === 0">Nach oben</button>
+      <button mat-button type="button" (click)="moveItemDown(i)" [disabled]="i === items.length - 1">Nach unten</button>
+      <button mat-button color="warn" type="button" (click)="removeItem(item)">Entfernen</button>
+    </mat-card-actions>
+  </mat-card>
+  </ng-container>
+</section>

@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MailTemplate } from '@core/models/mail-template';
 import { PendingChanges } from '@core/guards/pending-changes.guard';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+import { ClassicEditor, Essentials, Paragraph, Bold, Italic, Underline, Link, EditorConfig } from 'ckeditor5';
 
 @Component({
   selector: 'app-mail-templates',
@@ -24,12 +25,17 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   changeHtmlMode = false;
   monthlyHtmlMode = false;
   emailChangeHtmlMode = false;
-  public Editor = ClassicEditor as any;
-  public editorConfig: any = {
-    toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo']
+  lendingBorrowedHtmlMode = false;
+  lendingReturnedHtmlMode = false;
+  footerHtmlMode = false;
+  public Editor = ClassicEditor;
+  public editorConfig: EditorConfig = {
+    plugins: [Essentials, Paragraph, Bold, Italic, Underline, Link],
+    toolbar: ['bold', 'italic', 'underline', 'link', 'undo', 'redo'],
+    licenseKey: 'GPL'
   };
 
-  constructor(private fb: FormBuilder, private api: ApiService, private notification: NotificationService) {
+  constructor(private fb: FormBuilder, private api: ApiService, private adminService: AdminService, private notification: NotificationService) {
     this.form = this.fb.group({
       inviteSubject: ['', Validators.required],
       inviteBody: ['', Validators.required],
@@ -42,13 +48,30 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       monthlySubject: ['', Validators.required],
       monthlyBody: ['', Validators.required],
       emailChangeSubject: ['', Validators.required],
-      emailChangeBody: ['', Validators.required]
+      emailChangeBody: ['', Validators.required],
+      lendingBorrowedSubject: ['', Validators.required],
+      lendingBorrowedBody: ['', Validators.required],
+      lendingReturnedSubject: ['', Validators.required],
+      lendingReturnedBody: ['', Validators.required],
+      footerBody: ['', Validators.required]
     });
   }
 
   ngOnInit(): void {
+    this.loadLicenseKey();
     this.load();
     setTimeout(() => this.form.markAsPristine());
+  }
+
+  loadLicenseKey(): void {
+    this.adminService.getCkeditorLicenseKey().subscribe({
+      next: (data) => {
+        if (data?.value) {
+          this.editorConfig = { ...this.editorConfig, licenseKey: data.value };
+        }
+      },
+      error: () => {}
+    });
   }
 
   load(): void {
@@ -59,6 +82,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       const change = templates.find(t => t.type === 'piece-change');
       const monthly = templates.find(t => t.type === 'monthly-plan');
       const emailChange = templates.find(t => t.type === 'email-change');
+      const lendingBorrowed = templates.find(t => t.type === 'lending-borrowed');
+      const lendingReturned = templates.find(t => t.type === 'lending-returned');
+      const footer = templates.find(t => t.type === 'mail-footer');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
       }
@@ -76,6 +102,15 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       }
       if (emailChange) {
         this.form.patchValue({ emailChangeSubject: emailChange.subject, emailChangeBody: emailChange.body });
+      }
+      if (lendingBorrowed) {
+        this.form.patchValue({ lendingBorrowedSubject: lendingBorrowed.subject, lendingBorrowedBody: lendingBorrowed.body });
+      }
+      if (lendingReturned) {
+        this.form.patchValue({ lendingReturnedSubject: lendingReturned.subject, lendingReturnedBody: lendingReturned.body });
+      }
+      if (footer) {
+        this.form.patchValue({ footerBody: footer.body });
       }
       this.form.markAsPristine();
     });
@@ -104,6 +139,15 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     }
     if (!type || type === 'email-change') {
       templates.push({ type: 'email-change', subject: value.emailChangeSubject, body: value.emailChangeBody });
+    }
+    if (!type || type === 'lending-borrowed') {
+      templates.push({ type: 'lending-borrowed', subject: value.lendingBorrowedSubject, body: value.lendingBorrowedBody });
+    }
+    if (!type || type === 'lending-returned') {
+      templates.push({ type: 'lending-returned', subject: value.lendingReturnedSubject, body: value.lendingReturnedBody });
+    }
+    if (!type || type === 'mail-footer') {
+      templates.push({ type: 'mail-footer', subject: '(Footer)', body: value.footerBody });
     }
     this.api.updateMailTemplates(templates).subscribe(() => {
       this.notification.success('Gespeichert');
@@ -135,6 +179,18 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     this.emailChangeHtmlMode = !this.emailChangeHtmlMode;
   }
 
+  toggleLendingBorrowedHtml(): void {
+    this.lendingBorrowedHtmlMode = !this.lendingBorrowedHtmlMode;
+  }
+
+  toggleLendingReturnedHtml(): void {
+    this.lendingReturnedHtmlMode = !this.lendingReturnedHtmlMode;
+  }
+
+  toggleFooterHtml(): void {
+    this.footerHtmlMode = !this.footerHtmlMode;
+  }
+
   sendTest(type: string): void {
     this.api.sendTemplateTest(type).subscribe(() => {
       this.notification.success('Testmail verschickt');
@@ -159,6 +215,12 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
         return ['monthlySubject', 'monthlyBody'];
       case 'email-change':
         return ['emailChangeSubject', 'emailChangeBody'];
+      case 'lending-borrowed':
+        return ['lendingBorrowedSubject', 'lendingBorrowedBody'];
+      case 'lending-returned':
+        return ['lendingReturnedSubject', 'lendingReturnedBody'];
+      case 'mail-footer':
+        return ['footerBody'];
       default:
         return Object.keys(this.form.controls);
     }

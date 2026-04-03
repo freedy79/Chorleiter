@@ -1,0 +1,162 @@
+<div class="vapid-keys-config">
+  <!-- Status Card -->
+  <mat-card class="status-card" *ngIf="pushStatus">
+    <mat-card-content>
+      <div class="status-row">
+        <div class="status-item">
+          <mat-icon [class.status-ok]="pushStatus.vapidConfigured" [class.status-warn]="!pushStatus.vapidConfigured">
+            {{ pushStatus.vapidConfigured ? 'check_circle' : 'warning' }}
+          </mat-icon>
+          <span>{{ pushStatus.vapidConfigured ? 'VAPID-Schlüssel konfiguriert' : 'VAPID-Schlüssel fehlen' }}</span>
+        </div>
+        <div class="status-item">
+          <mat-icon class="status-info">people</mat-icon>
+          <span>{{ pushStatus.uniqueUsers }} Benutzer mit Push-Abo</span>
+        </div>
+        <div class="status-item">
+          <mat-icon class="status-info">notifications_active</mat-icon>
+          <span>{{ pushStatus.totalSubscriptions }} aktive Abonnements</span>
+        </div>
+        <div class="status-item">
+          <mat-icon class="status-info">groups</mat-icon>
+          <span>{{ pushStatus.uniqueChoirs }} Chöre mit Push</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Help Section -->
+  <mat-card class="help-card">
+    <mat-card-content>
+      <div class="help-toggle" (click)="showHelp = !showHelp">
+        <mat-icon>help_outline</mat-icon>
+        <span class="help-toggle-text">Was sind Push-Benachrichtigungen und wie richte ich sie ein?</span>
+        <mat-icon class="expand-icon">{{ showHelp ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </div>
+
+      <div class="help-content" *ngIf="showHelp">
+        <h4>Was sind Push-Benachrichtigungen?</h4>
+        <p>
+          Push-Benachrichtigungen informieren Chor-Mitglieder über neue Chat-Nachrichten und Beiträge,
+          auch wenn die App gerade nicht geöffnet ist. Sie werden als kleine Meldungen auf dem
+          Computer oder Smartphone angezeigt – ähnlich wie bei WhatsApp oder E-Mail.
+        </p>
+
+        <h4>Wie funktioniert das?</h4>
+        <ol>
+          <li><strong>VAPID-Schlüssel generieren:</strong> Klicken Sie unten auf „Schlüssel generieren". Das erstellt automatisch die nötigen kryptografischen Schlüssel.</li>
+          <li><strong>Subject eintragen:</strong> Geben Sie Ihre E-Mail-Adresse als Kontakt ein (Format: <code>mailto:ihre@email.de</code>).</li>
+          <li><strong>Backend neu starten:</strong> Nach dem Speichern muss der Server einmal neu gestartet werden, damit die Schlüssel aktiv werden.</li>
+          <li><strong>Benutzer aktivieren:</strong> Jedes Chor-Mitglied muss im eigenen Browser die Benachrichtigungen erlauben, wenn es dazu aufgefordert wird.</li>
+        </ol>
+
+        <h4>Auf welchen Geräten funktioniert es?</h4>
+        <ul>
+          <li><strong>Desktop:</strong> Chrome, Edge, Firefox – sofort nach Erlaubnis</li>
+          <li><strong>Android:</strong> Chrome, Edge, Firefox – sofort nach Erlaubnis</li>
+          <li><strong>iPhone/iPad:</strong> Safari ab iOS 16.4 – nur wenn die App zum Homescreen hinzugefügt wurde</li>
+        </ul>
+
+        <h4>Was passiert, wenn ich neue Schlüssel generiere?</h4>
+        <p>
+          <strong>Achtung:</strong> Wenn Sie neue Schlüssel generieren, werden alle bestehenden Push-Abonnements
+          ungültig. Die Chor-Mitglieder müssen danach erneut die Benachrichtigungen aktivieren.
+          Generieren Sie neue Schlüssel nur bei der Ersteinrichtung oder wenn es Sicherheitsprobleme gibt.
+        </p>
+
+        <h4>Alternative: CLI-Einrichtung</h4>
+        <p>
+          Fortgeschrittene Administratoren können die Schlüssel auch über die Kommandozeile generieren:
+        </p>
+        <code class="cli-command">cd choir-app-backend && npm run generate-vapid-keys -- --save --subject mailto:ihre&#64;email.de</code>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Configuration Card -->
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>VAPID-Schlüssel für Push-Benachrichtigungen</mat-card-title>
+      <mat-card-subtitle>
+        Diese Schlüssel ermöglichen es dem Server, Push-Benachrichtigungen an die Browser der Chor-Mitglieder zu senden.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <form [formGroup]="form" *ngIf="!loading">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Subject (Kontakt-E-Mail)</mat-label>
+          <input matInput formControlName="subject" placeholder="mailto:admin@example.com">
+          <mat-icon matPrefix>email</mat-icon>
+          <mat-hint>Ihre E-Mail im Format <code>mailto:name&#64;domain.de</code> – wird als Kontakt an den Push-Dienst übermittelt</mat-hint>
+          <mat-error *ngIf="form.get('subject')?.hasError('required')">
+            Eine Kontakt-E-Mail-Adresse ist erforderlich
+          </mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Öffentlicher Schlüssel (Public Key)</mat-label>
+          <input matInput formControlName="publicKey" placeholder="Wird automatisch generiert..." readonly>
+          <mat-icon matPrefix>lock_open</mat-icon>
+          <mat-hint>Wird automatisch beim Generieren erstellt – an Browser der Benutzer gesendet</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Privater Schlüssel (Private Key)</mat-label>
+          <input matInput
+                 formControlName="privateKey"
+                 [type]="showPrivateKey ? 'text' : 'password'"
+                 placeholder="Wird automatisch generiert..."
+                 readonly>
+          <mat-icon matPrefix>lock</mat-icon>
+          <button mat-icon-button matSuffix (click)="showPrivateKey = !showPrivateKey" type="button"
+                  aria-label="Privaten Schlüssel anzeigen/verbergen">
+            <mat-icon>{{ showPrivateKey ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-hint>Geheimer Server-Schlüssel – wird niemals an Dritte weitergegeben</mat-hint>
+        </mat-form-field>
+
+        <div class="info-box" *ngIf="!hasVapidKeys">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>Noch keine Schlüssel vorhanden</strong><br>
+            Klicken Sie auf „Schlüssel generieren", um die Push-Benachrichtigungen einzurichten.
+            Geben Sie vorher eine Kontakt-E-Mail ein.
+          </div>
+        </div>
+
+        <div class="info-box success-box" *ngIf="hasVapidKeys">
+          <mat-icon>check_circle</mat-icon>
+          <div>
+            <strong>Schlüssel konfiguriert</strong><br>
+            Push-Benachrichtigungen sind eingerichtet. Die Mitglieder können Benachrichtigungen
+            in ihren Chor-Einstellungen aktivieren.
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="accent"
+              (click)="generateKeys()"
+              [disabled]="generating || !form.value.subject">
+        <mat-icon>vpn_key</mat-icon>
+        {{ generating ? 'Generiere...' : 'Schlüssel generieren' }}
+      </button>
+      <button mat-raised-button color="primary"
+              (click)="save()"
+              [disabled]="form.pristine || form.invalid || saving">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Speichere...' : 'Speichern' }}
+      </button>
+      <button mat-button (click)="testNotification()">
+        <mat-icon>notifications_active</mat-icon>
+        Test-Benachrichtigung
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

@@ -1,0 +1,30 @@
+<h1 mat-dialog-title>{{ dialogTitle }}</h1>
+
+<mat-dialog-content class="room-dialog-content">
+  <mat-form-field appearance="outline">
+    <mat-label>Raumname</mat-label>
+    <input matInput [(ngModel)]="title" placeholder="#Orga-Team" maxlength="120" />
+  </mat-form-field>
+
+  <mat-checkbox [(ngModel)]="isPrivate" [disabled]="!canChangePrivacy">Privater Raum</mat-checkbox>
+
+  <p class="default-hint" *ngIf="!canChangePrivacy">
+    Der Standardraum bleibt immer öffentlich.
+  </p>
+
+  <mat-form-field appearance="outline" *ngIf="isPrivate && canChangePrivacy">
+    <mat-label>Teilnehmende</mat-label>
+    <mat-select [(ngModel)]="memberUserIds" multiple>
+      <mat-option *ngFor="let member of data.choirMembers" [value]="member.id">
+        {{ member.firstName || '' }} {{ member.name }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <p class="dialog-error" *ngIf="validationMessage" role="alert">{{ validationMessage }}</p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Abbrechen</button>
+  <button mat-flat-button color="primary" type="button" (click)="save()">{{ submitLabel }}</button>
+</mat-dialog-actions>

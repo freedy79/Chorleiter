@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
-import { Title } from '@angular/platform-browser';
+import { Meta, Title } from '@angular/platform-browser';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { ApiService } from 'src/app/core/services/api.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
@@ -9,8 +9,8 @@ import { MenuVisibilityService } from '@core/services/menu-visibility.service';
 import { MaterialModule } from '@modules/material.module';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
-import { combineLatest, map, Observable, of, filter, startWith, Subject, take, from } from 'rxjs';
-import { switchMap, takeUntil, withLatestFrom, tap, shareReplay } from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, map, Observable, of, filter, startWith, Subject, take, from, interval } from 'rxjs';
+import { switchMap, takeUntil, withLatestFrom, tap, shareReplay, catchError } from 'rxjs/operators';
 import { Theme, ThemeService } from '@core/services/theme.service';
 import { ErrorDisplayComponent } from '@shared/components/error-display/error-display.component';
 import { LoadingIndicatorComponent } from '@shared/components/loading-indicator/loading-indicator.component';
@@ -27,7 +27,19 @@ import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/buil
 import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
+import { NotificationService } from '@core/services/notification.service';
+import { PushNotificationService } from '@core/services/push-notification.service';
 import { Choir } from '@core/models/choir';
+import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
+import { ChatService } from '@core/services/chat.service';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{
+    outcome: 'accepted' | 'dismissed';
+    platform: string;
+  }>;
+}
 
 @Component({
   selector: 'app-main-layout',
@@ -62,6 +74,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     singer: 'Sänger',
     librarian: 'Bibliothekar',
     organist: 'Organist',
+    notenwart: 'Notenwart',
     user: 'Mitglied'
   };
   currentTheme: Theme;
@@ -84,6 +97,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private readonly drawerWidth = 220;
   private readonly maxDrawerRatio = 0.4;
 
+  /** Whether the fullscreen mobile menu overlay is open */
+  mobileMenuOpen = false;
+
   headerHeight = 64;
   footerHeight = 56;
 
@@ -94,6 +110,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   isMedium$: Observable<boolean> | undefined;
 
   pageTitle$: Observable<string | null>;
+  pageDescription$: Observable<string | null>;
+  isFramelessRoute$: Observable<boolean>;
   cartCount$: Observable<number>;
 
   availableChoirs$: Observable<Choir[]>;
@@ -105,6 +123,17 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   hasMoreItems$: Observable<boolean>;
   bottomNavVisible = true;
   private lastScrollY = 0;
+  chatUnreadCount$ = new BehaviorSubject<number>(0);
+  private latestChatOverview: ChatGlobalUnreadOverview | null = null;
+  private latestNotifiedMessageId: number | null = null;
+  private pendingNotificationPermissionRequest = false;
+  private deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
+  private installNotificationShown = false;
+  private readonly installPromptCooldownKey = 'pwa-install-prompt-dismissed-at';
+  private readonly installPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
+  private pushPromptShown = false;
+  private readonly pushPromptCooldownKey = 'push-prompt-dismissed-at';
+  private readonly pushPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
 
 
   constructor(private authService: AuthService,
@@ -119,7 +148,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private route: ActivatedRoute,
     private cart: LoanCartService,
     private menu: MenuVisibilityService,
-    private titleService: Title
+    private titleService: Title,
+    private metaService: Meta,
+    private chatService: ChatService,
+    private notification: NotificationService,
+    private pushService: PushNotificationService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -155,7 +188,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(u => (u?.firstName?.[0] || '') + (u?.name?.[0] || ''))
     );
 
-    this.isHandset$ = this.responsive.isHandset$.pipe(
+    this.isHandset$ = this.responsive.isMobile$.pipe(
       tap(match => {
         this.isHandset = match;
         this.headerHeight = match ? 56 : 64;
@@ -163,6 +196,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
+
+    // Ensure isHandset is always tracked even if not used in template
+    this.isHandset$.pipe(takeUntil(this.destroy$)).subscribe();
 
     this.isSmallScreen$ = this.responsive.isMobile$;
 
@@ -172,13 +208,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       map(roles => roles.includes('librarian'))
     );
 
-    this.hasMoreItems$ = combineLatest([
-      this.dienstplanVisible$,
-      this.isAdmin$,
-      this.isDemo$
-    ]).pipe(
-      map(([dienstplan, admin, demo]) => dienstplan || (!demo && admin))
-    );
+    // Always true: More menu contains Profile, Chat, Beiträge for all users
+    this.hasMoreItems$ = of(true);
 
     this.isLoggedIn$.pipe(
       switchMap(loggedIn => loggedIn ? this.api.getMyChoirDetails() : of(null)),
@@ -212,18 +243,82 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       })
     );
 
+    this.pageDescription$ = routeData$.pipe(
+      map(data => data.description ?? null)
+    );
+
+    this.isFramelessRoute$ = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      startWith(null),
+      map(() => this.isFramelessRoute(this.router.url)),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+
     // Update browser tab title when page title changes
     this.pageTitle$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(title => {
       const browserTitle = title ? `${title} - NAK Chorleiter` : 'NAK Chorleiter';
       this.titleService.setTitle(browserTitle);
+
+      this.metaService.updateTag({ property: 'og:title', content: browserTitle });
+      this.metaService.updateTag({ name: 'twitter:title', content: browserTitle });
+    });
+
+    this.pageDescription$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(description => {
+      const fallback = 'NAK Chorleiter - die Verwaltungsanwendung für Chöre mit Repertoire, Verfügbarkeiten, Kommunikation und Einsatzplanung.';
+      const finalDescription = description || fallback;
+
+      this.metaService.updateTag({ name: 'description', content: finalDescription });
+      this.metaService.updateTag({ property: 'og:description', content: finalDescription });
+      this.metaService.updateTag({ name: 'twitter:description', content: finalDescription });
     });
 
     this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
       takeUntil(this.destroy$)
-    ).subscribe(() => this.closeSidenav());
+    ).subscribe(() => {
+      this.closeSidenav();
+      this.closeFullscreenMenu();
+    });
+
+    this.isLoggedIn$.pipe(
+      switchMap(loggedIn => {
+        if (!loggedIn) {
+          this.chatUnreadCount$.next(0);
+          this.latestChatOverview = null;
+          this.latestNotifiedMessageId = null;
+          return of(null);
+        }
+
+        return interval(15000).pipe(
+          startWith(0),
+          switchMap(() => this.chatService.getGlobalUnreadOverview().pipe(catchError(() => of(null))))
+        );
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe(overview => {
+      if (!overview) {
+        return;
+      }
+
+      this.latestChatOverview = overview;
+      this.chatUnreadCount$.next(overview.totalUnread || 0);
+      this.maybeNotifyAboutNewestUnread(overview);
+    });
+
+    // Auto-prompt for push notifications after login
+    this.isLoggedIn$.pipe(
+      filter(loggedIn => loggedIn),
+      switchMap(() => this.availableChoirs$),
+      filter(choirs => choirs.length > 0),
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(choirs => {
+      setTimeout(() => this.tryShowPushPrompt(choirs), 5000);
+    });
   }
 
   ngAfterViewInit(): void {
@@ -236,6 +331,21 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   @HostListener('window:resize')
   onResize() {
     this.evaluateDrawerWidth();
+  }
+
+  @HostListener('window:beforeinstallprompt', ['$event'])
+  onBeforeInstallPrompt(event: Event): void {
+    const installEvent = event as BeforeInstallPromptEvent;
+    installEvent.preventDefault();
+    this.deferredInstallPrompt = installEvent;
+    this.tryShowInstallNotification();
+  }
+
+  @HostListener('window:appinstalled')
+  onAppInstalled(): void {
+    this.deferredInstallPrompt = null;
+    this.installNotificationShown = true;
+    localStorage.removeItem(this.installPromptCooldownKey);
   }
 
   private evaluateDrawerWidth() {
@@ -258,16 +368,29 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   toggleDrawer() {
-    this._appDrawer?.toggle();
+    if (this.isHandset) {
+      this.mobileMenuOpen = !this.mobileMenuOpen;
+    } else {
+      this._appDrawer?.toggle();
+    }
+  }
+
+  /** Close the fullscreen mobile menu overlay */
+  closeFullscreenMenu() {
+    this.mobileMenuOpen = false;
   }
 
   switchChoir(id: number): void {
     this.authService.switchChoir(id).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean } {
+  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null } {
     let child = route.firstChild;
-    const data = { title: child?.snapshot?.data?.['title'] ?? null, showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false };
+    const data = {
+      title: child?.snapshot?.data?.['title'] ?? null,
+      showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false,
+      description: child?.snapshot?.data?.['description'] ?? null
+    };
     while (child?.firstChild) {
       child = child.firstChild;
       if (child.snapshot?.data) {
@@ -277,6 +400,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         if (child.snapshot.data['showChoirName']) {
           data.showChoirName = child.snapshot.data['showChoirName'];
         }
+        if (child.snapshot.data['description']) {
+          data.description = child.snapshot.data['description'];
+        }
       }
     }
     return data;
@@ -284,9 +410,26 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
 
   ngOnInit(): void {
+    this.consumePendingPostSwitchRedirect();
+
     this.authService.activeChoir$
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.setupNavItems());
+
+    this.isSmallScreen$.pipe(
+      take(1),
+      takeUntil(this.destroy$)
+    ).subscribe(() => this.tryShowInstallNotification());
+  }
+
+  openChatFromHeader(): void {
+    const currentOverview = this.latestChatOverview;
+    if (!currentOverview?.oldestUnread) {
+      this.router.navigate(['/chat']);
+      return;
+    }
+
+    this.navigateToChatTarget(currentOverview.oldestUnread);
   }
 
   private restrictForDemo(visibility$: Observable<boolean>): Observable<boolean> {
@@ -295,129 +438,197 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     );
   }
 
+  private anyItemVisible(items: NavItem[]): Observable<boolean> {
+    const visibilityStreams = items.map(item => item.visibleSubject ?? of(item.visible !== false));
+    return combineLatest(visibilityStreams).pipe(
+      map(values => values.some(Boolean))
+    );
+  }
+
+  private createSectionHeader(displayName: string, items: NavItem[]): NavItem {
+    return {
+      displayName,
+      disabled: true,
+      isSectionHeader: true,
+      visibleSubject: this.anyItemVisible(items)
+    };
+  }
+
   private setupNavItems(): void {
-    // Phase 2: Wichtigste Items nach oben sortiert
+    const dashboard: NavItem = {
+      key: 'dashboard',
+      displayName: 'Home',
+      route: '/dashboard',
+      visibleSubject: this.menu.isVisible('dashboard'),
+      iconName: 'home',
+    };
+    const events: NavItem = {
+      key: 'events',
+      displayName: 'Termine',
+      route: '/events',
+      visibleSubject: this.menu.isVisible('events'),
+      iconName: 'event',
+    };
+    const dienstplan: NavItem = {
+      key: 'dienstplan',
+      displayName: 'Dienstplan',
+      route: '/dienstplan',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('dienstplan')),
+      iconName: 'calendar_today',
+    };
+    const availability: NavItem = {
+      key: 'availability',
+      displayName: 'Verfügbarkeiten',
+      route: '/availability',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('availability')),
+      iconName: 'event_available',
+    };
+    const chat: NavItem = {
+      key: 'chat',
+      displayName: 'Chat',
+      route: '/chat',
+      visibleSubject: this.menu.isVisible('chat'),
+      iconName: 'forum',
+    };
+    const posts: NavItem = {
+      key: 'posts',
+      displayName: 'Beiträge',
+      route: '/posts',
+      visibleSubject: this.menu.isVisible('posts'),
+      iconName: 'article',
+    };
+
+    const repertoire: NavItem = {
+      key: 'repertoire',
+      displayName: 'Repertoire',
+      route: '/repertoire',
+      visibleSubject: this.menu.isVisible('repertoire'),
+      iconName: 'library_music',
+    };
+    const practiceLists: NavItem = {
+      key: 'practiceLists',
+      displayName: 'Übungslisten',
+      route: '/practice-lists',
+      visibleSubject: this.menu.isVisible('repertoire'),
+      iconName: 'playlist_play',
+    };
+    const programs: NavItem = {
+      key: 'programs',
+      displayName: 'Programme',
+      route: '/programs',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('programs')),
+      iconName: 'queue_music',
+    };
+    const library: NavItem = {
+      key: 'library',
+      displayName: 'Bibliothek',
+      route: '/library',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('library')),
+      iconName: 'menu_book',
+    };
+    const collections: NavItem = {
+      key: 'collections',
+      displayName: 'Sammlungen',
+      route: '/collections',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('collections')),
+      iconName: 'folder',
+    };
+
+    const participation: NavItem = {
+      key: 'participation',
+      displayName: 'Anwesenheit',
+      route: '/participation',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
+      iconName: 'group',
+    };
+    const stats: NavItem = {
+      key: 'stats',
+      displayName: 'Statistik',
+      route: '/stats',
+      visibleSubject: this.menu.isVisible('stats'),
+      iconName: 'bar_chart',
+    };
+    const manageChoir: NavItem = {
+      key: 'manageChoir',
+      displayName: 'Choreinstellungen',
+      route: '/manage-choir',
+      visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
+      iconName: 'settings',
+    };
+    const publicPage: NavItem = {
+      key: 'publicPage',
+      displayName: 'Vorstellungsseite',
+      route: '/public-page',
+      visibleSubject: combineLatest([this.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+        map(([isAdmin, isChoirAdmin]) => isAdmin || isChoirAdmin)
+      ),
+      iconName: 'web',
+    };
+
+    const administration: NavItem = {
+      displayName: 'Administration',
+      visibleSubject: this.isAdmin$,
+      route: 'admin',
+      iconName: 'admin_panel_settings',
+      children: [
+        { displayName: 'Dashboard', route: '/admin/dashboard', iconName: 'dashboard' },
+        { displayName: '──────────', route: '', disabled: true },
+        { displayName: 'Organisationen', route: '/admin/organizations', iconName: 'account_balance' },
+        { displayName: 'E-Mail Management', route: '/admin/mail-management', iconName: 'mail' },
+        { displayName: 'PDF Templates', route: '/admin/pdf-templates', iconName: 'picture_as_pdf' },
+        { displayName: 'Metadaten', route: '/admin/metadata', iconName: 'library_music' },
+        { displayName: 'Datenanreicherung', route: '/admin/data-enrichment', iconName: 'auto_fix_high' },
+        { displayName: 'Sicherheit', route: '/admin/security', iconName: 'security' },
+        { displayName: 'Systemeinstellungen', route: '/admin/system-settings', iconName: 'settings' },
+        { displayName: 'PWA Konfiguration', route: '/admin/pwa-config', iconName: 'install_mobile' },
+        { displayName: '──────────', route: '', disabled: true },
+        { displayName: 'Allgemein', route: '/admin/general' },
+        { displayName: 'Chöre', route: '/admin/choirs' },
+        { displayName: 'Benutzer', route: '/admin/users' },
+        { displayName: 'Bezirke', route: '/admin/districts' },
+        { displayName: 'Gemeinden', route: '/admin/congregations' },
+        { displayName: 'Komponisten/Autoren', route: '/admin/creators' },
+        { displayName: 'Verlage', route: '/admin/publishers' },
+        { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
+        { displayName: 'Protokolle', route: '/admin/protocols' },
+        { displayName: 'Spenden', route: '/admin/donations' },
+        { displayName: 'Dateien', route: '/admin/files' },
+        { displayName: 'Develop', route: '/admin/develop' }
+      ]
+    };
+
+    const forms: NavItem = {
+      key: 'forms',
+      displayName: 'Formulare',
+      route: '/forms',
+      visibleSubject: this.restrictForDemo(of(true)),
+      iconName: 'assignment',
+    };
+    const members: NavItem = {
+      key: 'members',
+      displayName: 'Mitglieder',
+      route: '/members',
+      visibleSubject: this.restrictForDemo(of(true)),
+      iconName: 'people',
+    };
+
+    const aktuelles = [dashboard, events, dienstplan, availability, chat, posts, forms];
+    const notenUndMusik = [repertoire, practiceLists, library, collections, programs];
+    const chorUndAuswertung = [manageChoir, participation, stats, members, publicPage];
+    const system = [administration];
+
     this.navItems = [
-      // Primäre Navigation (am häufigsten verwendet)
-      {
-        key: 'dashboard',
-        displayName: 'Home',
-        route: '/dashboard',
-        visibleSubject: this.menu.isVisible('dashboard'),
-        iconName: 'home',
-      },
-      {
-        key: 'events',
-        displayName: 'Ereignisse',
-        route: '/events',
-        visibleSubject: this.menu.isVisible('events'),
-        iconName: 'event',
-      },
-      {
-        key: 'dienstplan',
-        displayName: 'Dienstplan',
-        route: '/dienstplan',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('dienstplan')),
-        iconName: 'calendar_today',
-      },
-      {
-        key: 'repertoire',
-        displayName: 'Repertoire',
-        route: '/repertoire',
-        visibleSubject: this.menu.isVisible('repertoire'),
-        iconName: 'library_music',
-      },
+      this.createSectionHeader('Aktuelles', aktuelles),
+      ...aktuelles,
 
-      // Sekundäre Navigation
-      {
-        key: 'availability',
-        displayName: 'Verfügbarkeiten',
-        route: '/availability',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('availability')),
-        iconName: 'event_available',
-      },
-      {
-        key: 'programs',
-        displayName: 'Programme',
-        route: '/programs',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('programs')),
-        iconName: 'queue_music',
-      },
-      {
-        key: 'library',
-        displayName: 'Bibliothek',
-        route: '/library',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('library')),
-        iconName: 'menu_book',
-      },
+      this.createSectionHeader('Noten & Musik', notenUndMusik),
+      ...notenUndMusik,
 
-      // Tertiäre Navigation
-      {
-        key: 'collections',
-        displayName: 'Sammlungen',
-        route: '/collections',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('collections')),
-        iconName: 'folder',
-      },
-      {
-        key: 'posts',
-        displayName: 'Beiträge',
-        route: '/posts',
-        visibleSubject: this.menu.isVisible('posts'),
-        iconName: 'article',
-      },
-      {
-        key: 'participation',
-        displayName: 'Beteiligung',
-        route: '/participation',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('participation')),
-        iconName: 'group',
-      },
-      {
-        key: 'stats',
-        displayName: 'Statistik',
-        route: '/stats',
-        visibleSubject: this.menu.isVisible('stats'),
-        iconName: 'bar_chart',
-      },
+      this.createSectionHeader('Chor & Auswertung', chorUndAuswertung),
+      ...chorUndAuswertung,
 
-      // Verwaltung
-      {
-        key: 'manageChoir',
-        displayName: 'Mein Chor',
-        route: '/manage-choir',
-        visibleSubject: this.restrictForDemo(this.menu.isVisible('manageChoir')),
-        iconName: 'settings',
-      },
-      {
-        displayName: 'Administration',
-        visibleSubject: this.isAdmin$,
-        route: 'admin',
-        iconName: 'admin_panel_settings',
-        children: [
-          { displayName: 'Dashboard', route: '/admin/dashboard', iconName: 'dashboard' },
-          { displayName: '──────────', route: '', disabled: true }, // Divider
-          { displayName: 'Organisationen', route: '/admin/organizations', iconName: 'account_balance' },
-          { displayName: 'E-Mail Management', route: '/admin/mail-management', iconName: 'mail' },
-          { displayName: 'PDF Templates', route: '/admin/pdf-templates', iconName: 'picture_as_pdf' },
-          { displayName: 'Metadaten', route: '/admin/metadata', iconName: 'library_music' },
-          { displayName: 'Sicherheit', route: '/admin/security', iconName: 'security' },
-          { displayName: 'Systemeinstellungen', route: '/admin/system-settings', iconName: 'settings' },
-          { displayName: '──────────', route: '', disabled: true }, // Divider
-          { displayName: 'Allgemein', route: '/admin/general' },
-          { displayName: 'Chöre', route: '/admin/choirs' },
-          { displayName: 'Benutzer', route: '/admin/users' },
-          { displayName: 'Bezirke', route: '/admin/districts' },
-          { displayName: 'Gemeinden', route: '/admin/congregations' },
-          { displayName: 'Komponisten/Autoren', route: '/admin/creators' },
-          { displayName: 'Verlage', route: '/admin/publishers' },
-          { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
-          { displayName: 'Protokolle', route: '/admin/protocols' },
-          { displayName: 'Spenden', route: '/admin/donations' },
-          { displayName: 'Dateien', route: '/admin/files' },
-          { displayName: 'Develop', route: '/admin/develop' }
-        ]
-      }
+      this.createSectionHeader('System', system),
+      ...system,
     ];
   }
 
@@ -433,8 +644,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   public closeSidenav() {
-    if (this.isHandset) {
-      this._appDrawer?.close();
+    if (this._appDrawer?.mode === 'over') {
+      this._appDrawer.close();
     }
   }
 
@@ -478,5 +689,235 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.chatUnreadCount$.complete();
+  }
+
+  private navigateToChatTarget(target: {
+    choirId: number;
+    chatRoomId: number;
+    messageId: number;
+  }): void {
+    this.activeChoir$.pipe(take(1), withLatestFrom(this.availableChoirs$)).subscribe(([activeChoir, choirs]) => {
+      const targetUrl = `/chat?room=${target.chatRoomId}&message=${target.messageId}`;
+      const hasMultipleChoirs = (choirs?.length || 0) > 1;
+      const mustSwitchChoir = !!activeChoir && activeChoir.id !== target.choirId;
+
+      if (hasMultipleChoirs && mustSwitchChoir) {
+        sessionStorage.setItem('postSwitchRedirect', targetUrl);
+        this.authService.switchChoir(target.choirId).pipe(take(1)).subscribe();
+        return;
+      }
+
+      this.router.navigate(['/chat'], { queryParams: { room: target.chatRoomId, message: target.messageId } });
+    });
+  }
+
+  private consumePendingPostSwitchRedirect(): void {
+    const pending = sessionStorage.getItem('postSwitchRedirect');
+    if (!pending) {
+      return;
+    }
+
+    sessionStorage.removeItem('postSwitchRedirect');
+    this.router.navigateByUrl(pending).catch(() => {
+      // no-op
+    });
+  }
+
+  private isFramelessRoute(url: string): boolean {
+    const cleanUrl = (url || '').split('?')[0].split('#')[0];
+    return cleanUrl.startsWith('/c/') || cleanUrl.startsWith('/shared-piece/');
+  }
+
+  private maybeNotifyAboutNewestUnread(overview: ChatGlobalUnreadOverview): void {
+    const newest = overview.newestUnread;
+    if (!newest?.messageId) {
+      return;
+    }
+
+    if (this.latestNotifiedMessageId === null) {
+      this.latestNotifiedMessageId = newest.messageId;
+      return;
+    }
+
+    if (newest.messageId <= this.latestNotifiedMessageId) {
+      return;
+    }
+
+    this.latestNotifiedMessageId = newest.messageId;
+    this.showBrowserNotification(newest);
+  }
+
+  private async showBrowserNotification(newest: NonNullable<ChatGlobalUnreadOverview['newestUnread']>): Promise<void> {
+    if (typeof Notification === 'undefined') {
+      return;
+    }
+
+    let permission = Notification.permission;
+    if (permission === 'default' && !this.pendingNotificationPermissionRequest) {
+      try {
+        this.pendingNotificationPermissionRequest = true;
+        permission = await Notification.requestPermission();
+      } finally {
+        this.pendingNotificationPermissionRequest = false;
+      }
+    }
+
+    if (permission !== 'granted') {
+      return;
+    }
+
+    const bodyPrefix = newest.authorName ? `${newest.authorName}: ` : '';
+    const notification = new Notification(`Neue Nachricht • ${newest.choirName || 'Chor'}`, {
+      body: `${bodyPrefix}${newest.preview}`,
+      icon: '/assets/icons/icon-192x192.png',
+      tag: `chat-${newest.messageId}`
+    });
+
+    notification.onclick = () => {
+      window.focus();
+      this.navigateToChatTarget({
+        choirId: newest.choirId,
+        chatRoomId: newest.chatRoomId,
+        messageId: newest.messageId
+      });
+      notification.close();
+    };
+  }
+
+  private tryShowInstallNotification(): void {
+    if (this.installNotificationShown || !this.deferredInstallPrompt) {
+      return;
+    }
+
+    if (this.isAppInstalled() || !this.responsive.checkMobile() || this.isInstallPromptInCooldown()) {
+      return;
+    }
+
+    this.installNotificationShown = true;
+
+    const snackBarRef = this.notification.infoWithAction(
+      'Diese App kann auf deinem Gerät installiert werden.',
+      'Installieren',
+      12000
+    );
+
+    snackBarRef.onAction().pipe(take(1)).subscribe(() => {
+      void this.promptInstall();
+    });
+
+    snackBarRef.afterDismissed().pipe(take(1)).subscribe(result => {
+      if (!result.dismissedByAction) {
+        this.markInstallPromptDismissed();
+      }
+    });
+  }
+
+  private async promptInstall(): Promise<void> {
+    if (!this.deferredInstallPrompt) {
+      return;
+    }
+
+    const installPrompt = this.deferredInstallPrompt;
+    this.deferredInstallPrompt = null;
+
+    try {
+      await installPrompt.prompt();
+      const choiceResult = await installPrompt.userChoice;
+      if (choiceResult.outcome !== 'accepted') {
+        this.markInstallPromptDismissed();
+      } else {
+        localStorage.removeItem(this.installPromptCooldownKey);
+      }
+    } catch {
+      this.markInstallPromptDismissed();
+    }
+  }
+
+  private isAppInstalled(): boolean {
+    const standaloneNavigator = (window.navigator as Navigator & { standalone?: boolean }).standalone;
+    return window.matchMedia('(display-mode: standalone)').matches || !!standaloneNavigator;
+  }
+
+  private isInstallPromptInCooldown(): boolean {
+    const rawTimestamp = localStorage.getItem(this.installPromptCooldownKey);
+    if (!rawTimestamp) {
+      return false;
+    }
+
+    const timestamp = Number(rawTimestamp);
+    if (Number.isNaN(timestamp)) {
+      return false;
+    }
+
+    return Date.now() - timestamp < this.installPromptCooldownMs;
+  }
+
+  private markInstallPromptDismissed(): void {
+    localStorage.setItem(this.installPromptCooldownKey, Date.now().toString());
+  }
+
+  private tryShowPushPrompt(choirs: Choir[]): void {
+    if (this.pushPromptShown) {
+      return;
+    }
+
+    if (!this.pushService.isSupported()) {
+      return;
+    }
+
+    const permission = this.pushService.getPermission();
+    if (permission !== 'default') {
+      // Already granted or denied — auto-subscribe if granted but not stored
+      if (permission === 'granted') {
+        const storedIds = this.pushService.getStoredChoirIds();
+        const missingIds = choirs.map(c => c.id).filter(id => !storedIds.includes(id));
+        if (missingIds.length > 0) {
+          this.pushService.subscribeToAllChoirs(missingIds).catch(() => {});
+        }
+      }
+      return;
+    }
+
+    if (this.isPushPromptInCooldown()) {
+      return;
+    }
+
+    this.pushPromptShown = true;
+
+    const snackBarRef = this.notification.infoWithAction(
+      'Möchtest du Push-Benachrichtigungen für Chat, Beiträge und Dienste aktivieren?',
+      'Aktivieren',
+      15000
+    );
+
+    snackBarRef.onAction().pipe(take(1)).subscribe(() => {
+      const choirIds = choirs.map(c => c.id);
+      this.pushService.subscribeToAllChoirs(choirIds).catch(() => {});
+    });
+
+    snackBarRef.afterDismissed().pipe(take(1)).subscribe(result => {
+      if (!result.dismissedByAction) {
+        this.markPushPromptDismissed();
+      }
+    });
+  }
+
+  private isPushPromptInCooldown(): boolean {
+    const rawTimestamp = localStorage.getItem(this.pushPromptCooldownKey);
+    if (!rawTimestamp) {
+      return false;
+    }
+
+    const timestamp = Number(rawTimestamp);
+    if (Number.isNaN(timestamp)) {
+      return false;
+    }
+
+    return Date.now() - timestamp < this.pushPromptCooldownMs;
+  }
+
+  private markPushPromptDismissed(): void {
+    localStorage.setItem(this.pushPromptCooldownKey, Date.now().toString());
   }
 }

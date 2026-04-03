@@ -9,11 +9,12 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { PostComponent } from './post.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PostComponent, EmptyStateComponent],
   templateUrl: './post-list.component.html',
   styleUrls: ['./post-list.component.scss']
 })
@@ -64,7 +65,7 @@ export class PostListComponent implements OnInit {
   addPost(): void {
     this.dialogHelper.openDialog<PostDialogComponent, string>(
       PostDialogComponent,
-      { width: '600px' }
+      { width: '60vw', maxWidth: '60vw' }
     ).subscribe(result => {
       if (result === 'created') {
         this.notification.success('Beitrag erstellt');
@@ -76,7 +77,7 @@ export class PostListComponent implements OnInit {
   onPostEdited(post: Post): void {
     this.dialogHelper.openDialog<PostDialogComponent, string>(
       PostDialogComponent,
-      { width: '600px', data: { post } }
+      { width: '60vw', maxWidth: '60vw', data: { post } }
     ).subscribe(result => {
       if (result === 'updated') {
         this.notification.success('Beitrag aktualisiert');

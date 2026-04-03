@@ -97,7 +97,7 @@ function applyHeaderFooter(doc, template, meta) {
       }
       const footerText = parts.join(' — ');
       doc.font('Helvetica').fontSize(footerFontSize).fillColor('black');
-      doc.text(footerText, baseMargin, footerY, { width: contentWidth, align: footer.align || 'center' });
+      doc.text(footerText, baseMargin, footerY, { width: contentWidth, align: footer.align || 'center', lineBreak: false });
     }
   }
 }
@@ -424,6 +424,38 @@ async function participationPdf(members, events, availabilities = []) {
     doc.y = y + rowHeight;
   }
 
+  function drawCheckMark(cellX, cellY, cellWidth, cellHeight) {
+    // Center the checkmark in the cell
+    const centerX = cellX + cellWidth / 2;
+    const centerY = cellY + cellHeight / 2;
+
+    // Scale based on cell size
+    const scale = Math.min(cellWidth, cellHeight) * 0.35;
+
+    // Checkmark path: short diagonal from left-bottom to center, then long diagonal to right-top
+    const point1X = centerX - scale * 0.4;  // Left point (start of short leg)
+    const point1Y = centerY + scale * 0.2;  // Lower
+
+    const point2X = centerX - scale * 0.1;  // Center point (corner)
+    const point2Y = centerY + scale * 0.4;  // Lowest point
+
+    const point3X = centerX + scale * 0.5;  // Right point (end of long leg)
+    const point3Y = centerY - scale * 0.4;  // Higher
+
+    doc.save();
+    doc.lineWidth(1.8);
+    doc.strokeColor('black');
+    doc.lineCap('round');
+    doc.lineJoin('round');
+
+    doc.moveTo(point1X, point1Y)
+      .lineTo(point2X, point2Y)
+      .lineTo(point3X, point3Y)
+      .stroke();
+
+    doc.restore();
+  }
+
   function drawRow(cells) {
     if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
       doc.addPage();
@@ -433,10 +465,15 @@ async function participationPdf(members, events, availabilities = []) {
     let x = left;
     cells.forEach((cell, i) => {
       if (i >= 5) {
-        doc.font('Helvetica').fontSize(table.rowFontSize || 9).text(cell, x + 2, y + 2, {
-          width: columnWidths[i] - 4,
-          align: 'center'
-        });
+        if (cell === '✓') {
+          drawCheckMark(x, y, columnWidths[i], rowHeight);
+        } else {
+          // Symbole in fetter Schrift und größer darstellen
+          doc.font('Helvetica-Bold').fontSize((table.rowFontSize || 9) + 2).text(cell, x + 2, y + 2, {
+            width: columnWidths[i] - 4,
+            align: 'center'
+          });
+        }
       } else {
         doc.font('Helvetica').fontSize(table.rowFontSize || 9).text(cell, x + 2, y + 2, {
           width: columnWidths[i] - 4,
@@ -471,7 +508,7 @@ async function participationPdf(members, events, availabilities = []) {
       let mark = '';
       if (status === 'AVAILABLE') mark = '✓';
       else if (status === 'MAYBE') mark = '?';
-      else if (status === 'UNAVAILABLE') mark = '-';
+      else if (status === 'UNAVAILABLE') mark = '–';  // Langes Minus (En Dash)
       row.push(mark);
     }
     drawRow(row);

@@ -75,3 +75,15 @@ export interface LeaveChoirResponse {
   activeChoir?: Choir | null;
   accountDeleted?: boolean;
 }
+
+export interface ChoirLeaveInfo {
+  name: string;
+  openBorrowings: number;
+  dutyAssignments: number;
+}
+
+export interface LeaveStatusResponse {
+  choirs: Record<number, ChoirLeaveInfo>;
+  totalOpenBorrowings: number;
+  totalDutyAssignments: number;
+}

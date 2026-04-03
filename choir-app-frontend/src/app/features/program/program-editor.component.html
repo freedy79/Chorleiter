@@ -181,12 +181,13 @@
   <div class="mobile-cards" cdkDropList (cdkDropListDropped)="drop($event)" [cdkDropListData]="items">
     <div *ngFor="let item of items; let i = index"
          cdkDrag
+         [cdkDragStartDelay]="mobileDragStartDelay"
          class="card"
          [class.selected]="selectedItemId === item.id"
          (click)="toggleSelectItem(item.id)"
          [cdkDragDisabled]="!isEditing">
 
-      <div class="card-drag-indicator" *ngIf="isEditing">
+      <div class="card-drag-indicator" *ngIf="isEditing" cdkDragHandle aria-label="Element verschieben">
         <mat-icon>drag_indicator</mat-icon>
       </div>
 

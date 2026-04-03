@@ -1,8 +1,43 @@
 <div class="maintenance-container">
   <mat-card>
     <mat-card-content>
+      <mat-icon class="warning-icon">cloud_off</mat-icon>
       <h2>Dienst nicht erreichbar</h2>
-      <p>Am Dienst wird aktuell gearbeitet. Bitte versuche es später erneut.</p>
+      <p>Der Server ist momentan nicht erreichbar. Dies kann verschiedene Ursachen haben:</p>
+      <ul class="causes-list">
+        <li>Am Dienst wird aktuell gearbeitet</li>
+        <li>Vorübergehende Netzwerkprobleme</li>
+      </ul>
+
+      <div class="retry-section">
+        <button mat-raised-button color="primary" (click)="retryPing()" [disabled]="isRetrying">
+          <mat-icon>refresh</mat-icon>
+          {{ isRetrying ? 'Verbindung wird geprüft...' : 'Erneut versuchen' }}
+        </button>
+
+        <p class="auto-retry-info" *ngIf="!isRetrying">
+          Automatischer Versuch in <strong>{{ secondsUntilRetry }}</strong> Sekunde(n)...
+        </p>
+        <p class="auto-retry-info" *ngIf="isRetrying">
+          Verbindung wird geprüft...
+        </p>
+
+        <p class="retry-count" *ngIf="retryCount > 0">
+          {{ retryCount }} fehlgeschlagene(r) Versuch(e)
+          <span *ngIf="lastRetryTime"> — zuletzt um {{ lastRetryTime | date:'HH:mm:ss' }}</span>
+        </p>
+      </div>
+
+      <div class="additional-actions">
+        <button mat-stroked-button (click)="hardReload()">
+          <mat-icon>sync</mat-icon>
+          Seite neu laden
+        </button>
+        <button mat-stroked-button (click)="clearCacheAndReload()">
+          <mat-icon>delete_sweep</mat-icon>
+          Cache leeren und neu laden
+        </button>
+      </div>
     </mat-card-content>
   </mat-card>
 </div>

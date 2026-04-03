@@ -1,0 +1,339 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as dm;
+
+.form-editor-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 500;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+
+  &.status-draft {
+    background: #fff3e0;
+    color: #e65100;
+  }
+  &.status-published {
+    background: #e8f5e9;
+    color: #2e7d32;
+  }
+  &.status-closed {
+    background: #fce4ec;
+    color: #c62828;
+  }
+
+  @include dm.dark-mode {
+    &.status-draft {
+      background: rgba(255, 152, 0, 0.15);
+      color: #ffb74d;
+    }
+    &.status-published {
+      background: rgba(76, 175, 80, 0.15);
+      color: #81c784;
+    }
+    &.status-closed {
+      background: rgba(244, 67, 54, 0.15);
+      color: #ef9a9a;
+    }
+  }
+}
+
+.section-card {
+  margin-bottom: 24px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.date-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
+.checkbox-row {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 12px 0 16px;
+}
+
+// ── Fields Editor ──────────────────────────────────────────
+
+.fields-list {
+  min-height: 60px;
+}
+
+.field-item {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: white;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  @include dm.dark-mode {
+    background: var(--card-bg, #424242);
+    border-color: rgba(255, 255, 255, 0.12);
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.drag-handle {
+  display: flex;
+  align-items: flex-start;
+  padding-top: 4px;
+  cursor: grab;
+  color: rgba(0, 0, 0, 0.38);
+
+  @include dm.dark-mode {
+    color: rgba(255, 255, 255, 0.38);
+  }
+}
+
+.field-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+
+  .field-type-icon {
+    color: var(--primary-color, #1976d2);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .field-type-label {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--primary-color, #1976d2);
+  }
+
+  .type-select {
+    width: 160px;
+    margin-left: 8px;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+// ── Options section ─────────────────────────────────────────
+
+.options-section {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+
+  @include dm.dark-mode {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .option-input {
+    flex: 1;
+  }
+}
+
+// ── Conditional Visibility (showIf) ─────────────────────────
+
+.show-if-section {
+  margin-top: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px dashed rgba(0, 0, 0, 0.08);
+
+  @include dm.dark-mode {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.show-if-config {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+
+  .show-if-label {
+    font-size: 0.85rem;
+    color: rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .show-if-field-select {
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .show-if-operator {
+    min-width: 140px;
+  }
+
+  .show-if-value {
+    min-width: 120px;
+    flex: 1;
+  }
+}
+
+// ── Add field section ───────────────────────────────────────
+
+.add-field-section {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.12);
+
+  @include dm.dark-mode {
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .add-label {
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: rgba(0, 0, 0, 0.6);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+}
+
+.add-field-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .add-field-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.82rem;
+    min-width: unset;
+
+    .btn-label {
+      @include bp.handset {
+        display: none;
+      }
+    }
+  }
+}
+
+// ── Actions ─────────────────────────────────────────────────
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-bottom: 32px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+}
+
+// ── Responsive ──────────────────────────────────────────────
+
+@include bp.handset {
+  .form-editor-container {
+    padding: 16px 8px;
+  }
+
+  .editor-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .field-header {
+    .type-select {
+      width: 120px;
+    }
+  }
+
+  .date-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}

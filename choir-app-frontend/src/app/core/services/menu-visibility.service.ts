@@ -12,6 +12,7 @@ export enum MenuKey {
   AVAILABILITY = 'availability',
   PARTICIPATION = 'participation',
   POSTS = 'posts',
+  CHAT = 'chat',
   PROGRAMS = 'programs',
   STATS = 'stats',
   MANAGE_CHOIR = 'manageChoir',
@@ -22,7 +23,7 @@ export enum MenuKey {
 
 const MENU_KEYS = Object.values(MenuKey);
 
-const CHOIR_ADMIN_ROLES = ['director', 'choir_admin', 'organist'] as const;
+const CHOIR_ADMIN_ROLES = ['director', 'choir_admin', 'organist', 'notenwart'] as const;
 const GLOBAL_ADMIN_ROLES = ['admin', 'librarian'] as const;
 const DEMO_RESTRICTED_KEYS = [
   MenuKey.DIENSTPLAN,
@@ -118,6 +119,7 @@ export class MenuVisibilityService {
       [MenuKey.AVAILABILITY]: true,
       [MenuKey.PARTICIPATION]: hasPrivilegedRole,
       [MenuKey.POSTS]: true,
+      [MenuKey.CHAT]: true,
       [MenuKey.PROGRAMS]: modules.programs === true && hasPrivilegedRole,
       [MenuKey.STATS]: hasPrivilegedRole,
       [MenuKey.MANAGE_CHOIR]: true,

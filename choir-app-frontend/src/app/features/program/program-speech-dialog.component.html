@@ -1,23 +1,23 @@
 <h1 mat-dialog-title>Sprachbeitrag</h1>
 <div mat-dialog-content>
   <form [formGroup]="form" class="speech-form" id="speech-form" (ngSubmit)="onSave()">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Titel</mat-label>
       <input matInput formControlName="title" required />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Quelle</mat-label>
       <input matInput formControlName="source" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Sprecher:in</mat-label>
       <input matInput formControlName="speaker" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Kurztext / Anriss</mat-label>
       <textarea matInput formControlName="text"></textarea>
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Dauer (mm:ss)</mat-label>
       <input matInput formControlName="duration" placeholder="mm:ss" />
     </mat-form-field>
@@ -25,5 +25,5 @@
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" type="submit" form="speech-form" [disabled]="form.invalid">Speichern</button>
+  <button mat-flat-button color="primary" type="submit" form="speech-form" [disabled]="form.invalid">Speichern</button>
 </div>

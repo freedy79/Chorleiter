@@ -1,0 +1,93 @@
+# Automatic PR labeling based on changed file paths
+
+backend:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-backend/**/*'
+      - '!choir-app-backend/tests/**'
+
+backend-tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-backend/tests/**/*'
+
+frontend:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-frontend/**/*'
+      - '!choir-app-frontend/src/**/*.spec.ts'
+
+frontend-tests:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-frontend/src/**/*.spec.ts'
+      - 'choir-app-frontend/karma.conf.js'
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'doc/**/*'
+      - '*.md'
+      - 'choir-app-backend/README.md'
+      - 'choir-app-frontend/README.md'
+
+ci-cd:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '.github/**/*'
+      - 'deploy*.sh'
+      - 'deploy*.ps1'
+      - 'Dockerfile*'
+      - 'docker-compose.yml'
+
+database:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-backend/src/models/**/*'
+      - 'choir-app-backend/src/init/**/*'
+      - 'choir-app-backend/src/migrations/**/*'
+
+api:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-backend/src/routes/**/*'
+      - 'choir-app-backend/src/controllers/**/*'
+      - 'choir-app-backend/src/validators/**/*'
+
+ui-components:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-frontend/src/app/**/*.component.ts'
+      - 'choir-app-frontend/src/app/**/*.component.html'
+      - 'choir-app-frontend/src/app/**/*.component.scss'
+
+services:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-frontend/src/app/core/services/**/*'
+      - 'choir-app-backend/src/services/**/*'
+
+security:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-backend/src/middleware/auth.middleware.js'
+      - 'choir-app-backend/src/utils/errors.js'
+      - '**/*security*'
+      - '**/*auth*'
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'choir-app-backend/package.json'
+      - 'choir-app-backend/package-lock.json'
+      - 'choir-app-frontend/package.json'
+      - 'choir-app-frontend/package-lock.json'
+
+pwa:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'choir-app-frontend/ngsw-config.json'
+      - 'choir-app-frontend/src/app/core/services/service-worker-update.service.ts'
+      - 'generate-pwa-icons.*'

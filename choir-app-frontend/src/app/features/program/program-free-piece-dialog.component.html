@@ -1,11 +1,11 @@
 <h1 mat-dialog-title>Freies Stück</h1>
 <div mat-dialog-content>
   <form [formGroup]="form" class="free-piece-form" id="free-piece-form" (ngSubmit)="onSave()">
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Titel</mat-label>
       <input matInput formControlName="title" required />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Komponist:in</mat-label>
       <input type="text" matInput [formControl]="composerCtrl" [matAutocomplete]="autoComposer" />
       <mat-autocomplete #autoComposer="matAutocomplete">
@@ -14,15 +14,15 @@
         </mat-option>
       </mat-autocomplete>
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Instrument</mat-label>
       <input matInput formControlName="instrument" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Ausführende</mat-label>
       <input matInput formControlName="performerNames" />
     </mat-form-field>
-    <mat-form-field appearance="fill">
+    <mat-form-field appearance="outline">
       <mat-label>Dauer (mm:ss)</mat-label>
       <input matInput formControlName="duration" placeholder="mm:ss" />
     </mat-form-field>
@@ -30,5 +30,5 @@
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-raised-button color="primary" type="submit" form="free-piece-form" [disabled]="form.invalid">Speichern</button>
+  <button mat-flat-button color="primary" type="submit" form="free-piece-form" [disabled]="form.invalid">Speichern</button>
 </div>

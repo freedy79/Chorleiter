@@ -100,7 +100,7 @@ $dark-mode-colors: (
 /// Mixin to apply styles only in dark theme mode
 /// Usage: @include dark-mode { color: white; }
 @mixin dark-mode {
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     @content;
   }
 }
@@ -110,9 +110,11 @@ $dark-mode-colors: (
 /// @param {String} $light-value - Value for light mode
 /// @param {String} $dark-value - Value for dark mode
 @mixin theme-color($property, $light-value, $dark-value) {
-  #{$property}: $light-value;
+  & {
+    #{$property}: $light-value;
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     #{$property}: $dark-value;
   }
 }
@@ -136,9 +138,11 @@ $dark-mode-colors: (
 /// @param {String} $property - CSS property name
 /// @param {String} $color-key - Key from color map (e.g., 'text-primary')
 @mixin apply-theme-var($property, $color-key) {
-  #{$property}: map.get($light-mode-colors, $color-key);
+  & {
+    #{$property}: map.get($light-mode-colors, $color-key);
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     #{$property}: map.get($dark-mode-colors, $color-key);
   }
 }
@@ -194,7 +198,9 @@ $dark-mode-colors: (
 
 /// Mixin for borders that should adapt to theme
 @mixin adaptive-border($width: 1px, $style: solid) {
-  border: $width $style;
+  & {
+    border: $width $style;
+  }
   @include border-color(
     map.get($light-mode-colors, 'border-primary'),
     map.get($dark-mode-colors, 'border-primary')
@@ -204,14 +210,20 @@ $dark-mode-colors: (
 /// Mixin for shadows in light mode, highlights in dark mode
 @mixin elevation-shadow($elevation: 1) {
   @if $elevation == 1 {
-    box-shadow: 0 2px 4px map.get($light-mode-colors, 'shadow-elevation-1');
+    & {
+      box-shadow: 0 2px 4px map.get($light-mode-colors, 'shadow-elevation-1');
+    }
   } @else if $elevation == 2 {
-    box-shadow: 0 4px 8px map.get($light-mode-colors, 'shadow-elevation-2');
+    & {
+      box-shadow: 0 4px 8px map.get($light-mode-colors, 'shadow-elevation-2');
+    }
   } @else if $elevation == 3 {
-    box-shadow: 0 8px 16px map.get($light-mode-colors, 'shadow-elevation-3');
+    & {
+      box-shadow: 0 8px 16px map.get($light-mode-colors, 'shadow-elevation-3');
+    }
   }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     // In dark mode, use highlight glow instead of shadow
     @if $elevation == 1 {
       box-shadow: 0 0 8px map.get($dark-mode-colors, 'highlight-glow'),
@@ -228,19 +240,23 @@ $dark-mode-colors: (
 
 /// Mixin for focus states with proper contrast
 @mixin focus-state {
-  outline: 2px solid map.get($light-mode-colors, 'border-focus');
-  outline-offset: 2px;
+  & {
+    outline: 2px solid map.get($light-mode-colors, 'border-focus');
+    outline-offset: 2px;
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     outline-color: map.get($dark-mode-colors, 'border-focus');
   }
 }
 
 /// Mixin for placeholder text
 @mixin placeholder-text {
-  color: map.get($light-mode-colors, 'text-tertiary');
+  & {
+    color: map.get($light-mode-colors, 'text-tertiary');
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     color: map.get($dark-mode-colors, 'text-tertiary');
   }
 }
@@ -269,9 +285,11 @@ $dark-mode-colors: (
 
 /// Mixin for overlay/modal backgrounds
 @mixin overlay {
-  background-color: map.get($light-mode-colors, 'overlay');
+  & {
+    background-color: map.get($light-mode-colors, 'overlay');
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     background-color: map.get($dark-mode-colors, 'overlay');
   }
 }
@@ -304,11 +322,13 @@ $letter-spacing-wide: 0.05em;
 /// Mixin für Suggestion/Autocomplete Highlights
 /// Verwendet für Suchergebnisse und Autocomplete-Matches
 @mixin suggestion-highlight {
-  background: rgba(255, 235, 59, 0.6);
-  padding: 0 2px;
-  border-radius: 2px;
+  & {
+    background: rgba(255, 235, 59, 0.6);
+    padding: 0 2px;
+    border-radius: 2px;
+  }
 
-  .dark-theme & {
+  @at-root .dark-theme #{&} {
     background: rgba(255, 193, 7, 0.6);
   }
 }

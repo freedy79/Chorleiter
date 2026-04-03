@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
+import { MatSnackBarRef, TextOnlySnackBar } from '@angular/material/snack-bar';
 import { HttpErrorResponse } from '@angular/common/http';
 
 /**
@@ -24,6 +25,18 @@ export class NotificationService {
    */
   success(message: string, duration?: number): void {
     this.show(message, 'OK', {
+      duration: duration ?? this.DEFAULT_SUCCESS_DURATION,
+      panelClass: 'success-snackbar'
+    });
+  }
+
+  /**
+   * Displays a success message with a custom action button.
+   * Returns the snackbar reference so callers can react to the action click.
+   */
+  successWithAction(message: string, actionLabel: string, duration?: number): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, actionLabel, {
+      verticalPosition: 'top',
       duration: duration ?? this.DEFAULT_SUCCESS_DURATION,
       panelClass: 'success-snackbar'
     });
@@ -68,6 +81,18 @@ export class NotificationService {
   }
 
   /**
+   * Displays an info message with a custom action button.
+   * Returns the snackbar reference so callers can react to the action click.
+   */
+  infoWithAction(message: string, actionLabel: string, duration?: number): MatSnackBarRef<TextOnlySnackBar> {
+    return this.snackBar.open(message, actionLabel, {
+      verticalPosition: 'top',
+      duration: duration ?? this.DEFAULT_INFO_DURATION,
+      panelClass: 'info-snackbar'
+    });
+  }
+
+  /**
    * Extracts a user-friendly error message from various error types.
    * @param error The error object (HttpErrorResponse, Error, or string)
    * @returns A user-friendly error message
@@ -83,12 +108,7 @@ export class NotificationService {
         return error.error.message;
       }
 
-      // Fall back to status text or generic message
-      if (error.statusText && error.statusText !== 'Unknown Error') {
-        return `Fehler: ${error.statusText}`;
-      }
-
-      // Provide status-specific messages
+      // Provide status-specific messages first (German translations)
       switch (error.status) {
         case 0:
           return 'Fehler: Keine Verbindung zum Server.';
@@ -105,6 +125,10 @@ export class NotificationService {
         case 500:
           return 'Fehler: Interner Serverfehler.';
         default:
+          // Fall back to status text or generic message
+          if (error.statusText && error.statusText !== 'Unknown Error') {
+            return `Fehler: ${error.statusText}`;
+          }
           return `Fehler: Ein unerwarteter Fehler ist aufgetreten (${error.status}).`;
       }
     }

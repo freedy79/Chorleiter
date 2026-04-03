@@ -11,6 +11,7 @@ const base = new BaseCrudController(Collection);
 const { Sequelize } = db; // access Sequelize error types
 const jobs = require('../services/import-jobs.service');
 const crypto = require('crypto');
+const imageService = require('../services/image.service');
 
 exports.create = async (req, res, next) => {
     const { title, subtitle, publisher, prefix, description, publisherNumber, singleEdition, pieces } = req.body;
@@ -263,6 +264,15 @@ exports.uploadCover = async (req, res, next) => {
         const collection = await Collection.findByPk(id);
         if (!collection) return res.status(404).send({ message: 'Collection not found.' });
 
+        // Resize the uploaded image to max width of 150px
+        const uploadedPath = path.join(__dirname, '../../uploads/collection-covers', req.file.filename);
+        try {
+            await imageService.resizeUploadedCover(uploadedPath, 150);
+        } catch (err) {
+            logger.warn(`Image resizing failed for ${req.file.filename}: ${err.message}`);
+            // Continue anyway - don't fail the upload if resizing fails
+        }
+
         await collection.update({ coverImage: req.file.filename });
         res.status(200).send({ filename: req.file.filename });
     } catch (err) { next(err); }
@@ -290,6 +300,62 @@ exports.getCover = async (req, res, next) => {
         const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
         res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
     } catch (err) { next(err); }
+};
+
+exports.getResizedCover = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const width = parseInt(req.query.width) || 150;
+
+        const collection = await Collection.findByPk(id);
+        if (!collection || !collection.coverImage) {
+            return res.status(404).send({ message: 'Cover not found.' });
+        }
+
+        const { buffer, mimeType } = await imageService.getResizedCover(collection.coverImage, width);
+        res.type(mimeType).send(buffer);
+    } catch (err) {
+        if (err.message.includes('not found')) {
+            return res.status(404).send({ message: 'Cover not found.' });
+        }
+        next(err);
+    }
+};
+
+exports.resizeCover = async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const { width } = req.body;
+
+        if (!width || typeof width !== 'number' || width < 10 || width > 2000) {
+            return res.status(400).send({ message: 'Invalid width. Must be between 10 and 2000 pixels.' });
+        }
+
+        const collection = await Collection.findByPk(id);
+        if (!collection || !collection.coverImage) {
+            return res.status(404).send({ message: 'Collection or cover not found.' });
+        }
+
+        const filePath = path.join(__dirname, '../../uploads/collection-covers', collection.coverImage);
+        try {
+            await fs.access(filePath);
+        } catch (err) {
+            return res.status(404).send({ message: 'Cover file not found on disk.' });
+        }
+
+        // Resize the original file in place
+        await imageService.resizeUploadedCover(filePath, width);
+        res.status(200).send({
+            message: `Cover resized to max width ${width}px.`,
+            filename: collection.coverImage,
+            width: width
+        });
+    } catch (err) {
+        if (err.message.includes('process')) {
+            return res.status(400).send({ message: 'Failed to resize cover: ' + err.message });
+        }
+        next(err);
+    }
 };
 
 // expose delete handler in case it's needed

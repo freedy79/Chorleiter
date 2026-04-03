@@ -20,6 +20,8 @@ import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { ResponsiveService } from '@shared/services/responsive.service';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-event-list',
@@ -30,13 +32,15 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
     MaterialModule,
     EventCardComponent,
     EventTypeLabelPipe,
-    PureDatePipe
+    PureDatePipe,
+    EmptyStateComponent
   ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss']
 })
 export class EventListComponent implements OnInit, AfterViewInit {
   typeControl = new FormControl('ALL');
+  timeControl = new FormControl('RECENT');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
@@ -47,6 +51,14 @@ export class EventListComponent implements OnInit, AfterViewInit {
   selection = new SelectionModel<Event>(true, []);
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
+  isLoading = false;
+
+  // Dynamic past-year filter options
+  pastYears: number[] = [];
+
+  // Mobile lazy rendering
+  private readonly MOBILE_PAGE_SIZE = 15;
+  mobileVisibleCount = this.MOBILE_PAGE_SIZE;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -56,7 +68,8 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private apiHelper: ApiHelperService,
               private notification: NotificationService,
               private paginatorService: PaginatorService,
-              private route: ActivatedRoute) {
+              private route: ActivatedRoute,
+              private responsive: ResponsiveService) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
   }
 
@@ -73,6 +86,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
       this.apiService.getEventById(eventId).subscribe(e => this.selectedEvent = e);
     }
     this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
+    this.timeControl.valueChanges.subscribe(() => this.applyTimeFilter());
     this.authService.isChoirAdmin$.subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
@@ -99,16 +113,88 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.displayedColumns = this.isAdmin ? ['select', ...base] : base;
   }
 
+  private allEvents: Event[] = [];
+
   private loadEvents(): void {
+    this.isLoading = true;
+    this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
     const type = this.typeControl.value;
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
-      .subscribe(events => {
-        this.dataSource.data = events;
-        this.selectedEvent = null;
+      .subscribe({
+        next: events => {
+          this.allEvents = events;
+          this.applyTimeFilter();
+          this.selectedEvent = null;
+          this.isLoading = false;
+        },
+        error: () => {
+          this.isLoading = false;
+        }
       });
   }
 
+  private applyTimeFilter(): void {
+    const time = this.timeControl.value;
+    if (time === 'ALL') {
+      this.dataSource.data = this.allEvents;
+      this.updatePastYears();
+      return;
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (time === 'RECENT') {
+      const pastLimit = new Date(today);
+      pastLimit.setDate(pastLimit.getDate() - 10);
+      const futureLimit = new Date(today);
+      futureLimit.setDate(futureLimit.getDate() + 10);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= pastLimit && eventDate <= futureLimit;
+      });
+    } else if (time === 'FUTURE') {
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today;
+      });
+    } else if (time === 'PAST') {
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate < today;
+      });
+    } else if (time?.startsWith('YEAR_')) {
+      const year = parseInt(time.substring(5), 10);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        return eventDate.getFullYear() === year && eventDate < today;
+      });
+    }
+    this.updatePastYears();
+    this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
+  }
+
+  private updatePastYears(): void {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const years = new Set<number>();
+    this.allEvents.forEach(ev => {
+      const eventDate = new Date(ev.date);
+      if (eventDate < today) {
+        years.add(eventDate.getFullYear());
+      }
+    });
+    this.pastYears = Array.from(years).sort((a, b) => b - a);
+  }
+
   selectEvent(event: Event): void {
+    // On mobile: open edit dialog directly for editors, show detail for singers
+    if (this.responsive.checkMobile() && !this.isSingerOnly) {
+      this.editEvent(event);
+      return;
+    }
     this.apiService.getEventById(event.id).subscribe(e => this.selectedEvent = e);
   }
 
@@ -116,7 +202,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.apiService.getEventById(event.id).subscribe(fullEvent => {
       this.dialogHelper.openDialogWithApi<
         EventDialogComponent,
-        { id: number; date: string; type: string; notes?: string; pieceIds: number[] },
+        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; programId?: string | null },
         Event
       >(
         EventDialogComponent,
@@ -205,10 +291,26 @@ export class EventListComponent implements OnInit, AfterViewInit {
     return numSelected === numRows && numRows > 0;
   }
 
+  trackByEventId(index: number, event: Event): number {
+    return event.id;
+  }
+
+  get mobileVisibleEvents(): Event[] {
+    return this.dataSource.data.slice(0, this.mobileVisibleCount);
+  }
+
+  get hasMoreMobileEvents(): boolean {
+    return this.mobileVisibleCount < this.dataSource.data.length;
+  }
+
+  loadMoreMobile(): void {
+    this.mobileVisibleCount += this.MOBILE_PAGE_SIZE;
+  }
+
   openAddEventDialog(): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
-      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number },
+      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
       CreateEventResponse
     >(
       EventDialogComponent,

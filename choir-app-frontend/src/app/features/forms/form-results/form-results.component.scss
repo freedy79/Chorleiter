@@ -1,0 +1,337 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as dm;
+
+.results-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    margin: 4px 0 0;
+    color: rgba(0, 0, 0, 0.54);
+    font-size: 0.875rem;
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.54);
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+// ── Tab bar ─────────────────────────────────────────────────
+
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+  padding-bottom: 0;
+
+  @include dm.dark-mode {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+  }
+
+  button {
+    border-radius: 8px 8px 0 0;
+    padding-bottom: 8px;
+    position: relative;
+
+    &.active-tab {
+      color: var(--primary-color, #1976d2);
+      font-weight: 500;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-color, #1976d2);
+      }
+    }
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 64px 16px;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: rgba(0, 0, 0, 0.2);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  h2 {
+    font-weight: 400;
+    margin-top: 16px;
+  }
+
+  p {
+    color: rgba(0, 0, 0, 0.54);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.54);
+    }
+  }
+}
+
+// ── Table ───────────────────────────────────────────────────
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+
+  @include dm.dark-mode {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+}
+
+.results-table {
+  width: 100%;
+
+  .cell-value {
+    max-width: 200px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .clickable-row {
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.04);
+
+      @include dm.dark-mode {
+        background: rgba(255, 255, 255, 0.04);
+      }
+    }
+  }
+}
+
+// ── Detail view ─────────────────────────────────────────────
+
+.detail-view {
+  .detail-card {
+    margin-top: 16px;
+  }
+}
+
+.answer-row {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  @include dm.dark-mode {
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .answer-label {
+    min-width: 150px;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 0.875rem;
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+
+  .answer-value {
+    flex: 1;
+    word-break: break-word;
+  }
+}
+
+// ── Statistics ──────────────────────────────────────────────
+
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 16px;
+
+  .stats-summary {
+    grid-column: 1 / -1;
+    font-size: 0.9rem;
+    color: rgba(0, 0, 0, 0.54);
+    margin: 0 0 8px;
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.54);
+    }
+  }
+}
+
+.stat-card {
+  .bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .bar-label {
+      min-width: 100px;
+      font-size: 0.85rem;
+      text-align: right;
+      color: rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      @include dm.dark-mode {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+
+      @include dm.dark-mode {
+        background: rgba(255, 255, 255, 0.08);
+      }
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--primary-color, #1976d2);
+      border-radius: 4px;
+      min-width: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .bar-count {
+      min-width: 70px;
+      font-size: 0.82rem;
+      color: rgba(0, 0, 0, 0.54);
+      white-space: nowrap;
+
+      @include dm.dark-mode {
+        color: rgba(255, 255, 255, 0.54);
+      }
+    }
+  }
+
+  .text-answers {
+    max-height: 200px;
+    overflow-y: auto;
+
+    .text-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      font-size: 0.85rem;
+
+      @include dm.dark-mode {
+        border-bottom-color: rgba(255, 255, 255, 0.04);
+      }
+
+      .text-value {
+        flex: 1;
+        word-break: break-word;
+      }
+
+      .text-count {
+        margin-left: 8px;
+        color: rgba(0, 0, 0, 0.38);
+        font-size: 0.8rem;
+
+        @include dm.dark-mode {
+          color: rgba(255, 255, 255, 0.38);
+        }
+      }
+    }
+
+    .no-data {
+      color: rgba(0, 0, 0, 0.38);
+      font-style: italic;
+
+      @include dm.dark-mode {
+        color: rgba(255, 255, 255, 0.38);
+      }
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  gap: 16px;
+}
+
+@include bp.handset {
+  .results-container {
+    padding: 16px 8px;
+  }
+
+  .results-header {
+    h1 {
+      font-size: 1.15rem;
+    }
+  }
+
+  .answer-row {
+    flex-direction: column;
+    gap: 4px;
+
+    .answer-label {
+      min-width: unset;
+    }
+  }
+
+  .statistics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card .bar-row .bar-label {
+    min-width: 70px;
+    font-size: 0.78rem;
+  }
+}

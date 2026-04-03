@@ -13,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     closesAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    isAnonymous: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true
     }
   });
   return Poll;

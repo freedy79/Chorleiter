@@ -1,0 +1,45 @@
+<div class="service-worker-config">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Service Worker Einstellungen</mat-card-title>
+      <mat-card-subtitle>
+        Konfiguration des Service Workers für Offline-Funktionalität und Updates
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+
+      <form [formGroup]="form" *ngIf="!loading">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Update Check Interval (Millisekunden)</mat-label>
+          <input matInput type="number" formControlName="updateCheckInterval">
+          <mat-hint>Aktuell: {{ getIntervalInHours() }} Stunde(n)</mat-hint>
+        </mat-form-field>
+
+        <div class="info-box">
+          <mat-icon>info</mat-icon>
+          <div>
+            <strong>Empfohlene Werte:</strong>
+            <ul>
+              <li>1 Stunde (3600000 ms) - häufige Updates</li>
+              <li>6 Stunden (21600000 ms) - normale Updates</li>
+              <li>24 Stunden (86400000 ms) - seltene Updates</li>
+            </ul>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary"
+              (click)="save()"
+              [disabled]="form.pristine || saving">
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Speichere...' : 'Speichern' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

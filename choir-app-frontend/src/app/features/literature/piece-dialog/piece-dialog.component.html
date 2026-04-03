@@ -158,7 +158,23 @@
 
           <ng-container *ngSwitchCase="'files'">
             <div class="form-section">
-              <h4 class="full-width">Links</h4>
+              <h4 class="full-width">Dateien &amp; Links</h4>
+              <div
+                class="full-width file-drop-zone"
+                [class.dragover]="isLinksDragOver"
+                (dragover)="onLinksDragOver($event)"
+                (dragleave)="onLinksDragLeave($event)"
+                (drop)="onLinksDrop($event)"
+                (click)="linkFileInput.click()"
+              >
+                <mat-icon>cloud_upload</mat-icon>
+                <p>Dateien oder Links hierher ziehen oder klicken</p>
+                <span class="hint">Mehrere Dateien gleichzeitig möglich</span>
+              </div>
+              <input type="file" #linkFileInput multiple
+                     accept="application/pdf,image/*,audio/*,.cap,.capx,.musicxml,.mxl"
+                     style="display: none;"
+                     (change)="onMultiFileSelected($event)" />
               <div formArrayName="links" class="full-width links-container">
                 <div *ngFor="let link of linksFormArray.controls; let i=index" [formGroupName]="i" class="link-item">
                   <div class="link-header">

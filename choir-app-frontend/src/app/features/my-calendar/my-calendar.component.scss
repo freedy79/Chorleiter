@@ -45,6 +45,21 @@
     margin-top: 16px;
     width: 100%;
     max-width: 360px;
+
+    ::ng-deep .mat-mdc-list-item {
+      height: auto !important;
+      min-height: 48px;
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+
+    ::ng-deep .mdc-list-item__primary-text,
+    ::ng-deep [matLine] {
+      white-space: normal !important;
+      overflow: visible !important;
+      text-overflow: unset !important;
+      line-height: 1.4;
+    }
   }
 
   .choir-dot {

@@ -99,6 +99,34 @@ mat-list-item {
   pointer-events: none;
 }
 
+.menu-section-header {
+  height: auto;
+  min-height: 32px;
+  margin-top: 0.6rem;
+  margin-bottom: 0.2rem;
+  opacity: 0.72;
+  color: rgba(0, 0, 0, 0.56);
+}
+
+.section-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.section-line {
+  flex: 1;
+  margin-left: 0.6rem;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.45;
+}
+
+:host-context(.dark-mode) .menu-section-header {
+  color: rgba(255, 255, 255, 0.64);
+}
+
 .divider-text {
   font-size: 0.9rem;
   letter-spacing: 0.08em;

@@ -78,6 +78,29 @@ export class PushNotificationService {
     return this.getStoredChoirIds().includes(choirId);
   }
 
+  async subscribeToAllChoirs(choirIds: number[]): Promise<void> {
+    if (!this.swPush.isEnabled || choirIds.length === 0) {
+      return;
+    }
+
+    const permission = await this.ensurePermission();
+    if (permission !== 'granted') {
+      return;
+    }
+
+    const publicKey = await firstValueFrom(this.api.getVAPIDPublicKey());
+    const subscription = await this.swPush.requestSubscription({
+      serverPublicKey: publicKey
+    });
+
+    for (const choirId of choirIds) {
+      if (!this.hasStoredChoir(choirId)) {
+        await firstValueFrom(this.api.subscribePushNotification(subscription, choirId));
+        this.storeSubscription(subscription, choirId);
+      }
+    }
+  }
+
   async clearAllSubscriptions(): Promise<void> {
     const subscription = await firstValueFrom(this.swPush.subscription);
     const endpoint = subscription?.endpoint;

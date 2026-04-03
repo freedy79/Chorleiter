@@ -62,6 +62,9 @@ Chorleiter/
 | [LICENSE](LICENSE) | Lizenzinformation | ✅ Aktiv |
 | [PAYPAL-PDT-SETUP.md](PAYPAL-PDT-SETUP.md) | PayPal Integration | ✅ Referenz |
 | [SECURITY-AUDIT-LOGIN.md](SECURITY-AUDIT-LOGIN.md) | Sicherheits-Audit | ✅ Referenz |
+| [OPENCLAW-PATTERNS-ROADMAP.md](OPENCLAW-PATTERNS-ROADMAP.md) | 🗺️ **Improvement Roadmap (3 Iterations)** | ✅ **NEU** |
+| [POLICY-AS-CODE-SETUP.md](POLICY-AS-CODE-SETUP.md) | 🔧 **Policy-as-Code Setup Guide** | ✅ **NEU** |
+| [POLICY-AS-CODE-SUMMARY.md](POLICY-AS-CODE-SUMMARY.md) | 📋 **Policy-as-Code Summary** | ✅ **NEU** |
 
 ### ✅ Neue Comprehensive Docs (Empfohlen)
 
@@ -143,7 +146,17 @@ tasks/ (48 Task-Dateien)
 
 | Datei | Zweck | Status |
 |-------|-------|--------|
-| [API-REFACTORING-COMPLETE.md](choir-app-frontend/API-REFACTORING-COMPLETE.md) | 🔄 API Refactoring - Complete Guide | ✅ **NEU** |
+| [API-REFACTORING-COMPLETE.md](../frontend/API-REFACTORING-COMPLETE.md) | 🔄 API Refactoring - Complete Guide | ✅ Reference |
+| [API-SERVICE-MIGRATION-GUIDE.md](../frontend/API-SERVICE-MIGRATION-GUIDE.md) | 📋 **ApiService Migration Guide** | ✅ **NEU** (2026-02-24) |
+| [DOMAIN-SERVICES-MIGRATION-SUMMARY.md](../frontend/DOMAIN-SERVICES-MIGRATION-SUMMARY.md) | 📊 **Domain Services Summary** | ✅ **NEU** (2026-02-24) |
+
+### ✅ NEW: Feature Requirements (2026-02-24)
+
+| Datei | Zweck | Status |
+|-------|-------|--------|
+| [PERSONAL-PRACTICE-LISTS-OFFLINE-REQUIREMENTS.md](../frontend/PERSONAL-PRACTICE-LISTS-OFFLINE-REQUIREMENTS.md) | 🎯 Persönliche Übungslisten + gezieltes Offline-Pinning | ✅ **NEU** |
+| [PARTICIPANT-CHAT-REQUIREMENTS.md](../frontend/PARTICIPANT-CHAT-REQUIREMENTS.md) | 💬 Teilnehmer-Chat (MVP bis Ausbau) | ✅ **NEU** |
+| [CONTENT-HIGHLIGHTING-REQUIREMENTS.md](../frontend/CONTENT-HIGHLIGHTING-REQUIREMENTS.md) | ⭐ Inhalte hervorheben (UX-Konzept + Requirements) | ✅ **NEU** |
 
 ### PWA Documentation
 
@@ -226,12 +239,31 @@ choir-app-frontend:
 3. Tasks: [docs/tasks/mobile-nav-p10-*.md](docs/tasks/) - Phase 10 Performance
 
 #### "Ich möchte API Calls refaktorieren"
-1. Complete Guide: [API-REFACTORING-COMPLETE.md](choir-app-frontend/API-REFACTORING-COMPLETE.md)
-2. Pattern Examples: In der Same Datei
+1. Complete Guide: [API-REFACTORING-COMPLETE.md](../frontend/API-REFACTORING-COMPLETE.md)
+2. Pattern Examples: In derselben Datei
+
+#### "Ich möchte von ApiService zu Domain Services migrieren"
+1. Migration Guide: [API-SERVICE-MIGRATION-GUIDE.md](../frontend/API-SERVICE-MIGRATION-GUIDE.md)
+2. Summary & Progress: [DOMAIN-SERVICES-MIGRATION-SUMMARY.md](../frontend/DOMAIN-SERVICES-MIGRATION-SUMMARY.md)
+3. Roadmap Context: [OPENCLAW-PATTERNS-ROADMAP.md](OPENCLAW-PATTERNS-ROADMAP.md) - Iteration 1.2
 
 #### "Ich möchte PWA Features verstehen"
 1. Quick Start: [PWA-QUICK-REFERENCE.md](choir-app-frontend/PWA-QUICK-REFERENCE.md)
 2. Testing & Checklists: [PWA-TESTING-GUIDE.md](choir-app-frontend/PWA-TESTING-GUIDE.md)
+
+#### "Ich möchte persönliche Übungslisten mit Offline-Medien umsetzen"
+1. Requirements: [PERSONAL-PRACTICE-LISTS-OFFLINE-REQUIREMENTS.md](../frontend/PERSONAL-PRACTICE-LISTS-OFFLINE-REQUIREMENTS.md)
+
+#### "Ich möchte einen Teilnehmer-Chat einführen"
+1. Requirements: [PARTICIPANT-CHAT-REQUIREMENTS.md](../frontend/PARTICIPANT-CHAT-REQUIREMENTS.md)
+
+#### "Ich möchte wichtige Inhalte sichtbar priorisieren"
+1. Konzept + Requirements: [CONTENT-HIGHLIGHTING-REQUIREMENTS.md](../frontend/CONTENT-HIGHLIGHTING-REQUIREMENTS.md)
+
+#### "Ich möchte das Projekt mit Best Practices verbessern"
+1. Complete Roadmap: [OPENCLAW-PATTERNS-ROADMAP.md](OPENCLAW-PATTERNS-ROADMAP.md)
+2. Setup Guide: [POLICY-AS-CODE-SETUP.md](POLICY-AS-CODE-SETUP.md)
+3. Summary: [POLICY-AS-CODE-SUMMARY.md](POLICY-AS-CODE-SUMMARY.md)
 
 ---
 
@@ -297,12 +329,15 @@ Update any cross-references in project README to point to new consolidated docs.
 
 | Kategorie | Dateien | Status |
 |-----------|---------|--------|
-| Root-Level | 6 | 2 active, 4 deprecated |
-| /docs | 11 | All active |
+| Root-Level | 9 | 8 active, 1 deprecated |
+| /docs/project | 14 | All active |
+| /docs/frontend | 6 | All active (+ 2 new: Migration Guide & Summary) |
 | /docs/tasks | 48 | All active (Phase 10 ✅) |
 | /choir-app-frontend | 15 | 11 active, 4 deprecated |
-| Total Active | **75** | ✅ Organized |
+| Total Active | **83** | ✅ Organized |
 | Total Legacy | **15** | ⏳ Can be cleaned |
+| **New: Iteration 1.2** | **2** | ✅ **Active** (Migration Guide + Summary) |
+| **New: Policy-as-Code** | **3** | ✅ **Active** |
 
 ---
 
@@ -319,16 +354,23 @@ Update any cross-references in project README to point to new consolidated docs.
 - 📚 [Design Specs](docs/figma-design-specs.md)
 
 ### Performance
-- ⚡ [Optimizations](choir-app-frontend/PERFORMANCE-OPTIMIZATIONS.md)
-- 📊 [Lighthouse Analysis](docs/lighthouse-report-analysis.md)
-- 🔄 [API Refactoring](choir-app-frontend/API-REFACTORING-COMPLETE.md)
+- ⚡ [Optimizations](../frontend/PERFORMANCE-OPTIMIZATIONS.md)
+- 📊 [Lighthouse Analysis](../lighthouse-report-analysis.md)
+- 🔄 [API Refactoring](../frontend/API-REFACTORING-COMPLETE.md)
 
 ### PWA
-- 🚀 [Quick Start](choir-app-frontend/PWA-QUICK-REFERENCE.md)
-- ✅ [Testing & Checklists](choir-app-frontend/PWA-TESTING-GUIDE.md)
+- 🚀 [Quick Start](../frontend/PWA-QUICK-REFERENCE.md)
+- ✅ [Testing & Checklists](../frontend/PWA-TESTING-GUIDE.md)
+
+### Best Practices & Refactoring
+- 🗺️ [Improvement Roadmap](OPENCLAW-PATTERNS-ROADMAP.md)
+- 🔧 [Policy-as-Code Setup](POLICY-AS-CODE-SETUP.md)
+- 📋 [Policy-as-Code Summary](POLICY-AS-CODE-SUMMARY.md)
+- 📝 [API Service Migration Guide](../frontend/API-SERVICE-MIGRATION-GUIDE.md)
+- 📊 [Domain Services Summary](../frontend/DOMAIN-SERVICES-MIGRATION-SUMMARY.md)
 
 ---
 
-**Last Updated:** 10. Februar 2026  
-**Next Review:** Nach completion von Phase 5-6  
+**Last Updated:** 24. Februar 2026  
+**Next Review:** Nach completion von Iteration 2.1 (Modular Routes)  
 **Maintainer:** Development Team

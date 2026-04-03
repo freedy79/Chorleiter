@@ -34,7 +34,9 @@ describe('MonthlyPlanComponent', () => {
       { open: () => null } as any,
       {} as any,
       { snapshot: { queryParamMap: new Map() } } as any,
+      {} as any,
       { prevLabel: () => '', nextLabel: () => '', previous: () => ({ year: 0, month: 0 }), next: () => ({ year: 0, month: 0 }) } as any,
+      {} as any,
       { markForCheck: () => void 0 } as any,
       { isEnabled: () => false } as any
     );

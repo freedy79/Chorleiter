@@ -52,6 +52,7 @@ describe('OfflineIndicatorComponent', () => {
   });
 
   it('sollte offline Indikatoren anzeigen wenn offline', () => {
+    fixture.detectChanges(); // trigger ngOnInit first
     component.isOffline = true;
     fixture.detectChanges();
 

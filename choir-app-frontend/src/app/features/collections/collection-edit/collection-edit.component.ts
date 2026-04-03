@@ -28,6 +28,7 @@ import { NotificationService } from '@core/services/notification.service';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AuthService } from '@core/services/auth.service';
 import { ImportDialogComponent } from '../import-dialog/import-dialog.component';
+import { CoverResizeDialogComponent } from '../cover-resize-dialog.component';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from 'src/app/core/services/api.service';
@@ -657,6 +658,36 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                             this.collectionId,
                         ]);
                     });
+            }
+        });
+    }
+
+    openResizeCoverDialog(): void {
+        if (!this.collectionId || !this.coverPreview) {
+            this.notification.warning('Bitte laden Sie zuerst ein Coverbild hoch.', 3000);
+            return;
+        }
+
+        const dialogRef = this.dialog.open(CoverResizeDialogComponent, {
+            width: '500px',
+            data: {
+                collectionId: this.collectionId,
+                collectionTitle: this.collectionForm.value.title,
+                currentCover: this.coverPreview
+            }
+        });
+
+        dialogRef.afterClosed().pipe(
+            takeUntil(this.destroy$)
+        ).subscribe(wasResized => {
+            if (wasResized) {
+                // Reload the cover preview to show the resized version
+                this.apiService.getCollectionCover(this.collectionId!).pipe(
+                    takeUntil(this.destroy$)
+                ).subscribe(data => {
+                    this.coverPreview = data;
+                    this.notification.success('Coverbild wurde aktualisiert.', 2000);
+                });
             }
         });
     }

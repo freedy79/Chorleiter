@@ -15,6 +15,11 @@
         matTooltip="Alle aktualisieren">
         <mat-icon>sync</mat-icon>
       </button>
+      <button *ngIf="isAdmin" mat-flat-button color="warn" (click)="checkCollectionDoublettes()"
+        [disabled]="dataSource.data.length === 0"
+        matTooltip="Auf Doubletten prüfen (nur für Administratoren)">
+        <mat-icon>content_copy</mat-icon>
+      </button>
     </div>
   </div>
 

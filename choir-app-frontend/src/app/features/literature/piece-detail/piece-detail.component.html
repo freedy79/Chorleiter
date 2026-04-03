@@ -11,7 +11,20 @@
     <button mat-icon-button color="primary" (click)="sharePiece()" aria-label="Stück teilen">
       <mat-icon>share</mat-icon>
     </button>
+    <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="deletePiece()" aria-label="Stück löschen">
+      <mat-icon>delete</mat-icon>
+    </button>
   </h2>
+  <button
+    mat-icon-button
+    color="primary"
+    matTooltip="Zu Übungsliste hinzufügen"
+    aria-label="Zu Übungsliste hinzufügen"
+    [matMenuTriggerFor]="practiceListMenu"
+    (click)="setPracticeListContext()"
+  >
+    <mat-icon>playlist_add</mat-icon>
+  </button>
   <button mat-button color="warn" (click)="openReportDialog()">Stück melden</button>
   <p *ngIf="piece.subtitle"><em>{{ piece.subtitle }}</em></p>
   <p><strong>Komponist/Ursprung:</strong> {{ piece.composer?.name || piece.origin }}{{ piece.composer | composerYears }}</p>
@@ -38,6 +51,16 @@
         <a [routerLink]="['/collections/edit', c.id]">
           {{ c.title }} ({{ c.singleEdition ? (piece.composer?.name || piece.origin) : c.prefix }}{{ c.collection_piece.numberInCollection }})
         </a>
+        <button
+          *ngIf="hasViewOnlyCollectionLicense(c.id)"
+          mat-icon-button
+          color="primary"
+          matTooltip="Digitale Originallizenz anzeigen"
+          aria-label="Digitale Originallizenz anzeigen"
+          (click)="openViewOnlyCollectionLicense(c.id, $event)"
+        >
+          <mat-icon>verified</mat-icon>
+        </button>
         <mat-icon
           *ngIf="libraryItems[c.id]"
           class="library-icon"
@@ -55,32 +78,101 @@
     </div>
     <div *ngIf="fileLinks.length">
       <h3>Dateien</h3>
-      <ul>
-        <li *ngFor="let link of fileLinks" class="file-item">
-          <app-audio-player
-            *ngIf="link.isMp3"
-            [title]="link.description"
-            [url]="getLinkUrl(link)"
-            [downloadName]="link.downloadName || link.description">
-          </app-audio-player>
+      <div *ngFor="let group of groupedFileLinks" class="file-group">
+        <h4>{{ group.label }}</h4>
+        <ul class="files-grid">
+          <li *ngFor="let link of group.links" class="file-item file-card" [class.mp3-card]="link.isMp3">
+            <!-- MP3: pin + audio player inline -->
+            <ng-container *ngIf="link.isMp3; else nonMp3Actions">
+              <div class="mp3-row">
+                <div class="mp3-pin-actions">
+                  <button
+                    mat-icon-button
+                    color="primary"
+                    type="button"
+                    matTooltip="Offline pinnen"
+                    aria-label="Offline pinnen"
+                    [matMenuTriggerFor]="practiceListMenu"
+                    (click)="setPracticeListContext(link, true)"
+                  >
+                    <mat-icon>push_pin</mat-icon>
+                  </button>
+                </div>
+                <app-audio-player
+                  [title]="link.description"
+                  [url]="getLinkUrl(link)"
+                  [downloadName]="link.downloadName || link.description"
+                  [markers]="link.markers || []"
+                  [canEditMarkers]="true"
+                  (markerCreate)="onMarkerCreate(link, $event)"
+                  (markerDelete)="onMarkerDelete(link, $event)"
+                  (markerUpdate)="onMarkerUpdate(link, $event)">
+                </app-audio-player>
+              </div>
+              <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted class="mp3-pinned-chip">
+                Offline verfügbar
+              </mat-chip>
+            </ng-container>
 
-          <div *ngIf="link.isImage">
-            <p>{{ link.description }}</p>
-            <img [src]="getLinkUrl(link)" [alt]="link.description" loading="lazy" style="max-width: 100%; max-height: 600px;" />
-            <br><span *ngIf="link.size">({{ link.size | fileSize }})</span>
-          </div>
+            <!-- Non-MP3: original practice actions block -->
+            <ng-template #nonMp3Actions>
+              <div class="practice-actions">
+                <button
+                  mat-icon-button
+                  type="button"
+                  matTooltip="Zur Übungsliste hinzufügen"
+                  aria-label="Zur Übungsliste hinzufügen"
+                  [matMenuTriggerFor]="practiceListMenu"
+                  (click)="setPracticeListContext(link)"
+                >
+                  <mat-icon>playlist_add</mat-icon>
+                </button>
+                <button
+                  mat-icon-button
+                  color="primary"
+                  type="button"
+                  matTooltip="Offline pinnen"
+                  aria-label="Offline pinnen"
+                  [matMenuTriggerFor]="practiceListMenu"
+                  (click)="setPracticeListContext(link, true)"
+                >
+                  <mat-icon>push_pin</mat-icon>
+                </button>
+                <mat-chip *ngIf="isLinkLocallyPinned(link)" color="accent" highlighted>
+                  Offline verfügbar
+                </mat-chip>
+              </div>
+            </ng-template>
 
-          <div *ngIf="!link.isMp3 && !link.isImage">
-            <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
-              <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
-              <mat-icon *ngIf="link.isCapella || link.isMuseScore" class="file-icon">music_note</mat-icon>
-              <mat-icon *ngIf="!link.isPdf && !link.isCapella && !link.isMuseScore" class="file-icon">insert_drive_file</mat-icon>
-              {{ link.description }}
-            </a>
-            <span *ngIf="link.size">({{ link.size | fileSize }})</span>
-          </div>
-        </li>
-      </ul>
+            <div *ngIf="link.isImage">
+              <p>{{ link.description }}</p>
+              <img [src]="getLinkUrl(link)" [alt]="link.description" loading="lazy" style="max-width: 100%; max-height: 600px;" />
+              <br><span *ngIf="link.size">({{ link.size | fileSize }})</span>
+            </div>
+
+            <div *ngIf="!link.isMp3 && !link.isImage">
+              <div class="file-link-actions" *ngIf="link.isPdf">
+                <button mat-stroked-button color="primary" type="button" (click)="openPdfFullscreen(link)">
+                  <mat-icon>fullscreen</mat-icon>
+                  PDF Vollbild
+                </button>
+                <a mat-button [href]="getLinkUrl(link)" target="_blank" rel="noopener noreferrer">
+                  <mat-icon>open_in_new</mat-icon>
+                  Neuer Tab
+                </a>
+              </div>
+
+              <a [href]="getLinkUrl(link)" [attr.download]="link.downloadName || link.description">
+                <mat-icon *ngIf="link.isPdf" class="file-icon">picture_as_pdf</mat-icon>
+                <mat-icon *ngIf="(link.isCapella || link.isMuseScore) && !hasVisibleMp3Player" class="file-icon">music_note</mat-icon>
+                <mat-icon *ngIf="!link.isPdf && !link.isCapella && !link.isMuseScore" class="file-icon">insert_drive_file</mat-icon>
+                {{ link.description }}
+              </a>
+              <span *ngIf="link.size">({{ link.size | fileSize }})</span>
+            </div>
+          </li>
+        </ul>
+      </div>
     </div>
     <div *ngIf="externalLinks.length">
       <h3>Links</h3>
@@ -149,3 +241,24 @@
     <p>Keine Einträge</p>
   </ng-template>
 </div>
+
+<!-- Shared practice-list menu for all "add to list" buttons -->
+<mat-menu #practiceListMenu="matMenu" class="practice-list-menu">
+  <ng-container *ngIf="practiceListsLoading">
+    <button mat-menu-item disabled>
+      <mat-icon><mat-spinner diameter="18"></mat-spinner></mat-icon>
+      <span>Laden…</span>
+    </button>
+  </ng-container>
+  <ng-container *ngIf="!practiceListsLoading">
+    <button mat-menu-item *ngFor="let list of practiceLists" (click)="addToPracticeList(list.id, list.title)">
+      <mat-icon>playlist_play</mat-icon>
+      <span>{{ list.title }}</span>
+    </button>
+    <mat-divider *ngIf="practiceLists.length"></mat-divider>
+    <button mat-menu-item (click)="openCreatePracticeListDialog()">
+      <mat-icon>add</mat-icon>
+      <span>Neue Liste anlegen</span>
+    </button>
+  </ng-container>
+</mat-menu>

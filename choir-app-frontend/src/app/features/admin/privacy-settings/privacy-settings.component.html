@@ -1,0 +1,47 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Datenschutzerklärung</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div *ngIf="loading" style="text-align: center; padding: 40px;">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p style="margin-top: 16px;">Wird geladen...</p>
+    </div>
+
+    <div *ngIf="!loading">
+      <div *ngIf="saved" style="margin-bottom: 20px; padding: 12px; background-color: #e8f5e9; border-left: 4px solid #4caf50; border-radius: 4px;">
+        <mat-icon style="color: #4caf50; vertical-align: middle;">check_circle</mat-icon>
+        <span style="color: #2e7d32; margin-left: 8px;">Datenschutzerklärung erfolgreich gespeichert!</span>
+      </div>
+
+      <div *ngIf="error" style="margin-bottom: 20px; padding: 12px; background-color: #ffebee; border-left: 4px solid #d32f2f; border-radius: 4px;">
+        <mat-icon style="color: #d32f2f; vertical-align: middle;">error</mat-icon>
+        <span style="color: #c62828; margin-left: 8px;">{{ error }}</span>
+      </div>
+
+      <p style="margin-bottom: 16px; color: #666;">
+        Bearbeiten Sie hier die Datenschutzerklärung. Verwenden Sie die Toolbar für Überschriften, Absätze und Formatierungen.
+      </p>
+
+      <div class="editor-container">
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
+          [data]="html"
+          (change)="onEditorChange($event)">
+        </ckeditor>
+      </div>
+
+      <div style="margin-top: 24px; text-align: right;">
+        <button mat-raised-button color="primary"
+                (click)="save()"
+                [disabled]="saving || !dirty">
+          <mat-icon *ngIf="!saving">save</mat-icon>
+          <mat-spinner *ngIf="saving" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+          {{ saving ? 'Wird gespeichert...' : 'Speichern' }}
+        </button>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

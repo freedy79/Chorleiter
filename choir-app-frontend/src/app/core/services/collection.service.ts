@@ -43,6 +43,12 @@ export class CollectionService {
     );
   }
 
+  resizeCollectionCover(id: number, width: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/collections/${id}/cover-resize`, { width }).pipe(
+      tap(() => this.imageCacheService.invalidate(`collection:${id}`))
+    );
+  }
+
   getCollectionCover(id: number): Observable<string> {
     return this.http
       .get<{ data: string }>(`${this.apiUrl}/collections/${id}/cover`)

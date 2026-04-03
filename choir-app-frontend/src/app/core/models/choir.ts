@@ -1,6 +1,6 @@
 import { DashboardContact } from './dashboard-contact';
 
-export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer';
+export type ChoirRole = 'director' | 'choir_admin' | 'organist' | 'singer' | 'notenwart';
 
 export interface ChoirMembership {
     rolesInChoir: ChoirRole[];
@@ -47,6 +47,7 @@ export function normalizeChoirRole(role: string): ChoirRole {
         case 'choir_admin':
         case 'organist':
         case 'singer':
+        case 'notenwart':
             return role as ChoirRole;
         default:
             return role as ChoirRole;

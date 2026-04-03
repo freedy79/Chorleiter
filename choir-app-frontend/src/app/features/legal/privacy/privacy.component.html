@@ -4,51 +4,61 @@
       <mat-card-title>Datenschutzerklärung</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <h2>1. Verantwortliche Stelle</h2>
-      <p>
-        Michael Free<br>
-        Am Ruthenhau 9<br>
-        37176 Nörten-Hardenberg<br>
-        E-Mail: michael.free&#64;gmx.de
-      </p>
+      <div *ngIf="loading" style="text-align: center; padding: 40px;">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
 
-      <h2>2. Verarbeitete Daten</h2>
-      <p>
-        Für die Nutzung dieser Anwendung speichern wir lediglich Ihre E-Mail-Adresse,
-        Ihren Namen sowie einen Passwort-Hash. Diese Angaben werden ausschließlich zur
-        Verwaltung Ihres Benutzerkontos verwendet. Fremdkomponenten werden nicht
-        eingebunden und es findet keine Analyse des Nutzungsverhaltens statt.
-      </p>
-      <p>
-        Die Daten liegen auf einem Server in Deutschland und werden nicht an Dritte
-        weitergegeben.
-      </p>
+      <!-- Dynamischer Inhalt aus der Datenbank -->
+      <div *ngIf="!loading && hasCustomContent" class="privacy-content" [innerHTML]="customHtml"></div>
 
-      <h2>3. Speicherdauer</h2>
-      <p>
-        Ihre Daten werden nur solange gespeichert, wie sie für die Nutzung der Anwendung
-        erforderlich sind. Nach Löschung Ihres Accounts werden sämtliche Daten entfernt.
-      </p>
+      <!-- Fallback: Hardcodierter Inhalt -->
+      <ng-container *ngIf="!loading && !hasCustomContent">
+        <h2>1. Verantwortliche Stelle</h2>
+        <p>
+          Michael Free<br>
+          Am Ruthenhau 9<br>
+          37176 Nörten-Hardenberg<br>
+          E-Mail: michael.free&#64;gmx.de
+        </p>
 
-      <h2>4. Betroffenenrechte</h2>
-      <p>
-        Betroffene können sich an den Betreiber wenden, um Auskunft über die gespeicherten
-        Daten zu erhalten, sie berichtigen oder löschen zu lassen oder der Verarbeitung
-        zu widersprechen.
-      </p>
+        <h2>2. Verarbeitete Daten</h2>
+        <p>
+          Für die Nutzung dieser Anwendung speichern wir lediglich Ihre E-Mail-Adresse,
+          Ihren Namen sowie einen Passwort-Hash. Diese Angaben werden ausschließlich zur
+          Verwaltung Ihres Benutzerkontos verwendet. Fremdkomponenten werden nicht
+          eingebunden und es findet keine Analyse des Nutzungsverhaltens statt.
+        </p>
+        <p>
+          Die Daten liegen auf einem Server in Deutschland und werden nicht an Dritte
+          weitergegeben.
+        </p>
 
-      <h2>5. Cookies und Local Storage</h2>
-      <p>
-        Nach dem Login wird ein Authentifizierungstoken im LocalStorage Ihres Browsers
-        gespeichert. Der Token dient ausschließlich der Anmeldung und wird beim
-        Ausloggen entfernt.
-      </p>
+        <h2>3. Speicherdauer</h2>
+        <p>
+          Ihre Daten werden nur solange gespeichert, wie sie für die Nutzung der Anwendung
+          erforderlich sind. Nach Löschung Ihres Accounts werden sämtliche Daten entfernt.
+        </p>
 
-      <h2>6. Änderungen dieser Datenschutzerklärung</h2>
-      <p>
-        Diese Datenschutzerklärung kann aktualisiert werden, um geänderte rechtliche
-        Vorgaben oder Funktionsänderungen abzubilden.
-      </p>
+        <h2>4. Betroffenenrechte</h2>
+        <p>
+          Betroffene können sich an den Betreiber wenden, um Auskunft über die gespeicherten
+          Daten zu erhalten, sie berichtigen oder löschen zu lassen oder der Verarbeitung
+          zu widersprechen.
+        </p>
+
+        <h2>5. Cookies und Local Storage</h2>
+        <p>
+          Nach dem Login wird ein Authentifizierungstoken im LocalStorage Ihres Browsers
+          gespeichert. Der Token dient ausschließlich der Anmeldung und wird beim
+          Ausloggen entfernt.
+        </p>
+
+        <h2>6. Änderungen dieser Datenschutzerklärung</h2>
+        <p>
+          Diese Datenschutzerklärung kann aktualisiert werden, um geänderte rechtliche
+          Vorgaben oder Funktionsänderungen abzubilden.
+        </p>
+      </ng-container>
     </mat-card-content>
   </mat-card>
 </div>

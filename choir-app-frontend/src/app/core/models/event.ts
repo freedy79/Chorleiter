@@ -36,7 +36,7 @@ export interface EventPiece {
 export interface Event {
   id: number;
   date: string;
-  type: 'REHEARSAL' | 'SERVICE';
+  type: 'REHEARSAL' | 'SERVICE' | 'PLAN_ENTRY';
   /**
    * Optional name for display purposes. Regular events usually do not have
    * a name but holiday entries in the calendar do. The property is optional so
@@ -53,6 +53,7 @@ export interface Event {
   monthlyPlan?: { year: number; month: number; finalized: boolean; version: number } | null;
   choirId?: number;
   choir?: { id: number; name: string };
+  program?: { id: string; title: string; status: 'draft' | 'published' | 'archived' } | null;
   pieces: EventPiece[];
 }
 

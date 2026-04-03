@@ -80,6 +80,27 @@
   text-align: right;
   font-size: 0.8125rem;
   color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  cursor: default;
+}
+
+.voter-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  color: #888;
+}
+
+.poll-type {
+  font-size: 0.8125rem;
+  color: #666;
+
+  &.anonymous {
+    color: #888;
+  }
 }
 
 @media (max-width: 768px) {

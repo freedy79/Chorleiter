@@ -40,9 +40,9 @@ export class ServiceWorkerUpdateService {
   private initializeUpdateChecking(): void {
     // Überprüfe auf Updates im Service Worker
     if (this.swUpdate.isEnabled) {
-      // Initiiere Update-Check alle 30 Minuten
+      // Initiiere Update-Check alle 10 Minuten
       this.ngZone.runOutsideAngular(() => {
-        interval(30 * 60 * 1000)
+        interval(10 * 60 * 1000)
           .pipe(
             switchMap(() => this.swUpdate.checkForUpdate())
           )
@@ -102,12 +102,19 @@ export class ServiceWorkerUpdateService {
       await this.swUpdate.activateUpdate();
 
       // Reload der Seite nach dem Update
-      document.location.reload();
+      this.reloadPage();
     } catch (err) {
       console.error('Fehler beim Aktivieren des Updates:', err);
       this.updating$.next(false);
       throw err;
     }
+  }
+
+  /**
+   * Lädt die Seite neu. Extrahiert für Testbarkeit.
+   */
+  protected reloadPage(): void {
+    document.location.reload();
   }
 
   /**

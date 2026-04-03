@@ -81,6 +81,7 @@
   flex-direction: column;
   gap: 16px;
   align-items: stretch;
+  min-width: 0;           /* allow flex items to shrink below content size */
 }
 
 .content-column--primary {

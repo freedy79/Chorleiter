@@ -27,14 +27,14 @@ export class ThemeService {
     this.currentTheme = localTheme ?? storedTheme ?? 'system';
     localStorage.setItem(ThemeService.STORAGE_KEY, this.currentTheme);
 
-    console.log(`[ThemeService] Theme wird initialisiert: "${this.currentTheme}"`);
+    //console.log(`[ThemeService] Theme wird initialisiert: "${this.currentTheme}"`);
     this.applyTheme(this.currentTheme);
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
     // Dies ist nur relevant, wenn der Benutzer 'system' ausgewählt hat.
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
       if (this.currentTheme === 'system') {
-        console.log(`[ThemeService] System-Theme hat sich geändert: prefers-dark=${e.matches}`);
+        //console.log(`[ThemeService] System-Theme hat sich geändert: prefers-dark=${e.matches}`);
         this.applySystemTheme();
       }
     });
@@ -44,11 +44,13 @@ export class ThemeService {
    * Wendet das ausgewählte Theme an und speichert die Auswahl.
    * @param theme - Das anzuwendende Theme: 'light', 'dark' oder 'system'.
    */
-  setTheme(theme: Theme): void {
-    console.log(`[ThemeService] Benutzer wählt Theme: "${theme}"`);
+  setTheme(theme: Theme, persist = true): void {
+    //console.log(`[ThemeService] Benutzer wählt Theme: "${theme}"`);
     this.currentTheme = theme;
     localStorage.setItem(ThemeService.STORAGE_KEY, theme);
-    this.prefs.update({ theme }).subscribe();
+    if (persist) {
+      this.prefs.update({ theme }).subscribe();
+    }
     this.applyTheme(theme);
   }
 
@@ -64,10 +66,10 @@ export class ThemeService {
    */
   private applyTheme(theme: Theme): void {
     if (theme === 'system') {
-      console.log('[ThemeService] Theme "system" gewählt - Browser-Einstellung wird evaluiert');
+      //console.log('[ThemeService] Theme "system" gewählt - Browser-Einstellung wird evaluiert');
       this.applySystemTheme();
     } else {
-      console.log(`[ThemeService] Theme wird angewendet: "${theme}"`);
+      //console.log(`[ThemeService] Theme wird angewendet: "${theme}"`);
       this.updateBodyClass(theme);
     }
   }
@@ -78,7 +80,7 @@ export class ThemeService {
   private applySystemTheme(): void {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const effectiveTheme = prefersDark ? 'dark' : 'light';
-    console.log(`[ThemeService] System-Präferenz evaluiert: prefers-color-scheme=${prefersDark ? 'dark' : 'light'} → Angewendetes Theme: "${effectiveTheme}"`);
+    //console.log(`[ThemeService] System-Präferenz evaluiert: prefers-color-scheme=${prefersDark ? 'dark' : 'light'} → Angewendetes Theme: "${effectiveTheme}"`);
     this.updateBodyClass(effectiveTheme);
   }
 
@@ -94,7 +96,7 @@ export class ThemeService {
     // Dann die gewünschte Klasse hinzufügen
     this.renderer.addClass(document.body, `${themeClass}-theme`);
 
-    console.log(`[ThemeService] Body-Klasse gesetzt: "${themeClass}-theme" (entfernt: "${oppositeClass}-theme")`);
-    console.log(`[ThemeService] Aktuelle Body-Klassen:`, document.body.className);
+    //console.log(`[ThemeService] Body-Klasse gesetzt: "${themeClass}-theme" (entfernt: "${oppositeClass}-theme")`);
+    //console.log(`[ThemeService] Aktuelle Body-Klassen:`, document.body.className);
   }
 }

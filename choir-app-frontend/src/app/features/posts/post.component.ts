@@ -7,8 +7,10 @@ import { PostComment } from '@core/models/post-comment';
 import { ReactionInfo, ReactionSummary, ReactionType } from '@core/models/reaction';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { PostPollComponent } from './post-poll.component';
+import { PollReminderDialogComponent } from './poll-reminder-dialog.component';
 
 @Component({
   selector: 'app-post',
@@ -43,7 +45,8 @@ export class PostComponent implements OnInit {
 
   constructor(
     private api: ApiService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private dialogHelper: DialogHelperService
   ) {}
 
   ngOnInit(): void {
@@ -74,6 +77,23 @@ export class PostComponent implements OnInit {
 
   editPost(): void {
     this.postEdited.emit(this.post);
+  }
+
+  canManagePollReminders(): boolean {
+    return !!this.post?.poll && this.post.published && this.canEdit();
+  }
+
+  openPollReminderDialog(): void {
+    if (!this.canManagePollReminders()) {
+      return;
+    }
+    this.dialogHelper.openDialog(PollReminderDialogComponent, {
+      width: '760px',
+      data: {
+        postId: this.post.id,
+        postTitle: this.post.title
+      }
+    }).subscribe();
   }
 
   setPostReaction(type?: ReactionType | null): void {

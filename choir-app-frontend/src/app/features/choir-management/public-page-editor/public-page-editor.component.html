@@ -1,0 +1,320 @@
+<div class="editor-container">
+  <!-- Top bar -->
+  <div class="editor-toolbar">
+    <h2>Vorstellungsseite</h2>
+    <div class="toolbar-actions">
+      <a *ngIf="publicPageUrlPreview" [href]="publicPageUrlPreview" target="_blank" rel="noopener noreferrer"
+         mat-stroked-button>
+        <mat-icon>open_in_new</mat-icon> Ansehen
+      </a>
+      <button mat-flat-button color="primary" (click)="savePublicPage()">
+        <mat-icon>save</mat-icon> Speichern
+      </button>
+    </div>
+  </div>
+
+  <!-- Color scheme selector -->
+  <div class="scheme-selector">
+    <span class="scheme-label">Farbschema:</span>
+    <div class="scheme-swatches">
+      <button
+        *ngFor="let scheme of colorSchemes"
+        class="scheme-swatch"
+        [class.active]="selectedColorScheme === scheme.key"
+        [matTooltip]="scheme.name"
+        (click)="selectColorScheme(scheme.key)"
+        type="button">
+        <span class="swatch-preview" [style.background]="scheme.preview.bg">
+          <span class="swatch-accent" [style.background]="scheme.preview.accent"></span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main area: preview + drawer -->
+  <mat-drawer-container class="editor-drawer-container" autosize>
+    <mat-drawer #drawer mode="over" position="end" class="editor-drawer">
+      <div class="drawer-header">
+        <h3>
+          <ng-container [ngSwitch]="activeSection">
+            <span *ngSwitchCase="'settings'">Einstellungen</span>
+            <span *ngSwitchCase="'header'">Kopfbereich</span>
+            <span *ngSwitchCase="'images'">Bilder</span>
+            <span *ngSwitchCase="'blocks'">Inhaltsblöcke</span>
+            <span *ngSwitchCase="'contact'">Kontakt</span>
+            <span *ngSwitchCase="'seo'">SEO</span>
+          </ng-container>
+        </h3>
+        <button mat-icon-button (click)="closeDrawer()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <div class="drawer-content" [formGroup]="publicPageForm">
+        <!-- Settings -->
+        <ng-container *ngIf="activeSection === 'settings'">
+          <mat-checkbox formControlName="isEnabled">Seite aktivieren</mat-checkbox>
+          <mat-checkbox formControlName="isPublished">Seite veröffentlichen</mat-checkbox>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Slug (URL-Pfad)</mat-label>
+            <input matInput formControlName="slug" (blur)="checkPublicSlugAvailability()" placeholder="z. B. mein-chor" />
+          </mat-form-field>
+          <div class="inline-actions">
+            <button mat-stroked-button type="button" (click)="checkPublicSlugAvailability()" [disabled]="slugChecking">Prüfen</button>
+            <span class="slug-state ok" *ngIf="slugAvailability === true">Verfügbar</span>
+            <span class="slug-state error" *ngIf="slugAvailability === false">Nicht verfügbar</span>
+          </div>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Template</mat-label>
+            <mat-select formControlName="templateKey">
+              <mat-option value="classic">Classic</mat-option>
+              <mat-option value="hero">Hero</mat-option>
+              <mat-option value="gallery">Gallery</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </ng-container>
+
+        <!-- Header -->
+        <ng-container *ngIf="activeSection === 'header'">
+          <mat-form-field appearance="outline">
+            <mat-label>Headline</mat-label>
+            <input matInput formControlName="headline" placeholder="z. B. Chorname" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Subheadline</mat-label>
+            <textarea matInput rows="3" formControlName="subheadline" placeholder="Kurze Beschreibung"></textarea>
+          </mat-form-field>
+        </ng-container>
+
+        <!-- Images -->
+        <ng-container *ngIf="activeSection === 'images'">
+          <div class="upload-area">
+            <input type="file" accept="image/*" (change)="onSelectPublicImage($event)" />
+            <button mat-flat-button color="primary" type="button"
+                    (click)="uploadPublicImage()"
+                    [disabled]="!selectedPublicImageFile || uploadingPublicAsset">
+              Bild hochladen
+            </button>
+          </div>
+
+          <div class="asset-list" *ngIf="publicAssets.length">
+            <div class="asset-item" *ngFor="let asset of publicAssets">
+              <img [src]="asset.url" [alt]="asset.altText || 'Bild'" />
+              <button mat-icon-button color="warn" (click)="removePublicImage(asset.id)" matTooltip="Entfernen">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </div>
+          </div>
+          <p class="muted" *ngIf="!publicAssets.length">Noch keine Bilder hochgeladen.</p>
+        </ng-container>
+
+        <!-- Blocks -->
+        <ng-container *ngIf="activeSection === 'blocks'">
+          <h4 class="section-subtitle">Einfache Blöcke (Legacy)</h4>
+          <button mat-stroked-button type="button" (click)="addPublicTextBlock()">
+            <mat-icon>add</mat-icon> Einfachen Block hinzufügen
+          </button>
+
+          <mat-accordion *ngIf="publicBlocks.length">
+            <mat-expansion-panel *ngFor="let block of publicBlocks; let i = index">
+              <mat-expansion-panel-header>
+                <mat-panel-title>{{ block.title || 'Block ' + (i + 1) }}</mat-panel-title>
+              </mat-expansion-panel-header>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Titel</mat-label>
+                <input matInput [(ngModel)]="block.title" [ngModelOptions]="{standalone: true}" />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Text</mat-label>
+                <textarea matInput rows="4" [(ngModel)]="block.text" [ngModelOptions]="{standalone: true}"></textarea>
+              </mat-form-field>
+              <button mat-stroked-button color="warn" type="button" (click)="removePublicBlock(i)">
+                <mat-icon>delete</mat-icon> Entfernen
+              </button>
+            </mat-expansion-panel>
+          </mat-accordion>
+          <p class="muted" *ngIf="!publicBlocks.length">Noch keine einfachen Inhaltsblöcke.</p>
+
+          <mat-divider class="block-divider"></mat-divider>
+
+          <h4 class="section-subtitle">Rich-Content-Blöcke</h4>
+          <app-block-editor
+            [blocks]="contentBlocks"
+            (blocksChange)="onContentBlocksChange($event)">
+          </app-block-editor>
+        </ng-container>
+
+        <!-- Contact -->
+        <ng-container *ngIf="activeSection === 'contact'">
+          <mat-form-field appearance="outline">
+            <mat-label>E-Mail</mat-label>
+            <input matInput formControlName="contactEmail" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Telefon</mat-label>
+            <input matInput formControlName="contactPhone" />
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Website</mat-label>
+            <input matInput formControlName="websiteUrl" />
+          </mat-form-field>
+        </ng-container>
+
+        <!-- SEO -->
+        <ng-container *ngIf="activeSection === 'seo'">
+          <mat-form-field appearance="outline">
+            <mat-label>SEO Titel</mat-label>
+            <input matInput formControlName="seoTitle" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>SEO Beschreibung</mat-label>
+            <textarea matInput rows="3" formControlName="seoDescription"></textarea>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>OG-Bild-URL</mat-label>
+            <input matInput formControlName="ogImageUrl" />
+          </mat-form-field>
+        </ng-container>
+      </div>
+    </mat-drawer>
+
+    <!-- Preview -->
+    <mat-drawer-content>
+      <div class="preview-wrapper" [ngStyle]="schemeVars">
+        <div class="preview-page" [class.hero-template]="isHeroTemplate">
+
+          <!-- Settings bar -->
+          <div class="preview-settings-bar editable-section" (click)="openSection('settings')">
+            <mat-icon class="section-edit-icon">settings</mat-icon>
+            <span class="pill" [class.active]="publicPageForm.value.isEnabled">
+              {{ publicPageForm.value.isEnabled ? 'Aktiv' : 'Inaktiv' }}
+            </span>
+            <span class="pill" [class.active]="publicPageForm.value.isPublished">
+              {{ publicPageForm.value.isPublished ? 'Veröffentlicht' : 'Entwurf' }}
+            </span>
+            <span class="pill template-pill">{{ publicPageForm.value.templateKey }}</span>
+          </div>
+
+          <ng-container *ngIf="isHeroTemplate; else classicPreview">
+            <!-- Hero preview -->
+            <div class="hero-shell">
+              <div class="hero-left editable-section" (click)="openSection('header')">
+                <mat-icon class="section-edit-icon">edit</mat-icon>
+                <p class="hero-badge">🎵 Chorvorstellung</p>
+                <h1>{{ previewHeadline }}</h1>
+                <p class="hero-sub" *ngIf="previewSubheadline">{{ previewSubheadline }}</p>
+
+                <div class="hero-actions">
+                  <span class="btn-primary" *ngIf="publicPageForm.value.contactEmail">Kontakt aufnehmen</span>
+                  <span class="btn-secondary" *ngIf="publicPageForm.value.websiteUrl">Website öffnen</span>
+                </div>
+
+                <p class="hero-meta" *ngIf="choirLocation">📍 {{ choirLocation }}</p>
+                <p class="hero-meta" *ngIf="publicPageForm.value.contactPhone">☎ {{ publicPageForm.value.contactPhone }}</p>
+              </div>
+
+              <div class="hero-right editable-section" (click)="openSection('images')">
+                <mat-icon class="section-edit-icon">image</mat-icon>
+                <img *ngIf="previewHeroImage" [src]="previewHeroImage" alt="Chorbild" />
+                <div class="placeholder-card" *ngIf="!previewHeroImage">
+                  <h3>{{ previewHeadline }}</h3>
+                  <p>Hier kann euer Chorbild erscheinen.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Feature grid -->
+            <section class="feature-grid editable-section" (click)="openSection('blocks')"
+                     *ngIf="previewFeatureBlocks.length; else emptyBlocks">
+              <mat-icon class="section-edit-icon">view_module</mat-icon>
+              <article class="feature-card" *ngFor="let block of previewFeatureBlocks">
+                <h2 *ngIf="block.title">{{ block.title }}</h2>
+                <p *ngIf="block.text">{{ block.text }}</p>
+              </article>
+            </section>
+            <ng-template #emptyBlocks>
+              <div class="empty-section editable-section" (click)="openSection('blocks')" *ngIf="!contentBlocks.length">
+                <mat-icon class="section-edit-icon">view_module</mat-icon>
+                <mat-icon class="empty-icon">dashboard_customize</mat-icon>
+                <p>Inhaltsblöcke hinzufügen</p>
+              </div>
+            </ng-template>
+
+            <!-- Rich Content Blocks in Hero -->
+            <section class="rich-blocks-preview editable-section" *ngIf="contentBlocks.length" (click)="openSection('blocks')">
+              <mat-icon class="section-edit-icon">view_module</mat-icon>
+              <app-block-renderer *ngFor="let block of contentBlocks" [block]="block"></app-block-renderer>
+            </section>
+          </ng-container>
+
+          <ng-template #classicPreview>
+            <!-- Classic header -->
+            <div class="classic-header editable-section" (click)="openSection('header')">
+              <mat-icon class="section-edit-icon">edit</mat-icon>
+              <h1>{{ previewHeadline }}</h1>
+              <p *ngIf="previewSubheadline">{{ previewSubheadline }}</p>
+              <p class="location" *ngIf="choirLocation">{{ choirLocation }}</p>
+            </div>
+
+            <!-- Classic assets -->
+            <div class="classic-assets editable-section" (click)="openSection('images')" *ngIf="publicAssets.length">
+              <mat-icon class="section-edit-icon">image</mat-icon>
+              <img *ngFor="let asset of publicAssets" [src]="asset.url" alt="Bild" />
+            </div>
+            <div class="empty-section editable-section" (click)="openSection('images')" *ngIf="!publicAssets.length">
+              <mat-icon class="section-edit-icon">image</mat-icon>
+              <mat-icon class="empty-icon">add_photo_alternate</mat-icon>
+              <p>Bilder hochladen</p>
+            </div>
+
+            <!-- Classic blocks -->
+            <div class="classic-blocks editable-section" (click)="openSection('blocks')" *ngIf="publicBlocks.length">
+              <mat-icon class="section-edit-icon">view_module</mat-icon>
+              <article class="block" *ngFor="let block of publicBlocks">
+                <h2 *ngIf="block.title">{{ block.title }}</h2>
+                <p *ngIf="block.text">{{ block.text }}</p>
+              </article>
+            </div>
+            <div class="empty-section editable-section" (click)="openSection('blocks')" *ngIf="!publicBlocks.length && !contentBlocks.length">
+              <mat-icon class="section-edit-icon">view_module</mat-icon>
+              <mat-icon class="empty-icon">dashboard_customize</mat-icon>
+              <p>Inhaltsblöcke hinzufügen</p>
+            </div>
+          </ng-template>
+
+          <!-- Rich Content Blocks Preview -->
+          <section class="rich-blocks-preview editable-section" *ngIf="contentBlocks.length" (click)="openSection('blocks')">
+            <mat-icon class="section-edit-icon">view_module</mat-icon>
+            <app-block-renderer *ngFor="let block of contentBlocks" [block]="block"></app-block-renderer>
+          </section>
+
+          <!-- Contact -->
+          <section class="contact-preview editable-section" (click)="openSection('contact')">
+            <mat-icon class="section-edit-icon">contact_mail</mat-icon>
+            <h2>Kontakt</h2>
+            <p *ngIf="publicPageForm.value.contactEmail">E-Mail: {{ publicPageForm.value.contactEmail }}</p>
+            <p *ngIf="publicPageForm.value.contactPhone">Telefon: {{ publicPageForm.value.contactPhone }}</p>
+            <p *ngIf="publicPageForm.value.websiteUrl">Website: {{ publicPageForm.value.websiteUrl }}</p>
+            <p class="muted" *ngIf="!publicPageForm.value.contactEmail && !publicPageForm.value.contactPhone && !publicPageForm.value.websiteUrl">
+              Kontaktdaten hinzufügen
+            </p>
+          </section>
+
+          <!-- SEO bar -->
+          <div class="seo-bar editable-section" (click)="openSection('seo')">
+            <mat-icon class="section-edit-icon">search</mat-icon>
+            <span>SEO-Einstellungen</span>
+            <span class="muted" *ngIf="publicPageForm.value.seoTitle"> · {{ publicPageForm.value.seoTitle }}</span>
+          </div>
+
+          <!-- Footer -->
+          <footer class="preview-footer">
+            <span>Zurück zur Startseite</span>
+          </footer>
+        </div>
+      </div>
+    </mat-drawer-content>
+  </mat-drawer-container>
+</div>

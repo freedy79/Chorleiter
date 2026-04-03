@@ -23,15 +23,19 @@ export class LibraryStatusDialogComponent extends BaseFormDialog<any, { item: Li
 
   protected buildForm(): FormGroup {
     const item = this.data?.item;
-    const endDate = item?.availableAt ? new Date(item.availableAt) : null;
-    const startDate = endDate ? new Date(endDate) : null;
-    if (startDate) startDate.setMonth(startDate.getMonth() - 3);
+    const endDateStr = item?.availableAt ? item.availableAt.toString().split('T')[0] : null;
+    let startDateStr: string | null = null;
+    if (endDateStr) {
+      const d = new Date(endDateStr);
+      d.setMonth(d.getMonth() - 3);
+      startDateStr = d.toISOString().split('T')[0];
+    }
 
     return this.fb.group({
       borrower: [''],
       status: [item?.status],
-      startDate: [startDate],
-      endDate: [endDate]
+      startDate: [startDateStr],
+      endDate: [endDateStr]
     });
   }
 
@@ -39,14 +43,14 @@ export class LibraryStatusDialogComponent extends BaseFormDialog<any, { item: Li
     const { status, endDate } = this.form.value;
     return {
       status,
-      availableAt: endDate ? endDate.toISOString() : null
+      availableAt: endDate || null
     };
   }
 
   extendPeriod(): void {
-    const current: Date = this.form.value.endDate ? new Date(this.form.value.endDate) : new Date();
+    const current = this.form.value.endDate ? new Date(this.form.value.endDate) : new Date();
     current.setMonth(current.getMonth() + 3);
-    this.form.patchValue({ endDate: current });
+    this.form.patchValue({ endDate: current.toISOString().split('T')[0] });
   }
 
   // Preserve original method names for template compatibility

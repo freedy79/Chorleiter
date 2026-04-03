@@ -59,6 +59,7 @@ const ALLOWED_MODELS = [
   'search_history',
   'physical_copy',
   'digital_license',
+  'choir_digital_license',
 ];
 
 function getModelAttributes(model) {

@@ -1,0 +1,47 @@
+<h1 mat-dialog-title>Erinnerungen zur Abstimmung</h1>
+
+<mat-dialog-content>
+  <p class="subtitle">Beitrag: <strong>{{ data.postTitle }}</strong></p>
+
+  <div *ngIf="loading" class="loading-state">
+    <mat-spinner diameter="36"></mat-spinner>
+  </div>
+
+  <ng-container *ngIf="!loading && status">
+    <div class="summary">
+      <span>Mitglieder: {{ status.totalSingerCount }}</span>
+      <span>Offen: {{ status.pendingCount }}</span>
+    </div>
+
+    <app-empty-state *ngIf="members.length === 0" icon="group" message="Keine Sänger im Chor gefunden."></app-empty-state>
+
+    <table *ngIf="members.length > 0" class="status-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Status</th>
+          <th>Stimmen</th>
+          <th>Letzte Erinnerung</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let member of members">
+          <td>{{ member.firstName }} {{ member.name }}</td>
+          <td>
+            <span [class.open]="!member.hasVoted" [class.done]="member.hasVoted">
+              {{ member.status }}
+            </span>
+          </td>
+          <td>{{ member.voteCount }}</td>
+          <td>{{ member.lastReminderSentAt ? (member.lastReminderSentAt | date:'short') : '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button (click)="sendTestToSelf()" [disabled]="sending || loading">Testmail an mich</button>
+  <button mat-flat-button color="primary" (click)="sendReminders()" [disabled]="sending || loading || pendingMembers.length === 0">Erinnerungen senden</button>
+  <button mat-button (click)="close()">Schließen</button>
+</mat-dialog-actions>

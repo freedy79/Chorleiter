@@ -12,6 +12,7 @@ import { ChoirAdminGuard } from '@core/guards/choir-admin.guard';
 import { ProgramGuard } from '@core/guards/program.guard';
 import { WelcomeComponent } from '@features/home/welcome/welcome.component';
 import { ManageChoirResolver } from '@features/choir-management/manage-choir-resolver';
+import { PublicPageEditorResolver } from '@features/choir-management/public-page-editor-resolver';
 import { InviteRegistrationComponent } from '@features/user/registration/invite-registration.component';
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
@@ -21,6 +22,75 @@ import { DonationSuccessComponent } from '@features/donations/donation-success.c
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
 
 export const routes: Routes = [
+    {
+        path: 'c/:slug',
+        loadComponent: () => import('./features/public-choir-page/public-choir-page.component').then(m => m.PublicChoirPageComponent),
+        data: { title: 'Chor-Vorstellung' }
+    },
+    {
+        path: 'shared-piece/:token',
+        loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
+        data: { title: 'Geteiltes Stück' }
+    },
+    {
+        path: 'poll-vote/:token',
+        loadComponent: () => import('./features/posts/poll-reminder-vote.component').then(m => m.PollReminderVoteComponent),
+        data: { title: 'Abstimmung' }
+    },
+    {
+        path: 'ota/:token',
+        loadComponent: () => import('./features/user/ota-login/ota-login.component').then(m => m.OtaLoginComponent),
+        data: { title: 'Einmal-Zugang' }
+    },
+    {
+        path: 'forms/public/:guid',
+        loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+        data: { title: 'Formular', isPublic: true }
+    },
+    // --- Formulare: eigene Seite mit eigenem Layout ---
+    {
+        path: 'forms',
+        loadComponent: () => import('./features/forms/form-layout/form-layout.component').then(m => m.FormLayoutComponent),
+        children: [
+            {
+                path: '',
+                pathMatch: 'full',
+                loadComponent: () => import('./features/forms/form-list/form-list.component').then(m => m.FormListComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Formulare' }
+            },
+            {
+                path: 'new',
+                loadComponent: () => import('./features/forms/form-editor/form-editor.component').then(m => m.FormEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Neues Formular' }
+            },
+            {
+                path: ':id/edit',
+                loadComponent: () => import('./features/forms/form-editor/form-editor.component').then(m => m.FormEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular bearbeiten' }
+            },
+            {
+                path: ':id/fill',
+                loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Formular ausfüllen' }
+            },
+            {
+                path: ':id/results',
+                loadComponent: () => import('./features/forms/form-results/form-results.component').then(m => m.FormResultsComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular-Ergebnisse' }
+            },
+            {
+                path: ':id/preview',
+                loadComponent: () => import('./features/forms/form-fill/form-fill.component').then(m => m.FormFillComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'Formular-Vorschau', isPreview: true }
+            },
+        ],
+    },
     // Die MainLayoutComponent ist jetzt die Wurzel und hat keine Guards
     {
         path: '',
@@ -30,11 +100,19 @@ export const routes: Routes = [
                 path: '',
                 pathMatch: 'full',
                 component: WelcomeComponent,
+                data: {
+                    title: 'Willkommen',
+                    description: 'NAK Chorleiter unterstützt Chöre bei Repertoire, Verfügbarkeiten, Kommunikation und Einsatzplanung.'
+                }
             },
             {
                 path: 'login',
                 component: LoginComponent,
                 canActivate: [LoginGuard],
+                data: {
+                    title: 'Login',
+                    description: 'Melde dich bei NAK Chorleiter an und verwalte deinen Chor digital und effizient.'
+                }
             },
             {
                 path: 'register/:token',
@@ -61,13 +139,6 @@ export const routes: Routes = [
             { path: 'donate', component: DonateComponent },
             { path: 'donation-success', component: DonationSuccessComponent },
             { path: 'donation-cancel', component: DonationCancelComponent },
-
-            // Shared Piece Route (öffentlich zugänglich mit Token, OHNE AuthGuard!)
-            {
-                path: 'shared-piece/:token',
-                loadComponent: () => import('./features/literature/shared-piece-view/shared-piece-view.component').then(m => m.SharedPieceViewComponent),
-                data: { title: 'Geteiltes Stück' }
-            },
 
             // --- Geschützte Routen (jede einzelne hat jetzt den Guard) ---
             {
@@ -104,7 +175,19 @@ export const routes: Routes = [
                 path: 'events',
                 loadComponent: () => import('./features/events/event-list/event-list.component').then(m => m.EventListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Ereignisse' }
+                data: { title: 'Termine' }
+            },
+            {
+                path: 'posts',
+                loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Beiträge', showChoirName: true }
+            },
+            {
+                path: 'chat',
+                loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Chat', showChoirName: true }
             },
             {
                 path: 'dienstplan',
@@ -119,16 +202,10 @@ export const routes: Routes = [
                 data: { title: 'Verfügbarkeiten' }
             },
             {
-                path: 'posts',
-                loadComponent: () => import('./features/posts/post-list.component').then(m => m.PostListComponent),
-                canActivate: [AuthGuard],
-                data: { title: 'Beiträge', showChoirName: true }
-            },
-            {
                 path: 'programs',
                 loadComponent: () => import('./features/programs/program-list.component').then(m => m.ProgramListComponent),
                 canActivate: [AuthGuard, ProgramGuard],
-                data: { title: 'Programme' }
+                data: { title: 'Programmplanung' }
             },
             {
                 path: 'programs/create',
@@ -158,13 +235,25 @@ export const routes: Routes = [
                 path: 'library',
                 loadComponent: () => import('./features/library/library.component').then(m => m.LibraryComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Bibliothek' }
+                data: { title: 'Notenbestand' }
             },
             {
                 path: 'repertoire',
                 loadComponent: () => import('./features/literature/literature-list/literature-list.component').then(m => m.LiteratureListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Repertoire' }
+                data: { title: 'Chor-Repertoire' }
+            },
+            {
+                path: 'practice-lists',
+                loadComponent: () => import('./features/practice-lists/practice-lists.component').then(m => m.PracticeListsComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Meine Übungslisten' }
+            },
+            {
+                path: 'practice-lists/:id',
+                loadComponent: () => import('./features/practice-lists/practice-list-detail.component').then(m => m.PracticeListDetailComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Übungsliste' }
             },
             {
                 path: 'pieces/:id',
@@ -194,14 +283,21 @@ export const routes: Routes = [
                 path: 'participation',
                 loadComponent: () => import('./features/participation/participation.component').then(m => m.ParticipationComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Beteiligung' }
+                data: { title: 'Anwesenheit' }
             },
             {
                 path: 'manage-choir',
                 loadComponent: () => import('./features/choir-management/manage-choir/manage-choir.component').then(m => m.ManageChoirComponent),
                 canActivate: [AuthGuard],
                 resolve: {pageData: ManageChoirResolver },
-                data: { title: 'Mein Chor' }
+                data: { title: 'Choreinstellungen' }
+            },
+            {
+                path: 'public-page',
+                loadComponent: () => import('./features/choir-management/public-page-editor/public-page-editor.component').then(m => m.PublicPageEditorComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                resolve: { publicPage: PublicPageEditorResolver },
+                data: { title: 'Vorstellungsseite' }
             },
         ],
     },

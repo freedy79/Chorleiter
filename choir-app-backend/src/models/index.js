@@ -1,11 +1,15 @@
 const dbConfig = require("../config/db.config.js");
 const Sequelize = require("sequelize");
 
+const isTest = process.env.NODE_ENV === 'test' || dbConfig.dialect === 'sqlite';
+
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
+  port: dbConfig.PORT,
   dialect: dbConfig.dialect,
   operatorsAliases: 0, // 0 instead of false
-  pool: dbConfig.pool
+  pool: dbConfig.pool,
+  logging: isTest ? false : console.log,
 });
 
 const db = {};
@@ -36,6 +40,8 @@ db.user_choir = require("./user_choir.model.js")(sequelize, Sequelize);
 db.piece_change = require("./piece_change.model.js")(sequelize, Sequelize);
 db.piece_note = require("./piece_note.model.js")(sequelize, Sequelize);
 db.repertoire_filter = require("./repertoire_filter.model.js")(sequelize, Sequelize);
+db.practice_list = require("./practice_list.model.js")(sequelize, Sequelize);
+db.practice_list_item = require("./practice_list_item.model.js")(sequelize, Sequelize);
 db.login_attempt = require("./login_attempt.model.js")(sequelize, Sequelize);
 db.mail_setting = require("./mail_setting.model.js")(sequelize, Sequelize);
 db.mail_template = require("./mail_template.model.js")(sequelize, Sequelize);
@@ -55,14 +61,35 @@ db.district = require("./district.model.js")(sequelize, Sequelize);
 db.donation = require("./donation.model.js")(sequelize, Sequelize);
 db.physical_copy = require("./physical_copy.model.js")(sequelize, Sequelize);
 db.digital_license = require("./digital_license.model.js")(sequelize, Sequelize);
+db.choir_digital_license = require("./choir_digital_license.model.js")(sequelize, Sequelize);
 db.choir_log = require("./choir_log.model.js")(sequelize, Sequelize);
 db.poll = require("./poll.model.js")(sequelize, Sequelize);
 db.poll_option = require("./poll_option.model.js")(sequelize, Sequelize);
 db.poll_vote = require("./poll_vote.model.js")(sequelize, Sequelize);
+db.poll_vote_reminder_token = require("./poll_vote_reminder_token.model.js")(sequelize, Sequelize);
 db.post_comment = require("./post_comment.model.js")(sequelize, Sequelize);
 db.post_reaction = require("./post_reaction.model.js")(sequelize, Sequelize);
+db.post_image = require("./post_image.model.js")(sequelize, Sequelize);
+db.chat_room = require("./chat_room.model.js")(sequelize, Sequelize);
+db.chat_message = require("./chat_message.model.js")(sequelize, Sequelize);
+db.chat_read_state = require("./chat_read_state.model.js")(sequelize, Sequelize);
+db.chat_room_member = require("./chat_room_member.model.js")(sequelize, Sequelize);
 db.search_history = require("./search_history.model.js")(sequelize, Sequelize);
 db.push_subscription = require("./pushSubscription.model.js")(sequelize, Sequelize);
+db.piece_audit_log = require("./piece_audit_log.model.js")(sequelize, Sequelize);
+db.data_enrichment_job = require("./data-enrichment-job.model.js")(sequelize, Sequelize);
+db.data_enrichment_suggestion = require("./data-enrichment-suggestion.model.js")(sequelize, Sequelize);
+db.data_enrichment_setting = require("./data-enrichment-setting.model.js")(sequelize, Sequelize);
+db.pwa_config = require("./pwa_config.js")(sequelize, Sequelize);
+db.choir_public_page = require('./choir_public_page.model.js')(sequelize, Sequelize);
+db.choir_public_asset = require('./choir_public_asset.model.js')(sequelize, Sequelize);
+db.audio_marker = require('./audio_marker.model.js')(sequelize, Sequelize);
+db.page_view = require('./page_view.model.js')(sequelize, Sequelize);
+db.form = require('./form.model.js')(sequelize, Sequelize);
+db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
+db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
+db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
+db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -81,6 +108,12 @@ db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' })
 // A Choir has many Pieces
 db.choir.belongsToMany(db.piece, { through: db.choir_repertoire });
 db.piece.belongsToMany(db.choir, { through: db.choir_repertoire });
+
+// Direct access to choir_repertoire junction table (needed for queries that filter by repertoire status)
+db.piece.hasMany(db.choir_repertoire, { foreignKey: 'pieceId' });
+db.choir_repertoire.belongsTo(db.piece, { foreignKey: 'pieceId' });
+db.choir.hasMany(db.choir_repertoire, { foreignKey: 'choirId' });
+db.choir_repertoire.belongsTo(db.choir, { foreignKey: 'choirId' });
 
 // A Choir has many Events
 db.choir.hasMany(db.event, { as: "events" });
@@ -147,6 +180,10 @@ db.composer.belongsToMany(db.piece, { through: db.piece_arranger, as: "arrangedP
 db.piece.hasMany(db.piece_link, { as: "links", onDelete: 'CASCADE' });
 db.piece_link.belongsTo(db.piece, { foreignKey: "pieceId" });
 
+// PieceLink <> AudioMarker -> One-to-Many
+db.piece_link.hasMany(db.audio_marker, { as: 'markers', foreignKey: 'pieceLinkId', onDelete: 'CASCADE' });
+db.audio_marker.belongsTo(db.piece_link, { foreignKey: 'pieceLinkId' });
+
 // Proposed changes to a piece
 db.piece.hasMany(db.piece_change, { as: 'changeRequests' });
 db.piece_change.belongsTo(db.piece, { foreignKey: 'pieceId' });
@@ -167,6 +204,21 @@ db.repertoire_filter.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 db.choir.hasMany(db.repertoire_filter, { as: 'repertoireFilters' });
 db.repertoire_filter.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 
+// Personal practice lists
+db.user.hasMany(db.practice_list, { as: 'practiceLists', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.practice_list.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.choir.hasMany(db.practice_list, { as: 'practiceLists', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.practice_list.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+
+db.practice_list.hasMany(db.practice_list_item, { as: 'items', foreignKey: 'practiceListId', onDelete: 'CASCADE' });
+db.practice_list_item.belongsTo(db.practice_list, { as: 'practiceList', foreignKey: 'practiceListId' });
+
+db.piece.hasMany(db.practice_list_item, { as: 'practiceListItems', foreignKey: 'pieceId', onDelete: 'CASCADE' });
+db.practice_list_item.belongsTo(db.piece, { as: 'piece', foreignKey: 'pieceId' });
+
+db.piece_link.hasMany(db.practice_list_item, { as: 'practiceListItems', foreignKey: 'pieceLinkId', onDelete: 'SET NULL' });
+db.practice_list_item.belongsTo(db.piece_link, { as: 'pieceLink', foreignKey: 'pieceLinkId' });
+
 // Posts written by choir members
 db.choir.hasMany(db.post, { as: 'posts' });
 db.post.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
@@ -182,6 +234,14 @@ db.poll_option.hasMany(db.poll_vote, { as: 'votes', foreignKey: 'pollOptionId', 
 db.poll_vote.belongsTo(db.poll_option, { foreignKey: 'pollOptionId', as: 'option' });
 db.user.hasMany(db.poll_vote, { as: 'pollVotes', foreignKey: 'userId', onDelete: 'CASCADE' });
 db.poll_vote.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.poll.hasMany(db.poll_vote_reminder_token, { as: 'reminderTokens', foreignKey: 'pollId', onDelete: 'CASCADE' });
+db.poll_vote_reminder_token.belongsTo(db.poll, { foreignKey: 'pollId', as: 'poll' });
+db.poll_option.hasMany(db.poll_vote_reminder_token, { as: 'reminderTokens', foreignKey: 'pollOptionId', onDelete: 'CASCADE' });
+db.poll_vote_reminder_token.belongsTo(db.poll_option, { foreignKey: 'pollOptionId', as: 'option' });
+db.user.hasMany(db.poll_vote_reminder_token, { as: 'pollReminderTokens', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.poll_vote_reminder_token.belongsTo(db.user, { foreignKey: 'userId', as: 'recipient' });
+db.user.hasMany(db.poll_vote_reminder_token, { as: 'createdPollReminderTokens', foreignKey: 'createdByUserId', onDelete: 'SET NULL' });
+db.poll_vote_reminder_token.belongsTo(db.user, { foreignKey: 'createdByUserId', as: 'creator' });
 db.post.hasMany(db.post_comment, { as: 'comments', foreignKey: 'postId', onDelete: 'CASCADE' });
 db.post_comment.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
 db.post_comment.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
@@ -190,12 +250,45 @@ db.user.hasMany(db.post_comment, { as: 'postComments', foreignKey: 'userId', onD
 db.post_comment.belongsTo(db.user, { foreignKey: 'userId', as: 'author' });
 db.post_comment.hasMany(db.post_comment, { as: 'replies', foreignKey: 'parentId', onDelete: 'CASCADE' });
 db.post_comment.belongsTo(db.post_comment, { foreignKey: 'parentId', as: 'parent' });
+db.post.hasMany(db.post_image, { as: 'images', foreignKey: 'postId', onDelete: 'CASCADE' });
+db.post_image.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
 db.post.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'postId', onDelete: 'CASCADE' });
 db.post_reaction.belongsTo(db.post, { foreignKey: 'postId', as: 'post' });
 db.post_comment.hasMany(db.post_reaction, { as: 'reactions', foreignKey: 'commentId', onDelete: 'CASCADE' });
 db.post_reaction.belongsTo(db.post_comment, { foreignKey: 'commentId', as: 'comment' });
 db.user.hasMany(db.post_reaction, { as: 'postReactions', foreignKey: 'userId', onDelete: 'CASCADE' });
 db.post_reaction.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+
+// Chat rooms, messages and read states
+db.choir.hasMany(db.chat_room, { as: 'chatRooms', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.chat_room.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+db.chat_room.hasMany(db.chat_message, { as: 'messages', foreignKey: 'chatRoomId', onDelete: 'CASCADE' });
+db.chat_message.belongsTo(db.chat_room, { as: 'room', foreignKey: 'chatRoomId' });
+db.user.hasMany(db.chat_message, { as: 'chatMessages', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.chat_message.belongsTo(db.user, { as: 'author', foreignKey: 'userId' });
+db.chat_message.belongsTo(db.chat_message, { as: 'replyToMessage', foreignKey: 'replyToMessageId' });
+db.chat_message.hasMany(db.chat_message, { as: 'replies', foreignKey: 'replyToMessageId' });
+db.chat_room.hasMany(db.chat_read_state, { as: 'readStates', foreignKey: 'chatRoomId', onDelete: 'CASCADE' });
+db.chat_read_state.belongsTo(db.chat_room, { as: 'room', foreignKey: 'chatRoomId' });
+db.user.hasMany(db.chat_read_state, { as: 'chatReadStates', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.chat_read_state.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.chat_read_state.belongsTo(db.chat_message, { as: 'lastReadMessage', foreignKey: 'lastReadMessageId' });
+db.chat_room.hasMany(db.chat_room_member, { as: 'roomMembers', foreignKey: 'chatRoomId', onDelete: 'CASCADE' });
+db.chat_room_member.belongsTo(db.chat_room, { as: 'room', foreignKey: 'chatRoomId' });
+db.user.hasMany(db.chat_room_member, { as: 'chatRoomMemberships', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.chat_room_member.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.chat_room.belongsToMany(db.user, {
+  through: db.chat_room_member,
+  as: 'members',
+  foreignKey: 'chatRoomId',
+  otherKey: 'userId'
+});
+db.user.belongsToMany(db.chat_room, {
+  through: db.chat_room_member,
+  as: 'memberRooms',
+  foreignKey: 'userId',
+  otherKey: 'chatRoomId'
+});
 
 // Donations
 db.user.hasMany(db.donation, { as: 'donations' });
@@ -216,6 +309,12 @@ db.library_item.hasMany(db.physical_copy, { as: 'physicalCopies', foreignKey: 'l
 db.physical_copy.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
 db.library_item.hasMany(db.digital_license, { as: 'digitalLicenses', foreignKey: 'libraryItemId', onDelete: 'CASCADE' });
 db.digital_license.belongsTo(db.library_item, { foreignKey: 'libraryItemId', as: 'libraryItem' });
+
+// Choir-specific digital licenses linked to choir collections
+db.collection.hasMany(db.choir_digital_license, { as: 'choirDigitalLicenses', foreignKey: 'collectionId', onDelete: 'CASCADE' });
+db.choir_digital_license.belongsTo(db.collection, { foreignKey: 'collectionId', as: 'collection' });
+db.choir.hasMany(db.choir_digital_license, { as: 'digitalLicenses', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.choir_digital_license.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 
 // Internal choir copies linked directly to collections
 db.collection.hasMany(db.lending, { as: 'copies', foreignKey: 'collectionId' });
@@ -240,6 +339,12 @@ db.program.belongsTo(db.user, { foreignKey: 'updatedBy', as: 'updater' });
 db.program.hasMany(db.program_item, { as: 'items', foreignKey: 'programId' });
 db.program_item.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
 
+db.program.hasMany(db.event, { as: 'events', foreignKey: 'programId' });
+db.event.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
+
+db.program.hasMany(db.plan_entry, { as: 'planEntries', foreignKey: 'programId' });
+db.plan_entry.belongsTo(db.program, { foreignKey: 'programId', as: 'program' });
+
 db.piece.hasMany(db.program_item, { as: 'programItems', foreignKey: 'pieceId' });
 db.program_item.belongsTo(db.piece, { foreignKey: 'pieceId', as: 'piece' });
 
@@ -260,7 +365,50 @@ db.user.hasMany(db.search_history, { as: 'searchHistory', foreignKey: 'userId' }
 db.search_history.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
 
+// Data Enrichment relationships
+db.user.hasMany(db.data_enrichment_job, { as: 'enrichmentJobs', foreignKey: 'createdBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_job.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+db.data_enrichment_job.hasMany(db.data_enrichment_suggestion, { as: 'suggestions', foreignKey: 'jobId', onDelete: 'CASCADE' });
+db.data_enrichment_suggestion.belongsTo(db.data_enrichment_job, { foreignKey: 'jobId', as: 'job' });
+
+db.user.hasMany(db.data_enrichment_suggestion, { as: 'reviewedSuggestions', foreignKey: 'reviewedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_suggestion.belongsTo(db.user, { foreignKey: 'reviewedBy', as: 'reviewer', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+db.user.hasMany(db.data_enrichment_setting, { as: 'modifiedSettings', foreignKey: 'lastModifiedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+db.data_enrichment_setting.belongsTo(db.user, { foreignKey: 'lastModifiedBy', as: 'modifiedBy', onDelete: 'CASCADE', onUpdate: 'CASCADE' });
+
+
 // Districts and congregations
  db.district.hasMany(db.congregation, { as: "congregations" });
  db.congregation.belongsTo(db.district, { foreignKey: "districtId", as: "district" });
+
+// Public choir pages
+db.choir.hasOne(db.choir_public_page, { as: 'publicPage', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.choir_public_page.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+db.choir_public_page.hasMany(db.choir_public_asset, { as: 'assets', foreignKey: 'choirPublicPageId', onDelete: 'CASCADE' });
+db.choir_public_asset.belongsTo(db.choir_public_page, { as: 'page', foreignKey: 'choirPublicPageId' });
+
+// Forms (surveys)
+db.choir.hasMany(db.form, { as: 'forms', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.form.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.user.hasMany(db.form, { as: 'createdForms', foreignKey: 'createdBy' });
+db.form.belongsTo(db.user, { foreignKey: 'createdBy', as: 'creator' });
+db.form.hasMany(db.form_field, { as: 'fields', foreignKey: 'formId', onDelete: 'CASCADE' });
+db.form_field.belongsTo(db.form, { foreignKey: 'formId', as: 'form' });
+db.form.hasMany(db.form_submission, { as: 'submissions', foreignKey: 'formId', onDelete: 'CASCADE' });
+db.form_submission.belongsTo(db.form, { foreignKey: 'formId', as: 'form' });
+db.user.hasMany(db.form_submission, { as: 'formSubmissions', foreignKey: 'userId' });
+db.form_submission.belongsTo(db.user, { foreignKey: 'userId', as: 'submitter' });
+db.form_submission.hasMany(db.form_answer, { as: 'answers', foreignKey: 'submissionId', onDelete: 'CASCADE' });
+db.form_answer.belongsTo(db.form_submission, { foreignKey: 'submissionId', as: 'submission' });
+db.form_field.hasMany(db.form_answer, { as: 'answers', foreignKey: 'fieldId', onDelete: 'CASCADE' });
+db.form_answer.belongsTo(db.form_field, { foreignKey: 'fieldId', as: 'field' });
+
+// One-time access tokens
+db.user.hasMany(db.one_time_token, { as: 'createdOtaTokens', foreignKey: 'createdByUserId' });
+db.one_time_token.belongsTo(db.user, { foreignKey: 'createdByUserId', as: 'createdBy' });
+db.user.hasMany(db.one_time_token, { as: 'targetOtaTokens', foreignKey: 'targetUserId' });
+db.one_time_token.belongsTo(db.user, { foreignKey: 'targetUserId', as: 'targetUser' });
+
 module.exports = db;

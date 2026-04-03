@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, combineLatest } from 'rxjs';
+import { BehaviorSubject, Observable, of, combineLatest, EMPTY } from 'rxjs';
 import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
@@ -37,6 +37,8 @@ export class AuthService {
   public isDemo$: Observable<boolean>;
   public isChoirAdmin$: Observable<boolean>;
   public isDirector$: Observable<boolean>;
+  public isNotenwart$: Observable<boolean>;
+  public isChoirAdminOrNotenwart$: Observable<boolean>;
   public isSinger$: Observable<boolean>;
   public isSingerOnly$: Observable<boolean>;
 
@@ -97,6 +99,17 @@ export class AuthService {
       distinctUntilChanged()
     );
 
+    this.isNotenwart$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
+      map(([isAdmin, choirRoles]) => isAdmin || choirRoles.includes('notenwart')),
+      distinctUntilChanged()
+    );
+
+    this.isChoirAdminOrNotenwart$ = combineLatest([this.isAdmin$, this.isLibrarian$, this.choirRoles$]).pipe(
+      map(([isAdmin, isLibrarian, choirRoles]) =>
+        isAdmin || isLibrarian || choirRoles.includes('choir_admin') || choirRoles.includes('notenwart')),
+      distinctUntilChanged()
+    );
+
     this.isSinger$ = this.choirRoles$.pipe(
       map(roles => roles.includes('singer')),
       distinctUntilChanged()
@@ -113,7 +126,7 @@ export class AuthService {
         this.reloadUserFromServer();
         this.prefs.load().subscribe(p => {
           if (p.theme) {
-            this.theme.setTheme(p.theme);
+            this.theme.setTheme(p.theme, false);
           }
         });
       } else {
@@ -154,6 +167,37 @@ export class AuthService {
       }),
       catchError(() => of(null))
     ).subscribe();
+  }
+
+  /**
+   * Periodically callable method that refreshes user data from the server
+   * and returns any newly added choirs since the last check.
+   * Unlike reloadUserFromServer(), this can be called multiple times.
+   */
+  refreshUserAndCheckForNewChoirs(): Observable<{ newChoirs: Choir[] }> {
+    if (!this.getToken()) {
+      return EMPTY;
+    }
+    return this.http.get<User>(`${environment.apiUrl}/users/me`).pipe(
+      map(freshUser => {
+        const normalizedUser = this.withNormalizedChoirData(freshUser);
+        const currentChoirs = this.availableChoirs$.value;
+        const newAvailableChoirs = normalizedUser.availableChoirs || [];
+
+        // Find newly added choirs
+        const currentIds = new Set(currentChoirs.map(c => c.id));
+        const newChoirs = newAvailableChoirs.filter(c => !currentIds.has(c.id));
+
+        // Update state with fresh data
+        localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+        this.currentUserSubject.next(normalizedUser);
+        this.setActiveChoir(normalizedUser.activeChoir || null);
+        this.availableChoirs$.next(newAvailableChoirs);
+
+        return { newChoirs };
+      }),
+      catchError(() => of({ newChoirs: [] as Choir[] }))
+    );
   }
 
   private migrateStorage(): void {
@@ -277,23 +321,29 @@ export class AuthService {
   login(credentials: any): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials, { withCredentials: true }).pipe(
       tap((user: User) => {
-        if (user.accessToken) {
-          const normalizedUser = this.withNormalizedChoirData(user);
-          localStorage.setItem(TOKEN_KEY, user.accessToken);
-          localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
-          this.loggedIn.next(true);
-          this.currentUserSubject.next(normalizedUser);
-          this.setActiveChoir(normalizedUser.activeChoir || null);
-          this.availableChoirs$.next(normalizedUser.availableChoirs || []);
-
-          this.prefs.load().subscribe(p => {
-            if (p.theme) {
-              this.theme.setTheme(p.theme);
-            }
-          });
-        }
+        this.establishSession(user);
       })
     );
+  }
+
+  establishSession(user: User | null | undefined): void {
+    if (!user?.accessToken) {
+      return;
+    }
+
+    const normalizedUser = this.withNormalizedChoirData(user);
+    localStorage.setItem(TOKEN_KEY, user.accessToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser));
+    this.loggedIn.next(true);
+    this.currentUserSubject.next(normalizedUser);
+    this.setActiveChoir(normalizedUser.activeChoir || null);
+    this.availableChoirs$.next(normalizedUser.availableChoirs || []);
+
+    this.prefs.load().subscribe(p => {
+      if (p.theme) {
+        this.theme.setTheme(p.theme, false);
+      }
+    });
   }
 
   logout(reason?: string): void {
@@ -429,7 +479,7 @@ export class AuthService {
       return false;
     }
     const hasChoirPrivilege = choirRoles.some(role =>
-      role === 'choir_admin' || role === 'director' || role === 'organist');
+      role === 'choir_admin' || role === 'director' || role === 'organist' || role === 'notenwart');
     return !hasChoirPrivilege;
   }
 }

@@ -13,5 +13,6 @@ export interface NavItem {
     route?: string;
     page?: string;
     disabled?: boolean;
+    isSectionHeader?: boolean;
     children?: NavItem[];
 }

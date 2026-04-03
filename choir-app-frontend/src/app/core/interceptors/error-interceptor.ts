@@ -1,8 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpContextToken } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ErrorService } from '../services/error.service';
+
+export const SKIP_GLOBAL_ERROR_REPORTING = new HttpContextToken<boolean>(() => false);
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -11,6 +13,9 @@ export class ErrorInterceptor implements HttpInterceptor {
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(req).pipe(
       catchError((error) => {
+        if (req.context.get(SKIP_GLOBAL_ERROR_REPORTING)) {
+          return throwError(() => error);
+        }
         if (req.url.includes('/auth/signin')) {
           return throwError(() => error);
         }

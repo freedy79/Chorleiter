@@ -109,6 +109,22 @@ async function seedDatabase(options = {}) {
                 }
             });
 
+            await db.mail_template.findOrCreate({
+                where: { type: 'poll-reminder' },
+                defaults: {
+                    subject: 'Erinnerung: Abstimmung zu "{{post_title}}"',
+                    body: '<p>Hallo {{first_name}} {{surname}},</p><p>für den Beitrag <b>{{post_title}}</b> liegt noch keine Abstimmung von dir vor.</p><p>{{poll_text}}</p><p>Bitte klicke auf eine der folgenden Optionen:</p>{{option_links}}<p>Viele Grüße<br>{{choir}}</p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'mail-footer' },
+                defaults: {
+                    subject: '(Footer)',
+                    body: '<p>Du erhältst diese Mail, weil du im Chor <strong>{{choir}}</strong> angemeldet bist. Wenn du kein Interesse mehr am Chor hast und dich austragen möchtest, kannst du das <a href="{{leave_link}}">hier</a> tun.</p>'
+                }
+            });
+
             for (const tpl of getDefaultPdfTemplates()) {
                 await db.pdf_template.findOrCreate({
                     where: { type: tpl.type },

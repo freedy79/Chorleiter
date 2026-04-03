@@ -1,33 +1,63 @@
 const db = require('../models');
 const { Op, where, cast, col, fn, literal } = require('sequelize');
 
+/**
+ * Build a safe EXISTS subquery matching pieces by collection reference (prefix + numberInCollection).
+ * Uses sequelize.escape() to prevent SQL injection.
+ */
+function buildRefSubquery(dbInstance, searchTerm) {
+  const escaped = dbInstance.sequelize.escape(`%${searchTerm}%`);
+  const dialect = dbInstance.sequelize.getDialect();
+  const ilike = dialect === 'sqlite' ? 'LIKE' : 'ILIKE';
+  return literal(`EXISTS (
+    SELECT 1 FROM collection_pieces cp
+    JOIN collections c ON cp."collectionId" = c.id
+    WHERE cp."pieceId" = "piece"."id"
+    AND (c.prefix || cp."numberInCollection") ${ilike} ${escaped}
+  )`);
+}
+
 exports.search = async (req, res) => {
   const q = req.query.q || req.query.query || '';
   if (!q) return res.status(400).send({ message: 'Missing search query' });
 
   const likeOp = db.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
-  const like = { [likeOp]: `%${q}%` };
+  const normalizedQ = q.replace(/[\s,.!?;:'"()\-–—\/\\]+/g, '%');
+  const like = { [likeOp]: `%${normalizedQ}%` };
 
-  let pieces = await db.piece.findAll({
-    where: {
-      [Op.or]: [
-        { title: like },
-        { lyrics: like },
-        { origin: like }
-      ]
-    },
-    include: [
-      { model: db.composer, as: 'composer', attributes: ['name'] },
-      {
-        model: db.collection,
-        attributes: ['id', 'prefix', 'singleEdition', 'title'],
-        through: { attributes: ['numberInCollection'] }
-      }
-    ],
-    limit: 10
-  });
+  const limit = parseInt(req.query.limit) || 10;
+  const offsetPieces = parseInt(req.query.offsetPieces) || 0;
+  const offsetEvents = parseInt(req.query.offsetEvents) || 0;
+  const offsetCollections = parseInt(req.query.offsetCollections) || 0;
 
-  pieces = pieces.map(p => p.get({ plain: true }));
+  const pieceWhere = {
+    [Op.or]: [
+      { title: like },
+      { lyrics: like },
+      { origin: like },
+      buildRefSubquery(db, normalizedQ)
+    ]
+  };
+
+  // --- Direct piece matches (title, lyrics, origin, collection reference) ---
+  const [pieces_raw, totalPieces] = await Promise.all([
+    db.piece.findAll({
+      where: pieceWhere,
+      include: [
+        { model: db.composer, as: 'composer', attributes: ['name'] },
+        {
+          model: db.collection,
+          attributes: ['id', 'prefix', 'singleEdition', 'title'],
+          through: { attributes: ['numberInCollection'] }
+        }
+      ],
+      limit,
+      offset: offsetPieces
+    }),
+    db.piece.count({ where: pieceWhere })
+  ]);
+  let pieces = pieces_raw.map(p => p.get({ plain: true }));
+
   if (pieces.length) {
     const ratings = await db.choir_repertoire.findAll({
       where: { choirId: req.activeChoirId, pieceId: pieces.map(p => p.id) },
@@ -38,30 +68,136 @@ exports.search = async (req, res) => {
     pieces = pieces.map(p => ({ ...p, choir_repertoire: { rating: ratingMap.get(p.id) || null } }));
   }
 
-  const events = await db.event.findAll({
-    where: {
-      choirId: req.activeChoirId,
-      [Op.or]: [
-        { notes: like },
-        where(cast(col('type'), 'TEXT'), { [likeOp]: `%${q}%` })
-      ]
-    },
-    order: [['date', 'DESC']],
-    limit: 10
+  const eventWhere = {
+    choirId: req.activeChoirId,
+    [Op.or]: [
+      { notes: like },
+      where(cast(col('type'), 'TEXT'), { [likeOp]: `%${q}%` })
+    ]
+  };
+
+  const collectionWhere = {
+    [Op.or]: [
+      { title: like },
+      { subtitle: like },
+      { prefix: like }
+    ]
+  };
+
+  const [events, totalEvents, collections, totalCollections] = await Promise.all([
+    db.event.findAll({
+      where: eventWhere,
+      order: [['date', 'DESC']],
+      limit,
+      offset: offsetEvents
+    }),
+    db.event.count({ where: eventWhere }),
+    db.collection.findAll({
+      where: collectionWhere,
+      limit,
+      offset: offsetCollections
+    }),
+    db.collection.count({ where: collectionWhere })
+  ]);
+
+  // --- Composer -> Pieces expansion ---
+  const matchedComposers = await db.composer.findAll({
+    where: { name: like },
+    limit: 5
   });
 
-  const collections = await db.collection.findAll({
-    where: {
-      [Op.or]: [
-        { title: like },
-        { subtitle: like },
-        { prefix: like }
-      ]
-    },
-    limit: 10
+  const directPieceIds = new Set(pieces.map(p => p.id));
+  const composerPieces = [];
+
+  for (const comp of matchedComposers) {
+    let compPieces = await db.piece.findAll({
+      where: {
+        composerId: comp.id,
+        id: { [Op.notIn]: [...directPieceIds] }
+      },
+      include: [
+        { model: db.composer, as: 'composer', attributes: ['name'] },
+        { model: db.category, as: 'category', attributes: ['name'] },
+        {
+          model: db.collection,
+          attributes: ['id', 'prefix', 'singleEdition', 'title'],
+          through: { attributes: ['numberInCollection'] }
+        }
+      ],
+      limit: 5
+    });
+    compPieces = compPieces.map(p => p.get({ plain: true }));
+    if (compPieces.length) {
+      composerPieces.push({
+        composer: { id: comp.id, name: comp.name },
+        pieces: compPieces
+      });
+    }
+  }
+
+  // --- Publisher -> Collections expansion ---
+  const directCollectionIds = new Set(collections.map(c => c.id));
+  const publisherCollections = [];
+
+  // Match via publisher entity (FK)
+  const matchedPublishers = await db.publisher.findAll({
+    where: { name: like },
+    limit: 5
   });
 
-  res.status(200).send({ pieces, events, collections });
+  for (const pub of matchedPublishers) {
+    const pubCollections = await db.collection.findAll({
+      where: {
+        publisherId: pub.id,
+        id: { [Op.notIn]: [...directCollectionIds] }
+      },
+      limit: 5
+    });
+    if (pubCollections.length) {
+      publisherCollections.push({
+        publisher: { id: pub.id, name: pub.name },
+        collections: pubCollections.map(c => c.get({ plain: true }))
+      });
+      pubCollections.forEach(c => directCollectionIds.add(c.id));
+    }
+  }
+
+  // Match via legacy publisher string field
+  const legacyPubCollections = await db.collection.findAll({
+    where: {
+      publisher: like,
+      id: { [Op.notIn]: [...directCollectionIds] }
+    },
+    limit: 5
+  });
+
+  if (legacyPubCollections.length) {
+    const grouped = {};
+    for (const c of legacyPubCollections) {
+      const plain = c.get({ plain: true });
+      const key = plain.publisher;
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(plain);
+    }
+    for (const [pubName, colls] of Object.entries(grouped)) {
+      const alreadyMatched = publisherCollections.some(
+        pc => pc.publisher.name.toLowerCase() === pubName.toLowerCase()
+      );
+      if (!alreadyMatched) {
+        publisherCollections.push({
+          publisher: { id: null, name: pubName },
+          collections: colls
+        });
+      }
+    }
+  }
+
+  res.status(200).send({
+    pieces, totalPieces,
+    events, totalEvents,
+    collections, totalCollections,
+    composerPieces, publisherCollections
+  });
 };
 
 function normalizeType(type) {
@@ -73,9 +209,30 @@ function normalizeType(type) {
 
 function buildPrefixLike(dbInstance, query) {
   const likeOp = dbInstance.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
-  return { op: likeOp, value: `${query}%` };
+  // Replace punctuation/whitespace with % wildcard so "Halleluja komm" matches "Halleluja, komm!"
+  const normalized = query.replace(/[\s,.!?;:'"()\-–—\/\\]+/g, '%');
+  return { op: likeOp, value: `${normalized}%` };
+}
+function buildContainsLike(dbInstance, query) {
+  const likeOp = dbInstance.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
+  const normalized = query.replace(/[\s,.!?;:'"()\-\u2013\u2014\/\\]+/g, '%');
+  return { op: likeOp, value: `%${normalized}%` };
 }
 
+/**
+ * Build a safe EXISTS subquery for piece suggestions matching collection references.
+ */
+function buildRefExistsForSuggestions(dbInstance, searchTerm) {
+  const escaped = dbInstance.sequelize.escape(`${searchTerm}%`);
+  const dialect = dbInstance.sequelize.getDialect();
+  const ilike = dialect === 'sqlite' ? 'LIKE' : 'ILIKE';
+  return literal(`EXISTS (
+    SELECT 1 FROM collection_pieces cp
+    JOIN collections c ON cp."collectionId" = c.id
+    WHERE cp."pieceId" = "piece"."id"
+    AND (c.prefix || cp."numberInCollection") ${ilike} ${escaped}
+  )`);
+}
 function buildExactOrder(dbInstance, columnName, query) {
   const escaped = dbInstance.sequelize.escape(String(query).toLowerCase());
   const colRef = `"${columnName}"`;
@@ -93,6 +250,7 @@ exports.suggestions = async (req, res) => {
   }
 
   const { op, value } = buildPrefixLike(db, q);
+  const { op: containsOp, value: containsValue } = buildContainsLike(db, q);
   const limit = 10;
   const dialect = db.sequelize.getDialect();
   const lengthFn = dialect === 'sqlite' ? 'length' : 'LENGTH';
@@ -109,13 +267,17 @@ exports.suggestions = async (req, res) => {
   };
 
   await maybeFetch('pieces', async () => {
+    const pieceWhere = {
+      [Op.or]: [
+        { title: { [op]: value } },
+        { subtitle: { [op]: value } },
+        { lyrics: { [containsOp]: containsValue } },
+        buildRefExistsForSuggestions(db, q)
+      ]
+    };
+
     const rows = await db.piece.findAll({
-      where: {
-        [Op.or]: [
-          { title: { [op]: value } },
-          { subtitle: { [op]: value } }
-        ]
-      },
+      where: pieceWhere,
       include: [
         { model: db.composer, as: 'composer', attributes: ['name'] },
         { model: db.category, as: 'category', attributes: ['name'] }
@@ -128,14 +290,7 @@ exports.suggestions = async (req, res) => {
       limit
     });
 
-    const count = await db.piece.count({
-      where: {
-        [Op.or]: [
-          { title: { [op]: value } },
-          { subtitle: { [op]: value } }
-        ]
-      }
-    });
+    const count = await db.piece.count({ where: pieceWhere });
 
     return {
       rows: rows.map(p => ({
@@ -150,8 +305,9 @@ exports.suggestions = async (req, res) => {
   });
 
   await maybeFetch('composers', async () => {
+    const composerWhere = { name: { [Op.or]: [{ [op]: value }, { [containsOp]: containsValue }] } };
     const rows = await db.composer.findAll({
-      where: { name: { [op]: value } },
+      where: composerWhere,
       order: [
         [buildExactOrder(db, 'name', q), 'ASC'],
         [fn(lengthFn, col('name')), 'ASC'],
@@ -159,7 +315,7 @@ exports.suggestions = async (req, res) => {
       ],
       limit
     });
-    const count = await db.composer.count({ where: { name: { [op]: value } } });
+    const count = await db.composer.count({ where: composerWhere });
     return {
       rows: rows.map(c => ({
         id: c.id,
@@ -234,8 +390,9 @@ exports.suggestions = async (req, res) => {
   });
 
   await maybeFetch('authors', async () => {
+    const authorWhere = { name: { [Op.or]: [{ [op]: value }, { [containsOp]: containsValue }] } };
     const rows = await db.author.findAll({
-      where: { name: { [op]: value } },
+      where: authorWhere,
       order: [
         [buildExactOrder(db, 'name', q), 'ASC'],
         [fn(lengthFn, col('name')), 'ASC'],
@@ -243,7 +400,7 @@ exports.suggestions = async (req, res) => {
       ],
       limit
     });
-    const count = await db.author.count({ where: { name: { [op]: value } } });
+    const count = await db.author.count({ where: authorWhere });
     return {
       rows: rows.map(a => ({
         id: a.id,
@@ -257,8 +414,9 @@ exports.suggestions = async (req, res) => {
   });
 
   await maybeFetch('publishers', async () => {
+    const publisherWhere = { name: { [Op.or]: [{ [op]: value }, { [containsOp]: containsValue }] } };
     const rows = await db.publisher.findAll({
-      where: { name: { [op]: value } },
+      where: publisherWhere,
       order: [
         [buildExactOrder(db, 'name', q), 'ASC'],
         [fn(lengthFn, col('name')), 'ASC'],
@@ -266,7 +424,7 @@ exports.suggestions = async (req, res) => {
       ],
       limit
     });
-    const count = await db.publisher.count({ where: { name: { [op]: value } } });
+    const count = await db.publisher.count({ where: publisherWhere });
     return {
       rows: rows.map(p => ({
         id: p.id,

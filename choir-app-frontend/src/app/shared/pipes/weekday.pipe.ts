@@ -58,6 +58,9 @@ export class WeekdayPipe implements PipeTransform {
 
     try {
       const date = parseDateOnly(value);
+      if (isNaN(date.getTime())) {
+        return '';
+      }
       const dayIndex = date.getUTCDay();
 
       return format === 'long'
