@@ -100,3 +100,12 @@ exports.reportMessageValidation = [
   param('id').isInt({ min: 1 }).withMessage('Invalid message id'),
   body('reason').isString().trim().notEmpty().isLength({ max: 2000 }).custom(noHtml).withMessage('Bitte einen gültigen Meldegrund angeben (max. 2000 Zeichen)')
 ];
+
+exports.toggleReactionValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Invalid message id'),
+  body('emoji').isString().trim().notEmpty().withMessage('Emoji erforderlich')
+];
+
+exports.getReactionsValidation = [
+  param('id').isInt({ min: 1 }).withMessage('Invalid message id')
+];

@@ -5,6 +5,13 @@ export interface ChatAttachment {
   url: string;
 }
 
+export interface ChatReaction {
+  emoji: string;
+  count: number;
+  userIds: number[];
+  hasOwn: boolean;
+}
+
 export interface ChatMessage {
   id: number;
   chatRoomId: number;
@@ -21,6 +28,7 @@ export interface ChatMessage {
     firstName: string | null;
     name: string;
   } | null;
+  reactions: ChatReaction[];
   isOwnMessage: boolean;
 }
 

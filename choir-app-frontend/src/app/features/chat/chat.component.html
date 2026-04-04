@@ -128,6 +128,10 @@
         </button>
 
         <mat-menu #messageMenu="matMenu" xPosition="before">
+          <button mat-menu-item (click)="openReactionPicker(message)">
+            <mat-icon>add_reaction</mat-icon>
+            <span>Reaktion</span>
+          </button>
           <button mat-menu-item (click)="beginReply(message)">
             <mat-icon>reply</mat-icon>
             <span>Antworten</span>
@@ -199,6 +203,40 @@
         >
           📎 {{ message.attachment.originalName }}
         </a>
+
+        <div class="reactions-row" *ngIf="!message.deleted && message.reactions?.length">
+          <button
+            *ngFor="let reaction of message.reactions"
+            class="reaction-chip"
+            [class.own]="reaction.hasOwn"
+            type="button"
+            (click)="toggleReaction(message, reaction.emoji)"
+            [attr.aria-label]="reaction.emoji + ' ' + reaction.count"
+          >
+            <span class="reaction-emoji">{{ reaction.emoji }}</span>
+            <span class="reaction-count">{{ reaction.count }}</span>
+          </button>
+          <button
+            class="reaction-add-btn"
+            type="button"
+            (click)="openReactionPicker(message)"
+            aria-label="Reaktion hinzufügen"
+          >
+            <mat-icon>add_reaction</mat-icon>
+          </button>
+        </div>
+
+        <div class="reaction-picker" *ngIf="reactionPickerMessageId === message.id">
+          <button
+            *ngFor="let emoji of availableEmojis"
+            class="reaction-picker-btn"
+            type="button"
+            (click)="toggleReaction(message, emoji)"
+            [attr.aria-label]="'Reaktion ' + emoji"
+          >
+            {{ emoji }}
+          </button>
+        </div>
       </article>
 
       <div class="empty" *ngIf="messages.length === 0">

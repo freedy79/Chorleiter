@@ -65,6 +65,20 @@ function canEditWithinWindow(message) {
   return new Date() <= editWindowEnd;
 }
 
+function serializeReactions(reactions, currentUserId) {
+  if (!Array.isArray(reactions) || reactions.length === 0) return [];
+
+  const grouped = new Map();
+  for (const r of reactions) {
+    const entry = grouped.get(r.emoji) || { emoji: r.emoji, count: 0, userIds: [], hasOwn: false };
+    entry.count++;
+    entry.userIds.push(r.userId);
+    if (r.userId === currentUserId) entry.hasOwn = true;
+    grouped.set(r.emoji, entry);
+  }
+  return Array.from(grouped.values());
+}
+
 function serializeMessage(message, currentUserId) {
   const plain = toPlain(message);
   const deleted = !!plain.deletedAt;
@@ -94,6 +108,7 @@ function serializeMessage(message, currentUserId) {
           name: plain.author.name
         }
       : null,
+    reactions: deleted ? [] : serializeReactions(plain.reactions || [], currentUserId),
     isOwnMessage: plain.userId === currentUserId
   };
 }
@@ -547,7 +562,10 @@ exports.getRoomMessages = async (req, res) => {
 
   const messages = await db.chat_message.findAll({
     where,
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ],
     order: [['createdAt', 'DESC']],
     limit
   });
@@ -626,7 +644,10 @@ exports.createMessage = async (req, res) => {
   });
 
   const fullMessage = await db.chat_message.findByPk(created.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
 
   const choir = await db.choir.findByPk(req.activeChoirId, { attributes: ['name'] });
@@ -705,7 +726,10 @@ exports.updateMessage = async (req, res) => {
   });
 
   const full = await db.chat_message.findByPk(message.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
 
   res.status(200).send(serializeMessage(full, req.userId));
@@ -1004,7 +1028,10 @@ exports.getMessageById = async (req, res) => {
 
   const messageId = Number(req.params.id);
   const message = await db.chat_message.findByPk(messageId, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
   if (!message) {
     return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
@@ -1096,7 +1123,10 @@ exports.streamRoomEvents = async (req, res) => {
         chatRoomId: room.id,
         id: { [Op.gt]: cursorId }
       },
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
+      include: [
+        { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+        { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+      ],
       order: [['id', 'ASC']],
       limit: MAX_LIMIT
     });
@@ -1215,5 +1245,95 @@ exports.reportMessage = async (req, res) => {
   res.status(201).send({
     id: report.id,
     message: 'Nachricht wurde gemeldet.'
+  });
+};
+
+const ALLOWED_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎵', '🔥', '👏', '🎉'];
+
+exports.toggleReaction = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const { emoji } = req.body || {};
+
+  if (!emoji || !ALLOWED_EMOJIS.includes(emoji)) {
+    return res.status(400).send({ message: 'Ungültiges Emoji.' });
+  }
+
+  const message = await db.chat_message.findByPk(messageId);
+  if (!message || message.deletedAt) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const room = await getAccessibleRoom(message.chatRoomId, req);
+  if (!room) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const existing = await db.chat_message_reaction.findOne({
+    where: { chatMessageId: messageId, userId: req.userId, emoji }
+  });
+
+  if (existing) {
+    await existing.destroy();
+  } else {
+    await db.chat_message_reaction.create({
+      chatMessageId: messageId,
+      userId: req.userId,
+      emoji
+    });
+  }
+
+  const reactions = await db.chat_message_reaction.findAll({
+    where: { chatMessageId: messageId },
+    attributes: ['emoji', 'userId']
+  });
+
+  res.status(200).send({
+    messageId,
+    reactions: serializeReactions(reactions.map(r => r.toJSON()), req.userId)
+  });
+};
+
+exports.getReactions = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const message = await db.chat_message.findByPk(messageId);
+  if (!message) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const room = await getAccessibleRoom(message.chatRoomId, req);
+  if (!room) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const reactions = await db.chat_message_reaction.findAll({
+    where: { chatMessageId: messageId },
+    attributes: ['emoji', 'userId'],
+    include: [{ model: db.user, as: 'user', attributes: ['id', 'firstName', 'name'] }]
+  });
+
+  const grouped = new Map();
+  for (const r of reactions) {
+    const plain = r.toJSON();
+    const entry = grouped.get(plain.emoji) || { emoji: plain.emoji, count: 0, users: [], hasOwn: false };
+    entry.count++;
+    entry.users.push({
+      id: plain.user.id,
+      name: plain.user.firstName ? `${plain.user.firstName} ${plain.user.name}` : plain.user.name
+    });
+    if (plain.userId === req.userId) entry.hasOwn = true;
+    grouped.set(plain.emoji, entry);
+  }
+
+  res.status(200).send({
+    messageId,
+    reactions: Array.from(grouped.values())
   });
 };

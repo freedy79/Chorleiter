@@ -22,6 +22,7 @@ const { ensurePageViewTable } = require('./ensurePageViewTable');
 const { ensureFormTables } = require('./ensureFormTables');
 const { ensureSystemSettingValueText } = require('./ensureSystemSettingValueText');
 const { ensureOtaTable } = require('./ensureOtaTable');
+const { ensureChatUnreadTemplate } = require('./ensureChatUnreadTemplate');
 const { encryptUserPersonalData } = require('./encryptUserPersonalData');
 
 async function init(options = {}) {
@@ -47,6 +48,7 @@ async function init(options = {}) {
     await ensureFormTables();
     await ensureSystemSettingValueText();
     await ensureOtaTable();
+    await ensureChatUnreadTemplate();
     // 4. Then run data migrations on existing tables
     await encryptUserPersonalData();
     await migrateUserNames();
@@ -80,5 +82,6 @@ module.exports = {
     ensurePollReminderTemplate,
     ensureMailFooterTemplate,
     ensureAudioMarkerTable,
-    ensurePageViewTable
+    ensurePageViewTable,
+    ensureChatUnreadTemplate
 };

@@ -57,6 +57,9 @@ export class ChatComponent implements OnInit, OnDestroy {
   highlightedMessageId: number | null = null;
   allReadUpToId: number | null = null;
   piecePreviewCache = new Map<number, { title: string; composer: string }>();
+  reactionPickerMessageId: number | null = null;
+
+  readonly availableEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎵', '🔥', '👏', '🎉'];
   private targetRoomId: number | null = null;
   private targetMessageId: number | null = null;
 
@@ -338,6 +341,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           }
         : null,
       author: { id: this.currentUserId ?? 0, firstName: null, name: 'Ich' },
+      reactions: [],
       isOwnMessage: true
     };
 
@@ -457,6 +461,26 @@ export class ChatComponent implements OnInit, OnDestroy {
       () => this.notification.success('Text kopiert.'),
       () => this.notification.error('Text konnte nicht kopiert werden.')
     );
+  }
+
+  openReactionPicker(message: ChatMessage): void {
+    this.reactionPickerMessageId = this.reactionPickerMessageId === message.id ? null : message.id;
+  }
+
+  toggleReaction(message: ChatMessage, emoji: string): void {
+    this.reactionPickerMessageId = null;
+    if (!message?.id || message.id < 0 || message.deleted) return;
+
+    this.chatService.toggleReaction(message.id, emoji).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
+        this.messages = this.messages.map(msg =>
+          msg.id === result.messageId ? { ...msg, reactions: result.reactions } : msg
+        );
+      },
+      error: err => {
+        this.notification.error(err?.error?.message || 'Reaktion konnte nicht gespeichert werden.');
+      }
+    });
   }
 
   get selectedRoomTitle(): string {

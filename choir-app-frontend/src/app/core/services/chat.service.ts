@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ChatMessage, ChatMessageListResponse } from '@core/models/chat-message';
+import { ChatMessage, ChatMessageListResponse, ChatReaction } from '@core/models/chat-message';
 import { ChatGlobalUnreadOverview, ChatRoom, ChatRoomDetail, ChatUnreadSummary } from '@core/models/chat-room';
 import { SKIP_GLOBAL_LOADING } from '@core/interceptors/loading-interceptor';
 import { SKIP_GLOBAL_ERROR_REPORTING } from '@core/interceptors/error-interceptor';
@@ -121,5 +121,13 @@ export class ChatService {
     }
 
     return `${base}?${params.toString()}`;
+  }
+
+  toggleReaction(messageId: number, emoji: string): Observable<{ messageId: number; reactions: ChatReaction[] }> {
+    return this.http.post<{ messageId: number; reactions: ChatReaction[] }>(
+      `${this.apiUrl}/messages/${messageId}/reactions`,
+      { emoji },
+      { context: new HttpContext().set(SKIP_GLOBAL_LOADING, true) }
+    );
   }
 }
