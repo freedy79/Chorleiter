@@ -165,10 +165,30 @@
           ↪ {{ resolveReplyPreview(message) }}
         </div>
 
-        <p class="text" *ngIf="!message.deleted; else deletedTemplate">{{ message.text }}</p>
+        <p class="text" *ngIf="!message.deleted; else deletedTemplate" [innerHTML]="message.text! | markdown | async" (click)="onMessageContentClick($event)"></p>
         <ng-template #deletedTemplate>
           <p class="text deleted-text">Nachricht wurde gelöscht.</p>
         </ng-template>
+
+        <div class="piece-previews" *ngIf="!message.deleted && extractPieceIds(message.text) as pieceIds">
+          <a
+            class="piece-preview"
+            *ngFor="let pieceId of pieceIds"
+            (click)="navigateToPiece(pieceId)"
+            role="link"
+            tabindex="0"
+            (keydown.enter)="navigateToPiece(pieceId)"
+          >
+            <mat-icon class="piece-preview-icon">music_note</mat-icon>
+            <div class="piece-preview-info" *ngIf="getPiecePreview(pieceId) as preview">
+              <span class="piece-preview-title">{{ preview.title }}</span>
+              <span class="piece-preview-composer" *ngIf="preview.composer">{{ preview.composer }}</span>
+            </div>
+            <div class="piece-preview-info" *ngIf="!getPiecePreview(pieceId)">
+              <span class="piece-preview-title">Stück #{{ pieceId }}</span>
+            </div>
+          </a>
+        </div>
 
         <a
           class="attachment"
@@ -212,9 +232,13 @@
         <button mat-icon-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen" class="attach-btn">
           <mat-icon>attach_file</mat-icon>
         </button>
+        <button mat-icon-button type="button" (click)="openPieceDialog()" aria-label="Stück verlinken" class="attach-btn" matTooltip="Stück verlinken">
+          <mat-icon>music_note</mat-icon>
+        </button>
 
         <mat-form-field appearance="outline" class="composer-field">
           <textarea
+            #composerTextarea
             matInput
             rows="1"
             [(ngModel)]="draftText"

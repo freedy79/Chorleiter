@@ -1,4 +1,5 @@
 @use '../../../themes/breakpoints' as bp;
+@use '../../../themes/dark-mode-variables' as dm;
 
 :host {
   display: block;
@@ -484,4 +485,111 @@
 
 .send-btn {
   color: var(--mat-sys-primary);
+}
+
+// --- Markdown-rendered message text ---
+
+.text {
+  ::ng-deep {
+    p {
+      margin: 0;
+    }
+
+    a {
+      color: var(--mat-sys-primary, #3f51b5);
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: 2px;
+      }
+    }
+
+    // Piece links rendered by MarkdownPipe (href starts with /pieces/)
+    a[href^="/pieces/"] {
+      &::before {
+        content: '🎵 ';
+        font-style: normal;
+      }
+    }
+  }
+}
+
+// --- Piece preview cards below message text ---
+
+.piece-previews {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.piece-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(63, 81, 181, 0.08);
+  border: 1px solid rgba(63, 81, 181, 0.2);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  max-width: fit-content;
+
+  @include dm.dark-mode {
+    background: rgba(121, 134, 203, 0.12);
+    border-color: rgba(121, 134, 203, 0.3);
+  }
+
+  &:hover {
+    background: rgba(63, 81, 181, 0.16);
+    border-color: rgba(63, 81, 181, 0.4);
+
+    @include dm.dark-mode {
+      background: rgba(121, 134, 203, 0.22);
+      border-color: rgba(121, 134, 203, 0.45);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+
+  .piece-preview-icon {
+    color: var(--mat-sys-primary, #3f51b5);
+    @include bp.responsive-font-size(1.1rem);
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  .piece-preview-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .piece-preview-title {
+    font-weight: 600;
+    @include bp.responsive-font-size(0.85rem);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .piece-preview-composer {
+    @include bp.responsive-font-size(0.75rem);
+    color: rgba(127, 127, 127, 0.9);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }

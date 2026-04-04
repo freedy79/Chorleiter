@@ -20,11 +20,13 @@ import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialo
 import { ChatReportDialogComponent, ChatReportDialogResult } from './chat-report-dialog.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ResponsiveService } from '@shared/services/responsive.service';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
@@ -54,6 +56,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   highlightedMessageId: number | null = null;
   allReadUpToId: number | null = null;
+  piecePreviewCache = new Map<number, { title: string; composer: string }>();
   private targetRoomId: number | null = null;
   private targetMessageId: number | null = null;
 
@@ -68,6 +71,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') set messagesContainerRef(el: ElementRef<HTMLElement>) {
     this._messagesContainer = el?.nativeElement ?? null;
   }
+
+  @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
   constructor(
     private chatService: ChatService,
@@ -220,7 +225,89 @@ export class ChatComponent implements OnInit, OnDestroy {
       if (this.draftText?.trim() || this.selectedAttachment) {
         this.sendMessage();
       }
+      return;
     }
+
+    // Double-{{ trigger: open piece selection dialog
+    if (event.key === '{') {
+      const textarea = event.target as HTMLTextAreaElement;
+      const pos = textarea.selectionStart || 0;
+      if (textarea.value[pos - 1] === '{') {
+        event.preventDefault();
+        const before = textarea.value.slice(0, pos - 1);
+        const after = textarea.value.slice(pos);
+        this.draftText = before + '{{}}' + after;
+        const placeholderStart = before.length;
+
+        const ref = this.dialog.open(ProgramPieceDialogComponent, { width: '600px', maxWidth: '96vw' });
+        ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+          if (result?.pieceId) {
+            const value = this.draftText;
+            const beforePH = value.slice(0, placeholderStart + 2);
+            const afterPH = value.slice(placeholderStart + 2);
+            this.draftText = beforePH + result.pieceId + afterPH;
+          } else {
+            // Remove the empty {{}} placeholder
+            const value = this.draftText;
+            const beforePH = value.slice(0, placeholderStart);
+            const afterPH = value.slice(placeholderStart + 4);
+            this.draftText = beforePH + afterPH;
+          }
+          setTimeout(() => this.composerTextarea?.nativeElement?.focus());
+        });
+      }
+    }
+  }
+
+  openPieceDialog(): void {
+    const textarea = this.composerTextarea?.nativeElement;
+    const pos = textarea?.selectionStart ?? this.draftText.length;
+
+    const ref = this.dialog.open(ProgramPieceDialogComponent, { width: '600px', maxWidth: '96vw' });
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result?.pieceId) {
+        const before = this.draftText.slice(0, pos);
+        const after = this.draftText.slice(pos);
+        const spaceBefore = before.length > 0 && !before.endsWith(' ') ? ' ' : '';
+        const spaceAfter = after.length > 0 && !after.startsWith(' ') ? ' ' : '';
+        this.draftText = before + spaceBefore + '{{' + result.pieceId + '}}' + spaceAfter + after;
+      }
+      setTimeout(() => textarea?.focus());
+    });
+  }
+
+  onMessageContentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'A') {
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        event.preventDefault();
+        this.router.navigateByUrl(href);
+      }
+    }
+  }
+
+  extractPieceIds(text: string | null): number[] {
+    if (!text) return [];
+    return Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
+  }
+
+  getPiecePreview(pieceId: number): { title: string; composer: string } | null {
+    const cached = this.piecePreviewCache.get(pieceId);
+    if (cached) return cached;
+
+    // Trigger async load if not cached yet
+    this.api.getPieceById(pieceId).pipe(takeUntil(this.destroy$)).subscribe(piece => {
+      this.piecePreviewCache.set(pieceId, {
+        title: piece.title,
+        composer: (piece as any).composer?.name || (piece as any).origin || ''
+      });
+    });
+    return null;
+  }
+
+  navigateToPiece(pieceId: number): void {
+    this.router.navigate(['/pieces', pieceId]);
   }
 
   sendMessage(): void {
