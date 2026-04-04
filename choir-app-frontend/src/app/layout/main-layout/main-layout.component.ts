@@ -228,8 +228,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     const routeData$ = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
+      startWith(null as any),
       map(() => this.getDeepestRouteData(this.route)),
-      startWith(this.getDeepestRouteData(this.route))
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.pageTitle$ = combineLatest([routeData$, this.authService.activeChoir$]).pipe(
@@ -754,6 +755,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     }
 
     this.latestNotifiedMessageId = newest.messageId;
+
+    // Skip local notification when push notifications are active —
+    // the backend already sends push notifications for chat messages.
+    if (this.pushService.isSupported() && this.pushService.getStoredChoirIds().length > 0) {
+      return;
+    }
+
     this.showBrowserNotification(newest);
   }
 
@@ -777,21 +785,42 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     }
 
     const bodyPrefix = newest.authorName ? `${newest.authorName}: ` : '';
-    const notification = new Notification(`Neue Nachricht • ${newest.choirName || 'Chor'}`, {
+    const title = `Neue Nachricht • ${newest.choirName || 'Chor'}`;
+    const options: NotificationOptions = {
       body: `${bodyPrefix}${newest.preview}`,
-      icon: '/assets/icons/icon-192x192.png',
-      tag: `chat-${newest.messageId}`
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      this.navigateToChatTarget({
+      tag: `chat-${newest.messageId}`,
+      data: {
         choirId: newest.choirId,
         chatRoomId: newest.chatRoomId,
         messageId: newest.messageId
-      });
-      notification.close();
+      }
     };
+
+    // Use ServiceWorkerRegistration.showNotification() for PWA compatibility (Android)
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, options);
+        return;
+      } catch {
+        // Fall through to Notification constructor for browsers without SW
+      }
+    }
+
+    try {
+      const notification = new Notification(title, options);
+      notification.onclick = () => {
+        window.focus();
+        this.navigateToChatTarget({
+          choirId: newest.choirId,
+          chatRoomId: newest.chatRoomId,
+          messageId: newest.messageId
+        });
+        notification.close();
+      };
+    } catch {
+      // Notification constructor not available (e.g. Android PWA)
+    }
   }
 
   private tryShowInstallNotification(): void {

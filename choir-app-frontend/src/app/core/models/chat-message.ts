@@ -18,6 +18,7 @@ export interface ChatMessage {
   attachment: ChatAttachment | null;
   author: {
     id: number;
+    firstName: string | null;
     name: string;
   } | null;
   isOwnMessage: boolean;

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { environment } from 'src/environments/environment';
 import { PayPalService, DonationSummary } from 'src/app/core/services/paypal.service';
-import { AdminService } from '@core/services/admin.service';
 
 @Component({
   selector: 'app-donate',
@@ -21,8 +20,7 @@ export class DonateComponent implements OnInit {
   summaryError = false;
 
   constructor(
-    private paypalService: PayPalService,
-    private adminService: AdminService
+    private paypalService: PayPalService
   ) {}
 
   ngOnInit(): void {
@@ -31,7 +29,7 @@ export class DonateComponent implements OnInit {
   }
 
   private loadDonationEmail() {
-    this.adminService.getPayPalSettings().subscribe({
+    this.paypalService.getDonationConfig().subscribe({
       next: (settings) => {
         this.donationEmail = settings.donationEmail || null;
         if (!this.donationEmail) {

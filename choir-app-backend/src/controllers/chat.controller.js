@@ -90,6 +90,7 @@ function serializeMessage(message, currentUserId) {
     author: plain.author
       ? {
           id: plain.author.id,
+          firstName: plain.author.firstName || null,
           name: plain.author.name
         }
       : null,
@@ -255,12 +256,12 @@ async function collectUnreadInfoForRoom(room, userId, readState) {
     db.chat_message.count({ where: unreadWhere }),
     db.chat_message.findOne({
       where: unreadWhere,
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
       order: [['createdAt', 'ASC']]
     }),
     db.chat_message.findOne({
       where: unreadWhere,
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
       order: [['createdAt', 'DESC']]
     })
   ]);
@@ -535,7 +536,7 @@ exports.getRoomMessages = async (req, res) => {
 
   const messages = await db.chat_message.findAll({
     where,
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
     order: [['createdAt', 'DESC']],
     limit
   });
@@ -614,16 +615,24 @@ exports.createMessage = async (req, res) => {
   });
 
   const fullMessage = await db.chat_message.findByPk(created.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
   });
 
   const choir = await db.choir.findByPk(req.activeChoirId, { attributes: ['name'] });
+  const sender = await db.user.findByPk(req.userId, { attributes: ['firstName', 'name'] });
+  const senderName = sender ? `${sender.firstName || ''} ${sender.name || ''}`.trim() : '';
+  const choirName = choir?.name || 'Dein Chor';
+  const messagePreview = text
+    ? (text.length > 100 ? text.substring(0, 100) + '…' : text)
+    : `📎 ${req.file?.originalname || 'Anhang'}`;
+  const url = `/chat?room=${room.id}&message=${created.id}`;
   const payload = {
-    title: `Neue Chat-Nachricht in ${choir?.name || 'deinem Chor'}`,
-    body: text || `📎 ${req.file?.originalname || 'Anhang'}`,
-    icon: '/assets/icons/icon-192x192.png',
-    url: `/chat?room=${room.id}&message=${created.id}`,
-    data: { url: `/chat?room=${room.id}&message=${created.id}` }
+    title: `${choirName} – ${senderName}`,
+    body: messagePreview,
+    tag: `chat-room-${room.id}`,
+    renotify: true,
+    url,
+    data: { url }
   };
 
   if (room.isPrivate) {
@@ -685,7 +694,7 @@ exports.updateMessage = async (req, res) => {
   });
 
   const full = await db.chat_message.findByPk(message.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
   });
 
   res.status(200).send(serializeMessage(full, req.userId));
@@ -984,7 +993,7 @@ exports.getMessageById = async (req, res) => {
 
   const messageId = Number(req.params.id);
   const message = await db.chat_message.findByPk(messageId, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }]
   });
   if (!message) {
     return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
@@ -1076,7 +1085,7 @@ exports.streamRoomEvents = async (req, res) => {
         chatRoomId: room.id,
         id: { [Op.gt]: cursorId }
       },
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
       order: [['id', 'ASC']],
       limit: MAX_LIMIT
     });
@@ -1128,7 +1137,7 @@ exports.reportMessage = async (req, res) => {
 
   const message = await db.chat_message.findByPk(messageId, {
     include: [
-      { model: db.user, as: 'author', attributes: ['id', 'name', 'email'] },
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name', 'email'] },
       {
         model: db.chat_room, as: 'room',
         attributes: ['id', 'key', 'title', 'choirId'],

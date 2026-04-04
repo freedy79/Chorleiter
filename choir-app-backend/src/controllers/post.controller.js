@@ -500,7 +500,6 @@ exports.create = async (req, res) => {
         const payload = {
           title: `Neuer Beitrag in ${choir.name}`,
           body: sanitizedTitle,
-          icon: '/assets/icons/icon-192x192.png',
           url,
           data: { url }
         };
@@ -665,7 +664,6 @@ exports.publish = async (req, res) => {
       const payload = {
         title: `Neuer Beitrag in ${choir.name}`,
         body: full.title,
-        icon: '/assets/icons/icon-192x192.png',
         url,
         data: { url }
       };

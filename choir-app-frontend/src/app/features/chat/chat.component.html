@@ -109,7 +109,7 @@
         </mat-menu>
 
         <div class="meta">
-          <strong>{{ message.author?.name || 'Unbekannt' }}</strong>
+          <strong>{{ message.author?.firstName ? (message.author?.firstName + ' ' + message.author?.name) : (message.author?.name || 'Unbekannt') }}</strong>
           <span>{{ message.createdAt | date:'short' }}</span>
           <span
             *ngIf="getMessageStatus(message) as status"
@@ -188,7 +188,7 @@
         </mat-form-field>
 
         <button
-          *ngIf="draftText?.trim() || selectedAttachment"
+          *ngIf="draftText.trim() || selectedAttachment"
           mat-icon-button
           color="primary"
           type="button"

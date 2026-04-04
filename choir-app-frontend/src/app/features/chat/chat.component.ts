@@ -244,11 +244,12 @@ export class ChatComponent implements OnInit, OnDestroy {
             url: ''
           }
         : null,
-      author: { id: this.currentUserId ?? 0, name: 'Ich' },
+      author: { id: this.currentUserId ?? 0, firstName: null, name: 'Ich' },
       isOwnMessage: true
     };
 
     this.messages = [...this.messages, optimisticMessage];
+    this.scrollToBottom();
 
     this.chatService.sendMessage(this.selectedRoomId, {
       text: trimmed,

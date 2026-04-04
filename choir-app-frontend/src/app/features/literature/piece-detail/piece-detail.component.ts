@@ -78,6 +78,7 @@ export class PieceDetailComponent implements OnInit {
   editState: { [id: number]: string } = {};
   userId: number | null = null;
   isAdmin = false;
+  canShare = true;
   canRate = false;
   pieceImage: string | null = null;
   fileLinks: DisplayFileLink[] = [];
@@ -120,6 +121,7 @@ export class PieceDetailComponent implements OnInit {
     });
     this.auth.currentUser$.subscribe(u => this.userId = u?.id || null);
     this.auth.isAdmin$.subscribe(a => this.isAdmin = a);
+    this.auth.isSingerOnly$.subscribe(singerOnly => this.canShare = !singerOnly);
     combineLatest([this.auth.isChoirAdmin$, this.auth.isDirector$]).subscribe(([isChoirAdmin, isDirector]) => {
       this.canRate = isChoirAdmin || isDirector;
     });

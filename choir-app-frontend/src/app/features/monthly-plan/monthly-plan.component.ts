@@ -209,7 +209,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return entry.id;
   }
 
-  trackByProgramId(index: number, program: Program): number {
+  trackByProgramId(index: number, program: Program): string {
     return program.id;
   }
 
