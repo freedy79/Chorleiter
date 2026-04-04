@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
@@ -19,6 +19,7 @@ import { UserInChoir } from '@core/models/user';
 import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialog.component';
 import { ChatReportDialogComponent, ChatReportDialogResult } from './chat-report-dialog.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { ResponsiveService } from '@shared/services/responsive.service';
 
 @Component({
   selector: 'app-chat',
@@ -56,6 +57,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private targetRoomId: number | null = null;
   private targetMessageId: number | null = null;
 
+  isMobile$: Observable<boolean>;
+
   private readonly destroy$ = new Subject<void>();
   private readonly roomRealtimeStop$ = new Subject<void>();
   private _messagesContainer: HTMLElement | null = null;
@@ -74,8 +77,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private route: ActivatedRoute,
     private router: Router,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private responsive: ResponsiveService
+  ) {
+    this.isMobile$ = this.responsive.isMobile$;
+  }
 
   ngOnInit(): void {
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
@@ -378,6 +384,18 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   get canManageSelectedRoom(): boolean {
     return !!this.selectedRoom && this.isChoirAdmin;
+  }
+
+  get sortedRoomsForDropdown(): ChatRoom[] {
+    return [...this.rooms].sort((a, b) => {
+      const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }
+
+  get hasMultipleRooms(): boolean {
+    return this.rooms.length > 1;
   }
 
   openCreateRoomDialog(): void {

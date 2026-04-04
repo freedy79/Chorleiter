@@ -37,7 +37,46 @@
   <section class="chat-main" *ngIf="selectedRoomId; else noRoomSelected">
     <header class="chat-header">
       <div class="chat-header-top">
-        <h2>{{ selectedRoomTitle }}</h2>
+        <ng-container *ngIf="(isMobile$ | async) && hasMultipleRooms; else desktopTitle">
+          <button
+            type="button"
+            class="room-dropdown-trigger"
+            [matMenuTriggerFor]="roomDropdown"
+            aria-label="Raum wechseln"
+          >
+            <h2>{{ selectedRoomTitle }}</h2>
+            <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+          </button>
+
+          <mat-menu #roomDropdown="matMenu" class="room-dropdown-panel">
+            <button
+              mat-menu-item
+              *ngFor="let room of sortedRoomsForDropdown"
+              class="room-dropdown-item"
+              [class.active]="room.id === selectedRoomId"
+              (click)="selectRoom(room.id)"
+            >
+              <div class="room-dropdown-row1">
+                <span class="room-dropdown-name">
+                  {{ room.title }}
+                  <mat-icon *ngIf="room.isPrivate" class="private-icon" aria-hidden="true">lock</mat-icon>
+                </span>
+                <span class="room-dropdown-badge" *ngIf="room.unreadCount > 0">{{ room.unreadCount }}</span>
+              </div>
+              <div class="room-dropdown-row2" *ngIf="room.lastMessageAt">
+                {{ room.lastMessageAt | date:'short' }}
+              </div>
+              <div class="room-dropdown-row3" *ngIf="room.oldestUnreadPreview">
+                {{ room.oldestUnreadPreview }}
+              </div>
+            </button>
+          </mat-menu>
+        </ng-container>
+
+        <ng-template #desktopTitle>
+          <h2>{{ selectedRoomTitle }}</h2>
+        </ng-template>
+
         <div class="chat-header-actions">
           <button
             *ngIf="canManageSelectedRoom"
@@ -51,6 +90,7 @@
             <mat-icon>edit</mat-icon>
           </button>
           <span
+            *ngIf="isChoirAdmin"
             class="transport-badge"
             [class.sse]="currentTransport === 'sse'"
             [class.polling]="currentTransport === 'polling'"

@@ -296,7 +296,7 @@ exports.getRooms = async (req, res) => {
       const readState = readStateByRoomId.get(room.id);
       const unreadSince = readState?.lastReadAt || new Date(0);
 
-      const [unreadCount, lastMessage] = await Promise.all([
+      const [unreadCount, lastMessage, oldestUnread] = await Promise.all([
         db.chat_message.count({
           where: {
             chatRoomId: room.id,
@@ -308,6 +308,15 @@ exports.getRooms = async (req, res) => {
         db.chat_message.findOne({
           where: { chatRoomId: room.id },
           order: [['createdAt', 'DESC']]
+        }),
+        db.chat_message.findOne({
+          where: {
+            chatRoomId: room.id,
+            deletedAt: null,
+            userId: { [Op.ne]: req.userId },
+            createdAt: { [Op.gt]: unreadSince }
+          },
+          order: [['createdAt', 'ASC']]
         })
       ]);
 
@@ -322,7 +331,9 @@ exports.getRooms = async (req, res) => {
         unreadCount,
         lastReadAt: readState?.lastReadAt || null,
         lastReadMessageId: readState?.lastReadMessageId || null,
-        lastMessageAt: lastMessage?.createdAt || null
+        lastMessageAt: lastMessage?.createdAt || null,
+        oldestUnreadPreview: oldestUnread?.text ? oldestUnread.text.substring(0, 100) : null,
+        oldestUnreadAt: oldestUnread?.createdAt || null
       };
     })
   );

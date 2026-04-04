@@ -3,6 +3,10 @@
 :host {
   display: block;
   height: calc(100vh - 180px);
+
+  @include bp.handset {
+    height: calc(100vh - bp.$header-height-mobile - bp.$bottom-nav-height);
+  }
 }
 
 .chat-page {
@@ -13,8 +17,7 @@
 
   @include bp.handset {
     grid-template-columns: 1fr;
-    height: auto;
-    min-height: calc(100vh - 180px);
+    gap: 0;
   }
 }
 
@@ -25,11 +28,7 @@
   overflow: auto;
 
   @include bp.handset {
-    display: flex;
-    gap: bp.$spacing-sm;
-    overflow-x: auto;
-    overflow-y: hidden;
-    white-space: nowrap;
+    display: none;
   }
 }
 
@@ -116,6 +115,7 @@
   border: 1px solid rgba(127, 127, 127, 0.2);
   border-radius: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -143,6 +143,107 @@
   button {
     min-height: 40px;
   }
+}
+
+// --- Mobile room dropdown ---
+
+.room-dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+
+  h2 {
+    margin: 0;
+    @include bp.responsive-font-size(1.1rem);
+  }
+
+  .dropdown-arrow {
+    @include bp.responsive-font-size(1.3rem);
+    color: rgba(127, 127, 127, 0.7);
+    transition: transform 0.2s ease;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ::ng-deep needed because mat-menu renders outside the component
+::ng-deep .room-dropdown-panel {
+  min-width: 280px !important;
+  max-width: 92vw !important;
+}
+
+.room-dropdown-item {
+  height: auto !important;
+  white-space: normal !important;
+  line-height: normal !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+
+  &.active {
+    background: rgba(63, 81, 181, 0.08);
+  }
+}
+
+.room-dropdown-row1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: bp.$spacing-sm;
+  width: 100%;
+}
+
+.room-dropdown-name {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  @include bp.responsive-font-size(0.95rem);
+
+  .private-icon {
+    width: 1em;
+    height: 1em;
+    @include bp.responsive-font-size(0.85rem);
+    color: rgba(127, 127, 127, 0.8);
+  }
+}
+
+.room-dropdown-badge {
+  min-width: 22px;
+  height: 22px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--mat-sys-primary, #3f51b5);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0 5px;
+  flex-shrink: 0;
+}
+
+.room-dropdown-row2 {
+  color: rgba(127, 127, 127, 0.85);
+  margin-top: 2px;
+  @include bp.responsive-font-size(0.75rem);
+}
+
+.room-dropdown-row3 {
+  color: rgba(127, 127, 127, 0.7);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+  @include bp.responsive-font-size(0.8rem);
 }
 
 .transport-badge {
@@ -345,8 +446,6 @@
   border-top: 1px solid rgba(127, 127, 127, 0.2);
   padding: bp.$spacing-sm bp.$spacing-md;
   background: rgba(127, 127, 127, 0.05);
-  position: sticky;
-  bottom: 0;
 }
 
 .reply-chip,
@@ -373,14 +472,14 @@
 
 .composer-input-row {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 4px;
 }
 
 .attach-btn,
 .send-btn {
   flex-shrink: 0;
-  margin-bottom: 6px;
+  margin-top: 4px;
 }
 
 .send-btn {
