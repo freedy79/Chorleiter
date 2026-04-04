@@ -372,25 +372,54 @@ exports.findNext = async (req, res) => {
         ]
     });
 
-    // Map plan entries to event-compatible shape
-    const planEntryEvents = planEntries.map(entry => ({
-        id: entry.id,
-        date: entry.date,
-        type: 'PLAN_ENTRY',
-        notes: entry.notes,
-        director: entry.director,
-        organist: entry.organist,
-        choirId: entry.monthlyPlan?.choirId,
-        choir: entry.monthlyPlan?.choir,
-        program: entry.program,
-        pieces: [],
-        monthlyPlan: entry.monthlyPlan
-            ? { year: entry.monthlyPlan.year, month: entry.monthlyPlan.month, finalized: entry.monthlyPlan.finalized, version: entry.monthlyPlan.version }
-            : null
-    }));
+    // Map plan entries to event-compatible shape with duty role
+    const planEntryEvents = planEntries.map(entry => {
+        const dutyRole = entry.directorId === req.userId ? 'Chorleitung'
+            : entry.organistId === req.userId ? 'Orgel' : null;
+        return {
+            id: entry.id,
+            date: entry.date,
+            type: 'PLAN_ENTRY',
+            notes: entry.notes,
+            director: entry.director,
+            organist: entry.organist,
+            choirId: entry.monthlyPlan?.choirId,
+            choir: entry.monthlyPlan?.choir,
+            program: entry.program,
+            pieces: [],
+            monthlyPlan: entry.monthlyPlan
+                ? { year: entry.monthlyPlan.year, month: entry.monthlyPlan.month, finalized: entry.monthlyPlan.finalized, version: entry.monthlyPlan.version }
+                : null,
+            dutyRole
+        };
+    });
 
-    // Merge events and plan entries, sort by date, apply limit
-    const merged = [...events.map(e => e.toJSON()), ...planEntryEvents]
+    // Deduplicate: when Event and PlanEntry share the same date + choir, merge into the Event
+    const eventJsons = events.map(e => e.toJSON());
+
+    const planEntryMap = {};
+    for (const pe of planEntryEvents) {
+        const key = `${isoDateString(new Date(pe.date))}_${pe.choirId}`;
+        planEntryMap[key] = pe;
+    }
+
+    const consumedPlanKeys = new Set();
+    const enrichedEvents = eventJsons.map(ev => {
+        const key = `${isoDateString(new Date(ev.date))}_${ev.choirId}`;
+        if (planEntryMap[key]) {
+            consumedPlanKeys.add(key);
+            return { ...ev, dutyRole: planEntryMap[key].dutyRole };
+        }
+        return ev;
+    });
+
+    // Keep only plan entries that have no matching event
+    const remainingPlanEntries = planEntryEvents.filter(pe => {
+        const key = `${isoDateString(new Date(pe.date))}_${pe.choirId}`;
+        return !consumedPlanKeys.has(key);
+    });
+
+    const merged = [...enrichedEvents, ...remainingPlanEntries]
         .sort((a, b) => new Date(a.date) - new Date(b.date))
         .slice(0, limit);
 

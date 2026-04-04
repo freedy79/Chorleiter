@@ -19,8 +19,16 @@
   top: 0; // Sie klebt am oberen Rand.
   z-index: 100; // Sie bleibt über allen anderen Inhalten.
   height: var(--header-height); // Wir verwenden unsere definierte Höhe.
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 @media (max-width: 768px) {
@@ -60,6 +68,16 @@
 
 .chat-badge-button {
   margin-right: 0.15rem;
+}
+
+// Profil-Icon auf Mobile ausblenden (erreichbar über Bottom-Nav "Mehr")
+.profile-button-desktop {
+  flex-shrink: 0;
+}
+@media (max-width: 599px) {
+  .profile-button-desktop {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
