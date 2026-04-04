@@ -187,7 +187,7 @@ export const routes: Routes = [
                 path: 'chat',
                 loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Chat', showChoirName: true }
+                data: { title: 'Chat', showChoirName: true, fullWidth: true }
             },
             {
                 path: 'dienstplan',

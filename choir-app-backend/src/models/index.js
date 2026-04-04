@@ -74,6 +74,7 @@ db.chat_room = require("./chat_room.model.js")(sequelize, Sequelize);
 db.chat_message = require("./chat_message.model.js")(sequelize, Sequelize);
 db.chat_read_state = require("./chat_read_state.model.js")(sequelize, Sequelize);
 db.chat_room_member = require("./chat_room_member.model.js")(sequelize, Sequelize);
+db.chat_message_report = require("./chat_message_report.model.js")(sequelize, Sequelize);
 db.search_history = require("./search_history.model.js")(sequelize, Sequelize);
 db.push_subscription = require("./pushSubscription.model.js")(sequelize, Sequelize);
 db.piece_audit_log = require("./piece_audit_log.model.js")(sequelize, Sequelize);
@@ -289,6 +290,12 @@ db.user.belongsToMany(db.chat_room, {
   foreignKey: 'userId',
   otherKey: 'chatRoomId'
 });
+
+// Chat message reports
+db.chat_message.hasMany(db.chat_message_report, { as: 'reports', foreignKey: 'chatMessageId', onDelete: 'CASCADE' });
+db.chat_message_report.belongsTo(db.chat_message, { as: 'message', foreignKey: 'chatMessageId' });
+db.user.hasMany(db.chat_message_report, { as: 'chatMessageReports', foreignKey: 'reporterUserId', onDelete: 'CASCADE' });
+db.chat_message_report.belongsTo(db.user, { as: 'reporter', foreignKey: 'reporterUserId' });
 
 // Donations
 db.user.hasMany(db.donation, { as: 'donations' });

@@ -186,6 +186,7 @@
 }
 
 .message {
+  position: relative;
   max-width: 80%;
   border-radius: 0;
   padding: 10px 12px;
@@ -193,6 +194,11 @@
 
   @include bp.handset {
     max-width: 100%;
+  }
+
+  &:hover .message-menu-trigger,
+  .message-menu-trigger[aria-expanded="true"] {
+    opacity: 1;
   }
 
   &.own {
@@ -208,6 +214,44 @@
     box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.55);
     animation: target-pulse 1.2s ease-in-out 1;
   }
+}
+
+.message-menu-trigger {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(127, 127, 127, 0.7);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+
+  @include bp.handset {
+    opacity: 1;
+  }
+
+  mat-icon {
+    @include bp.responsive-font-size(1.15rem);
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  &:hover {
+    background: rgba(127, 127, 127, 0.15);
+    color: inherit;
+  }
+}
+
+.delete-action {
+  color: #c62828;
 }
 
 @keyframes target-pulse {
@@ -231,6 +275,22 @@
   span {
     color: rgba(127, 127, 127, 0.9);
     @include bp.responsive-font-size(0.75rem);
+  }
+}
+
+.message-status {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid rgba(127, 127, 127, 0.55);
+  border-radius: 1px;
+  vertical-align: middle;
+  flex-shrink: 0;
+  align-self: center;
+
+  &.read {
+    background: var(--mat-sys-primary, #3f51b5);
+    border-color: var(--mat-sys-primary, #3f51b5);
   }
 }
 
@@ -259,11 +319,6 @@
   @include bp.responsive-font-size(0.85rem);
 }
 
-.actions {
-  display: flex;
-  gap: bp.$spacing-xs;
-}
-
 .loading,
 .empty,
 .empty-state {
@@ -274,6 +329,16 @@
   text-align: center;
   gap: bp.$spacing-sm;
   color: rgba(127, 127, 127, 0.95);
+}
+
+.loading-older {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: bp.$spacing-xs;
+  padding: bp.$spacing-xs 0;
+  color: rgba(127, 127, 127, 0.85);
+  @include bp.responsive-font-size(0.8rem);
 }
 
 .composer {
@@ -298,16 +363,26 @@
 }
 
 .composer-field {
-  width: 100%;
+  flex: 1;
+  margin-bottom: 0 !important;
+
+  textarea {
+    resize: none;
+  }
 }
 
-.composer-actions {
+.composer-input-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: bp.$spacing-sm;
+  align-items: flex-end;
+  gap: 4px;
+}
 
-  button {
-    min-height: 44px;
-  }
+.attach-btn,
+.send-btn {
+  flex-shrink: 0;
+  margin-bottom: 6px;
+}
+
+.send-btn {
+  color: var(--mat-sys-primary);
 }

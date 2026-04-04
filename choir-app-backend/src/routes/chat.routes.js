@@ -16,7 +16,8 @@ const {
   deleteMessageValidation,
   messageDetailValidation,
   markReadValidation,
-  messageStreamValidation
+  messageStreamValidation,
+  reportMessageValidation
 } = require('../validators/chat.validation');
 const {
   diskUpload,
@@ -53,5 +54,6 @@ router.get('/messages/:id', messageDetailValidation, validate, wrap(controller.g
 router.put('/messages/:id', role.requireNonDemo, updateMessageValidation, validate, wrap(controller.updateMessage));
 router.delete('/messages/:id', role.requireNonDemo, deleteMessageValidation, validate, wrap(controller.deleteMessage));
 router.get('/messages/:id/attachment', deleteMessageValidation, validate, wrap(controller.downloadAttachment));
+router.post('/messages/:id/report', role.requireNonDemo, reportMessageValidation, validate, wrap(controller.reportMessage));
 
 module.exports = router;

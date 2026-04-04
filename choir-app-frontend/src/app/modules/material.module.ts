@@ -2,6 +2,7 @@ import { NgModule } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { CdkTableModule } from "@angular/cdk/table";
 import { DragDropModule } from "@angular/cdk/drag-drop";
+import { TextFieldModule } from "@angular/cdk/text-field";
 import { MatAutocompleteModule } from "@angular/material/autocomplete";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatBadgeModule } from "@angular/material/badge";
@@ -76,7 +77,8 @@ import { MatTreeModule } from "@angular/material/tree";
     MatToolbarModule,
     MatTooltipModule,
     MatBadgeModule,
-    DragDropModule
+    DragDropModule,
+    TextFieldModule
   ],
   exports: [
     CdkTableModule,
@@ -115,7 +117,8 @@ import { MatTreeModule } from "@angular/material/tree";
     MatToolbarModule,
     MatTooltipModule,
     MatBadgeModule,
-    DragDropModule
+    DragDropModule,
+    TextFieldModule
   ]
 })
 export class MaterialModule {}

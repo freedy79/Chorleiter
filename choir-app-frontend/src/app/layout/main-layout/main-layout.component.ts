@@ -112,6 +112,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   pageTitle$: Observable<string | null>;
   pageDescription$: Observable<string | null>;
   isFramelessRoute$: Observable<boolean>;
+  isFullWidthRoute$: Observable<boolean>;
   cartCount$: Observable<number>;
 
   availableChoirs$: Observable<Choir[]>;
@@ -245,6 +246,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.pageDescription$ = routeData$.pipe(
       map(data => data.description ?? null)
+    );
+
+    this.isFullWidthRoute$ = routeData$.pipe(
+      map(data => !!data.fullWidth)
     );
 
     this.isFramelessRoute$ = this.router.events.pipe(
@@ -384,12 +389,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.authService.switchChoir(id).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null } {
+  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null; fullWidth: boolean } {
     let child = route.firstChild;
     const data = {
       title: child?.snapshot?.data?.['title'] ?? null,
       showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false,
-      description: child?.snapshot?.data?.['description'] ?? null
+      description: child?.snapshot?.data?.['description'] ?? null,
+      fullWidth: child?.snapshot?.data?.['fullWidth'] ?? false
     };
     while (child?.firstChild) {
       child = child.firstChild;
@@ -402,6 +408,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         }
         if (child.snapshot.data['description']) {
           data.description = child.snapshot.data['description'];
+        }
+        if (child.snapshot.data['fullWidth']) {
+          data.fullWidth = child.snapshot.data['fullWidth'];
         }
       }
     }

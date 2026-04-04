@@ -31,6 +31,7 @@ export interface ChatMessageListResponse {
     isDefault: boolean;
   };
   messages: ChatMessage[];
+  allReadUpToId: number | null;
   realtime?: {
     transport: 'polling' | 'sse' | 'websocket';
     supportsCursor: boolean;

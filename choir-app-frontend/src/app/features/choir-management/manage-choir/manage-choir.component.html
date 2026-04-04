@@ -42,7 +42,11 @@
           <mat-checkbox [(ngModel)]="joinByLinkEnabled" (change)="onModulesChange()">
             Beitritt als Sänger per Link erlauben
           </mat-checkbox>
-          <p *ngIf="joinByLinkEnabled && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a></p>
+          <p *ngIf="joinByLinkEnabled && joinLink">Beitrittslink: <a [href]="joinLink" target="_blank">{{joinLink}}</a>
+            <button mat-icon-button (click)="copyJoinLink()" matTooltip="Link kopieren" aria-label="Link in die Zwischenablage kopieren">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </p>
         </section>
 
         <section class="settings-section dashboard-contact-settings" aria-label="Kontaktpersonen auf dem Dashboard">

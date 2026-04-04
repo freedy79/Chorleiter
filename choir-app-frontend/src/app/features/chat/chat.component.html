@@ -64,7 +64,11 @@
       <small *ngIf="pollError" class="poll-warning" aria-live="polite">Verbindungsproblem – erneuter Versuch läuft.</small>
     </header>
 
-    <div class="messages" *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite">
+    <div class="messages" #messagesContainer *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite" (scroll)="onMessagesScroll($event)">
+      <div class="loading-older" *ngIf="loadingOlderMessages">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Ältere Nachrichten…</span>
+      </div>
       <article
         class="message"
         *ngFor="let message of messages; trackBy: trackMessage"
@@ -73,9 +77,48 @@
         [class.deleted]="message.deleted"
         [class.highlighted]="message.id === highlightedMessageId"
       >
+        <button
+          *ngIf="!message.deleted"
+          class="message-menu-trigger"
+          type="button"
+          [matMenuTriggerFor]="messageMenu"
+          aria-label="Nachricht-Aktionen"
+        >
+          <mat-icon>expand_more</mat-icon>
+        </button>
+
+        <mat-menu #messageMenu="matMenu" xPosition="before">
+          <button mat-menu-item (click)="beginReply(message)">
+            <mat-icon>reply</mat-icon>
+            <span>Antworten</span>
+          </button>
+          <button mat-menu-item *ngIf="message.text" (click)="copyMessageText(message)">
+            <mat-icon>content_copy</mat-icon>
+            <span>Kopieren</span>
+          </button>
+          <!-- TODO: reportMessage not yet implemented
+          <button mat-menu-item *ngIf="!isOwnMessage(message)" (click)="reportMessage(message)">
+            <mat-icon>flag</mat-icon>
+            <span>Melden</span>
+          </button>
+          -->
+          <button mat-menu-item *ngIf="isOwnMessage(message) || isChoirAdmin" class="delete-action" (click)="deleteMessage(message)">
+            <mat-icon>delete</mat-icon>
+            <span>Löschen</span>
+          </button>
+        </mat-menu>
+
         <div class="meta">
           <strong>{{ message.author?.name || 'Unbekannt' }}</strong>
           <span>{{ message.createdAt | date:'short' }}</span>
+          <span
+            *ngIf="getMessageStatus(message) as status"
+            class="message-status"
+            [class.delivered]="status === 'delivered'"
+            [class.read]="status === 'read'"
+            [attr.aria-label]="status === 'read' ? 'Von allen gelesen' : 'Zugestellt'"
+            [matTooltip]="status === 'read' ? 'Von allen gelesen' : 'Zugestellt'"
+          ></span>
         </div>
 
         <div class="reply-preview" *ngIf="message.replyToMessageId">
@@ -96,11 +139,6 @@
         >
           📎 {{ message.attachment.originalName }}
         </a>
-
-        <div class="actions" *ngIf="!message.deleted">
-          <button mat-stroked-button type="button" (click)="beginReply(message)">Antworten</button>
-          <button mat-button type="button" *ngIf="isOwnMessage(message)" (click)="deleteMessage(message)">Löschen</button>
-        </div>
       </article>
 
       <div class="empty" *ngIf="messages.length === 0">
@@ -129,25 +167,36 @@
         <button mat-button type="button" (click)="clearAttachment(fileInput)">Entfernen</button>
       </div>
 
-      <mat-form-field appearance="outline" class="composer-field">
-        <mat-label>Nachricht</mat-label>
-        <textarea
-          matInput
-          rows="3"
-          [(ngModel)]="draftText"
-          placeholder="Schreibe eine Nachricht…"
-          aria-label="Nachrichtentext"
-        ></textarea>
-      </mat-form-field>
-
-      <div class="composer-actions">
+      <div class="composer-input-row">
         <input #fileInput type="file" hidden (change)="onAttachmentSelected($event)" />
-        <button mat-stroked-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen">
+        <button mat-icon-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen" class="attach-btn">
           <mat-icon>attach_file</mat-icon>
-          Anhang
         </button>
-        <button mat-flat-button color="primary" type="button" (click)="sendMessage()" [disabled]="sending">
-          {{ sending ? 'Sende…' : 'Senden' }}
+
+        <mat-form-field appearance="outline" class="composer-field">
+          <textarea
+            matInput
+            rows="1"
+            [(ngModel)]="draftText"
+            placeholder="Nachricht"
+            aria-label="Nachrichtentext"
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+          ></textarea>
+        </mat-form-field>
+
+        <button
+          *ngIf="draftText?.trim() || selectedAttachment"
+          mat-icon-button
+          color="primary"
+          type="button"
+          (click)="sendMessage()"
+          [disabled]="sending"
+          aria-label="Nachricht senden"
+          class="send-btn"
+        >
+          <mat-icon>send</mat-icon>
         </button>
       </div>
     </footer>

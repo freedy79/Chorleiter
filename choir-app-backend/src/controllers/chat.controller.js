@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const db = require('../models');
 const logger = require('../config/logger');
 const pushNotificationService = require('../services/pushNotification.service');
+const emailService = require('../services/email.service');
 
 const ATTACHMENTS_DIR = path.join(__dirname, '../..', 'uploads', 'chat-attachments');
 const DEFAULT_ROOM_KEY = 'allgemein';
@@ -125,6 +126,38 @@ function buildMessagePreview(message) {
     return `📎 ${message.attachmentOriginalName}`;
   }
   return '(Nachricht)';
+}
+
+async function calculateAllReadUpToId(room, currentUserId) {
+  let participantIds;
+
+  if (room.isPrivate) {
+    const members = await db.chat_room_member.findAll({
+      where: { chatRoomId: room.id, userId: { [Op.ne]: currentUserId } },
+      attributes: ['userId']
+    });
+    participantIds = members.map(m => m.userId);
+  } else {
+    const choirMembers = await db.user_choir.findAll({
+      where: { choirId: room.choirId, userId: { [Op.ne]: currentUserId } },
+      attributes: ['userId']
+    });
+    participantIds = choirMembers.map(m => m.userId);
+  }
+
+  if (participantIds.length === 0) return null;
+
+  const readStates = await db.chat_read_state.findAll({
+    where: { chatRoomId: room.id, userId: participantIds },
+    attributes: ['userId', 'lastReadMessageId']
+  });
+
+  if (readStates.length < participantIds.length) return null;
+
+  const readIds = readStates.map(s => s.lastReadMessageId).filter(id => id != null);
+  if (readIds.length < participantIds.length) return null;
+
+  return Math.min(...readIds);
 }
 
 async function ensureDefaultRoom(choirId) {
@@ -509,6 +542,7 @@ exports.getRoomMessages = async (req, res) => {
 
   const ordered = [...messages].reverse();
   const lastMessageId = ordered.length > 0 ? ordered[ordered.length - 1].id : null;
+  const allReadUpToId = await calculateAllReadUpToId(room, req.userId);
 
   res.status(200).send({
     room: {
@@ -519,6 +553,7 @@ exports.getRoomMessages = async (req, res) => {
       isDefault: room.isDefault
     },
     messages: ordered.map(message => serializeMessage(message, req.userId)),
+    allReadUpToId,
     realtime: {
       transport: 'polling',
       supportsCursor: true,
@@ -1065,12 +1100,100 @@ exports.streamRoomEvents = async (req, res) => {
   }, STREAM_POLL_INTERVAL_MS);
 
   const heartbeatTimer = setInterval(() => {
-    sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId });
+    calculateAllReadUpToId(room, req.userId).then(allReadUpToId => {
+      sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId, allReadUpToId });
+    }).catch(() => {
+      sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId, allReadUpToId: null });
+    });
   }, STREAM_HEARTBEAT_MS);
 
   req.on('close', () => {
     clearInterval(pollingTimer);
     clearInterval(heartbeatTimer);
     res.end();
+  });
+};
+
+exports.reportMessage = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const { reason } = req.body || {};
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).send({ message: 'Bitte einen Meldegrund angeben.' });
+  }
+
+  const message = await db.chat_message.findByPk(messageId, {
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'name', 'email'] },
+      {
+        model: db.chat_room, as: 'room',
+        attributes: ['id', 'key', 'title', 'choirId'],
+        include: [{ model: db.choir, as: 'choir', attributes: ['id', 'name'] }]
+      }
+    ]
+  });
+
+  if (!message) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  if (message.deleted || message.deletedAt) {
+    return res.status(400).send({ message: 'Gelöschte Nachrichten können nicht gemeldet werden.' });
+  }
+
+  // Prevent self-reporting
+  if (message.userId === req.userId) {
+    return res.status(400).send({ message: 'Eigene Nachrichten können nicht gemeldet werden.' });
+  }
+
+  // Check for duplicate reports by same user on same message
+  const existingReport = await db.chat_message_report.findOne({
+    where: { chatMessageId: messageId, reporterUserId: req.userId, status: 'pending' }
+  });
+  if (existingReport) {
+    return res.status(409).send({ message: 'Du hast diese Nachricht bereits gemeldet.' });
+  }
+
+  const reporter = await db.user.findByPk(req.userId, { attributes: ['id', 'name', 'email'] });
+
+  const report = await db.chat_message_report.create({
+    chatMessageId: messageId,
+    reporterUserId: req.userId,
+    reason: reason.trim()
+  });
+
+  // Send email to choir directors and admins
+  try {
+    const choirId = message.room?.choirId;
+    const choirName = message.room?.choir?.name || 'Unbekannter Chor';
+    const roomTitle = message.room?.title || 'Unbekannt';
+    const authorName = message.author?.name || 'Unbekannt';
+    const reporterName = reporter?.name || 'Unbekannt';
+    const messageText = message.text || '(Nachricht ohne Text)';
+    const messageDate = message.createdAt;
+
+    await emailService.sendChatMessageReportMail({
+      choirId,
+      choirName,
+      roomTitle,
+      authorName,
+      messageText,
+      reason: reason.trim(),
+      messageDate,
+      reporterName,
+      messageId: message.id,
+      roomId: message.room?.id
+    });
+  } catch (err) {
+    logger.error(`Failed to send chat message report email: ${err.message}`);
+  }
+
+  res.status(201).send({
+    id: report.id,
+    message: 'Nachricht wurde gemeldet.'
   });
 };

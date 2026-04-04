@@ -38,6 +38,11 @@ async function ensureTablesExist() {
     logger.info('[Migration] Created table: chat_room_members');
   }
 
+  if (!tableSet.has('chat_message_reports') && !tableSet.has('chat_message_report')) {
+    await db.chat_message_report.sync();
+    logger.info('[Migration] Created table: chat_message_reports');
+  }
+
   await ensureChatRoomColumns(queryInterface, tableSet);
 }
 
