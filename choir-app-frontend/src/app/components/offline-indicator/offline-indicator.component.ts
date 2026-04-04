@@ -69,19 +69,21 @@ import { takeUntil } from 'rxjs/operators';
 export class OfflineIndicatorComponent implements OnInit, OnDestroy {
   isOffline = false;
   private destroy$ = new Subject<void>();
+  private readonly boundOnOnline = () => this.onOnline();
+  private readonly boundOnOffline = () => this.onOffline();
 
   ngOnInit(): void {
     // Überprüfe initialen Online-Status
     this.isOffline = !navigator.onLine;
 
     // Überwache Online/Offline Events
-    window.addEventListener('online', this.onOnline.bind(this));
-    window.addEventListener('offline', this.onOffline.bind(this));
+    window.addEventListener('online', this.boundOnOnline);
+    window.addEventListener('offline', this.boundOnOffline);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('online', this.onOnline.bind(this));
-    window.removeEventListener('offline', this.onOffline.bind(this));
+    window.removeEventListener('online', this.boundOnOnline);
+    window.removeEventListener('offline', this.boundOnOffline);
     this.destroy$.next();
     this.destroy$.complete();
   }

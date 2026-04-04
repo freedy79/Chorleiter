@@ -10,6 +10,12 @@ export class ThemeService {
   private renderer: Renderer2;
   private currentTheme: Theme = 'system';
   private static readonly STORAGE_KEY = 'theme';
+  private mediaQuery: MediaQueryList | null = null;
+  private readonly mediaQueryListener = (e: MediaQueryListEvent) => {
+    if (this.currentTheme === 'system') {
+      this.applySystemTheme();
+    }
+  };
 
   constructor(rendererFactory: RendererFactory2,
               private prefs: UserPreferencesService) {
@@ -32,12 +38,12 @@ export class ThemeService {
 
     // Fügen Sie einen Listener hinzu, um auf Änderungen im System-Theme zu reagieren.
     // Dies ist nur relevant, wenn der Benutzer 'system' ausgewählt hat.
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-      if (this.currentTheme === 'system') {
-        //console.log(`[ThemeService] System-Theme hat sich geändert: prefers-dark=${e.matches}`);
-        this.applySystemTheme();
-      }
-    });
+    this.mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    this.mediaQuery.addEventListener('change', this.mediaQueryListener);
+  }
+
+  destroy(): void {
+    this.mediaQuery?.removeEventListener('change', this.mediaQueryListener);
   }
 
   /**

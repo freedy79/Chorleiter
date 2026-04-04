@@ -59,6 +59,8 @@ export class ChatComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly roomRealtimeStop$ = new Subject<void>();
   private _messagesContainer: HTMLElement | null = null;
+  private scrollTimer: ReturnType<typeof setTimeout> | null = null;
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
 
   @ViewChild('messagesContainer') set messagesContainerRef(el: ElementRef<HTMLElement>) {
     this._messagesContainer = el?.nativeElement ?? null;
@@ -114,6 +116,8 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.roomRealtimeStop$.complete();
+    if (this.scrollTimer !== null) clearTimeout(this.scrollTimer);
+    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
   }
 
   loadRooms(selectRoomId?: number, silent = false): void {
@@ -202,6 +206,15 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.notification.error('Nachrichten konnten nicht geladen werden.');
       }
     });
+  }
+
+  onComposerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
+      event.preventDefault();
+      if (this.draftText?.trim() || this.selectedAttachment) {
+        this.sendMessage();
+      }
+    }
   }
 
   sendMessage(): void {
@@ -552,7 +565,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   private scrollToBottom(): void {
-    setTimeout(() => {
+    this.scrollTimer = setTimeout(() => {
       if (this._messagesContainer) {
         this._messagesContainer.scrollTop = this._messagesContainer.scrollHeight;
       }
@@ -585,12 +598,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.targetMessageId = null;
     this.highlightedMessageId = targetId;
 
-    setTimeout(() => {
+    this.scrollTimer = setTimeout(() => {
       const element = document.getElementById(`chat-message-${targetId}`);
       element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
 
-    setTimeout(() => {
+    this.highlightTimer = setTimeout(() => {
       if (this.highlightedMessageId === targetId) {
         this.highlightedMessageId = null;
       }

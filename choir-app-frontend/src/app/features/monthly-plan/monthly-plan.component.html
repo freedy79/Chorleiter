@@ -122,7 +122,7 @@
               <ng-container *ngIf="isChoirAdmin && !plan.finalized; else programTextDesktop">
                 <mat-select [value]="ev.program?.id ?? null" (selectionChange)="updateProgram(ev, $event.value)">
                   <mat-option [value]="null">--</mat-option>
-                  <mat-option *ngFor="let program of programs" [value]="program.id">
+                  <mat-option *ngFor="let program of programs; trackBy: trackByProgramId" [value]="program.id">
                     {{ program.title }}
                   </mat-option>
                 </mat-select>
@@ -139,7 +139,7 @@
               <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorTextDesktop">
                 <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)">
                   <mat-option [value]="null">--</mat-option>
-                  <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">
+                  <mat-option *ngFor="let m of availableForDate(directors, ev.date); trackBy: trackByMemberId" [value]="m.id">
                     <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
                       <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
                       {{ m.name }}, {{ m.firstName }}
@@ -162,7 +162,7 @@
               <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistTextDesktop">
                 <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)">
                   <mat-option [value]="null">--</mat-option>
-                  <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">
+                  <mat-option *ngFor="let m of availableForDate(organists, ev.date); trackBy: trackByMemberId" [value]="m.id">
                     <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
                       <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
                       {{ m.name }}, {{ m.firstName }}
@@ -238,7 +238,7 @@
                   <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)"
                     class="card-select">
                     <mat-option [value]="null">--</mat-option>
-                    <mat-option *ngFor="let m of availableForDate(directors, ev.date)" [value]="m.id">
+                    <mat-option *ngFor="let m of availableForDate(directors, ev.date); trackBy: trackByMemberId" [value]="m.id">
                       <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
                         <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
                         {{ m.name }}, {{ m.firstName }}
@@ -260,7 +260,7 @@
                   <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)"
                     class="card-select">
                     <mat-option [value]="null">--</mat-option>
-                    <mat-option *ngFor="let m of availableForDate(organists, ev.date)" [value]="m.id">
+                    <mat-option *ngFor="let m of availableForDate(organists, ev.date); trackBy: trackByMemberId" [value]="m.id">
                       <span class="person-option" [class.person-option--maybe]="isMaybe(m.id, ev.date)">
                         <mat-icon *ngIf="isMaybe(m.id, ev.date)" class="person-option__icon" color="warn">warning</mat-icon>
                         {{ m.name }}, {{ m.firstName }}
@@ -292,7 +292,7 @@
                 <span class="card-label">Programm</span>
                 <mat-select [value]="ev.program?.id ?? null" (selectionChange)="updateProgram(ev, $event.value)" class="card-select">
                   <mat-option [value]="null">--</mat-option>
-                  <mat-option *ngFor="let program of programs" [value]="program.id">{{ program.title }}</mat-option>
+                  <mat-option *ngFor="let program of programs; trackBy: trackByProgramId" [value]="program.id">{{ program.title }}</mat-option>
                 </mat-select>
               </div>
               <ng-template #programTextMobile>
@@ -321,14 +321,14 @@
             <thead>
               <tr>
                 <th>Name</th>
-                <th *ngFor="let d of counterPlanDates" [matTooltip]="timestamp(d)">{{ d |
+                <th *ngFor="let d of counterPlanDates; trackBy: trackByDate" [matTooltip]="timestamp(d)">{{ d |
                   date:'dd.MM.':'Europe/Berlin':'de-DE' }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let row of counterPlanRows">
+              <tr *ngFor="let row of counterPlanRows; trackBy: trackByUserId">
                 <td>{{ row.user.name }}, {{ row.user.firstName }}</td>
-                <td *ngFor="let key of counterPlanDateKeys">{{ row.assignments[key] }}</td>
+                <td *ngFor="let key of counterPlanDateKeys; trackBy: trackByDateKey">{{ row.assignments[key] }}</td>
               </tr>
             </tbody>
           </table>
@@ -339,10 +339,10 @@
       <div class="counter-plan-mobile mobile-only" *ngIf="counterPlanDates.length > 0">
         <h3>Gegenplan</h3>
         <div class="counter-plan-cards">
-          <div class="counter-card" *ngFor="let row of counterPlanRows">
+          <div class="counter-card" *ngFor="let row of counterPlanRows; trackBy: trackByUserId">
             <div class="counter-card-name">{{ row.user.name }}, {{ row.user.firstName }}</div>
             <div class="counter-card-assignments">
-              <div class="counter-assignment" *ngFor="let d of counterPlanDates; let i = index">
+              <div class="counter-assignment" *ngFor="let d of counterPlanDates; trackBy: trackByDate; let i = index">
                 <span class="counter-date">{{ d | date:'dd.MM.':'Europe/Berlin':'de-DE' }}</span>
                 <span class="counter-value">{{ row.assignments[counterPlanDateKeys[i]] || '—' }}</span>
               </div>
@@ -359,7 +359,7 @@
       <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
       <div *ngIf="isChoirAdmin" class="member-availabilities">
         <h3>Verfügbarkeiten aller Mitglieder</h3>
-        <div class="member-availability-card" *ngFor="let ev of entries">
+        <div class="member-availability-card" *ngFor="let ev of entries; trackBy: trackByEntryId">
           <h4>{{ ev.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</h4>
           <div class="availability-row available-row">
             <mat-icon class="status-icon available-icon">check_circle</mat-icon>
