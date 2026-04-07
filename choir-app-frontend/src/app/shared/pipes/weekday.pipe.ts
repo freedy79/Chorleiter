@@ -66,7 +66,8 @@ export class WeekdayPipe implements PipeTransform {
       return format === 'long'
         ? this.weekdaysLong[dayIndex]
         : this.weekdaysShort[dayIndex];
-    } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       return '';
     }
   }

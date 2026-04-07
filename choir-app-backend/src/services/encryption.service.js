@@ -21,7 +21,6 @@ const IV_LENGTH = 16;
 // Für GCM (neu): ENCRYPTION_KEY direkt nutzen (sollte bereits 32 bytes sein)
 const ALGORITHM_GCM = 'aes-256-gcm';
 const GCM_IV_LENGTH = 12; // 96-bit IV für GCM optimal
-const GCM_AUTH_TAG_LENGTH = 16; // 128-bit authentication tag
 
 /**
  * Verschlüsselt einen Text mit AES-256-CBC (legacy support)

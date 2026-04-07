@@ -24,7 +24,7 @@ import { PieceDialogComponent } from '../piece-dialog/piece-dialog.component';
 import { RepertoireFilter } from '@core/models/repertoire-filter';
 import { FilterPresetService } from '@core/services/filter-preset.service';
 import { AuthService } from '@core/services/auth.service';
-import { FilterPresetDialogComponent, FilterPresetDialogData } from '../filter-preset-dialog/filter-preset-dialog.component';
+import { FilterPresetDialogComponent } from '../filter-preset-dialog/filter-preset-dialog.component';
 import { ErrorService } from '@core/services/error.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
 import { UserPreferences } from '@core/models/user-preferences';

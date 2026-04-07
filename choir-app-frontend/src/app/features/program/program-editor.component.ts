@@ -15,7 +15,6 @@ import { PieceService } from '@core/services/piece.service';
 import { ApiHelperService } from '@core/services/api-helper.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { AddItemTypeDialogComponent } from './add-item-type-dialog.component';
-import { FabComponent, FabAction } from '@shared/components/fab/fab.component';
 import { DurationPipe } from '@shared/pipes/duration.pipe';
 import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
 import { parseDurationToSeconds } from '@shared/util/duration.utils';
@@ -646,7 +645,8 @@ export class ProgramEditorComponent implements OnInit {
     ).subscribe();
   }
 
-  private updateProgramId(id: string | undefined) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private updateProgramId(_id: string | undefined) {
     // With the new draft-based system, we no longer update the programId
     // as the backend now handles draft creation transparently via getForEditing
     // and all operations stay on the same program ID

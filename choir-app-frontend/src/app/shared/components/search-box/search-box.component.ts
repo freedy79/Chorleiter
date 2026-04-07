@@ -155,9 +155,9 @@ export class SearchBoxComponent implements OnInit {
     if (!query) return this.sanitizer.bypassSecurityTrustHtml(text);
     // Split query into words, ignoring punctuation, so highlighting works
     // even when the user omits punctuation (e.g. "Halleluja komm" highlights "Halleluja, komm!")
-    const words = query.split(/[\s,.!?;:'"()\-\u2013\u2014\/\\]+/).filter(w => w.length > 0);
+    const words = query.split(/[\s,.!?;:'"()\-\u2013\u2014/\\]+/).filter(w => w.length > 0);
     if (!words.length) return this.sanitizer.bypassSecurityTrustHtml(text);
-    const pattern = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s,.!?\'\"();:\\-\u2013\u2014\\/\\\\]*');
+    const pattern = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s,.!?\'"();:\\-\u2013\u2014/\\\\]*');
     const regex = new RegExp(`(${pattern})`, 'ig');
     const result = text.replace(regex, '<mark>$1</mark>');
     return this.sanitizer.bypassSecurityTrustHtml(result);

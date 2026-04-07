@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { BehaviorSubject, interval } from 'rxjs';
 import { filter, switchMap, debounceTime } from 'rxjs/operators';
 
 const ACTIVATED_VERSION_KEY = 'sw-activated-version';

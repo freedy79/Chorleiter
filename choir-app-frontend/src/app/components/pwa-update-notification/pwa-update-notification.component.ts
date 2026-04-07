@@ -53,6 +53,7 @@ import { ServiceWorkerUpdateService } from '../../services/service-worker-update
       z-index: 9999;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
       padding: 1rem;
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 
     .notification-content {

@@ -123,7 +123,7 @@ async function resizeAllCovers() {
     for (const file of imageFiles) {
       for (const width of widths) {
         try {
-          const resizedName = await saveResizedCover(file, width);
+          await saveResizedCover(file, width);
           processed++;
         } catch (err) {
           logger.error(`Failed to create ${width}px version of ${file}:`, err.message);

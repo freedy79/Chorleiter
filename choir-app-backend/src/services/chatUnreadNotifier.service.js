@@ -2,7 +2,7 @@ const db = require('../models');
 const logger = require('../config/logger');
 const { sendTemplateMail } = require('./email.service');
 const { getFrontendUrl } = require('../utils/frontend-url');
-const { Op, fn, col, literal } = require('sequelize');
+const { Op } = require('sequelize');
 
 // Check every 6 hours
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;

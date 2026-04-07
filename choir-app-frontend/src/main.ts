@@ -19,7 +19,6 @@ import localeDe from '@angular/common/locales/de'; // Importieren Sie das deutsc
 import localeDeExtra from '@angular/common/locales/extra/de'; // Optionale extra Daten
 import { LOCALE_ID, ErrorHandler } from '@angular/core';
 import { MAT_DATE_LOCALE, DateAdapter } from '@angular/material/core';
-import { MondayFirstDateAdapter } from '@core/adapters/monday-first-date-adapter';
 import { GlobalErrorHandler } from '@core/handlers/global-error.handler';
 import { CustomDateAdapter } from '@shared/util/custom.date.adapter';
 import { CdkColumnDef } from '@angular/cdk/table';

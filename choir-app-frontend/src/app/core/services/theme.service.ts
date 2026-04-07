@@ -11,7 +11,8 @@ export class ThemeService {
   private currentTheme: Theme = 'system';
   private static readonly STORAGE_KEY = 'theme';
   private mediaQuery: MediaQueryList | null = null;
-  private readonly mediaQueryListener = (e: MediaQueryListEvent) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private readonly mediaQueryListener = (_e: MediaQueryListEvent) => {
     if (this.currentTheme === 'system') {
       this.applySystemTheme();
     }

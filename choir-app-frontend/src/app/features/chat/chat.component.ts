@@ -419,9 +419,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.replyTo = null;
   }
 
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
   onAttachmentSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] || null;
+    if (file && file.size > ChatComponent.MAX_FILE_SIZE) {
+      this.notification.error('Datei ist zu groß. Maximal 10 MB erlaubt.');
+      input.value = '';
+      return;
+    }
     this.selectedAttachment = file;
   }
 

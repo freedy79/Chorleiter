@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatCardModule } from '@angular/material/card';
@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 export interface ResponsiveColumn {
   key: string;
@@ -40,7 +39,7 @@ export interface ResponsiveAction {
     MatTooltipModule
   ]
 })
-export class ResponsiveTableComponent implements OnInit {
+export class ResponsiveTableComponent implements OnInit, OnChanges {
   @Input() data: any[] = [];
   @Input() columns: ResponsiveColumn[] = [];
   @Input() actions: ResponsiveAction[] = [];

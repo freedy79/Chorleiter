@@ -272,7 +272,7 @@
         </mat-card-actions>
       </mat-card>
 
-      <div class="actions-footer" *ngIf="!(isDemo$ | async)">
+      <div class="actions-footer" *ngIf="(isDemo$ | async) === false">
         <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileForm.pristine">
           Speichern
         </button>

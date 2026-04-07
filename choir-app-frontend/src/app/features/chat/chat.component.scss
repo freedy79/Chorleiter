@@ -590,19 +590,28 @@
   display: flex;
   align-items: flex-start;
   gap: 4px;
+
+  @include bp.handset {
+    gap: 2px;
+  }
 }
 
 .attach-btn,
 .send-btn {
   flex-shrink: 0;
   margin-top: 4px;
+
+  @include bp.handset {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    margin-top: 6px;
+  }
 }
 
 .send-btn {
   color: var(--mat-sys-primary);
 }
-
-// --- Markdown-rendered message text ---
 
 .text {
   ::ng-deep {

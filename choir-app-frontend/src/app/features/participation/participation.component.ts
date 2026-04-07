@@ -96,9 +96,8 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.api.getChoirMembers().pipe(
       takeUntil(this.destroy$),
       finalize(() => this.isLoadingMembers = false),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       catchError(_err => {
-        this.hasError = true;
-        this.errorMessage = 'Fehler beim Laden der Mitglieder.';
         return of([]);
       })
     ).subscribe(m => {
@@ -112,6 +111,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.api.getEvents(undefined, false, this.startDate ? new Date(this.startDate) : undefined, this.endDate ? new Date(this.endDate) : undefined).pipe(
       takeUntil(this.destroy$),
       finalize(() => this.isLoadingEvents = false),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       catchError(_err => {
         this.hasError = true;
         this.errorMessage = 'Fehler beim Laden der Termine.';
@@ -180,8 +180,8 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     requests.forEach(req => {
       req.pipe(
         takeUntil(this.destroy$),
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         catchError(_err => {
-          console.error('Fehler beim Laden der Verfügbarkeiten');
           return of([]);
         })
       ).subscribe((data: MemberAvailability[]) => {
@@ -269,6 +269,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.updatingStatus[statusKey] = true;
     this.api.setMemberAvailability(userId, key, next).pipe(
       finalize(() => delete this.updatingStatus[statusKey]),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       catchError(_err => {
         this.notification.error('Fehler beim Aktualisieren des Status', 3000);
         return of(null);
@@ -397,6 +398,7 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     this.isDownloadingPdf = true;
     this.api.downloadParticipationPdf({ startDate: this.startDate ? new Date(this.startDate) : undefined, endDate: this.endDate ? new Date(this.endDate) : undefined }).pipe(
       finalize(() => this.isDownloadingPdf = false),
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       catchError(_err => {
         this.notification.error('Fehler beim Erstellen der PDF', 3000);
         return of(null);

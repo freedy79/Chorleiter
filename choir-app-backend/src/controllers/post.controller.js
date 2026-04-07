@@ -514,9 +514,6 @@ exports.create = async (req, res) => {
         const hasAttachment = !!full.attachmentFilename;
         await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
       }
-    } else if (sendTest && author?.email) {
-      const hasAttachment = !!full.attachmentFilename;
-      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
     }
 
     res.status(201).send(serializePost(full, req.userId, { isAdmin: admin }));

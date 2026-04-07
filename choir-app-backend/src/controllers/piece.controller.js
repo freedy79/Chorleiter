@@ -280,6 +280,7 @@ exports.report = async (req, res) => {
     }
 };
 
+// eslint-disable-next-line no-unused-vars
 exports.uploadImage = async (req, res, next) => {
     const id = req.params.id;
     if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
@@ -291,11 +292,13 @@ exports.uploadImage = async (req, res, next) => {
     res.status(200).send({ filename: req.file.filename });
 };
 
+// eslint-disable-next-line no-unused-vars
 exports.uploadLinkFile = async (req, res, next) => {
     if (!req.file) return res.status(400).send({ message: 'No file uploaded.' });
     res.status(200).send({ path: `/uploads/piece-files/${req.file.filename}` });
 };
 
+// eslint-disable-next-line no-unused-vars
 exports.deleteLinkFile = async (req, res, next) => {
     const { path: filePath } = req.body || {};
     if (!filePath) return res.status(400).send({ message: 'No file path provided.' });
@@ -307,6 +310,7 @@ exports.deleteLinkFile = async (req, res, next) => {
     return res.status(200).send({ message: 'File deleted.' });
 };
 
+// eslint-disable-next-line no-unused-vars
 exports.getImage = async (req, res, next) => {
     const id = req.params.id;
     const piece = await Piece.findByPk(id);

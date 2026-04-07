@@ -195,7 +195,8 @@ export class ImageCacheService {
     const maxConcurrent = options?.maxConcurrent || 5;
     const loadQueue = [...images];
     let activeLoads = 0;
-    const results: Observable<string>[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _results: Observable<string>[] = [];
 
     return new Observable(observer => {
       const loadNext = () => {
@@ -228,7 +229,8 @@ export class ImageCacheService {
   /**
    * Prefetch images in background (non-blocking)
    */
-  prefetch(images: ImageRef[], options?: PreloadOptions): Observable<number> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  prefetch(images: ImageRef[], _options?: PreloadOptions): Observable<number> {
     return new Observable(observer => {
       let loaded = 0;
       const total = images.length;

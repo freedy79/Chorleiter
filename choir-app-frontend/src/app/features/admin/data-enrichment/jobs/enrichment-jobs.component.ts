@@ -6,7 +6,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Subject, timer } from 'rxjs';
-import { takeUntil, switchMap } from 'rxjs/operators';
+import { takeUntil } from 'rxjs/operators';
 
 interface EnrichmentJob {
   id: string;

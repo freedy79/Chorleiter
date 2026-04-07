@@ -12,6 +12,7 @@ const logger = require('../config/logger');
  * Error Handler Middleware
  * Should be registered AFTER all routes in app.js
  */
+// eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
   // Log error details
   const logMeta = {

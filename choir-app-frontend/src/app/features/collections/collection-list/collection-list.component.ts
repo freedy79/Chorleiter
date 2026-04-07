@@ -7,7 +7,6 @@ import { ApiHelperService } from '@core/services/api-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Collection } from '@core/models/collection';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';

@@ -2,7 +2,6 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-offline-indicator',
@@ -25,6 +24,7 @@ import { takeUntil } from 'rxjs/operators';
       background-color: #ff9800;
       color: white;
       padding: 0.75rem;
+      padding-top: calc(0.75rem + env(safe-area-inset-top, 0px));
       text-align: center;
       font-weight: 500;
       z-index: 9998;

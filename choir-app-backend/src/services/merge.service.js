@@ -4,7 +4,6 @@
  */
 
 const db = require('../models');
-const { getAffectedCollections } = require('./doublette.service');
 const logger = require('../config/logger');
 
 /**
@@ -113,7 +112,7 @@ async function mergePieces(sourceId, targetId, userId, choirId, mergedMetadata =
       if (newCategories.length > 0) {
         await db.sequelize.query(
           'INSERT INTO piece_categories (pieceId, categoryId) VALUES ' +
-          newCategories.map((_, i) => `(?, ?)`).join(','),
+          newCategories.map(() => `(?, ?)`).join(','),
           {
             replacements: newCategories.flatMap(c => [
               targetId,

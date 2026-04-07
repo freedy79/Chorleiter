@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
@@ -15,7 +15,7 @@ import { DebugLogService } from '@core/services/debug-log.service';
   templateUrl: './choir-switcher.component.html',
   styleUrls: ['./choir-switcher.component.scss']
 })
-export class ChoirSwitcherComponent implements OnInit, OnDestroy {
+export class ChoirSwitcherComponent {
   private readonly destroyRef = inject(DestroyRef);
   availableChoirs$: Observable<Choir[]>;
   activeChoir$: Observable<Choir | null>;
@@ -29,14 +29,8 @@ export class ChoirSwitcherComponent implements OnInit, OnDestroy {
     );
   }
 
-  ngOnInit(): void {}
-
   onChoirChange(choirId: number): void {
     //console.debug('ChoirSwitcher onChoirChange', choirId);
     this.authService.switchChoir(choirId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe();
-  }
-
-  ngOnDestroy(): void {
-    // Cleanup handled by takeUntilDestroyed
   }
 }

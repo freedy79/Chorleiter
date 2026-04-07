@@ -266,13 +266,21 @@
       </div>
 
       <div class="composer-input-row">
-        <input #fileInput type="file" hidden (change)="onAttachmentSelected($event)" />
-        <button mat-icon-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen" class="attach-btn">
+        <input #fileInput type="file" hidden accept="image/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" (change)="onAttachmentSelected($event)" />
+        <button mat-icon-button type="button" [matMenuTriggerFor]="attachMenu" aria-label="Anhang hinzufügen" class="attach-btn">
           <mat-icon>attach_file</mat-icon>
         </button>
-        <button mat-icon-button type="button" (click)="openPieceDialog()" aria-label="Stück verlinken" class="attach-btn" matTooltip="Stück verlinken">
-          <mat-icon>music_note</mat-icon>
-        </button>
+
+        <mat-menu #attachMenu="matMenu" yPosition="above">
+          <button mat-menu-item (click)="openPieceDialog()">
+            <mat-icon>music_note</mat-icon>
+            <span>Stück verlinken</span>
+          </button>
+          <button mat-menu-item (click)="fileInput.click()">
+            <mat-icon>attach_file</mat-icon>
+            <span>Datei anhängen</span>
+          </button>
+        </mat-menu>
 
         <mat-form-field appearance="outline" class="composer-field">
           <textarea

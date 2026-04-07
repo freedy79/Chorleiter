@@ -184,7 +184,7 @@ class DataEnrichmentService {
             // ═══════════════ Phase 1: LLM Enrichment ═══════════════
             // Progress callback: updates processedItems in DB after each batch
             let lastProgressUpdate = 0;
-            const progressCallback = async ({ processed, total, batchSuggestions, totalCostSoFar }) => {
+            const progressCallback = async ({ processed, _total, _batchSuggestions, _totalCostSoFar }) => {
                 const now = Date.now();
                 // Throttle DB writes: max one write per 3 seconds
                 if (now - lastProgressUpdate < 3000) return;
@@ -400,7 +400,7 @@ class DataEnrichmentService {
     /**
      * Store suggestions in database
      */
-    async storeSuggestions(jobId, jobType, suggestions, userId) {
+    async storeSuggestions(jobId, jobType, suggestions, _userId) {
         const stored = [];
 
         try {
@@ -643,7 +643,7 @@ class DataEnrichmentService {
     /**
      * Apply approved suggestion
      */
-    async applySuggestion(suggestionId, userId) {
+    async applySuggestion(suggestionId, _userId) {
         try {
             const suggestion = await db.data_enrichment_suggestion.findByPk(suggestionId);
             if (!suggestion) {

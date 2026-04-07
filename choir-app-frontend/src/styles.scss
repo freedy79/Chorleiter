@@ -24,6 +24,14 @@ body {
   display: flex;
   flex-direction: column;
   scroll-behavior: smooth;
+
+  // PWA: Prevent pull-to-refresh and rubber-band overscroll in standalone mode.
+  // Only affects overscroll behavior — normal scrolling within the page is unaffected.
+  overscroll-behavior: none;
+
+  // PWA: Prevent text inflation on iOS orientation change
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* Smooth scroll for all scrollable elements */
