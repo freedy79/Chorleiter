@@ -93,6 +93,11 @@
                 (click)="$event.stopPropagation()">
                 <mat-icon>edit</mat-icon>
               </button>
+              <button *ngIf="!isChoirAdmin && !isAdmin" mat-icon-button
+                [routerLink]="['/collections/view', collection.id]" matTooltip="Sammlung ansehen"
+                (click)="$event.stopPropagation()">
+                <mat-icon>visibility</mat-icon>
+              </button>
             </mat-cell>
           </ng-container>
 

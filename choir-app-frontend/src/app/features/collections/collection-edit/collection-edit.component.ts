@@ -80,6 +80,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     isDragOver = false;
     isAdmin = false;
     isChoirAdmin = false;
+    isReadOnly = false;
     readonly addNewPieceId = -1;
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
     isSaving = false;
@@ -143,6 +144,8 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     }
 
     ngOnInit(): void {
+        this.isReadOnly = !!this.route.snapshot.data['readOnly'];
+
         // --- Determine Edit/Create Mode FIRST (before auth check) ---
         this.route.paramMap
             .pipe(
@@ -151,8 +154,9 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
                     if (id) {
                         this.isEditMode = true;
                         this.collectionId = +id;
-                        this.pageSubtitle =
-                            "Sammlungsdetails und Stücke verwalten";
+                        this.pageSubtitle = this.isReadOnly
+                            ? "Sammlungsdetails ansehen"
+                            : "Sammlungsdetails und Stücke verwalten";
                         return this.apiService.getCollectionById(
                             this.collectionId
                         );
@@ -165,19 +169,24 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
             .subscribe((collectionData) => {
                 if (this.isEditMode && collectionData) {
                     this.populateForm(collectionData);
+                    if (this.isReadOnly) {
+                        this.collectionForm.disable();
+                    }
                 }
             });
 
-        combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
-            takeUntil(this.destroy$)
-        ).subscribe(([isAdmin, isChoirAdmin]) => {
-            this.isAdmin = isAdmin;
-            this.isChoirAdmin = isChoirAdmin;
-            if (!this.isAdmin && !this.isChoirAdmin) {
-                this.router.navigate(['/collections']);
-                this.notification.error('Keine Berechtigung Sammlungen zu bearbeiten.');
-            }
-        });
+        if (!this.isReadOnly) {
+            combineLatest([this.authService.isAdmin$, this.authService.isChoirAdmin$]).pipe(
+                takeUntil(this.destroy$)
+            ).subscribe(([isAdmin, isChoirAdmin]) => {
+                this.isAdmin = isAdmin;
+                this.isChoirAdmin = isChoirAdmin;
+                if (!this.isAdmin && !this.isChoirAdmin) {
+                    this.router.navigate(['/collections']);
+                    this.notification.error('Keine Berechtigung Sammlungen zu bearbeiten.');
+                }
+            });
+        }
         this.apiService.getPublishers().pipe(
             takeUntil(this.destroy$)
         ).subscribe(list => {
