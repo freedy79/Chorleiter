@@ -22,6 +22,7 @@ import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-event-list',
@@ -204,12 +205,25 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   selectEvent(event: Event): void {
-    // On mobile: open edit dialog directly for editors, show detail for singers
-    if (this.responsive.checkMobile() && !this.isSingerOnly) {
-      this.editEvent(event);
+    // On mobile: open dialog directly (read-only for singers, editable for editors)
+    if (this.responsive.checkMobile()) {
+      if (this.isSingerOnly) {
+        this.openReadOnlyDialog(event);
+      } else {
+        this.editEvent(event);
+      }
       return;
     }
     this.apiService.getEventById(event.id).pipe(takeUntil(this.destroy$)).subscribe(e => { this.selectedEvent = e; this.cdr.markForCheck(); });
+  }
+
+  private openReadOnlyDialog(event: Event): void {
+    this.apiService.getEventById(event.id).pipe(takeUntil(this.destroy$)).subscribe(fullEvent => {
+      this.dialogHelper.openDialog<EventDialogComponent, void>(
+        EventDialogComponent,
+        { width: '600px', data: { event: fullEvent, readOnly: true } }
+      ).subscribe();
+    });
   }
 
   editEvent(event: Event): void {
@@ -362,5 +376,27 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadEvents();
       }
     });
+  }
+
+  downloadIcs(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const url = `${environment.apiUrl}/events/ics?token=${token}`;
+    window.open(url, '_blank');
+  }
+
+  subscribeIcal(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
+    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
+    window.open(webcalUrl, '_self');
+  }
+
+  connectGoogleCalendar(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
+    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
   }
 }

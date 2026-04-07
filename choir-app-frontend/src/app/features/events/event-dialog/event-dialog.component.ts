@@ -57,6 +57,7 @@ export class EventDialogComponent implements OnInit {
     pieceColumns: string[] = ['reference', 'title', 'actions'];
 
     isEditMode = false;
+    readOnly = false;
     private editEventId: number | null = null;
     programs: Program[] = [];
 
@@ -68,7 +69,7 @@ export class EventDialogComponent implements OnInit {
         private programService: ProgramService,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<EventDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { event?: Event } | null
+        @Inject(MAT_DIALOG_DATA) public data: { event?: Event; readOnly?: boolean } | null
     ) {
         this.eventForm = this.fb.group({
             date: [new Date().toISOString().split('T')[0], Validators.required],
@@ -81,9 +82,24 @@ export class EventDialogComponent implements OnInit {
             this.isEditMode = true;
             this.editEventId = data.event.id;
         }
+        if (data && data.readOnly) {
+            this.readOnly = true;
+        }
     }
 
     ngOnInit(): void {
+        if (this.readOnly) {
+            // Read-only mode: populate from event data without API calls
+            if (this.data?.event) {
+                this.populateFromEvent(this.data.event);
+                if (this.data.event.program) {
+                    this.programs = [this.data.event.program as any];
+                }
+            }
+            this.eventForm.disable();
+            return;
+        }
+
         // Holen Sie das gesamte Repertoire des Chors
         this.apiService.getRepertoireForLookup().subscribe((pieces) => {
             this.allRepertoirePieces = pieces;
