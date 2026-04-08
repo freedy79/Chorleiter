@@ -495,7 +495,7 @@ exports.startImportCsvToCollection = async (req, res) => {
         }),
         skip_empty_lines: true,
         trim: true,
-        cast: (value, context) => {
+        cast: (value, _context) => {
             // Sanitize all cell values to prevent CSV formula injection
             return sanitizeCsvCell(value);
         }
@@ -634,7 +634,7 @@ const processEventImport = async (job, eventType, records, choirId, userId) => {
                 jobs.updateJobLog(job.id, `Event on ${dateStr} created.`);
             }
 
-            const [link, created] = await db.event_pieces.findOrCreate({
+            const [_link, created] = await db.event_pieces.findOrCreate({
                 where: { eventId: event.id, pieceId: piece.id }
             });
             if (created) {
@@ -692,7 +692,7 @@ exports.startImportEvents = async (req, res) => {
         columns: header => header.map(h => h.trim().toLowerCase()),
         skip_empty_lines: true,
         trim: true,
-        cast: (value, context) => {
+        cast: (value, _context) => {
             // Sanitize all cell values to prevent CSV formula injection
             return sanitizeCsvCell(value);
         }

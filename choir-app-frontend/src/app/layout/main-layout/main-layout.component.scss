@@ -5,6 +5,13 @@
   flex-direction: column;
   flex: 1;
   min-height: calc(100vh - 64px);
+
+  // PWA: Prevent long-press callout on navigation links (iOS)
+  .bottom-nav,
+  .main-toolbar,
+  .sidenav-toggle {
+    -webkit-touch-callout: none;
+  }
 }
 
 .site-container {
@@ -19,8 +26,20 @@
   top: 0; // Sie klebt am oberen Rand.
   z-index: 100; // Sie bleibt über allen anderen Inhalten.
   height: var(--header-height); // Wir verwenden unsere definierte Höhe.
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+
+  // iOS PWA safe area: push toolbar content below the system status bar/notch/Dynamic Island.
+  // env(safe-area-inset-top) returns 0 on devices without overlapping system bars.
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 @media (max-width: 768px) {
@@ -60,6 +79,16 @@
 
 .chat-badge-button {
   margin-right: 0.15rem;
+}
+
+// Profil-Icon auf Mobile ausblenden (erreichbar über Bottom-Nav "Mehr")
+.profile-button-desktop {
+  flex-shrink: 0;
+}
+@media (max-width: 599px) {
+  .profile-button-desktop {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
@@ -171,6 +200,10 @@ app-search-box {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
+
+    &.full-width {
+      max-width: none;
+    }
   }
 }
 
@@ -293,14 +326,14 @@ app-search-box {
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 64px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
     background: var(--page-header-bg-color, #fff);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15);
     border-top: 1px solid rgba(0, 0, 0, 0.08);
     justify-content: space-around;
     align-items: stretch;
     z-index: 1000;
-    padding: 12px 0 0 0;
+    padding: 12px 0 env(safe-area-inset-bottom, 0px) 0;
     margin: 0;
 
     // Phase 10: GPU acceleration for smooth transitions
@@ -381,10 +414,10 @@ app-search-box {
     display: none !important;
   }
 
-  // Platz für Bottom Nav
+  // Platz für Bottom Nav (inkl. iOS safe area)
   .main-content,
   .public-content {
-    padding-bottom: 64px;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -408,7 +441,7 @@ app-search-box {
   .fullscreen-menu-overlay {
     display: block;
     position: fixed;
-    top: var(--header-height, 56px);
+    top: calc(var(--header-height, 56px) + env(safe-area-inset-top, 0px));
     left: 0;
     right: 0;
     bottom: 0;

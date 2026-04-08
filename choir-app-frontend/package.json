@@ -29,6 +29,7 @@
     "perf:check": "npm run lighthouse:mobile && npm run pwa-health-check"
   },
   "private": true,
+  "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@angular/animations": "^20.3.16",
     "@angular/cdk": "^20.0.3",

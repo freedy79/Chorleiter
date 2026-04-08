@@ -247,7 +247,8 @@ export abstract class BaseListComponent<T> extends BaseComponent implements OnIn
    *
    * @param error The error object from the failed Observable
    */
-  protected handleLoadError(error: any): void {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  protected handleLoadError(_error: any): void {
     // Default: just log the error
     // Child classes can override to show snackbars, etc.
   }

@@ -499,3 +499,65 @@ exports.notifyAdminsOnCrash = async (error, req) => {
     logger.error(err.stack);
   }
 };
+
+exports.sendChatMessageReportMail = async ({ choirId, choirName, roomTitle, authorName, messageText, reason, messageDate, reporterName, messageId, roomId }) => {
+  if (emailDisabled()) return;
+  try {
+    // Find choir directors/admins + global admins
+    const recipients = new Set();
+
+    if (choirId) {
+      const associations = await db.user_choir.findAll({
+        where: { choirId },
+        include: [{ model: db.user, attributes: ['email'] }]
+      });
+      associations
+        .filter(a => Array.isArray(a.rolesInChoir) && (a.rolesInChoir.includes('choir_admin') || a.rolesInChoir.includes('director')))
+        .forEach(a => { if (a.user?.email) recipients.add(a.user.email); });
+    }
+
+    const globalAdmins = await db.user.findAll();
+    globalAdmins
+      .filter(u => Array.isArray(u.roles) && u.roles.includes('admin') && u.email)
+      .forEach(u => recipients.add(u.email));
+
+    if (recipients.size === 0) return;
+
+    const formattedDate = new Date(messageDate).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+    const frontendUrl = await getFrontendUrl();
+    const chatLink = `${frontendUrl}/chat?room=${roomId}&message=${messageId}`;
+
+    const subject = `Chat-Nachricht gemeldet: ${choirName} – ${roomTitle}`;
+    const text = appendFooterText(
+      `Eine Chat-Nachricht wurde gemeldet.\n\n` +
+      `Chor: ${choirName}\n` +
+      `Chat-Raum: ${roomTitle}\n` +
+      `Verfasser: ${authorName}\n` +
+      `Datum/Uhrzeit: ${formattedDate}\n` +
+      `Nachricht: ${messageText}\n\n` +
+      `Meldegrund: ${reason}\n` +
+      `Gemeldet von: ${reporterName}\n\n` +
+      `Nachricht ansehen: ${chatLink}`,
+      choirName
+    );
+    const rawHtml =
+      `<h3>Chat-Nachricht gemeldet</h3>` +
+      `<table style="border-collapse:collapse;width:100%;max-width:560px">` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Chor</td><td style="padding:6px 12px">${choirName}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Chat-Raum</td><td style="padding:6px 12px">${roomTitle}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Verfasser</td><td style="padding:6px 12px">${authorName}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Datum/Uhrzeit</td><td style="padding:6px 12px">${formattedDate}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Nachricht</td><td style="padding:6px 12px">${(messageText || '').replace(/\n/g, '<br>')}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top;color:#c62828">Meldegrund</td><td style="padding:6px 12px;color:#c62828">${reason.replace(/\n/g, '<br>')}</td></tr>` +
+      `<tr><td style="padding:6px 12px;font-weight:bold;vertical-align:top">Gemeldet von</td><td style="padding:6px 12px">${reporterName}</td></tr>` +
+      `</table>` +
+      `<p style="margin-top:16px"><a href="${chatLink}">Nachricht im Chat ansehen</a></p>`;
+
+    const html = await wrapWithMailLayout(rawHtml, { choir: choirName, frontendUrl });
+    await sendMail({ to: [...recipients], subject, text, html, choirName });
+  } catch (err) {
+    logger.error(`Error sending chat message report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};

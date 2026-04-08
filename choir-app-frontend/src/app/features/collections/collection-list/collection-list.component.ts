@@ -7,7 +7,6 @@ import { ApiHelperService } from '@core/services/api-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Collection } from '@core/models/collection';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { PaginatorService } from '@core/services/paginator.service';
@@ -152,12 +151,12 @@ export class CollectionListComponent extends BaseListComponent<Collection> imple
   }
 
   openCollection(collection: Collection): void {
-    if (!this.isChoirAdmin && !this.isAdmin) { return; }
     const page = this.paginator ? this.paginator.pageIndex : 0;
     this.navState.saveState(this.stateKey, { page, selectedId: collection.id });
     // Create an extra history entry so the back button returns to this list with state
     this.navState.pushPlaceholderState();
-    this.router.navigate(['/collections/edit', collection.id]);
+    const route = (this.isChoirAdmin || this.isAdmin) ? '/collections/edit' : '/collections/view';
+    this.router.navigate([route, collection.id]);
   }
 
   onViewChange(value: 'collections' | 'pieces'): void {

@@ -209,6 +209,26 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return entry.id;
   }
 
+  trackByProgramId(index: number, program: Program): string {
+    return program.id;
+  }
+
+  trackByMemberId(index: number, member: UserInChoir): number {
+    return member.id;
+  }
+
+  trackByDate(index: number, date: Date): number {
+    return date.getTime();
+  }
+
+  trackByDateKey(index: number, key: string): string {
+    return key;
+  }
+
+  trackByUserId(index: number, row: { user: UserInChoir }): number {
+    return row.user.id;
+  }
+
   /** Returns dialog config for mobile-friendly fullscreen dialogs */
   private mobileDialogConfig(extra: Record<string, unknown> = {}): Record<string, unknown> {
     const isMobile = this.responsive.checkMobile();

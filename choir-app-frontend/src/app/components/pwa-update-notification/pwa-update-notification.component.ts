@@ -17,7 +17,7 @@ import { ServiceWorkerUpdateService } from '../../services/service-worker-update
       <div class="notification-content">
         <div class="notification-message">
           <h4>Update verfügbar</h4>
-          <p>Eine neue Version der NAK Chorleiter App ist verfügbar.</p>
+          <p>Eine neue Version der NAK Chorleiter App ist verfügbar (aktualisiert am {{updateTime}}).</p>
         </div>
         <div class="notification-actions">
           <button
@@ -53,6 +53,7 @@ import { ServiceWorkerUpdateService } from '../../services/service-worker-update
       z-index: 9999;
       box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
       padding: 1rem;
+      padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
     }
 
     .notification-content {
@@ -167,6 +168,7 @@ import { ServiceWorkerUpdateService } from '../../services/service-worker-update
 export class PwaUpdateNotificationComponent implements OnInit, OnDestroy {
   updateAvailable = false;
   isUpdating = false;
+  updateTime = '';
   private destroy$ = new Subject<void>();
 
   constructor(private swUpdateService: ServiceWorkerUpdateService) {}
@@ -176,6 +178,10 @@ export class PwaUpdateNotificationComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(available => {
         this.updateAvailable = available;
+        if (available) {
+          const now = new Date();
+          this.updateTime = now.toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
       });
 
     this.swUpdateService.updating

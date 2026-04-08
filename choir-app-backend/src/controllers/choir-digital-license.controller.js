@@ -182,7 +182,7 @@ exports.streamDocumentInline = async (req, res) => {
   }
 
   const mime = license.documentMime || 'application/pdf';
-  const fileName = (license.documentOriginalName || `license-${license.id}.pdf`).replace(/\"/g, '');
+  const fileName = (license.documentOriginalName || `license-${license.id}.pdf`).replace(/"/g, '');
 
   // For PDFs: add watermark and prevent download via Content-Disposition
   if (mime === 'application/pdf') {

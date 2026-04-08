@@ -37,7 +37,46 @@
   <section class="chat-main" *ngIf="selectedRoomId; else noRoomSelected">
     <header class="chat-header">
       <div class="chat-header-top">
-        <h2>{{ selectedRoomTitle }}</h2>
+        <ng-container *ngIf="(isMobile$ | async) && hasMultipleRooms; else desktopTitle">
+          <button
+            type="button"
+            class="room-dropdown-trigger"
+            [matMenuTriggerFor]="roomDropdown"
+            aria-label="Raum wechseln"
+          >
+            <h2>{{ selectedRoomTitle }}</h2>
+            <mat-icon class="dropdown-arrow">expand_more</mat-icon>
+          </button>
+
+          <mat-menu #roomDropdown="matMenu" class="room-dropdown-panel">
+            <button
+              mat-menu-item
+              *ngFor="let room of sortedRoomsForDropdown"
+              class="room-dropdown-item"
+              [class.active]="room.id === selectedRoomId"
+              (click)="selectRoom(room.id)"
+            >
+              <div class="room-dropdown-row1">
+                <span class="room-dropdown-name">
+                  {{ room.title }}
+                  <mat-icon *ngIf="room.isPrivate" class="private-icon" aria-hidden="true">lock</mat-icon>
+                </span>
+                <span class="room-dropdown-badge" *ngIf="room.unreadCount > 0">{{ room.unreadCount }}</span>
+              </div>
+              <div class="room-dropdown-row2" *ngIf="room.lastMessageAt">
+                {{ room.lastMessageAt | date:'short' }}
+              </div>
+              <div class="room-dropdown-row3" *ngIf="room.oldestUnreadPreview">
+                {{ room.oldestUnreadPreview }}
+              </div>
+            </button>
+          </mat-menu>
+        </ng-container>
+
+        <ng-template #desktopTitle>
+          <h2>{{ selectedRoomTitle }}</h2>
+        </ng-template>
+
         <div class="chat-header-actions">
           <button
             *ngIf="canManageSelectedRoom"
@@ -51,6 +90,7 @@
             <mat-icon>edit</mat-icon>
           </button>
           <span
+            *ngIf="isChoirAdmin"
             class="transport-badge"
             [class.sse]="currentTransport === 'sse'"
             [class.polling]="currentTransport === 'polling'"
@@ -64,7 +104,11 @@
       <small *ngIf="pollError" class="poll-warning" aria-live="polite">Verbindungsproblem – erneuter Versuch läuft.</small>
     </header>
 
-    <div class="messages" *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite">
+    <div class="messages" #messagesContainer *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite" (scroll)="onMessagesScroll($event)">
+      <div class="loading-older" *ngIf="loadingOlderMessages">
+        <mat-spinner diameter="20"></mat-spinner>
+        <span>Ältere Nachrichten…</span>
+      </div>
       <article
         class="message"
         *ngFor="let message of messages; trackBy: trackMessage"
@@ -73,19 +117,82 @@
         [class.deleted]="message.deleted"
         [class.highlighted]="message.id === highlightedMessageId"
       >
+        <button
+          *ngIf="!message.deleted"
+          class="message-menu-trigger"
+          type="button"
+          [matMenuTriggerFor]="messageMenu"
+          aria-label="Nachricht-Aktionen"
+        >
+          <mat-icon>expand_more</mat-icon>
+        </button>
+
+        <mat-menu #messageMenu="matMenu" xPosition="before">
+          <button mat-menu-item (click)="openReactionPicker(message)">
+            <mat-icon>add_reaction</mat-icon>
+            <span>Reaktion</span>
+          </button>
+          <button mat-menu-item (click)="beginReply(message)">
+            <mat-icon>reply</mat-icon>
+            <span>Antworten</span>
+          </button>
+          <button mat-menu-item *ngIf="message.text" (click)="copyMessageText(message)">
+            <mat-icon>content_copy</mat-icon>
+            <span>Kopieren</span>
+          </button>
+          <!-- TODO: reportMessage not yet implemented
+          <button mat-menu-item *ngIf="!isOwnMessage(message)" (click)="reportMessage(message)">
+            <mat-icon>flag</mat-icon>
+            <span>Melden</span>
+          </button>
+          -->
+          <button mat-menu-item *ngIf="isOwnMessage(message) || isChoirAdmin" class="delete-action" (click)="deleteMessage(message)">
+            <mat-icon>delete</mat-icon>
+            <span>Löschen</span>
+          </button>
+        </mat-menu>
+
         <div class="meta">
-          <strong>{{ message.author?.name || 'Unbekannt' }}</strong>
+          <strong>{{ message.author?.firstName ? (message.author?.firstName + ' ' + message.author?.name) : (message.author?.name || 'Unbekannt') }}</strong>
           <span>{{ message.createdAt | date:'short' }}</span>
+          <span
+            *ngIf="getMessageStatus(message) as status"
+            class="message-status"
+            [class.delivered]="status === 'delivered'"
+            [class.read]="status === 'read'"
+            [attr.aria-label]="status === 'read' ? 'Von allen gelesen' : 'Zugestellt'"
+            [matTooltip]="status === 'read' ? 'Von allen gelesen' : 'Zugestellt'"
+          ></span>
         </div>
 
         <div class="reply-preview" *ngIf="message.replyToMessageId">
           ↪ {{ resolveReplyPreview(message) }}
         </div>
 
-        <p class="text" *ngIf="!message.deleted; else deletedTemplate">{{ message.text }}</p>
+        <p class="text" *ngIf="!message.deleted; else deletedTemplate" [innerHTML]="message.text! | markdown | async" (click)="onMessageContentClick($event)"></p>
         <ng-template #deletedTemplate>
           <p class="text deleted-text">Nachricht wurde gelöscht.</p>
         </ng-template>
+
+        <div class="piece-previews" *ngIf="!message.deleted && extractPieceIds(message.text) as pieceIds">
+          <a
+            class="piece-preview"
+            *ngFor="let pieceId of pieceIds"
+            (click)="navigateToPiece(pieceId)"
+            role="link"
+            tabindex="0"
+            (keydown.enter)="navigateToPiece(pieceId)"
+          >
+            <mat-icon class="piece-preview-icon">music_note</mat-icon>
+            <div class="piece-preview-info" *ngIf="getPiecePreview(pieceId) as preview">
+              <span class="piece-preview-title">{{ preview.title }}</span>
+              <span class="piece-preview-composer" *ngIf="preview.composer">{{ preview.composer }}</span>
+            </div>
+            <div class="piece-preview-info" *ngIf="!getPiecePreview(pieceId)">
+              <span class="piece-preview-title">Stück #{{ pieceId }}</span>
+            </div>
+          </a>
+        </div>
 
         <a
           class="attachment"
@@ -97,9 +204,38 @@
           📎 {{ message.attachment.originalName }}
         </a>
 
-        <div class="actions" *ngIf="!message.deleted">
-          <button mat-stroked-button type="button" (click)="beginReply(message)">Antworten</button>
-          <button mat-button type="button" *ngIf="isOwnMessage(message)" (click)="deleteMessage(message)">Löschen</button>
+        <div class="reactions-row" *ngIf="!message.deleted && message.reactions?.length">
+          <button
+            *ngFor="let reaction of message.reactions"
+            class="reaction-chip"
+            [class.own]="reaction.hasOwn"
+            type="button"
+            (click)="toggleReaction(message, reaction.emoji)"
+            [attr.aria-label]="reaction.emoji + ' ' + reaction.count"
+          >
+            <span class="reaction-emoji">{{ reaction.emoji }}</span>
+            <span class="reaction-count">{{ reaction.count }}</span>
+          </button>
+          <button
+            class="reaction-add-btn"
+            type="button"
+            (click)="openReactionPicker(message)"
+            aria-label="Reaktion hinzufügen"
+          >
+            <mat-icon>add_reaction</mat-icon>
+          </button>
+        </div>
+
+        <div class="reaction-picker" *ngIf="reactionPickerMessageId === message.id">
+          <button
+            *ngFor="let emoji of availableEmojis"
+            class="reaction-picker-btn"
+            type="button"
+            (click)="toggleReaction(message, emoji)"
+            [attr.aria-label]="'Reaktion ' + emoji"
+          >
+            {{ emoji }}
+          </button>
         </div>
       </article>
 
@@ -129,25 +265,49 @@
         <button mat-button type="button" (click)="clearAttachment(fileInput)">Entfernen</button>
       </div>
 
-      <mat-form-field appearance="outline" class="composer-field">
-        <mat-label>Nachricht</mat-label>
-        <textarea
-          matInput
-          rows="3"
-          [(ngModel)]="draftText"
-          placeholder="Schreibe eine Nachricht…"
-          aria-label="Nachrichtentext"
-        ></textarea>
-      </mat-form-field>
-
-      <div class="composer-actions">
-        <input #fileInput type="file" hidden (change)="onAttachmentSelected($event)" />
-        <button mat-stroked-button type="button" (click)="fileInput.click()" aria-label="Anhang hinzufügen">
+      <div class="composer-input-row">
+        <input #fileInput type="file" hidden accept="image/*,audio/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip" (change)="onAttachmentSelected($event)" />
+        <button mat-icon-button type="button" [matMenuTriggerFor]="attachMenu" aria-label="Anhang hinzufügen" class="attach-btn">
           <mat-icon>attach_file</mat-icon>
-          Anhang
         </button>
-        <button mat-flat-button color="primary" type="button" (click)="sendMessage()" [disabled]="sending">
-          {{ sending ? 'Sende…' : 'Senden' }}
+
+        <mat-menu #attachMenu="matMenu" yPosition="above">
+          <button mat-menu-item (click)="openPieceDialog()">
+            <mat-icon>music_note</mat-icon>
+            <span>Stück verlinken</span>
+          </button>
+          <button mat-menu-item (click)="fileInput.click()">
+            <mat-icon>attach_file</mat-icon>
+            <span>Datei anhängen</span>
+          </button>
+        </mat-menu>
+
+        <mat-form-field appearance="outline" class="composer-field">
+          <textarea
+            #composerTextarea
+            matInput
+            rows="1"
+            [(ngModel)]="draftText"
+            placeholder="Nachricht"
+            aria-label="Nachrichtentext"
+            cdkTextareaAutosize
+            cdkAutosizeMinRows="1"
+            cdkAutosizeMaxRows="5"
+            (keydown)="onComposerKeydown($event)"
+          ></textarea>
+        </mat-form-field>
+
+        <button
+          *ngIf="draftText.trim() || selectedAttachment"
+          mat-icon-button
+          color="primary"
+          type="button"
+          (click)="sendMessage()"
+          [disabled]="sending"
+          aria-label="Nachricht senden"
+          class="send-btn"
+        >
+          <mat-icon>send</mat-icon>
         </button>
       </div>
     </footer>

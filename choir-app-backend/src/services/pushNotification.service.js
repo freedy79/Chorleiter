@@ -46,12 +46,14 @@ function normalizePayload(payload) {
   if (!payload) return {};
   if (payload.notification) return payload;
 
-  const { title, body, icon, data, url, ...rest } = payload;
+  const { title, body, icon, data, url, tag, renotify, ...rest } = payload;
   const notification = {
     ...(title ? { title } : {}),
     ...(body ? { body } : {}),
     ...(icon ? { icon } : {}),
-    ...(data ? { data } : {})
+    ...(data ? { data } : {}),
+    ...(tag ? { tag } : {}),
+    ...(renotify !== undefined ? { renotify } : {})
   };
 
   if (url) {

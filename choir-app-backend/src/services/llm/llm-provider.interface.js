@@ -29,6 +29,7 @@ class LLMProvider {
      * @param {Array} enrichmentFields - Fields to enrich (e.g., ['opus', 'voicing', 'durationSec'])
      * @returns {Promise<Object>} { suggestions: [], costs: 0, tokensUsed: 0 }
      */
+    // eslint-disable-next-line no-unused-vars
     async enrichPieces(pieces, enrichmentFields) {
         throw new Error(`enrichPieces() must be implemented by ${this.providerName}`);
     }
@@ -39,6 +40,7 @@ class LLMProvider {
      * @param {Array} enrichmentFields - Fields to enrich
      * @returns {Promise<Object>}
      */
+    // eslint-disable-next-line no-unused-vars
     async enrichComposers(composers, enrichmentFields) {
         throw new Error(`enrichComposers() must be implemented by ${this.providerName}`);
     }
@@ -49,6 +51,7 @@ class LLMProvider {
      * @param {Array} enrichmentFields - Fields to enrich
      * @returns {Promise<Object>}
      */
+    // eslint-disable-next-line no-unused-vars
     async enrichPublishers(publishers, enrichmentFields) {
         throw new Error(`enrichPublishers() must be implemented by ${this.providerName}`);
     }

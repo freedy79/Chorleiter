@@ -188,7 +188,7 @@ async function initializeDefaultSettings() {
         ];
 
         for (const setting of defaultSettings) {
-            const [record, created] = await db.data_enrichment_setting.findOrCreate({
+            const [_record, created] = await db.data_enrichment_setting.findOrCreate({
                 where: { settingKey: setting.settingKey },
                 defaults: setting
             });

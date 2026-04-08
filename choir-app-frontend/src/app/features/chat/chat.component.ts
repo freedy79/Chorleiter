@@ -1,9 +1,9 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
-import { Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { catchError, switchMap, takeUntil } from 'rxjs/operators';
 import { ActivatedRoute } from '@angular/router';
 import { Router } from '@angular/router';
@@ -17,22 +17,30 @@ import { ChatMessage } from '@core/models/chat-message';
 import { ApiService } from '@core/services/api.service';
 import { UserInChoir } from '@core/models/user';
 import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialog.component';
+import { ChatReportDialogComponent, ChatReportDialogResult } from './chat-report-dialog.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { ResponsiveService } from '@shared/services/responsive.service';
+import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
+import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
+  private static readonly PAGE_SIZE = 20;
+
   rooms: ChatRoom[] = [];
   selectedRoomId: number | null = null;
   messages: ChatMessage[] = [];
 
   loadingRooms = false;
   loadingMessages = false;
+  loadingOlderMessages = false;
+  hasOlderMessages = true;
   sending = false;
 
   draftText = '';
@@ -47,11 +55,27 @@ export class ChatComponent implements OnInit, OnDestroy {
   roomMutationInProgress = false;
 
   highlightedMessageId: number | null = null;
+  allReadUpToId: number | null = null;
+  piecePreviewCache = new Map<number, { title: string; composer: string }>();
+  reactionPickerMessageId: number | null = null;
+
+  readonly availableEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎵', '🔥', '👏', '🎉'];
   private targetRoomId: number | null = null;
   private targetMessageId: number | null = null;
 
+  isMobile$: Observable<boolean>;
+
   private readonly destroy$ = new Subject<void>();
   private readonly roomRealtimeStop$ = new Subject<void>();
+  private _messagesContainer: HTMLElement | null = null;
+  private scrollTimer: ReturnType<typeof setTimeout> | null = null;
+  private highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+  @ViewChild('messagesContainer') set messagesContainerRef(el: ElementRef<HTMLElement>) {
+    this._messagesContainer = el?.nativeElement ?? null;
+  }
+
+  @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
 
   constructor(
     private chatService: ChatService,
@@ -61,8 +85,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     private api: ApiService,
     private route: ActivatedRoute,
     private router: Router,
-    private dialog: MatDialog
-  ) {}
+    private dialog: MatDialog,
+    private responsive: ResponsiveService
+  ) {
+    this.isMobile$ = this.responsive.isMobile$;
+  }
 
   ngOnInit(): void {
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
@@ -103,31 +130,39 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.roomRealtimeStop$.complete();
+    if (this.scrollTimer !== null) clearTimeout(this.scrollTimer);
+    if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
   }
 
-  loadRooms(selectRoomId?: number): void {
-    this.loadingRooms = true;
-    this.chatService.getRooms().pipe(takeUntil(this.destroy$)).subscribe({
+  loadRooms(selectRoomId?: number, silent = false): void {
+    if (!silent) {
+      this.loadingRooms = true;
+    }
+    this.chatService.getRooms(silent ? { silent: true } : undefined).pipe(takeUntil(this.destroy$)).subscribe({
       next: rooms => {
         this.rooms = rooms;
         this.loadingRooms = false;
 
-        const requestedRoomId = selectRoomId ?? this.targetRoomId ?? this.selectedRoomId ?? null;
-        const preferredId = requestedRoomId && rooms.some(room => room.id === requestedRoomId)
-          ? requestedRoomId
-          : (rooms[0]?.id ?? null);
+        if (!silent) {
+          const requestedRoomId = selectRoomId ?? this.targetRoomId ?? this.selectedRoomId ?? null;
+          const preferredId = requestedRoomId && rooms.some(room => room.id === requestedRoomId)
+            ? requestedRoomId
+            : (rooms[0]?.id ?? null);
 
-        if (requestedRoomId && preferredId !== requestedRoomId) {
-          this.clearInvalidRoomQueryParams();
-        }
+          if (requestedRoomId && preferredId !== requestedRoomId) {
+            this.clearInvalidRoomQueryParams();
+          }
 
-        if (preferredId) {
-          this.selectRoom(preferredId);
+          if (preferredId) {
+            this.selectRoom(preferredId);
+          }
         }
       },
       error: () => {
         this.loadingRooms = false;
-        this.notification.error('Chat-Räume konnten nicht geladen werden.');
+        if (!silent) {
+          this.notification.error('Chat-Räume konnten nicht geladen werden.');
+        }
       }
     });
   }
@@ -141,6 +176,9 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.replyTo = null;
     this.pollError = false;
     this.currentTransport = null;
+    this.hasOlderMessages = true;
+    this.loadingOlderMessages = false;
+    this.allReadUpToId = null;
     this.loadMessages();
   }
 
@@ -163,12 +201,16 @@ export class ChatComponent implements OnInit, OnDestroy {
           }),
           catchError(() => this.chatService.getMessages(roomId, { limit: 100 }))
         )
-      : this.chatService.getMessages(roomId, { limit: 100 });
+      : this.chatService.getMessages(roomId, { limit: ChatComponent.PAGE_SIZE });
 
     load$.pipe(takeUntil(this.destroy$)).subscribe({
       next: response => {
         this.messages = response.messages;
+        this.allReadUpToId = response.allReadUpToId ?? null;
+        const requestedLimit = targetMessageId ? 100 : ChatComponent.PAGE_SIZE;
+        this.hasOlderMessages = response.messages.length >= requestedLimit;
         this.loadingMessages = false;
+        this.scrollToBottom();
         this.focusTargetMessageIfPresent();
         this.markReadToLatest();
         this.startRealtimeForSelectedRoom();
@@ -178,6 +220,97 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.notification.error('Nachrichten konnten nicht geladen werden.');
       }
     });
+  }
+
+  onComposerKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey) {
+      event.preventDefault();
+      if (this.draftText?.trim() || this.selectedAttachment) {
+        this.sendMessage();
+      }
+      return;
+    }
+
+    // Double-{{ trigger: open piece selection dialog
+    if (event.key === '{') {
+      const textarea = event.target as HTMLTextAreaElement;
+      const pos = textarea.selectionStart || 0;
+      if (textarea.value[pos - 1] === '{') {
+        event.preventDefault();
+        const before = textarea.value.slice(0, pos - 1);
+        const after = textarea.value.slice(pos);
+        this.draftText = before + '{{}}' + after;
+        const placeholderStart = before.length;
+
+        const ref = this.dialog.open(ProgramPieceDialogComponent, { width: '600px', maxWidth: '96vw' });
+        ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+          if (result?.pieceId) {
+            const value = this.draftText;
+            const beforePH = value.slice(0, placeholderStart + 2);
+            const afterPH = value.slice(placeholderStart + 2);
+            this.draftText = beforePH + result.pieceId + afterPH;
+          } else {
+            // Remove the empty {{}} placeholder
+            const value = this.draftText;
+            const beforePH = value.slice(0, placeholderStart);
+            const afterPH = value.slice(placeholderStart + 4);
+            this.draftText = beforePH + afterPH;
+          }
+          setTimeout(() => this.composerTextarea?.nativeElement?.focus());
+        });
+      }
+    }
+  }
+
+  openPieceDialog(): void {
+    const textarea = this.composerTextarea?.nativeElement;
+    const pos = textarea?.selectionStart ?? this.draftText.length;
+
+    const ref = this.dialog.open(ProgramPieceDialogComponent, { width: '600px', maxWidth: '96vw' });
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe(result => {
+      if (result?.pieceId) {
+        const before = this.draftText.slice(0, pos);
+        const after = this.draftText.slice(pos);
+        const spaceBefore = before.length > 0 && !before.endsWith(' ') ? ' ' : '';
+        const spaceAfter = after.length > 0 && !after.startsWith(' ') ? ' ' : '';
+        this.draftText = before + spaceBefore + '{{' + result.pieceId + '}}' + spaceAfter + after;
+      }
+      setTimeout(() => textarea?.focus());
+    });
+  }
+
+  onMessageContentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'A') {
+      const href = target.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        event.preventDefault();
+        this.router.navigateByUrl(href);
+      }
+    }
+  }
+
+  extractPieceIds(text: string | null): number[] {
+    if (!text) return [];
+    return Array.from(new Set(Array.from(text.matchAll(/\{\{(\d+)\}\}/g)).map(m => +m[1])));
+  }
+
+  getPiecePreview(pieceId: number): { title: string; composer: string } | null {
+    const cached = this.piecePreviewCache.get(pieceId);
+    if (cached) return cached;
+
+    // Trigger async load if not cached yet
+    this.api.getPieceById(pieceId).pipe(takeUntil(this.destroy$)).subscribe(piece => {
+      this.piecePreviewCache.set(pieceId, {
+        title: piece.title,
+        composer: (piece as any).composer?.name || (piece as any).origin || ''
+      });
+    });
+    return null;
+  }
+
+  navigateToPiece(pieceId: number): void {
+    this.router.navigate(['/pieces', pieceId]);
   }
 
   sendMessage(): void {
@@ -207,11 +340,13 @@ export class ChatComponent implements OnInit, OnDestroy {
             url: ''
           }
         : null,
-      author: { id: this.currentUserId ?? 0, name: 'Ich' },
+      author: { id: this.currentUserId ?? 0, firstName: null, name: 'Ich' },
+      reactions: [],
       isOwnMessage: true
     };
 
     this.messages = [...this.messages, optimisticMessage];
+    this.scrollToBottom();
 
     this.chatService.sendMessage(this.selectedRoomId, {
       text: trimmed,
@@ -222,7 +357,7 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.messages = this.messages.map(msg => msg.id === optimisticId ? saved : msg);
         this.afterSendReset();
         this.markReadToLatest();
-        this.loadRooms(this.selectedRoomId || undefined);
+        this.loadRooms(this.selectedRoomId || undefined, true);
       },
       error: err => {
         this.messages = this.messages.filter(msg => msg.id !== optimisticId);
@@ -248,6 +383,33 @@ export class ChatComponent implements OnInit, OnDestroy {
     });
   }
 
+  reportMessage(message: ChatMessage): void {
+    if (!message?.id || message.id < 0 || message.deleted) return;
+
+    const dialogRef = this.dialog.open(ChatReportDialogComponent, {
+      width: '500px',
+      maxWidth: '96vw',
+      data: {
+        authorName: message.author?.name || 'Unbekannt',
+        messageText: message.text,
+        messageDate: message.createdAt
+      }
+    });
+
+    dialogRef.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((result?: ChatReportDialogResult) => {
+      if (!result) return;
+
+      this.chatService.reportMessage(message.id, result.reason).pipe(takeUntil(this.destroy$)).subscribe({
+        next: () => {
+          this.notification.success('Nachricht wurde gemeldet. Die Admins werden benachrichtigt.');
+        },
+        error: err => {
+          this.notification.error(err?.error?.message || 'Nachricht konnte nicht gemeldet werden.');
+        }
+      });
+    });
+  }
+
   beginReply(message: ChatMessage): void {
     if (message.deleted) return;
     this.replyTo = message;
@@ -257,9 +419,16 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.replyTo = null;
   }
 
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
   onAttachmentSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] || null;
+    if (file && file.size > ChatComponent.MAX_FILE_SIZE) {
+      this.notification.error('Datei ist zu groß. Maximal 10 MB erlaubt.');
+      input.value = '';
+      return;
+    }
     this.selectedAttachment = file;
   }
 
@@ -285,6 +454,42 @@ export class ChatComponent implements OnInit, OnDestroy {
     return message.userId === this.currentUserId;
   }
 
+  getMessageStatus(message: ChatMessage): 'sending' | 'delivered' | 'read' | null {
+    if (!this.isOwnMessage(message)) return null;
+    if (message.deleted) return null;
+    if (message.id < 0) return 'sending';
+    if (this.allReadUpToId != null && message.id <= this.allReadUpToId) return 'read';
+    return 'delivered';
+  }
+
+  copyMessageText(message: ChatMessage): void {
+    if (!message.text) return;
+    navigator.clipboard.writeText(message.text).then(
+      () => this.notification.success('Text kopiert.'),
+      () => this.notification.error('Text konnte nicht kopiert werden.')
+    );
+  }
+
+  openReactionPicker(message: ChatMessage): void {
+    this.reactionPickerMessageId = this.reactionPickerMessageId === message.id ? null : message.id;
+  }
+
+  toggleReaction(message: ChatMessage, emoji: string): void {
+    this.reactionPickerMessageId = null;
+    if (!message?.id || message.id < 0 || message.deleted) return;
+
+    this.chatService.toggleReaction(message.id, emoji).pipe(takeUntil(this.destroy$)).subscribe({
+      next: result => {
+        this.messages = this.messages.map(msg =>
+          msg.id === result.messageId ? { ...msg, reactions: result.reactions } : msg
+        );
+      },
+      error: err => {
+        this.notification.error(err?.error?.message || 'Reaktion konnte nicht gespeichert werden.');
+      }
+    });
+  }
+
   get selectedRoomTitle(): string {
     if (!this.selectedRoomId) return '#allgemein';
     return this.rooms.find(room => room.id === this.selectedRoomId)?.title || '#allgemein';
@@ -297,6 +502,18 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   get canManageSelectedRoom(): boolean {
     return !!this.selectedRoom && this.isChoirAdmin;
+  }
+
+  get sortedRoomsForDropdown(): ChatRoom[] {
+    return [...this.rooms].sort((a, b) => {
+      const timeA = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const timeB = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }
+
+  get hasMultipleRooms(): boolean {
+    return this.rooms.length > 1;
   }
 
   openCreateRoomDialog(): void {
@@ -413,6 +630,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       .subscribe(update => {
         this.currentTransport = update.transport;
 
+        if (update.allReadUpToId !== undefined) {
+          this.allReadUpToId = update.allReadUpToId;
+        }
+
         if (update.hadError) {
           this.pollError = true;
           return;
@@ -425,11 +646,73 @@ export class ChatComponent implements OnInit, OnDestroy {
         const additions = update.messages.filter(message => !knownIds.has(message.id));
         if (!additions.length) return;
 
+        const wasAtBottom = this.isScrolledToBottom();
         this.messages = [...this.messages, ...additions];
         this.focusTargetMessageIfPresent();
         this.markReadToLatest();
-        this.loadRooms(roomId);
+        this.loadRooms(roomId, true);
+
+        if (wasAtBottom) {
+          this.scrollToBottom();
+        }
       });
+  }
+
+  onMessagesScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (target.scrollTop < 80 && this.hasOlderMessages && !this.loadingOlderMessages && this.messages.length > 0) {
+      this.loadOlderMessages();
+    }
+  }
+
+  loadOlderMessages(): void {
+    if (!this.selectedRoomId || this.loadingOlderMessages || !this.hasOlderMessages || this.messages.length === 0) return;
+
+    this.loadingOlderMessages = true;
+    const oldestMessage = this.messages[0];
+    const before = oldestMessage.createdAt;
+    const container = this._messagesContainer;
+    const scrollHeightBefore = container?.scrollHeight ?? 0;
+
+    this.chatService.getMessages(this.selectedRoomId, { before, limit: ChatComponent.PAGE_SIZE }, { silent: true })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: response => {
+          this.hasOlderMessages = response.messages.length >= ChatComponent.PAGE_SIZE;
+          if (response.messages.length > 0) {
+            const existingIds = new Set(this.messages.map(m => m.id));
+            const olderMessages = response.messages.filter(m => !existingIds.has(m.id));
+            if (olderMessages.length > 0) {
+              this.messages = [...olderMessages, ...this.messages];
+              // Preserve scroll position after Angular renders new messages
+              setTimeout(() => {
+                if (container) {
+                  const scrollHeightAfter = container.scrollHeight;
+                  container.scrollTop += scrollHeightAfter - scrollHeightBefore;
+                }
+              });
+            }
+          }
+          this.loadingOlderMessages = false;
+        },
+        error: () => {
+          this.loadingOlderMessages = false;
+        }
+      });
+  }
+
+  private scrollToBottom(): void {
+    this.scrollTimer = setTimeout(() => {
+      if (this._messagesContainer) {
+        this._messagesContainer.scrollTop = this._messagesContainer.scrollHeight;
+      }
+    });
+  }
+
+  private isScrolledToBottom(): boolean {
+    const el = this._messagesContainer;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 60;
   }
 
   private loadChoirMembers(): void {
@@ -452,12 +735,12 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.targetMessageId = null;
     this.highlightedMessageId = targetId;
 
-    setTimeout(() => {
+    this.scrollTimer = setTimeout(() => {
       const element = document.getElementById(`chat-message-${targetId}`);
       element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 50);
 
-    setTimeout(() => {
+    this.highlightTimer = setTimeout(() => {
       if (this.highlightedMessageId === targetId) {
         this.highlightedMessageId = null;
       }

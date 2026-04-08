@@ -62,7 +62,7 @@
     </button>
 
 
-    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil">
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil" class="profile-button-desktop">
       <mat-icon>person</mat-icon>
     </button>
 
@@ -150,7 +150,7 @@
     <app-loading-indicator></app-loading-indicator>
 
     <div class="content-wrapper">
-      <div class="container">
+      <div class="container" [class.full-width]="isFullWidthRoute$ | async">
         <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
         <router-outlet></router-outlet>
       </div>
@@ -213,6 +213,29 @@
     <mat-icon>person</mat-icon>
     <span>Profil</span>
   </a>
+  <button mat-menu-item [matMenuTriggerFor]="moreThemeMenu">
+    <mat-icon>contrast</mat-icon>
+    <span>Theme</span>
+  </button>
+  <button mat-menu-item (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    <span>Abmelden</span>
+  </button>
+</mat-menu>
+
+<mat-menu #moreThemeMenu="matMenu">
+  <button mat-menu-item (click)="setTheme('light')">
+    <mat-icon *ngIf="currentTheme === 'light'">check</mat-icon>
+    <span>Light</span>
+  </button>
+  <button mat-menu-item (click)="setTheme('dark')">
+    <mat-icon *ngIf="currentTheme === 'dark'">check</mat-icon>
+    <span>Dark</span>
+  </button>
+  <button mat-menu-item (click)="setTheme('system')">
+    <mat-icon *ngIf="currentTheme === 'system'">check</mat-icon>
+    <span>System</span>
+  </button>
 </mat-menu>
 
 <app-footer *ngIf="(isFramelessRoute$ | async) === false"></app-footer>

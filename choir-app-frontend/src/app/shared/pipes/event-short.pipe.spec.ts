@@ -1,4 +1,4 @@
-import { EventShortPipe, PlanEntry } from './event-short.pipe';
+import { EventShortPipe } from './event-short.pipe';
 
 describe('EventShortPipe', () => {
   let pipe: EventShortPipe;

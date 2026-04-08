@@ -4,7 +4,7 @@
 <div class="form-container">
   <div class="header-actions">
     <button
-      *ngIf="isEditMode && (isAdmin || isChoirAdmin)"
+      *ngIf="isEditMode && (isAdmin || isChoirAdmin) && !isReadOnly"
       mat-stroked-button
       color="accent"
       (click)="openImportDialog()">
@@ -61,7 +61,10 @@
 
         <mat-checkbox formControlName="singleEdition">Einzelausgabe (nur ein Stück)</mat-checkbox>
 
-        <div class="cover-upload">
+        <div *ngIf="isReadOnly && coverPreview" class="cover-readonly">
+          <img [src]="coverPreview" alt="Cover" loading="lazy" />
+        </div>
+        <div class="cover-upload" *ngIf="!isReadOnly">
           <div
             class="dropzone"
             [class.dragover]="isDragOver"
@@ -96,7 +99,7 @@
       </mat-card-header>
       <mat-card-content>
         <!-- This is the sub-form for adding a single piece-number link -->
-        <div class="add-piece-container" *ngIf="!collectionForm.value.singleEdition || selectedPieceLinks.length === 0">
+        <div class="add-piece-container" *ngIf="!isReadOnly && (!collectionForm.value.singleEdition || selectedPieceLinks.length === 0)">
           <h3>Stücke hinzufügen</h3>
           <form [formGroup]="addPieceForm" (ngSubmit)="addPieceToCollection()" class="add-piece-form">
             <!-- Autocomplete field to search for and select a piece -->
@@ -136,7 +139,7 @@
           </form>
         </div>
 
-        <div *ngIf="collectionForm.value.singleEdition && selectedPieceLinks.length > 0" class="single-hint">
+        <div *ngIf="!isReadOnly && collectionForm.value.singleEdition && selectedPieceLinks.length > 0" class="single-hint">
           Einzelausgabe: Es kann nur ein Stück hinzugefügt werden.
         </div>
 
@@ -154,7 +157,7 @@
             <ng-container matColumnDef="number">
               <mat-header-cell *matHeaderCellDef mat-sort-header="number"> Nr. </mat-header-cell>
               <mat-cell *matCellDef="let link" class="number-cell">
-                <mat-form-field appearance="outline">
+                <mat-form-field appearance="outline" *ngIf="!isReadOnly">
                   <input
                     matInput
                     [(ngModel)]="link.numberInCollection"
@@ -162,6 +165,7 @@
                     [ngModelOptions]="{standalone: true}"
                   />
                 </mat-form-field>
+                <span *ngIf="isReadOnly">{{ link.numberInCollection }}</span>
               </mat-cell>
             </ng-container>
 
@@ -181,12 +185,14 @@
             <ng-container matColumnDef="actions">
               <mat-header-cell *matHeaderCellDef></mat-header-cell>
               <mat-cell *matCellDef="let link" class="actions-cell">
+                <ng-container *ngIf="!isReadOnly">
                 <button type="button" mat-icon-button (click)="openEditPieceDialog(link.piece.id)" matTooltip="Stück bearbeiten">
                   <mat-icon>edit</mat-icon>
                 </button>
                 <button type="button" mat-icon-button color="warn" (click)="removePieceFromCollection(link.piece)" matTooltip="Stück aus Sammlung entfernen">
                   <mat-icon>delete</mat-icon>
                 </button>
+                </ng-container>
               </mat-cell>
             </ng-container>
 
@@ -215,8 +221,10 @@
 
     <!-- The main actions footer for saving or canceling the entire collection -->
     <div class="actions-footer">
-      <button type="button" mat-stroked-button routerLink="/collections">Abbrechen</button>
-      <button type="submit" mat-flat-button color="primary" [disabled]="collectionForm.invalid">
+      <button type="button" mat-stroked-button routerLink="/collections">
+        {{ isReadOnly ? 'Zurück' : 'Abbrechen' }}
+      </button>
+      <button *ngIf="!isReadOnly" type="submit" mat-flat-button color="primary" [disabled]="collectionForm.invalid">
         {{ isEditMode ? 'Änderungen speichern' : 'Sammlung speichern' }}
       </button>
     </div>

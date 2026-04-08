@@ -28,8 +28,9 @@
         <ckeditor
           [editor]="Editor"
           [config]="editorConfig"
-          [data]="html"
-          (change)="onEditorChange($event)">
+          [data]="initialHtml"
+          (ready)="onEditorReady($event)"
+          (change)="onEditorChange()">
         </ckeditor>
       </div>
 

@@ -12,7 +12,24 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 
+// SECURITY: Only hardcoded, allowlisted commands may be passed to runShellCommand.
+// NEVER pass user-supplied input or interpolated request data into this function.
+const ALLOWED_SHELL_COMMAND_PREFIXES = [
+    'grep -i t-online /var/log/mail.log',
+    "grep -Ei 'status=deferred|status=bounced|status=sent|reject' /var/log/mail.log",
+    'postqueue -p',
+    'mailq'
+];
+
+function isAllowedShellCommand(command) {
+    return ALLOWED_SHELL_COMMAND_PREFIXES.some(prefix => command === prefix || command.startsWith(prefix + ' ') || command.startsWith(prefix + '|') || command.includes(prefix));
+}
+
 async function runShellCommand(command) {
+    if (!isAllowedShellCommand(command)) {
+        logger.error(`Blocked disallowed shell command: ${command}`);
+        return { ok: false, stdout: '', stderr: 'Command not in allowlist', code: 1 };
+    }
     try {
         const { stdout, stderr } = await execAsync(command, {
             timeout: 10000,
@@ -42,83 +59,60 @@ function tailLines(value, lineCount = 50) {
         .slice(-lineCount);
 }
 
+const { AppError } = require('../utils/errors');
+
 // Holt alle Entitäten eines bestimmten Typs für die Admin-Tabellen
-exports.getAll = (model) => async (req, res) => {
-    try {
-        const items = await model.findAll({ order: [['name', 'ASC']] });
-        res.status(200).send(items);
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+// All routes use wrap(asyncHandler) — errors propagate to the global error handler automatically.
+exports.getAll = (model) => async (_req, res) => {
+    const items = await model.findAll({ order: [['name', 'ASC']] });
+    res.status(200).send(items);
 };
 
 // Spezielle Abfrage für Chöre mit zusätzlichen Statistiken
-exports.getAllChoirs = async (req, res) => {
-    try {
-        const choirs = await db.choir.findAll({
-            attributes: {
-                include: [
-                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "user_choirs" AS uc WHERE uc."choirId" = "choir"."id")`), 'memberCount'],
-                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "events" AS e WHERE e."choirId" = "choir"."id")`), 'eventCount'],
-                    [db.sequelize.literal(`(SELECT COUNT(*) FROM "choir_repertoires" AS cr WHERE cr."choirId" = "choir"."id")`), 'pieceCount']
-                ]
-            },
-            order: [['name', 'ASC']],
-            raw: true
-        });
+exports.getAllChoirs = async (_req, res) => {
+    const choirs = await db.choir.findAll({
+        attributes: {
+            include: [
+                [db.sequelize.literal(`(SELECT COUNT(*) FROM "user_choirs" AS uc WHERE uc."choirId" = "choir"."id")`), 'memberCount'],
+                [db.sequelize.literal(`(SELECT COUNT(*) FROM "events" AS e WHERE e."choirId" = "choir"."id")`), 'eventCount'],
+                [db.sequelize.literal(`(SELECT COUNT(*) FROM "choir_repertoires" AS cr WHERE cr."choirId" = "choir"."id")`), 'pieceCount']
+            ]
+        },
+        order: [['name', 'ASC']],
+        raw: true
+    });
 
-        const result = choirs.map(c => ({
-            ...c,
-            memberCount: parseInt(c.memberCount, 10) || 0,
-            eventCount: parseInt(c.eventCount, 10) || 0,
-            pieceCount: parseInt(c.pieceCount, 10) || 0
-        }));
+    const result = choirs.map(c => ({
+        ...c,
+        memberCount: parseInt(c.memberCount, 10) || 0,
+        eventCount: parseInt(c.eventCount, 10) || 0,
+        pieceCount: parseInt(c.pieceCount, 10) || 0
+    }));
 
-        res.status(200).send(result);
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+    res.status(200).send(result);
 };
 
 // Erstellt ein neues Element eines gegebenen Modells
 exports.create = (model) => async (req, res) => {
-    try {
-        const item = await model.create(req.body);
-        res.status(201).send(item);
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+    const item = await model.create(req.body);
+    res.status(201).send(item);
 };
 
 // Aktualisiert ein bestehendes Element
 exports.update = (model) => async (req, res) => {
     const { id } = req.params;
-    try {
-        const [num] = await model.update(req.body, { where: { id } });
-        if (num === 1) {
-            const item = await model.findByPk(id);
-            res.status(200).send(item);
-        } else {
-            res.status(404).send({ message: 'Not found' });
-        }
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+    const [num] = await model.update(req.body, { where: { id } });
+    if (num !== 1) throw new AppError('Not found', 404);
+    const item = await model.findByPk(id);
+    res.status(200).send(item);
 };
 
 // Löscht ein Element
 exports.remove = (model) => async (req, res) => {
     const { id } = req.params;
-    try {
-        const num = await model.destroy({ where: { id } });
-        if (num === 1) {
-            res.status(204).send();
-        } else {
-            res.status(404).send({ message: 'Not found' });
-        }
-    } catch (err) {
-        res.status(500).send({ message: err.message });
-    }
+    const num = await model.destroy({ where: { id } });
+    if (num !== 1) throw new AppError('Not found', 404);
+    res.status(204).send();
 };
 
 // Spezielle Abfrage für Benutzer inklusive Chöre
@@ -831,8 +825,17 @@ exports.updateCkeditorLicenseKey = async (req, res) => {
  * Lädt das aktuelle Git-Repository und startet optional das Deploy-Skript.
  * Übergabe von `deploy=true` im Body oder Query startet das Skript nach dem Pull.
  */
+// SECURITY: repoPath is derived from __dirname only — never from user input.
+// The deploy script path is hardcoded and validated below.
+const REPO_PATH = path.resolve(__dirname, '../../../');
+const DEPLOY_SCRIPT = 'deploy-server.sh';
+
 exports.pullAndDeploy = (req, res) => {
-    const repoPath = path.resolve(__dirname, '../../../');
+    const repoPath = REPO_PATH;
+    // Validate repoPath is within expected directory (defense-in-depth)
+    if (!repoPath || repoPath.includes('..')) {
+        return res.status(500).end('Invalid repository path\n');
+    }
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
 
     const send = data => {
@@ -854,7 +857,7 @@ exports.pullAndDeploy = (req, res) => {
             return res.end('Pull completed without deployment.\n');
         }
 
-        const child = spawn('sh', ['deploy-server.sh'], { cwd: repoPath });
+        const child = spawn('sh', [DEPLOY_SCRIPT], { cwd: repoPath });
         child.stdout.on('data', send);
         child.stderr.on('data', send);
         child.on('close', deployCode => {

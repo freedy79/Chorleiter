@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { ChatMessage, ChatMessageListResponse } from '@core/models/chat-message';
+import { ChatMessage, ChatMessageListResponse, ChatReaction } from '@core/models/chat-message';
 import { ChatGlobalUnreadOverview, ChatRoom, ChatRoomDetail, ChatUnreadSummary } from '@core/models/chat-room';
 import { SKIP_GLOBAL_LOADING } from '@core/interceptors/loading-interceptor';
 import { SKIP_GLOBAL_ERROR_REPORTING } from '@core/interceptors/error-interceptor';
@@ -20,8 +20,14 @@ export class ChatService {
 
   constructor(private http: HttpClient) {}
 
-  getRooms(): Observable<ChatRoom[]> {
-    return this.http.get<ChatRoom[]>(`${this.apiUrl}/rooms`);
+  getRooms(options?: { silent?: boolean }): Observable<ChatRoom[]> {
+    const httpOptions: { context?: HttpContext } = {};
+    if (options?.silent) {
+      httpOptions.context = new HttpContext()
+        .set(SKIP_GLOBAL_LOADING, true)
+        .set(SKIP_GLOBAL_ERROR_REPORTING, true);
+    }
+    return this.http.get<ChatRoom[]>(`${this.apiUrl}/rooms`, httpOptions);
   }
 
   createRoom(payload: { title: string; key?: string; isPrivate?: boolean; memberUserIds?: number[] }): Observable<ChatRoom> {
@@ -36,14 +42,21 @@ export class ChatService {
     return this.http.put<ChatRoomDetail>(`${this.apiUrl}/rooms/${roomId}`, payload);
   }
 
-  getMessages(roomId: number, query: ChatMessageQuery = {}): Observable<ChatMessageListResponse> {
+  getMessages(roomId: number, query: ChatMessageQuery = {}, options?: { silent?: boolean }): Observable<ChatMessageListResponse> {
     let params = new HttpParams();
     if (query.before) params = params.set('before', query.before);
     if (query.after) params = params.set('after', query.after);
     if (query.afterId) params = params.set('afterId', String(query.afterId));
     if (query.limit) params = params.set('limit', String(query.limit));
 
-    return this.http.get<ChatMessageListResponse>(`${this.apiUrl}/rooms/${roomId}/messages`, { params });
+    const httpOptions: { params: HttpParams; context?: HttpContext } = { params };
+    if (options?.silent) {
+      httpOptions.context = new HttpContext()
+        .set(SKIP_GLOBAL_LOADING, true)
+        .set(SKIP_GLOBAL_ERROR_REPORTING, true);
+    }
+
+    return this.http.get<ChatMessageListResponse>(`${this.apiUrl}/rooms/${roomId}/messages`, httpOptions);
   }
 
   sendMessage(roomId: number, payload: { text?: string; replyToMessageId?: number | null; attachment?: File | null }): Observable<ChatMessage> {
@@ -63,6 +76,10 @@ export class ChatService {
 
   deleteMessage(messageId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/messages/${messageId}`);
+  }
+
+  reportMessage(messageId: number, reason: string): Observable<{ id: number; message: string }> {
+    return this.http.post<{ id: number; message: string }>(`${this.apiUrl}/messages/${messageId}/report`, { reason });
   }
 
   markRoomRead(roomId: number, lastReadMessageId?: number): Observable<{ chatRoomId: number; lastReadMessageId: number | null; lastReadAt: string | null }> {
@@ -104,5 +121,13 @@ export class ChatService {
     }
 
     return `${base}?${params.toString()}`;
+  }
+
+  toggleReaction(messageId: number, emoji: string): Observable<{ messageId: number; reactions: ChatReaction[] }> {
+    return this.http.post<{ messageId: number; reactions: ChatReaction[] }>(
+      `${this.apiUrl}/messages/${messageId}/reactions`,
+      { emoji },
+      { context: new HttpContext().set(SKIP_GLOBAL_LOADING, true) }
+    );
   }
 }

@@ -41,6 +41,19 @@ const DEFAULT_TEMPLATES = {
     body: '<p>Du erhältst diese Mail, weil du im Chor <strong>{{choir}}</strong> angemeldet bist. ' +
           'Wenn du kein Interesse mehr am Chor hast und dich austragen möchtest, kannst du das ' +
           '<a href="{{leave_link}}">hier</a> tun.</p>'
+  },
+  'chat-unread': {
+    subject: 'Ungelesene Nachrichten in {{room_title}} – {{choir}}',
+    body: '<p>Hallo {{first_name}} {{surname}},</p>' +
+          '<p>im Chatraum <b>{{room_title}}</b> des Chors <b>{{choir}}</b> ' +
+          'gibt es <b>{{unread_count}}</b> ungelesene Nachricht(en), ' +
+          'die seit {{oldest_unread_date}} auf dich warten.</p>' +
+          '<p>Letzte Nachricht von <b>{{last_author}}</b>:</p>' +
+          '<blockquote style="border-left:3px solid #ccc;padding:4px 12px;color:#555;">{{last_message_preview}}</blockquote>' +
+          '<p style="margin:24px 0;">' +
+          '<a href="{{link}}" style="background-color:#1976d2;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;">Zum Chat</a>' +
+          '</p>' +
+          '<p>Viele Grüße<br>{{choir}}</p>'
   }
 };
 

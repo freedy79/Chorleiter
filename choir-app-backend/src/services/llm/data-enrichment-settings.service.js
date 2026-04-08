@@ -152,7 +152,7 @@ class DataEnrichmentSettingsService {
                         try {
                             value = JSON.parse(value);
                         } catch {
-                            value = value;
+                            // keep value as-is
                         }
                     }
                 }

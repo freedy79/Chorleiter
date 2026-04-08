@@ -8,7 +8,7 @@
     <button mat-icon-button color="primary" (click)="openEditPieceDialog()" aria-label="Stück bearbeiten">
       <mat-icon>edit</mat-icon>
     </button>
-    <button mat-icon-button color="primary" (click)="sharePiece()" aria-label="Stück teilen">
+    <button *ngIf="canShare" mat-icon-button color="primary" (click)="sharePiece()" aria-label="Stück teilen">
       <mat-icon>share</mat-icon>
     </button>
     <button *ngIf="isAdmin" mat-icon-button color="warn" (click)="deletePiece()" aria-label="Stück löschen">

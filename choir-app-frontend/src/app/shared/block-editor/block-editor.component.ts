@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, forwardRef } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { MaterialModule } from '@modules/material.module';
-import { ContentBlock, BlockType, BLOCK_TYPES, createBlock } from './block.model';
+import { ContentBlock, BlockType, createBlock } from './block.model';
 import { BlockToolbarComponent } from './block-toolbar.component';
 import { BlockWrapperComponent } from './block-wrapper.component';
 import { NG_VALUE_ACCESSOR, ControlValueAccessor } from '@angular/forms';

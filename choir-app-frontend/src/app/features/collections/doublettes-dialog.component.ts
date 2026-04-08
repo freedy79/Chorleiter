@@ -4,8 +4,6 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
-import { Collection } from '@core/models/collection';
-import { Piece } from '@core/models/piece';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -136,7 +134,8 @@ export class DoublettesDialogComponent implements OnInit {
     this.api
       .mergePieces(this.choirId, this.selectedSourceId!, this.selectedTargetId!, mergedMetadata)
       .subscribe(
-        (result: any) => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        (_result: any) => {
           this.isMerging = false;
           this.notification.success('Stücke erfolgreich zusammengeführt');
           this.dialogRef.close(true);

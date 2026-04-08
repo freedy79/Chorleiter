@@ -1,8 +1,17 @@
+:host {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+}
+
 mat-card {
     // Stellt sicher, dass die Karte eine Mindesthöhe hat, auch wenn sie leer ist.
     min-height: 250px;
     display: flex;
     flex-direction: column;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
 }
 
 mat-card-header {
@@ -19,6 +28,7 @@ mat-card-content {
 
 mat-card-content h3 {
     font-weight: 500;
+    font-size: 1.05rem;
     color: #666;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;

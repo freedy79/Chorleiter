@@ -55,6 +55,7 @@ export interface Event {
   choir?: { id: number; name: string };
   program?: { id: string; title: string; status: 'draft' | 'published' | 'archived' } | null;
   pieces: EventPiece[];
+  dutyRole?: 'Chorleitung' | 'Orgel' | null;
 }
 
 export interface CreateEventResponse {

@@ -50,7 +50,7 @@ class IMSLPAdapter {
     /**
      * Parse IMSLP search results
      */
-    parseIMSLPResults(html, piece) {
+    parseIMSLPResults(html, _piece) {
         const enrichments = [];
 
         // Basic parsing - in production would use proper HTML parser
@@ -182,7 +182,7 @@ class WikidataAdapter {
     /**
      * Extract piece metadata from Wikidata results
      */
-    extractPieceMetadata(results, piece) {
+    extractPieceMetadata(results, _piece) {
         const enrichments = [];
 
         if (results.length === 0) return enrichments;
@@ -268,7 +268,7 @@ class MusicBrainzAdapter {
     /**
      * Extract work metadata from MusicBrainz
      */
-    extractWorkMetadata(works, piece) {
+    extractWorkMetadata(works, _piece) {
         const enrichments = [];
 
         if (works.length === 0) return enrichments;

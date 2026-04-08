@@ -9,6 +9,7 @@ export interface ChatRealtimeUpdate {
   messages: ChatMessage[];
   hadError: boolean;
   transport: 'polling' | 'sse' | 'websocket';
+  allReadUpToId?: number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -42,7 +43,7 @@ export class ChatRealtimeService {
       startWith(0),
       switchMap(() => {
         const afterId = getAfterId();
-        return this.chatService.getMessages(roomId, { afterId, limit: 50 }).pipe(
+        return this.chatService.getMessages(roomId, { afterId, limit: 50 }, { silent: true }).pipe(
           map(response => {
             const recommended = response.realtime?.recommendedRetryMs;
             if (typeof recommended === 'number' && recommended > 0) {
@@ -52,7 +53,8 @@ export class ChatRealtimeService {
             return {
               messages: response.messages,
               hadError: false,
-              transport: 'polling' as const
+              transport: 'polling' as const,
+              allReadUpToId: response.allReadUpToId ?? null
             };
           }),
           catchError(() => of({
@@ -99,11 +101,17 @@ export class ChatRealtimeService {
           }
         });
 
-        source.addEventListener('heartbeat', () => {
+        source.addEventListener('heartbeat', (event: MessageEvent) => {
+          let allReadUpToId: number | null = null;
+          try {
+            const data = JSON.parse(event.data);
+            allReadUpToId = data.allReadUpToId ?? null;
+          } catch { /* ignore */ }
           subscriber.next({
             messages: [],
             hadError: false,
-            transport: 'sse'
+            transport: 'sse',
+            allReadUpToId
           });
         });
 

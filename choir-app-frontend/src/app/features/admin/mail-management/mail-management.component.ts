@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabChangeEvent } from '@angular/material/tabs';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -29,15 +29,13 @@ import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page
     AdminEmailSettingsHubComponent
   ]
 })
-export class MailManagementComponent implements OnInit {
+export class MailManagementComponent {
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
   constructor(responsive: ResponsiveService) {
     this.isMobile$ = responsive.isHandset$;
   }
-
-  ngOnInit(): void {}
 
   onTabChange(event: MatTabChangeEvent): void {
     this.selectedTabIndex = event.index;

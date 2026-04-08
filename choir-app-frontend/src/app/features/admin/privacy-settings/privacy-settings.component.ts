@@ -46,12 +46,13 @@ export class PrivacySettingsComponent implements OnInit {
     licenseKey: 'GPL'
   };
 
-  html: string = '';
+  initialHtml: string = '';
   loading = true;
   saving = false;
   saved = false;
   dirty = false;
   error: string | null = null;
+  private editorInstance: any = null;
 
   constructor(
     private adminService: AdminService,
@@ -68,7 +69,7 @@ export class PrivacySettingsComponent implements OnInit {
 
     this.adminService.getPrivacyPolicy().subscribe({
       next: (data: { html: string }) => {
-        this.html = data.html || '';
+        this.initialHtml = data.html || '';
         this.loading = false;
       },
       error: (err: any) => {
@@ -79,8 +80,11 @@ export class PrivacySettingsComponent implements OnInit {
     });
   }
 
-  onEditorChange(event: any): void {
-    this.html = event.editor.getData();
+  onEditorReady(editor: any): void {
+    this.editorInstance = editor;
+  }
+
+  onEditorChange(): void {
     this.dirty = true;
     this.saved = false;
   }
@@ -90,7 +94,8 @@ export class PrivacySettingsComponent implements OnInit {
     this.error = null;
     this.saved = false;
 
-    this.adminService.updatePrivacyPolicy({ html: this.html }).subscribe({
+    const html = this.editorInstance ? this.editorInstance.getData() : this.initialHtml;
+    this.adminService.updatePrivacyPolicy({ html }).subscribe({
       next: () => {
         this.saving = false;
         this.saved = true;

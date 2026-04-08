@@ -1,6 +1,4 @@
-const express = require('express');
 const doubletteController = require('../controllers/doublette.controller');
-const pieceController = require('../controllers/piece.controller');
 const { verifyToken } = require('../middleware/auth.middleware');
 const role = require('../middleware/role.middleware');
 

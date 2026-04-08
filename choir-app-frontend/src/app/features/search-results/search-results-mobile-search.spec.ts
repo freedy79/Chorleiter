@@ -6,7 +6,6 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { SearchService } from '@core/services/search.service';
 import { SearchResultsComponent } from './search-results.component';
 import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
 
 const emptyResult = { pieces: [], totalPieces: 0, events: [], totalEvents: 0, collections: [], totalCollections: 0, composerPieces: [], publisherCollections: [] };
 
@@ -88,6 +87,7 @@ describe('SearchResultsComponent - Mobile Search Page', () => {
   it('should fetch search results when query changes', () => {
     searchSpy.searchAll.and.returnValue(of(emptyResult));
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { component } = createComponent();
     expect(searchSpy.searchAll).toHaveBeenCalled();
   });

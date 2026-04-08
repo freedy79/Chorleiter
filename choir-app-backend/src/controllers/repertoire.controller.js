@@ -303,7 +303,7 @@ exports.findMyRepertoire = async (req, res) => {
             case 'category':
                 order = [[{ model: db.category, as: 'category' }, 'name', sortDirection]];
                 break;
-            case 'reference':
+            case 'reference': {
                 // Use safe subquery builders
                 const collectionPrefixSubquery = SUBQUERIES.collectionPrefix();
                 const collectionNumberSubquery = SUBQUERIES.collectionNumber();
@@ -317,6 +317,7 @@ exports.findMyRepertoire = async (req, res) => {
                     ]
                 ];
                 break;
+            }
             case 'lastSung': {
                 // Use safe subquery builder
                 const base = SUBQUERIES.lastSung(req.activeChoirId);

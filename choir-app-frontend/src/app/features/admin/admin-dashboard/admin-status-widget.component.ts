@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -113,15 +113,11 @@ interface StatusWidget {
   standalone: true,
   imports: [CommonModule, MatIconModule]
 })
-export class AdminStatusWidgetComponent implements OnInit {
+export class AdminStatusWidgetComponent {
   statusWidgets: StatusWidget[] = [
     { title: 'Aktive Benutzer', value: 24, unit: '', icon: 'people', color: 'primary', trend: 8 },
     { title: 'Chöre', value: 12, unit: '', icon: 'account_balance', color: 'success' },
     { title: 'System Health', value: 99, unit: '%', icon: 'favorite', color: 'success' },
     { title: 'Ausstehend', value: 3, unit: '', icon: 'notifications_active', color: 'warning' }
   ];
-
-  ngOnInit(): void {
-    // TODO: Load real data from admin service
-  }
 }

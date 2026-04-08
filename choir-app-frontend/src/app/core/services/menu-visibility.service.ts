@@ -35,7 +35,7 @@ const DEMO_RESTRICTED_KEYS = [
   MenuKey.LIBRARY
 ] as const;
 
-export interface MenuVisibility extends Record<MenuKey, boolean> {}
+export type MenuVisibility = Record<MenuKey, boolean>;
 
 @Injectable({
   providedIn: 'root'

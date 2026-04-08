@@ -6,6 +6,11 @@ const paypalSettingsService = require('../services/paypal-settings.service');
 
 const { Op } = db.Sequelize;
 
+exports.getDonationConfig = async (req, res) => {
+    const donationEmail = await paypalSettingsService.getDonationEmail();
+    res.status(200).send({ donationEmail: donationEmail || null });
+};
+
 /**
  * Verify PayPal Payment Data Transfer (PDT) token
  * This is called when a user returns from PayPal with a tx (transaction) token

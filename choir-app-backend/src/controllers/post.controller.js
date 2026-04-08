@@ -500,7 +500,6 @@ exports.create = async (req, res) => {
         const payload = {
           title: `Neuer Beitrag in ${choir.name}`,
           body: sanitizedTitle,
-          icon: '/assets/icons/icon-192x192.png',
           url,
           data: { url }
         };
@@ -515,9 +514,6 @@ exports.create = async (req, res) => {
         const hasAttachment = !!full.attachmentFilename;
         await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
       }
-    } else if (sendTest && author?.email) {
-      const hasAttachment = !!full.attachmentFilename;
-      await emailService.sendPostNotificationMail([author.email], sanitizedTitle, sanitizedText, choir?.name, replyTo, full.id, hasAttachment);
     }
 
     res.status(201).send(serializePost(full, req.userId, { isAdmin: admin }));
@@ -665,7 +661,6 @@ exports.publish = async (req, res) => {
       const payload = {
         title: `Neuer Beitrag in ${choir.name}`,
         body: full.title,
-        icon: '/assets/icons/icon-192x192.png',
         url,
         data: { url }
       };

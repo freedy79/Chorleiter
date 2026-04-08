@@ -279,6 +279,14 @@ export class DashboardComponent extends BaseComponent implements OnInit {
     window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
   }
 
+  subscribeIcal(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
+    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
+    window.open(webcalUrl, '_self');
+  }
+
   openEvent(ev: Event): void {
     if (ev.type === 'PLAN_ENTRY') {
       if (ev.monthlyPlan) {
@@ -289,17 +297,12 @@ export class DashboardComponent extends BaseComponent implements OnInit {
       return;
     }
     this.isSingerOnly$.pipe(take(1)).subscribe(isSinger => {
-      if (isSinger) {
-        const d = new Date(ev.date);
-        this.router.navigate(['/availability'], {
-          queryParams: { year: d.getFullYear(), month: d.getMonth() + 1 }
+      this.apiService.getEventById(ev.id).subscribe(fullEvent => {
+        const dialogRef = this.dialog.open(EventDialogComponent, {
+          width: '600px',
+          data: { event: fullEvent, readOnly: isSinger }
         });
-      } else {
-        this.apiService.getEventById(ev.id).subscribe(fullEvent => {
-          const dialogRef = this.dialog.open(EventDialogComponent, {
-            width: '600px',
-            data: { event: fullEvent }
-          });
+        if (!isSinger) {
           dialogRef.afterClosed().subscribe(result => {
             if (result && result.id) {
               this.apiService.updateEvent(result.id, result).subscribe({
@@ -311,8 +314,8 @@ export class DashboardComponent extends BaseComponent implements OnInit {
               });
             }
           });
-        });
-      }
+        }
+      });
     });
   }
 

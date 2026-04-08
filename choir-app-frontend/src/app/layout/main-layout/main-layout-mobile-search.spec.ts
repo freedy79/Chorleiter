@@ -16,7 +16,6 @@ import { BehaviorSubject, of, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { MainLayoutComponent } from './main-layout.component';
-import { DebugElement } from '@angular/core';
 import { By } from '@angular/platform-browser';
 
 describe('MainLayoutComponent - Mobile Search', () => {

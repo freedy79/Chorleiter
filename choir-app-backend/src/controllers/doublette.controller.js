@@ -6,7 +6,6 @@
 const asyncHandler = require('express-async-handler');
 const doubletteService = require('../services/doublette.service');
 const mergeService = require('../services/merge.service');
-const db = require('../models');
 const logger = require('../config/logger');
 
 /**

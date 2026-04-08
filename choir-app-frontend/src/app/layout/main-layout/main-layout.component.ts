@@ -27,19 +27,12 @@ import { BuildInfoDialogComponent } from '@features/admin/build-info-dialog/buil
 import { SearchBoxComponent } from '@shared/components/search-box/search-box.component';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { LoanCartService } from '@core/services/loan-cart.service';
-import { NotificationService } from '@core/services/notification.service';
 import { PushNotificationService } from '@core/services/push-notification.service';
 import { Choir } from '@core/models/choir';
 import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
 import { ChatService } from '@core/services/chat.service';
+import { PwaInstallService } from '@core/services/pwa-install.service';
 
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{
-    outcome: 'accepted' | 'dismissed';
-    platform: string;
-  }>;
-}
 
 @Component({
   selector: 'app-main-layout',
@@ -112,6 +105,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   pageTitle$: Observable<string | null>;
   pageDescription$: Observable<string | null>;
   isFramelessRoute$: Observable<boolean>;
+  isFullWidthRoute$: Observable<boolean>;
   cartCount$: Observable<number>;
 
   availableChoirs$: Observable<Choir[]>;
@@ -127,13 +121,6 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private latestChatOverview: ChatGlobalUnreadOverview | null = null;
   private latestNotifiedMessageId: number | null = null;
   private pendingNotificationPermissionRequest = false;
-  private deferredInstallPrompt: BeforeInstallPromptEvent | null = null;
-  private installNotificationShown = false;
-  private readonly installPromptCooldownKey = 'pwa-install-prompt-dismissed-at';
-  private readonly installPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
-  private pushPromptShown = false;
-  private readonly pushPromptCooldownKey = 'push-prompt-dismissed-at';
-  private readonly pushPromptCooldownMs = 7 * 24 * 60 * 60 * 1000;
 
 
   constructor(private authService: AuthService,
@@ -151,8 +138,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private titleService: Title,
     private metaService: Meta,
     private chatService: ChatService,
-    private notification: NotificationService,
-    private pushService: PushNotificationService
+    private pushService: PushNotificationService,
+    private pwaInstall: PwaInstallService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -227,8 +214,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     const routeData$ = this.router.events.pipe(
       filter(event => event instanceof NavigationEnd),
+      startWith(null as any),
       map(() => this.getDeepestRouteData(this.route)),
-      startWith(this.getDeepestRouteData(this.route))
+      shareReplay({ bufferSize: 1, refCount: true })
     );
 
     this.pageTitle$ = combineLatest([routeData$, this.authService.activeChoir$]).pipe(
@@ -245,6 +233,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.pageDescription$ = routeData$.pipe(
       map(data => data.description ?? null)
+    );
+
+    this.isFullWidthRoute$ = routeData$.pipe(
+      map(data => !!data.fullWidth)
     );
 
     this.isFramelessRoute$ = this.router.events.pipe(
@@ -317,7 +309,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       take(1),
       takeUntil(this.destroy$)
     ).subscribe(choirs => {
-      setTimeout(() => this.tryShowPushPrompt(choirs), 5000);
+      setTimeout(() => this.pwaInstall.tryShowPushPrompt(choirs), 5000);
     });
   }
 
@@ -335,17 +327,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   @HostListener('window:beforeinstallprompt', ['$event'])
   onBeforeInstallPrompt(event: Event): void {
-    const installEvent = event as BeforeInstallPromptEvent;
-    installEvent.preventDefault();
-    this.deferredInstallPrompt = installEvent;
-    this.tryShowInstallNotification();
+    this.pwaInstall.setDeferredInstallPrompt(event);
+    this.pwaInstall.tryShowInstallNotification(this.responsive.checkMobile());
   }
 
   @HostListener('window:appinstalled')
   onAppInstalled(): void {
-    this.deferredInstallPrompt = null;
-    this.installNotificationShown = true;
-    localStorage.removeItem(this.installPromptCooldownKey);
+    this.pwaInstall.onAppInstalled();
   }
 
   private evaluateDrawerWidth() {
@@ -384,12 +372,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.authService.switchChoir(id).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null } {
+  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null; fullWidth: boolean } {
     let child = route.firstChild;
     const data = {
       title: child?.snapshot?.data?.['title'] ?? null,
       showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false,
-      description: child?.snapshot?.data?.['description'] ?? null
+      description: child?.snapshot?.data?.['description'] ?? null,
+      fullWidth: child?.snapshot?.data?.['fullWidth'] ?? false
     };
     while (child?.firstChild) {
       child = child.firstChild;
@@ -402,6 +391,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         }
         if (child.snapshot.data['description']) {
           data.description = child.snapshot.data['description'];
+        }
+        if (child.snapshot.data['fullWidth']) {
+          data.fullWidth = child.snapshot.data['fullWidth'];
         }
       }
     }
@@ -419,7 +411,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.isSmallScreen$.pipe(
       take(1),
       takeUntil(this.destroy$)
-    ).subscribe(() => this.tryShowInstallNotification());
+    ).subscribe(() => this.pwaInstall.tryShowInstallNotification(this.responsive.checkMobile()));
   }
 
   openChatFromHeader(): void {
@@ -745,6 +737,13 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     }
 
     this.latestNotifiedMessageId = newest.messageId;
+
+    // Skip local notification when push notifications are active —
+    // the backend already sends push notifications for chat messages.
+    if (this.pushService.isSupported() && this.pushService.getStoredChoirIds().length > 0) {
+      return;
+    }
+
     this.showBrowserNotification(newest);
   }
 
@@ -768,156 +767,42 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     }
 
     const bodyPrefix = newest.authorName ? `${newest.authorName}: ` : '';
-    const notification = new Notification(`Neue Nachricht • ${newest.choirName || 'Chor'}`, {
+    const title = `Neue Nachricht • ${newest.choirName || 'Chor'}`;
+    const options: NotificationOptions = {
       body: `${bodyPrefix}${newest.preview}`,
-      icon: '/assets/icons/icon-192x192.png',
-      tag: `chat-${newest.messageId}`
-    });
-
-    notification.onclick = () => {
-      window.focus();
-      this.navigateToChatTarget({
+      tag: `chat-${newest.messageId}`,
+      data: {
         choirId: newest.choirId,
         chatRoomId: newest.chatRoomId,
         messageId: newest.messageId
-      });
-      notification.close();
-    };
-  }
-
-  private tryShowInstallNotification(): void {
-    if (this.installNotificationShown || !this.deferredInstallPrompt) {
-      return;
-    }
-
-    if (this.isAppInstalled() || !this.responsive.checkMobile() || this.isInstallPromptInCooldown()) {
-      return;
-    }
-
-    this.installNotificationShown = true;
-
-    const snackBarRef = this.notification.infoWithAction(
-      'Diese App kann auf deinem Gerät installiert werden.',
-      'Installieren',
-      12000
-    );
-
-    snackBarRef.onAction().pipe(take(1)).subscribe(() => {
-      void this.promptInstall();
-    });
-
-    snackBarRef.afterDismissed().pipe(take(1)).subscribe(result => {
-      if (!result.dismissedByAction) {
-        this.markInstallPromptDismissed();
       }
-    });
-  }
+    };
 
-  private async promptInstall(): Promise<void> {
-    if (!this.deferredInstallPrompt) {
-      return;
+    // Use ServiceWorkerRegistration.showNotification() for PWA compatibility (Android)
+    if ('serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.showNotification(title, options);
+        return;
+      } catch {
+        // Fall through to Notification constructor for browsers without SW
+      }
     }
-
-    const installPrompt = this.deferredInstallPrompt;
-    this.deferredInstallPrompt = null;
 
     try {
-      await installPrompt.prompt();
-      const choiceResult = await installPrompt.userChoice;
-      if (choiceResult.outcome !== 'accepted') {
-        this.markInstallPromptDismissed();
-      } else {
-        localStorage.removeItem(this.installPromptCooldownKey);
-      }
+      const notification = new Notification(title, options);
+      notification.onclick = () => {
+        window.focus();
+        this.navigateToChatTarget({
+          choirId: newest.choirId,
+          chatRoomId: newest.chatRoomId,
+          messageId: newest.messageId
+        });
+        notification.close();
+      };
     } catch {
-      this.markInstallPromptDismissed();
+      // Notification constructor not available (e.g. Android PWA)
     }
   }
 
-  private isAppInstalled(): boolean {
-    const standaloneNavigator = (window.navigator as Navigator & { standalone?: boolean }).standalone;
-    return window.matchMedia('(display-mode: standalone)').matches || !!standaloneNavigator;
-  }
-
-  private isInstallPromptInCooldown(): boolean {
-    const rawTimestamp = localStorage.getItem(this.installPromptCooldownKey);
-    if (!rawTimestamp) {
-      return false;
-    }
-
-    const timestamp = Number(rawTimestamp);
-    if (Number.isNaN(timestamp)) {
-      return false;
-    }
-
-    return Date.now() - timestamp < this.installPromptCooldownMs;
-  }
-
-  private markInstallPromptDismissed(): void {
-    localStorage.setItem(this.installPromptCooldownKey, Date.now().toString());
-  }
-
-  private tryShowPushPrompt(choirs: Choir[]): void {
-    if (this.pushPromptShown) {
-      return;
-    }
-
-    if (!this.pushService.isSupported()) {
-      return;
-    }
-
-    const permission = this.pushService.getPermission();
-    if (permission !== 'default') {
-      // Already granted or denied — auto-subscribe if granted but not stored
-      if (permission === 'granted') {
-        const storedIds = this.pushService.getStoredChoirIds();
-        const missingIds = choirs.map(c => c.id).filter(id => !storedIds.includes(id));
-        if (missingIds.length > 0) {
-          this.pushService.subscribeToAllChoirs(missingIds).catch(() => {});
-        }
-      }
-      return;
-    }
-
-    if (this.isPushPromptInCooldown()) {
-      return;
-    }
-
-    this.pushPromptShown = true;
-
-    const snackBarRef = this.notification.infoWithAction(
-      'Möchtest du Push-Benachrichtigungen für Chat, Beiträge und Dienste aktivieren?',
-      'Aktivieren',
-      15000
-    );
-
-    snackBarRef.onAction().pipe(take(1)).subscribe(() => {
-      const choirIds = choirs.map(c => c.id);
-      this.pushService.subscribeToAllChoirs(choirIds).catch(() => {});
-    });
-
-    snackBarRef.afterDismissed().pipe(take(1)).subscribe(result => {
-      if (!result.dismissedByAction) {
-        this.markPushPromptDismissed();
-      }
-    });
-  }
-
-  private isPushPromptInCooldown(): boolean {
-    const rawTimestamp = localStorage.getItem(this.pushPromptCooldownKey);
-    if (!rawTimestamp) {
-      return false;
-    }
-
-    const timestamp = Number(rawTimestamp);
-    if (Number.isNaN(timestamp)) {
-      return false;
-    }
-
-    return Date.now() - timestamp < this.pushPromptCooldownMs;
-  }
-
-  private markPushPromptDismissed(): void {
-    localStorage.setItem(this.pushPromptCooldownKey, Date.now().toString());
-  }
 }

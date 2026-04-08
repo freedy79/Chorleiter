@@ -10,6 +10,8 @@ export interface ChatRoom {
   lastReadAt: string | null;
   lastReadMessageId: number | null;
   lastMessageAt: string | null;
+  oldestUnreadPreview?: string | null;
+  oldestUnreadAt?: string | null;
 }
 
 export interface ChatRoomDetail {

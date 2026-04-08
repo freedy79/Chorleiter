@@ -48,6 +48,28 @@
       <mat-icon>delete</mat-icon>
     </button>
   </ng-container>
+  <!-- Export menu (visible for all users) -->
+  <button mat-stroked-button [matMenuTriggerFor]="exportMenu" matTooltip="Termine exportieren" class="desktop-only" style="margin-left:8px;">
+    <mat-icon>file_download</mat-icon>
+    <span>Export</span>
+  </button>
+  <button mat-icon-button [matMenuTriggerFor]="exportMenu" class="mobile-only" aria-label="Termine exportieren">
+    <mat-icon>file_download</mat-icon>
+  </button>
+  <mat-menu #exportMenu="matMenu">
+    <button mat-menu-item (click)="downloadIcs()">
+      <mat-icon>download</mat-icon>
+      <span>ICS-Datei herunterladen</span>
+    </button>
+    <button mat-menu-item (click)="subscribeIcal()">
+      <mat-icon>event</mat-icon>
+      <span>iCal abonnieren</span>
+    </button>
+    <button mat-menu-item (click)="connectGoogleCalendar()">
+      <mat-icon>open_in_new</mat-icon>
+      <span>Google Kalender</span>
+    </button>
+  </mat-menu>
 </div>
 
 

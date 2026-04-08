@@ -151,25 +151,31 @@ export const routes: Routes = [
                 path: 'collections/pieces',
                 loadComponent: () => import('./features/collections/piece-list/collection-piece-list.component').then(m => m.CollectionPieceListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Stücke' },
+                data: { title: 'Stücke', fullWidth: true },
             },
             {
                 path: 'collections',
                 loadComponent: () => import('./features/collections/collection-list/collection-list.component').then(m => m.CollectionListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Sammlungen' },
+                data: { title: 'Sammlungen', fullWidth: true },
             },
             {
                 path: 'collections/new',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
-                data: { title: 'Neue Sammlung' },
+                data: { title: 'Neue Sammlung', fullWidth: true },
+            },
+            {
+                path: 'collections/view/:id',
+                loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Sammlung', readOnly: true, fullWidth: true },
             },
             {
                 path: 'collections/edit/:id',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
-                data: { title: 'Sammlung bearbeiten' },
+                data: { title: 'Sammlung bearbeiten', fullWidth: true },
             },
             {
                 path: 'events',
@@ -187,7 +193,7 @@ export const routes: Routes = [
                 path: 'chat',
                 loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Chat', showChoirName: true }
+                data: { title: 'Chat', showChoirName: true, fullWidth: true }
             },
             {
                 path: 'dienstplan',

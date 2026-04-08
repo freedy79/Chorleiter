@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import {
@@ -30,7 +30,7 @@ import { RichTextBlock } from '../block.model';
     }
   `]
 })
-export class RichTextBlockEditorComponent implements OnInit {
+export class RichTextBlockEditorComponent {
   @Input() block!: RichTextBlock;
   @Output() blockChange = new EventEmitter<RichTextBlock>();
 
@@ -60,8 +60,6 @@ export class RichTextBlockEditorComponent implements OnInit {
     },
     licenseKey: 'GPL'
   };
-
-  ngOnInit(): void {}
 
   onEditorChange(event: any): void {
     const data = event.editor.getData();

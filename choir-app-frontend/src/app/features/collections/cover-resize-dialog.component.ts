@@ -241,7 +241,8 @@ export class CoverResizeDialogComponent {
 
     this.isResizing = true;
     this.api.resizeCollectionCover(this.data.collectionId, this.selectedWidth).subscribe({
-      next: (response) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      next: (_response) => {
         this.isResizing = false;
         this.notification.success(`Coverbild erfolgreich auf ${this.selectedWidth}px angepasst.`, 3000);
         this.dialogRef.close(true);

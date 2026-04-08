@@ -112,6 +112,17 @@ mat-card-actions button mat-icon {
 }
 
 
+.cover-readonly {
+  margin-top: 1rem;
+
+  img {
+    max-height: 150px;
+    width: auto;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+}
+
 .cover-upload {
   margin-top: 1rem;
 

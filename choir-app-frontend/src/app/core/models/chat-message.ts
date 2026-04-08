@@ -5,6 +5,13 @@ export interface ChatAttachment {
   url: string;
 }
 
+export interface ChatReaction {
+  emoji: string;
+  count: number;
+  userIds: number[];
+  hasOwn: boolean;
+}
+
 export interface ChatMessage {
   id: number;
   chatRoomId: number;
@@ -18,8 +25,10 @@ export interface ChatMessage {
   attachment: ChatAttachment | null;
   author: {
     id: number;
+    firstName: string | null;
     name: string;
   } | null;
+  reactions: ChatReaction[];
   isOwnMessage: boolean;
 }
 
@@ -31,6 +40,7 @@ export interface ChatMessageListResponse {
     isDefault: boolean;
   };
   messages: ChatMessage[];
+  allReadUpToId: number | null;
   realtime?: {
     transport: 'polling' | 'sse' | 'websocket';
     supportsCursor: boolean;

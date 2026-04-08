@@ -2,8 +2,7 @@ import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
 import {
-  ContentBlock, RichTextBlock, HeroBannerBlock, ImageBlock, ImageTextBlock,
-  GalleryBlock, DividerBlock, SpacerBlock, QuoteBlock, CtaBlock, EmbedBlock
+  ContentBlock
 } from './block.model';
 
 const SPACER_MAP: Record<string, string> = {

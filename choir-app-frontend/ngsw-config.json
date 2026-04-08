@@ -29,6 +29,18 @@
   ],
   "dataGroups": [
     {
+      "name": "google-fonts",
+      "urls": [
+        "https://fonts.googleapis.com/**",
+        "https://fonts.gstatic.com/**"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxAge": "30d",
+        "maxSize": 20
+      }
+    },
+    {
       "name": "api-performance",
       "urls": [
         "/api/performances/**",

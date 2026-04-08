@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
@@ -24,15 +24,13 @@ import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page
     ManageChoirsComponent
   ]
 })
-export class OrganizationsComponent implements OnInit {
+export class OrganizationsComponent {
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
   constructor(responsive: ResponsiveService) {
     this.isMobile$ = responsive.isHandset$;
   }
-
-  ngOnInit(): void {}
 
   onTabChange(event: any): void {
     this.selectedTabIndex = event.index;

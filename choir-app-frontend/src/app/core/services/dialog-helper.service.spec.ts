@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { of, throwError, Observable } from 'rxjs';
-import { DialogHelperService, DialogApiConfig, ConfirmOptions, DeleteConfirmOptions } from './dialog-helper.service';
+import { of, Observable } from 'rxjs';
+import { DialogHelperService, DialogApiConfig, ConfirmOptions } from './dialog-helper.service';
 import { ApiHelperService } from './api-helper.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -160,7 +160,9 @@ describe('DialogHelperService', () => {
         transformResult: (result) => ({ name: result.name })
       };
 
-      service.openDialogWithApi(mockComponent, mockApiCall, { apiConfig }).subscribe(result => {
+      service.openDialogWithApi(mockComponent, mockApiCall, { apiConfig }).subscribe(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        _result => {
         expect(mockApiCall).toHaveBeenCalledWith(transformedResult);
         done();
       });

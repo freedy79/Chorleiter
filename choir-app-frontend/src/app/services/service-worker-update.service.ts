@@ -1,7 +1,9 @@
 import { Injectable, NgZone } from '@angular/core';
-import { SwUpdate } from '@angular/service-worker';
-import { BehaviorSubject, Observable, interval } from 'rxjs';
+import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
+import { BehaviorSubject, interval } from 'rxjs';
 import { filter, switchMap, debounceTime } from 'rxjs/operators';
+
+const ACTIVATED_VERSION_KEY = 'sw-activated-version';
 
 /**
  * Service für die Verwaltung von Service Worker Updates
@@ -26,6 +28,8 @@ export class ServiceWorkerUpdateService {
    */
   public updateAvailable = this.updateAvailable$.asObservable();
   public updating = this.updating$.asObservable();
+
+  private latestVersionHash: string | null = null;
 
   constructor(
     private swUpdate: SwUpdate,
@@ -58,7 +62,18 @@ export class ServiceWorkerUpdateService {
             filter(evt => evt.type === 'VERSION_READY'),
             debounceTime(100)
           )
-          .subscribe(() => {
+          .subscribe((evt) => {
+            const readyEvt = evt as VersionReadyEvent;
+            const latestHash = readyEvt.latestVersion?.hash;
+            const activatedHash = localStorage.getItem(ACTIVATED_VERSION_KEY);
+
+            if (activatedHash && activatedHash === latestHash) {
+              console.log('Update bereits aktiviert, Benachrichtigung wird übersprungen.');
+              localStorage.removeItem(ACTIVATED_VERSION_KEY);
+              return;
+            }
+
+            this.latestVersionHash = latestHash;
             this.updateAvailable$.next(true);
             console.log('Neue App-Version verfügbar!');
           });
@@ -97,6 +112,11 @@ export class ServiceWorkerUpdateService {
 
     try {
       this.updating$.next(true);
+
+      // Speichere die aktuelle latestVersion, um nach Reload keine doppelte Benachrichtigung zu zeigen
+      if (this.latestVersionHash) {
+        localStorage.setItem(ACTIVATED_VERSION_KEY, this.latestVersionHash);
+      }
 
       // Aktiviere den neuen Service Worker
       await this.swUpdate.activateUpdate();

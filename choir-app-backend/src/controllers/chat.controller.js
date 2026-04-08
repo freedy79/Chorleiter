@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const db = require('../models');
 const logger = require('../config/logger');
 const pushNotificationService = require('../services/pushNotification.service');
+const emailService = require('../services/email.service');
 
 const ATTACHMENTS_DIR = path.join(__dirname, '../..', 'uploads', 'chat-attachments');
 const DEFAULT_ROOM_KEY = 'allgemein';
@@ -64,6 +65,20 @@ function canEditWithinWindow(message) {
   return new Date() <= editWindowEnd;
 }
 
+function serializeReactions(reactions, currentUserId) {
+  if (!Array.isArray(reactions) || reactions.length === 0) return [];
+
+  const grouped = new Map();
+  for (const r of reactions) {
+    const entry = grouped.get(r.emoji) || { emoji: r.emoji, count: 0, userIds: [], hasOwn: false };
+    entry.count++;
+    entry.userIds.push(r.userId);
+    if (r.userId === currentUserId) entry.hasOwn = true;
+    grouped.set(r.emoji, entry);
+  }
+  return Array.from(grouped.values());
+}
+
 function serializeMessage(message, currentUserId) {
   const plain = toPlain(message);
   const deleted = !!plain.deletedAt;
@@ -89,9 +104,11 @@ function serializeMessage(message, currentUserId) {
     author: plain.author
       ? {
           id: plain.author.id,
+          firstName: plain.author.firstName || null,
           name: plain.author.name
         }
       : null,
+    reactions: deleted ? [] : serializeReactions(plain.reactions || [], currentUserId),
     isOwnMessage: plain.userId === currentUserId
   };
 }
@@ -125,6 +142,38 @@ function buildMessagePreview(message) {
     return `📎 ${message.attachmentOriginalName}`;
   }
   return '(Nachricht)';
+}
+
+async function calculateAllReadUpToId(room, currentUserId) {
+  let participantIds;
+
+  if (room.isPrivate) {
+    const members = await db.chat_room_member.findAll({
+      where: { chatRoomId: room.id, userId: { [Op.ne]: currentUserId } },
+      attributes: ['userId']
+    });
+    participantIds = members.map(m => m.userId);
+  } else {
+    const choirMembers = await db.user_choir.findAll({
+      where: { choirId: room.choirId, userId: { [Op.ne]: currentUserId } },
+      attributes: ['userId']
+    });
+    participantIds = choirMembers.map(m => m.userId);
+  }
+
+  if (participantIds.length === 0) return null;
+
+  const readStates = await db.chat_read_state.findAll({
+    where: { chatRoomId: room.id, userId: participantIds },
+    attributes: ['userId', 'lastReadMessageId']
+  });
+
+  if (readStates.length < participantIds.length) return null;
+
+  const readIds = readStates.map(s => s.lastReadMessageId).filter(id => id != null);
+  if (readIds.length < participantIds.length) return null;
+
+  return Math.min(...readIds);
 }
 
 async function ensureDefaultRoom(choirId) {
@@ -222,12 +271,12 @@ async function collectUnreadInfoForRoom(room, userId, readState) {
     db.chat_message.count({ where: unreadWhere }),
     db.chat_message.findOne({
       where: unreadWhere,
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
       order: [['createdAt', 'ASC']]
     }),
     db.chat_message.findOne({
       where: unreadWhere,
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [{ model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] }],
       order: [['createdAt', 'DESC']]
     })
   ]);
@@ -262,7 +311,7 @@ exports.getRooms = async (req, res) => {
       const readState = readStateByRoomId.get(room.id);
       const unreadSince = readState?.lastReadAt || new Date(0);
 
-      const [unreadCount, lastMessage] = await Promise.all([
+      const [unreadCount, lastMessage, oldestUnread] = await Promise.all([
         db.chat_message.count({
           where: {
             chatRoomId: room.id,
@@ -274,6 +323,15 @@ exports.getRooms = async (req, res) => {
         db.chat_message.findOne({
           where: { chatRoomId: room.id },
           order: [['createdAt', 'DESC']]
+        }),
+        db.chat_message.findOne({
+          where: {
+            chatRoomId: room.id,
+            deletedAt: null,
+            userId: { [Op.ne]: req.userId },
+            createdAt: { [Op.gt]: unreadSince }
+          },
+          order: [['createdAt', 'ASC']]
         })
       ]);
 
@@ -288,7 +346,9 @@ exports.getRooms = async (req, res) => {
         unreadCount,
         lastReadAt: readState?.lastReadAt || null,
         lastReadMessageId: readState?.lastReadMessageId || null,
-        lastMessageAt: lastMessage?.createdAt || null
+        lastMessageAt: lastMessage?.createdAt || null,
+        oldestUnreadPreview: oldestUnread?.text ? oldestUnread.text.substring(0, 100) : null,
+        oldestUnreadAt: oldestUnread?.createdAt || null
       };
     })
   );
@@ -502,13 +562,17 @@ exports.getRoomMessages = async (req, res) => {
 
   const messages = await db.chat_message.findAll({
     where,
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ],
     order: [['createdAt', 'DESC']],
     limit
   });
 
   const ordered = [...messages].reverse();
   const lastMessageId = ordered.length > 0 ? ordered[ordered.length - 1].id : null;
+  const allReadUpToId = await calculateAllReadUpToId(room, req.userId);
 
   res.status(200).send({
     room: {
@@ -519,6 +583,7 @@ exports.getRoomMessages = async (req, res) => {
       isDefault: room.isDefault
     },
     messages: ordered.map(message => serializeMessage(message, req.userId)),
+    allReadUpToId,
     realtime: {
       transport: 'polling',
       supportsCursor: true,
@@ -579,16 +644,27 @@ exports.createMessage = async (req, res) => {
   });
 
   const fullMessage = await db.chat_message.findByPk(created.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
 
   const choir = await db.choir.findByPk(req.activeChoirId, { attributes: ['name'] });
+  const sender = await db.user.findByPk(req.userId, { attributes: ['firstName', 'name'] });
+  const senderName = sender ? `${sender.firstName || ''} ${sender.name || ''}`.trim() : '';
+  const choirName = choir?.name || 'Dein Chor';
+  const messagePreview = text
+    ? (text.length > 100 ? text.substring(0, 100) + '…' : text)
+    : `📎 ${req.file?.originalname || 'Anhang'}`;
+  const url = `/chat?room=${room.id}&message=${created.id}`;
   const payload = {
-    title: `Neue Chat-Nachricht in ${choir?.name || 'deinem Chor'}`,
-    body: text || `📎 ${req.file?.originalname || 'Anhang'}`,
-    icon: '/assets/icons/icon-192x192.png',
-    url: `/chat?room=${room.id}&message=${created.id}`,
-    data: { url: `/chat?room=${room.id}&message=${created.id}` }
+    title: `${choirName} – ${senderName}`,
+    body: messagePreview,
+    tag: `chat-room-${room.id}`,
+    renotify: true,
+    url,
+    data: { url }
   };
 
   if (room.isPrivate) {
@@ -650,7 +726,10 @@ exports.updateMessage = async (req, res) => {
   });
 
   const full = await db.chat_message.findByPk(message.id, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
 
   res.status(200).send(serializeMessage(full, req.userId));
@@ -949,7 +1028,10 @@ exports.getMessageById = async (req, res) => {
 
   const messageId = Number(req.params.id);
   const message = await db.chat_message.findByPk(messageId, {
-    include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }]
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+      { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+    ]
   });
   if (!message) {
     return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
@@ -1041,7 +1123,10 @@ exports.streamRoomEvents = async (req, res) => {
         chatRoomId: room.id,
         id: { [Op.gt]: cursorId }
       },
-      include: [{ model: db.user, as: 'author', attributes: ['id', 'name'] }],
+      include: [
+        { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name'] },
+        { model: db.chat_message_reaction, as: 'reactions', attributes: ['emoji', 'userId'] }
+      ],
       order: [['id', 'ASC']],
       limit: MAX_LIMIT
     });
@@ -1065,12 +1150,190 @@ exports.streamRoomEvents = async (req, res) => {
   }, STREAM_POLL_INTERVAL_MS);
 
   const heartbeatTimer = setInterval(() => {
-    sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId });
+    calculateAllReadUpToId(room, req.userId).then(allReadUpToId => {
+      sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId, allReadUpToId });
+    }).catch(() => {
+      sendEvent('heartbeat', { ts: new Date().toISOString(), cursorId, allReadUpToId: null });
+    });
   }, STREAM_HEARTBEAT_MS);
 
   req.on('close', () => {
     clearInterval(pollingTimer);
     clearInterval(heartbeatTimer);
     res.end();
+  });
+};
+
+exports.reportMessage = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const { reason } = req.body || {};
+
+  if (!reason || !reason.trim()) {
+    return res.status(400).send({ message: 'Bitte einen Meldegrund angeben.' });
+  }
+
+  const message = await db.chat_message.findByPk(messageId, {
+    include: [
+      { model: db.user, as: 'author', attributes: ['id', 'firstName', 'name', 'email'] },
+      {
+        model: db.chat_room, as: 'room',
+        attributes: ['id', 'key', 'title', 'choirId'],
+        include: [{ model: db.choir, as: 'choir', attributes: ['id', 'name'] }]
+      }
+    ]
+  });
+
+  if (!message) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  if (message.deleted || message.deletedAt) {
+    return res.status(400).send({ message: 'Gelöschte Nachrichten können nicht gemeldet werden.' });
+  }
+
+  // Prevent self-reporting
+  if (message.userId === req.userId) {
+    return res.status(400).send({ message: 'Eigene Nachrichten können nicht gemeldet werden.' });
+  }
+
+  // Check for duplicate reports by same user on same message
+  const existingReport = await db.chat_message_report.findOne({
+    where: { chatMessageId: messageId, reporterUserId: req.userId, status: 'pending' }
+  });
+  if (existingReport) {
+    return res.status(409).send({ message: 'Du hast diese Nachricht bereits gemeldet.' });
+  }
+
+  const reporter = await db.user.findByPk(req.userId, { attributes: ['id', 'name', 'email'] });
+
+  const report = await db.chat_message_report.create({
+    chatMessageId: messageId,
+    reporterUserId: req.userId,
+    reason: reason.trim()
+  });
+
+  // Send email to choir directors and admins
+  try {
+    const choirId = message.room?.choirId;
+    const choirName = message.room?.choir?.name || 'Unbekannter Chor';
+    const roomTitle = message.room?.title || 'Unbekannt';
+    const authorName = message.author?.name || 'Unbekannt';
+    const reporterName = reporter?.name || 'Unbekannt';
+    const messageText = message.text || '(Nachricht ohne Text)';
+    const messageDate = message.createdAt;
+
+    await emailService.sendChatMessageReportMail({
+      choirId,
+      choirName,
+      roomTitle,
+      authorName,
+      messageText,
+      reason: reason.trim(),
+      messageDate,
+      reporterName,
+      messageId: message.id,
+      roomId: message.room?.id
+    });
+  } catch (err) {
+    logger.error(`Failed to send chat message report email: ${err.message}`);
+  }
+
+  res.status(201).send({
+    id: report.id,
+    message: 'Nachricht wurde gemeldet.'
+  });
+};
+
+const ALLOWED_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎵', '🔥', '👏', '🎉'];
+
+exports.toggleReaction = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const { emoji } = req.body || {};
+
+  if (!emoji || !ALLOWED_EMOJIS.includes(emoji)) {
+    return res.status(400).send({ message: 'Ungültiges Emoji.' });
+  }
+
+  const message = await db.chat_message.findByPk(messageId);
+  if (!message || message.deletedAt) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const room = await getAccessibleRoom(message.chatRoomId, req);
+  if (!room) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const existing = await db.chat_message_reaction.findOne({
+    where: { chatMessageId: messageId, userId: req.userId, emoji }
+  });
+
+  if (existing) {
+    await existing.destroy();
+  } else {
+    await db.chat_message_reaction.create({
+      chatMessageId: messageId,
+      userId: req.userId,
+      emoji
+    });
+  }
+
+  const reactions = await db.chat_message_reaction.findAll({
+    where: { chatMessageId: messageId },
+    attributes: ['emoji', 'userId']
+  });
+
+  res.status(200).send({
+    messageId,
+    reactions: serializeReactions(reactions.map(r => r.toJSON()), req.userId)
+  });
+};
+
+exports.getReactions = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff.' });
+  }
+
+  const messageId = Number(req.params.id);
+  const message = await db.chat_message.findByPk(messageId);
+  if (!message) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const room = await getAccessibleRoom(message.chatRoomId, req);
+  if (!room) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const reactions = await db.chat_message_reaction.findAll({
+    where: { chatMessageId: messageId },
+    attributes: ['emoji', 'userId'],
+    include: [{ model: db.user, as: 'user', attributes: ['id', 'firstName', 'name'] }]
+  });
+
+  const grouped = new Map();
+  for (const r of reactions) {
+    const plain = r.toJSON();
+    const entry = grouped.get(plain.emoji) || { emoji: plain.emoji, count: 0, users: [], hasOwn: false };
+    entry.count++;
+    entry.users.push({
+      id: plain.user.id,
+      name: plain.user.firstName ? `${plain.user.firstName} ${plain.user.name}` : plain.user.name
+    });
+    if (plain.userId === req.userId) entry.hasOwn = true;
+    grouped.set(plain.emoji, entry);
+  }
+
+  res.status(200).send({
+    messageId,
+    reactions: Array.from(grouped.values())
   });
 };

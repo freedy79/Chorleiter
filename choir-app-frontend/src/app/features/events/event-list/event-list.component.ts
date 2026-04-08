@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
@@ -10,9 +10,9 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
-import { startWith } from 'rxjs/operators';
+import { startWith, takeUntil } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
@@ -22,6 +22,7 @@ import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-event-list',
@@ -36,9 +37,10 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
     EmptyStateComponent
   ],
   templateUrl: './event-list.component.html',
-  styleUrls: ['./event-list.component.scss']
+  styleUrls: ['./event-list.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class EventListComponent implements OnInit, AfterViewInit {
+export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   typeControl = new FormControl('ALL');
   timeControl = new FormControl('RECENT');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
@@ -59,6 +61,7 @@ export class EventListComponent implements OnInit, AfterViewInit {
   // Mobile lazy rendering
   private readonly MOBILE_PAGE_SIZE = 15;
   mobileVisibleCount = this.MOBILE_PAGE_SIZE;
+  private readonly destroy$ = new Subject<void>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -69,8 +72,14 @@ export class EventListComponent implements OnInit, AfterViewInit {
               private notification: NotificationService,
               private paginatorService: PaginatorService,
               private route: ActivatedRoute,
-              private responsive: ResponsiveService) {
+              private responsive: ResponsiveService,
+              private cdr: ChangeDetectorRef) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   ngAfterViewInit(): void {
@@ -83,25 +92,29 @@ export class EventListComponent implements OnInit, AfterViewInit {
     this.loadEvents();
     const eventId = Number(this.route.snapshot.queryParamMap.get('eventId'));
     if (eventId) {
-      this.apiService.getEventById(eventId).subscribe(e => this.selectedEvent = e);
+      this.apiService.getEventById(eventId).pipe(takeUntil(this.destroy$)).subscribe(e => { this.selectedEvent = e; this.cdr.markForCheck(); });
     }
-    this.typeControl.valueChanges.pipe(startWith('ALL')).subscribe(() => this.loadEvents());
-    this.timeControl.valueChanges.subscribe(() => this.applyTimeFilter());
-    this.authService.isChoirAdmin$.subscribe(isChoirAdmin => {
+    this.typeControl.valueChanges.pipe(startWith('ALL'), takeUntil(this.destroy$)).subscribe(() => this.loadEvents());
+    this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.applyTimeFilter());
+    this.authService.isChoirAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
+      this.cdr.markForCheck();
     });
-    this.authService.isAdmin$.subscribe(isAdmin => {
+    this.authService.isAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isAdmin => {
       this.isAdmin = isAdmin;
       this.updateDisplayedColumns();
+      this.cdr.markForCheck();
     });
-    this.authService.isDirector$.subscribe(isDirector => {
+    this.authService.isDirector$.pipe(takeUntil(this.destroy$)).subscribe(isDirector => {
       this.isDirector = isDirector;
       this.updateDisplayedColumns();
+      this.cdr.markForCheck();
     });
-    this.authService.isSingerOnly$.subscribe(isSingerOnly => {
+    this.authService.isSingerOnly$.pipe(takeUntil(this.destroy$)).subscribe(isSingerOnly => {
       this.isSingerOnly = isSingerOnly;
       this.updateDisplayedColumns();
+      this.cdr.markForCheck();
     });
   }
 
@@ -126,9 +139,11 @@ export class EventListComponent implements OnInit, AfterViewInit {
           this.applyTimeFilter();
           this.selectedEvent = null;
           this.isLoading = false;
+          this.cdr.markForCheck();
         },
         error: () => {
           this.isLoading = false;
+          this.cdr.markForCheck();
         }
       });
   }
@@ -190,12 +205,25 @@ export class EventListComponent implements OnInit, AfterViewInit {
   }
 
   selectEvent(event: Event): void {
-    // On mobile: open edit dialog directly for editors, show detail for singers
-    if (this.responsive.checkMobile() && !this.isSingerOnly) {
-      this.editEvent(event);
+    // On mobile: open dialog directly (read-only for singers, editable for editors)
+    if (this.responsive.checkMobile()) {
+      if (this.isSingerOnly) {
+        this.openReadOnlyDialog(event);
+      } else {
+        this.editEvent(event);
+      }
       return;
     }
-    this.apiService.getEventById(event.id).subscribe(e => this.selectedEvent = e);
+    this.apiService.getEventById(event.id).pipe(takeUntil(this.destroy$)).subscribe(e => { this.selectedEvent = e; this.cdr.markForCheck(); });
+  }
+
+  private openReadOnlyDialog(event: Event): void {
+    this.apiService.getEventById(event.id).pipe(takeUntil(this.destroy$)).subscribe(fullEvent => {
+      this.dialogHelper.openDialog<EventDialogComponent, void>(
+        EventDialogComponent,
+        { width: '600px', data: { event: fullEvent, readOnly: true } }
+      ).subscribe();
+    });
   }
 
   editEvent(event: Event): void {
@@ -348,5 +376,27 @@ export class EventListComponent implements OnInit, AfterViewInit {
         this.loadEvents();
       }
     });
+  }
+
+  downloadIcs(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const url = `${environment.apiUrl}/events/ics?token=${token}`;
+    window.open(url, '_blank');
+  }
+
+  subscribeIcal(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
+    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
+    window.open(webcalUrl, '_self');
+  }
+
+  connectGoogleCalendar(): void {
+    const token = this.authService.getToken();
+    if (!token) return;
+    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
+    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
   }
 }

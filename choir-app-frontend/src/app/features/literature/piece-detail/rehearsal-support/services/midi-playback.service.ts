@@ -374,7 +374,8 @@ export class MidiPlaybackService {
       if (sn.player && sn.player.stop) {
         try {
           sn.player.stop();
-        } catch (e) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_e) {
           // Ignore
         }
       }

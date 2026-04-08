@@ -22,7 +22,7 @@ exports.search = async (req, res) => {
   if (!q) return res.status(400).send({ message: 'Missing search query' });
 
   const likeOp = db.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
-  const normalizedQ = q.replace(/[\s,.!?;:'"()\-–—\/\\]+/g, '%');
+  const normalizedQ = q.replace(/[\s,.!?;:'"()\-–—/\\]+/g, '%');
   const like = { [likeOp]: `%${normalizedQ}%` };
 
   const limit = parseInt(req.query.limit) || 10;
@@ -210,12 +210,12 @@ function normalizeType(type) {
 function buildPrefixLike(dbInstance, query) {
   const likeOp = dbInstance.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
   // Replace punctuation/whitespace with % wildcard so "Halleluja komm" matches "Halleluja, komm!"
-  const normalized = query.replace(/[\s,.!?;:'"()\-–—\/\\]+/g, '%');
+  const normalized = query.replace(/[\s,.!?;:'"()\-\u2013\u2014/\\]+/g, '%');
   return { op: likeOp, value: `${normalized}%` };
 }
 function buildContainsLike(dbInstance, query) {
   const likeOp = dbInstance.sequelize.getDialect() === 'sqlite' ? Op.like : Op.iLike;
-  const normalized = query.replace(/[\s,.!?;:'"()\-\u2013\u2014\/\\]+/g, '%');
+  const normalized = query.replace(/[\s,.!?;:'"()\-\u2013\u2014/\\]+/g, '%');
   return { op: likeOp, value: `%${normalized}%` };
 }
 
@@ -440,6 +440,7 @@ exports.suggestions = async (req, res) => {
   const sorted = suggestions
     .map((s, idx) => {
       const exact = s.text?.toLowerCase() === q.toLowerCase();
+      // eslint-disable-next-line no-unused-vars
       return { ...s, _rank: exact ? 0 : 1, _idx: idx };
     })
     .sort((a, b) => (a._rank - b._rank) || (a._idx - b._idx))

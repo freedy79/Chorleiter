@@ -1,5 +1,5 @@
 <div class="dialog-title-bar">
-  <h1 mat-dialog-title>{{ isEditMode ? 'Ereignis bearbeiten' : 'Neues Ereignis erstellen' }}</h1>
+  <h1 mat-dialog-title>{{ readOnly ? 'Ereignis anzeigen' : (isEditMode ? 'Ereignis bearbeiten' : 'Neues Ereignis erstellen') }}</h1>
   <button mat-icon-button class="dialog-close-btn" (click)="onCancel()" aria-label="Dialog schließen">
     <mat-icon>close</mat-icon>
   </button>
@@ -42,6 +42,7 @@
 
     <!-- Piece Lookup -->
     <h3 class="mat-subheading-2">Stücke</h3>
+    <ng-container *ngIf="!readOnly">
     <div class="autocomplete-container">
       <div class="search-box">
         <mat-form-field appearance="outline" class="full-width">
@@ -79,6 +80,7 @@
         oder <a (click)="openAddPieceDialog()">Eigene Literatur hinzufügen</a>
       </div>
     </div>
+    </ng-container>
 
     <!-- Display Selected Pieces -->
     <div class="selected-pieces-list" *ngIf="selectedPieces.length; else noPieces">
@@ -87,7 +89,7 @@
           <span class="piece-reference">{{ piece.reference }}</span>
           <span class="piece-title">{{ piece.title }}</span>
         </div>
-        <button mat-icon-button color="warn" (click)="remove(piece)" aria-label="Stück entfernen">
+        <button *ngIf="!readOnly" mat-icon-button color="warn" (click)="remove(piece)" aria-label="Stück entfernen">
           <mat-icon>delete</mat-icon>
         </button>
       </div>
@@ -100,6 +102,11 @@
 </div>
 
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">Abbrechen</button>
-  <button mat-flat-button color="primary" type="submit" form="event-form" [disabled]="eventForm.invalid">Speichern</button>
+  <ng-container *ngIf="readOnly; else editActions">
+    <button mat-flat-button color="primary" (click)="onCancel()">Schließen</button>
+  </ng-container>
+  <ng-template #editActions>
+    <button mat-button (click)="onCancel()">Abbrechen</button>
+    <button mat-flat-button color="primary" type="submit" form="event-form" [disabled]="eventForm.invalid">Speichern</button>
+  </ng-template>
 </div>

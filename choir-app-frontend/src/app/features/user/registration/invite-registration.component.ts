@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, DestroyRef, inject } from '@angular/core';
+import { Component, OnInit, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -16,7 +16,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     'style': 'display: flex; flex-direction: column; flex: 1; width: 100%; min-height: 100vh;'
   }
 })
-export class InviteRegistrationComponent implements OnInit, OnDestroy {
+export class InviteRegistrationComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   form: FormGroup;
   token: string = '';
@@ -49,9 +49,5 @@ export class InviteRegistrationComponent implements OnInit, OnDestroy {
       },
       error: err => this.notification.error(err.error?.message || 'Fehler')
     });
-  }
-
-  ngOnDestroy(): void {
-    // Cleanup handled by takeUntilDestroyed
   }
 }

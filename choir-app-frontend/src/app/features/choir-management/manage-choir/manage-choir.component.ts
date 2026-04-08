@@ -241,6 +241,12 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     }
   }
 
+  copyJoinLink(): void {
+    navigator.clipboard.writeText(this.joinLink)
+      .then(() => this.notification.success('Beitrittslink kopiert.'))
+      .catch(() => this.notification.error('Fehler beim Kopieren des Links.'));
+  }
+
   copyEmailsToClipboard(): void {
     const emails = this.dataSource.data
       .map(u => u.email)

@@ -36,4 +36,8 @@ export class PayPalService {
   getDonationSummary(): Observable<DonationSummary> {
     return this.http.get<DonationSummary>(`${this.apiUrl}/paypal/donations/summary`);
   }
+
+  getDonationConfig(): Observable<{ donationEmail: string | null }> {
+    return this.http.get<{ donationEmail: string | null }>(`${this.apiUrl}/paypal/donation-config`);
+  }
 }

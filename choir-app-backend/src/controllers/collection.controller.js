@@ -134,7 +134,6 @@ exports.findAll = async (req, res, next) => {
         const choir = await Choir.findByPk(req.activeChoirId);
         if (!choir) {
             logger.warn(`Choir with id ${req.activeChoirId} not found for user ${req.userId}.`);
-            const adoptedCollectionIds = new Set();
             const results = allCollections.map(c => ({ ...c, isAdded: false }));
             return res.status(200).send(results);
         }
