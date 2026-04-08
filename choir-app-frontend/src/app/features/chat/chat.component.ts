@@ -648,11 +648,8 @@ export class ChatComponent implements OnInit, OnDestroy {
         const knownIds = new Set(this.messages.map(message => message.id));
         const additions = update.messages.filter(message => !message.deleted && !knownIds.has(message.id));
         if (!additions.length && !deletedIds.size) return;
-
         const wasAtBottom = this.isScrolledToBottom();
         this.messages = [...this.messages, ...additions];
-        this.focusTargetMessageIfPresent();
-        this.markReadToLatest();
         this.loadRooms(roomId, true);
 
         if (wasAtBottom) {

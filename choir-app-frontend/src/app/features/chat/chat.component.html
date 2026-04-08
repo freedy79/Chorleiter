@@ -200,6 +200,26 @@
           </a>
         </div>
 
+        <div class="piece-previews" *ngIf="!message.deleted && extractPieceIds(message.text) as pieceIds">
+          <a
+            class="piece-preview"
+            *ngFor="let pieceId of pieceIds"
+            (click)="navigateToPiece(pieceId)"
+            role="link"
+            tabindex="0"
+            (keydown.enter)="navigateToPiece(pieceId)"
+          >
+            <mat-icon class="piece-preview-icon">music_note</mat-icon>
+            <div class="piece-preview-info" *ngIf="getPiecePreview(pieceId) as preview">
+              <span class="piece-preview-title">{{ preview.title }}</span>
+              <span class="piece-preview-composer" *ngIf="preview.composer">{{ preview.composer }}</span>
+            </div>
+            <div class="piece-preview-info" *ngIf="!getPiecePreview(pieceId)">
+              <span class="piece-preview-title">Stück #{{ pieceId }}</span>
+            </div>
+          </a>
+        </div>
+
         <a
           class="attachment"
           *ngIf="message.attachment"
