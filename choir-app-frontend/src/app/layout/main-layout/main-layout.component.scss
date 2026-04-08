@@ -271,6 +271,59 @@ app-search-box {
     transition-duration: 250ms !important;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
   }
+
+  // --- Scrollbar Fade-in / Fade-out ---
+  // Firefox: transparent by default, visible on hover/scroll
+  ::ng-deep .mat-drawer-inner-container {
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+  }
+
+  &:hover,
+  &.is-scrolling {
+    ::ng-deep .mat-drawer-inner-container {
+      scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+  }
+
+  // Webkit (Chrome, Edge, Safari)
+  ::ng-deep .mat-drawer-inner-container {
+    &::-webkit-scrollbar-thumb {
+      background-color: transparent;
+      transition: background-color 0.3s ease;
+    }
+  }
+
+  &:hover,
+  &.is-scrolling {
+    ::ng-deep .mat-drawer-inner-container {
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(0, 0, 0, 0.35);
+      }
+    }
+  }
+
+  // Dark mode overrides
+  :host-context(.dark-theme) & {
+    &:hover,
+    &.is-scrolling {
+      ::ng-deep .mat-drawer-inner-container {
+        scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+
+        &::-webkit-scrollbar-thumb {
+          background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        &::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(255, 255, 255, 0.35);
+        }
+      }
+    }
+  }
 }
 
 .user-name {

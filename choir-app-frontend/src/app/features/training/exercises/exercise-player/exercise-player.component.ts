@@ -29,6 +29,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   currentBeat = 0;
   metronomeInterval: any = null;
   startTime = 0;
+  activeNoteIndex = -1;
+  beatTimeline: { beatTime: number; noteIndex: number }[] = [];
 
   // Recognition state
   selectedOption: string | null = null;
@@ -250,10 +252,15 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     switch (type) {
       case 'whole': case 'rest_whole': return 4;
       case 'dotted_half': return 3;
+      case 'tied_half_quarter': return 3;
       case 'half': case 'rest_half': return 2;
+      case 'tied_quarter_quarter': return 2;
+      case 'tied_quarter_eighth': return 1.5;
       case 'dotted_quarter': return 1.5;
       case 'quarter': case 'rest_quarter': return 1;
+      case 'triplet_quarter': return 2 / 3;
       case 'dotted_eighth': return 0.75;
+      case 'tied_eighth_eighth': return 1;
       case 'eighth': case 'rest_eighth': return 0.5;
       case 'sixteenth': case 'rest_sixteenth': return 0.25;
       case 'triplet_eighth': return 1 / 3;
@@ -264,6 +271,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   // === TAP RHYTHM ===
   onTap(): void {
     if (this.phase !== 'playing' || this.exercise?.type !== 'tap_rhythm') return;
+    // If tapping during last count-in beat, start time reference now
+    if (!this.startTime && this.currentBeat === 0) {
+      this.startTime = Date.now();
+    }
+    if (!this.startTime) return;
     const tapTime = Date.now() - this.startTime;
     this.tapTimes.push(tapTime);
 
@@ -285,7 +297,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     const bars = this.exercise.content.bars || 2;
     const countInBeats = 4; // One bar count-in
 
+    // Build beat timeline for note highlighting
+    this.buildBeatTimeline();
+
     this.currentBeat = -countInBeats;
+    this.activeNoteIndex = -1;
     this.isMetronomeRunning = true;
 
     this.metronomeInterval = setInterval(() => {
@@ -294,10 +310,17 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
       if (this.currentBeat <= 0) {
         this.playMetronomeClick(this.currentBeat === -countInBeats + 1);
       } else if (this.currentBeat === 1) {
-        this.startTime = Date.now();
+        if (!this.startTime) {
+          this.startTime = Date.now();
+        }
         this.playMetronomeClick(true);
       } else {
         this.playMetronomeClick(false);
+      }
+
+      // Update active note for highlighting (beginner mode)
+      if (this.currentBeat > 0) {
+        this.updateActiveNote(this.currentBeat);
       }
 
       const totalBeats = bars * 4 + 2;
@@ -316,6 +339,27 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
       this.metronomeInterval = null;
     }
     this.isMetronomeRunning = false;
+    this.activeNoteIndex = -1;
+  }
+
+  private buildBeatTimeline(): void {
+    if (!this.exercise?.content?.pattern) return;
+    this.beatTimeline = [];
+    const pattern = this.exercise.content.pattern;
+    for (let i = 0; i < pattern.length; i++) {
+      this.beatTimeline.push({ beatTime: pattern[i].beat, noteIndex: i });
+    }
+  }
+
+  private updateActiveNote(currentBeat: number): void {
+    // Find which note corresponds to the current beat
+    let activeIdx = -1;
+    for (const entry of this.beatTimeline) {
+      if (entry.beatTime <= currentBeat) {
+        activeIdx = entry.noteIndex;
+      }
+    }
+    this.activeNoteIndex = activeIdx;
   }
 
   private finishTapRhythm(): void {
@@ -483,7 +527,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     } else {
       this.currentInterval = item;
       const direction = content.direction || 'ascending';
-      const baseFreq = this.noteToFreq(content.baseNote || 'C4');
+      const nominalBase = this.noteToFreq(content.baseNote || 'C4');
+      // Vary the starting pitch by up to ±4 semitones for ear training variety
+      const offset = Math.floor(Math.random() * 9) - 4; // -4 to +4
+      const baseFreq = nominalBase * Math.pow(2, offset / 12);
 
       if (direction === 'descending') {
         const targetFreq = baseFreq / Math.pow(2, item.semitones / 12);
@@ -931,17 +978,18 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   }
 
   // Rhythm notation display
-  get rhythmBars(): { notes: { symbol: string; isRest: boolean; width: number }[] }[] {
+  get rhythmBars(): { notes: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] }[] {
     if (!this.exercise?.content?.pattern) return [];
     const pattern = this.exercise.content.pattern;
     const beatsPerBar = 4; // 4/4 time
-    const bars: { notes: { symbol: string; isRest: boolean; width: number }[] }[] = [];
-    let currentBar: { symbol: string; isRest: boolean; width: number }[] = [];
+    const bars: { notes: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] }[] = [];
+    let currentBar: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] = [];
     let barBeatCount = 0;
 
-    for (const note of pattern) {
+    for (let i = 0; i < pattern.length; i++) {
+      const note = pattern[i];
       const beats = this.getNoteDurationBeats(note.type);
-      const isRest = note.type.startsWith('rest') || note.type.startsWith('rest_');
+      const isRest = note.type.startsWith('rest');
       const symbol = this.noteTypeToSymbol(note.type);
 
       if (barBeatCount >= beatsPerBar) {
@@ -950,7 +998,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         barBeatCount = 0;
       }
 
-      currentBar.push({ symbol, isRest, width: beats });
+      currentBar.push({ symbol, isRest, width: beats, noteIndex: i });
       barBeatCount += beats;
     }
     if (currentBar.length > 0) {
@@ -959,23 +1007,32 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     return bars;
   }
 
+  get isBeginnerMode(): boolean {
+    return this.exercise?.difficulty === 'beginner';
+  }
+
   private noteTypeToSymbol(type: string): string {
     switch (type) {
-      case 'whole': return '𝅝';
-      case 'rest_whole': return '𝄻';
-      case 'half': return '𝅗𝅥';
-      case 'rest_half': return '𝄼';
-      case 'dotted_half': return '𝅗𝅥.';
-      case 'quarter': return '♩';
-      case 'rest_quarter': return '𝄾';
-      case 'dotted_quarter': return '♩.';
-      case 'eighth': return '♪';
-      case 'rest_eighth': return '𝄾♪';
-      case 'dotted_eighth': return '♪.';
-      case 'sixteenth': return '𝅘𝅥𝅯';
-      case 'rest_sixteenth': return '𝄿';
-      case 'triplet_eighth': return '³♪';
-      default: return '♩';
+      case 'whole': return '\uD834\uDD5D';
+      case 'rest_whole': return '\uD834\uDD3B';
+      case 'half': return '\uD834\uDD5E';
+      case 'rest_half': return '\uD834\uDD3C';
+      case 'dotted_half': return '\uD834\uDD5E.';
+      case 'quarter': return '\u2669';
+      case 'rest_quarter': return '\uD834\uDD3D';
+      case 'dotted_quarter': return '\u2669.';
+      case 'eighth': return '\u266A';
+      case 'rest_eighth': return '\uD834\uDD3E';
+      case 'dotted_eighth': return '\u266A.';
+      case 'sixteenth': return '\uD834\uDD60';
+      case 'rest_sixteenth': return '\uD834\uDD3F';
+      case 'triplet_eighth': return '\u00B3\u266A';
+      case 'triplet_quarter': return '\u00B3\u2669';
+      case 'tied_half_quarter': return '\uD834\uDD5E\u203F\u2669';
+      case 'tied_quarter_quarter': return '\u2669\u203F\u2669';
+      case 'tied_quarter_eighth': return '\u2669\u203F\u266A';
+      case 'tied_eighth_eighth': return '\u266A\u203F\u266A';
+      default: return '\u2669';
     }
   }
 

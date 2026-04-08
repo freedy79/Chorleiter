@@ -134,7 +134,8 @@
 
 <mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
   <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="'navigation'"
-    [mode]="'side'" class="appDrawer">
+    [mode]="'side'" class="appDrawer" [class.is-scrolling]="drawerScrolling"
+    (scroll)="onDrawerScroll()">
 
     <ng-container *ngIf="(isLoggedIn$ | async)">
       <mat-nav-list>

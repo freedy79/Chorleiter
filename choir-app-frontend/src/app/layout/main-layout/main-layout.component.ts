@@ -121,6 +121,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private latestChatOverview: ChatGlobalUnreadOverview | null = null;
   private latestNotifiedMessageId: number | null = null;
   private pendingNotificationPermissionRequest = false;
+  drawerScrolling = false;
+  private drawerScrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 
   constructor(private authService: AuthService,
@@ -686,10 +688,23 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     });
   }
 
+  onDrawerScroll(): void {
+    this.drawerScrolling = true;
+    if (this.drawerScrollTimeout) {
+      clearTimeout(this.drawerScrollTimeout);
+    }
+    this.drawerScrollTimeout = setTimeout(() => {
+      this.drawerScrolling = false;
+    }, 1000);
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.chatUnreadCount$.complete();
+    if (this.drawerScrollTimeout) {
+      clearTimeout(this.drawerScrollTimeout);
+    }
   }
 
   private navigateToChatTarget(target: {

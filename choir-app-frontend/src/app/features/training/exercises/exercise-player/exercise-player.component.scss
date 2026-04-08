@@ -180,17 +180,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: 'Noto Music', sans-serif;
   font-size: 2rem;
   min-height: 48px;
   color: #333;
+  transition: transform 0.15s ease, color 0.15s ease;
 
   &.rest {
     color: #999;
   }
 
+  &.active {
+    transform: scale(1.25);
+    color: #667eea;
+
+    &.rest {
+      color: #90a4f9;
+    }
+  }
+
   @include bp.handset {
     font-size: 1.6rem;
     min-height: 40px;
+  }
+}
+
+.count-in-bar {
+  opacity: 0.7;
+}
+
+.count-in-note {
+  font-family: Roboto, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #667eea;
+
+  &.active {
+    transform: scale(1.4);
+    color: #ff6d00;
   }
 }
 
@@ -205,6 +232,14 @@
   font-size: 0.8rem;
   color: #888;
   align-self: flex-end;
+}
+
+.tap-instruction {
+  font-size: 0.85rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0.25rem 0 0.5rem;
 }
 
 .metronome-info {
@@ -283,6 +318,7 @@
 
 .option-button {
   padding: 1.25rem 1rem;
+  font-family: 'Noto Music', sans-serif;
   font-size: 2rem;
   line-height: 1.4;
   white-space: normal;
@@ -594,7 +630,12 @@
   }
 
   .rhythm-time-sig { color: #90a4f9; }
-  .rhythm-note { color: #eee; &.rest { color: #888; } }
+  .rhythm-note {
+    color: #eee;
+    &.rest { color: #888; }
+    &.active { color: #90a4f9; &.rest { color: #7986cb; } }
+  }
+  .count-in-note { color: #90a4f9; &.active { color: #ff9e40; } }
   .bar-line { color: #666; }
   .rhythm-bpm { color: #888; }
 

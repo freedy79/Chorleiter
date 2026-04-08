@@ -216,10 +216,10 @@ async function seedExercises(force = false) {
                                 { type: 'rest_quarter' }, { type: 'quarter' }
                             ],
                             options: [
-                                { id: 'a', label: '♩ 𝄾 ♩ ♩ | 𝅗𝅥 𝄾 ♩', correct: true },
-                                { id: 'b', label: '♩ ♩ 𝄾 ♩ | 𝅗𝅥 ♩ 𝄾', correct: false },
+                                { id: 'a', label: '♩ 𝄽 ♩ ♩ | 𝅗𝅥 𝄽 ♩', correct: true },
+                                { id: 'b', label: '♩ ♩ 𝄽 ♩ | 𝅗𝅥 ♩ 𝄽', correct: false },
                                 { id: 'c', label: '♩ ♩ ♩ ♩ | 𝅗𝅥 𝅗𝅥', correct: false },
-                                { id: 'd', label: '𝄾 ♩ ♩ ♩ | ♩ 𝄾 𝅗𝅥', correct: false }
+                                { id: 'd', label: '𝄽 ♩ ♩ ♩ | ♩ 𝄽 𝅗𝅥', correct: false }
                             ]
                         },
                         {
@@ -230,9 +230,9 @@ async function seedExercises(force = false) {
                                 { type: 'quarter' }, { type: 'quarter' }
                             ],
                             options: [
-                                { id: 'a', label: '𝄾 ♩ ♩ ♩ | ♩ 𝄾 ♩ ♩', correct: true },
-                                { id: 'b', label: '♩ 𝄾 ♩ ♩ | 𝄾 ♩ ♩ ♩', correct: false },
-                                { id: 'c', label: '♩ ♩ 𝄾 ♩ | ♩ ♩ 𝄾 ♩', correct: false },
+                                { id: 'a', label: '𝄽 ♩ ♩ ♩ | ♩ 𝄽 ♩ ♩', correct: true },
+                                { id: 'b', label: '♩ 𝄽 ♩ ♩ | 𝄽 ♩ ♩ ♩', correct: false },
+                                { id: 'c', label: '♩ ♩ 𝄽 ♩ | ♩ ♩ 𝄽 ♩', correct: false },
                                 { id: 'd', label: '♩ ♩ ♩ ♩ | ♩ ♩ ♩ ♩', correct: false }
                             ]
                         },
@@ -244,10 +244,10 @@ async function seedExercises(force = false) {
                                 { type: 'quarter' }, { type: 'rest_quarter' }
                             ],
                             options: [
-                                { id: 'a', label: '♩ ♩ 𝄾 ♩ | ♩ ♩ ♩ 𝄾', correct: true },
-                                { id: 'b', label: '♩ 𝄾 ♩ ♩ | ♩ ♩ 𝄾 ♩', correct: false },
-                                { id: 'c', label: '♩ ♩ ♩ 𝄾 | 𝄾 ♩ ♩ ♩', correct: false },
-                                { id: 'd', label: '𝄾 ♩ ♩ ♩ | ♩ 𝄾 ♩ ♩', correct: false }
+                                { id: 'a', label: '♩ ♩ 𝄽 ♩ | ♩ ♩ ♩ 𝄽', correct: true },
+                                { id: 'b', label: '♩ 𝄽 ♩ ♩ | ♩ ♩ 𝄽 ♩', correct: false },
+                                { id: 'c', label: '♩ ♩ ♩ 𝄽 | 𝄽 ♩ ♩ ♩', correct: false },
+                                { id: 'd', label: '𝄽 ♩ ♩ ♩ | ♩ 𝄽 ♩ ♩', correct: false }
                             ]
                         },
                         {
@@ -257,9 +257,9 @@ async function seedExercises(force = false) {
                                 { type: 'half' }
                             ],
                             options: [
-                                { id: 'a', label: '𝅗𝅥 𝄾 ♩ | ♩ 𝄾 𝅗𝅥', correct: true },
-                                { id: 'b', label: '♩ 𝄾 𝅗𝅥 | 𝅗𝅥 𝄾 ♩', correct: false },
-                                { id: 'c', label: '𝅗𝅥 ♩ 𝄾 | 𝄾 ♩ 𝅗𝅥', correct: false },
+                                { id: 'a', label: '𝅗𝅥 𝄽 ♩ | ♩ 𝄽 𝅗𝅥', correct: true },
+                                { id: 'b', label: '♩ 𝄽 𝅗𝅥 | 𝅗𝅥 𝄽 ♩', correct: false },
+                                { id: 'c', label: '𝅗𝅥 ♩ 𝄽 | 𝄽 ♩ 𝅗𝅥', correct: false },
                                 { id: 'd', label: '𝅗𝅥 𝅗𝅥 | ♩ ♩ 𝅗𝅥', correct: false }
                             ]
                         },
@@ -271,10 +271,10 @@ async function seedExercises(force = false) {
                                 { type: 'rest_quarter' }, { type: 'rest_quarter' }
                             ],
                             options: [
-                                { id: 'a', label: '𝄾 𝄾 ♩ ♩ | ♩ ♩ 𝄾 𝄾', correct: true },
-                                { id: 'b', label: '♩ ♩ 𝄾 𝄾 | 𝄾 𝄾 ♩ ♩', correct: false },
-                                { id: 'c', label: '𝄾 ♩ 𝄾 ♩ | ♩ 𝄾 ♩ 𝄾', correct: false },
-                                { id: 'd', label: '♩ 𝄾 ♩ 𝄾 | 𝄾 ♩ 𝄾 ♩', correct: false }
+                                { id: 'a', label: '𝄽 𝄽 ♩ ♩ | ♩ ♩ 𝄽 𝄽', correct: true },
+                                { id: 'b', label: '♩ ♩ 𝄽 𝄽 | 𝄽 𝄽 ♩ ♩', correct: false },
+                                { id: 'c', label: '𝄽 ♩ 𝄽 ♩ | ♩ 𝄽 ♩ 𝄽', correct: false },
+                                { id: 'd', label: '♩ 𝄽 ♩ 𝄽 | 𝄽 ♩ 𝄽 ♩', correct: false }
                             ]
                         }
                     ]
@@ -436,7 +436,7 @@ async function seedExercises(force = false) {
                                 { type: 'half' }, { type: 'quarter' }
                             ],
                             options: [
-                                { id: 'a', label: '♪ 𝄾♪ ♪♪ ♩ ♩ | ♪ 𝄾♪ 𝅗𝅥 ♩', correct: true },
+                                { id: 'a', label: '♪ 𝄾 ♪♪ ♩ ♩ | ♪ 𝄾 𝅗𝅥 ♩', correct: true },
                                 { id: 'b', label: '♪♪ ♪♪ ♩ ♩ | ♪♪ 𝅗𝅥 ♩', correct: false },
                                 { id: 'c', label: '♩ ♪♪ ♩ ♩ | ♩ 𝅗𝅥 ♩', correct: false },
                                 { id: 'd', label: '♪ ♩ ♪ ♩ ♩ | ♪ ♩ ♪ 𝅗𝅥', correct: false }
@@ -513,6 +513,136 @@ async function seedExercises(force = false) {
                 },
                 xpReward: 20,
                 orderIndex: 21
+            },
+            {
+                module: 'rhythm',
+                difficulty: 'advanced',
+                type: 'tap_rhythm',
+                title: 'Gemischte Notenwerte',
+                description: 'Klopfe einen Rhythmus mit Achtel-, Viertel- und Halben Noten.',
+                content: {
+                    timeSignature: '4/4',
+                    bpm: 90,
+                    bars: 2,
+                    pattern: [
+                        { type: 'eighth', beat: 1 },
+                        { type: 'eighth', beat: 1.5 },
+                        { type: 'quarter', beat: 2 },
+                        { type: 'half', beat: 3 },
+                        { type: 'quarter', beat: 5 },
+                        { type: 'eighth', beat: 6 },
+                        { type: 'eighth', beat: 6.5 },
+                        { type: 'quarter', beat: 7 },
+                        { type: 'quarter', beat: 8 }
+                    ],
+                    toleranceMs: 120
+                },
+                xpReward: 20,
+                orderIndex: 22
+            },
+            {
+                module: 'rhythm',
+                difficulty: 'advanced',
+                type: 'tap_rhythm',
+                title: 'Übergebundene Noten',
+                description: 'Klopfe Rhythmen mit übergebundenen Noten. Gebundene Noten werden als ein langer Ton gespielt.',
+                content: {
+                    timeSignature: '4/4',
+                    bpm: 80,
+                    bars: 2,
+                    pattern: [
+                        { type: 'quarter', beat: 1 },
+                        { type: 'tied_quarter_quarter', beat: 2 },
+                        { type: 'quarter', beat: 4 },
+                        { type: 'tied_half_quarter', beat: 5 },
+                        { type: 'quarter', beat: 8 }
+                    ],
+                    toleranceMs: 150
+                },
+                xpReward: 25,
+                orderIndex: 23
+            },
+            {
+                module: 'rhythm',
+                difficulty: 'advanced',
+                type: 'tap_rhythm',
+                title: 'Triolen als Viertel',
+                description: 'Klopfe Triolen im Viertelwert – drei gleichmäßige Schläge auf zwei Zählzeiten.',
+                content: {
+                    timeSignature: '4/4',
+                    bpm: 80,
+                    bars: 2,
+                    pattern: [
+                        { type: 'triplet_quarter', beat: 1 },
+                        { type: 'triplet_quarter', beat: 1.67 },
+                        { type: 'triplet_quarter', beat: 2.33 },
+                        { type: 'quarter', beat: 3 },
+                        { type: 'quarter', beat: 4 },
+                        { type: 'quarter', beat: 5 },
+                        { type: 'quarter', beat: 6 },
+                        { type: 'triplet_quarter', beat: 7 },
+                        { type: 'triplet_quarter', beat: 7.67 },
+                        { type: 'triplet_quarter', beat: 8.33 }
+                    ],
+                    toleranceMs: 120
+                },
+                xpReward: 25,
+                orderIndex: 24
+            },
+            {
+                module: 'rhythm',
+                difficulty: 'advanced',
+                type: 'tap_rhythm',
+                title: 'Hemiolen',
+                description: 'Klopfe Hemiolen – drei Halbe Noten über zwei Takte im 3/4-Takt.',
+                content: {
+                    timeSignature: '3/4',
+                    bpm: 100,
+                    bars: 4,
+                    pattern: [
+                        { type: 'quarter', beat: 1 },
+                        { type: 'quarter', beat: 2 },
+                        { type: 'quarter', beat: 3 },
+                        { type: 'quarter', beat: 4 },
+                        { type: 'quarter', beat: 5 },
+                        { type: 'quarter', beat: 6 },
+                        { type: 'half', beat: 7 },
+                        { type: 'half', beat: 9 },
+                        { type: 'half', beat: 11 }
+                    ],
+                    toleranceMs: 120
+                },
+                xpReward: 25,
+                orderIndex: 25
+            },
+            {
+                module: 'rhythm',
+                difficulty: 'advanced',
+                type: 'tap_rhythm',
+                title: 'Übergebundene Triolen',
+                description: 'Klopfe Rhythmen mit übergebundenen Triolen und gemischten Notenwerten.',
+                content: {
+                    timeSignature: '4/4',
+                    bpm: 80,
+                    bars: 2,
+                    pattern: [
+                        { type: 'triplet_eighth', beat: 1 },
+                        { type: 'triplet_eighth', beat: 1.33 },
+                        { type: 'triplet_eighth', beat: 1.67 },
+                        { type: 'tied_quarter_eighth', beat: 2 },
+                        { type: 'eighth', beat: 3.5 },
+                        { type: 'quarter', beat: 4 },
+                        { type: 'eighth', beat: 5 },
+                        { type: 'eighth', beat: 5.5 },
+                        { type: 'triplet_eighth', beat: 6 },
+                        { type: 'triplet_eighth', beat: 6.33 },
+                        { type: 'triplet_eighth', beat: 6.67 },
+                        { type: 'half', beat: 7 }
+                    ],
+                    toleranceMs: 120
+                },
+                xpReward: 30,
+                orderIndex: 26
             },
 
             // === NOTE READING – Beginner ===

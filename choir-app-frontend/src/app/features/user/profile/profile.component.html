@@ -168,6 +168,7 @@
           <div class="reminder-section">
             <mat-slide-toggle
               [(ngModel)]="reminderEnabled"
+              [ngModelOptions]="{standalone: true}"
               [disabled]="isReminderSaving"
               (change)="onReminderToggle()"
             >
@@ -179,6 +180,7 @@
                 <mat-label>Erinnerungszeitpunkt</mat-label>
                 <mat-select
                   [(ngModel)]="reminderDaysBefore"
+                  [ngModelOptions]="{standalone: true}"
                   [disabled]="isReminderSaving"
                   (selectionChange)="onReminderSettingsChange()"
                 >
@@ -192,6 +194,7 @@
                 <span class="channel-label">Benachrichtigung per:</span>
                 <mat-checkbox
                   [(ngModel)]="reminderPush"
+                  [ngModelOptions]="{standalone: true}"
                   [disabled]="isReminderSaving"
                   (change)="onReminderSettingsChange()"
                 >
@@ -199,6 +202,7 @@
                 </mat-checkbox>
                 <mat-checkbox
                   [(ngModel)]="reminderEmail"
+                  [ngModelOptions]="{standalone: true}"
                   [disabled]="isReminderSaving"
                   (change)="onReminderSettingsChange()"
                 >

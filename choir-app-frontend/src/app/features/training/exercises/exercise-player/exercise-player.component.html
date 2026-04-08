@@ -50,10 +50,21 @@
       <div class="rhythm-notation" *ngIf="exercise.content?.pattern">
         <div class="rhythm-time-sig">{{ exercise.content.timeSignature || '4/4' }}</div>
         <div class="rhythm-bars">
+          <!-- Count-in bar (beginner mode) -->
+          <div *ngIf="isBeginnerMode" class="rhythm-bar count-in-bar">
+            <span *ngFor="let i of [1,2,3,4]"
+                  class="rhythm-note count-in-note"
+                  [class.active]="isMetronomeRunning && currentBeat < 0 && (4 + currentBeat) === i"
+                  [style.flex]="1">
+              {{ i }}
+            </span>
+            <span class="bar-line">|</span>
+          </div>
           <div *ngFor="let bar of rhythmBars; let last = last" class="rhythm-bar">
             <span *ngFor="let note of bar.notes"
                   class="rhythm-note"
                   [class.rest]="note.isRest"
+                  [class.active]="isBeginnerMode && isMetronomeRunning && activeNoteIndex === note.noteIndex"
                   [style.flex]="note.width">
               {{ note.symbol }}
             </span>
@@ -62,13 +73,17 @@
         </div>
         <div class="rhythm-bpm">♩ = {{ exercise.content.bpm }} BPM</div>
       </div>
+      <p class="tap-instruction" *ngIf="!isMetronomeRunning && tapTimes.length === 0">
+        Klopfe die Noten im richtigen Rhythmus. Pausen (grau) werden nicht geklopft.<br>
+        Nach dem Start hörst du 4 Einzählschläge.
+      </p>
       <div class="metronome-info" *ngIf="isMetronomeRunning">
-        <span *ngIf="currentBeat <= 0" class="count-in">Zähle mit... {{ 4 + currentBeat + 1 }}</span>
+        <span *ngIf="currentBeat <= 0" class="count-in">Zähle mit... {{ 4 + currentBeat }}</span>
         <span *ngIf="currentBeat > 0" class="beat-display">Takt</span>
       </div>
       <div class="tap-count">Taps: {{ tapTimes.length }}</div>
       <button mat-fab color="primary" class="tap-button" (click)="onTap()"
-              [disabled]="currentBeat <= 0">
+              [disabled]="!isMetronomeRunning || currentBeat < 0">
         <mat-icon>touch_app</mat-icon>
       </button>
       <p class="tap-hint">Tippe im Rhythmus!</p>
