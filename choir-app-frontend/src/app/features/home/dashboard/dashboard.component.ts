@@ -286,14 +286,6 @@ export class DashboardComponent extends BaseComponent implements OnInit {
     window.location.href = webcalUrl;
   }
 
-  subscribeIcal(): void {
-    const token = this.authService.getToken();
-    if (!token) return;
-    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
-    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
-    window.open(webcalUrl, '_self');
-  }
-
   openEvent(ev: Event): void {
     if (ev.type === 'PLAN_ENTRY') {
       if (ev.monthlyPlan) {
@@ -325,7 +317,6 @@ export class DashboardComponent extends BaseComponent implements OnInit {
       });
     });
   }
-
 
   approvePieceChange(change: PieceChange): void {
     this.apiService.approvePieceChange(change.id).subscribe({

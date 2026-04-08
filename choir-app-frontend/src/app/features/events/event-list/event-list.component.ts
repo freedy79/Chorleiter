@@ -398,3 +398,4 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
     window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`, '_blank');
 }
+}

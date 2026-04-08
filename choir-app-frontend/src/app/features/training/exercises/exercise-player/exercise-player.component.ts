@@ -49,6 +49,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   currentIntervalIndex = 0;
   intervalAnswers: { correct: boolean }[] = [];
   currentInterval: any = null;
+  isPlayingInterval = false;
 
   // Scale hearing state
   scaleAnswers: { correct: boolean }[] = [];
@@ -64,6 +65,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   currentIntervalReadingIndex = 0;
   intervalReadingAnswers: { correct: boolean }[] = [];
   currentIntervalPair: any = null;
+
+  // Whether the current hearing item has been played at least once
+  hasPlayedCurrent = false;
 
   // Unified answer feedback
   answerFeedback: {
@@ -184,6 +188,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     this.selectedOption = null;
     this.isCorrect = null;
     this.recognitionAnswered = false;
+    this.hasPlayedCurrent = false;
 
     if (this.exercise?.type === 'tap_rhythm') {
       this.startMetronome();
@@ -194,6 +199,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     }
     if (this.exercise?.type === 'scale_hearing') {
       this.playScale();
+    }
+    if (this.exercise?.type === 'interval_hearing') {
+      this.playInterval();
     }
   }
 
@@ -232,7 +240,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
       }
       currentTime += durationBeats * beatDuration;
     }
-    setTimeout(() => this.isPlayingRhythm = false, currentTime + 200);
+    setTimeout(() => {
+      this.isPlayingRhythm = false;
+      this.hasPlayedCurrent = true;
+    }, currentTime + 200);
   }
 
   private getNoteDurationBeats(type: string): number {
@@ -377,6 +388,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         this.selectedOption = null;
         this.isCorrect = null;
         this.recognitionAnswered = false;
+        this.hasPlayedCurrent = false;
         this.setCurrentRound();
         this.playRecognitionRhythm();
       }, 1500);
@@ -452,19 +464,21 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   playInterval(): void {
     if (!this.exercise?.content || !this.audioContext) return;
     if (this.currentIntervalIndex >= this._intervalSequence.length) return;
+    if (this.isPlayingInterval) return;
 
     const content = this.exercise.content;
     const item = this._intervalSequence[this.currentIntervalIndex];
+    this.isPlayingInterval = true;
+    let totalDurationMs: number;
 
     if (content.type === 'chord_quality') {
       const playback = content.playback || 'default';
-      if (playback === 'arpeggio_then_chord') {
-        this.playArpeggioThenChord(item.notes);
-      } else if (playback === 'chord_only') {
+      if (playback === 'chord_only') {
         this.playChord(item.notes);
+        totalDurationMs = 1200;
       } else {
-        // Default: arpeggio then chord
         this.playArpeggioThenChord(item.notes);
+        totalDurationMs = item.notes.length * 300 + 400 + 1200;
       }
     } else {
       this.currentInterval = item;
@@ -475,16 +489,24 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         const targetFreq = baseFreq / Math.pow(2, item.semitones / 12);
         this.playTone(baseFreq, 0.6);
         setTimeout(() => this.playTone(targetFreq, 0.6), 700);
+        totalDurationMs = 1300;
       } else if (direction === 'harmonic') {
         const targetFreq = baseFreq * Math.pow(2, item.semitones / 12);
         this.playTone(baseFreq, 1.2);
         this.playTone(targetFreq, 1.2);
+        totalDurationMs = 1200;
       } else {
         const targetFreq = baseFreq * Math.pow(2, item.semitones / 12);
         this.playTone(baseFreq, 0.6);
         setTimeout(() => this.playTone(targetFreq, 0.6), 700);
+        totalDurationMs = 1300;
       }
     }
+
+    setTimeout(() => {
+      this.isPlayingInterval = false;
+      this.hasPlayedCurrent = true;
+    }, totalDurationMs + 200);
   }
 
   selectIntervalAnswer(answer: string): void {
@@ -518,6 +540,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         this.submitResult(score, score);
       } else {
         this.currentIntervalIndex++;
+        this.hasPlayedCurrent = false;
+        this.playInterval();
       }
     };
 
@@ -656,6 +680,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     this.currentIntervalReadingIndex = 0;
     this.currentIntervalPair = null;
     this.answerFeedback = { show: false, isCorrect: false, correctAnswer: '', givenAnswer: '' };
+    this.isPlayingInterval = false;
+    this.hasPlayedCurrent = false;
     this.prepareExercise();
   }
 
@@ -730,7 +756,10 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
       const freq = baseFreq * Math.pow(2, intervals[i] / 12);
       setTimeout(() => this.playTone(freq, 0.4), i * noteDelay);
     }
-    setTimeout(() => this.isPlayingScale = false, intervals.length * noteDelay + 200);
+    setTimeout(() => {
+      this.isPlayingScale = false;
+      this.hasPlayedCurrent = true;
+    }, intervals.length * noteDelay + 200);
   }
 
   selectScaleAnswer(answer: string): void {
@@ -749,6 +778,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         this.submitResult(score, score);
       } else {
         this.currentScaleIndex++;
+        this.hasPlayedCurrent = false;
+        this.playScale();
       }
     };
 

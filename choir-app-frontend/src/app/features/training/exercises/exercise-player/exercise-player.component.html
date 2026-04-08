@@ -89,7 +89,7 @@
                 [class.selected]="selectedOption === option.id"
                 [class.correct]="recognitionAnswered && option.correct"
                 [class.wrong]="recognitionAnswered && selectedOption === option.id && !option.correct"
-                [disabled]="recognitionAnswered"
+                [disabled]="recognitionAnswered || !hasPlayedCurrent"
                 (click)="selectOption(option.id)">
           {{ option.label }}
         </button>
@@ -233,7 +233,7 @@
                 class="interval-button"
                 [class.correct-highlight]="answerFeedback.show && opt === answerFeedback.correctAnswer"
                 [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && opt === answerFeedback.givenAnswer"
-                [disabled]="answerFeedback.show"
+                [disabled]="answerFeedback.show || !hasPlayedCurrent"
                 (click)="selectScaleAnswer(opt)">
           {{ opt }}
         </button>
@@ -307,17 +307,18 @@
     <!-- INTERVAL HEARING -->
     <div *ngIf="exercise.type === 'interval_hearing'" class="interval-hearing-area">
       <div class="progress-indicator">{{ currentProgress }}</div>
-      <button mat-fab color="accent" class="play-sound-button" (click)="playInterval()">
-        <mat-icon>volume_up</mat-icon>
+      <button mat-fab color="accent" class="play-sound-button" (click)="playInterval()"
+              [disabled]="isPlayingInterval">
+        <mat-icon>{{ isPlayingInterval ? 'volume_up' : 'play_arrow' }}</mat-icon>
       </button>
-      <p class="hearing-hint">Drücke Play und wähle das richtige Intervall</p>
+      <p class="hearing-hint">Höre das Intervall und wähle die richtige Antwort</p>
       <div class="interval-options">
         <button *ngFor="let opt of intervalOptions"
                 mat-raised-button
                 class="interval-button"
                 [class.correct-highlight]="answerFeedback.show && (chordQualityLabels[opt] || opt) === answerFeedback.correctAnswer"
                 [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && (chordQualityLabels[opt] || opt) === answerFeedback.givenAnswer"
-                [disabled]="answerFeedback.show"
+                [disabled]="answerFeedback.show || !hasPlayedCurrent"
                 (click)="selectIntervalAnswer(opt)">
           {{ chordQualityLabels[opt] || opt }}
         </button>
