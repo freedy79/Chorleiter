@@ -5,9 +5,13 @@
   <span *ngIf="isPublished" class="status-badge published">Veröffentlicht</span>
   <span *ngIf="isDraft && !isPublished" class="status-badge draft">Entwurf</span>
   <button *ngIf="isPublished && !isEditing" mat-raised-button color="primary" (click)="startEditing()">Bearbeiten starten</button>
-  <button *ngIf="isDraft && isEditing" mat-raised-button color="primary" (click)="publishDraft()">
+  <button *ngIf="isDraft && isEditing" mat-raised-button (click)="closeDraft()">
     <mat-icon>save</mat-icon>
     Speichern
+  </button>
+  <button *ngIf="isDraft && isEditing" mat-raised-button color="primary" (click)="publishDraft()">
+    <mat-icon>publish</mat-icon>
+    Veröffentlichen
   </button>
   <button
     *ngIf="isEditing"
@@ -79,7 +83,7 @@
   >
   <ng-container matColumnDef="move">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index">
+    <mat-cell *matCellDef="let item; let i = dataIndex">
       <span class="drag-handle" cdkDragHandle aria-label="Greifen">
         <mat-icon>drag_indicator</mat-icon>
       </span>
@@ -114,7 +118,7 @@
 
   <ng-container matColumnDef="time">
     <mat-header-cell *matHeaderCellDef>Uhrzeit</mat-header-cell>
-    <mat-cell *matCellDef="let item; let i = index" class="time-cell" [class.missing-duration]="typeof item.durationSec !== 'number'">
+    <mat-cell *matCellDef="let item; let i = dataIndex" class="time-cell" [class.missing-duration]="typeof item.durationSec !== 'number'">
       <div class="planned-time">{{ getPlannedTime(i) }}</div>
       <div class="duration">
         <input matInput [(ngModel)]="item.durationStr" (blur)="onDurationChange(item)" placeholder="mm:ss"
@@ -151,18 +155,8 @@
     </mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="noteRow">
-    <mat-cell *matCellDef="let item" class="note-row-cell" [attr.colspan]="displayedColumns.length">
-      <div class="note-row-content">
-        <mat-icon>notes</mat-icon>
-        <span>{{ item.note }}</span>
-      </div>
-    </mat-cell>
-  </ng-container>
-
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
   <mat-row *matRowDef="let row; columns: displayedColumns" cdkDrag></mat-row>
-  <mat-row *matRowDef="let row; columns: ['noteRow']; when: hasNoteRow" class="note-row"></mat-row>
   </mat-table>
 </div>
 

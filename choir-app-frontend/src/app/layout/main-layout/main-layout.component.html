@@ -150,7 +150,7 @@
     <app-loading-indicator></app-loading-indicator>
 
     <div class="content-wrapper">
-      <div class="container" [class.full-width]="isFullWidthRoute$ | async">
+      <div class="container">
         <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
         <router-outlet></router-outlet>
       </div>

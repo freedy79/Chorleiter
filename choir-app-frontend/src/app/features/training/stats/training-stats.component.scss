@@ -1,0 +1,138 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.training-stats {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  text-align: center;
+
+  @include bp.handset {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+.overview-value {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.overview-label {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.module-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.module-stat-card {
+  padding: 1rem;
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+
+  mat-icon {
+    color: #667eea;
+  }
+}
+
+.module-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+
+  span {
+    color: #666;
+  }
+}
+
+.module-empty {
+  font-size: 0.9rem;
+  color: #999;
+  font-style: italic;
+}
+
+.activity-bars {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  height: 120px;
+  padding-bottom: 2rem;
+  position: relative;
+}
+
+.activity-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.activity-bar {
+  width: 100%;
+  max-width: 40px;
+  background: #667eea;
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+}
+
+.activity-label {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.activity-xp {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+.empty-state {
+  text-align: center;
+  color: #666;
+  padding: 1rem;
+}
+
+@include dark-mode {
+  .overview-value { color: #90a4f9; }
+  .overview-label, .detail-row span, .activity-label { color: #aaa; }
+  .module-header mat-icon { color: #90a4f9; }
+  .activity-bar { background: #90a4f9; }
+}

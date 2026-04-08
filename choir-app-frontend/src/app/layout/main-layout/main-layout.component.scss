@@ -200,10 +200,7 @@ app-search-box {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-
-    &.full-width {
-      max-width: none;
-    }
+    max-width: none;
   }
 }
 

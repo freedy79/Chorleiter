@@ -92,6 +92,14 @@ db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
 db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
 db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
 db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
+db.reminder_log = require('./reminder_log.model.js')(sequelize, Sequelize);
+
+// Training models
+db.training_profile = require('./training_profile.model.js')(sequelize, Sequelize);
+db.exercise = require('./exercise.model.js')(sequelize, Sequelize);
+db.exercise_attempt = require('./exercise_attempt.model.js')(sequelize, Sequelize);
+db.badge_definition = require('./badge_definition.model.js')(sequelize, Sequelize);
+db.user_badge = require('./user_badge.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---
@@ -424,5 +432,29 @@ db.user.hasMany(db.one_time_token, { as: 'createdOtaTokens', foreignKey: 'create
 db.one_time_token.belongsTo(db.user, { foreignKey: 'createdByUserId', as: 'createdBy' });
 db.user.hasMany(db.one_time_token, { as: 'targetOtaTokens', foreignKey: 'targetUserId' });
 db.one_time_token.belongsTo(db.user, { foreignKey: 'targetUserId', as: 'targetUser' });
+
+// Reminder logs for rehearsal/event reminders
+db.user.hasMany(db.reminder_log, { as: 'reminderLogs', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.reminder_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.choir.hasMany(db.reminder_log, { as: 'reminderLogs', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.reminder_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.event.hasMany(db.reminder_log, { as: 'reminderLogs', foreignKey: 'eventId', onDelete: 'CASCADE' });
+db.reminder_log.belongsTo(db.event, { foreignKey: 'eventId', as: 'event' });
+
+// Training associations
+db.user.hasMany(db.training_profile, { as: 'trainingProfiles', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.training_profile.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.choir.hasMany(db.training_profile, { as: 'trainingProfiles', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.training_profile.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+
+db.user.hasMany(db.exercise_attempt, { as: 'exerciseAttempts', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.exercise_attempt.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.exercise.hasMany(db.exercise_attempt, { as: 'attempts', foreignKey: 'exerciseId', onDelete: 'CASCADE' });
+db.exercise_attempt.belongsTo(db.exercise, { foreignKey: 'exerciseId', as: 'exercise' });
+db.choir.hasMany(db.exercise_attempt, { as: 'exerciseAttempts', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.exercise_attempt.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+
+db.user.belongsToMany(db.badge_definition, { through: db.user_badge, foreignKey: 'userId', otherKey: 'badgeDefinitionId', as: 'badges' });
+db.badge_definition.belongsToMany(db.user, { through: db.user_badge, foreignKey: 'badgeDefinitionId', otherKey: 'userId', as: 'users' });
 
 module.exports = db;

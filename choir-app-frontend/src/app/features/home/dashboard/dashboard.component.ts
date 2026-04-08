@@ -275,16 +275,15 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   connectGoogleCalendar(): void {
     const token = this.authService.getToken();
     if (!token) return;
-    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
-    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
+    const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+    window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`, '_blank');
   }
 
   subscribeIcal(): void {
     const token = this.authService.getToken();
     if (!token) return;
-    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
-    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
-    window.open(webcalUrl, '_self');
+    const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+    window.location.href = webcalUrl;
   }
 
   openEvent(ev: Event): void {

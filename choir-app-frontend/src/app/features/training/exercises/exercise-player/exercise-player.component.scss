@@ -1,0 +1,614 @@
+@use '../../../../../themes/breakpoints' as bp;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.exercise-player {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.back-button {
+  margin-bottom: 0.5rem;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #f44336;
+  }
+}
+
+// Ready Screen
+.ready-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+}
+
+.exercise-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.exercise-module {
+  font-size: 0.85rem;
+  color: #667eea;
+  font-weight: 500;
+}
+
+.exercise-difficulty {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+
+  &[data-difficulty='beginner'] { background: #e8f5e9; color: #2e7d32; }
+  &[data-difficulty='intermediate'] { background: #fff3e0; color: #e65100; }
+  &[data-difficulty='advanced'] { background: #fce4ec; color: #c62828; }
+}
+
+.exercise-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.exercise-desc {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.xp-info {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #667eea;
+}
+
+.previous-result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  padding: 0.5rem 1rem;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #999;
+
+    &.completed {
+      color: #43a047;
+    }
+  }
+}
+
+.xp-earned-info {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.start-button {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  padding: 0.5rem 2rem;
+}
+
+// Playing Screen
+.playing-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.playing-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.progress-indicator {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+// Tap Rhythm
+.tap-rhythm-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+// Rhythm Notation Display
+.rhythm-notation {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rhythm-time-sig {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #667eea;
+  align-self: flex-start;
+}
+
+.rhythm-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+.rhythm-bar {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.rhythm-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  min-height: 48px;
+  color: #333;
+
+  &.rest {
+    color: #999;
+  }
+
+  @include bp.handset {
+    font-size: 1.6rem;
+    min-height: 40px;
+  }
+}
+
+.bar-line {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #999;
+  margin: 0 0.25rem;
+}
+
+.rhythm-bpm {
+  font-size: 0.8rem;
+  color: #888;
+  align-self: flex-end;
+}
+
+.metronome-info {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.count-in {
+  color: #ff6d00;
+}
+
+.tap-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.tap-button {
+  width: 120px;
+  height: 120px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  @include bp.handset {
+    width: 100px;
+    height: 100px;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
+
+.tap-hint {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+// Recognition
+.recognition-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.play-rhythm-button {
+  width: 72px;
+  height: 72px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.recognition-hint {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+.option-button {
+  padding: 1.25rem 1rem;
+  font-size: 2rem;
+  line-height: 1.4;
+  white-space: normal;
+  min-height: 72px;
+  transition: all 0.3s;
+  letter-spacing: 0.05em;
+
+  &.correct {
+    background-color: #4caf50 !important;
+    color: white !important;
+  }
+
+  &.wrong {
+    background-color: #f44336 !important;
+    color: white !important;
+  }
+}
+
+.answer-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.correct-icon { color: #4caf50; }
+.wrong-icon { color: #f44336; }
+
+// Note Naming
+.note-naming-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.note-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.staff-svg {
+  width: 200px;
+  height: 150px;
+  color: #333;
+}
+
+.clef-info {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.note-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.note-button {
+  min-width: 48px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answers-summary {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+
+  span {
+    font-size: 1.1rem;
+    font-weight: 700;
+
+    &.correct { color: #4caf50; }
+    &.wrong { color: #f44336; }
+  }
+}
+
+// Interval Hearing
+.interval-hearing-area,
+.scale-hearing-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+// Interval Reading
+.interval-reading-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.interval-staff {
+  width: 260px;
+  height: 150px;
+}
+
+// Key Signature
+.key-signature-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.key-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.key-staff {
+  width: 260px;
+  height: 150px;
+}
+
+.play-sound-button {
+  width: 80px;
+  height: 80px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.hearing-hint {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.interval-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.interval-button {
+  min-width: 80px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+// Answer feedback highlights
+.correct-highlight {
+  background-color: #43a047 !important;
+  color: white !important;
+  border-color: #2e7d32 !important;
+}
+
+.wrong-highlight {
+  background-color: #e53935 !important;
+  color: white !important;
+  border-color: #c62828 !important;
+}
+
+.answer-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  .correct-icon {
+    color: #43a047;
+  }
+
+  .wrong-icon {
+    color: #e53935;
+  }
+}
+
+@include dark-mode {
+  .correct-highlight {
+    background-color: #2e7d32 !important;
+    border-color: #1b5e20 !important;
+  }
+
+  .wrong-highlight {
+    background-color: #c62828 !important;
+    border-color: #b71c1c !important;
+  }
+
+  .previous-result {
+    background: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+  }
+
+  .xp-earned-info {
+    color: #777;
+  }
+}
+
+// Result Screen
+.result-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+}
+
+.result-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.score-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.great {
+    background: linear-gradient(135deg, #66bb6a, #43a047);
+    color: white;
+  }
+
+  &.ok {
+    background: linear-gradient(135deg, #ffa726, #ff9800);
+    color: white;
+  }
+
+  &.poor {
+    background: linear-gradient(135deg, #ef5350, #e53935);
+    color: white;
+  }
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.result-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  mat-icon {
+    color: #667eea;
+  }
+}
+
+.level-up-icon { color: #ffc107 !important; }
+.level-up-text { color: #ffc107; font-weight: 700; }
+.streak-active { color: #ff6d00 !important; }
+
+.result-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+// Dark mode
+@include dark-mode {
+  .exercise-desc,
+  .tap-hint,
+  .tap-count,
+  .hearing-hint,
+  .recognition-hint,
+  .clef-info,
+  .progress-indicator {
+    color: #aaa;
+  }
+
+  .exercise-module,
+  .xp-info {
+    color: #90a4f9;
+  }
+
+  .rhythm-notation {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .rhythm-time-sig { color: #90a4f9; }
+  .rhythm-note { color: #eee; &.rest { color: #888; } }
+  .bar-line { color: #666; }
+  .rhythm-bpm { color: #888; }
+
+  .staff-svg {
+    color: #eee;
+  }
+
+  .result-row mat-icon {
+    color: #90a4f9;
+  }
+
+  .exercise-difficulty {
+    &[data-difficulty='beginner'] { background: rgba(46, 125, 50, 0.2); color: #81c784; }
+    &[data-difficulty='intermediate'] { background: rgba(230, 81, 0, 0.2); color: #ffb74d; }
+    &[data-difficulty='advanced'] { background: rgba(198, 40, 40, 0.2); color: #ef9a9a; }
+  }
+}

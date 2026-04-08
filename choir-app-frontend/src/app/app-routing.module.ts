@@ -151,31 +151,31 @@ export const routes: Routes = [
                 path: 'collections/pieces',
                 loadComponent: () => import('./features/collections/piece-list/collection-piece-list.component').then(m => m.CollectionPieceListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Stücke', fullWidth: true },
+                data: { title: 'Stücke' },
             },
             {
                 path: 'collections',
                 loadComponent: () => import('./features/collections/collection-list/collection-list.component').then(m => m.CollectionListComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Sammlungen', fullWidth: true },
+                data: { title: 'Sammlungen' },
             },
             {
                 path: 'collections/new',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
-                data: { title: 'Neue Sammlung', fullWidth: true },
+                data: { title: 'Neue Sammlung' },
             },
             {
                 path: 'collections/view/:id',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Sammlung', readOnly: true, fullWidth: true },
+                data: { title: 'Sammlung', readOnly: true },
             },
             {
                 path: 'collections/edit/:id',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
-                data: { title: 'Sammlung bearbeiten', fullWidth: true },
+                data: { title: 'Sammlung bearbeiten' },
             },
             {
                 path: 'events',
@@ -193,7 +193,7 @@ export const routes: Routes = [
                 path: 'chat',
                 loadComponent: () => import('./features/chat/chat.component').then(m => m.ChatComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Chat', showChoirName: true, fullWidth: true }
+                data: { title: 'Chat', showChoirName: true }
             },
             {
                 path: 'dienstplan',
@@ -283,7 +283,7 @@ export const routes: Routes = [
                 path: 'members',
                 loadComponent: () => import('./features/choir-members/choir-members.component').then(m => m.ChoirMembersComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Chormitglieder' }
+                data: { title: 'Chormitglieder', fullWidth: true }
             },
             {
                 path: 'participation',
@@ -306,6 +306,11 @@ export const routes: Routes = [
                 data: { title: 'Vorstellungsseite' }
             },
         ],
+    },
+    {
+        path: 'training',
+        canActivate: [AuthGuard, AdminGuard], // Nur für Admins während der Testphase
+        loadChildren: () => import('./features/training/training.routes').then(m => m.trainingRoutes),
     },
     {
         path: 'admin',

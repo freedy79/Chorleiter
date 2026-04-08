@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { MaterialModule } from '@modules/material.module';
 import { environment } from 'src/environments/environment';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import DOMPurify from 'dompurify';
 
 @Component({
   selector: 'app-privacy',
@@ -26,7 +27,12 @@ export class PrivacyComponent implements OnInit {
     this.http.get<{ html: string }>(`${environment.apiUrl}/privacy`).subscribe({
       next: (data) => {
         if (data.html && data.html.trim()) {
-          this.customHtml = this.sanitizer.bypassSecurityTrustHtml(data.html);
+          const sanitized = DOMPurify.sanitize(data.html, {
+            USE_PROFILES: { html: true },
+            FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
+            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit'],
+          });
+          this.customHtml = this.sanitizer.bypassSecurityTrustHtml(sanitized);
           this.hasCustomContent = true;
         }
         this.loading = false;

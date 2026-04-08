@@ -333,14 +333,3 @@
 .spacer {
   flex: 1 1 auto;
 }
-
-// ===== SCROLLBAR STYLING =====
-.admin-sidebar,
-.main-content {
-  scrollbar-width: thin;
-  scrollbar-color: #ddd transparent;
-
-  .dark-theme & {
-    scrollbar-color: #555 transparent;
-  }
-}

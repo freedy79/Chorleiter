@@ -39,6 +39,63 @@ body {
   scroll-behavior: smooth;
 }
 
+// ============================================================================
+// CUSTOM SCROLLBAR STYLING
+// ============================================================================
+// Modern thin scrollbars for all browsers.
+// Firefox: uses scrollbar-width/scrollbar-color (standard).
+// Chromium/Safari: uses ::-webkit-scrollbar pseudo-elements.
+
+// --- Standard (Firefox) ---
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+// --- Webkit (Chrome, Edge, Safari) ---
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.35);
+  }
+
+  &:active {
+    background-color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+// --- Dark Mode ---
+.dark-theme {
+  * {
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.35);
+    }
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.45);
+    }
+  }
+}
+
 app-root {
   display: flex;
   flex-direction: column;

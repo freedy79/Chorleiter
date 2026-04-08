@@ -205,7 +205,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     load$.pipe(takeUntil(this.destroy$)).subscribe({
       next: response => {
-        this.messages = response.messages;
+        this.messages = response.messages.filter(m => !m.deleted);
         this.allReadUpToId = response.allReadUpToId ?? null;
         const requestedLimit = targetMessageId ? 100 : ChatComponent.PAGE_SIZE;
         this.hasOlderMessages = response.messages.length >= requestedLimit;
@@ -372,10 +372,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
     this.chatService.deleteMessage(message.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
-        this.messages = this.messages.map(item => item.id === message.id
-          ? { ...item, deleted: true, text: null, attachment: null, deletedAt: new Date().toISOString() }
-          : item
-        );
+        this.messages = this.messages.filter(item => item.id !== message.id);
       },
       error: err => {
         this.notification.error(err?.error?.message || 'Nachricht konnte nicht gelöscht werden.');
@@ -642,9 +639,15 @@ export class ChatComponent implements OnInit, OnDestroy {
         this.pollError = false;
         if (!update.messages?.length) return;
 
+        // Remove messages that have been deleted by others in real-time
+        const deletedIds = new Set(update.messages.filter(m => m.deleted).map(m => m.id));
+        if (deletedIds.size > 0) {
+          this.messages = this.messages.filter(m => !deletedIds.has(m.id));
+        }
+
         const knownIds = new Set(this.messages.map(message => message.id));
-        const additions = update.messages.filter(message => !knownIds.has(message.id));
-        if (!additions.length) return;
+        const additions = update.messages.filter(message => !message.deleted && !knownIds.has(message.id));
+        if (!additions.length && !deletedIds.size) return;
 
         const wasAtBottom = this.isScrolledToBottom();
         this.messages = [...this.messages, ...additions];
@@ -681,7 +684,7 @@ export class ChatComponent implements OnInit, OnDestroy {
           this.hasOlderMessages = response.messages.length >= ChatComponent.PAGE_SIZE;
           if (response.messages.length > 0) {
             const existingIds = new Set(this.messages.map(m => m.id));
-            const olderMessages = response.messages.filter(m => !existingIds.has(m.id));
+            const olderMessages = response.messages.filter(m => !m.deleted && !existingIds.has(m.id));
             if (olderMessages.length > 0) {
               this.messages = [...olderMessages, ...this.messages];
               // Preserve scroll position after Angular renders new messages

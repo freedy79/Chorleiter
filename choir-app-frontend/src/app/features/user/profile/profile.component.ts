@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder, FormGroup, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -14,6 +14,8 @@ import { AuthService } from '@core/services/auth.service';
 import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
 import { PushNotificationService } from '@core/services/push-notification.service';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { RehearsalReminderPreferences } from '@core/models/user-preferences';
 
 /**
  * Validator für sichere Passwörter (Option 1: Neue Anforderungen)
@@ -65,6 +67,7 @@ type PushPermission = 'default' | 'denied' | 'granted' | string;
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MaterialModule
   ],
   templateUrl: './profile.component.html',
@@ -84,6 +87,14 @@ export class ProfileComponent implements OnInit, OnDestroy {
   pushStates: Record<number, boolean> = {};
   isPushUpdating = false;
   leaveStatus: LeaveStatusResponse | null = null;
+
+  // Rehearsal reminder state
+  reminderEnabled = false;
+  reminderDaysBefore: 1 | 2 | 3 = 1;
+  reminderPush = true;
+  reminderEmail = false;
+  isReminderSaving = false;
+
   private destroy$ = new Subject<void>();
 
   // Password validation helper methods for template
@@ -110,7 +121,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
     private notification: NotificationService,
     private authService: AuthService,
     private dialogHelper: DialogHelperService,
-    private pushService: PushNotificationService
+    private pushService: PushNotificationService,
+    private prefsService: UserPreferencesService
   ) {
     this.availableChoirs$ = this.authService.availableChoirs$;
     this.isDemo$ = this.authService.isDemo$;
@@ -188,11 +200,59 @@ export class ProfileComponent implements OnInit, OnDestroy {
       next: (status) => this.leaveStatus = status,
       error: () => this.leaveStatus = null
     });
+
+    // Load rehearsal reminder preferences
+    this.prefsService.load().pipe(takeUntil(this.destroy$)).subscribe({
+      next: (prefs) => {
+        const r = prefs.rehearsalReminder;
+        if (r) {
+          this.reminderEnabled = !!r.enabled;
+          this.reminderDaysBefore = r.daysBefore || 1;
+          this.reminderPush = (r.channels || []).includes('push');
+          this.reminderEmail = (r.channels || []).includes('email');
+        }
+      },
+      error: () => { /* silently ignore — defaults are already set */ }
+    });
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  onReminderToggle(): void {
+    this.saveReminderPreferences();
+  }
+
+  onReminderSettingsChange(): void {
+    if (this.reminderEnabled) {
+      this.saveReminderPreferences();
+    }
+  }
+
+  private saveReminderPreferences(): void {
+    const channels: ('push' | 'email')[] = [];
+    if (this.reminderPush) channels.push('push');
+    if (this.reminderEmail) channels.push('email');
+
+    // Ensure at least one channel if enabled
+    if (this.reminderEnabled && channels.length === 0) {
+      channels.push('push');
+      this.reminderPush = true;
+    }
+
+    this.isReminderSaving = true;
+    this.prefsService.update({
+      rehearsalReminder: {
+        enabled: this.reminderEnabled,
+        daysBefore: this.reminderDaysBefore as 1 | 2 | 3,
+        channels
+      }
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => this.isReminderSaving = false,
+      error: () => this.isReminderSaving = false
+    });
   }
 
   onSubmit(): void {

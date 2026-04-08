@@ -1,0 +1,388 @@
+<div class="exercise-player">
+  <!-- Back button -->
+  <button mat-button class="back-button" (click)="navigateBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Dashboard
+  </button>
+
+  <!-- Loading -->
+  <div *ngIf="phase === 'loading' && !error" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="error" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-stroked-button (click)="goToList()">Zurück zur Übersicht</button>
+  </div>
+
+  <!-- Ready -->
+  <div *ngIf="phase === 'ready' && exercise" class="ready-screen">
+    <div class="exercise-info">
+      <span class="exercise-module">{{ moduleLabels[exercise.module] }}</span>
+      <span class="exercise-difficulty" [attr.data-difficulty]="exercise.difficulty">
+        {{ difficultyLabels[exercise.difficulty] }}
+      </span>
+    </div>
+    <h2 class="exercise-title">{{ exercise.title }}</h2>
+    <p class="exercise-desc" *ngIf="exercise.description">{{ exercise.description }}</p>
+    <div class="xp-info">+{{ exercise.xpReward }} XP</div>
+    <div *ngIf="exercise.bestScore != null" class="previous-result">
+      <mat-icon [class.completed]="exercise.completed">{{ exercise.completed ? 'check_circle' : 'info' }}</mat-icon>
+      <span>Bestleistung: {{ exercise.bestScore }}%</span>
+      <span *ngIf="exercise.totalXpEarned != null" class="xp-earned-info">
+        ({{ exercise.totalXpEarned }}/{{ exercise.xpReward }} XP verdient)
+      </span>
+    </div>
+
+    <button mat-raised-button color="primary" class="start-button" (click)="startExercise()">
+      <mat-icon>play_arrow</mat-icon>
+      Übung starten
+    </button>
+  </div>
+
+  <!-- Playing -->
+  <div *ngIf="phase === 'playing' && exercise" class="playing-screen">
+    <h3 class="playing-title">{{ exercise.title }}</h3>
+
+    <!-- TAP RHYTHM -->
+    <div *ngIf="exercise.type === 'tap_rhythm'" class="tap-rhythm-area">
+      <div class="rhythm-notation" *ngIf="exercise.content?.pattern">
+        <div class="rhythm-time-sig">{{ exercise.content.timeSignature || '4/4' }}</div>
+        <div class="rhythm-bars">
+          <div *ngFor="let bar of rhythmBars; let last = last" class="rhythm-bar">
+            <span *ngFor="let note of bar.notes"
+                  class="rhythm-note"
+                  [class.rest]="note.isRest"
+                  [style.flex]="note.width">
+              {{ note.symbol }}
+            </span>
+            <span *ngIf="!last" class="bar-line">|</span>
+          </div>
+        </div>
+        <div class="rhythm-bpm">♩ = {{ exercise.content.bpm }} BPM</div>
+      </div>
+      <div class="metronome-info" *ngIf="isMetronomeRunning">
+        <span *ngIf="currentBeat <= 0" class="count-in">Zähle mit... {{ 4 + currentBeat + 1 }}</span>
+        <span *ngIf="currentBeat > 0" class="beat-display">Takt</span>
+      </div>
+      <div class="tap-count">Taps: {{ tapTimes.length }}</div>
+      <button mat-fab color="primary" class="tap-button" (click)="onTap()"
+              [disabled]="currentBeat <= 0">
+        <mat-icon>touch_app</mat-icon>
+      </button>
+      <p class="tap-hint">Tippe im Rhythmus!</p>
+    </div>
+
+    <!-- RHYTHM RECOGNITION -->
+    <div *ngIf="exercise.type === 'rhythm_recognition'" class="recognition-area">
+      <div class="progress-indicator" *ngIf="recognitionProgress">{{ recognitionProgress }}</div>
+      <button mat-fab color="accent" class="play-rhythm-button" (click)="playRecognitionRhythm()"
+              [disabled]="isPlayingRhythm || recognitionAnswered">
+        <mat-icon>{{ isPlayingRhythm ? 'volume_up' : 'play_arrow' }}</mat-icon>
+      </button>
+      <p class="recognition-hint">Höre den Rhythmus und wähle das passende Notenbild</p>
+      <div class="options-grid" *ngIf="currentRound">
+        <button *ngFor="let option of currentRound.options"
+                mat-raised-button
+                class="option-button"
+                [class.selected]="selectedOption === option.id"
+                [class.correct]="recognitionAnswered && option.correct"
+                [class.wrong]="recognitionAnswered && selectedOption === option.id && !option.correct"
+                [disabled]="recognitionAnswered"
+                (click)="selectOption(option.id)">
+          {{ option.label }}
+        </button>
+      </div>
+      <div *ngIf="recognitionAnswered" class="answer-feedback">
+        <mat-icon *ngIf="isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span>{{ isCorrect ? 'Richtig!' : 'Leider falsch.' }}</span>
+      </div>
+      <div class="answers-summary" *ngIf="recognitionAnswers.length > 0">
+        <span *ngFor="let answer of recognitionAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- NOTE NAMING -->
+    <div *ngIf="exercise.type === 'name_note'" class="note-naming-area">
+      <div class="progress-indicator">{{ currentProgress }}</div>
+      <div class="note-display" *ngIf="currentNote">
+        <svg viewBox="0 0 120 90" class="staff-svg" xmlns="http://www.w3.org/2000/svg">
+          <!-- Clef -->
+          <text *ngIf="exercise.content.clef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
+          <text *ngIf="exercise.content.clef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#x1D122;</text>
+          <!-- 5 staff lines -->
+          <line *ngFor="let i of staffLineIndices"
+                x1="10" x2="110"
+                [attr.y1]="staffLineY(i)" [attr.y2]="staffLineY(i)"
+                stroke="currentColor" stroke-width="1" opacity="0.6"/>
+          <!-- Ledger lines -->
+          <line *ngFor="let lp of currentLedgerLines"
+                x1="42" x2="78"
+                [attr.y1]="staffPositionY(lp)" [attr.y2]="staffPositionY(lp)"
+                stroke="currentColor" stroke-width="1"/>
+          <!-- Note head -->
+          <ellipse cx="60" [attr.cy]="noteY" rx="7" ry="5"
+                   fill="currentColor" [attr.transform]="'rotate(-15 60 ' + noteY + ')'"/>
+          <!-- Stem -->
+          <line *ngIf="stemUp"
+                x1="66" [attr.y1]="noteY - 3" x2="66" [attr.y2]="noteY - 30"
+                stroke="currentColor" stroke-width="1.5"/>
+          <line *ngIf="!stemUp"
+                x1="54" [attr.y1]="noteY + 3" x2="54" [attr.y2]="noteY + 30"
+                stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="note-options">
+        <button *ngFor="let note of noteOptions"
+                mat-raised-button
+                class="note-button"
+                [class.correct-highlight]="answerFeedback.show && (note | uppercase) === answerFeedback.correctAnswer"
+                [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && (note | uppercase) === answerFeedback.givenAnswer"
+                [disabled]="answerFeedback.show"
+                (click)="selectNoteAnswer(note)">
+          {{ note | uppercase }}
+        </button>
+      </div>
+      <div *ngIf="answerFeedback.show" class="answer-feedback">
+        <mat-icon *ngIf="answerFeedback.isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!answerFeedback.isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span *ngIf="answerFeedback.isCorrect">Richtig!</span>
+        <span *ngIf="!answerFeedback.isCorrect">Richtig wäre: <strong>{{ answerFeedback.correctAnswer }}</strong></span>
+      </div>
+      <div class="answers-summary" *ngIf="noteAnswers.length > 0">
+        <span *ngFor="let answer of noteAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- INTERVAL READING -->
+    <div *ngIf="exercise.type === 'interval_reading'" class="interval-reading-area">
+      <div class="progress-indicator">{{ intervalReadingProgress }}</div>
+      <div class="note-display" *ngIf="currentIntervalPair">
+        <svg viewBox="0 0 160 90" class="staff-svg interval-staff" xmlns="http://www.w3.org/2000/svg">
+          <!-- Clef -->
+          <text *ngIf="intervalReadingClef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
+          <text *ngIf="intervalReadingClef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#x1D122;</text>
+          <!-- 5 staff lines -->
+          <line *ngFor="let i of staffLineIndices"
+                x1="10" x2="150"
+                [attr.y1]="staffLineY(i)" [attr.y2]="staffLineY(i)"
+                stroke="currentColor" stroke-width="1" opacity="0.6"/>
+          <!-- Ledger lines note 1 -->
+          <line *ngFor="let lp of note1LedgerLines"
+                x1="55" x2="90"
+                [attr.y1]="staffPositionY(lp)" [attr.y2]="staffPositionY(lp)"
+                stroke="currentColor" stroke-width="1"/>
+          <!-- Ledger lines note 2 -->
+          <line *ngFor="let lp of note2LedgerLines"
+                x1="105" x2="140"
+                [attr.y1]="staffPositionY(lp)" [attr.y2]="staffPositionY(lp)"
+                stroke="currentColor" stroke-width="1"/>
+          <!-- Note 1 -->
+          <ellipse cx="72" [attr.cy]="note1Y" rx="7" ry="5"
+                   fill="currentColor" [attr.transform]="'rotate(-15 72 ' + note1Y + ')'"/>
+          <line x1="78" [attr.y1]="note1Y - 3" x2="78" [attr.y2]="note1Y - 30"
+                stroke="currentColor" stroke-width="1.5"/>
+          <!-- Note 2 -->
+          <ellipse cx="122" [attr.cy]="note2Y" rx="7" ry="5"
+                   fill="currentColor" [attr.transform]="'rotate(-15 122 ' + note2Y + ')'"/>
+          <line x1="128" [attr.y1]="note2Y - 3" x2="128" [attr.y2]="note2Y - 30"
+                stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="interval-options">
+        <button *ngFor="let opt of intervalReadingOptions"
+                mat-raised-button
+                class="interval-button"
+                [class.correct-highlight]="answerFeedback.show && opt === answerFeedback.correctAnswer"
+                [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && opt === answerFeedback.givenAnswer"
+                [disabled]="answerFeedback.show"
+                (click)="selectIntervalReadingAnswer(opt)">
+          {{ opt }}
+        </button>
+      </div>
+      <div *ngIf="answerFeedback.show" class="answer-feedback">
+        <mat-icon *ngIf="answerFeedback.isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!answerFeedback.isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span *ngIf="answerFeedback.isCorrect">Richtig!</span>
+        <span *ngIf="!answerFeedback.isCorrect">Richtig wäre: <strong>{{ answerFeedback.correctAnswer }}</strong></span>
+      </div>
+      <div class="answers-summary" *ngIf="intervalReadingAnswers.length > 0">
+        <span *ngFor="let answer of intervalReadingAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- SCALE HEARING -->
+    <div *ngIf="exercise.type === 'scale_hearing'" class="scale-hearing-area">
+      <div class="progress-indicator">{{ scaleProgress }}</div>
+      <button mat-fab color="accent" class="play-sound-button" (click)="playScale()"
+              [disabled]="isPlayingScale">
+        <mat-icon>{{ isPlayingScale ? 'volume_up' : 'play_arrow' }}</mat-icon>
+      </button>
+      <p class="hearing-hint">Höre die Tonleiter und wähle den richtigen Typ</p>
+      <div class="interval-options">
+        <button *ngFor="let opt of scaleOptions"
+                mat-raised-button
+                class="interval-button"
+                [class.correct-highlight]="answerFeedback.show && opt === answerFeedback.correctAnswer"
+                [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && opt === answerFeedback.givenAnswer"
+                [disabled]="answerFeedback.show"
+                (click)="selectScaleAnswer(opt)">
+          {{ opt }}
+        </button>
+      </div>
+      <div *ngIf="answerFeedback.show" class="answer-feedback">
+        <mat-icon *ngIf="answerFeedback.isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!answerFeedback.isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span *ngIf="answerFeedback.isCorrect">Richtig!</span>
+        <span *ngIf="!answerFeedback.isCorrect">Richtig wäre: <strong>{{ answerFeedback.correctAnswer }}</strong></span>
+      </div>
+      <div class="answers-summary" *ngIf="scaleAnswers.length > 0">
+        <span *ngFor="let answer of scaleAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- KEY SIGNATURE -->
+    <div *ngIf="exercise.type === 'key_signature'" class="key-signature-area">
+      <div class="progress-indicator">{{ keyProgress }}</div>
+      <div class="key-display" *ngIf="currentKeySignature">
+        <svg viewBox="0 0 160 90" class="staff-svg key-staff" xmlns="http://www.w3.org/2000/svg">
+          <!-- Clef -->
+          <text x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
+          <!-- 5 staff lines -->
+          <line *ngFor="let i of staffLineIndices"
+                x1="10" x2="150"
+                [attr.y1]="staffLineY(i)" [attr.y2]="staffLineY(i)"
+                stroke="currentColor" stroke-width="1" opacity="0.6"/>
+          <!-- Sharps -->
+          <text *ngFor="let pos of currentSharps; let idx = index"
+                [attr.x]="40 + idx * 14"
+                [attr.y]="staffPositionY(pos) + 4"
+                fill="currentColor" font-size="16" font-weight="bold">♯</text>
+          <!-- Flats -->
+          <text *ngFor="let pos of currentFlats; let idx = index"
+                [attr.x]="40 + idx * 14"
+                [attr.y]="staffPositionY(pos) + 4"
+                fill="currentColor" font-size="16" font-weight="bold">♭</text>
+          <!-- No accidentals text -->
+          <text *ngIf="currentSharps.length === 0 && currentFlats.length === 0"
+                x="80" y="48" fill="currentColor" font-size="11" text-anchor="middle">
+            Keine Vorzeichen
+          </text>
+        </svg>
+      </div>
+      <div class="interval-options">
+        <button *ngFor="let opt of keyOptions"
+                mat-raised-button
+                class="interval-button"
+                [class.correct-highlight]="answerFeedback.show && opt === answerFeedback.correctAnswer"
+                [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && opt === answerFeedback.givenAnswer"
+                [disabled]="answerFeedback.show"
+                (click)="selectKeyAnswer(opt)">
+          {{ opt }}
+        </button>
+      </div>
+      <div *ngIf="answerFeedback.show" class="answer-feedback">
+        <mat-icon *ngIf="answerFeedback.isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!answerFeedback.isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span *ngIf="answerFeedback.isCorrect">Richtig!</span>
+        <span *ngIf="!answerFeedback.isCorrect">Richtig wäre: <strong>{{ answerFeedback.correctAnswer }}</strong></span>
+      </div>
+      <div class="answers-summary" *ngIf="keySignatureAnswers.length > 0">
+        <span *ngFor="let answer of keySignatureAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- INTERVAL HEARING -->
+    <div *ngIf="exercise.type === 'interval_hearing'" class="interval-hearing-area">
+      <div class="progress-indicator">{{ currentProgress }}</div>
+      <button mat-fab color="accent" class="play-sound-button" (click)="playInterval()">
+        <mat-icon>volume_up</mat-icon>
+      </button>
+      <p class="hearing-hint">Drücke Play und wähle das richtige Intervall</p>
+      <div class="interval-options">
+        <button *ngFor="let opt of intervalOptions"
+                mat-raised-button
+                class="interval-button"
+                [class.correct-highlight]="answerFeedback.show && (chordQualityLabels[opt] || opt) === answerFeedback.correctAnswer"
+                [class.wrong-highlight]="answerFeedback.show && !answerFeedback.isCorrect && (chordQualityLabels[opt] || opt) === answerFeedback.givenAnswer"
+                [disabled]="answerFeedback.show"
+                (click)="selectIntervalAnswer(opt)">
+          {{ chordQualityLabels[opt] || opt }}
+        </button>
+      </div>
+      <div *ngIf="answerFeedback.show" class="answer-feedback">
+        <mat-icon *ngIf="answerFeedback.isCorrect" class="correct-icon">check_circle</mat-icon>
+        <mat-icon *ngIf="!answerFeedback.isCorrect" class="wrong-icon">cancel</mat-icon>
+        <span *ngIf="answerFeedback.isCorrect">Richtig!</span>
+        <span *ngIf="!answerFeedback.isCorrect">Richtig wäre: <strong>{{ answerFeedback.correctAnswer }}</strong></span>
+      </div>
+      <div class="answers-summary" *ngIf="intervalAnswers.length > 0">
+        <span *ngFor="let answer of intervalAnswers" [class.correct]="answer.correct" [class.wrong]="!answer.correct">
+          {{ answer.correct ? '✓' : '✗' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div *ngIf="phase === 'result'" class="result-screen">
+    <div class="result-header" *ngIf="result">
+      <div class="score-circle" [class.great]="result.attempt.score >= 80"
+           [class.ok]="result.attempt.score >= 50 && result.attempt.score < 80"
+           [class.poor]="result.attempt.score < 50">
+        <span class="score-value">{{ result.attempt.score }}%</span>
+      </div>
+      <div class="result-text">
+        <span *ngIf="result.attempt.score >= 80">Großartig!</span>
+        <span *ngIf="result.attempt.score >= 50 && result.attempt.score < 80">Gut gemacht!</span>
+        <span *ngIf="result.attempt.score < 50">Weiter üben!</span>
+      </div>
+    </div>
+
+    <div class="result-details" *ngIf="result">
+      <div class="result-row">
+        <mat-icon>bolt</mat-icon>
+        <span>+{{ result.xpEarned }} XP verdient</span>
+      </div>
+      <div class="result-row" *ngIf="result.leveledUp">
+        <mat-icon class="level-up-icon">arrow_upward</mat-icon>
+        <span class="level-up-text">Level Up! Du bist jetzt Level {{ result.currentLevel }}!</span>
+      </div>
+      <div class="result-row">
+        <mat-icon [class.streak-active]="result.currentStreak > 0">local_fire_department</mat-icon>
+        <span>{{ result.currentStreak }} Tage Streak</span>
+      </div>
+      <div class="result-row">
+        <mat-icon>schedule</mat-icon>
+        <span>{{ exerciseDuration }} Sekunden</span>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button mat-raised-button color="primary" (click)="restartExercise()">
+        <mat-icon>replay</mat-icon>
+        Nochmal
+      </button>
+      <button mat-stroked-button (click)="goToList()">
+        <mat-icon>list</mat-icon>
+        Übersicht
+      </button>
+      <button mat-stroked-button routerLink="/training">
+        <mat-icon>dashboard</mat-icon>
+        Dashboard
+      </button>
+    </div>
+  </div>
+</div>

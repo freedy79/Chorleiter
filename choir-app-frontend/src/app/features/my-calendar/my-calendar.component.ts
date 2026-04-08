@@ -4,7 +4,6 @@ import {
     ViewChild,
     ElementRef,
     Inject,
-    Input,
 } from '@angular/core';
 import { MatCalendar } from '@angular/material/datepicker';
 import { CommonModule } from '@angular/common';
@@ -49,7 +48,6 @@ export class MyCalendarComponent implements OnInit {
     private loadedPlanMonths = new Set<string>();
     allPlanEntries: PlanEntry[] = [];
     isAdmin = false;
-    @Input() showTitle: boolean = true;
     choirColors: Record<number, string> = {};
     private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
 
@@ -207,10 +205,17 @@ export class MyCalendarComponent implements OnInit {
         window.open(url, '_blank');
     }
 
-    get googleCalendarUrl(): string | null {
+    subscribeIcal(): void {
         const token = this.auth.getToken();
-        if (!token) return null;
-        const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
-        return `https://calendar.google.com/calendar/r?cid=${icsUrl}`;
+        if (!token) return;
+        const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+        window.location.href = webcalUrl;
+    }
+
+    connectGoogleCalendar(): void {
+        const token = this.auth.getToken();
+        if (!token) return;
+        const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+        window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`, '_blank');
     }
 }

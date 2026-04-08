@@ -52,32 +52,20 @@
         <section class="settings-section dashboard-contact-settings" aria-label="Kontaktpersonen auf dem Dashboard">
           <h3>Kontaktpersonen auf dem Dashboard</h3>
           <p class="muted contact-hint">
-            Markiere in der Mitgliederliste die Personen, die auf der Startseite sichtbar sein sollen.
+            Wähle die Dirigenten aus, die auf der Startseite als Kontaktpersonen angezeigt werden sollen.
           </p>
-          <div *ngIf="selectedDashboardContacts.length; else noDashboardContacts" class="contact-preview-list">
-            <div *ngFor="let contact of selectedDashboardContacts" class="contact-preview-entry">
-              <div class="contact-preview-name">
-                {{ contact.firstName ? contact.firstName + ' ' : '' }}{{ contact.name }}
-              </div>
-              <div class="contact-preview-detail">
-                <mat-icon aria-hidden="true">mail</mat-icon>
-                <a [href]="'mailto:' + contact.email">{{ contact.email }}</a>
-              </div>
-              <div class="contact-preview-detail" *ngIf="contact.phone; else noPhonePreview">
-                <mat-icon aria-hidden="true">call</mat-icon>
-                <a [href]="'tel:' + contact.phone">{{ contact.phone }}</a>
-              </div>
-              <ng-template #noPhonePreview>
-                <div class="contact-preview-detail muted">
-                  <mat-icon aria-hidden="true">call</mat-icon>
-                  <span>Keine Telefonnummer hinterlegt.</span>
-                </div>
-              </ng-template>
-            </div>
-          </div>
-          <ng-template #noDashboardContacts>
-            <p class="muted">Es wurden noch keine Kontaktpersonen ausgewählt.</p>
-          </ng-template>
+          <mat-form-field appearance="outline" class="dashboard-contact-select">
+            <mat-label>Kontaktpersonen</mat-label>
+            <mat-select
+              multiple
+              [ngModel]="dashboardContactUserIds"
+              (ngModelChange)="onDashboardContactsChange($event)"
+            >
+              <mat-option *ngFor="let d of directorMembers" [value]="d.id">
+                {{ d.firstName ? d.firstName + ' ' : '' }}{{ d.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
         </section>
 
         <section class="settings-section service-settings" *ngIf="dienstplanEnabled">
@@ -131,99 +119,9 @@
       </div>
     </mat-tab>
 
-    <!-- Tab 4: Mitglieder (inkl. Log) -->
-    <mat-tab label="Mitglieder" *ngIf="isChoirAdmin">
+    <!-- Tab 4: Protokolle -->
+    <mat-tab label="Protokolle" *ngIf="isChoirAdmin">
       <div class="tab-content">
-
-        <div class="tab-actions-bar">
-          <button mat-flat-button color="primary" (click)="copyEmailsToClipboard()">
-            <mat-icon>content_copy</mat-icon>
-            <span>E-Mailadressen kopieren</span>
-          </button>
-          <button mat-flat-button color="accent" (click)="openInviteDialog()">
-            <mat-icon>add</mat-icon>
-            <span>Neues Mitglied einladen</span>
-          </button>
-        </div>
-
-        <div class="table-wrapper mat-elevation-z2">
-          <mat-table [dataSource]="dataSource">
-            <ng-container matColumnDef="dashboardContact">
-              <mat-header-cell *matHeaderCellDef class="contact-column-header">Startseite</mat-header-cell>
-              <mat-cell *matCellDef="let user" class="contact-column-cell">
-                <mat-checkbox
-                  [checked]="isDashboardContactSelected(user.id)"
-                  [disabled]="!canManageMenu || !hasDirectorRole(user)"
-                  (change)="onDashboardContactToggle(user, $event.checked)"
-                  (click)="$event.stopPropagation()"
-                  aria-label="Kontakt auf der Startseite anzeigen">
-                </mat-checkbox>
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="name">
-              <mat-header-cell *matHeaderCellDef> Name </mat-header-cell>
-              <mat-cell *matCellDef="let user"> {{user.name}}, {{ user.firstName }} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="email">
-              <mat-header-cell *matHeaderCellDef> E-Mail </mat-header-cell>
-              <mat-cell *matCellDef="let user"> {{user.email}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="address">
-              <mat-header-cell *matHeaderCellDef>Adresse</mat-header-cell>
-              <mat-cell *matCellDef="let user">
-                {{ user.street ? user.street + ',' : '' }} {{ user.postalCode }} {{ user.city }}
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="role">
-              <mat-header-cell *matHeaderCellDef> Rollen </mat-header-cell>
-              <mat-cell *matCellDef="let user">
-                <ng-container *ngIf="isChoirAdmin; else roleText">
-                  <mat-form-field appearance="outline" class="roles-select">
-                    <mat-select
-                      multiple
-                      [ngModel]="user.membership?.rolesInChoir"
-                      (ngModelChange)="onRolesChange(user, $event)"
-                    >
-                      <mat-option value="director">Dirigent</mat-option>
-                      <mat-option value="choir_admin">Chor-Admin</mat-option>
-                      <mat-option value="organist">Organist</mat-option>
-                      <mat-option value="singer">Sänger</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </ng-container>
-                <ng-template #roleText>{{ user.membership?.rolesInChoir?.join(', ') || '-' }}</ng-template>
-              </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="status">
-              <mat-header-cell *matHeaderCellDef> Status </mat-header-cell>
-              <mat-cell *matCellDef="let user"> {{user.membership?.registrationStatus === 'PENDING' ? 'Registrierung ausstehend' : 'Registriert'}} </mat-cell>
-            </ng-container>
-            <ng-container matColumnDef="actions">
-              <mat-header-cell *matHeaderCellDef></mat-header-cell>
-              <mat-cell *matCellDef="let user" class="actions-cell">
-                <button
-                  mat-icon-button
-                  color="warn"
-                  (click)="removeMember(user)"
-                  matTooltip="Mitglied aus dem Chor entfernen"
-                  [disabled]="dataSource.data.length <= 1">
-                  <mat-icon>person_remove</mat-icon>
-                </button>
-              </mat-cell>
-            </ng-container>
-            <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-            <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-            <ng-container matNoDataRow>
-              <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                  Keine Mitglieder gefunden.
-                </td>
-              </tr>
-            </ng-container>
-          </mat-table>
-        </div>
-
-        <h3 class="section-divider-title">Log</h3>
         <div class="table-wrapper mat-elevation-z2">
           <mat-table [dataSource]="logDataSource">
             <ng-container matColumnDef="timestamp">
@@ -242,7 +140,6 @@
             <mat-row *matRowDef="let row; columns: displayedLogColumns;"></mat-row>
           </mat-table>
         </div>
-
       </div>
     </mat-tab>
 

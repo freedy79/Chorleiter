@@ -1,0 +1,67 @@
+<div class="exercise-list-page">
+  <button mat-button class="back-button" routerLink="/training">
+    <mat-icon>arrow_back</mat-icon>
+    Dashboard
+  </button>
+
+  <div class="filters">
+    <mat-chip-listbox aria-label="Modul" class="filter-chips">
+      <mat-chip-option [selected]="selectedModule === ''" (click)="onModuleChange('')">Alle</mat-chip-option>
+      <mat-chip-option *ngFor="let mod of modules"
+                       [selected]="selectedModule === mod"
+                       (click)="onModuleChange(mod)">
+        {{ moduleLabels[mod] }}
+      </mat-chip-option>
+    </mat-chip-listbox>
+
+    <mat-chip-listbox aria-label="Schwierigkeit" class="filter-chips">
+      <mat-chip-option [selected]="selectedDifficulty === ''" (click)="onDifficultyChange('')">Alle</mat-chip-option>
+      <mat-chip-option *ngFor="let diff of difficulties"
+                       [selected]="selectedDifficulty === diff"
+                       (click)="onDifficultyChange(diff)">
+        {{ difficultyLabels[diff] }}
+      </mat-chip-option>
+    </mat-chip-listbox>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && exercises.length === 0" class="empty-state">
+    <mat-icon>sentiment_dissatisfied</mat-icon>
+    <p>Keine Übungen für diese Filter gefunden.</p>
+  </div>
+
+  <div *ngIf="!isLoading && exercises.length > 0" class="progress-summary">
+    <mat-icon>check_circle</mat-icon>
+    <span>{{ completedCount }} von {{ exercises.length }} Übungen abgeschlossen</span>
+    <mat-progress-bar mode="determinate" [value]="completedPercent"></mat-progress-bar>
+  </div>
+
+  <div *ngIf="!isLoading" class="exercises-grid">
+    <mat-card *ngFor="let exercise of exercises"
+              class="exercise-card"
+              [routerLink]="['/training/exercises', exercise.id]">
+      <div class="exercise-header">
+        <mat-icon class="exercise-module-icon">{{ moduleIcons[exercise.module] }}</mat-icon>
+        <div class="exercise-meta">
+          <span class="exercise-type">{{ getExerciseTypeLabel(exercise.type) }}</span>
+          <span class="exercise-difficulty" [attr.data-difficulty]="exercise.difficulty">
+            {{ difficultyLabels[exercise.difficulty] }}
+          </span>
+        </div>
+      </div>
+      <div class="exercise-title">{{ exercise.title }}</div>
+      <div class="exercise-description" *ngIf="exercise.description">{{ exercise.description }}</div>
+      <div class="exercise-footer">
+        <span class="xp-reward">+{{ exercise.xpReward }} XP</span>
+        <div class="exercise-status">
+          <mat-icon *ngIf="exercise.completed" class="completed-icon">check_circle</mat-icon>
+          <span *ngIf="exercise.bestScore != null" class="best-score">Bestleistung: {{ exercise.bestScore }}%</span>
+        </div>
+        <mat-icon>play_circle_outline</mat-icon>
+      </div>
+    </mat-card>
+  </div>
+</div>

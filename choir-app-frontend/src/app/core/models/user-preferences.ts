@@ -1,3 +1,9 @@
+export interface RehearsalReminderPreferences {
+  enabled: boolean;
+  daysBefore: 1 | 2 | 3;
+  channels: ('push' | 'email')[];
+}
+
 export interface UserPreferences {
   theme?: 'light' | 'dark' | 'system';
   pageSizes?: { [key: string]: number };
@@ -9,4 +15,6 @@ export interface UserPreferences {
   };
   /** Default availability status for new events */
   defaultAvailability?: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
+  /** Rehearsal reminder preferences */
+  rehearsalReminder?: RehearsalReminderPreferences;
 }

@@ -24,24 +24,7 @@
                 <mat-icon>list</mat-icon>
                 <span>Alle Termine</span>
               </button>
-              <button mat-stroked-button [matMenuTriggerFor]="exportMenu" matTooltip="Termine exportieren" class="hide-on-mobile">
-                <mat-icon>file_download</mat-icon>
-                <span>Export</span>
-              </button>
-              <mat-menu #exportMenu="matMenu">
-                <button mat-menu-item (click)="downloadIcs()">
-                  <mat-icon>download</mat-icon>
-                  <span>ICS-Datei herunterladen</span>
-                </button>
-                <button mat-menu-item (click)="subscribeIcal()">
-                  <mat-icon>event</mat-icon>
-                  <span>iCal abonnieren</span>
-                </button>
-                <button mat-menu-item (click)="connectGoogleCalendar()">
-                  <mat-icon>open_in_new</mat-icon>
-                  <span>Google Kalender</span>
-                </button>
-              </mat-menu>
+
             </div>
           </div>
 
@@ -52,22 +35,6 @@
               { label: 'Aktuell im Repertoire', value: (vm.performableCount || 0) }
             ]" class="hide-on-mobile">
           </app-kpi-widget>
-<!--
-          <app-status-chips-widget
-            [chips]="[
-              { label: 'Audio-Technik OK', status: 'ok' },
-              { label: 'Liedabgleich offen', status: 'warn' },
-              { label: '2 fehlende Noten', status: 'bad' }
-            ]">
-          </app-status-chips-widget>
-
-          <app-quick-actions-widget
-            (exportIcs)="downloadIcs()"
-            (connectGoogle)="connectGoogleCalendar()"
-            (createEvent)="openAddEventDialog()">
-          </app-quick-actions-widget>
-
-          -->
         </div>
 
 
@@ -76,7 +43,10 @@
           <div class="content-column content-column--primary">
             <app-upcoming-events-widget
               [events]="vm.upcomingEvents" [choirColors]="choirColors"
-              (open)="openEvent($event)">
+              (open)="openEvent($event)"
+              (exportIcs)="downloadIcs()"
+              (exportIcal)="subscribeIcal()"
+              (exportGoogle)="connectGoogleCalendar()">
             </app-upcoming-events-widget>
 
             <app-event-card *ngIf="vm.lastService as lastService"
@@ -112,14 +82,7 @@
               [post]="vm.latestPost">
             </app-latest-post-widget>
 
-            <mat-card class="calendar-card" role="region" aria-labelledby="my-dates">
-              <mat-card-header>
-                <mat-card-title id="my-dates">Meine Termine</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <app-my-calendar [showTitle]="false"></app-my-calendar>
-              </mat-card-content>
-            </mat-card>
+            <app-my-calendar></app-my-calendar>
           </div>
         </section>
     </div>

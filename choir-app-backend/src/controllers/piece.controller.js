@@ -329,7 +329,9 @@ exports.getImage = async (req, res, next) => {
 
     const fileData = await fs.readFile(filePath);
     const base64 = fileData.toString('base64');
-    const mimeType = 'image/' + (path.extname(filePath).slice(1) || 'jpeg');
+    const SAFE_IMAGE_MIME = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
+    const ext = path.extname(filePath).slice(1).toLowerCase();
+    const mimeType = SAFE_IMAGE_MIME[ext] ?? 'image/jpeg';
     res.status(200).json({ data: `data:${mimeType};base64,${base64}` });
 };
 

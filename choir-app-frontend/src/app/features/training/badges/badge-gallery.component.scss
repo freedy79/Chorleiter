@@ -1,0 +1,117 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.badge-gallery {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.badge-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+
+  mat-icon {
+    color: #ffc107;
+  }
+}
+
+.badge-category {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+  }
+}
+
+.badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+
+  @include bp.handset {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.badge-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0.75rem;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.2s;
+  gap: 0.25rem;
+
+  &.earned {
+    border-color: #ffc107;
+    background: rgba(255, 193, 7, 0.05);
+
+    .badge-icon {
+      color: #ffc107;
+    }
+  }
+
+  &.locked {
+    opacity: 0.5;
+
+    .badge-icon {
+      color: #bbb;
+    }
+  }
+}
+
+.badge-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+}
+
+.badge-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.badge-desc {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.badge-xp {
+  font-size: 0.75rem;
+  color: #667eea;
+  font-weight: 600;
+}
+
+.badge-date {
+  font-size: 0.7rem;
+  color: #999;
+}
+
+@include dark-mode {
+  .badge-card {
+    border-color: #444;
+
+    &.earned {
+      border-color: #ffc107;
+      background: rgba(255, 193, 7, 0.1);
+    }
+  }
+
+  .badge-desc { color: #aaa; }
+  .badge-xp { color: #90a4f9; }
+}

@@ -263,7 +263,35 @@ exports.updatePreferences = async (req, res) => {
         if (!user) {
             return res.status(404).send({ message: "User not found." });
         }
-        const prefs = Object.assign({}, user.preferences || {}, req.body || {});
+        const incoming = req.body || {};
+
+        // Validate rehearsalReminder if present
+        if (incoming.rehearsalReminder !== undefined) {
+            const r = incoming.rehearsalReminder;
+            if (typeof r !== 'object' || r === null) {
+                return res.status(400).send({ message: "rehearsalReminder must be an object." });
+            }
+            if (r.enabled !== undefined && typeof r.enabled !== 'boolean') {
+                return res.status(400).send({ message: "rehearsalReminder.enabled must be a boolean." });
+            }
+            if (r.daysBefore !== undefined) {
+                const d = Number(r.daysBefore);
+                if (!Number.isInteger(d) || d < 1 || d > 3) {
+                    return res.status(400).send({ message: "rehearsalReminder.daysBefore must be 1, 2, or 3." });
+                }
+                r.daysBefore = d;
+            }
+            if (r.channels !== undefined) {
+                if (!Array.isArray(r.channels) || !r.channels.every(c => c === 'push' || c === 'email')) {
+                    return res.status(400).send({ message: "rehearsalReminder.channels must be an array of 'push' and/or 'email'." });
+                }
+                if (r.channels.length === 0) {
+                    return res.status(400).send({ message: "rehearsalReminder.channels must contain at least one channel." });
+                }
+            }
+        }
+
+        const prefs = Object.assign({}, user.preferences || {}, incoming);
         user.preferences = prefs;
         await user.save();
         res.status(200).send(prefs);

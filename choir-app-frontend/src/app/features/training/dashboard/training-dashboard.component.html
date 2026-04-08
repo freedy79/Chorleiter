@@ -1,0 +1,137 @@
+<div class="training-dashboard">
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="error && !isLoading" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error }}</p>
+    <button mat-stroked-button (click)="loadData()">Erneut versuchen</button>
+  </div>
+
+  <div *ngIf="!isLoading && !error && profile" class="dashboard-content">
+    <!-- Profile Overview -->
+    <div class="profile-header">
+      <div class="level-circle">
+        <span class="level-number">{{ profile.currentLevel }}</span>
+        <span class="level-label">Level</span>
+      </div>
+      <div class="profile-info">
+        <div class="xp-section">
+          <div class="xp-text">
+            <span class="xp-current">{{ profile.totalXp }} XP</span>
+            <span class="xp-next" *ngIf="profile.nextLevelXp">/ {{ profile.nextLevelXp }} XP</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="xpProgress" color="primary"></mat-progress-bar>
+        </div>
+        <div class="streak-section">
+          <mat-icon class="streak-icon" [class.active]="profile.currentStreak > 0">local_fire_department</mat-icon>
+          <span class="streak-count">{{ profile.currentStreak }} Tage Streak</span>
+          <span class="streak-best" *ngIf="profile.longestStreak > profile.currentStreak">
+            (Rekord: {{ profile.longestStreak }})
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="stats-row">
+      <mat-card class="stat-card">
+        <mat-icon>fitness_center</mat-icon>
+        <div class="stat-value">{{ profile.totalExercises || 0 }}</div>
+        <div class="stat-label">Übungen</div>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-icon>emoji_events</mat-icon>
+        <div class="stat-value">{{ earnedBadgeCount }}</div>
+        <div class="stat-label">Abzeichen</div>
+      </mat-card>
+      <mat-card class="stat-card">
+        <mat-icon>schedule</mat-icon>
+        <div class="stat-value">{{ profile.weeklyMinutes || 0 }} min</div>
+        <div class="stat-label">Diese Woche</div>
+      </mat-card>
+    </div>
+
+    <!-- Weekly Goal -->
+    <mat-card class="weekly-goal-card">
+      <mat-card-header>
+        <mat-card-title>Wochenziel</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="weekly-goal">
+          <span>{{ profile.weeklyMinutes || 0 }} / {{ profile.weeklyGoalMinutes }} Minuten</span>
+          <mat-progress-bar mode="determinate" [value]="weeklyProgress" color="accent"></mat-progress-bar>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Modules -->
+    <h2 class="section-title">Trainingsmodule</h2>
+    <div class="modules-grid">
+      <mat-card *ngFor="let mod of modules"
+                class="module-card"
+                [routerLink]="['/training/exercises']"
+                [queryParams]="{ module: mod }">
+        <mat-icon class="module-icon">{{ moduleIcons[mod] }}</mat-icon>
+        <div class="module-info">
+          <div class="module-name">{{ moduleLabels[mod] }}</div>
+          <div class="module-progress" *ngIf="moduleProgress[mod].total > 0">
+            <span class="module-progress-text">{{ moduleProgress[mod].completed }}/{{ moduleProgress[mod].total }}</span>
+            <mat-progress-bar mode="determinate"
+              [value]="moduleProgress[mod].total ? (moduleProgress[mod].completed / moduleProgress[mod].total * 100) : 0">
+            </mat-progress-bar>
+          </div>
+        </div>
+        <mat-icon class="module-arrow">chevron_right</mat-icon>
+      </mat-card>
+    </div>
+
+    <!-- Recent Badges -->
+    <div *ngIf="recentBadges.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">Letzte Abzeichen</h2>
+        <a mat-button routerLink="/training/badges" color="primary">Alle anzeigen</a>
+      </div>
+      <div class="badges-row">
+        <div *ngFor="let badge of recentBadges" class="badge-item earned">
+          <mat-icon>{{ badge.icon }}</mat-icon>
+          <span class="badge-title">{{ badge.title }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" routerLink="/training/exercises">
+        <mat-icon>play_arrow</mat-icon>
+        Übung starten
+      </button>
+      <button mat-stroked-button routerLink="/training/stats">
+        <mat-icon>bar_chart</mat-icon>
+        Statistik
+      </button>
+      <button mat-stroked-button routerLink="/training/badges">
+        <mat-icon>emoji_events</mat-icon>
+        Abzeichen
+      </button>
+    </div>
+
+    <!-- Admin Section -->
+    <div *ngIf="isAdmin" class="admin-section">
+      <h2 class="section-title">Admin-Verwaltung</h2>
+      <mat-card class="admin-card">
+        <mat-card-content>
+          <p class="admin-hint">Alle Übungen zurücksetzen und aus den Seed-Daten neu erstellen.
+            Bisherige Versuche und Abzeichen werden gelöscht.</p>
+          <button mat-raised-button color="warn" (click)="reseedExercises()"
+                  [disabled]="isReseeding">
+            <mat-icon>restart_alt</mat-icon>
+            {{ isReseeding ? 'Wird zurückgesetzt...' : 'Übungen neu erstellen' }}
+          </button>
+          <p *ngIf="reseedMessage" class="reseed-message">{{ reseedMessage }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+</div>

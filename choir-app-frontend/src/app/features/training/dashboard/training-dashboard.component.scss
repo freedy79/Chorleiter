@@ -1,0 +1,352 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.training-dashboard {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.error-container {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #f44336;
+  }
+}
+
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Profile Header
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+
+  @include bp.handset {
+    gap: 1rem;
+  }
+}
+
+.level-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  flex-shrink: 0;
+
+  @include bp.handset {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.level-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+
+  @include bp.handset {
+    font-size: 1.4rem;
+  }
+}
+
+.level-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.profile-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.xp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.xp-text {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.xp-current {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.xp-next {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.streak-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.streak-icon {
+  color: #ccc;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+
+  &.active {
+    color: #ff6d00;
+  }
+}
+
+.streak-count {
+  font-weight: 500;
+  @include bp.responsive-font-size(0.95rem);
+}
+
+.streak-best {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+// Stats Row
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0.5rem;
+  text-align: center;
+
+  mat-icon {
+    color: #667eea;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+
+  @include bp.handset {
+    font-size: 1.1rem;
+  }
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+// Weekly Goal
+.weekly-goal-card {
+  .weekly-goal {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    span {
+      font-weight: 500;
+    }
+  }
+}
+
+// Section titles
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// Modules Grid
+.modules-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.module-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.module-icon {
+  color: #667eea;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.module-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.module-name {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.module-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  mat-progress-bar {
+    flex: 1;
+  }
+}
+
+.module-progress-text {
+  font-size: 0.75rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.module-arrow {
+  color: #999;
+}
+
+// Badges
+.badges-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 72px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: #ffd54f;
+  }
+
+  &.earned mat-icon {
+    color: #ffc107;
+  }
+}
+
+.badge-title {
+  font-size: 0.7rem;
+  text-align: center;
+  color: #666;
+}
+
+// Action Buttons
+.action-buttons {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  @include bp.handset {
+    flex-direction: column;
+  }
+}
+
+// Admin Section
+.admin-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.admin-card {
+  .admin-hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 1rem;
+  }
+
+  .reseed-message {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: #4caf50;
+    font-weight: 500;
+  }
+}
+
+// Dark mode
+@include dark-mode {
+  .error-container {
+    color: #aaa;
+  }
+
+  .stat-label,
+  .xp-next,
+  .streak-best,
+  .badge-title,
+  .module-progress-text {
+    color: #aaa;
+  }
+
+  .stat-card mat-icon,
+  .module-icon {
+    color: #90a4f9;
+  }
+
+  .module-arrow {
+    color: #666;
+  }
+
+  .admin-section {
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .admin-hint {
+    color: #aaa !important;
+  }
+}

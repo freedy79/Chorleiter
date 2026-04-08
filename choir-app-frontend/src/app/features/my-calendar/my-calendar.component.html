@@ -1,13 +1,27 @@
-<div class="calendar-wrapper">
-  <div *ngIf="showTitle">
-    <h2>Meine Termine</h2>
-  </div>
-  <div class="calendar-actions">
-    <button mat-stroked-button (click)="downloadIcs()">ICS herunterladen</button>
-    <a mat-stroked-button *ngIf="googleCalendarUrl" [href]="googleCalendarUrl" target="_blank" rel="noopener">Google
-      Kalender</a>
-  </div>
-  <mat-calendar class="compact" [selected]="selectedDate" (selectedChange)="onSelectedChange($event)"
+<mat-card class="calendar-card" role="region" aria-labelledby="my-dates">
+  <mat-card-header>
+    <mat-card-title id="my-dates">Meine Termine</mat-card-title>
+    <span class="spacer"></span>
+    <button mat-icon-button [matMenuTriggerFor]="exportMenu" matTooltip="Termine exportieren">
+      <mat-icon>file_download</mat-icon>
+    </button>
+    <mat-menu #exportMenu="matMenu">
+      <button mat-menu-item (click)="downloadIcs()">
+        <mat-icon>download</mat-icon>
+        <span>ICS-Datei herunterladen</span>
+      </button>
+      <button mat-menu-item (click)="subscribeIcal()">
+        <mat-icon>event</mat-icon>
+        <span>iCal abonnieren</span>
+      </button>
+      <button mat-menu-item (click)="connectGoogleCalendar()">
+        <mat-icon>open_in_new</mat-icon>
+        <span>Google Kalender</span>
+      </button>
+    </mat-menu>
+  </mat-card-header>
+  <mat-card-content>
+    <mat-calendar class="compact" [selected]="selectedDate" (selectedChange)="onSelectedChange($event)"
     [dateClass]="dateClass"></mat-calendar>
 
   <div #eventList class="event-list" *ngIf="eventsForSelectedDate.length > 0">
@@ -53,7 +67,8 @@
       </mat-list-item>
     </mat-list>
   </div>
-  <div *ngIf="eventsForSelectedDate.length === 0">
-    <p>Keine Termine an diesem Tag.</p>
-  </div>
-</div>
+    <div *ngIf="eventsForSelectedDate.length === 0">
+      <p>Keine Termine an diesem Tag.</p>
+    </div>
+  </mat-card-content>
+</mat-card>

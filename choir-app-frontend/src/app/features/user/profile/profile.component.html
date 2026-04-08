@@ -162,6 +162,56 @@
 
       <mat-card>
         <mat-card-header>
+          <mat-card-title>Proben-Erinnerungen</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="reminder-section">
+            <mat-slide-toggle
+              [(ngModel)]="reminderEnabled"
+              [disabled]="isReminderSaving"
+              (change)="onReminderToggle()"
+            >
+              Erinnerungen aktivieren
+            </mat-slide-toggle>
+
+            <div class="reminder-settings" *ngIf="reminderEnabled">
+              <mat-form-field appearance="outline">
+                <mat-label>Erinnerungszeitpunkt</mat-label>
+                <mat-select
+                  [(ngModel)]="reminderDaysBefore"
+                  [disabled]="isReminderSaving"
+                  (selectionChange)="onReminderSettingsChange()"
+                >
+                  <mat-option [value]="1">Einen Tag vorher</mat-option>
+                  <mat-option [value]="2">Zwei Tage vorher</mat-option>
+                  <mat-option [value]="3">Drei Tage vorher</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <div class="reminder-channels">
+                <span class="channel-label">Benachrichtigung per:</span>
+                <mat-checkbox
+                  [(ngModel)]="reminderPush"
+                  [disabled]="isReminderSaving"
+                  (change)="onReminderSettingsChange()"
+                >
+                  Push
+                </mat-checkbox>
+                <mat-checkbox
+                  [(ngModel)]="reminderEmail"
+                  [disabled]="isReminderSaving"
+                  (change)="onReminderSettingsChange()"
+                >
+                  E-Mail
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card>
+        <mat-card-header>
           <mat-card-title>Push-Benachrichtigungen</mat-card-title>
         </mat-card-header>
         <mat-card-content>

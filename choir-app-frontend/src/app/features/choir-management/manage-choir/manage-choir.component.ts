@@ -13,10 +13,10 @@ import { Choir } from 'src/app/core/models/choir';
 import { UserInChoir } from 'src/app/core/models/user';
 import { AuthService } from 'src/app/core/services/auth.service';
 import { Collection } from 'src/app/core/models/collection';
-import { InviteUserDialogComponent } from '../invite-user-dialog/invite-user-dialog.component';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
+import { CHOIR_ROLE_LABELS } from 'src/app/shared/constants/roles.constants';
 import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
 import { LibraryItem } from '@core/models/library-item';
 import { NotificationService } from '@core/services/notification.service';
@@ -96,10 +96,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   displayedLogColumns: string[] = ['timestamp', 'user', 'action'];
   logDataSource = new MatTableDataSource<ChoirLog>();
 
-
-  // Für die Mitglieder-Tabelle
-  displayedColumns: string[] = ['dashboardContact', 'name', 'email', 'address', 'role', 'status', 'actions'];
-  dataSource = new MatTableDataSource<UserInChoir>();
+  // For dashboard contact dropdown
+  directorMembers: UserInChoir[] = [];
   dashboardContactUserIds: number[] = [];
 
   constructor(
@@ -190,7 +188,9 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
           this.choirForm.disable();
         }
 
-        this.dataSource.data = pageData.members;
+        this.directorMembers = (pageData.members || []).filter(
+          (m: UserInChoir) => m.membership?.rolesInChoir?.includes('director')
+        );
         this.pruneDashboardContactIds();
         this.collectionDataSource.data = pageData.collections;
         this.logDataSource.data = pageData.logs;
@@ -220,14 +220,8 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   }
 
   private reloadData(): void {
-    // Sie könnten einen API-Aufruf machen oder, noch besser, zur Seite neu navigieren,
-    // um den Resolver erneut auszulösen.
     if (this.isChoirAdmin) {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-      this.apiService.getChoirMembers(opts).pipe(takeUntil(this.destroy$)).subscribe(members => {
-        this.dataSource.data = members;
-        this.pruneDashboardContactIds();
-      });
       this.apiService.getChoirCollections(opts).pipe(takeUntil(this.destroy$)).subscribe(cols => {
         this.collectionDataSource.data = cols;
         this.collectionCopyIds.clear();
@@ -247,28 +241,19 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       .catch(() => this.notification.error('Fehler beim Kopieren des Links.'));
   }
 
-  copyEmailsToClipboard(): void {
-    const emails = this.dataSource.data
-      .map(u => u.email)
-      .filter(email => !!email)
-      .join(';');
-
-    if (!emails) {
-      this.notification.info('Keine E-Mailadressen vorhanden.');
-      return;
-    }
-
-    navigator.clipboard.writeText(emails)
-      .then(() => this.notification.success('E-Mailadressen kopiert.'))
-      .catch(() => this.notification.error('Fehler beim Kopieren der E-Mailadressen.'));
-  }
-
   formatAction(log: ChoirLog): string {
+    const userName = log.details?.userName;
     switch (log.action) {
       case 'member_join':
-        return 'Beitritt';
+        return userName ? `Beitritt: ${userName}` : 'Beitritt';
       case 'member_leave':
-        return 'Abmeldung';
+        return userName ? `Abmeldung: ${userName}` : 'Abmeldung';
+      case 'member_role_change': {
+        const newRoles = (log.details?.newRoles as string[] || []).map(r => CHOIR_ROLE_LABELS[r] || r).join(', ');
+        return userName
+          ? `Rollenänderung: ${userName} → ${newRoles}`
+          : `Rollenänderung → ${newRoles}`;
+      }
       case 'repertoire_add_piece':
         return `Repertoire: Stück ${log.details?.pieceTitle || log.details?.pieceId} hinzugefügt`;
       case 'repertoire_update_status':
@@ -301,65 +286,6 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       error: () => this.notification.error('Fehler beim Aktualisieren der Chordaten.')
     });
   }
-
-  openInviteDialog(): void {
-    if (!this.isChoirAdmin) {
-      return;
-    }
-    this.dialogHelper.openDialogWithApi(
-      InviteUserDialogComponent,
-      (result: { email: string; roles: string[] }) => {
-        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-        return this.apiService.inviteUserToChoir(result.email, result.roles, opts);
-      },
-      {
-        dialogConfig: { width: '450px' },
-        apiConfig: {
-          onSuccess: (response: { message: string }) => {
-            this.notification.success(response.message, 4000);
-            this.reloadData();
-          },
-          errorMessage: 'Fehler beim Einladen'
-        }
-      }
-    ).subscribe();
-  }
-
-  removeMember(user: UserInChoir): void {
-    if (!this.isChoirAdmin) {
-      return;
-    }
-    this.dialogHelper.confirm({
-      title: 'Mitglied entfernen?',
-      message: `Soll ${user.name}, ${user.firstName} (${user.email}) aus diesem Chor entfernt werden? Dies kann nicht rückgängig gemacht werden.`
-    }).subscribe(confirmed => {
-      if (confirmed) {
-        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-        this.apiService.removeUserFromChoir(user.id, opts).subscribe({
-          next: () => {
-            this.notification.success(`${user.name}, ${user.firstName} wurde aus dem Chor entfernt.`);
-            this.reloadData();
-          },
-          error: () => this.notification.error('Fehler beim Entfernen des Mitglieds.')
-        });
-      }
-    });
-  }
-
-
-  onRolesChange(user: UserInChoir, roles: ('director' | 'choir_admin' | 'organist' | 'singer')[]): void {
-    if (!this.isChoirAdmin) return;
-    const previous = [...(user.membership?.rolesInChoir || [])];
-    user.membership!.rolesInChoir = roles;
-    const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-    this.apiService.updateChoirMember(user.id, { rolesInChoir: roles }, opts).subscribe({
-      error: () => {
-        this.notification.error('Fehler beim Aktualisieren.');
-        user.membership!.rolesInChoir = previous;
-      }
-    });
-  }
-
 
   onModulesChange(): void {
     if (!this.canManageMenu) {
@@ -400,50 +326,16 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     });
   }
 
-  onDashboardContactToggle(user: UserInChoir, checked: boolean): void {
-    if (!this.canManageMenu || !this.hasDirectorRole(user)) {
-      return;
-    }
-
-    const alreadySelected = this.isDashboardContactSelected(user.id);
-
-    if (checked && !alreadySelected) {
-      this.dashboardContactUserIds = [...this.dashboardContactUserIds, user.id];
-      this.onModulesChange();
-    } else if (!checked && alreadySelected) {
-      this.dashboardContactUserIds = this.dashboardContactUserIds.filter(id => id !== user.id);
-      this.onModulesChange();
-    }
-  }
-
-  isDashboardContactSelected(userId: number): boolean {
-    return this.dashboardContactUserIds.includes(userId);
-  }
-
-  hasDirectorRole(user: UserInChoir): boolean {
-    const roles = user.membership?.rolesInChoir ?? [];
-    return roles.includes('director');
-  }
-
-  get selectedDashboardContacts(): UserInChoir[] {
-    const members = this.dataSource.data ?? [];
-    return this.dashboardContactUserIds
-      .map(id => members.find(member => member.id === id))
-      .filter((member): member is UserInChoir => !!member);
+  onDashboardContactsChange(selectedIds: number[]): void {
+    this.dashboardContactUserIds = selectedIds;
+    this.onModulesChange();
   }
 
   private pruneDashboardContactIds(): void {
-    const members = this.dataSource.data ?? [];
-    const memberMap = new Map(members.map(member => [member.id, member] as const));
+    const directorIds = new Set(this.directorMembers.map(m => m.id));
     const sanitized = this.dashboardContactUserIds
       .map(id => Number(id))
-      .filter(id => {
-        if (!Number.isInteger(id) || id <= 0) {
-          return false;
-        }
-        const member = memberMap.get(id);
-        return !!member && this.hasDirectorRole(member);
-      });
+      .filter(id => Number.isInteger(id) && id > 0 && directorIds.has(id));
 
     if (sanitized.length !== this.dashboardContactUserIds.length) {
       this.dashboardContactUserIds = sanitized;

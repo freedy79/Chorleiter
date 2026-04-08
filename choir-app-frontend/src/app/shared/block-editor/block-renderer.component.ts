@@ -1,6 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml, SafeResourceUrl } from '@angular/platform-browser';
+import DOMPurify from 'dompurify';
 import {
   ContentBlock
 } from './block.model';
@@ -362,7 +363,12 @@ export class BlockRendererComponent {
   constructor(private sanitizer: DomSanitizer) {}
 
   safeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html || '');
+    const sanitized = DOMPurify.sanitize(html || '', {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'form'],
+      FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit'],
+    });
+    return this.sanitizer.bypassSecurityTrustHtml(sanitized);
   }
 
   spacerHeight(height: string): string {

@@ -79,6 +79,17 @@
 
         <div class="chat-header-actions">
           <button
+            *ngIf="isChoirAdmin && (isMobile$ | async)"
+            mat-icon-button
+            type="button"
+            (click)="openCreateRoomDialog()"
+            [disabled]="roomMutationInProgress"
+            aria-label="Neuen Raum erstellen"
+            matTooltip="Neuen Raum erstellen"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+          <button
             *ngIf="canManageSelectedRoom"
             mat-icon-button
             type="button"
@@ -114,11 +125,9 @@
         *ngFor="let message of messages; trackBy: trackMessage"
         [attr.id]="'chat-message-' + message.id"
         [class.own]="isOwnMessage(message)"
-        [class.deleted]="message.deleted"
         [class.highlighted]="message.id === highlightedMessageId"
       >
         <button
-          *ngIf="!message.deleted"
           class="message-menu-trigger"
           type="button"
           [matMenuTriggerFor]="messageMenu"
@@ -169,12 +178,9 @@
           ↪ {{ resolveReplyPreview(message) }}
         </div>
 
-        <p class="text" *ngIf="!message.deleted; else deletedTemplate" [innerHTML]="message.text! | markdown | async" (click)="onMessageContentClick($event)"></p>
-        <ng-template #deletedTemplate>
-          <p class="text deleted-text">Nachricht wurde gelöscht.</p>
-        </ng-template>
+        <p class="text" [innerHTML]="message.text! | markdown | async" (click)="onMessageContentClick($event)"></p>
 
-        <div class="piece-previews" *ngIf="!message.deleted && extractPieceIds(message.text) as pieceIds">
+        <div class="piece-previews" *ngIf="extractPieceIds(message.text) as pieceIds">
           <a
             class="piece-preview"
             *ngFor="let pieceId of pieceIds"
@@ -204,7 +210,7 @@
           📎 {{ message.attachment.originalName }}
         </a>
 
-        <div class="reactions-row" *ngIf="!message.deleted && message.reactions?.length">
+        <div class="reactions-row" *ngIf="message.reactions?.length">
           <button
             *ngFor="let reaction of message.reactions"
             class="reaction-chip"
@@ -315,5 +321,21 @@
 </section>
 
 <ng-template #noRoomSelected>
-  <app-empty-state icon="forum" title="Kein Raum ausgewählt" message="Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben."></app-empty-state>
+  <app-empty-state
+    icon="forum"
+    [title]="rooms.length === 0 ? 'Noch kein Raum vorhanden' : 'Kein Raum ausgewählt'"
+    [message]="rooms.length === 0 && isChoirAdmin ? 'Erstelle jetzt den ersten Chat-Raum.' : 'Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.'"
+  >
+    <button
+      *ngIf="rooms.length === 0 && isChoirAdmin"
+      mat-raised-button
+      color="primary"
+      type="button"
+      (click)="openCreateRoomDialog()"
+      [disabled]="roomMutationInProgress"
+    >
+      <mat-icon>add</mat-icon>
+      Raum erstellen
+    </button>
+  </app-empty-state>
 </ng-template>
