@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -1220,6 +1220,20 @@ export class ApiService {
     return this.http.delete(`${environment.apiUrl}/notifications/unsubscribe`, {
       body: { endpoint, choirId }
     });
+  }
+
+  getPushSubscriptions(endpoint?: string): Observable<{
+    endpoint: string | null;
+    choirIds: number[];
+    endpoints: { endpoint: string; choirIds: number[] }[];
+  }> {
+    let params = new HttpParams();
+    if (endpoint) params = params.set('endpoint', endpoint);
+    return this.http.get<{
+      endpoint: string | null;
+      choirIds: number[];
+      endpoints: { endpoint: string; choirIds: number[] }[];
+    }>(`${environment.apiUrl}/notifications/subscriptions`, { params });
   }
 
   // --- PWA Configuration Methods ---

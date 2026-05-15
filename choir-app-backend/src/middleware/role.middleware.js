@@ -1,6 +1,6 @@
 const db = require('../models');
 
-const DIRECTOR_ROLES = ['director'];
+const DIRECTOR_ROLES = ['director', 'chorleiter', 'choirleiter'];
 
 async function getActiveChoirMembership(req) {
     if (!req.userId || !req.activeChoirId) {
@@ -171,7 +171,7 @@ async function requireNonSinger(req, res, next) {
         return next();
     }
     try {
-        const hasRole = await userHasChoirRole(req, ['choir_admin', 'director', 'organist', 'notenwart']);
+        const hasRole = await userHasChoirRole(req, ['choir_admin', ...DIRECTOR_ROLES, 'organist', 'notenwart']);
         if (hasRole) {
             return next();
         }

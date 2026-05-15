@@ -68,6 +68,56 @@ exports.subscribe = async (req, res) => {
   }
 };
 
+/**
+ * Returns the current push subscription state for the requesting user.
+ * - If `endpoint` query param is provided, only subscriptions matching that
+ *   endpoint are returned (typical case: a single device wants to know which
+ *   choirs are subscribed on it).
+ * - Otherwise, all of the user's subscriptions across endpoints are returned.
+ *
+ * Response shape:
+ *   {
+ *     endpoint: string | null,     // only set when filtered by endpoint
+ *     choirIds: number[],          // distinct choirIds for the (filtered) subscriptions
+ *     endpoints: [{ endpoint, choirIds: number[] }] // full breakdown
+ *   }
+ */
+exports.listSubscriptions = async (req, res) => {
+  const endpointFilter = typeof req.query.endpoint === 'string' && req.query.endpoint
+    ? req.query.endpoint
+    : null;
+
+  const where = { userId: req.userId };
+  if (endpointFilter) where.endpoint = endpointFilter;
+
+  const rows = await db.push_subscription.findAll({
+    where,
+    attributes: ['endpoint', 'choirId']
+  });
+
+  const byEndpoint = new Map();
+  for (const row of rows) {
+    const list = byEndpoint.get(row.endpoint) || new Set();
+    list.add(row.choirId);
+    byEndpoint.set(row.endpoint, list);
+  }
+
+  const endpoints = Array.from(byEndpoint.entries()).map(([endpoint, set]) => ({
+    endpoint,
+    choirIds: Array.from(set)
+  }));
+
+  const flatChoirIds = endpointFilter
+    ? Array.from(byEndpoint.get(endpointFilter) || [])
+    : Array.from(new Set(rows.map(r => r.choirId)));
+
+  return res.status(200).send({
+    endpoint: endpointFilter,
+    choirIds: flatChoirIds,
+    endpoints
+  });
+};
+
 exports.unsubscribe = async (req, res) => {
   const { endpoint, choirId } = req.body || {};
   if (!endpoint || !choirId) {

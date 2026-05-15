@@ -53,6 +53,8 @@ async function checkAndSendReminders() {
         title: `Anstehender Dienst – ${event.choir.name}`,
         body: `${dateStr} um ${timeStr}${event.notes ? ' · ' + event.notes : ''}`,
         icon: '/assets/icons/icon-192x192.png',
+        badge: '/assets/icons/icon-96x96.png',
+        tag: `duty-event-${event.id}`,
         url: '/events',
         data: { url: '/events' }
       };
@@ -102,6 +104,8 @@ async function checkAndSendReminders() {
         title: `Anstehender Dienst – ${choir.name}`,
         body: `${dateStr} um ${timeStr}${entry.notes ? ' · ' + entry.notes : ''}`,
         icon: '/assets/icons/icon-192x192.png',
+        badge: '/assets/icons/icon-96x96.png',
+        tag: `duty-plan-${entry.id}`,
         url: '/events',
         data: { url: '/events' }
       };

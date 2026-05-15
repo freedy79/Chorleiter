@@ -61,6 +61,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   userRole$: Observable<string | undefined>;
   private readonly roleTranslations: Record<string, string> = {
     director: 'Chorleiter',
+    chorleiter: 'Chorleiter',
+    choirleiter: 'Chorleiter',
     choir_admin: 'Chor-Admin',
     admin: 'Administrator',
     demo: 'Demo',
@@ -311,6 +313,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       take(1),
       takeUntil(this.destroy$)
     ).subscribe(choirs => {
+      // First, reconcile the push subscription state with the backend. This
+      // re-registers the current browser endpoint if the server-side record
+      // was lost (common on Android where FCM endpoints rotate).
+      this.pushService
+        .syncSubscriptionState(choirs.map(c => c.id))
+        .catch(() => {});
       setTimeout(() => this.pwaInstall.tryShowPushPrompt(choirs), 5000);
     });
   }

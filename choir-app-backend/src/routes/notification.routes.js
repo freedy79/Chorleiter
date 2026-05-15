@@ -7,6 +7,7 @@ router.get('/vapid-public-key', wrap(controller.getVapidPublicKey));
 
 router.use(authJwt.verifyToken);
 
+router.get('/subscriptions', wrap(controller.listSubscriptions));
 router.post('/subscribe', wrap(controller.subscribe));
 router.delete('/unsubscribe', wrap(controller.unsubscribe));
 

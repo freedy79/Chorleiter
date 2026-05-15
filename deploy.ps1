@@ -73,14 +73,33 @@ if ($buildFrontend -or $buildBackend) {
 }
 
 if ($buildFrontend) {
-    # Build Angular frontend
-    Write-Host "Building Angular frontend..."
-    npm --prefix choir-app-frontend run build
-    if ($LASTEXITCODE -ne 0) {
-        throw "Build failed. Aborting deployment."
+    # Check if frontend build is already up-to-date
+    $skipBuild = $false
+    $distPath = Join-Path $PSScriptRoot "choir-app-frontend/dist/choir-app-frontend/browser"
+    $buildInfoPath = Join-Path $PSScriptRoot "choir-app-frontend/src/environments/build-info.ts"
+
+    if ((Test-Path $distPath) -and (Test-Path $buildInfoPath)) {
+        $currentCommit = (git rev-parse --short HEAD 2>$null)
+        $frontendChanges = (git status --porcelain -- choir-app-frontend/src/ 2>$null)
+
+        if ($currentCommit -and -not $frontendChanges) {
+            $buildInfoContent = Get-Content $buildInfoPath -Raw
+            if ($buildInfoContent -match "commit:\s*'($currentCommit)'") {
+                Write-Host "Frontend build is already up-to-date (commit: $currentCommit). Skipping build." -ForegroundColor Green
+                $skipBuild = $true
+            }
+        }
     }
 
-    Write-Host "Build finished."
+    if (-not $skipBuild) {
+        # Build Angular frontend
+        Write-Host "Building Angular frontend..."
+        npm --prefix choir-app-frontend run build
+        if ($LASTEXITCODE -ne 0) {
+            throw "Build failed. Aborting deployment."
+        }
+        Write-Host "Build finished."
+    }
 }
 
 if ($buildBackend) {

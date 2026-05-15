@@ -142,7 +142,8 @@ exports.findOne = async (req, res) => {
                 { model: Composer, as: 'composers', through: { attributes: ['type'] } },
                 { model: Category, as: 'category', attributes: ['id', 'name'] },
                 { model: Author, as: 'author', attributes: ['id', 'name'] },
-                { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] }
+                { model: db.piece_link, as: 'links', include: [{ model: db.audio_marker, as: 'markers' }] },
+                { model: db.collection, through: { attributes: ['numberInCollection'] }, attributes: ['id', 'prefix', 'title', 'singleEdition'] }
             ]
         });
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Program, ProgramItem } from '@core/models/program';
 import { MaterialModule } from '@modules/material.module';
@@ -17,13 +17,14 @@ import { PieceService } from '@core/services/piece.service';
 export class CurrentProgramWidgetComponent implements OnInit {
   @Input({ required: true }) program: Program | null = null;
   composerCache = new Map<string, any>();
+  pieceCache = new Map<string, any>();
 
-  constructor(private pieceService: PieceService) {}
+  constructor(private pieceService: PieceService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    // Load composer data for pieces when program items are available
+    // Load piece data (composer, collections) when program items are available
     if (this.program?.items) {
-      this.program.items.forEach(item => this.loadComposerData(item));
+      this.program.items.forEach(item => this.loadPieceData(item));
     }
   }
 
@@ -46,16 +47,20 @@ export class CurrentProgramWidgetComponent implements OnInit {
     return '';
   }
 
-  loadComposerData(item: ProgramItem): void {
-    if (item.type === 'piece' && item.pieceId && !this.composerCache.has(item.pieceId)) {
+  loadPieceData(item: ProgramItem): void {
+    if (item.type === 'piece' && item.pieceId && !this.pieceCache.has(item.pieceId)) {
       this.pieceService.getPieceById(Number(item.pieceId)).subscribe({
         next: (piece: any) => {
-          if (piece.composer && item.pieceId) {
-            this.composerCache.set(item.pieceId, piece.composer);
+          if (item.pieceId) {
+            this.pieceCache.set(item.pieceId, piece);
+            if (piece.composer) {
+              this.composerCache.set(item.pieceId, piece.composer);
+            }
+            this.cdr.markForCheck();
           }
         },
         error: () => {
-          // Silently fail - years just won't be shown
+          // Silently fail - extra info just won't be shown
         }
       });
     }
@@ -95,5 +100,29 @@ export class CurrentProgramWidgetComponent implements OnInit {
       default:
         return null;
     }
+  }
+
+  getCollectionInfo(item: ProgramItem): string | null {
+    if (item.type !== 'piece' || !item.pieceId || !this.pieceCache.has(item.pieceId)) {
+      return null;
+    }
+    const piece = this.pieceCache.get(item.pieceId);
+    if (!piece?.collections?.length) {
+      return null;
+    }
+    const parts: string[] = [];
+    for (const col of piece.collections) {
+      if (col.singleEdition) {
+        if (col.title) {
+          parts.push(col.title);
+        }
+      } else {
+        const num = col.collection_piece?.numberInCollection;
+        if (num) {
+          parts.push(`${col.prefix} ${num}`);
+        }
+      }
+    }
+    return parts.length > 0 ? parts.join(' · ') : null;
   }
 }
