@@ -18,6 +18,7 @@ type ExercisePhase = 'loading' | 'ready' | 'playing' | 'result';
 })
 export class ExercisePlayerComponent implements OnInit, OnDestroy {
   exercise: Exercise | null = null;
+  nextExercise: Exercise | null = null;
   phase: ExercisePhase = 'loading';
   error: string | null = null;
   moduleLabels = MODULE_LABELS;
@@ -127,6 +128,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         this.exercise = exercise;
         this.phase = 'ready';
         this.prepareExercise();
+        this.loadNextExerciseSuggestion();
       },
       error: () => {
         this.error = 'Übung konnte nicht geladen werden.';
@@ -167,6 +169,31 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (this.exercise.type === 'interval_reading') {
       this.prepareIntervalReadingSequence();
     }
+  }
+
+  private loadNextExerciseSuggestion(): void {
+    if (!this.exercise) return;
+
+    const { module, difficulty, id: currentId, orderIndex: currentOrderIndex } = this.exercise;
+    this.trainingService.getExercises({ module, difficulty, limit: 500 }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (result) => {
+        const orderedExercises = [...result.exercises].sort((a, b) => {
+          if (a.orderIndex !== b.orderIndex) {
+            return a.orderIndex - b.orderIndex;
+          }
+          return a.title.localeCompare(b.title, 'de');
+        });
+
+        const currentIndex = orderedExercises.findIndex(ex => ex.id === currentId);
+        const nextByIndex = currentIndex >= 0 ? orderedExercises[currentIndex + 1] : undefined;
+        const nextByOrder = orderedExercises.find(ex => ex.orderIndex > currentOrderIndex);
+
+        this.nextExercise = nextByIndex || nextByOrder || null;
+      },
+      error: () => {
+        this.nextExercise = null;
+      }
+    });
   }
 
   private shuffleNotes(): void {
@@ -442,7 +469,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   get recognitionProgress(): string {
     const rounds = this.exercise?.content?.rounds;
     if (!rounds || rounds.length <= 1) return '';
-    return `${this.recognitionAnswers.length + 1} / ${rounds.length}`;
+    const current = Math.min(this.recognitionAnswers.length + 1, rounds.length);
+    return `${current} / ${rounds.length}`;
   }
 
   // === NOTE NAMING ===
@@ -496,11 +524,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (!source || source.length === 0) return;
 
     const count = content.count || source.length;
-    const sequence: any[] = [];
-    for (let i = 0; i < count; i++) {
-      sequence.push(source[Math.floor(Math.random() * source.length)]);
-    }
-    this._intervalSequence = sequence;
+    this._intervalSequence = this.sampleWithoutImmediateRepeat(source, count);
     this.currentIntervalIndex = 0;
     this.intervalAnswers = [];
   }
@@ -732,6 +756,11 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     this.prepareExercise();
   }
 
+  startNextExercise(): void {
+    if (!this.nextExercise) return;
+    this.router.navigate(['/training/exercises', this.nextExercise.id]);
+  }
+
   goToList(): void {
     this.router.navigate(['/training/exercises'], {
       queryParams: this.exercise ? { module: this.exercise.module } : {}
@@ -777,13 +806,12 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (!this.exercise?.content?.scales) return;
     const scales = this.exercise.content.scales;
     const count = this.exercise.content.count || 8;
-    this._scaleSequence = [];
     const baseNotes = this.exercise.content.baseNotes || ['C4'];
-    for (let i = 0; i < count; i++) {
-      const scale = scales[Math.floor(Math.random() * scales.length)];
-      const baseNote = baseNotes[Math.floor(Math.random() * baseNotes.length)];
-      this._scaleSequence.push({ ...scale, baseNote });
-    }
+    const picked = this.sampleWithoutImmediateRepeat(scales, count, (s: any) => s.name);
+    this._scaleSequence = picked.map(scale => ({
+      ...scale,
+      baseNote: baseNotes[Math.floor(Math.random() * baseNotes.length)]
+    }));
     this.currentScaleIndex = 0;
     this.scaleAnswers = [];
   }
@@ -839,7 +867,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   }
 
   get scaleProgress(): string {
-    return `${this.scaleAnswers.length + 1} / ${this._scaleSequence.length}`;
+    const total = this._scaleSequence.length;
+    const current = Math.min(this.scaleAnswers.length + 1, total);
+    return `${current} / ${total}`;
   }
 
   // === KEY SIGNATURE ===
@@ -853,10 +883,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (!this.exercise?.content?.keySignatures) return;
     const keys = this.exercise.content.keySignatures;
     const count = this.exercise.content.count || 8;
-    this._keySequence = [];
-    for (let i = 0; i < count; i++) {
-      this._keySequence.push(keys[Math.floor(Math.random() * keys.length)]);
-    }
+    this._keySequence = this.sampleWithoutImmediateRepeat(keys, count, (k: any) => k.answer);
     this.currentKeyIndex = 0;
     this.currentKeySignature = this._keySequence[0];
     this.keySignatureAnswers = [];
@@ -891,7 +918,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   }
 
   get keyProgress(): string {
-    return `${this.keySignatureAnswers.length + 1} / ${this._keySequence.length}`;
+    const total = this._keySequence.length;
+    const current = Math.min(this.keySignatureAnswers.length + 1, total);
+    return `${current} / ${total}`;
   }
 
   get currentSharps(): number[] {
@@ -911,13 +940,37 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (!this.exercise?.content?.intervals) return;
     const intervals = this.exercise.content.intervals;
     const count = this.exercise.content.count || intervals.length;
-    this._intervalReadingSequence = [];
-    for (let i = 0; i < count; i++) {
-      this._intervalReadingSequence.push(intervals[Math.floor(Math.random() * intervals.length)]);
-    }
+    this._intervalReadingSequence = this.sampleWithoutImmediateRepeat(
+      intervals, count, (i: any) => `${i.note1}-${i.note2}`
+    );
     this.currentIntervalReadingIndex = 0;
     this.currentIntervalPair = this._intervalReadingSequence[0];
     this.intervalReadingAnswers = [];
+  }
+
+  /**
+   * Randomly pick `count` items from `source`, avoiding consecutive duplicates
+   * (compared by the optional `keyFn`). Falls back gracefully if `source.length === 1`.
+   */
+  private sampleWithoutImmediateRepeat<T>(source: T[], count: number, keyFn?: (item: T) => any): T[] {
+    if (!source || source.length === 0) return [];
+    const result: T[] = [];
+    let lastKey: any = undefined;
+    for (let i = 0; i < count; i++) {
+      let pick: T;
+      let attempts = 0;
+      do {
+        pick = source[Math.floor(Math.random() * source.length)];
+        attempts++;
+      } while (
+        source.length > 1 &&
+        attempts < 8 &&
+        (keyFn ? keyFn(pick) === lastKey : pick === result[result.length - 1])
+      );
+      result.push(pick);
+      lastKey = keyFn ? keyFn(pick) : pick;
+    }
+    return result;
   }
 
   selectIntervalReadingAnswer(answer: string): void {
@@ -949,7 +1002,9 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   }
 
   get intervalReadingProgress(): string {
-    return `${this.intervalReadingAnswers.length + 1} / ${this._intervalReadingSequence.length}`;
+    const total = this._intervalReadingSequence.length;
+    const current = Math.min(this.intervalReadingAnswers.length + 1, total);
+    return `${current} / ${total}`;
   }
 
   get note1Y(): number {
@@ -1039,11 +1094,13 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   get currentProgress(): string {
     if (this.exercise?.type === 'name_note') {
       const total = this.exercise.content.count || this.exercise.content.notes.length;
-      return `${this.noteAnswers.length + 1} / ${total}`;
+      const current = Math.min(this.noteAnswers.length + 1, total);
+      return `${current} / ${total}`;
     }
     if (this.exercise?.type === 'interval_hearing') {
       const total = this._intervalSequence.length;
-      return `${this.intervalAnswers.length + 1} / ${total}`;
+      const current = Math.min(this.intervalAnswers.length + 1, total);
+      return `${current} / ${total}`;
     }
     return '';
   }

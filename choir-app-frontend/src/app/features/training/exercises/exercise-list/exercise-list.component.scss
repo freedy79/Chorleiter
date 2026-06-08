@@ -36,7 +36,7 @@
 .empty-state {
   text-align: center;
   padding: 2rem;
-  color: #666;
+  color: var(--training-text-muted);
 
   mat-icon {
     font-size: 48px;
@@ -69,7 +69,7 @@
 }
 
 .exercise-module-icon {
-  color: #667eea;
+  color: var(--training-accent);
   font-size: 24px;
 }
 
@@ -81,7 +81,7 @@
 
 .exercise-type {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .exercise-difficulty {
@@ -91,18 +91,18 @@
   font-weight: 500;
 
   &[data-difficulty='beginner'] {
-    background: #e8f5e9;
-    color: #2e7d32;
+    background: var(--training-success-soft-bg);
+    color: var(--training-success-soft-fg);
   }
 
   &[data-difficulty='intermediate'] {
-    background: #fff3e0;
-    color: #e65100;
+    background: var(--training-warning-soft-bg);
+    color: var(--training-warning-soft-fg);
   }
 
   &[data-difficulty='advanced'] {
-    background: #fce4ec;
-    color: #c62828;
+    background: var(--training-danger-soft-bg);
+    color: var(--training-danger-soft-fg);
   }
 }
 
@@ -114,7 +114,7 @@
 
 .exercise-description {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
   margin-bottom: 0.5rem;
 }
 
@@ -131,7 +131,7 @@
 }
 
 .completed-icon {
-  color: #43a047;
+  color: var(--training-success);
   font-size: 18px;
   width: 18px;
   height: 18px;
@@ -139,7 +139,7 @@
 
 .best-score {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .progress-summary {
@@ -148,13 +148,13 @@
   gap: 0.5rem;
   flex-wrap: wrap;
   padding: 0.75rem 1rem;
-  background: rgba(102, 126, 234, 0.08);
+  background: var(--training-accent-soft-bg);
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
 
   mat-icon {
-    color: #43a047;
+    color: var(--training-success);
     font-size: 20px;
     width: 20px;
     height: 20px;
@@ -169,41 +169,11 @@
 .xp-reward {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #667eea;
+  color: var(--training-accent);
 }
 
 .exercise-footer mat-icon {
-  color: #999;
+  color: var(--training-text-subtle);
 }
 
-@include dark-mode {
-  .exercise-type,
-  .exercise-description,
-  .best-score {
-    color: #aaa;
-  }
-
-  .exercise-module-icon,
-  .xp-reward {
-    color: #90a4f9;
-  }
-
-  .progress-summary {
-    background: rgba(102, 126, 234, 0.15);
-  }
-
-  .exercise-difficulty {
-    &[data-difficulty='beginner'] {
-      background: rgba(46, 125, 50, 0.2);
-      color: #81c784;
-    }
-    &[data-difficulty='intermediate'] {
-      background: rgba(230, 81, 0, 0.2);
-      color: #ffb74d;
-    }
-    &[data-difficulty='advanced'] {
-      background: rgba(198, 40, 40, 0.2);
-      color: #ef9a9a;
-    }
-  }
-}
+// Dark mode adjustments are handled automatically by --training-* tokens.

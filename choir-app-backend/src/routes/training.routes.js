@@ -16,6 +16,11 @@ router.post('/exercises/:id/attempt', role.requireNonDemo, wrap(controller.submi
 router.get('/history', wrap(controller.getHistory));
 router.get('/badges', wrap(controller.getBadges));
 router.get('/stats', wrap(controller.getStats));
+router.get('/leaderboard/weekly', wrap(controller.getWeeklyLeaderboard));
+
+// Theory knowledge base (read-only for all authenticated users)
+router.get('/theory', wrap(controller.getTheoryTopics));
+router.get('/theory/:key', wrap(controller.getTheoryTopic));
 
 // Admin endpoints for exercise management
 router.post('/admin/exercises', role.requireNonDemo, role.requireAdmin, wrap(controller.createExercise));

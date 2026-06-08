@@ -1,5 +1,6 @@
 const db = require('../models');
 const logger = require('../config/logger');
+const { seedTheoryTopics } = require('./seedTheoryTopics');
 
 async function ensureTrainingTables() {
     try {
@@ -17,6 +18,9 @@ async function ensureTrainingTables() {
 
         await db.user_badge.sync();
         logger.info('[Migration] user_badge table ensured.');
+
+        await db.theory_topic.sync();
+        logger.info('[Migration] theory_topic table ensured.');
     } catch (err) {
         logger.error('[Migration] Error ensuring training tables:', err);
         throw err;
@@ -1285,6 +1289,267 @@ async function seedExercises(force = false) {
                 },
                 xpReward: 20,
                 orderIndex: 39
+            },
+
+            // === EAR TRAINING – Dreiklang-Umkehrungen (intermediate, arpeggio + chord) ===
+            {
+                module: 'ear_training',
+                difficulty: 'intermediate',
+                type: 'interval_hearing',
+                title: 'Dreiklang-Umkehrungen – Einzeln & Akkord',
+                description: 'Höre Dur-Dreiklänge als Arpeggio und Akkord. Bestimme Grundstellung, Sextakkord (1. Umkehrung) oder Quartsextakkord (2. Umkehrung).',
+                content: {
+                    type: 'chord_quality',
+                    playback: 'arpeggio_then_chord',
+                    chords: [
+                        // C-Dur in allen Stellungen
+                        { notes: ['C4', 'E4', 'G4'], answer: 'grundstellung' },
+                        { notes: ['E4', 'G4', 'C5'], answer: '1. Umkehrung' },
+                        { notes: ['G4', 'C5', 'E5'], answer: '2. Umkehrung' },
+                        // F-Dur
+                        { notes: ['F4', 'A4', 'C5'], answer: 'grundstellung' },
+                        { notes: ['A4', 'C5', 'F5'], answer: '1. Umkehrung' },
+                        { notes: ['C5', 'F5', 'A5'], answer: '2. Umkehrung' },
+                        // G-Dur
+                        { notes: ['G4', 'B4', 'D5'], answer: 'grundstellung' },
+                        { notes: ['B4', 'D5', 'G5'], answer: '1. Umkehrung' },
+                        { notes: ['D5', 'G5', 'B5'], answer: '2. Umkehrung' },
+                        // D-Dur
+                        { notes: ['D4', 'F#4', 'A4'], answer: 'grundstellung' },
+                        { notes: ['F#4', 'A4', 'D5'], answer: '1. Umkehrung' },
+                        { notes: ['A4', 'D5', 'F#5'], answer: '2. Umkehrung' }
+                    ],
+                    count: 10,
+                    timeLimitSeconds: 180
+                },
+                xpReward: 15,
+                orderIndex: 53.5
+            },
+            // === EAR TRAINING – Dreiklang-Umkehrungen (advanced, chord only, Dur + Moll) ===
+            {
+                module: 'ear_training',
+                difficulty: 'advanced',
+                type: 'interval_hearing',
+                title: 'Dreiklang-Umkehrungen bestimmen',
+                description: 'Nur als Akkord: Bestimme die Stellung (Grundstellung, 1. oder 2. Umkehrung) von Dur- und Mollakkorden.',
+                content: {
+                    type: 'chord_quality',
+                    playback: 'chord_only',
+                    chords: [
+                        // Dur
+                        { notes: ['C4', 'E4', 'G4'], answer: 'grundstellung' },
+                        { notes: ['E4', 'G4', 'C5'], answer: '1. Umkehrung' },
+                        { notes: ['G4', 'C5', 'E5'], answer: '2. Umkehrung' },
+                        { notes: ['F4', 'A4', 'C5'], answer: 'grundstellung' },
+                        { notes: ['A4', 'C5', 'F5'], answer: '1. Umkehrung' },
+                        { notes: ['C5', 'F5', 'A5'], answer: '2. Umkehrung' },
+                        { notes: ['G4', 'B4', 'D5'], answer: 'grundstellung' },
+                        { notes: ['B4', 'D5', 'G5'], answer: '1. Umkehrung' },
+                        { notes: ['D5', 'G5', 'B5'], answer: '2. Umkehrung' },
+                        // Moll
+                        { notes: ['A4', 'C5', 'E5'], answer: 'grundstellung' },
+                        { notes: ['C5', 'E5', 'A5'], answer: '1. Umkehrung' },
+                        { notes: ['E4', 'A4', 'C5'], answer: '2. Umkehrung' },
+                        { notes: ['D4', 'F4', 'A4'], answer: 'grundstellung' },
+                        { notes: ['F4', 'A4', 'D5'], answer: '1. Umkehrung' },
+                        { notes: ['A4', 'D5', 'F5'], answer: '2. Umkehrung' },
+                        { notes: ['E4', 'G4', 'B4'], answer: 'grundstellung' },
+                        { notes: ['G4', 'B4', 'E5'], answer: '1. Umkehrung' },
+                        { notes: ['B4', 'E5', 'G5'], answer: '2. Umkehrung' }
+                    ],
+                    count: 12,
+                    timeLimitSeconds: 240
+                },
+                xpReward: 20,
+                orderIndex: 57.5
+            },
+
+            // === EAR TRAINING – Drei-/Vierton-Folgen benennen ===
+            // Nutzt scale_hearing-Engine (Intervalle ab Grundton)
+            {
+                module: 'ear_training',
+                difficulty: 'beginner',
+                type: 'scale_hearing',
+                title: 'Dreitonfolgen erkennen – Anfänger',
+                description: 'Höre drei Töne nacheinander und bestimme das Muster (z. B. Dur-Dreiklang aufwärts, Moll-Dreiklang abwärts, chromatisch).',
+                content: {
+                    scales: [
+                        { name: 'Dur-Dreiklang aufwärts',  intervals: [0, 4, 7] },
+                        { name: 'Dur-Dreiklang abwärts',   intervals: [12, 7, 4] },
+                        { name: 'Moll-Dreiklang aufwärts', intervals: [0, 3, 7] },
+                        { name: 'Moll-Dreiklang abwärts',  intervals: [12, 7, 3] },
+                        { name: 'Chromatisch aufwärts',    intervals: [0, 1, 2] },
+                        { name: 'Ganztonschritte',         intervals: [0, 2, 4] }
+                    ],
+                    baseNotes: ['C4', 'D4', 'E4', 'F4', 'G4', 'A4'],
+                    count: 8,
+                    timeLimitSeconds: 150
+                },
+                xpReward: 15,
+                orderIndex: 58
+            },
+            {
+                module: 'ear_training',
+                difficulty: 'intermediate',
+                type: 'scale_hearing',
+                title: 'Viertonfolgen erkennen',
+                description: 'Höre vier Töne nacheinander und benenne das Muster (Tetrachord, Septakkord-Arpeggio, Skalenausschnitt).',
+                content: {
+                    scales: [
+                        { name: 'Dur-Tetrachord',           intervals: [0, 2, 4, 5] },
+                        { name: 'Moll-Tetrachord',          intervals: [0, 2, 3, 5] },
+                        { name: 'Phrygischer Tetrachord',   intervals: [0, 1, 3, 5] },
+                        { name: 'Dur-Septakkord (Maj7)',    intervals: [0, 4, 7, 11] },
+                        { name: 'Dominant-Septakkord',      intervals: [0, 4, 7, 10] },
+                        { name: 'Moll-Septakkord',          intervals: [0, 3, 7, 10] },
+                        { name: 'Verminderter Septakkord',  intervals: [0, 3, 6, 9] }
+                    ],
+                    baseNotes: ['C4', 'D4', 'E4', 'F4', 'G4'],
+                    count: 10,
+                    timeLimitSeconds: 180
+                },
+                xpReward: 20,
+                orderIndex: 59
+            },
+            {
+                module: 'ear_training',
+                difficulty: 'advanced',
+                type: 'scale_hearing',
+                title: 'Melodische Wendungen erkennen',
+                description: 'Vier- und Fünftonfolgen aus realer Choralliteratur. Erkenne typische Wendungen (Dominantauflösung, Subdominante, Trugschluss).',
+                content: {
+                    scales: [
+                        { name: 'V → I (Dominantauflösung Dur)',  intervals: [7, 11, 12] },
+                        { name: 'V → I (Dominantauflösung Moll)', intervals: [7, 11, 12] },
+                        { name: 'IV → I (Plagal)',                intervals: [5, 4, 0] },
+                        { name: 'I → IV → V → I (Quartfall)',     intervals: [0, 5, 7, 0] },
+                        { name: 'Sext-Sprung aufwärts',           intervals: [0, 9, 7, 4] },
+                        { name: 'Quintfall',                      intervals: [12, 7, 5, 0] },
+                        { name: 'Chromatischer Durchgang',        intervals: [0, 1, 2, 3, 4] }
+                    ],
+                    baseNotes: ['C4', 'F4', 'G4'],
+                    count: 10,
+                    timeLimitSeconds: 240
+                },
+                xpReward: 25,
+                orderIndex: 63
+            },
+
+            // === EAR TRAINING – Rhythmus-Diktat (mehr Varianz, 3/4 + 4/4 gemischt) ===
+            {
+                module: 'ear_training',
+                difficulty: 'intermediate',
+                type: 'rhythm_recognition',
+                title: 'Rhythmus notieren – 3/4 & 4/4',
+                description: 'Höre den Rhythmus und wähle das richtige Notenbild. Gemischte Taktarten.',
+                content: {
+                    bpm: 90,
+                    rounds: [
+                        {
+                            correctPattern: [
+                                { type: 'quarter' }, { type: 'eighth' }, { type: 'eighth' },
+                                { type: 'half' },
+                                { type: 'quarter' }, { type: 'quarter' }, { type: 'half' }
+                            ],
+                            options: [
+                                { id: 'a', label: '♩ ♪♪ 𝅗𝅥 | ♩ ♩ 𝅗𝅥', correct: true },
+                                { id: 'b', label: '♪♪ ♩ 𝅗𝅥 | ♩ ♩ 𝅗𝅥', correct: false },
+                                { id: 'c', label: '♩ ♩ 𝅗𝅥 | ♪♪ ♩ 𝅗𝅥', correct: false },
+                                { id: 'd', label: '♩ ♪♪ ♩ ♩ | 𝅗𝅥 𝅗𝅥', correct: false }
+                            ]
+                        },
+                        {
+                            correctPattern: [
+                                { type: 'dotted_quarter' }, { type: 'eighth' }, { type: 'quarter' },
+                                { type: 'quarter' }, { type: 'quarter' }, { type: 'quarter' }
+                            ],
+                            options: [
+                                { id: 'a', label: '♩. ♪ ♩ | ♩ ♩ ♩', correct: true },
+                                { id: 'b', label: '♩ ♪. ♩ | ♩ ♩ ♩', correct: false },
+                                { id: 'c', label: '♩. ♪ ♩ | ♩. ♪ ♩', correct: false },
+                                { id: 'd', label: '♩ ♩ ♩ | ♩. ♪ ♩', correct: false }
+                            ]
+                        },
+                        {
+                            correctPattern: [
+                                { type: 'eighth' }, { type: 'eighth' }, { type: 'eighth' }, { type: 'eighth' },
+                                { type: 'quarter' }, { type: 'half' }
+                            ],
+                            options: [
+                                { id: 'a', label: '♪♪ ♪♪ ♩ 𝅗𝅥', correct: true },
+                                { id: 'b', label: '♪♪ ♩ ♪♪ 𝅗𝅥', correct: false },
+                                { id: 'c', label: '♩ ♪♪ ♪♪ 𝅗𝅥', correct: false },
+                                { id: 'd', label: '♩ ♩ ♪♪ 𝅗𝅥', correct: false }
+                            ]
+                        },
+                        {
+                            correctPattern: [
+                                { type: 'quarter' }, { type: 'rest_eighth' }, { type: 'eighth' },
+                                { type: 'quarter' }, { type: 'quarter' },
+                                { type: 'half' }, { type: 'half' }
+                            ],
+                            options: [
+                                { id: 'a', label: '♩ 𝄾 ♪ ♩ ♩ | 𝅗𝅥 𝅗𝅥', correct: true },
+                                { id: 'b', label: '♩ ♪ 𝄾 ♩ ♩ | 𝅗𝅥 𝅗𝅥', correct: false },
+                                { id: 'c', label: '𝄾 ♪ ♩ ♩ ♩ | 𝅗𝅥 𝅗𝅥', correct: false },
+                                { id: 'd', label: '♩ ♩ ♪ 𝄾 ♩ | 𝅗𝅥 𝅗𝅥', correct: false }
+                            ]
+                        }
+                    ]
+                },
+                xpReward: 15,
+                orderIndex: 64
+            },
+
+            // === EAR TRAINING – Melodie-Diktat ===
+            // Implementiert über scale_hearing-Engine (3-/4-Ton-Melodien als Intervalle ab Grundton),
+            // Antwortmöglichkeiten als beschreibende Labels.
+            {
+                module: 'ear_training',
+                difficulty: 'beginner',
+                type: 'scale_hearing',
+                title: 'Melodie-Diktat – Drei Töne',
+                description: 'Höre die kurze Drei-Ton-Melodie und wähle das richtige Notenmuster.',
+                content: {
+                    scales: [
+                        { name: 'Aufsteigend Stufe 1-2-3 (Dur)',          intervals: [0, 2, 4] },
+                        { name: 'Aufsteigend Stufe 1-3-5 (Dur-Akkord)',    intervals: [0, 4, 7] },
+                        { name: 'Aufsteigend Stufe 1-3-5 (Moll-Akkord)',   intervals: [0, 3, 7] },
+                        { name: 'Absteigend Stufe 5-3-1 (Dur)',            intervals: [7, 4, 0] },
+                        { name: 'Wechselnoten 1-2-1',                       intervals: [0, 2, 0] },
+                        { name: 'Sprung 1-5-1',                             intervals: [0, 7, 0] },
+                        { name: 'Quartfall 5-1-3',                          intervals: [7, 0, 4] }
+                    ],
+                    baseNotes: ['C4', 'D4', 'E4', 'F4', 'G4'],
+                    count: 8,
+                    timeLimitSeconds: 180
+                },
+                xpReward: 15,
+                orderIndex: 65
+            },
+            {
+                module: 'ear_training',
+                difficulty: 'intermediate',
+                type: 'scale_hearing',
+                title: 'Melodie-Diktat – Vier Töne',
+                description: 'Höre kurze Vier-Ton-Melodiephrasen und benenne sie. Verbindet Hörerkennung mit Notation typischer Melodiebausteine.',
+                content: {
+                    scales: [
+                        { name: '1-3-5-3 (Dur-Akkord)',            intervals: [0, 4, 7, 4] },
+                        { name: '1-3-5-3 (Moll-Akkord)',           intervals: [0, 3, 7, 3] },
+                        { name: '1-2-3-4 (Tonleiter Dur aufw.)',   intervals: [0, 2, 4, 5] },
+                        { name: '5-4-3-2 (Tonleiter Dur abw.)',    intervals: [7, 5, 4, 2] },
+                        { name: '1-5-3-1 (Trugschlussfigur)',      intervals: [0, 7, 4, 0] },
+                        { name: '1-4-3-1 (Plagal-Wendung)',        intervals: [0, 5, 4, 0] },
+                        { name: '1-3-2-1 (Schlussfloskel)',        intervals: [0, 4, 2, 0] },
+                        { name: '5-3-2-1 (klassischer Schluss)',   intervals: [7, 4, 2, 0] }
+                    ],
+                    baseNotes: ['C4', 'D4', 'F4', 'G4'],
+                    count: 10,
+                    timeLimitSeconds: 240
+                },
+                xpReward: 20,
+                orderIndex: 66
             }
         ];
 
@@ -1429,6 +1694,7 @@ async function ensureTrainingSetup() {
     await ensureTrainingTables();
     await seedExercises();
     await seedBadgeDefinitions();
+    await seedTheoryTopics();
 }
 
-module.exports = { ensureTrainingSetup, seedExercises, seedBadgeDefinitions };
+module.exports = { ensureTrainingSetup, seedExercises, seedBadgeDefinitions, seedTheoryTopics };

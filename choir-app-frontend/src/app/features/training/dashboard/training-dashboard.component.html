@@ -66,11 +66,58 @@
       </mat-card-content>
     </mat-card>
 
+    <!-- Daily Goal -->
+    <mat-card class="daily-goal-card">
+      <mat-card-header>
+        <mat-card-title>Tagesziel</mat-card-title>
+        <mat-card-subtitle>{{ dailyXpGoal }} XP pro Tag</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="daily-goal">
+          <div class="daily-goal-text">
+            <span>{{ todayXp }} / {{ dailyXpGoal }} XP heute</span>
+            <span class="daily-goal-status" [class.reached]="dailyGoalReached">
+              {{ dailyGoalReached ? 'Geschafft 🎉' : 'Dranbleiben 💪' }}
+            </span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="dailyXpProgress"></mat-progress-bar>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Activity Heatmap -->
+    <mat-card class="activity-heatmap-card">
+      <mat-card-header>
+        <mat-card-title>Aktivität der letzten 12 Wochen</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="heatmap-grid" role="img" aria-label="Trainingsaktivität der letzten 12 Wochen">
+          <span *ngFor="let cell of heatmapCells"
+                class="heatmap-cell"
+                [class.level-1]="cell.level === 1"
+                [class.level-2]="cell.level === 2"
+                [class.level-3]="cell.level === 3"
+                [class.today]="cell.isToday"
+                [attr.aria-label]="heatmapAriaLabel(cell)">
+          </span>
+        </div>
+        <div class="heatmap-legend">
+          <span>Weniger</span>
+          <span class="heatmap-cell"></span>
+          <span class="heatmap-cell level-1"></span>
+          <span class="heatmap-cell level-2"></span>
+          <span class="heatmap-cell level-3"></span>
+          <span>Mehr</span>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
     <!-- Modules -->
     <h2 class="section-title">Trainingsmodule</h2>
     <div class="modules-grid">
       <mat-card *ngFor="let mod of modules"
                 class="module-card"
+                [ngClass]="'module-' + mod"
                 [routerLink]="['/training/exercises']"
                 [queryParams]="{ module: mod }">
         <mat-icon class="module-icon">{{ moduleIcons[mod] }}</mat-icon>
@@ -86,6 +133,64 @@
         <mat-icon class="module-arrow">chevron_right</mat-icon>
       </mat-card>
     </div>
+
+    <!-- Weekly Leaderboard (Chor-übergreifend, Reset jeden Montag 0:00) -->
+    <mat-card class="leaderboard-card">
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon class="title-icon">leaderboard</mat-icon>
+          Wochenhitliste
+        </mat-card-title>
+        <mat-card-subtitle>Chor-übergreifend &middot; Reset Montag 0:00</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-button-toggle-group class="leaderboard-tabs"
+                                 [value]="leaderboardTab"
+                                 (change)="leaderboardTab = $event.value"
+                                 hideSingleSelectionIndicator>
+          <mat-button-toggle value="xp">
+            <mat-icon>star</mat-icon>&nbsp;Punkte
+          </mat-button-toggle>
+          <mat-button-toggle value="time">
+            <mat-icon>timer</mat-icon>&nbsp;Beste Zeit (100%)
+          </mat-button-toggle>
+        </mat-button-toggle-group>
+
+        <div *ngIf="isLeaderboardLoading" class="leaderboard-loading">
+          <mat-spinner diameter="24"></mat-spinner>
+        </div>
+
+        <ng-container *ngIf="!isLeaderboardLoading && leaderboard">
+          <!-- XP-Liste -->
+          <ol class="leaderboard-list" *ngIf="leaderboardTab === 'xp'">
+            <li *ngFor="let entry of leaderboard.byXp" class="leaderboard-row">
+              <span class="rank rank-{{entry.rank}}">{{ entry.rank }}</span>
+              <span class="name">{{ entry.firstName }}</span>
+              <span class="value">{{ entry.xp }} XP</span>
+            </li>
+            <li *ngIf="leaderboard.byXp.length === 0" class="leaderboard-empty">
+              Noch keine Punkte diese Woche – sei die/der Erste!
+            </li>
+          </ol>
+
+          <!-- Zeit-Liste -->
+          <ol class="leaderboard-list" *ngIf="leaderboardTab === 'time'">
+            <li *ngFor="let entry of leaderboard.byTime" class="leaderboard-row">
+              <span class="rank rank-{{entry.rank}}">{{ entry.rank }}</span>
+              <span class="name">{{ entry.firstName }}</span>
+              <span class="value">{{ formatDuration(entry.durationSeconds) }}</span>
+            </li>
+            <li *ngIf="leaderboard.byTime.length === 0" class="leaderboard-empty">
+              Noch keine 100%-Übung diese Woche.
+            </li>
+          </ol>
+
+          <p class="leaderboard-hint" *ngIf="leaderboardTab === 'time'">
+            Schnellste Einzelübung mit 100% Treffergenauigkeit.
+          </p>
+        </ng-container>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Recent Badges -->
     <div *ngIf="recentBadges.length > 0">
@@ -115,6 +220,10 @@
         <mat-icon>emoji_events</mat-icon>
         Abzeichen
       </button>
+      <button mat-stroked-button routerLink="/training/theorie">
+        <mat-icon>menu_book</mat-icon>
+        Musiktheorie
+      </button>
     </div>
 
     <!-- Admin Section -->
@@ -122,12 +231,20 @@
       <h2 class="section-title">Admin-Verwaltung</h2>
       <mat-card class="admin-card">
         <mat-card-content>
-          <p class="admin-hint">Alle Übungen zurücksetzen und aus den Seed-Daten neu erstellen.
-            Bisherige Versuche und Abzeichen werden gelöscht.</p>
+          <p class="admin-hint">
+            <strong>Trainings-Inhalte neu erzeugen:</strong> Setzt alle Übungen, Versuche,
+            Abzeichen und Theorie-Themen zurück und legt sie aus den aktuellen Seed-Daten neu an.
+            Verwende dies nach Updates, um neue Übungen und Theorie-Themen einzuspielen.
+          </p>
+          <p class="admin-warning">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            Benutzer verlieren ihre Versuchs-Historie und vergebenen Abzeichen.
+            Profile (XP, Level, Streak) bleiben erhalten.
+          </p>
           <button mat-raised-button color="warn" (click)="reseedExercises()"
                   [disabled]="isReseeding">
             <mat-icon>restart_alt</mat-icon>
-            {{ isReseeding ? 'Wird zurückgesetzt...' : 'Übungen neu erstellen' }}
+            {{ isReseeding ? 'Wird zurückgesetzt...' : 'Trainings-Inhalte neu erzeugen' }}
           </button>
           <p *ngIf="reseedMessage" class="reseed-message">{{ reseedMessage }}</p>
         </mat-card-content>

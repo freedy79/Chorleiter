@@ -22,7 +22,7 @@
   margin-bottom: 1.5rem;
 
   mat-icon {
-    color: #ffc107;
+    color: var(--training-gold);
   }
 }
 
@@ -53,16 +53,16 @@
   text-align: center;
   padding: 1rem 0.75rem;
   border-radius: 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--training-divider);
   transition: transform 0.2s;
   gap: 0.25rem;
 
   &.earned {
-    border-color: #ffc107;
-    background: rgba(255, 193, 7, 0.05);
+    border-color: var(--training-gold);
+    background: var(--training-gold-soft-bg);
 
     .badge-icon {
-      color: #ffc107;
+      color: var(--training-gold);
     }
   }
 
@@ -70,7 +70,7 @@
     opacity: 0.5;
 
     .badge-icon {
-      color: #bbb;
+      color: var(--training-text-subtle);
     }
   }
 }
@@ -88,30 +88,18 @@
 
 .badge-desc {
   font-size: 0.8rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .badge-xp {
   font-size: 0.75rem;
-  color: #667eea;
+  color: var(--training-accent);
   font-weight: 600;
 }
 
 .badge-date {
   font-size: 0.7rem;
-  color: #999;
+  color: var(--training-text-subtle);
 }
 
-@include dark-mode {
-  .badge-card {
-    border-color: #444;
-
-    &.earned {
-      border-color: #ffc107;
-      background: rgba(255, 193, 7, 0.1);
-    }
-  }
-
-  .badge-desc { color: #aaa; }
-  .badge-xp { color: #90a4f9; }
-}
+// Dark mode adjustments handled by --training-* tokens.

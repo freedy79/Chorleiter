@@ -10,6 +10,9 @@ describe('ServiceWorkerUpdateService', () => {
   let versionUpdatesSubject: Subject<VersionEvent>;
 
   beforeEach(() => {
+    localStorage.removeItem('sw-dismissed-version');
+    localStorage.removeItem('sw-activated-version');
+
     versionUpdatesSubject = new Subject<VersionEvent>();
 
     swUpdateMock = jasmine.createSpyObj('SwUpdate', [

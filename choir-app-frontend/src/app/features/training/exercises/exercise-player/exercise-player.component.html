@@ -1,4 +1,4 @@
-<div class="exercise-player">
+<div class="exercise-player" [ngClass]="exercise ? 'module-' + exercise.module : ''">
   <!-- Back button -->
   <button mat-button class="back-button" (click)="navigateBack()">
     <mat-icon>arrow_back</mat-icon>
@@ -27,10 +27,10 @@
     <h2 class="exercise-title">{{ exercise.title }}</h2>
     <p class="exercise-desc" *ngIf="exercise.description">{{ exercise.description }}</p>
     <div class="xp-info">+{{ exercise.xpReward }} XP</div>
-    <div *ngIf="exercise.bestScore != null" class="previous-result">
+    <div *ngIf="exercise.bestScore !== null" class="previous-result">
       <mat-icon [class.completed]="exercise.completed">{{ exercise.completed ? 'check_circle' : 'info' }}</mat-icon>
       <span>Bestleistung: {{ exercise.bestScore }}%</span>
-      <span *ngIf="exercise.totalXpEarned != null" class="xp-earned-info">
+      <span *ngIf="exercise.totalXpEarned !== null" class="xp-earned-info">
         ({{ exercise.totalXpEarned }}/{{ exercise.xpReward }} XP verdient)
       </span>
     </div>
@@ -127,8 +127,8 @@
       <div class="note-display" *ngIf="currentNote">
         <svg viewBox="0 0 120 90" class="staff-svg" xmlns="http://www.w3.org/2000/svg">
           <!-- Clef -->
-          <text *ngIf="exercise.content.clef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
-          <text *ngIf="exercise.content.clef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#x1D122;</text>
+          <text *ngIf="exercise.content.clef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#xE050;</text>
+          <text *ngIf="exercise.content.clef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#xE062;</text>
           <!-- 5 staff lines -->
           <line *ngFor="let i of staffLineIndices"
                 x1="10" x2="110"
@@ -181,8 +181,8 @@
       <div class="note-display" *ngIf="currentIntervalPair">
         <svg viewBox="0 0 160 90" class="staff-svg interval-staff" xmlns="http://www.w3.org/2000/svg">
           <!-- Clef -->
-          <text *ngIf="intervalReadingClef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
-          <text *ngIf="intervalReadingClef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#x1D122;</text>
+          <text *ngIf="intervalReadingClef === 'treble'" x="14" y="52" fill="currentColor" font-size="38">&#xE050;</text>
+          <text *ngIf="intervalReadingClef === 'bass'" x="14" y="38" fill="currentColor" font-size="24">&#xE062;</text>
           <!-- 5 staff lines -->
           <line *ngFor="let i of staffLineIndices"
                 x1="10" x2="150"
@@ -272,7 +272,7 @@
       <div class="key-display" *ngIf="currentKeySignature">
         <svg viewBox="0 0 160 90" class="staff-svg key-staff" xmlns="http://www.w3.org/2000/svg">
           <!-- Clef -->
-          <text x="14" y="52" fill="currentColor" font-size="38">&#x1D11E;</text>
+          <text x="14" y="52" fill="currentColor" font-size="38">&#xE050;</text>
           <!-- 5 staff lines -->
           <line *ngFor="let i of staffLineIndices"
                 x1="10" x2="150"
@@ -384,6 +384,21 @@
         <mat-icon>schedule</mat-icon>
         <span>{{ exerciseDuration }} Sekunden</span>
       </div>
+    </div>
+
+    <div *ngIf="nextExercise" class="next-exercise-callout">
+      <div class="next-exercise-text">
+        <mat-icon>arrow_forward</mat-icon>
+        <div>
+          <span class="next-exercise-label">Als Nächstes</span>
+          <strong>{{ nextExercise.title }}</strong>
+          <span>Direkt weitermachen?</span>
+        </div>
+      </div>
+      <button mat-raised-button color="primary" (click)="startNextExercise()">
+        <mat-icon>play_arrow</mat-icon>
+        Nächste Übung starten
+      </button>
     </div>
 
     <div class="result-actions">

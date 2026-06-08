@@ -25,7 +25,7 @@
     font-size: 48px;
     width: 48px;
     height: 48px;
-    color: #f44336;
+    color: var(--training-danger);
   }
 }
 
@@ -47,7 +47,7 @@
 
 .exercise-module {
   font-size: 0.85rem;
-  color: #667eea;
+  color: var(--training-accent);
   font-weight: 500;
 }
 
@@ -57,9 +57,18 @@
   border-radius: 12px;
   font-weight: 500;
 
-  &[data-difficulty='beginner'] { background: #e8f5e9; color: #2e7d32; }
-  &[data-difficulty='intermediate'] { background: #fff3e0; color: #e65100; }
-  &[data-difficulty='advanced'] { background: #fce4ec; color: #c62828; }
+  &[data-difficulty='beginner'] {
+    background: var(--training-success-soft-bg);
+    color: var(--training-success-soft-fg);
+  }
+  &[data-difficulty='intermediate'] {
+    background: var(--training-warning-soft-bg);
+    color: var(--training-warning-soft-fg);
+  }
+  &[data-difficulty='advanced'] {
+    background: var(--training-danger-soft-bg);
+    color: var(--training-danger-soft-fg);
+  }
 }
 
 .exercise-title {
@@ -69,7 +78,7 @@
 }
 
 .exercise-desc {
-  color: #666;
+  color: var(--training-text-muted);
   font-size: 0.95rem;
   margin: 0;
 }
@@ -77,7 +86,7 @@
 .xp-info {
   font-size: 1rem;
   font-weight: 600;
-  color: #667eea;
+  color: var(--training-accent);
 }
 
 .previous-result {
@@ -85,26 +94,26 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
   padding: 0.5rem 1rem;
-  background: rgba(0, 0, 0, 0.04);
+  background: var(--training-surface-soft);
   border-radius: 8px;
 
   mat-icon {
     font-size: 20px;
     width: 20px;
     height: 20px;
-    color: #999;
+    color: var(--training-text-subtle);
 
     &.completed {
-      color: #43a047;
+      color: var(--training-success);
     }
   }
 }
 
 .xp-earned-info {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--training-text-subtle);
 }
 
 .start-button {
@@ -130,7 +139,7 @@
 
 .progress-indicator {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
   font-weight: 500;
 }
 
@@ -146,7 +155,7 @@
 // Rhythm Notation Display
 .rhythm-notation {
   width: 100%;
-  background: rgba(0, 0, 0, 0.03);
+  background: var(--training-surface-soft);
   border-radius: 12px;
   padding: 1rem 1.25rem;
   display: flex;
@@ -158,7 +167,7 @@
 .rhythm-time-sig {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #667eea;
+  color: var(--training-accent);
   align-self: flex-start;
 }
 
@@ -180,22 +189,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Noto Music', sans-serif;
+  font-family: 'Bravura Text', 'Bravura', 'Noto Music', sans-serif;
   font-size: 2rem;
   min-height: 48px;
-  color: #333;
+  color: var(--mat-sys-on-surface, currentColor);
   transition: transform 0.15s ease, color 0.15s ease;
 
   &.rest {
-    color: #999;
+    color: var(--training-text-subtle);
   }
 
   &.active {
     transform: scale(1.25);
-    color: #667eea;
+    color: var(--training-accent);
 
     &.rest {
-      color: #90a4f9;
+      color: var(--training-accent-strong);
     }
   }
 
@@ -213,30 +222,30 @@
   font-family: Roboto, sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #667eea;
+  color: var(--training-accent);
 
   &.active {
     transform: scale(1.4);
-    color: #ff6d00;
+    color: var(--training-streak);
   }
 }
 
 .bar-line {
   font-size: 2rem;
   font-weight: 300;
-  color: #999;
+  color: var(--training-text-subtle);
   margin: 0 0.25rem;
 }
 
 .rhythm-bpm {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--training-text-subtle);
   align-self: flex-end;
 }
 
 .tap-instruction {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--training-text-muted);
   text-align: center;
   line-height: 1.5;
   margin: 0.25rem 0 0.5rem;
@@ -248,12 +257,12 @@
 }
 
 .count-in {
-  color: #ff6d00;
+  color: var(--training-streak);
 }
 
 .tap-count {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .tap-button {
@@ -280,7 +289,7 @@
 
 .tap-hint {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 // Recognition
@@ -312,13 +321,13 @@
 
 .recognition-hint {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
   margin: 0;
 }
 
 .option-button {
   padding: 1.25rem 1rem;
-  font-family: 'Noto Music', sans-serif;
+  font-family: 'Bravura Text', 'Bravura', 'Noto Music', sans-serif;
   font-size: 2rem;
   line-height: 1.4;
   white-space: normal;
@@ -327,13 +336,13 @@
   letter-spacing: 0.05em;
 
   &.correct {
-    background-color: #4caf50 !important;
-    color: white !important;
+    background-color: var(--training-success) !important;
+    color: #fff !important;
   }
 
   &.wrong {
-    background-color: #f44336 !important;
-    color: white !important;
+    background-color: var(--training-danger) !important;
+    color: #fff !important;
   }
 }
 
@@ -345,8 +354,8 @@
   font-weight: 600;
 }
 
-.correct-icon { color: #4caf50; }
-.wrong-icon { color: #f44336; }
+.correct-icon { color: var(--training-success); }
+.wrong-icon { color: var(--training-danger); }
 
 // Note Naming
 .note-naming-area {
@@ -368,12 +377,16 @@
 .staff-svg {
   width: 200px;
   height: 150px;
-  color: #333;
+  color: var(--mat-sys-on-surface, currentColor);
+
+  text {
+    font-family: 'Bravura Text', 'Bravura', 'Noto Music', serif;
+  }
 }
 
 .clef-info {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .note-options {
@@ -398,8 +411,8 @@
     font-size: 1.1rem;
     font-weight: 700;
 
-    &.correct { color: #4caf50; }
-    &.wrong { color: #f44336; }
+    &.correct { color: var(--training-success); }
+    &.wrong { color: var(--training-danger); }
   }
 }
 
@@ -461,7 +474,7 @@
 
 .hearing-hint {
   font-size: 0.9rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .interval-options {
@@ -479,15 +492,15 @@
 
 // Answer feedback highlights
 .correct-highlight {
-  background-color: #43a047 !important;
-  color: white !important;
-  border-color: #2e7d32 !important;
+  background-color: var(--training-success) !important;
+  color: #fff !important;
+  border-color: var(--training-success-soft-fg) !important;
 }
 
 .wrong-highlight {
-  background-color: #e53935 !important;
-  color: white !important;
-  border-color: #c62828 !important;
+  background-color: var(--training-danger) !important;
+  color: #fff !important;
+  border-color: var(--training-danger-soft-fg) !important;
 }
 
 .answer-feedback {
@@ -500,32 +513,17 @@
   font-weight: 500;
 
   .correct-icon {
-    color: #43a047;
+    color: var(--training-success);
   }
 
   .wrong-icon {
-    color: #e53935;
+    color: var(--training-danger);
   }
 }
 
 @include dark-mode {
-  .correct-highlight {
-    background-color: #2e7d32 !important;
-    border-color: #1b5e20 !important;
-  }
-
-  .wrong-highlight {
-    background-color: #c62828 !important;
-    border-color: #b71c1c !important;
-  }
-
   .previous-result {
-    background: rgba(255, 255, 255, 0.08);
-    color: #aaa;
-  }
-
-  .xp-earned-info {
-    color: #777;
+    background: var(--training-surface-soft);
   }
 }
 
@@ -554,18 +552,18 @@
   justify-content: center;
 
   &.great {
-    background: linear-gradient(135deg, #66bb6a, #43a047);
-    color: white;
+    background: linear-gradient(135deg, var(--training-success), var(--training-success-soft-fg));
+    color: #fff;
   }
 
   &.ok {
-    background: linear-gradient(135deg, #ffa726, #ff9800);
-    color: white;
+    background: linear-gradient(135deg, var(--training-warning), var(--training-warning-soft-fg));
+    color: #fff;
   }
 
   &.poor {
-    background: linear-gradient(135deg, #ef5350, #e53935);
-    color: white;
+    background: linear-gradient(135deg, var(--training-danger), var(--training-danger-soft-fg));
+    color: #fff;
   }
 }
 
@@ -587,19 +585,57 @@
   max-width: 300px;
 }
 
+.next-exercise-callout {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: var(--training-surface-soft);
+  border: 1px solid color-mix(in srgb, var(--training-accent) 18%, transparent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.next-exercise-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  mat-icon {
+    color: var(--training-accent);
+    margin-top: 0.1rem;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+}
+
+.next-exercise-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--training-accent);
+}
+
 .result-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 
   mat-icon {
-    color: #667eea;
+    color: var(--training-accent);
   }
 }
 
-.level-up-icon { color: #ffc107 !important; }
-.level-up-text { color: #ffc107; font-weight: 700; }
-.streak-active { color: #ff6d00 !important; }
+.level-up-icon { color: var(--training-gold) !important; }
+.level-up-text { color: var(--training-gold); font-weight: 700; }
+.streak-active { color: var(--training-streak) !important; }
 
 .result-actions {
   display: flex;
@@ -608,48 +644,22 @@
   justify-content: center;
 }
 
-// Dark mode
+@include bp.handset {
+  .next-exercise-callout {
+    padding: 0.9rem 1rem;
+  }
+
+  .result-actions {
+    width: 100%;
+
+    button {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// Dark mode adjustments not handled by --training-* tokens
 @include dark-mode {
-  .exercise-desc,
-  .tap-hint,
-  .tap-count,
-  .hearing-hint,
-  .recognition-hint,
-  .clef-info,
-  .progress-indicator {
-    color: #aaa;
-  }
-
-  .exercise-module,
-  .xp-info {
-    color: #90a4f9;
-  }
-
-  .rhythm-notation {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .rhythm-time-sig { color: #90a4f9; }
-  .rhythm-note {
-    color: #eee;
-    &.rest { color: #888; }
-    &.active { color: #90a4f9; &.rest { color: #7986cb; } }
-  }
-  .count-in-note { color: #90a4f9; &.active { color: #ff9e40; } }
-  .bar-line { color: #666; }
-  .rhythm-bpm { color: #888; }
-
-  .staff-svg {
-    color: #eee;
-  }
-
-  .result-row mat-icon {
-    color: #90a4f9;
-  }
-
-  .exercise-difficulty {
-    &[data-difficulty='beginner'] { background: rgba(46, 125, 50, 0.2); color: #81c784; }
-    &[data-difficulty='intermediate'] { background: rgba(230, 81, 0, 0.2); color: #ffb74d; }
-    &[data-difficulty='advanced'] { background: rgba(198, 40, 40, 0.2); color: #ef9a9a; }
-  }
+  .rhythm-note { color: var(--mat-sys-on-surface, #eee); }
+  .staff-svg { color: var(--mat-sys-on-surface, #eee); }
 }

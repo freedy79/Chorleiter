@@ -100,6 +100,7 @@ db.exercise = require('./exercise.model.js')(sequelize, Sequelize);
 db.exercise_attempt = require('./exercise_attempt.model.js')(sequelize, Sequelize);
 db.badge_definition = require('./badge_definition.model.js')(sequelize, Sequelize);
 db.user_badge = require('./user_badge.model.js')(sequelize, Sequelize);
+db.theory_topic = require('./theory_topic.model.js')(sequelize, Sequelize);
 
 
 // --- Define Associations ---

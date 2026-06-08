@@ -15,7 +15,6 @@ import { District } from '@core/models/district';
 import { Congregation } from '@core/models/congregation';
 import { PushNotificationService } from '@core/services/push-notification.service';
 import { UserPreferencesService } from '@core/services/user-preferences.service';
-import { RehearsalReminderPreferences } from '@core/models/user-preferences';
 
 /**
  * Validator für sichere Passwörter (Option 1: Neue Anforderungen)

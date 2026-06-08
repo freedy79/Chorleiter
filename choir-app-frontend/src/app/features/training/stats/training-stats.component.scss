@@ -37,12 +37,12 @@
 .overview-value {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #667eea;
+  color: var(--training-accent);
 }
 
 .overview-label {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .module-stats {
@@ -63,7 +63,7 @@
   margin-bottom: 0.75rem;
 
   mat-icon {
-    color: #667eea;
+    color: var(--training-accent);
   }
 }
 
@@ -79,13 +79,13 @@
   font-size: 0.9rem;
 
   span {
-    color: #666;
+    color: var(--training-text-muted);
   }
 }
 
 .module-empty {
   font-size: 0.9rem;
-  color: #999;
+  color: var(--training-text-subtle);
   font-style: italic;
 }
 
@@ -109,30 +109,25 @@
 .activity-bar {
   width: 100%;
   max-width: 40px;
-  background: #667eea;
+  background: var(--training-accent);
   border-radius: 4px 4px 0 0;
   min-height: 4px;
 }
 
 .activity-label {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--training-text-muted);
 }
 
 .activity-xp {
   font-size: 0.7rem;
-  color: #999;
+  color: var(--training-text-subtle);
 }
 
 .empty-state {
   text-align: center;
-  color: #666;
+  color: var(--training-text-muted);
   padding: 1rem;
 }
 
-@include dark-mode {
-  .overview-value { color: #90a4f9; }
-  .overview-label, .detail-row span, .activity-label { color: #aaa; }
-  .module-header mat-icon { color: #90a4f9; }
-  .activity-bar { background: #90a4f9; }
-}
+// Dark mode adjustments handled by --training-* tokens.

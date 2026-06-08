@@ -21,6 +21,39 @@ function getXpForNextLevel(currentLevel) {
 }
 
 /**
+ * Returns the start of the current ISO-style training week (Monday 00:00 local time).
+ * Used for the weekly leaderboard which resets every Monday at 0:00.
+ */
+function getStartOfTrainingWeek(reference = new Date()) {
+    const d = new Date(reference);
+    const day = d.getDay(); // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+    const diffToMonday = (day + 6) % 7; // Sunday -> 6, Monday -> 0, ...
+    d.setDate(d.getDate() - diffToMonday);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
+
+function getEndOfTrainingWeek(reference = new Date()) {
+    const start = getStartOfTrainingWeek(reference);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    return end;
+}
+
+/**
+ * Derive a privacy-safe display name (first name only).
+ */
+function firstNameOf(user) {
+    if (!user) return 'Anonym';
+    if (user.firstName && user.firstName.trim()) return user.firstName.trim();
+    if (user.name && user.name.trim()) {
+        // Fallback: erste Wortgruppe aus dem Anzeigenamen
+        return user.name.trim().split(/\s+/)[0];
+    }
+    return 'Anonym';
+}
+
+/**
  * Get or create training profile for a user in a choir
  */
 async function getOrCreateProfile(userId, choirId) {
@@ -44,10 +77,8 @@ async function getOrCreateProfile(userId, choirId) {
 async function getProfile(userId, choirId) {
     const profile = await getOrCreateProfile(userId, choirId);
 
-    // Compute weekly practice minutes
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    weekStart.setHours(0, 0, 0, 0);
+    // Compute weekly practice minutes (Woche ab Montag 00:00)
+    const weekStart = getStartOfTrainingWeek();
 
     const weekAttempts = await db.exercise_attempt.findAll({
         where: {
@@ -405,6 +436,88 @@ async function evaluateBadgeCondition(condition, userId, profile) {
     }
 }
 
+/**
+ * Cross-choir weekly leaderboard.
+ * Returns two ranked lists for the current training week (Monday 00:00 - next Monday 00:00):
+ *   - byTime: fastest single attempt that reached score = 100 (lowest duration wins)
+ *   - byXp:   total XP earned during the week (highest wins)
+ *
+ * Only first names are returned for privacy reasons.
+ * The "weekly reset" happens implicitly because the query filters by completedAt >= weekStart.
+ */
+async function getWeeklyLeaderboard({ limit = 10 } = {}) {
+    const weekStart = getStartOfTrainingWeek();
+    const weekEnd = getEndOfTrainingWeek();
+
+    // --- 1) Fastest time to 100% per user (best single attempt) ---
+    const fastestAttempts = await db.exercise_attempt.findAll({
+        where: {
+            score: 100,
+            completedAt: { [Op.gte]: weekStart, [Op.lt]: weekEnd }
+        },
+        attributes: [
+            'userId',
+            [db.sequelize.fn('MIN', db.sequelize.col('duration')), 'bestDuration']
+        ],
+        group: ['userId'],
+        order: [[db.sequelize.literal('"bestDuration"'), 'ASC']],
+        limit,
+        raw: true
+    });
+
+    // --- 2) Total XP earned per user during the week ---
+    const xpTotals = await db.exercise_attempt.findAll({
+        where: {
+            completedAt: { [Op.gte]: weekStart, [Op.lt]: weekEnd }
+        },
+        attributes: [
+            'userId',
+            [db.sequelize.fn('SUM', db.sequelize.col('xpEarned')), 'totalXp']
+        ],
+        group: ['userId'],
+        having: db.sequelize.where(
+            db.sequelize.fn('SUM', db.sequelize.col('xpEarned')),
+            { [Op.gt]: 0 }
+        ),
+        order: [[db.sequelize.literal('"totalXp"'), 'DESC']],
+        limit,
+        raw: true
+    });
+
+    // Collect all unique userIds and load their first names in one query
+    const userIds = Array.from(new Set([
+        ...fastestAttempts.map(r => r.userId),
+        ...xpTotals.map(r => r.userId)
+    ]));
+
+    const users = userIds.length
+        ? await db.user.findAll({
+            where: { id: userIds },
+            attributes: ['id', 'firstName', 'name']
+        })
+        : [];
+    const userMap = new Map(users.map(u => [u.id, u]));
+
+    const byTime = fastestAttempts.map((row, idx) => ({
+        rank: idx + 1,
+        firstName: firstNameOf(userMap.get(row.userId)),
+        durationSeconds: Number(row.bestDuration)
+    }));
+
+    const byXp = xpTotals.map((row, idx) => ({
+        rank: idx + 1,
+        firstName: firstNameOf(userMap.get(row.userId)),
+        xp: Number(row.totalXp)
+    }));
+
+    return {
+        weekStart: weekStart.toISOString(),
+        weekEnd: weekEnd.toISOString(),
+        byTime,
+        byXp
+    };
+}
+
 module.exports = {
     getOrCreateProfile,
     getProfile,
@@ -415,7 +528,10 @@ module.exports = {
     getHistory,
     getBadges,
     getStats,
+    getWeeklyLeaderboard,
     getLevelForXp,
     getXpForNextLevel,
+    getStartOfTrainingWeek,
+    getEndOfTrainingWeek,
     XP_PER_LEVEL
 };

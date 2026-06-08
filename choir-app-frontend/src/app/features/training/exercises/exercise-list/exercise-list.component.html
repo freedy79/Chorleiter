@@ -42,6 +42,7 @@
   <div *ngIf="!isLoading" class="exercises-grid">
     <mat-card *ngFor="let exercise of exercises"
               class="exercise-card"
+              [ngClass]="'module-' + exercise.module"
               [routerLink]="['/training/exercises', exercise.id]">
       <div class="exercise-header">
         <mat-icon class="exercise-module-icon">{{ moduleIcons[exercise.module] }}</mat-icon>
@@ -58,7 +59,7 @@
         <span class="xp-reward">+{{ exercise.xpReward }} XP</span>
         <div class="exercise-status">
           <mat-icon *ngIf="exercise.completed" class="completed-icon">check_circle</mat-icon>
-          <span *ngIf="exercise.bestScore != null" class="best-score">Bestleistung: {{ exercise.bestScore }}%</span>
+          <span *ngIf="exercise.bestScore !== null && exercise.bestScore !== undefined" class="best-score">Bestleistung: {{ exercise.bestScore }}%</span>
         </div>
         <mat-icon>play_circle_outline</mat-icon>
       </div>

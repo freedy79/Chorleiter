@@ -10,7 +10,10 @@ import {
   BadgeDefinition,
   TrainingStats,
   TrainingModule,
-  ExerciseDifficulty
+  ExerciseDifficulty,
+  TheoryTopicSummary,
+  TheoryTopic,
+  WeeklyLeaderboard
 } from '../models/training';
 
 @Injectable({ providedIn: 'root' })
@@ -69,6 +72,11 @@ export class TrainingService {
     return this.http.get<TrainingStats>(`${this.baseUrl}/stats`);
   }
 
+  getWeeklyLeaderboard(limit = 10): Observable<WeeklyLeaderboard> {
+    const params = new HttpParams().set('limit', limit.toString());
+    return this.http.get<WeeklyLeaderboard>(`${this.baseUrl}/leaderboard/weekly`, { params });
+  }
+
   // Admin
   createExercise(exercise: Partial<Exercise>): Observable<Exercise> {
     return this.http.post<Exercise>(`${this.baseUrl}/admin/exercises`, exercise);
@@ -84,5 +92,14 @@ export class TrainingService {
 
   reseedExercises(): Observable<{ message: string }> {
     return this.http.post<{ message: string }>(`${this.baseUrl}/admin/reseed`, {});
+  }
+
+  // === Theory knowledge base ===
+  getTheoryTopics(): Observable<TheoryTopicSummary[]> {
+    return this.http.get<TheoryTopicSummary[]>(`${this.baseUrl}/theory`);
+  }
+
+  getTheoryTopic(key: string): Observable<TheoryTopic> {
+    return this.http.get<TheoryTopic>(`${this.baseUrl}/theory/${key}`);
   }
 }

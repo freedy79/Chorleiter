@@ -32,6 +32,16 @@ export const trainingRoutes: Routes = [
         loadComponent: () => import('./stats/training-stats.component').then(m => m.TrainingStatsComponent),
         data: { title: 'Trainingsstatistik' }
       },
+      {
+        path: 'theorie',
+        loadComponent: () => import('./theory/theory-list.component').then(m => m.TheoryListComponent),
+        data: { title: 'Musiktheorie' }
+      },
+      {
+        path: 'theorie/:key',
+        loadComponent: () => import('./theory/theory-detail.component').then(m => m.TheoryDetailComponent),
+        data: { title: 'Musiktheorie' }
+      },
     ],
   },
 ];

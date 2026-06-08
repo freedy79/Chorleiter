@@ -105,3 +105,58 @@ export const DIFFICULTY_LABELS: Record<ExerciseDifficulty, string> = {
   intermediate: 'Fortgeschritten',
   advanced: 'Experte'
 };
+
+// === MUSIC THEORY ===
+export type TheoryCategory =
+  | 'grundlagen'
+  | 'tonhoehen_rhythmen'
+  | 'tonleitern_intervalle'
+  | 'harmonien_akkorde'
+  | 'anhang';
+
+export interface TheoryTopicSummary {
+  id: string;
+  key: string;
+  category: TheoryCategory;
+  title: string;
+  summary: string | null;
+  orderIndex: number;
+}
+
+export interface TheoryTopic extends TheoryTopicSummary {
+  content: string; // Markdown
+  relatedExercises?: { module: TrainingModule; difficulty?: ExerciseDifficulty }[] | null;
+}
+
+export const THEORY_CATEGORY_LABELS: Record<TheoryCategory, string> = {
+  grundlagen: 'Grundelemente der Notenschrift',
+  tonhoehen_rhythmen: 'Tonhöhen & Rhythmen',
+  tonleitern_intervalle: 'Tonleitern & Intervalle',
+  harmonien_akkorde: 'Harmonien & Akkorde',
+  anhang: 'Anhang & Übersichten'
+};
+
+export const THEORY_CATEGORY_ORDER: TheoryCategory[] = [
+  'grundlagen', 'tonhoehen_rhythmen', 'tonleitern_intervalle', 'harmonien_akkorde', 'anhang'
+];
+
+// --- Weekly leaderboard ---
+
+export interface LeaderboardTimeEntry {
+  rank: number;
+  firstName: string;
+  durationSeconds: number;
+}
+
+export interface LeaderboardXpEntry {
+  rank: number;
+  firstName: string;
+  xp: number;
+}
+
+export interface WeeklyLeaderboard {
+  weekStart: string;
+  weekEnd: string;
+  byTime: LeaderboardTimeEntry[];
+  byXp: LeaderboardXpEntry[];
+}
