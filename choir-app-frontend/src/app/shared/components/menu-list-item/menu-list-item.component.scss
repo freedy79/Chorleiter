@@ -37,6 +37,16 @@
     .expandIcon {
       color: white !important;
     }
+
+    .menu-item-content {
+      color: white !important;
+    }
+
+    ::ng-deep .mat-mdc-list-item-unscoped-content,
+    ::ng-deep .mdc-list-item__content,
+    ::ng-deep .mdc-list-item__primary-text {
+      color: white !important;
+    }
   }
 
   .mat-mdc-list-item.active {
@@ -50,6 +60,16 @@
     --mdc-list-list-item-leading-icon-color: white;
     --mdc-list-list-item-trailing-icon-color: white;
     border-radius: 0px;
+
+    .menu-item-content {
+      color: white !important;
+    }
+
+    ::ng-deep .mat-mdc-list-item-unscoped-content,
+    ::ng-deep .mdc-list-item__content,
+    ::ng-deep .mdc-list-item__primary-text {
+      color: white !important;
+    }
   }
 
   &:hover {

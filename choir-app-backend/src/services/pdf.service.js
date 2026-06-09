@@ -6,13 +6,49 @@ const db = require('../models');
 
 function eventShort(notes) {
   const value = (notes || '').toLowerCase();
-  if (/\b(gottesdienst|gd)\b/.test(value)) {
+  // Suffix-Match for German compounds:
+  // Hauptgottesdienst, Sonntagsgottesdienst, Abendgottesdienst, ...
+  if (/gottesdienst\b/.test(value) || /\bgd\b/.test(value)) {
     return 'GD';
   }
   if (/\b(chorprobe|probe|cp)\b/.test(value)) {
     return 'CP';
   }
   return '';
+}
+
+function resolveMonthlyPlanColumnWidths(table, availableWidth, headerCount) {
+  const fallback = [84, 56, 116, 116, 143];
+  let widths = Array.isArray(table?.columnWidths) && table.columnWidths.length === headerCount
+    ? table.columnWidths.map(Number)
+    : fallback.slice(0, headerCount);
+
+  if (widths.some(w => !Number.isFinite(w) || w <= 0)) {
+    widths = fallback.slice(0, headerCount);
+  }
+
+  // Normalize to exact available width to prevent border/fill mismatch.
+  const total = widths.reduce((sum, w) => sum + w, 0);
+  if (total > 0 && Math.abs(total - availableWidth) > 0.01) {
+    const scale = availableWidth / total;
+    widths = widths.map(w => w * scale);
+  }
+
+  // Keep "Ereignis" reliably one-line by borrowing a few points from date column.
+  // This also matches the user request to slightly reduce the date column.
+  const DATE_INDEX = 0;
+  const EVENT_INDEX = 1;
+  const minDateWidth = 80;
+  const minEventWidth = 56;
+  if (widths[EVENT_INDEX] < minEventWidth) {
+    const missing = minEventWidth - widths[EVENT_INDEX];
+    const movableFromDate = Math.max(0, widths[DATE_INDEX] - minDateWidth);
+    const delta = Math.min(missing, movableFromDate);
+    widths[DATE_INDEX] -= delta;
+    widths[EVENT_INDEX] += delta;
+  }
+
+  return widths;
 }
 
 function formatDate(d) {
@@ -188,56 +224,79 @@ async function monthlyPlanPdf(plan) {
 
   const left = doc.page.margins.left;
   const right = doc.page.width - doc.page.margins.right;
-  const columnWidths = table.columnWidths || [90, 50, 120, 120, right - left - 380];
-  const rowHeight = table.rowHeight || 18;
+  const availableWidth = right - left;
+  const columnWidths = resolveMonthlyPlanColumnWidths(table, availableWidth, headers.length);
+  const baseRowHeight = table.rowHeight || 18;
+  const notesColumnIndex = headers.length - 1;
+  const rowFontSize = table.rowFontSize || 10;
 
   function drawTableHeader() {
     const headerFill = table.headerFill || null;
     const y = doc.y;
     if (headerFill) {
       doc.save();
-      doc.rect(left, y, columnWidths.reduce((a, b) => a + b, 0), rowHeight).fill(headerFill);
+      doc.rect(left, y, columnWidths.reduce((a, b) => a + b, 0), baseRowHeight).fill(headerFill);
       doc.restore();
     }
     doc.font('Helvetica-Bold').fontSize(table.headerFontSize || 11).fillColor('black');
     let x = left;
     headers.forEach((headerText, i) => {
-      doc.text(headerText, x + 4, y + 4, { width: columnWidths[i] - 8, align: 'center' });
+      doc.text(headerText, x + 4, y + 4, {
+        width: columnWidths[i] - 8,
+        height: baseRowHeight - 6,
+        align: 'center',
+        ellipsis: true,
+        lineBreak: false
+      });
       x += columnWidths[i];
     });
     doc.moveTo(left, y).lineTo(right, y).stroke();
-    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+    doc.moveTo(left, y + baseRowHeight).lineTo(right, y + baseRowHeight).stroke();
 
     x = left;
     columnWidths.forEach(w => {
-      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      doc.moveTo(x, y).lineTo(x, y + baseRowHeight).stroke();
       x += w;
     });
-    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
+    doc.moveTo(right, y).lineTo(right, y + baseRowHeight).stroke();
 
-    doc.y = y + rowHeight;
+    doc.y = y + baseRowHeight;
   }
 
   function drawRow(cells) {
-    if (doc.y + rowHeight > doc.page.height - doc.page.margins.bottom) {
+    const notesText = String(cells[notesColumnIndex] || '');
+    doc.font('Helvetica').fontSize(rowFontSize);
+    const notesTextHeight = doc.heightOfString(notesText, {
+      width: columnWidths[notesColumnIndex] - 8,
+      align: 'left'
+    });
+    const dynamicRowHeight = Math.max(baseRowHeight, notesTextHeight + 8);
+
+    if (doc.y + dynamicRowHeight > doc.page.height - doc.page.margins.bottom) {
       doc.addPage();
       drawTableHeader();
     }
     const y = doc.y;
-    doc.font('Helvetica').fontSize(table.rowFontSize || 10).fillColor('black');
+    doc.font('Helvetica').fontSize(rowFontSize).fillColor('black');
     let x = left;
     cells.forEach((cell, i) => {
-      doc.text(cell, x + 4, y + 4, { width: columnWidths[i] - 8, height: rowHeight - 6, ellipsis: true, align: 'center' });
+      const isNotesColumn = i === notesColumnIndex;
+      doc.text(cell, x + 4, y + 4, {
+        width: columnWidths[i] - 8,
+        height: dynamicRowHeight - 6,
+        ellipsis: isNotesColumn ? false : true,
+        align: isNotesColumn ? 'left' : 'center'
+      });
       x += columnWidths[i];
     });
-    doc.moveTo(left, y + rowHeight).lineTo(right, y + rowHeight).stroke();
+    doc.moveTo(left, y + dynamicRowHeight).lineTo(right, y + dynamicRowHeight).stroke();
     x = left;
     columnWidths.forEach(w => {
-      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
+      doc.moveTo(x, y).lineTo(x, y + dynamicRowHeight).stroke();
       x += w;
     });
-    doc.moveTo(right, y).lineTo(right, y + rowHeight).stroke();
-    doc.y = y + rowHeight;
+    doc.moveTo(right, y).lineTo(right, y + dynamicRowHeight).stroke();
+    doc.y = y + dynamicRowHeight;
   }
 
   drawTableHeader();

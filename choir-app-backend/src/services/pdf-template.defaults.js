@@ -20,7 +20,7 @@ const defaultPdfTemplates = {
       rowFontSize: 10,
       rowHeight: 18,
       headerFill: '#efefef',
-      columnWidths: [90, 50, 120, 120, 145],
+      columnWidths: [84, 56, 116, 116, 143],
       headers: ['Datum', 'Ereignis', 'Chorleiter', 'Organist', 'Notizen']
     }
   },
