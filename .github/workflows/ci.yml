@@ -122,8 +122,58 @@ jobs:
       - name: Generate build info
         run: npm run generate-build-info --prefix choir-app-frontend
 
-      - name: Run Angular tests
-        run: npm run test --prefix choir-app-frontend -- --watch=false --progress=false --browsers=ChromeHeadlessCI
+      - name: Run Angular tests (capture log)
+        id: frontend_test
+        shell: bash
+        env:
+          TZ: UTC
+          CI: true
+        run: |
+          set +e
+          npm run test --prefix choir-app-frontend -- --watch=false --progress=false --browsers=ChromeHeadlessCI 2>&1 | tee choir-app-frontend/test-results.log
+          TEST_EXIT_CODE=${PIPESTATUS[0]}
+          echo "exit_code=${TEST_EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          exit ${TEST_EXIT_CODE}
+
+      - name: Upload frontend test log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-test-log
+          path: choir-app-frontend/test-results.log
+
+      - name: Comment frontend test failure on PR
+        if: github.event_name == 'pull_request' && failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'choir-app-frontend/test-results.log';
+            let content = 'No log file found.';
+            if (fs.existsSync(path)) {
+              content = fs.readFileSync(path, 'utf8');
+            }
+
+            const lines = content.split('\n');
+            const tail = lines.slice(-120).join('\n');
+            const body = [
+              '## ❌ Frontend test failure (automated)',
+              '',
+              'The frontend test job failed in CI. Latest log excerpt:',
+              '',
+              '```text',
+              tail.substring(0, 65000),
+              '```',
+              '',
+              '_Artifact `frontend-test-log` contains the full output._'
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });
 
       - name: Upload frontend test coverage
         if: always()
