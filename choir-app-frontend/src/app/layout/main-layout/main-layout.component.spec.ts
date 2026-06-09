@@ -13,6 +13,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { PushNotificationService } from '@core/services/push-notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { BehaviorSubject, of, firstValueFrom, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -76,6 +77,7 @@ describe('MainLayoutComponent', () => {
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
     const pushMock = { isSupported: () => false, getPermission: () => 'denied', subscribeToChoir: () => Promise.resolve(), notificationClicks$: of() };
+    const dialogHelperMock = { openDialog: () => of(undefined) };
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
       providers: [
@@ -90,6 +92,7 @@ describe('MainLayoutComponent', () => {
         { provide: ThemeService, useValue: themeMock },
         { provide: LoanCartService, useValue: cartMock },
         { provide: PushNotificationService, useValue: pushMock },
+        { provide: DialogHelperService, useValue: dialogHelperMock },
         MenuVisibilityService
       ]
     })

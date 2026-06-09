@@ -32,6 +32,7 @@ import { Choir } from '@core/models/choir';
 import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
 import { ChatService } from '@core/services/chat.service';
 import { PwaInstallService } from '@core/services/pwa-install.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 
 
 @Component({
@@ -143,7 +144,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private metaService: Meta,
     private chatService: ChatService,
     private pushService: PushNotificationService,
-    private pwaInstall: PwaInstallService
+    private pwaInstall: PwaInstallService,
+    private dialogHelper: DialogHelperService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -660,11 +662,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   openBuildInfo(): void {
-    this.dialog.open(BuildInfoDialogComponent, { width: '400px' });
+    this.dialogHelper.openDialog(BuildInfoDialogComponent, { width: '400px' }).subscribe();
   }
 
   openHelp(): void {
-    this.dialog.open(HelpWizardComponent, { width: '600px' });
+    this.dialogHelper.openDialog(HelpWizardComponent, { width: '600px' }).subscribe();
   }
 
   openChoirSwitcher(): void {
