@@ -93,11 +93,76 @@ export class PushNotificationService {
       serverPublicKey: publicKey
     });
 
+    // Always register with the backend (idempotent upsert) — do NOT rely solely
+    // on the local `hasStoredChoir` cache. The backend may have purged the
+    // subscription (e.g. due to an expired FCM endpoint, app reinstall, etc.),
+    // in which case skipping based on localStorage would leave the user
+    // silently un-subscribed.
     for (const choirId of choirIds) {
-      if (!this.hasStoredChoir(choirId)) {
-        await firstValueFrom(this.api.subscribePushNotification(subscription, choirId));
-        this.storeSubscription(subscription, choirId);
+      await firstValueFrom(this.api.subscribePushNotification(subscription, choirId));
+      this.storeSubscription(subscription, choirId);
+    }
+  }
+
+  /**
+   * Reconciles client-side state with backend state and re-registers the
+   * current browser push subscription for any missing memberships.
+   *
+   * Call this on app start (after login). It handles three failure modes that
+   * are common on Android:
+   *
+   *  1. Backend purged the subscription (410 from FCM) — localStorage still
+   *     claimed "subscribed" but no pushes ever arrived.
+   *  2. Browser rotated the push endpoint (`pushsubscriptionchange`) — Angular's
+   *     ngsw-worker does not forward the new endpoint to the server.
+   *  3. App data was cleared / PWA reinstalled — local cache stale.
+   */
+  async syncSubscriptionState(memberChoirIds: number[]): Promise<void> {
+    if (!this.swPush.isEnabled) return;
+    if (this.getPermission() !== 'granted') return;
+
+    let browserSubscription: PushSubscription | null = null;
+    try {
+      browserSubscription = await firstValueFrom(this.swPush.subscription);
+    } catch {
+      browserSubscription = null;
+    }
+
+    const browserEndpoint = browserSubscription?.endpoint || null;
+
+    let backendChoirIds: number[] = [];
+    try {
+      const response = await firstValueFrom(
+        this.api.getPushSubscriptions(browserEndpoint ?? undefined)
+      );
+      backendChoirIds = response?.choirIds || [];
+    } catch {
+      // If the call fails (e.g. offline), keep the local state.
+      return;
+    }
+
+    if (browserSubscription && browserEndpoint) {
+      // Update local cache to mirror backend truth for THIS endpoint.
+      this.replaceStoredState(browserEndpoint, backendChoirIds);
+
+      const missing = memberChoirIds.filter(id => !backendChoirIds.includes(id));
+      if (missing.length > 0) {
+        try {
+          for (const choirId of missing) {
+            await firstValueFrom(
+              this.api.subscribePushNotification(browserSubscription, choirId)
+            );
+            this.storeSubscription(browserSubscription, choirId);
+          }
+        } catch {
+          // Ignore — retry on next app start.
+        }
       }
+    } else if (backendChoirIds.length > 0) {
+      // Browser has no subscription but backend still has entries (could be
+      // from a previous session). Clear local cache; the next user action /
+      // prompt will recreate them.
+      this.clearStoredState();
     }
   }
 
@@ -173,6 +238,18 @@ export class PushNotificationService {
 
   private clearStoredState(): void {
     localStorage.removeItem(this.storageKey);
+  }
+
+  private replaceStoredState(endpoint: string, choirIds: number[]): void {
+    if (!endpoint || choirIds.length === 0) {
+      this.clearStoredState();
+      return;
+    }
+    const nextState: PushSubscriptionState = {
+      endpoint,
+      choirIds: Array.from(new Set(choirIds))
+    };
+    localStorage.setItem(this.storageKey, JSON.stringify(nextState));
   }
 
   private getStoredState(): PushSubscriptionState | null {

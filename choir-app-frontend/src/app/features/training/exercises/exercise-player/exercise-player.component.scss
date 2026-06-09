@@ -1,0 +1,665 @@
+@use '../../../../../themes/breakpoints' as bp;
+@use '../../../../../themes/dark-mode-variables' as *;
+
+.exercise-player {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.back-button {
+  margin-bottom: 0.5rem;
+}
+
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  gap: 1rem;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: var(--training-danger);
+  }
+}
+
+// Ready Screen
+.ready-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+}
+
+.exercise-info {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.exercise-module {
+  font-size: 0.85rem;
+  color: var(--training-accent);
+  font-weight: 500;
+}
+
+.exercise-difficulty {
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+
+  &[data-difficulty='beginner'] {
+    background: var(--training-success-soft-bg);
+    color: var(--training-success-soft-fg);
+  }
+  &[data-difficulty='intermediate'] {
+    background: var(--training-warning-soft-bg);
+    color: var(--training-warning-soft-fg);
+  }
+  &[data-difficulty='advanced'] {
+    background: var(--training-danger-soft-bg);
+    color: var(--training-danger-soft-fg);
+  }
+}
+
+.exercise-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.exercise-desc {
+  color: var(--training-text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.xp-info {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--training-accent);
+}
+
+.previous-result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+  padding: 0.5rem 1rem;
+  background: var(--training-surface-soft);
+  border-radius: 8px;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: var(--training-text-subtle);
+
+    &.completed {
+      color: var(--training-success);
+    }
+  }
+}
+
+.xp-earned-info {
+  font-size: 0.8rem;
+  color: var(--training-text-subtle);
+}
+
+.start-button {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  padding: 0.5rem 2rem;
+}
+
+// Playing Screen
+.playing-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.playing-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.progress-indicator {
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+  font-weight: 500;
+}
+
+// Tap Rhythm
+.tap-rhythm-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+// Rhythm Notation Display
+.rhythm-notation {
+  width: 100%;
+  background: var(--training-surface-soft);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rhythm-time-sig {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--training-accent);
+  align-self: flex-start;
+}
+
+.rhythm-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+}
+
+.rhythm-bar {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.rhythm-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bravura Text', 'Bravura', 'Noto Music', sans-serif;
+  font-size: 2rem;
+  min-height: 48px;
+  color: var(--mat-sys-on-surface, currentColor);
+  transition: transform 0.15s ease, color 0.15s ease;
+
+  &.rest {
+    color: var(--training-text-subtle);
+  }
+
+  &.active {
+    transform: scale(1.25);
+    color: var(--training-accent);
+
+    &.rest {
+      color: var(--training-accent-strong);
+    }
+  }
+
+  @include bp.handset {
+    font-size: 1.6rem;
+    min-height: 40px;
+  }
+}
+
+.count-in-bar {
+  opacity: 0.7;
+}
+
+.count-in-note {
+  font-family: Roboto, sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--training-accent);
+
+  &.active {
+    transform: scale(1.4);
+    color: var(--training-streak);
+  }
+}
+
+.bar-line {
+  font-size: 2rem;
+  font-weight: 300;
+  color: var(--training-text-subtle);
+  margin: 0 0.25rem;
+}
+
+.rhythm-bpm {
+  font-size: 0.8rem;
+  color: var(--training-text-subtle);
+  align-self: flex-end;
+}
+
+.tap-instruction {
+  font-size: 0.85rem;
+  color: var(--training-text-muted);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.metronome-info {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.count-in {
+  color: var(--training-streak);
+}
+
+.tap-count {
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+}
+
+.tap-button {
+  width: 120px;
+  height: 120px;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+  }
+
+  @include bp.handset {
+    width: 100px;
+    height: 100px;
+
+    mat-icon {
+      font-size: 40px;
+      width: 40px;
+      height: 40px;
+    }
+  }
+}
+
+.tap-hint {
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+}
+
+// Recognition
+.recognition-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.play-rhythm-button {
+  width: 72px;
+  height: 72px;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+  }
+}
+
+.recognition-hint {
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+  margin: 0;
+}
+
+.option-button {
+  padding: 1.25rem 1rem;
+  font-family: 'Bravura Text', 'Bravura', 'Noto Music', sans-serif;
+  font-size: 2rem;
+  line-height: 1.4;
+  white-space: normal;
+  min-height: 72px;
+  transition: all 0.3s;
+  letter-spacing: 0.05em;
+
+  &.correct {
+    background-color: var(--training-success) !important;
+    color: #fff !important;
+  }
+
+  &.wrong {
+    background-color: var(--training-danger) !important;
+    color: #fff !important;
+  }
+}
+
+.answer-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.correct-icon { color: var(--training-success); }
+.wrong-icon { color: var(--training-danger); }
+
+// Note Naming
+.note-naming-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.note-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.staff-svg {
+  width: 200px;
+  height: 150px;
+  color: var(--mat-sys-on-surface, currentColor);
+
+  text {
+    font-family: 'Bravura Text', 'Bravura', 'Noto Music', serif;
+  }
+}
+
+.clef-info {
+  font-size: 0.85rem;
+  color: var(--training-text-muted);
+}
+
+.note-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.note-button {
+  min-width: 48px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.answers-summary {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+
+  span {
+    font-size: 1.1rem;
+    font-weight: 700;
+
+    &.correct { color: var(--training-success); }
+    &.wrong { color: var(--training-danger); }
+  }
+}
+
+// Interval Hearing
+.interval-hearing-area,
+.scale-hearing-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+// Interval Reading
+.interval-reading-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.interval-staff {
+  width: 260px;
+  height: 150px;
+}
+
+// Key Signature
+.key-signature-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.key-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.key-staff {
+  width: 260px;
+  height: 150px;
+}
+
+.play-sound-button {
+  width: 80px;
+  height: 80px;
+
+  mat-icon {
+    font-size: 36px;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+.hearing-hint {
+  font-size: 0.9rem;
+  color: var(--training-text-muted);
+}
+
+.interval-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.interval-button {
+  min-width: 80px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+}
+
+// Answer feedback highlights
+.correct-highlight {
+  background-color: var(--training-success) !important;
+  color: #fff !important;
+  border-color: var(--training-success-soft-fg) !important;
+}
+
+.wrong-highlight {
+  background-color: var(--training-danger) !important;
+  color: #fff !important;
+  border-color: var(--training-danger-soft-fg) !important;
+}
+
+.answer-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  .correct-icon {
+    color: var(--training-success);
+  }
+
+  .wrong-icon {
+    color: var(--training-danger);
+  }
+}
+
+@include dark-mode {
+  .previous-result {
+    background: var(--training-surface-soft);
+  }
+}
+
+// Result Screen
+.result-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+}
+
+.result-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.score-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.great {
+    background: linear-gradient(135deg, var(--training-success), var(--training-success-soft-fg));
+    color: #fff;
+  }
+
+  &.ok {
+    background: linear-gradient(135deg, var(--training-warning), var(--training-warning-soft-fg));
+    color: #fff;
+  }
+
+  &.poor {
+    background: linear-gradient(135deg, var(--training-danger), var(--training-danger-soft-fg));
+    color: #fff;
+  }
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.result-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 300px;
+}
+
+.next-exercise-callout {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 16px;
+  background: var(--training-surface-soft);
+  border: 1px solid color-mix(in srgb, var(--training-accent) 18%, transparent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.next-exercise-text {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+
+  mat-icon {
+    color: var(--training-accent);
+    margin-top: 0.1rem;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+}
+
+.next-exercise-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--training-accent);
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  mat-icon {
+    color: var(--training-accent);
+  }
+}
+
+.level-up-icon { color: var(--training-gold) !important; }
+.level-up-text { color: var(--training-gold); font-weight: 700; }
+.streak-active { color: var(--training-streak) !important; }
+
+.result-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+@include bp.handset {
+  .next-exercise-callout {
+    padding: 0.9rem 1rem;
+  }
+
+  .result-actions {
+    width: 100%;
+
+    button {
+      flex: 1 1 100%;
+    }
+  }
+}
+
+// Dark mode adjustments not handled by --training-* tokens
+@include dark-mode {
+  .rhythm-note { color: var(--mat-sys-on-surface, #eee); }
+  .staff-svg { color: var(--mat-sys-on-surface, #eee); }
+}

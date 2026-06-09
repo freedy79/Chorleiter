@@ -500,6 +500,9 @@ exports.create = async (req, res) => {
         const payload = {
           title: `Neuer Beitrag in ${choir.name}`,
           body: sanitizedTitle,
+          icon: '/assets/icons/icon-192x192.png',
+          badge: '/assets/icons/icon-96x96.png',
+          tag: `post-${full.id}`,
           url,
           data: { url }
         };
@@ -661,6 +664,9 @@ exports.publish = async (req, res) => {
       const payload = {
         title: `Neuer Beitrag in ${choir.name}`,
         body: full.title,
+        icon: '/assets/icons/icon-192x192.png',
+        badge: '/assets/icons/icon-96x96.png',
+        tag: `post-${full.id}`,
         url,
         data: { url }
       };
@@ -1361,7 +1367,8 @@ exports.getImageByToken = async (req, res) => {
     if (!fs.existsSync(filePath)) return res.status(404).send({ message: 'File not found' });
 
     res.setHeader('Content-Type', image.mimeType);
-    res.setHeader('Content-Disposition', `inline; filename="${image.originalName}"`);
+    const safeFilename = (image.originalName || 'image').replace(/[^\w.-]/g, '_').slice(0, 200);
+    res.setHeader('Content-Disposition', `inline; filename="${safeFilename}"`);
     res.setHeader('Cache-Control', 'public, max-age=604800'); // 7 days for public/email images
     res.sendFile(filePath);
   } catch (err) {

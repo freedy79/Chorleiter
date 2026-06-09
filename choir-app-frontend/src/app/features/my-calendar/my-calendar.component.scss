@@ -23,11 +23,23 @@
     line-height: 2rem;
   }
 
-  .calendar-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    overflow-y: auto;
+  .calendar-card {
+    mat-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .spacer {
+        flex: 1 1 auto;
+      }
+    }
+
+    mat-card-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-y: auto;
+    }
   }
 
   .calendar-actions {

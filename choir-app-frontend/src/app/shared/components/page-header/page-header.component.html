@@ -1,4 +1,14 @@
 <div class="page-header" *ngIf="title && title !== 'Home'">
-  <h1>{{ title }}</h1>
+  <div class="title-group">
+    <nav class="breadcrumbs" *ngIf="breadcrumbs.length" aria-label="Breadcrumb">
+      <ol>
+        <li *ngFor="let crumb of breadcrumbs; let isLast = last">
+          <a *ngIf="crumb.route && !isLast" [routerLink]="crumb.route">{{ crumb.label }}</a>
+          <span *ngIf="!crumb.route || isLast">{{ crumb.label }}</span>
+        </li>
+      </ol>
+    </nav>
+    <h1>{{ title }}</h1>
+  </div>
   <ng-content></ng-content>
 </div>

@@ -1,0 +1,30 @@
+<div class="badge-gallery">
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <div class="badge-summary">
+      <mat-icon>emoji_events</mat-icon>
+      <span>{{ earnedCount }} / {{ badges.length }} Abzeichen freigeschaltet</span>
+    </div>
+
+    <div *ngFor="let cat of categories" class="badge-category">
+      <h3>{{ categoryLabels[cat] || cat }}</h3>
+      <div class="badges-grid">
+        <div *ngFor="let badge of badgesInCategory(cat)"
+             class="badge-card"
+             [class.earned]="badge.earned"
+             [class.locked]="!badge.earned">
+          <mat-icon class="badge-icon">{{ badge.icon }}</mat-icon>
+          <div class="badge-title">{{ badge.title }}</div>
+          <div class="badge-desc">{{ badge.description }}</div>
+          <div class="badge-xp" *ngIf="badge.xpBonus > 0">+{{ badge.xpBonus }} XP</div>
+          <div class="badge-date" *ngIf="badge.earnedAt">
+            {{ badge.earnedAt | date:'dd.MM.yyyy' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

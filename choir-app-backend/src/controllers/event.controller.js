@@ -273,6 +273,10 @@ exports.ics = async (req, res) => {
         return res.status(401).send({ message: "Unauthorized" });
     }
 
+    const Choir = db.choir;
+    const choir = await Choir.findByPk(decoded.activeChoirId);
+    const calName = choir ? `NAK Chorleiter – ${choir.name}` : 'NAK Chorleiter';
+
     const events = await Event.findAll({
         where: { choirId: decoded.activeChoirId },
         order: [['date', 'ASC']]
@@ -283,7 +287,8 @@ exports.ics = async (req, res) => {
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
         'PRODID:-//Chorleiter//EN',
-        'CALSCALE:GREGORIAN'
+        'CALSCALE:GREGORIAN',
+        `X-WR-CALNAME:${calName}`
     ];
 
     const formatDate = (d) => new Date(d).toISOString().split('T')[0].replace(/-/g, '');
@@ -308,7 +313,8 @@ exports.ics = async (req, res) => {
 
     lines.push('END:VCALENDAR');
     res.setHeader('Content-Type', 'text/calendar');
-    res.setHeader('Content-Disposition', 'attachment; filename="events.ics"');
+    const filename = choir ? `${choir.name.replace(/[^a-zA-Z0-9äöüÄÖÜß _-]/g, '')}.ics` : 'events.ics';
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.send(lines.join('\r\n'));
 };
 
@@ -505,7 +511,7 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : event.directorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);

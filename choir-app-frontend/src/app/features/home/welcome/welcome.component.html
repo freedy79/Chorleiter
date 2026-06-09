@@ -2,10 +2,10 @@
   <div class="hero-section">
     <div class="hero-content">
       <h1 class="welcome-title">NAK Chorleiter</h1>
-      <p class="welcome-subtitle">Die Verwaltungssoftware für Ihren Chor</p>
+      <p class="welcome-subtitle">Die App für deinen Chor</p>
       <p class="welcome-description">
-        Verwalten Sie Mitglieder, Noten, Dienstpläne und Programme –
-        alles an einem Ort, einfach und effizient.
+        Noten, Termine, Chat und Dienstpläne –
+        alles an einem Ort, für Sänger und Chorleiter.
       </p>
 
       <div class="cta-buttons">
@@ -93,9 +93,20 @@
     </div>
   </div>
 
+  <mat-card *ngIf="!isPwa" class="pwa-install-card">
+    <mat-card-content>
+      <mat-icon class="feature-icon">install_mobile</mat-icon>
+      <h3>Als App installieren</h3>
+      <p>
+        Du hast die Möglichkeit, Chorleiter direkt auf deinem Smartphone zu installieren –
+        ohne App Store. Erhalte Benachrichtigungen und bleibe immer informiert.
+      </p>
+    </mat-card-content>
+  </mat-card>
+
   <div class="register-cta-section">
     <h2>Bereit loszulegen?</h2>
-    <p>Registrieren Sie sich jetzt kostenlos und verwalten Sie Ihren Chor professionell</p>
+    <p>Registriere dich jetzt kostenlos und werde Teil deines Chors</p>
     <a mat-raised-button color="primary"
        [routerLink]="isBackendAvailable ? '/register' : null"
        [attr.aria-disabled]="!isBackendAvailable"

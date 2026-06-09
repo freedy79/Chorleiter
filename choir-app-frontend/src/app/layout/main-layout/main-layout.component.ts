@@ -32,6 +32,7 @@ import { Choir } from '@core/models/choir';
 import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
 import { ChatService } from '@core/services/chat.service';
 import { PwaInstallService } from '@core/services/pwa-install.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 
 
 @Component({
@@ -61,6 +62,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   userRole$: Observable<string | undefined>;
   private readonly roleTranslations: Record<string, string> = {
     director: 'Chorleiter',
+    chorleiter: 'Chorleiter',
+    choirleiter: 'Chorleiter',
     choir_admin: 'Chor-Admin',
     admin: 'Administrator',
     demo: 'Demo',
@@ -121,6 +124,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private latestChatOverview: ChatGlobalUnreadOverview | null = null;
   private latestNotifiedMessageId: number | null = null;
   private pendingNotificationPermissionRequest = false;
+  drawerScrolling = false;
+  private drawerScrollTimeout: ReturnType<typeof setTimeout> | null = null;
 
 
   constructor(private authService: AuthService,
@@ -139,7 +144,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private metaService: Meta,
     private chatService: ChatService,
     private pushService: PushNotificationService,
-    private pwaInstall: PwaInstallService
+    private pwaInstall: PwaInstallService,
+    private dialogHelper: DialogHelperService
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -309,6 +315,12 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       take(1),
       takeUntil(this.destroy$)
     ).subscribe(choirs => {
+      // First, reconcile the push subscription state with the backend. This
+      // re-registers the current browser endpoint if the server-side record
+      // was lost (common on Android where FCM endpoints rotate).
+      this.pushService
+        .syncSubscriptionState(choirs.map(c => c.id))
+        .catch(() => {});
       setTimeout(() => this.pwaInstall.tryShowPushPrompt(choirs), 5000);
     });
   }
@@ -604,10 +616,18 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       iconName: 'people',
     };
 
+    const training: NavItem = {
+      key: 'training',
+      displayName: 'ChorTraining',
+      route: '/training',
+      visibleSubject: this.isAdmin$,
+      iconName: 'school',
+    };
+
     const aktuelles = [dashboard, events, dienstplan, availability, chat, posts, forms];
     const notenUndMusik = [repertoire, practiceLists, library, collections, programs];
     const chorUndAuswertung = [manageChoir, participation, stats, members, publicPage];
-    const system = [administration];
+    const system = [training, administration];
 
     this.navItems = [
       this.createSectionHeader('Aktuelles', aktuelles),
@@ -642,11 +662,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   }
 
   openBuildInfo(): void {
-    this.dialog.open(BuildInfoDialogComponent, { width: '400px' });
+    this.dialogHelper.openDialog(BuildInfoDialogComponent, { width: '400px' }).subscribe();
   }
 
   openHelp(): void {
-    this.dialog.open(HelpWizardComponent, { width: '600px' });
+    this.dialogHelper.openDialog(HelpWizardComponent, { width: '600px' }).subscribe();
   }
 
   openChoirSwitcher(): void {
@@ -678,10 +698,23 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     });
   }
 
+  onDrawerScroll(): void {
+    this.drawerScrolling = true;
+    if (this.drawerScrollTimeout) {
+      clearTimeout(this.drawerScrollTimeout);
+    }
+    this.drawerScrollTimeout = setTimeout(() => {
+      this.drawerScrolling = false;
+    }, 1000);
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
     this.chatUnreadCount$.complete();
+    if (this.drawerScrollTimeout) {
+      clearTimeout(this.drawerScrollTimeout);
+    }
   }
 
   private navigateToChatTarget(target: {

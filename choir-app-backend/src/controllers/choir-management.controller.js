@@ -240,11 +240,21 @@ exports.getDashboardContacts = async (req, res, next) => {
     }
 };
 
-// Alle Mitglieder (Direktoren) des aktiven Chors abrufen
+// Alle Mitglieder des aktiven Chors abrufen
 exports.getChoirMembers = async (req, res, next) => {
-    const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
+    const globalRoles = Array.isArray(req.userRoles) ? req.userRoles : [];
     try {
         await cleanupExpiredInvitations();
+
+        // Choir-Rollen des anfragenden Nutzers ermitteln
+        const membership = await db.user_choir.findOne({
+            where: { userId: req.userId, choirId: req.activeChoirId }
+        });
+        const choirRoles = membership?.rolesInChoir || [];
+        const canSeeAddresses = globalRoles.includes('admin')
+            || choirRoles.includes('choir_admin')
+            || choirRoles.includes('director');
+
         const choir = await db.choir.findByPk(req.activeChoirId, {
             // Binden Sie die zugehörigen Benutzer an die Chor-Abfrage.
             include: [{
@@ -267,25 +277,25 @@ exports.getChoirMembers = async (req, res, next) => {
         // Sequelize fügt die 'through'-Daten in ein verschachteltes Objekt ein.
         // Wir formatieren die Antwort, um sie für das Frontend einfacher zu machen.
         const members = choir.users.map(user => {
-            const canShareContact = roles.includes('admin') || user.shareWithChoir;
             const base = {
                 id: user.id,
                 firstName: user.firstName,
                 name: user.name,
                 email: user.email,
-                phone: canShareContact ? user.phone : undefined,
                 voice: user.voice,
                 membership: {
                     rolesInChoir: user.user_choir.rolesInChoir,
                     registrationStatus: user.user_choir.registrationStatus
                 }
             };
-            if (canShareContact) {
-                return Object.assign(base, {
-                    street: user.street,
-                    postalCode: user.postalCode,
-                    city: user.city
-                });
+            if (canSeeAddresses) {
+                base.shareWithChoir = user.shareWithChoir;
+                if (user.shareWithChoir) {
+                    base.phone = user.phone;
+                    base.street = user.street;
+                    base.postalCode = user.postalCode;
+                    base.city = user.city;
+                }
             }
             return base;
         });
@@ -312,7 +322,7 @@ exports.inviteUserToChoir = async (req, res, next) => {
 
         if (user) {
             await choir.addUser(user, { through: { rolesInChoir, registrationStatus: 'REGISTERED' } });
-            await db.choir_log.create({ choirId, userId: user.id, action: 'member_join' });
+            await db.choir_log.create({ choirId, userId: user.id, action: 'member_join', details: { userName: `${user.firstName} ${user.name}`, rolesInChoir, addedBy: req.userId } });
             res.status(200).send({ message: `User ${email} has been added to the choir.` });
         } else {
             const token = crypto.randomBytes(20).toString('hex');
@@ -399,9 +409,16 @@ exports.updateMember = async (req, res, next) => {
             }
         }
 
+        const oldRoles = [...(association.rolesInChoir || [])];
         await association.update({
             ...(rolesInChoir ? { rolesInChoir } : {})
         });
+
+        if (rolesInChoir) {
+            const user = await db.user.findByPk(userId, { attributes: ['firstName', 'name'] });
+            const userName = user ? `${user.firstName} ${user.name}` : null;
+            await db.choir_log.create({ choirId, userId: parseInt(userId, 10), action: 'member_role_change', details: { userName, oldRoles, newRoles: rolesInChoir, changedBy: req.userId } });
+        }
 
         res.status(200).send({ message: 'Membership updated.' });
     } catch (err) {

@@ -1,0 +1,75 @@
+<div class="training-stats">
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && stats">
+    <!-- Overview -->
+    <mat-card class="overview-card">
+      <mat-card-header>
+        <mat-card-title>Gesamtübersicht</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="overview-grid">
+          <div class="overview-item">
+            <div class="overview-value">{{ stats.profile.totalXp }}</div>
+            <div class="overview-label">Gesamt-XP</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-value">Level {{ stats.profile.currentLevel }}</div>
+            <div class="overview-label">Aktuelles Level</div>
+          </div>
+          <div class="overview-item">
+            <div class="overview-value">{{ stats.profile.longestStreak }}</div>
+            <div class="overview-label">Längster Streak</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Module Stats -->
+    <h2 class="section-title">Module</h2>
+    <div class="module-stats">
+      <mat-card *ngFor="let mod of modules" class="module-stat-card">
+        <div class="module-header">
+          <mat-icon>{{ moduleIcons[mod] }}</mat-icon>
+          <span>{{ moduleLabels[mod] }}</span>
+        </div>
+        <div class="module-detail" *ngIf="stats.moduleStats[mod]">
+          <div class="detail-row">
+            <span>Übungen</span>
+            <strong>{{ stats.moduleStats[mod].attempts }}</strong>
+          </div>
+          <div class="detail-row">
+            <span>Ø Score</span>
+            <strong>{{ stats.moduleStats[mod].avgScore }}%</strong>
+          </div>
+          <div class="detail-row">
+            <span>Zeit</span>
+            <strong>{{ stats.moduleStats[mod].totalMinutes }} min</strong>
+          </div>
+        </div>
+        <div *ngIf="!stats.moduleStats[mod] || stats.moduleStats[mod].attempts === 0" class="module-empty">
+          Noch keine Übungen absolviert.
+        </div>
+      </mat-card>
+    </div>
+
+    <!-- Recent Activity -->
+    <h2 class="section-title">Letzte 7 Tage</h2>
+    <mat-card *ngIf="stats.recentActivity.length > 0">
+      <mat-card-content>
+        <div class="activity-bars">
+          <div *ngFor="let day of stats.recentActivity" class="activity-day">
+            <div class="activity-bar" [style.height.%]="(day.xp / 100) * 100 | number:'1.0-0'"></div>
+            <div class="activity-label">{{ day.day | date:'EE' }}</div>
+            <div class="activity-xp">{{ day.xp }} XP</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    <div *ngIf="stats.recentActivity.length === 0" class="empty-state">
+      Keine Aktivität in den letzten 7 Tagen.
+    </div>
+  </div>
+</div>

@@ -283,7 +283,7 @@ export const routes: Routes = [
                 path: 'members',
                 loadComponent: () => import('./features/choir-members/choir-members.component').then(m => m.ChoirMembersComponent),
                 canActivate: [AuthGuard],
-                data: { title: 'Chormitglieder' }
+                data: { title: 'Chormitglieder', fullWidth: true }
             },
             {
                 path: 'participation',
@@ -306,6 +306,11 @@ export const routes: Routes = [
                 data: { title: 'Vorstellungsseite' }
             },
         ],
+    },
+    {
+        path: 'training',
+        canActivate: [AuthGuard, AdminGuard], // Nur für Admins während der Testphase
+        loadChildren: () => import('./features/training/training.routes').then(m => m.trainingRoutes),
     },
     {
         path: 'admin',

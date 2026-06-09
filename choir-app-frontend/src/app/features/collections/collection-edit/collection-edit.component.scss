@@ -39,15 +39,23 @@ mat-card-title {
   width: 100%;
 
   .mat-column-number {
-    width: 20%;
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
   }
 
   .mat-column-title {
-    width: auto;
+    width: 42%;
+  }
+
+  .mat-column-composer {
+    width: 28%;
   }
 
   .mat-column-actions {
-    width: 30%;
+    width: 140px;
+    min-width: 140px;
+    max-width: 140px;
   }
 
   .piece-composer {
@@ -55,17 +63,27 @@ mat-card-title {
     font-size: 0.9em;
   }
 
-  .number-cell mat-form-field {
-    width: 4rem;
+  .number-cell {
+    padding-right: 0.25rem;
 
-    // Hide outline by default and only show on hover or focus
-    .mat-form-field-outline {
-      display: none;
+    .inline-number-field {
+      width: 3.5rem;
+      margin-bottom: -1.25em; // Remove extra reserved space for subscript row
     }
 
-    &:hover .mat-form-field-outline,
-    &.mat-focused .mat-form-field-outline {
-      display: block;
+    .inline-number-field .mat-mdc-text-field-wrapper {
+      height: 40px;
+    }
+
+    .inline-number-field .mat-mdc-form-field-flex {
+      height: 40px;
+      align-items: center;
+    }
+
+    .inline-number-field .mat-mdc-form-field-infix {
+      min-height: 40px;
+      padding-top: 0.2rem;
+      padding-bottom: 0.2rem;
     }
   }
 }

@@ -32,7 +32,8 @@ export class MarkdownPipe implements PipeTransform {
         const html = marked.parse(replaced) as string;
         const sanitized = DOMPurify.sanitize(html, {
           ADD_TAGS: ['img'],
-          ADD_ATTR: ['src', 'alt', 'width', 'height', 'loading']
+          ADD_ATTR: ['src', 'alt', 'width', 'height', 'loading'],
+          ALLOWED_URI_REGEXP: /^(?:https?|mailto):/i,
         });
         return this.sanitizer.bypassSecurityTrustHtml(sanitized);
       })

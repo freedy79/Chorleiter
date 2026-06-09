@@ -1,0 +1,158 @@
+// ============================================================================
+// Training Section Design Tokens
+// ----------------------------------------------------------------------------
+// Centralized CSS custom properties for the Training feature (Dashboard,
+// Exercises, Player, Stats, Badges, Theory).
+//
+// Use these tokens instead of hardcoded colors so:
+//   - Dark mode works automatically via .dark-theme overrides
+//   - Each training module (rhythm / note_reading / ear_training) gets its
+//     own accent palette by placing a `.module-<key>` class on any ancestor.
+//
+// Apply a module class like this:
+//   <div class="exercise-player module-rhythm"> ... </div>
+//
+// All `--training-accent*` variables will be overridden to the module color.
+// ============================================================================
+
+// ----------------------------------------------------------------------------
+// Base tokens (Light mode default — applied app-wide so the training feature
+// can use them without scoping. Hard-coded to :root because they don't clash
+// with anything else.)
+// ----------------------------------------------------------------------------
+:root {
+  // Accent (default = app primary "NAK Blue")
+  --training-accent: #1976d2;
+  --training-accent-strong: #0d47a1;
+  --training-accent-soft-bg: #e3f2fd;
+  --training-accent-soft-fg: #0d47a1;
+  --training-accent-on: #ffffff;
+
+  // Neutral text
+  --training-text-muted: #666666;
+  --training-text-subtle: #999999;
+
+  // Surfaces / dividers
+  --training-surface-soft: rgba(0, 0, 0, 0.03);
+  --training-surface-hover: rgba(0, 0, 0, 0.05);
+  --training-divider: rgba(0, 0, 0, 0.08);
+
+  // Status colors
+  --training-success: #43a047;
+  --training-success-soft-bg: #e8f5e9;
+  --training-success-soft-fg: #2e7d32;
+
+  --training-warning: #ef6c00;
+  --training-warning-soft-bg: #fff3e0;
+  --training-warning-soft-fg: #e65100;
+
+  --training-danger: #e53935;
+  --training-danger-soft-bg: #fce4ec;
+  --training-danger-soft-fg: #c62828;
+
+  // Streak (fire) — always warm, slightly different from warning
+  --training-streak: #ff6d00;
+
+  // Gold (badges, leaderboard rank 1)
+  --training-gold: #ffc107;
+  --training-gold-soft-bg: rgba(255, 193, 7, 0.08);
+  --training-gold-soft-fg: #b28704;
+
+  // Silver / Bronze for rank 2/3
+  --training-silver-bg: #cfd8dc;
+  --training-silver-fg: #37474f;
+  --training-bronze-bg: #ffcc80;
+  --training-bronze-fg: #4e342e;
+}
+
+// ----------------------------------------------------------------------------
+// Dark mode overrides
+// ----------------------------------------------------------------------------
+.dark-theme {
+  --training-accent: #64b5f6;
+  --training-accent-strong: #90caf9;
+  --training-accent-soft-bg: rgba(33, 150, 243, 0.15);
+  --training-accent-soft-fg: #90caf9;
+  --training-accent-on: #0a1929;
+
+  --training-text-muted: #b0b0b0;
+  --training-text-subtle: #808080;
+
+  --training-surface-soft: rgba(255, 255, 255, 0.04);
+  --training-surface-hover: rgba(255, 255, 255, 0.08);
+  --training-divider: rgba(255, 255, 255, 0.10);
+
+  --training-success: #66bb6a;
+  --training-success-soft-bg: rgba(46, 125, 50, 0.20);
+  --training-success-soft-fg: #81c784;
+
+  --training-warning: #ffb74d;
+  --training-warning-soft-bg: rgba(230, 81, 0, 0.20);
+  --training-warning-soft-fg: #ffcc80;
+
+  --training-danger: #ef5350;
+  --training-danger-soft-bg: rgba(198, 40, 40, 0.20);
+  --training-danger-soft-fg: #ef9a9a;
+
+  --training-streak: #ff9e40;
+
+  --training-gold: #ffd54f;
+  --training-gold-soft-bg: rgba(255, 193, 7, 0.12);
+  --training-gold-soft-fg: #ffd54f;
+
+  --training-silver-bg: rgba(207, 216, 220, 0.20);
+  --training-silver-fg: #cfd8dc;
+  --training-bronze-bg: rgba(255, 204, 128, 0.20);
+  --training-bronze-fg: #ffcc80;
+}
+
+// ----------------------------------------------------------------------------
+// Module accent overrides
+// ----------------------------------------------------------------------------
+// Rhythm — warm orange (drums, energy)
+.module-rhythm {
+  --training-accent: #ef6c00;
+  --training-accent-strong: #e65100;
+  --training-accent-soft-bg: #fff3e0;
+  --training-accent-soft-fg: #e65100;
+  --training-accent-on: #ffffff;
+}
+.dark-theme .module-rhythm {
+  --training-accent: #ffb74d;
+  --training-accent-strong: #ffcc80;
+  --training-accent-soft-bg: rgba(239, 108, 0, 0.18);
+  --training-accent-soft-fg: #ffcc80;
+  --training-accent-on: #2a1500;
+}
+
+// Note Reading — blue (matches app primary, lets it feel "core")
+.module-note_reading {
+  --training-accent: #1976d2;
+  --training-accent-strong: #0d47a1;
+  --training-accent-soft-bg: #e3f2fd;
+  --training-accent-soft-fg: #0d47a1;
+  --training-accent-on: #ffffff;
+}
+.dark-theme .module-note_reading {
+  --training-accent: #64b5f6;
+  --training-accent-strong: #90caf9;
+  --training-accent-soft-bg: rgba(33, 150, 243, 0.18);
+  --training-accent-soft-fg: #90caf9;
+  --training-accent-on: #0a1929;
+}
+
+// Ear Training — green (fresh, "open ear")
+.module-ear_training {
+  --training-accent: #2e7d32;
+  --training-accent-strong: #1b5e20;
+  --training-accent-soft-bg: #e8f5e9;
+  --training-accent-soft-fg: #1b5e20;
+  --training-accent-on: #ffffff;
+}
+.dark-theme .module-ear_training {
+  --training-accent: #81c784;
+  --training-accent-strong: #a5d6a7;
+  --training-accent-soft-bg: rgba(46, 125, 50, 0.20);
+  --training-accent-soft-fg: #a5d6a7;
+  --training-accent-on: #0c1f0f;
+}

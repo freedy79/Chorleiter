@@ -34,6 +34,7 @@
     "marked": "^18.0.4",
     "multer": "^2.0.1",
     "node-cache": "^5.1.2",
+    "node-cron": "^4.2.1",
     "nodemailer": "^8.0.8",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.18.0",

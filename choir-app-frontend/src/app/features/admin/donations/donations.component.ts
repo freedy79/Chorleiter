@@ -8,12 +8,14 @@ import { AdminService } from '@core/services/admin.service';
 import { Donation } from '@core/models/donation';
 import { User } from '@core/models/user';
 import { PayPalSettingsComponent } from '../paypal-settings/paypal-settings.component';
+import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-donations',
   standalone: true,
-  imports: [CommonModule, MaterialModule, FormsModule],
+  imports: [CommonModule, MaterialModule, FormsModule, EmptyStateComponent],
   templateUrl: './donations.component.html',
+  styleUrls: ['./donations.component.scss']
 })
 export class DonationsComponent implements OnInit {
   donations: Donation[] = [];

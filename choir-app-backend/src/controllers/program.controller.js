@@ -2,6 +2,53 @@ const db = require('../models');
 const Program = db.program;
 const { programPdf } = require('../services/pdf.service');
 
+/**
+ * Sync snapshot fields of piece-linked program items with the current piece data.
+ * Fetches all referenced pieces in a single query, compares, and updates stale snapshots.
+ */
+async function syncPieceSnapshots(items) {
+  if (!items || !items.length) return;
+
+  const pieceItems = items.filter(i => i.type === 'piece' && i.pieceId);
+  if (!pieceItems.length) return;
+
+  const pieceIds = [...new Set(pieceItems.map(i => i.pieceId))];
+  const pieces = await db.piece.findAll({
+    where: { id: pieceIds },
+    include: [{ model: db.composer, as: 'composer' }],
+  });
+  const pieceMap = new Map(pieces.map(p => [p.id, p]));
+
+  const updates = [];
+  for (const item of pieceItems) {
+    const piece = pieceMap.get(item.pieceId);
+    if (!piece) continue;
+
+    const newTitle = piece.title;
+    const newComposer = piece.composer?.name || null;
+    const newDuration = piece.durationSec ?? null;
+
+    const changed =
+      item.pieceTitleSnapshot !== newTitle ||
+      item.pieceComposerSnapshot !== newComposer ||
+      item.pieceDurationSecSnapshot !== newDuration;
+
+    if (changed) {
+      item.pieceTitleSnapshot = newTitle;
+      item.pieceComposerSnapshot = newComposer;
+      item.pieceDurationSecSnapshot = newDuration;
+      updates.push(
+        db.program_item.update(
+          { pieceTitleSnapshot: newTitle, pieceComposerSnapshot: newComposer, pieceDurationSecSnapshot: newDuration },
+          { where: { id: item.id } }
+        )
+      );
+    }
+  }
+
+  if (updates.length) await Promise.all(updates);
+}
+
 // Create a draft revision of a published program so that further changes
 // do not modify the published version. Copies all existing items to the new
 // revision and returns it. If an itemId is provided, the returned object will
@@ -106,6 +153,7 @@ exports.findLastPublished = async (req, res) => {
       order: [['publishedAt', 'DESC']],
       include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
     });
+    if (program) await syncPieceSnapshots(program.items);
     res.status(200).send(program);
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -120,6 +168,7 @@ exports.findOne = async (req, res) => {
       include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
     });
     if (!program) return res.status(404).send({ message: 'program not found' });
+    await syncPieceSnapshots(program.items);
     res.status(200).send(program);
   } catch (err) {
     res.status(500).send({ message: err.message });
@@ -141,6 +190,7 @@ exports.getForEditing = async (req, res) => {
 
     // If it's a draft, return it
     if (program.status === 'draft') {
+      await syncPieceSnapshots(program.items);
       return res.status(200).send(program);
     }
 
@@ -151,7 +201,9 @@ exports.getForEditing = async (req, res) => {
     });
 
     // Return whichever exists (draft takes priority)
-    res.status(200).send(draft || program);
+    const result = draft || program;
+    await syncPieceSnapshots(result.items);
+    res.status(200).send(result);
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -164,6 +216,7 @@ exports.downloadPdf = async (req, res) => {
       include: [{ model: db.program_item, as: 'items', separate: true, order: [['sortIndex', 'ASC']] }],
     });
     if (!program) return res.status(404).send({ message: 'program not found' });
+    await syncPieceSnapshots(program.items);
     const buffer = await programPdf(program.toJSON());
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="programm-${program.id}.pdf"`);

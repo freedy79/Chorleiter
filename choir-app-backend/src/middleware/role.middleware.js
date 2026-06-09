@@ -193,7 +193,7 @@ async function requireNonSinger(req, res, next) {
         return next();
     }
     try {
-        const hasRole = await userHasChoirRole(req, ['choir_admin', 'director', 'organist', 'notenwart']);
+        const hasRole = await userHasChoirRole(req, ['choir_admin', ...DIRECTOR_ROLES, 'organist', 'notenwart']);
         if (hasRole) {
             return next();
         }

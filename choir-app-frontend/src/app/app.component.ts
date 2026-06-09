@@ -42,9 +42,9 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if ('serviceWorker' in navigator) {
+    /*if ('serviceWorker' in navigator) {
       console.log('Service Worker wird unterstützt');
-    }
+    }*/
 
     this.pushService.initializeNotificationClicks();
   }

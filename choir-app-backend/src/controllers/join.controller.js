@@ -28,6 +28,7 @@ exports.joinChoir = async (req, res) => {
     if (existing) return res.status(409).send({ message: 'User already exists.' });
     const user = await db.user.create({ firstName, name, email, password: bcrypt.hashSync(password, 8), roles: ['user'] });
     await choir.addUser(user, { through: { rolesInChoir: ['singer'], registrationStatus: 'REGISTERED' } });
+    await db.choir_log.create({ choirId: choir.id, userId: user.id, action: 'member_join', details: { userName: `${firstName} ${name}`, rolesInChoir: ['singer'], selfJoin: true } });
     await emailService.sendNewMemberNotification(choir.id, user);
     res.status(201).send({ message: 'Registration completed.' });
   } catch (err) {

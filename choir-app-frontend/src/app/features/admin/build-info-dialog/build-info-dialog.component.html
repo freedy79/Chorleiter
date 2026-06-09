@@ -2,7 +2,7 @@
 <div mat-dialog-content>
   <p><strong>Version:</strong> {{ info.version }}</p>
   <p><strong>Commit:</strong> {{ info.commit }}</p>
-  <p><strong>Build-Datum:</strong> {{ info.date | date:'short' }}</p>
+  <p><strong>Build-Datum:</strong> {{ info.date | date:'dd.MM.yyyy, HH:mm' }}</p>
 </div>
 <div mat-dialog-actions align="end">
   <button mat-button (click)="close()">Schließen</button>

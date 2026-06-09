@@ -127,7 +127,7 @@
             </mat-form-field>
 
             <!-- Input field for the piece's number within the collection -->
-            <mat-form-field appearance="outline" class="piece-number-field dense">
+            <mat-form-field appearance="outline" class="piece-number-field">
               <mat-label>Nummer</mat-label>
               <input matInput formControlName="number" placeholder="4">
             </mat-form-field>
@@ -157,7 +157,7 @@
             <ng-container matColumnDef="number">
               <mat-header-cell *matHeaderCellDef mat-sort-header="number"> Nr. </mat-header-cell>
               <mat-cell *matCellDef="let link" class="number-cell">
-                <mat-form-field appearance="outline" *ngIf="!isReadOnly">
+                <mat-form-field appearance="outline" class="inline-number-field" subscriptSizing="dynamic" *ngIf="!isReadOnly">
                   <input
                     matInput
                     [(ngModel)]="link.numberInCollection"
@@ -174,16 +174,19 @@
               <mat-header-cell *matHeaderCellDef mat-sort-header="title"> Titel </mat-header-cell>
               <mat-cell *matCellDef="let link">
                 <div class="piece-title">{{ link.piece.title }}</div>
-                <div
-                  class="piece-composer"
-                  *ngIf="link.piece.composer?.name || link.piece.origin"
-                >{{ link.piece.composer?.name || link.piece.origin }}</div>
+              </mat-cell>
+            </ng-container>
+
+            <ng-container matColumnDef="composer">
+              <mat-header-cell *matHeaderCellDef> Komponist </mat-header-cell>
+              <mat-cell *matCellDef="let link">
+                <div class="piece-composer">{{ link.piece.composer?.name || link.piece.origin || '—' }}</div>
               </mat-cell>
             </ng-container>
 
             <!-- Actions Column Definition -->
             <ng-container matColumnDef="actions">
-              <mat-header-cell *matHeaderCellDef></mat-header-cell>
+              <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
               <mat-cell *matCellDef="let link" class="actions-cell">
                 <ng-container *ngIf="!isReadOnly">
                 <button type="button" mat-icon-button (click)="openEditPieceDialog(link.piece.id)" matTooltip="Stück bearbeiten">

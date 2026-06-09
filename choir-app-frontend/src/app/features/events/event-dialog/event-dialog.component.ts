@@ -20,6 +20,7 @@ import {
 } from '@angular/material/dialog';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { take } from 'rxjs/operators';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatTableDataSource } from '@angular/material/table';
 
@@ -33,6 +34,8 @@ import { LookupPiece } from '@core/models/lookup-piece';
 import { PieceDialogComponent } from '../../literature/piece-dialog/piece-dialog.component';
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
+import { UserInChoir } from '@core/models/user';
+import { AuthService } from '@core/services/auth.service';
 
 @Component({
     selector: 'app-event-dialog',
@@ -60,12 +63,14 @@ export class EventDialogComponent implements OnInit {
     readOnly = false;
     private editEventId: number | null = null;
     programs: Program[] = [];
+    directors: UserInChoir[] = [];
 
     @ViewChild('pieceInput') pieceInput!: ElementRef<HTMLInputElement>;
 
     constructor(
         private fb: FormBuilder,
         private apiService: ApiService,
+        private authService: AuthService,
         private programService: ProgramService,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<EventDialogComponent>,
@@ -74,6 +79,7 @@ export class EventDialogComponent implements OnInit {
         this.eventForm = this.fb.group({
             date: [new Date().toISOString().split('T')[0], Validators.required],
             type: ['', Validators.required],
+            directorId: [null as number | null],
             notes: [''],
             programId: [null as string | null],
         });
@@ -115,6 +121,39 @@ export class EventDialogComponent implements OnInit {
 
         this.programService.getPrograms().subscribe((programs) => {
             this.programs = (programs || []).filter(p => p.status !== 'archived');
+        });
+
+        this.apiService.getChoirMembers().subscribe((members) => {
+            const eligibleDirectors = (members || []).filter(m => {
+                const roles = m.membership?.rolesInChoir || [];
+                return roles.includes('director') || roles.includes('choir_admin');
+            });
+
+            if (this.data?.event?.director?.id) {
+                const hasCurrentDirector = eligibleDirectors.some(d => d.id === this.data!.event!.director!.id);
+                if (!hasCurrentDirector) {
+                    eligibleDirectors.push({
+                        id: this.data.event.director.id,
+                        name: this.data.event.director.name,
+                        email: ''
+                    } as UserInChoir);
+                }
+            }
+
+            this.directors = eligibleDirectors;
+
+            if (!this.isEditMode && this.eventForm.get('directorId')?.value == null) {
+                this.authService.currentUser$.pipe(take(1)).subscribe(currentUser => {
+                    const currentUserId = currentUser?.id;
+                    if (!currentUserId) {
+                        return;
+                    }
+                    const isEligibleDirector = this.directors.some(d => d.id === currentUserId);
+                    if (isEligibleDirector) {
+                        this.eventForm.patchValue({ directorId: currentUserId });
+                    }
+                });
+            }
         });
     }
 
@@ -238,6 +277,7 @@ export class EventDialogComponent implements OnInit {
         this.eventForm.patchValue({
             date: event.date ? event.date.toString().split('T')[0] : '',
             type: event.type,
+            directorId: event.director?.id ?? null,
             notes: event.notes || '',
             programId: event.program?.id || null,
         });

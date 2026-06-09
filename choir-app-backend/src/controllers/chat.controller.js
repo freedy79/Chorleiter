@@ -653,6 +653,8 @@ exports.createMessage = async (req, res) => {
   const payload = {
     title: `${choirName} – ${senderName}`,
     body: messagePreview,
+    icon: '/assets/icons/icon-192x192.png',
+    badge: '/assets/icons/icon-96x96.png',
     tag: `chat-room-${room.id}`,
     renotify: true,
     url,

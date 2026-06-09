@@ -18,6 +18,8 @@ export class WelcomeComponent implements OnInit {
   demoEmail = 'demo@nak-chorleiter.de';
   demoPassword = 'demo';
   isBackendAvailable = true;
+  isPwa = window.matchMedia('(display-mode: standalone)').matches
+       || (navigator as any).standalone === true;
 
   constructor(
     private authService: AuthService,
@@ -50,33 +52,33 @@ export class WelcomeComponent implements OnInit {
   features = [
     {
       icon: 'people',
-      title: 'Mitgliederverwaltung',
-      description: 'Verwalten Sie Ihre Chormitglieder, Kontaktdaten und Stimmen zentral'
+      title: 'Dein Chor auf einen Blick',
+      description: 'Alle Mitglieder, Stimmgruppen und Kontaktdaten zentral – inkl. Anwesenheitsübersicht bei Proben und Auftritten'
     },
     {
       icon: 'library_music',
-      title: 'Literaturverwaltung',
-      description: 'Organisieren Sie Ihre Notenbibliothek mit umfassenden Suchfunktionen'
+      title: 'Noten & Übungslisten',
+      description: 'Finde alle Stücke im Repertoire, stöbere in Sammlungen, leihe Noten aus und erstelle persönliche Übungslisten'
     },
     {
       icon: 'calendar_today',
-      title: 'Dienstplanung',
-      description: 'Erstellen Sie Monatsdienstpläne und fragen Sie Verfügbarkeiten ab'
+      title: 'Termine & Verfügbarkeiten',
+      description: 'Sieh alle Proben und Auftritte im Überblick, melde deine Verfügbarkeit und behalte den Dienstplan im Blick'
     },
     {
       icon: 'event',
-      title: 'Programmplanung',
-      description: 'Planen Sie Konzerte und Gottesdienste mit Ihrem Repertoire'
+      title: 'Programme & Auftritte',
+      description: 'Erfahre, welche Stücke beim nächsten Gottesdienst oder Konzert gesungen werden – immer aktuell'
     },
     {
-      icon: 'mail',
-      title: 'Kommunikation',
-      description: 'E-Mail-Benachrichtigungen und direkte Kommunikation mit dem Chor'
+      icon: 'forum',
+      title: 'Chat, Neuigkeiten & Umfragen',
+      description: 'Tausche dich mit dem Chor aus, lies aktuelle Beiträge und nimm an Umfragen und Formularen teil'
     },
     {
       icon: 'insights',
-      title: 'Statistiken',
-      description: 'Behalten Sie den Überblick über Anwesenheit und Aktivitäten'
+      title: 'Statistiken & Chorseite',
+      description: 'Verfolge deine Probe-Teilnahmen und entdecke die öffentliche Seite deines Chors'
     }
   ];
 }

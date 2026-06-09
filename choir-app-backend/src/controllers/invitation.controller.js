@@ -43,7 +43,7 @@ exports.completeRegistration = async (req, res) => {
     }
     await db.user.update({ firstName, name, password: bcrypt.hashSync(password, 8) }, { where: { id: entry.user.id } });
     await entry.update({ registrationStatus: 'REGISTERED', inviteToken: null, inviteExpiry: null });
-    await db.choir_log.create({ choirId: entry.choirId, userId: entry.user.id, action: 'member_join' });
+    await db.choir_log.create({ choirId: entry.choirId, userId: entry.user.id, action: 'member_join', details: { userName: `${firstName} ${name}`, viaInvitation: true } });
     const user = await db.user.findByPk(entry.user.id, { attributes: ['firstName', 'name', 'email'] });
     await emailService.sendNewMemberNotification(entry.choirId, user);
     res.status(200).send({ message: 'Registration completed.' });

@@ -10,6 +10,7 @@ const logger = require("./src/config/logger");
 const { sendCrashReportMail } = require("./src/services/email.service");
 const { startScheduler: startDutyReminder } = require("./src/services/dutyReminder.service");
 const { startScheduler: startChatUnreadNotifier } = require("./src/services/chatUnreadNotifier.service");
+const { startScheduler: startRehearsalReminder } = require("./src/services/rehearsalReminder.scheduler");
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 let shuttingDown = false;
@@ -70,6 +71,7 @@ async function start() {
             logger.info(`Server is running on port ${PORT}, listening ${ADDRESS}.`);
             startDutyReminder();
             startChatUnreadNotifier();
+            startRehearsalReminder();
         });
         // Close requests that take longer than 20 seconds
         server.setTimeout(20 * 1000);

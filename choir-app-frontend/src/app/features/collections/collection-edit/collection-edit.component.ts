@@ -67,7 +67,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
     private collectionId: number | null = null;
     pageSubtitle =
         "Beschreibung der Sammlung, Hinzufügen von Stücken.";
-    public pieceLinkColumns: string[] = ['number', 'title', 'actions'];
+    public pieceLinkColumns: string[] = ['number', 'title', 'composer', 'actions'];
     pieceCtrl = new FormControl<string | (Piece & { isNew?: boolean })>('');
     filteredPieces$!: Observable<(Piece & { isNew?: boolean })[]>;
     allPieces: Piece[] = [];

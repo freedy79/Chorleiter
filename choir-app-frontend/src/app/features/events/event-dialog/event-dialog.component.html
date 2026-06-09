@@ -26,6 +26,16 @@
 
     <!-- Notes -->
     <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Leiter (optional)</mat-label>
+      <mat-select formControlName="directorId">
+        <mat-option [value]="null">Keine Auswahl</mat-option>
+        <mat-option *ngFor="let director of directors" [value]="director.id">
+          {{ director.name }}{{ director.firstName ? ', ' + director.firstName : '' }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
       <mat-label>Notizen</mat-label>
       <textarea matInput formControlName="notes" rows="3"></textarea>
     </mat-form-field>

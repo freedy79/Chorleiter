@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, combineLatest, EMPTY } from 'rxjs';
-import { map, tap, catchError, distinctUntilChanged } from 'rxjs/operators';
-import { Router } from '@angular/router';
+import { map, tap, catchError, distinctUntilChanged, filter, throttleTime } from 'rxjs/operators';
+import { NavigationEnd, Router } from '@angular/router';
 import { environment } from 'src/environments/environment';
 import { User, GlobalRole } from '../models/user';
 import { Choir, ChoirMembership, ChoirRole, normalizeChoir, normalizeChoirs } from '../models/choir';
@@ -140,6 +140,17 @@ export class AuthService {
         this.logout('sessionExpired');
       }
     }
+
+    // Auto-refresh user data (roles, modules, choir memberships) on navigation,
+    // throttled to once per minute. Ensures role / module changes take effect
+    // without requiring the user to log out and back in.
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd),
+      filter(() => this.hasToken() && !this.isTokenExpired(this.getToken() || '')),
+      throttleTime(60_000, undefined, { leading: false, trailing: true })
+    ).subscribe(() => {
+      this.refreshUserAndCheckForNewChoirs().subscribe();
+    });
   }
 
   private hasToken(): boolean {

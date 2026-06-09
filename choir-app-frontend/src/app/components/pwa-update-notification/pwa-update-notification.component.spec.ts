@@ -13,6 +13,7 @@ describe('PwaUpdateNotificationComponent', () => {
     const swUpdateServiceMock = jasmine.createSpyObj('ServiceWorkerUpdateService', [
       'activateUpdate',
       'checkForUpdates',
+      'dismissUpdate',
       'isUpdateAvailable',
       'isUpdating',
       'unregisterServiceWorker',
@@ -70,7 +71,7 @@ describe('PwaUpdateNotificationComponent', () => {
     const dismissButton = fixture.nativeElement.querySelector('.btn-secondary');
     dismissButton.click();
 
-    expect(component.updateAvailable).toBe(false);
+    expect(swUpdateService.dismissUpdate).toHaveBeenCalled();
   });
 
   it('sollte Buttons deaktivieren während Update läuft', () => {

@@ -25,6 +25,9 @@
     ) !important;
     // Selected SideNav entries should always use white text
     color: white !important;
+    --mdc-list-list-item-label-text-color: white;
+    --mdc-list-list-item-leading-icon-color: white;
+    --mdc-list-list-item-trailing-icon-color: white;
     border-radius: 0px;
 
     mat-icon {
@@ -32,6 +35,16 @@
     }
 
     .expandIcon {
+      color: white !important;
+    }
+
+    .menu-item-content {
+      color: white !important;
+    }
+
+    ::ng-deep .mat-mdc-list-item-unscoped-content,
+    ::ng-deep .mdc-list-item__content,
+    ::ng-deep .mdc-list-item__primary-text {
       color: white !important;
     }
   }
@@ -43,7 +56,20 @@
     ) !important;
     // Selected SideNav entries should always use white text
     color: white !important;
+    --mdc-list-list-item-label-text-color: white;
+    --mdc-list-list-item-leading-icon-color: white;
+    --mdc-list-list-item-trailing-icon-color: white;
     border-radius: 0px;
+
+    .menu-item-content {
+      color: white !important;
+    }
+
+    ::ng-deep .mat-mdc-list-item-unscoped-content,
+    ::ng-deep .mdc-list-item__content,
+    ::ng-deep .mdc-list-item__primary-text {
+      color: white !important;
+    }
   }
 
   &:hover {
@@ -104,6 +130,7 @@ mat-list-item {
   min-height: 32px;
   margin-top: 0.6rem;
   margin-bottom: 0.2rem;
+  margin-left: 4px;
   opacity: 0.72;
   color: rgba(0, 0, 0, 0.56);
 }

@@ -230,7 +230,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.apiService.getEventById(event.id).subscribe(fullEvent => {
       this.dialogHelper.openDialogWithApi<
         EventDialogComponent,
-        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; programId?: string | null },
+        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; directorId?: number | null; programId?: string | null },
         Event
       >(
         EventDialogComponent,
@@ -249,6 +249,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
               const changed =
                 new Date(result.date).getTime() !== new Date(fullEvent.date).getTime() ||
                 result.type !== fullEvent.type ||
+                (result.directorId ?? null) !== (fullEvent.director?.id ?? null) ||
                 (result.notes || '') !== (fullEvent.notes || '') ||
                 JSON.stringify(originalPieces) !== JSON.stringify(newPieces);
 
@@ -338,7 +339,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   openAddEventDialog(): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
-      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
+      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
       CreateEventResponse
     >(
       EventDialogComponent,
@@ -388,15 +389,14 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   subscribeIcal(): void {
     const token = this.authService.getToken();
     if (!token) return;
-    const httpsUrl = `${environment.apiUrl}/events/ics?token=${token}`;
-    const webcalUrl = httpsUrl.replace(/^https?:/, 'webcal:');
-    window.open(webcalUrl, '_self');
+    const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+    window.location.href = webcalUrl;
   }
 
   connectGoogleCalendar(): void {
     const token = this.authService.getToken();
     if (!token) return;
-    const icsUrl = encodeURIComponent(`${environment.apiUrl}/events/ics?token=${token}`);
-    window.open(`https://calendar.google.com/calendar/r?cid=${icsUrl}`, '_blank');
-  }
+    const webcalUrl = `${environment.apiUrl}/events/ics?token=${token}`.replace(/^https?:/, 'webcal:');
+    window.open(`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcalUrl)}`, '_blank');
+}
 }

@@ -4,6 +4,7 @@ import { BehaviorSubject, interval } from 'rxjs';
 import { filter, switchMap, debounceTime } from 'rxjs/operators';
 
 const ACTIVATED_VERSION_KEY = 'sw-activated-version';
+const DISMISSED_VERSION_KEY = 'sw-dismissed-version';
 
 /**
  * Service für die Verwaltung von Service Worker Updates
@@ -65,11 +66,26 @@ export class ServiceWorkerUpdateService {
           .subscribe((evt) => {
             const readyEvt = evt as VersionReadyEvent;
             const latestHash = readyEvt.latestVersion?.hash;
+            const currentHash = readyEvt.currentVersion?.hash;
             const activatedHash = localStorage.getItem(ACTIVATED_VERSION_KEY);
+            const dismissedHash = localStorage.getItem(DISMISSED_VERSION_KEY);
+
+            if (!latestHash || latestHash === currentHash) {
+              return;
+            }
 
             if (activatedHash && activatedHash === latestHash) {
               console.log('Update bereits aktiviert, Benachrichtigung wird übersprungen.');
               localStorage.removeItem(ACTIVATED_VERSION_KEY);
+              return;
+            }
+
+            if (dismissedHash === latestHash) {
+              console.log('Update bereits verworfen, Benachrichtigung wird übersprungen.');
+              return;
+            }
+
+            if (this.latestVersionHash === latestHash && this.updateAvailable$.value) {
               return;
             }
 
@@ -115,6 +131,7 @@ export class ServiceWorkerUpdateService {
 
       // Speichere die aktuelle latestVersion, um nach Reload keine doppelte Benachrichtigung zu zeigen
       if (this.latestVersionHash) {
+        localStorage.removeItem(DISMISSED_VERSION_KEY);
         localStorage.setItem(ACTIVATED_VERSION_KEY, this.latestVersionHash);
       }
 
@@ -168,6 +185,18 @@ export class ServiceWorkerUpdateService {
    */
   public isUpdating(): boolean {
     return this.updating$.value;
+  }
+
+  /**
+   * Blendet das aktuell gemeldete Update aus und merkt sich die Version,
+   * damit derselbe Hinweis nicht erneut angezeigt wird.
+   */
+  public dismissUpdate(): void {
+    if (this.latestVersionHash) {
+      localStorage.setItem(DISMISSED_VERSION_KEY, this.latestVersionHash);
+    }
+
+    this.updateAvailable$.next(false);
   }
 
   /**

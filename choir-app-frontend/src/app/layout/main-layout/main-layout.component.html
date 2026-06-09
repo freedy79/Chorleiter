@@ -30,7 +30,8 @@
   <!-- Mobile: Choir Switcher als Bottom Sheet -->
   <button mat-icon-button class="choir-badge-mobile" (click)="openChoirSwitcher()" [disabled]="isDemo$ | async"
     *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (isSmallScreen$ | async)"
-    matTooltip="{{ (activeChoir$ | async)?.name || 'Chor wählen' }}">
+    matTooltip="{{ (activeChoir$ | async)?.name || 'Chor wählen' }}"
+    aria-label="Chor wechseln">
     <mat-icon>groups</mat-icon>
   </button>
 
@@ -57,12 +58,13 @@
     </button>
 
     <button *ngIf="((cartCount$ | async) ?? 0) > 0" mat-icon-button routerLink="/library/request"
-      [matBadge]="(cartCount$ | async) ?? 0" matBadgeColor="accent" matTooltip="Entleihkorb">
+      [matBadge]="(cartCount$ | async) ?? 0" matBadgeColor="accent" matTooltip="Entleihkorb"
+      aria-label="Entleihkorb öffnen">
       <mat-icon>shopping_cart</mat-icon>
     </button>
 
 
-    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil" class="profile-button-desktop">
+    <button mat-icon-button [matMenuTriggerFor]="userMenu" matTooltip="Benutzerprofil" class="profile-button-desktop" aria-label="Benutzerprofil öffnen">
       <mat-icon>person</mat-icon>
     </button>
 
@@ -134,7 +136,8 @@
 
 <mat-sidenav-container class="site-container" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
   <mat-sidenav #appDrawer [fixedInViewport]="false" [attr.role]="'navigation'"
-    [mode]="'side'" class="appDrawer">
+    [mode]="'side'" class="appDrawer" [class.is-scrolling]="drawerScrolling"
+    (scroll)="onDrawerScroll()">
 
     <ng-container *ngIf="(isLoggedIn$ | async)">
       <mat-nav-list>
@@ -169,24 +172,25 @@
 <!-- Bottom Navigation - Optimiert für Mobile -->
 <nav class="bottom-nav" *ngIf="(isLoggedIn$ | async) && ((isFramelessRoute$ | async) === false)">
   <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'" aria-label="Startseite">
     <mat-icon>home</mat-icon>
   </a>
   <a mat-button routerLink="/events" routerLinkActive="active"
-    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'" aria-label="Termine">
     <mat-icon>event</mat-icon>
   </a>
   <a mat-button routerLink="/repertoire" routerLinkActive="active"
-    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'" aria-label="Repertoire">
     <mat-icon>library_music</mat-icon>
   </a>
   <a mat-button routerLink="/search" routerLinkActive="active"
-    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'">
+    class="bottom-nav-item" matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'" aria-label="Suche">
     <mat-icon>search</mat-icon>
   </a>
   <button mat-button class="bottom-nav-item bottom-nav-more" [matMenuTriggerFor]="moreMenu"
     matRipple [matRippleColor]="'rgba(0, 0, 0, 0.1)'"
-    *ngIf="hasMoreItems$ | async">
+    *ngIf="hasMoreItems$ | async"
+    aria-label="Weitere Optionen">
     <mat-icon>more_horiz</mat-icon>
   </button>
 </nav>

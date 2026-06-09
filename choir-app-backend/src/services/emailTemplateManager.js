@@ -54,6 +54,13 @@ const DEFAULT_TEMPLATES = {
           '<a href="{{link}}" style="background-color:#1976d2;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:4px;display:inline-block;">Zum Chat</a>' +
           '</p>' +
           '<p>Viele Grüße<br>{{choir}}</p>'
+  },
+  'rehearsal-reminder': {
+    subject: 'Erinnerung: {{event_type}} am {{event_date}} – {{choir}}',
+    body: '<p>Hallo {{first_name}} {{surname}},</p>' +
+          '<p>dies ist eine Erinnerung an die bevorstehende <b>{{event_type}}</b> am <b>{{event_date}}</b> im Chor <b>{{choir}}</b>.</p>' +
+          '<p>{{event_notes}}</p>' +
+          '<p>Viele Grüße<br>{{choir}}</p>'
   }
 };
 

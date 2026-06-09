@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -468,7 +468,7 @@ export class ApiService {
    * Creates a new event (service or rehearsal) for the current choir.
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
-  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number, programId?: string | null }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number | null, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number, programId?: string | null }): Observable<CreateEventResponse> {
     return this.eventService.createEvent(eventData);
   }
 
@@ -489,7 +489,7 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
-  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
+  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
 
@@ -1220,6 +1220,20 @@ export class ApiService {
     return this.http.delete(`${environment.apiUrl}/notifications/unsubscribe`, {
       body: { endpoint, choirId }
     });
+  }
+
+  getPushSubscriptions(endpoint?: string): Observable<{
+    endpoint: string | null;
+    choirIds: number[];
+    endpoints: { endpoint: string; choirIds: number[] }[];
+  }> {
+    let params = new HttpParams();
+    if (endpoint) params = params.set('endpoint', endpoint);
+    return this.http.get<{
+      endpoint: string | null;
+      choirIds: number[];
+      endpoints: { endpoint: string; choirIds: number[] }[];
+    }>(`${environment.apiUrl}/notifications/subscriptions`, { params });
   }
 
   // --- PWA Configuration Methods ---

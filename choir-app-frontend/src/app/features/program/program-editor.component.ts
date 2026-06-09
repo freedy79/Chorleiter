@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { ProgramService } from '@core/services/program.service';
 import { ProgramItem, Program } from '@core/models/program';
@@ -14,6 +14,7 @@ import { ProgramFreePieceDialogComponent } from './program-free-piece-dialog.com
 import { PieceService } from '@core/services/piece.service';
 import { ApiHelperService } from '@core/services/api-helper.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { NotificationService } from '@core/services/notification.service';
 import { AddItemTypeDialogComponent } from './add-item-type-dialog.component';
 import { DurationPipe } from '@shared/pipes/duration.pipe';
 import { ComposerYearsPipe } from '@shared/pipes/composer-years.pipe';
@@ -51,9 +52,11 @@ export class ProgramEditorComponent implements OnInit {
   constructor(
     private programService: ProgramService,
     private route: ActivatedRoute,
+    private router: Router,
     private pieceService: PieceService,
     private apiHelper: ApiHelperService,
-    private dialogHelper: DialogHelperService
+    private dialogHelper: DialogHelperService,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -93,23 +96,37 @@ export class ProgramEditorComponent implements OnInit {
     ).subscribe();
   }
 
+  closeDraft(): void {
+    this.notificationService.success('Entwurf gespeichert');
+    this.router.navigate(['/programs']);
+  }
+
   publishDraft(): void {
     if (!this.isDraft) return;
 
-    this.apiHelper.handleApiCall(
-      this.programService.publishProgram(this.programId),
-      {
-        successMessage: 'Programm veröffentlicht',
-        errorMessage: 'Fehler beim Veröffentlichen',
-        onSuccess: (publishedProgram) => {
-          this.programId = publishedProgram.id;
-          this.isPublished = true;
-          this.isDraft = false;
-          this.isEditing = false;
-          this.loadProgram();
+    this.dialogHelper.confirm({
+      title: 'Programm veröffentlichen?',
+      message: 'Das Programm wird für alle Chormitglieder sichtbar. Möchtest du fortfahren?',
+      confirmButtonText: 'Veröffentlichen',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
+      if (!confirmed) return;
+
+      this.apiHelper.handleApiCall(
+        this.programService.publishProgram(this.programId),
+        {
+          successMessage: 'Programm veröffentlicht',
+          errorMessage: 'Fehler beim Veröffentlichen',
+          onSuccess: (publishedProgram) => {
+            this.programId = publishedProgram.id;
+            this.isPublished = true;
+            this.isDraft = false;
+            this.isEditing = false;
+            this.loadProgram();
+          }
         }
-      }
-    ).subscribe();
+      ).subscribe();
+    });
   }
 
 
@@ -460,13 +477,13 @@ export class ProgramEditorComponent implements OnInit {
   }
 
   moveUp(index: number) {
-    if (index === 0) return;
+    if (index == null || index === 0) return;
     moveItemInArray(this.items, index, index - 1);
     this.saveOrder();
   }
 
   moveDown(index: number) {
-    if (index === this.items.length - 1) return;
+    if (index == null || index === this.items.length - 1) return;
     moveItemInArray(this.items, index, index + 1);
     this.saveOrder();
   }

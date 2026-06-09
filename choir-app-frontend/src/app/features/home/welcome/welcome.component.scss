@@ -281,6 +281,38 @@
   }
 }
 
+.pwa-install-card {
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  text-align: center;
+
+  mat-card-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .feature-icon {
+    font-size: 3rem;
+    width: 3rem;
+    height: 3rem;
+    color: #005d9d;
+    margin-bottom: 1rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    margin: 0 0 0.75rem 0;
+    color: #333333;
+  }
+
+  p {
+    margin: 0;
+    color: #666666;
+    line-height: 1.5;
+  }
+}
+
 .register-cta-section {
   padding: 4rem 2rem;
   text-align: center;

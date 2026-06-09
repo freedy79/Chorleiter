@@ -43,6 +43,7 @@ const publicRoutes = require('./public.routes');
 const pageViewRoutes = require('./page-view.routes');
 const formRoutes = require('./form.routes');
 const otaRoutes = require('./ota.routes');
+const trainingRoutes = require('./training.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -89,6 +90,7 @@ const routeDefinitions = [
     ['/api/page-views', pageViewRoutes],
     ['/api/forms', formRoutes],
     ['/api/ota', otaRoutes],
+    ['/api/training', trainingRoutes],
 ];
 
 function registerRoutes(app) {

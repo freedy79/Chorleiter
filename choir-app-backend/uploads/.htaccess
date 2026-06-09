@@ -1,0 +1,23 @@
+# Deny execution of scripts in this directory and all subdirectories.
+# This prevents PHP, CGI, Perl, Python, shell scripts, and other executables
+# from being run even if they are uploaded successfully through validation gaps.
+
+Options -ExecCGI -Indexes
+RemoveHandler .php .php3 .php4 .php5 .php7 .phtml .pl .py .rb .cgi .sh .bash .exe .bat .cmd .com
+RemoveType .php .php3 .php4 .php5 .php7 .phtml .pl .py .rb .cgi .sh .bash .exe .bat .cmd .com
+
+<FilesMatch "\.(php\d?|phtml|pl|py|rb|cgi|sh|bash|exe|bat|cmd|com|msi|dll|so)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>

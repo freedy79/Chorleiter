@@ -4,6 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
 import { HelpService } from '@core/services/help.service';
 import { AuthService } from '@core/services/auth.service';
 import { MenuVisibilityService } from '@core/services/menu-visibility.service';
@@ -12,6 +13,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import { ThemeService } from '@core/services/theme.service';
 import { LoanCartService } from '@core/services/loan-cart.service';
 import { PushNotificationService } from '@core/services/push-notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { BehaviorSubject, of, firstValueFrom, combineLatest } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -75,6 +77,7 @@ describe('MainLayoutComponent', () => {
     const themeMock = { getCurrentTheme: () => 'light', setTheme: () => {} };
     const cartMock = { items$: of([]) };
     const pushMock = { isSupported: () => false, getPermission: () => 'denied', subscribeToChoir: () => Promise.resolve(), notificationClicks$: of() };
+    const dialogHelperMock = { openDialog: () => of(undefined) };
     await TestBed.configureTestingModule({
       imports: [MainLayoutComponent, HttpClientTestingModule, RouterTestingModule, NoopAnimationsModule],
       providers: [
@@ -89,6 +92,7 @@ describe('MainLayoutComponent', () => {
         { provide: ThemeService, useValue: themeMock },
         { provide: LoanCartService, useValue: cartMock },
         { provide: PushNotificationService, useValue: pushMock },
+        { provide: DialogHelperService, useValue: dialogHelperMock },
         MenuVisibilityService
       ]
     })
@@ -202,5 +206,19 @@ describe('MainLayoutComponent', () => {
     fixture.detectChanges();
     role = await firstValueFrom(component.userRole$);
     expect(role).toBe('Chorleiter');
+  });
+
+  it('provides aria labels for icon-only header and bottom-nav actions', () => {
+    fixture.detectChanges();
+
+    const chatButton = fixture.debugElement.query(By.css('.chat-badge-button'));
+    const profileButton = fixture.debugElement.query(By.css('.profile-button-desktop'));
+    const homeLink = fixture.debugElement.query(By.css('a[routerLink="/"]'));
+    const moreButton = fixture.debugElement.query(By.css('.bottom-nav-more'));
+
+    expect(chatButton.attributes['aria-label']).toBe('Chat mit ungelesenen Nachrichten');
+    expect(profileButton.attributes['aria-label']).toBe('Benutzerprofil öffnen');
+    expect(homeLink.attributes['aria-label']).toBe('Startseite');
+    expect(moreButton.attributes['aria-label']).toBe('Weitere Optionen');
   });
 });
