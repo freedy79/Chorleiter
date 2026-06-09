@@ -67,7 +67,7 @@ const controller = require('../src/controllers/event.controller');
     const afterChange = await db.event.findByPk(updateId);
     assert.notStrictEqual(afterChange.updatedAt.getTime(), initialUpdatedAt.getTime());
 
-    // preserve initial director when updated by another user without explicit directorId
+    // changing only the director should persist
     const updater = await createUserWithRoles(db, {
       email: 'updater@example.com',
       choirMemberships: [{ choirId: choir.id, rolesInChoir: ['director'] }]
@@ -75,14 +75,19 @@ const controller = require('../src/controllers/event.controller');
 
     await controller.update({
       ...baseReq,
-      userId: updater.id,
       params: { id: updateId },
-      body: { date: '2024-01-02T10:00:00Z', type: 'SERVICE', notes: 'C', pieceIds: [] }
+      body: {
+        date: '2024-01-02T10:00:00Z',
+        type: 'SERVICE',
+        notes: 'B',
+        pieceIds: [],
+        directorId: updater.id
+      }
     }, res);
 
     assert.strictEqual(res.statusCode, 200);
     const afterForeignUpdate = await db.event.findByPk(updateId);
-    assert.strictEqual(afterForeignUpdate.directorId, user.id);
+    assert.strictEqual(afterForeignUpdate.directorId, updater.id);
 
     // --- Next events tests ---
     const otherUser = await createUserWithRoles(db, {

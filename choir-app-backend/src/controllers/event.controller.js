@@ -494,13 +494,19 @@ exports.update = async (req, res) => {
         const dateChanged = targetDate.getTime() !== new Date(event.date).getTime();
         const typeChanged = type !== event.type;
         const notesChanged = (notes || '') !== (event.notes || '');
+        const nextDirectorId = directorId !== undefined ? directorId : event.directorId;
+        const directorChanged = nextDirectorId !== (event.directorId ?? null);
+        const nextOrganistId = organistId !== undefined ? organistId : event.organistId;
+        const organistChanged = nextOrganistId !== (event.organistId ?? null);
+        const finalizedChanged = finalized !== undefined && finalized !== event.finalized;
+        const monthlyPlanChanged = (monthlyPlanId !== undefined ? monthlyPlanId : event.monthlyPlanId) !== (event.monthlyPlanId ?? null);
         const programChanged = nextProgramId !== (event.programId || null);
 
         const incomingPieces = Array.isArray(pieceIds) ? [...pieceIds].sort() : [];
         const existingPieces = event.pieces.map(p => p.id).sort();
         const piecesChanged = JSON.stringify(incomingPieces) !== JSON.stringify(existingPieces);
 
-        if (!dateChanged && !typeChanged && !notesChanged && !piecesChanged && !programChanged) {
+        if (!dateChanged && !typeChanged && !notesChanged && !directorChanged && !organistChanged && !finalizedChanged && !monthlyPlanChanged && !piecesChanged && !programChanged) {
             const full = await Event.findByPk(id, {
                 include: [
                     { model: Piece, as: 'pieces', through: { attributes: [] } },
@@ -511,7 +517,17 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : event.directorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        await event.update({
+            date: targetDate,
+            type,
+            notes,
+            directorId: nextDirectorId,
+            organistId: nextOrganistId,
+            finalized,
+            version,
+            monthlyPlanId,
+            programId: nextProgramId
+        });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
