@@ -115,7 +115,7 @@ export class MenuVisibilityService {
     return {
       [MenuKey.DASHBOARD]: true,
       [MenuKey.EVENTS]: true,
-      [MenuKey.DIENSTPLAN]: modules.dienstplan === true && hasPrivilegedRole,
+      [MenuKey.DIENSTPLAN]: modules.dienstplan === true,
       [MenuKey.AVAILABILITY]: true,
       [MenuKey.PARTICIPATION]: hasPrivilegedRole,
       [MenuKey.POSTS]: true,
@@ -142,6 +142,9 @@ export class MenuVisibilityService {
   private applySingerMenuRestrictions(visibility: MenuVisibility, modules: any): void {
     const singerMenu = modules.singerMenu || {};
     MENU_KEYS.forEach(key => {
+      if (key === MenuKey.DIENSTPLAN && modules.dienstplan === true) {
+        return;
+      }
       if (singerMenu[key] === false) {
         (visibility as any)[key] = false;
       }

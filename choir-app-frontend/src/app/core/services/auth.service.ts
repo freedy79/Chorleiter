@@ -37,6 +37,7 @@ export class AuthService {
   public isDemo$: Observable<boolean>;
   public isChoirAdmin$: Observable<boolean>;
   public isDirector$: Observable<boolean>;
+  public isDienstplanManager$: Observable<boolean>;
   public isNotenwart$: Observable<boolean>;
   public isChoirAdminOrNotenwart$: Observable<boolean>;
   public isSinger$: Observable<boolean>;
@@ -96,6 +97,12 @@ export class AuthService {
         }
         return choirRoles.includes('director');
       }),
+      distinctUntilChanged()
+    );
+
+    this.isDienstplanManager$ = combineLatest([this.isAdmin$, this.choirRoles$]).pipe(
+      map(([isAdmin, choirRoles]) =>
+        isAdmin || choirRoles.includes('choir_admin') || choirRoles.includes('director')),
       distinctUntilChanged()
     );
 

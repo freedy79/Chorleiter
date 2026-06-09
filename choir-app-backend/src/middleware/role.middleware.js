@@ -1,6 +1,7 @@
 const db = require('../models');
 
-const DIRECTOR_ROLES = ['director', 'chorleiter', 'choirleiter'];
+const DIRECTOR_ROLES = ['director'];
+const DIENSTPLAN_MANAGER_ROLES = ['choir_admin', ...DIRECTOR_ROLES];
 
 async function getActiveChoirMembership(req) {
     if (!req.userId || !req.activeChoirId) {
@@ -66,6 +67,27 @@ async function requireChoirAdmin(req, res, next) {
             return next();
         }
         return res.status(403).send({ message: 'Require Choir Admin Role!' });
+    } catch (err) {
+        return res.status(500).send({ message: 'Error checking permissions.' });
+    }
+}
+
+/**
+ * Middleware that allows users who may manage the monthly duty plan.
+ *
+ * The duty plan is intentionally broader than choir-admin-only: directors
+ * normally prepare the plan, while choir admins retain the same access.
+ */
+async function requireDienstplanManager(req, res, next) {
+    if (req.userRoles.includes('admin')) {
+        return next();
+    }
+    try {
+        const hasRole = await userHasChoirRole(req, DIENSTPLAN_MANAGER_ROLES);
+        if (hasRole) {
+            return next();
+        }
+        return res.status(403).send({ message: 'Require Dienstplan Manager Role!' });
     } catch (err) {
         return res.status(500).send({ message: 'Error checking permissions.' });
     }
@@ -181,4 +203,4 @@ async function requireNonSinger(req, res, next) {
     }
 }
 
-module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireLibrarian, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireNonSinger };
+module.exports = { requireNonDemo, requireAdmin, requireChoirAdmin, requireDienstplanManager, requireDirector, requireLibrarian, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireNonSinger };
