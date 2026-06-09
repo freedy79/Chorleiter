@@ -75,6 +75,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   availabilityMap: { [userId: number]: { [date: string]: string } } = {};
   selectedTab = 0;
   isLoadingPlan = false;
+  private readonly planningStateKeyPrefix = 'monthlyPlan:lastState';
 
   counterPlanDates: Date[] = [];
   counterPlanDateKeys: string[] = [];
@@ -394,16 +395,17 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     const initialParams = this.route.snapshot.queryParamMap;
     const initialYear = Number(initialParams.get('year'));
     const initialMonth = Number(initialParams.get('month'));
+    const storedState = this.getStoredPlanningState();
 
     this.selectedYear = !Number.isNaN(initialYear) && initialYear > 0
       ? initialYear
-      : now.getFullYear();
+      : (storedState?.year ?? now.getFullYear());
     this.selectedMonth = !Number.isNaN(initialMonth) && initialMonth > 0
       ? initialMonth
-      : now.getMonth() + 1;
-    this.selectedTab = initialParams.get('tab') === 'avail' ? 1 : 0;
+      : (storedState?.month ?? now.getMonth() + 1);
+    this.selectedTab = initialParams.get('tab') === 'avail' ? 1 : (storedState?.tab ?? 0);
 
-    this.auth.isChoirAdmin$.pipe(take(1)).subscribe(isChoirAdmin => {
+    this.auth.isDienstplanManager$.pipe(take(1)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
       if (isChoirAdmin) {
@@ -415,7 +417,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.paramSub = this.route.queryParamMap.pipe(
       takeUntil(this.destroy$)
     ).subscribe(params => {
-      const tabIndex = params.get('tab') === 'avail' ? 1 : 0;
+      const tabParam = params.get('tab');
+      const tabIndex = tabParam === 'avail' ? 1 : (tabParam === null ? this.selectedTab : 0);
       if (this.selectedTab !== tabIndex) {
         this.selectedTab = tabIndex;
       }
@@ -440,6 +443,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       }
 
       if (shouldReload) {
+        this.savePlanningState();
         this.loadPlan(this.selectedYear, this.selectedMonth);
       }
     });
@@ -448,7 +452,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       takeUntil(this.destroy$)
     ).subscribe(u => this.currentUserId = u?.id || null);
 
-    this.roleSub = this.auth.isChoirAdmin$.pipe(
+    this.roleSub = this.auth.isDienstplanManager$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(isChoirAdmin => {
       const wasAdmin = this.isChoirAdmin;
@@ -608,6 +612,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   monthChanged(): void {
+    this.savePlanningState();
     this.skipNextParamLoad = true;
     void this.router.navigate([], {
       relativeTo: this.route,
@@ -625,6 +630,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
   tabChanged(index: number): void {
     this.selectedTab = index;
+    this.savePlanningState();
     this.skipNextParamLoad = true;
     void this.router.navigate([], {
       relativeTo: this.route,
@@ -660,6 +666,49 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.selectedYear = next.year;
     this.selectedMonth = next.month;
     this.monthChanged();
+  }
+
+  private getStoredPlanningState(): { year: number; month: number; tab: number } | null {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    try {
+      const raw = localStorage.getItem(this.getPlanningStateKey());
+      if (!raw) {
+        return null;
+      }
+      const parsed = JSON.parse(raw);
+      const year = Number(parsed?.year);
+      const month = Number(parsed?.month);
+      const tab = Number(parsed?.tab);
+      if (!Number.isInteger(year) || year <= 0 || !Number.isInteger(month) || month < 1 || month > 12) {
+        return null;
+      }
+      return { year, month, tab: tab === 1 ? 1 : 0 };
+    } catch {
+      return null;
+    }
+  }
+
+  private savePlanningState(): void {
+    if (typeof localStorage === 'undefined') {
+      return;
+    }
+    try {
+      localStorage.setItem(this.getPlanningStateKey(), JSON.stringify({
+        year: this.selectedYear,
+        month: this.selectedMonth,
+        tab: this.selectedTab
+      }));
+    } catch {
+      // Ignore storage failures in private browsing or restricted environments.
+    }
+  }
+
+  private getPlanningStateKey(): string {
+    const activeChoir = this.auth?.activeChoir$;
+    const choirId = activeChoir && 'value' in activeChoir ? activeChoir.value?.id : null;
+    return `${this.planningStateKeyPrefix}:${choirId ?? 'default'}`;
   }
 
   updateDirector(ev: PlanEntry, userId: number | null): void {

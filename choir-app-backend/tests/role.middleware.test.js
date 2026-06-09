@@ -7,7 +7,7 @@ process.env.DB_NAME = ':memory:';
 
 const db = require('../src/models');
 const { createUserWithRoles } = require('./utils/userFactory');
-const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDirector, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireLibrarian, requireNonSinger } = require('../src/middleware/role.middleware');
+const { requireNonDemo, requireAdmin, requireChoirAdmin, requireDienstplanManager, requireDirector, requireDirectorOrHigher, requireChoirAdminOrNotenwart, requireLibrarian, requireNonSinger } = require('../src/middleware/role.middleware');
 
 async function sendRequest(middleware, context) {
   const app = express();
@@ -128,6 +128,26 @@ async function sendRequest(middleware, context) {
     res = await sendRequest(requireChoirAdmin, { userRoles: ['user'], userId: normal.id, activeChoirId: choir.id });
     assert.strictEqual(res.status, 500, 'db error should return 500');
     db.user_choir.findOne = originalFindOne;
+
+    // requireDienstplanManager success as global admin
+    res = await sendRequest(requireDienstplanManager, { userRoles: ['admin'], userId: admin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'global admin should pass dienstplan manager middleware');
+
+    // requireDienstplanManager success as choir admin
+    res = await sendRequest(requireDienstplanManager, { userRoles: ['user'], userId: choirAdmin.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir admin should pass dienstplan manager middleware');
+
+    // requireDienstplanManager success as choir director
+    res = await sendRequest(requireDienstplanManager, { userRoles: ['user'], userId: choirDirector.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 200, 'choir director should pass dienstplan manager middleware');
+
+    // requireDienstplanManager failure as organist
+    res = await sendRequest(requireDienstplanManager, { userRoles: ['user'], userId: choirOrganist.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'organist should not pass dienstplan manager middleware');
+
+    // requireDienstplanManager failure as global librarian
+    res = await sendRequest(requireDienstplanManager, { userRoles: ['librarian'], userId: normal.id, activeChoirId: choir.id });
+    assert.strictEqual(res.status, 403, 'librarian should not pass dienstplan manager middleware');
 
     // requireDirector success as global admin
     res = await sendRequest(requireDirector, { userRoles: ['admin'], userId: admin.id, activeChoirId: choir.id });

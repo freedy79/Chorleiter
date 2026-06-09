@@ -1,4 +1,4 @@
-import { Subject } from 'rxjs';
+import { BehaviorSubject, of, Subject } from 'rxjs';
 import { MonthlyPlanComponent } from './monthly-plan.component';
 import { MonthlyPlan } from '@core/models/monthly-plan';
 import { PlanEntry } from '@core/models/plan-entry';
@@ -15,8 +15,12 @@ describe('MonthlyPlanComponent', () => {
     getMonthlyPlan: jasmine.Spy;
     clearMonthlyPlanCache: jasmine.Spy;
   };
+  let authStub: any;
+  let routerStub: any;
+  let routeStub: any;
 
   beforeEach(() => {
+    localStorage.clear();
     apiStub = {
       getMemberAvailabilities: jasmine.createSpy('getMemberAvailabilities'),
       getChoirMembers: jasmine.createSpy('getChoirMembers')
@@ -25,15 +29,28 @@ describe('MonthlyPlanComponent', () => {
       getMonthlyPlan: jasmine.createSpy('getMonthlyPlan'),
       clearMonthlyPlanCache: jasmine.createSpy('clearMonthlyPlanCache')
     };
+    planServiceStub.getMonthlyPlan.and.returnValue(of(null));
+    authStub = {
+      activeChoir$: new BehaviorSubject<any>({ id: 42 }),
+      isDienstplanManager$: of(false),
+      currentUser$: of(null)
+    };
+    routerStub = {
+      navigate: jasmine.createSpy('navigate').and.returnValue(Promise.resolve())
+    };
+    routeStub = {
+      snapshot: { queryParamMap: new Map() },
+      queryParamMap: of(new Map())
+    };
 
     component = new MonthlyPlanComponent(
       apiStub as any,
       planServiceStub as any,
-      {} as any,
+      authStub as any,
       {} as any,
       { open: () => null } as any,
-      {} as any,
-      { snapshot: { queryParamMap: new Map() } } as any,
+      routerStub as any,
+      routeStub as any,
       {} as any,
       { prevLabel: () => '', nextLabel: () => '', previous: () => ({ year: 0, month: 0 }), next: () => ({ year: 0, month: 0 }) } as any,
       {} as any,
@@ -111,5 +128,28 @@ describe('MonthlyPlanComponent', () => {
     expect(component.organists.map(o => o.id)).toEqual([6]);
     expect(component.availabilityMap[5]['2024-07-01']).toBe('AVAILABLE');
     expect(component.isLoadingPlan).toBeFalse();
+  });
+
+  it('should remember the selected month and tab per choir when month changes', () => {
+    component.selectedYear = 2026;
+    component.selectedMonth = 9;
+    component.selectedTab = 1;
+
+    component.monthChanged();
+
+    const raw = localStorage.getItem('monthlyPlan:lastState:42');
+    expect(raw).toBeTruthy();
+    expect(JSON.parse(raw!)).toEqual({ year: 2026, month: 9, tab: 1 });
+    expect(routerStub.navigate).toHaveBeenCalledWith([], jasmine.objectContaining({
+      queryParams: { year: 2026, month: 9, tab: 'avail' }
+    }));
+  });
+
+  it('should restore a previously stored planning month for the active choir', () => {
+    localStorage.setItem('monthlyPlan:lastState:42', JSON.stringify({ year: 2026, month: 11, tab: 1 }));
+
+    const restored = (component as any).getStoredPlanningState();
+
+    expect(restored).toEqual({ year: 2026, month: 11, tab: 1 });
   });
 });

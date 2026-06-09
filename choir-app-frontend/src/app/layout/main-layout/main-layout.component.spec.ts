@@ -121,13 +121,27 @@ describe('MainLayoutComponent', () => {
     expect(visible).toBeFalse();
   });
 
-  it('shows dienstplan for organists even if singers cannot see it', async () => {
+  it('shows dienstplan for singers when the choir module is enabled', async () => {
     globalRolesSubject.next(['user']);
-    choirRolesSubject.next(['singer', 'organist']);
+    choirRolesSubject.next(['singer']);
     currentUserSubject.next({ roles: ['user'] });
     activeChoirSubject.next({
       modules: { dienstplan: true, singerMenu: { dienstplan: false } },
-      membership: { rolesInChoir: ['singer', 'organist'] }
+      membership: { rolesInChoir: ['singer'] }
+    });
+    fixture.detectChanges();
+    const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
+    const visible = await firstValueFrom(dienstplanItem!.visibleSubject!);
+    expect(visible).toBeTrue();
+  });
+
+  it('shows dienstplan for global admins when the choir module is enabled', async () => {
+    globalRolesSubject.next(['admin']);
+    choirRolesSubject.next(['singer']);
+    currentUserSubject.next({ roles: ['admin'] });
+    activeChoirSubject.next({
+      modules: { dienstplan: true, singerMenu: { dienstplan: false } },
+      membership: { rolesInChoir: ['singer'] }
     });
     fixture.detectChanges();
     const dienstplanItem = component.navItems.find(i => i.key === 'dienstplan');
