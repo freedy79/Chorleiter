@@ -11,6 +11,8 @@ export interface AppError {
   url?: string;
   file?: string;
   line?: number;
+  retryLabel?: string;
+  retryAction?: () => void;
 }
 
 @Injectable({

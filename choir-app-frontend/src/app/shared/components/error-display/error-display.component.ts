@@ -21,4 +21,9 @@ export class ErrorDisplayComponent {
   clear(): void {
     this.errorService.clearError();
   }
+
+  retry(error: AppError): void {
+    error.retryAction?.();
+    this.errorService.clearError();
+  }
 }

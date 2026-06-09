@@ -5,6 +5,9 @@
     <p>{{ error.message }}</p>
     <p *ngIf="error.status">Statuscode: {{ error.status }}</p>
     <pre *ngIf="error.details" class="error-details">{{ error.details }}</pre>
+    <button *ngIf="error.retryAction" mat-stroked-button color="primary" (click)="retry(error)">
+      {{ error.retryLabel || 'Erneut versuchen' }}
+    </button>
     <button mat-flat-button color="warn" (click)="clear()">Schließen</button>
   </div>
 </div>
