@@ -47,6 +47,14 @@ describe('DonationsComponent', () => {
   });
 
   it('uses css classes instead of inline style attributes in template', () => {
+    component.donations = [
+      {
+        id: 1,
+        amount: 10,
+        donatedAt: new Date().toISOString(),
+        user: { id: 1, firstName: 'Max', name: 'Mustermann' } as any
+      } as any
+    ];
     component.isAddingDonation = true;
     fixture.detectChanges();
 
@@ -61,5 +69,14 @@ describe('DonationsComponent', () => {
     expect(header.getAttribute('style')).toBeNull();
     expect(grid.getAttribute('style')).toBeNull();
     expect(table.getAttribute('style')).toBeNull();
+  });
+
+  it('shows standardized empty state when there are no donations', () => {
+    component.donations = [];
+    fixture.detectChanges();
+
+    const emptyState = fixture.nativeElement.querySelector('app-empty-state');
+    expect(emptyState).toBeTruthy();
+    expect(fixture.nativeElement.textContent).toContain('Noch keine Spenden erfasst');
   });
 });

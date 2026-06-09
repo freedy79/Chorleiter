@@ -44,21 +44,31 @@
       </div>
     </div>
 
-    <table mat-table [dataSource]="donations" class="mat-elevation-z8 donations-table">
-      <ng-container matColumnDef="user">
-        <th mat-header-cell *matHeaderCellDef>Benutzer</th>
-        <td mat-cell *matCellDef="let d">{{ d.user?.firstName }} {{ d.user?.name }}</td>
-      </ng-container>
-      <ng-container matColumnDef="date">
-        <th mat-header-cell *matHeaderCellDef>Datum</th>
-        <td mat-cell *matCellDef="let d">{{ d.donatedAt | date:'short' }}</td>
-      </ng-container>
-      <ng-container matColumnDef="amount">
-        <th mat-header-cell *matHeaderCellDef>Betrag</th>
-        <td mat-cell *matCellDef="let d">{{ d.amount | number:'1.2-2' }} €</td>
-      </ng-container>
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-    </table>
+    <ng-container *ngIf="donations.length; else donationsEmptyState">
+      <table mat-table [dataSource]="donations" class="mat-elevation-z8 donations-table">
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>Benutzer</th>
+          <td mat-cell *matCellDef="let d">{{ d.user?.firstName }} {{ d.user?.name }}</td>
+        </ng-container>
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Datum</th>
+          <td mat-cell *matCellDef="let d">{{ d.donatedAt | date:'short' }}</td>
+        </ng-container>
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Betrag</th>
+          <td mat-cell *matCellDef="let d">{{ d.amount | number:'1.2-2' }} €</td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </ng-container>
+
+    <ng-template #donationsEmptyState>
+      <app-empty-state
+        icon="volunteer_activism"
+        title="Noch keine Spenden erfasst"
+        message="Lege über „Spende hinzufügen“ den ersten Eintrag an.">
+      </app-empty-state>
+    </ng-template>
   </mat-card-content>
 </mat-card>
