@@ -31,11 +31,15 @@ function createRes() {
 
     const choir = await db.choir.create({ name: 'Test Choir' });
     const director = await db.user.create({ email: 'director@example.com', roles: ['user'] });
+    const outsiderDirector = await db.user.create({ email: 'outsider-director@example.com', roles: ['user'] });
+    const adminUser = await db.user.create({ email: 'admin@example.com', roles: ['admin'] });
     const memberA = await db.user.create({ email: 'a@example.com', roles: ['user'] });
     const memberB = await db.user.create({ email: 'b@example.com', roles: ['user'] });
 
     await db.user_choir.bulkCreate([
       { userId: director.id, choirId: choir.id, rolesInChoir: ['director'] },
+      { userId: outsiderDirector.id, choirId: choir.id, rolesInChoir: ['director'] },
+      { userId: adminUser.id, choirId: choir.id, rolesInChoir: ['singer'] },
       { userId: memberA.id, choirId: choir.id, rolesInChoir: ['singer'] },
       { userId: memberB.id, choirId: choir.id, rolesInChoir: ['singer'] }
     ]);
@@ -226,6 +230,73 @@ function createRes() {
     assert.ok(Array.isArray(res.data.memberUserIds));
     assert.ok(res.data.memberUserIds.includes(memberB.id));
     assert.ok(res.data.memberUserIds.includes(director.id));
+
+    res = createRes();
+    await controller.createMessage({
+      params: { roomId: editableRoomId },
+      body: { text: 'Nur für Mitglieder' },
+      userId: director.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 201);
+    const privateMessageId = res.data.id;
+
+    res = createRes();
+    await controller.getRooms({
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.ok(!res.data.some(room => room.id === editableRoomId));
+
+    res = createRes();
+    await controller.getRoomDetail({
+      params: { roomId: editableRoomId },
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
+
+    res = createRes();
+    await controller.getRoomMessages({
+      params: { roomId: editableRoomId },
+      query: {},
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
+
+    res = createRes();
+    await controller.getMessageById({
+      params: { id: privateMessageId },
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
+
+    res = createRes();
+    await controller.getMessageById({
+      params: { id: privateMessageId },
+      userId: adminUser.id,
+      activeChoirId: choir.id,
+      userRoles: ['admin']
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
+
+    res = createRes();
+    await controller.reportMessage({
+      params: { id: privateMessageId },
+      body: { reason: 'Kein Zugriff auf private Nachricht' },
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
 
     console.log('chat.controller tests passed');
     await db.sequelize.close();
