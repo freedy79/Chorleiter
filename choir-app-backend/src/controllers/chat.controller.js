@@ -203,10 +203,6 @@ async function getAccessibleRoom(roomId, req) {
     return room;
   }
 
-  if (await isModerator(req)) {
-    return room;
-  }
-
   const roomMember = await db.chat_room_member.findOne({
     where: { chatRoomId: room.id, userId: req.userId }
   });
@@ -214,7 +210,7 @@ async function getAccessibleRoom(roomId, req) {
   return roomMember ? room : null;
 }
 
-async function getAccessibleRoomsForChoir(choirId, userId, userIsPrivileged = false) {
+async function getAccessibleRoomsForChoir(choirId, userId) {
   const rooms = await db.chat_room.findAll({
     where: { choirId },
     order: [
@@ -222,10 +218,6 @@ async function getAccessibleRoomsForChoir(choirId, userId, userIsPrivileged = fa
       ['title', 'ASC']
     ]
   });
-
-  if (userIsPrivileged) {
-    return rooms;
-  }
 
   const privateRoomIds = rooms.filter(room => room.isPrivate).map(room => room.id);
   if (!privateRoomIds.length) {
@@ -296,7 +288,7 @@ exports.getRooms = async (req, res) => {
   await ensureDefaultRoom(req.activeChoirId);
 
   const moderator = await isModerator(req);
-  const rooms = await getAccessibleRoomsForChoir(req.activeChoirId, req.userId, moderator);
+  const rooms = await getAccessibleRoomsForChoir(req.activeChoirId, req.userId);
 
   const readStates = await db.chat_read_state.findAll({
     where: {
@@ -362,8 +354,8 @@ exports.getRoomDetail = async (req, res) => {
   }
 
   const roomId = Number(req.params.roomId);
-  const room = await db.chat_room.findByPk(roomId);
-  if (!room || room.choirId !== req.activeChoirId) {
+  const room = await getAccessibleRoom(roomId, req);
+  if (!room) {
     return res.status(404).send({ message: 'Raum nicht gefunden.' });
   }
 
@@ -817,7 +809,7 @@ exports.getUnreadSummary = async (req, res) => {
 
   await ensureDefaultRoom(req.activeChoirId);
 
-  const rooms = await getAccessibleRoomsForChoir(req.activeChoirId, req.userId, await isModerator(req));
+  const rooms = await getAccessibleRoomsForChoir(req.activeChoirId, req.userId);
 
   const readStates = await db.chat_read_state.findAll({
     where: {
@@ -1188,6 +1180,11 @@ exports.reportMessage = async (req, res) => {
   });
 
   if (!message) {
+    return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
+  }
+
+  const room = await getAccessibleRoom(message.chatRoomId, req);
+  if (!room) {
     return res.status(404).send({ message: 'Nachricht nicht gefunden.' });
   }
 
