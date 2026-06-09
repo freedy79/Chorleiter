@@ -511,7 +511,7 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : req.userId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : event.directorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);

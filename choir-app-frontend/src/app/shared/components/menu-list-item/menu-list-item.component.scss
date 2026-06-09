@@ -25,6 +25,9 @@
     ) !important;
     // Selected SideNav entries should always use white text
     color: white !important;
+    --mdc-list-list-item-label-text-color: white;
+    --mdc-list-list-item-leading-icon-color: white;
+    --mdc-list-list-item-trailing-icon-color: white;
     border-radius: 0px;
 
     mat-icon {
@@ -43,6 +46,9 @@
     ) !important;
     // Selected SideNav entries should always use white text
     color: white !important;
+    --mdc-list-list-item-label-text-color: white;
+    --mdc-list-list-item-leading-icon-color: white;
+    --mdc-list-list-item-trailing-icon-color: white;
     border-radius: 0px;
   }
 

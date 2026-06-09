@@ -468,7 +468,7 @@ export class ApiService {
    * Creates a new event (service or rehearsal) for the current choir.
    * @param eventData - The details of the event, including the IDs of the pieces performed.
    */
-  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number, programId?: string | null }): Observable<CreateEventResponse> {
+  createEvent(eventData: { date: string, type: string, notes?: string, pieceIds?: number[], directorId?: number | null, organistId?: number, finalized?: boolean, version?: number, monthlyPlanId?: number, programId?: string | null }): Observable<CreateEventResponse> {
     return this.eventService.createEvent(eventData);
   }
 
@@ -489,7 +489,7 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
-  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
+  updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
 

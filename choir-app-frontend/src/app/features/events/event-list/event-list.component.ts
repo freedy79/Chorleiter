@@ -230,7 +230,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.apiService.getEventById(event.id).subscribe(fullEvent => {
       this.dialogHelper.openDialogWithApi<
         EventDialogComponent,
-        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; programId?: string | null },
+        { id: number; date: string; type: string; notes?: string; pieceIds: number[]; directorId?: number | null; programId?: string | null },
         Event
       >(
         EventDialogComponent,
@@ -249,6 +249,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
               const changed =
                 new Date(result.date).getTime() !== new Date(fullEvent.date).getTime() ||
                 result.type !== fullEvent.type ||
+                (result.directorId ?? null) !== (fullEvent.director?.id ?? null) ||
                 (result.notes || '') !== (fullEvent.notes || '') ||
                 JSON.stringify(originalPieces) !== JSON.stringify(newPieces);
 
@@ -338,7 +339,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   openAddEventDialog(): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
-      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
+      { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
       CreateEventResponse
     >(
       EventDialogComponent,
