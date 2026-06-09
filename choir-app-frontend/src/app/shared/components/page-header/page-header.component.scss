@@ -11,6 +11,46 @@
   color: var(--page-header-text-color, #212121);
 }
 
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.breadcrumbs {
+  ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.875rem;
+    color: var(--page-header-text-color, #212121);
+
+    &:not(:last-child)::after {
+      content: '›';
+      margin-left: 0.25rem;
+      opacity: 0.7;
+    }
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+}
+
 h1 {
   margin: 0;
   font-size: 1.5rem;
