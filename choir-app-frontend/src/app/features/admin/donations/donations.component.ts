@@ -14,6 +14,7 @@ import { PayPalSettingsComponent } from '../paypal-settings/paypal-settings.comp
   standalone: true,
   imports: [CommonModule, MaterialModule, FormsModule],
   templateUrl: './donations.component.html',
+  styleUrls: ['./donations.component.scss']
 })
 export class DonationsComponent implements OnInit {
   donations: Donation[] = [];
