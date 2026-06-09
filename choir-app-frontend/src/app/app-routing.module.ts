@@ -172,12 +172,6 @@ export const routes: Routes = [
                 data: { title: 'Sammlung', readOnly: true, fullWidth: true },
             },
             {
-                path: 'collections/view/:id',
-                loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
-                canActivate: [AuthGuard],
-                data: { title: 'Sammlung', readOnly: true },
-            },
-            {
                 path: 'collections/edit/:id',
                 loadComponent: () => import('./features/collections/collection-edit/collection-edit.component').then(m => m.CollectionEditComponent),
                 canActivate: [AuthGuard, ChoirAdminGuard],
