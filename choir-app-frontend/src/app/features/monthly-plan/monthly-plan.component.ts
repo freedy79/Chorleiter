@@ -14,7 +14,7 @@ import { Subscription, forkJoin, of } from 'rxjs';
 import { map, take, tap, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@shared/components/base.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
-import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
+import { SendPlanDialogComponent, SendPlanDialogResult } from './send-plan-dialog/send-plan-dialog.component';
 import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
 import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
@@ -823,9 +823,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
-    ).subscribe((result: { ids: number[]; emails: string[] }) => {
-      if (result && (result.ids.length > 0 || result.emails.length > 0)) {
-        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).pipe(
+    ).subscribe((result: SendPlanDialogResult) => {
+      if (result && (result.ids.length > 0 || result.addressBookEntryIds.length > 0 || result.emails.length > 0)) {
+        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails, result.addressBookEntryIds, result.saveSelection).pipe(
           takeUntil(this.destroy$)
         ).subscribe({
           next: () => this.notification.success('E-Mail gesendet.', 3000),

@@ -55,4 +55,29 @@ describe('MonthlyPlanService', () => {
 
     expect(refreshed).toEqual(refreshedResponse);
   });
+
+  it('should send monthly plan emails with personal address book recipients and saved selection flag', () => {
+    service.emailMonthlyPlan(7, [1], ['extra@example.com'], [10], true).subscribe();
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/monthly-plans/7/email`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({
+      recipients: [1],
+      emails: ['extra@example.com'],
+      addressBookEntryIds: [10],
+      saveSelection: true
+    });
+    req.flush({ message: 'Mail sent.' });
+  });
+
+  it('should load saved monthly plan email recipient preferences', () => {
+    let result: any;
+    service.getEmailRecipientPreference().subscribe(value => result = value);
+
+    const req = httpMock.expectOne(`${environment.apiUrl}/monthly-plans/email-recipient-preference`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ selectedUserIds: [1], selectedAddressBookEntryIds: [10] });
+
+    expect(result).toEqual({ selectedUserIds: [1], selectedAddressBookEntryIds: [10] });
+  });
 });

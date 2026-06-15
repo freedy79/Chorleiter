@@ -1,126 +1,305 @@
-<mat-accordion>
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Cover ({{ unassignedCovers }} unzugewiesen)
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-    <mat-table [dataSource]="covers" class="mat-elevation-z1" *ngIf="covers.length > 0">
-      <ng-container matColumnDef="filename">
-        <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
-        <mat-cell *matCellDef="let f">{{ f.filename }}</mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="linked">
-        <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <a *ngIf="f.collectionId" [routerLink]="['/collections/edit', f.collectionId]">{{ f.collectionTitle }}</a>
-          <span *ngIf="!f.collectionId">–</span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <button mat-icon-button color="warn" *ngIf="!f.collectionId" (click)="delete('covers', f.filename)" matTooltip="Löschen">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-    <p *ngIf="covers.length === 0">Keine Dateien gefunden.</p>
-  </mat-expansion-panel>
+<ng-container *ngIf="isHandset$ | async as isHandset">
+  <div class="storage-summary mat-elevation-z1">
+    <div class="storage-summary__item">
+      <span class="label">Gesamtbelegung</span>
+      <strong>{{ formatSize(totalStorageBytes) }}</strong>
+    </div>
+    <div class="storage-summary__item">
+      <span class="label">Cover</span>
+      <span>{{ formatSize(coverStorageBytes) }}</span>
+    </div>
+    <div class="storage-summary__item">
+      <span class="label">Notenbilder</span>
+      <span>{{ formatSize(imageStorageBytes) }}</span>
+    </div>
+    <div class="storage-summary__item">
+      <span class="label">Dateien</span>
+      <span>{{ formatSize(fileStorageBytes) }}</span>
+    </div>
+  </div>
 
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Notenbild ({{ unassignedImages }} unzugewiesen)
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-    <mat-table [dataSource]="images" class="mat-elevation-z1" *ngIf="images.length > 0">
-      <ng-container matColumnDef="filename">
-        <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <a [href]="getImageUrl(f.filename)" target="_blank" rel="noopener">
-            {{ f.filename }}
-          </a>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="linked">
-        <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
-          <span *ngIf="!f.pieceId">–</span>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('images', f.filename)" matTooltip="Löschen">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
-    </mat-table>
-    <p *ngIf="images.length === 0">Keine Dateien gefunden.</p>
-  </mat-expansion-panel>
+  <mat-accordion>
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Cover ({{ unassignedCovers }} unzugewiesen, {{ formatSize(coverStorageBytes) }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
 
-  <mat-expansion-panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        Hochgeladene Dateien ({{ unassignedFiles }} unzugewiesen)
-      </mat-panel-title>
-    </mat-expansion-panel-header>
-    <mat-table [dataSource]="files" class="mat-elevation-z1" *ngIf="files.length > 0">
-      <ng-container matColumnDef="filename">
-        <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <a
-            [href]="getFileUrl(f.filename)"
-            target="_blank"
-            rel="noopener"
-            [attr.download]="f.downloadName || f.filename"
-          >
-            {{ f.filename }}
-          </a>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="downloadName">
-        <mat-header-cell *matHeaderCellDef>Downloadname</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <ng-container *ngIf="f.downloadName; else noDownloadName">
-            <a
-              [href]="getFileUrl(f.filename)"
-              target="_blank"
-              rel="noopener"
-              [attr.download]="f.downloadName"
-            >
-              {{ f.downloadName }}
-            </a>
+      <ng-container *ngIf="!isHandset; else coversMobile">
+        <mat-table [dataSource]="covers" class="mat-elevation-z1" *ngIf="covers.length > 0">
+          <ng-container matColumnDef="filename">
+            <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a [href]="getCoverUrl(f.filename)" target="_blank" rel="noopener">
+                {{ f.filename }}
+              </a>
+            </mat-cell>
           </ng-container>
-          <ng-template #noDownloadName>–</ng-template>
-        </mat-cell>
+          <ng-container matColumnDef="sizeBytes">
+            <mat-header-cell *matHeaderCellDef>Größe</mat-header-cell>
+            <mat-cell *matCellDef="let f">{{ formatSize(f.sizeBytes) }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="linked">
+            <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a *ngIf="f.collectionId" [routerLink]="['/collections/edit', f.collectionId]">{{ f.collectionTitle }}</a>
+              <span *ngIf="!f.collectionId">–</span>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a mat-icon-button [href]="getCoverUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+              <a mat-icon-button [href]="getCoverUrl(f.filename)" [attr.download]="f.filename" matTooltip="Herunterladen">
+                <mat-icon>download</mat-icon>
+              </a>
+              <button mat-icon-button color="warn" *ngIf="!f.collectionId" (click)="delete('covers', f.filename)" matTooltip="Löschen">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+        </mat-table>
       </ng-container>
-      <ng-container matColumnDef="linked">
-        <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
-          <span *ngIf="!f.pieceId">–</span>
-        </mat-cell>
+
+      <ng-template #coversMobile>
+        <div class="mobile-file-list" *ngIf="covers.length > 0; else noCovers">
+          <mat-card class="mobile-file-card" *ngFor="let f of covers">
+            <mat-card-content>
+              <div class="mobile-file-card__header">
+                <a [href]="getCoverUrl(f.filename)" target="_blank" rel="noopener" class="mobile-file-card__title">
+                  {{ f.filename }}
+                </a>
+                <span class="mobile-file-card__size">{{ formatSize(f.sizeBytes) }}</span>
+              </div>
+              <div class="mobile-file-card__meta">
+                <span class="mobile-file-card__label">Zugewiesen</span>
+                <a *ngIf="f.collectionId; else noCoverAssignment" [routerLink]="['/collections/edit', f.collectionId]">
+                  {{ f.collectionTitle }}
+                </a>
+                <ng-template #noCoverAssignment>–</ng-template>
+              </div>
+              <div class="mobile-file-card__actions">
+                <a mat-icon-button color="primary" [href]="getCoverUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                  <mat-icon>open_in_new</mat-icon>
+                </a>
+                <a mat-icon-button [href]="getCoverUrl(f.filename)" [attr.download]="f.filename" matTooltip="Herunterladen">
+                  <mat-icon>download</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" *ngIf="!f.collectionId" (click)="delete('covers', f.filename)" matTooltip="Löschen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+
+      <ng-template #noCovers>
+        <p>Keine Dateien gefunden.</p>
+      </ng-template>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Notenbild ({{ unassignedImages }} unzugewiesen, {{ formatSize(imageStorageBytes) }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <ng-container *ngIf="!isHandset; else imagesMobile">
+        <mat-table [dataSource]="images" class="mat-elevation-z1" *ngIf="images.length > 0">
+          <ng-container matColumnDef="filename">
+            <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a [href]="getImageUrl(f.filename)" target="_blank" rel="noopener">
+                {{ f.filename }}
+              </a>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="sizeBytes">
+            <mat-header-cell *matHeaderCellDef>Größe</mat-header-cell>
+            <mat-cell *matCellDef="let f">{{ formatSize(f.sizeBytes) }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="linked">
+            <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
+              <span *ngIf="!f.pieceId">–</span>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a mat-icon-button [href]="getImageUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+              <a mat-icon-button [href]="getImageUrl(f.filename)" [attr.download]="f.filename" matTooltip="Herunterladen">
+                <mat-icon>download</mat-icon>
+              </a>
+              <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('images', f.filename)" matTooltip="Löschen">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+        </mat-table>
       </ng-container>
-      <ng-container matColumnDef="actions">
-        <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
-        <mat-cell *matCellDef="let f">
-          <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('files', f.filename)" matTooltip="Löschen">
-            <mat-icon>delete</mat-icon>
-          </button>
-        </mat-cell>
+
+      <ng-template #imagesMobile>
+        <div class="mobile-file-list" *ngIf="images.length > 0; else noImages">
+          <mat-card class="mobile-file-card" *ngFor="let f of images">
+            <mat-card-content>
+              <div class="mobile-file-card__header">
+                <a [href]="getImageUrl(f.filename)" target="_blank" rel="noopener" class="mobile-file-card__title">
+                  {{ f.filename }}
+                </a>
+                <span class="mobile-file-card__size">{{ formatSize(f.sizeBytes) }}</span>
+              </div>
+              <div class="mobile-file-card__meta">
+                <span class="mobile-file-card__label">Zugewiesen</span>
+                <a *ngIf="f.pieceId; else noImageAssignment" [routerLink]="['/pieces', f.pieceId]">
+                  {{ f.pieceTitle }}
+                </a>
+                <ng-template #noImageAssignment>–</ng-template>
+              </div>
+              <div class="mobile-file-card__actions">
+                <a mat-icon-button color="primary" [href]="getImageUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                  <mat-icon>open_in_new</mat-icon>
+                </a>
+                <a mat-icon-button [href]="getImageUrl(f.filename)" [attr.download]="f.filename" matTooltip="Herunterladen">
+                  <mat-icon>download</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('images', f.filename)" matTooltip="Löschen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+
+      <ng-template #noImages>
+        <p>Keine Dateien gefunden.</p>
+      </ng-template>
+    </mat-expansion-panel>
+
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Hochgeladene Dateien ({{ unassignedFiles }} unzugewiesen, {{ formatSize(fileStorageBytes) }})
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+
+      <ng-container *ngIf="!isHandset; else filesMobile">
+        <mat-table [dataSource]="files" class="mat-elevation-z1" *ngIf="files.length > 0">
+          <ng-container matColumnDef="filename">
+            <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a [href]="getFileUrl(f.filename)" target="_blank" rel="noopener">
+                {{ f.filename }}
+              </a>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="downloadName">
+            <mat-header-cell *matHeaderCellDef>Downloadname</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <ng-container *ngIf="f.downloadName; else noDownloadName">
+                <a
+                  [href]="getFileUrl(f.filename)"
+                  target="_blank"
+                  rel="noopener"
+                  [attr.download]="f.downloadName"
+                >
+                  {{ f.downloadName }}
+                </a>
+              </ng-container>
+              <ng-template #noDownloadName>–</ng-template>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="sizeBytes">
+            <mat-header-cell *matHeaderCellDef>Größe</mat-header-cell>
+            <mat-cell *matCellDef="let f">{{ formatSize(f.sizeBytes) }}</mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="linked">
+            <mat-header-cell *matHeaderCellDef>Zugewiesen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a *ngIf="f.pieceId" [routerLink]="['/pieces', f.pieceId]">{{ f.pieceTitle }}</a>
+              <span *ngIf="!f.pieceId">–</span>
+            </mat-cell>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef>Aktionen</mat-header-cell>
+            <mat-cell *matCellDef="let f">
+              <a mat-icon-button [href]="getFileUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                <mat-icon>open_in_new</mat-icon>
+              </a>
+              <a mat-icon-button [href]="getFileUrl(f.filename)" [attr.download]="f.downloadName || f.filename" matTooltip="Herunterladen">
+                <mat-icon>download</mat-icon>
+              </a>
+              <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('files', f.filename)" matTooltip="Löschen">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </mat-cell>
+          </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedFileColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedFileColumns"></mat-row>
+        </mat-table>
       </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedFileColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedFileColumns"></mat-row>
-    </mat-table>
-    <p *ngIf="files.length === 0">Keine Dateien gefunden.</p>
-  </mat-expansion-panel>
-</mat-accordion>
+
+      <ng-template #filesMobile>
+        <div class="mobile-file-list" *ngIf="files.length > 0; else noFiles">
+          <mat-card class="mobile-file-card" *ngFor="let f of files">
+            <mat-card-content>
+              <div class="mobile-file-card__header">
+                <a [href]="getFileUrl(f.filename)" target="_blank" rel="noopener" class="mobile-file-card__title">
+                  {{ f.filename }}
+                </a>
+                <span class="mobile-file-card__size">{{ formatSize(f.sizeBytes) }}</span>
+              </div>
+              <div class="mobile-file-card__meta" *ngIf="f.downloadName; else noMobileDownloadName">
+                <span class="mobile-file-card__label">Downloadname</span>
+                <a [href]="getFileUrl(f.filename)" target="_blank" rel="noopener" [attr.download]="f.downloadName">
+                  {{ f.downloadName }}
+                </a>
+              </div>
+              <ng-template #noMobileDownloadName>
+                <div class="mobile-file-card__meta">
+                  <span class="mobile-file-card__label">Downloadname</span>
+                  <span>–</span>
+                </div>
+              </ng-template>
+              <div class="mobile-file-card__meta">
+                <span class="mobile-file-card__label">Zugewiesen</span>
+                <a *ngIf="f.pieceId; else noFileAssignment" [routerLink]="['/pieces', f.pieceId]">
+                  {{ f.pieceTitle }}
+                </a>
+                <ng-template #noFileAssignment>–</ng-template>
+              </div>
+              <div class="mobile-file-card__actions">
+                <a mat-icon-button color="primary" [href]="getFileUrl(f.filename)" target="_blank" rel="noopener" matTooltip="Öffnen">
+                  <mat-icon>open_in_new</mat-icon>
+                </a>
+                <a mat-icon-button [href]="getFileUrl(f.filename)" [attr.download]="f.downloadName || f.filename" matTooltip="Herunterladen">
+                  <mat-icon>download</mat-icon>
+                </a>
+                <button mat-icon-button color="warn" *ngIf="!f.pieceId" (click)="delete('files', f.filename)" matTooltip="Löschen">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </ng-template>
+
+      <ng-template #noFiles>
+        <p>Keine Dateien gefunden.</p>
+      </ng-template>
+    </mat-expansion-panel>
+  </mat-accordion>
+</ng-container>

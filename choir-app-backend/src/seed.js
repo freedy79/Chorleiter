@@ -142,6 +142,38 @@ async function seedDatabase(options = {}) {
                 }
             });
 
+            await db.mail_template.findOrCreate({
+                where: { type: 'choir-recommendation' },
+                defaults: {
+                    subject: 'NAK Chorleiter – kurz ansehen',
+                    body: '<p>Hallo {{recipient_name}},</p><p><strong>{{teaser}}</strong></p><p><a href="{{registration_link}}">{{cta_text}}</a></p><p><a href="{{learn_more_link}}">Mehr erfahren</a></p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'choir-registration-verification' },
+                defaults: {
+                    subject: 'Verifizierungscode für die Chorregistrierung',
+                    body: '<p>Hallo {{requester_name}},</p><p>dein Verifizierungscode für die Chorregistrierung lautet: <b>{{verification_code}}</b></p><p>Der Code ist bis {{expiry}} gültig.</p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'choir-registration-admin-notify' },
+                defaults: {
+                    subject: 'Neue Chorregistrierung wartet auf Freigabe',
+                    body: '<p>Es wurde eine neue Chorregistrierung eingereicht:</p><ul><li><b>Name:</b> {{requester_name}}</li><li><b>E-Mail:</b> {{requester_email}}</li><li><b>Telefon:</b> {{requester_phone}}</li><li><b>Chor:</b> {{choir_name}}</li><li><b>Ort:</b> {{city}}</li><li><b>Gemeinde:</b> {{congregation}}</li><li><b>Bezirk:</b> {{district}}</li></ul>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'choir-registration-decision' },
+                defaults: {
+                    subject: 'Ergebnis deiner Chorregistrierung',
+                    body: '<p>Hallo {{requester_name}},</p><p>{{decision_message}}</p><p><b>Chor:</b> {{choir_name}}</p><p><b>Status:</b> {{decision_status}}</p><p>{{setup_password_hint}}</p><p>{{setup_password_link-html}}</p><p><b>Ablehnungsgrund:</b> {{rejection_reason}}</p>'
+                }
+            });
+
             for (const tpl of getDefaultPdfTemplates()) {
                 await db.pdf_template.findOrCreate({
                     where: { type: tpl.type },

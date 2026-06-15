@@ -10,7 +10,7 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
-import { startWith, takeUntil } from 'rxjs/operators';
+import { finalize, startWith, takeUntil } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
 import { forkJoin, Subject } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
@@ -18,6 +18,7 @@ import { EventImportDialogComponent } from '../event-import-dialog/event-import-
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
@@ -72,6 +73,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
               private notification: NotificationService,
               private paginatorService: PaginatorService,
               private route: ActivatedRoute,
+              private router: Router,
               private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
@@ -93,6 +95,37 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     const eventId = Number(this.route.snapshot.queryParamMap.get('eventId'));
     if (eventId) {
       this.apiService.getEventById(eventId).pipe(takeUntil(this.destroy$)).subscribe(e => { this.selectedEvent = e; this.cdr.markForCheck(); });
+    }
+    const createEventToken = this.route.snapshot.queryParamMap.get('createEventToken');
+    if (createEventToken) {
+      this.apiService.resolveCreatePrefillToken(createEventToken)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { createEventToken: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true
+            });
+          })
+        )
+        .subscribe({
+          next: (prefill) => {
+            this.openAddEventDialog(prefill);
+          },
+          error: (err) => {
+            if (err?.status === 409) {
+              this.notification.info(err?.error?.message || 'Das Ereignis wurde bereits eingetragen.');
+            } else if (err?.status === 410) {
+              this.notification.error('Der Link ist abgelaufen.');
+            } else if (err?.status === 403) {
+              this.notification.error('Der Link ist für dein aktuelles Konto oder den aktiven Chor nicht gültig.');
+            } else {
+              this.notification.error('Der Link konnte nicht verarbeitet werden.');
+            }
+          }
+        });
     }
     this.typeControl.valueChanges.pipe(startWith('ALL'), takeUntil(this.destroy$)).subscribe(() => this.loadEvents());
     this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.applyTimeFilter());
@@ -336,7 +369,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mobileVisibleCount += this.MOBILE_PAGE_SIZE;
   }
 
-  openAddEventDialog(): void {
+  openAddEventDialog(prefill?: { date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
       { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
@@ -345,7 +378,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
       EventDialogComponent,
       (result) => this.apiService.createEvent(result),
       {
-        dialogConfig: { width: '600px', disableClose: true },
+        dialogConfig: { width: '600px', disableClose: true, data: prefill ? { prefill } : undefined },
         apiConfig: {
           onSuccess: (response: CreateEventResponse) => {
             const baseMessage = response.wasUpdated ?

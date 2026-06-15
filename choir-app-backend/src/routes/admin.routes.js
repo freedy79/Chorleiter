@@ -1,6 +1,7 @@
 const { verifyToken } = require("../middleware/auth.middleware");
 const role = require("../middleware/role.middleware");
 const controller = require("../controllers/admin.controller");
+const referralController = require('../controllers/referral.controller');
 const db = require("../models");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
@@ -66,6 +67,10 @@ router.get('/privacy-policy', wrap(controller.getPrivacyPolicy));
 router.put('/privacy-policy', role.requireNonDemo, wrap(controller.updatePrivacyPolicy));
 router.get('/ckeditor-license', wrap(controller.getCkeditorLicenseKey));
 router.put('/ckeditor-license', role.requireNonDemo, wrap(controller.updateCkeditorLicenseKey));
+
+router.get('/choir-registration-requests', wrap(referralController.listRegistrationRequests));
+router.post('/choir-registration-requests/:id/approve', role.requireNonDemo, wrap(referralController.approveRegistrationRequest));
+router.post('/choir-registration-requests/:id/reject', role.requireNonDemo, wrap(referralController.rejectRegistrationRequest));
 
 // PWA Configuration routes
 const pwaConfigRoutes = require('./pwaConfig.routes');

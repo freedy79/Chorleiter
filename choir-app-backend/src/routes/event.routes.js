@@ -12,6 +12,7 @@ router.use(authJwt.verifyToken);
 
 router.get("/last", wrap(controller.findLast));
 router.get("/next", wrap(controller.findNext));
+router.get('/prefill/:token', wrap(controller.resolveCreatePrefillToken));
 router.get("/", wrap(controller.findAll));
 router.get("/:id", wrap(controller.findOne));
 router.post("/", role.requireNonDemo, role.requireDirector, createEventValidation, validate, wrap(controller.create));

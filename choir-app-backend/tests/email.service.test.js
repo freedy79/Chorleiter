@@ -49,6 +49,23 @@ const db = require('../src/models');
       assert.ok(capturedOptions[1].subject.includes('bob'), 'Second recipient first_name not replaced');
       assert.ok(capturedOptions[1].html.includes('bob'), 'Second recipient surname fallback not replaced');
 
+      // Test improvement suggestion mail formatting
+      capturedOptions = [];
+      await emailService2.sendImprovementSuggestionMail(
+        ['admin@example.com', 'tester@example.com'],
+        {
+          senderName: 'Max Mustermann',
+          senderEmail: 'tester@example.com',
+          message: 'Bitte den Kontrast erhöhen.\nUnd die Fußleiste etwas größer machen.'
+        }
+      );
+      assert.strictEqual(capturedOptions.length, 1, 'Improvement suggestion should send a single mail request');
+      assert.strictEqual(capturedOptions[0].subject, 'Neuer Verbesserungsvorschlag für Chorleiter', 'Suggestion subject mismatch');
+      assert.ok(capturedOptions[0].text.includes('Guten Tag'), 'Suggestion text should include formal greeting');
+      assert.ok(capturedOptions[0].text.includes('Kontrast erhöhen'), 'Suggestion text missing message');
+      assert.ok(capturedOptions[0].html.includes('Fußleiste'), 'Suggestion html missing message');
+      assert.strictEqual(capturedOptions[0].replyTo, 'tester@example.com', 'Suggestion reply-to not set correctly');
+
       emailTransporter.sendMail = originalSendMail;
 
       console.log('email.service tests passed');

@@ -1,7 +1,7 @@
 <div class="organizations">
   <app-admin-page-header
     title="Organisationen verwalten"
-    description="Zentrale Verwaltung von Bezirken, Gemeinden und Chören">
+    description="Zentrale Verwaltung von Bezirken, Gemeinden, Chören und Registrierungsanfragen">
   </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
@@ -36,6 +36,16 @@
       </ng-template>
       <div class="tab-content">
         <app-manage-choirs></app-manage-choirs>
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Registrierungsanfragen">
+      <ng-template mat-tab-label>
+        <mat-icon matTabLabelPadding>how_to_reg</mat-icon>
+        <span class="tab-label">Registrierungsanfragen</span>
+      </ng-template>
+      <div class="tab-content">
+        <app-choir-registration-requests></app-choir-registration-requests>
       </div>
     </mat-tab>
   </mat-tab-group>

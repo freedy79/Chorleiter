@@ -123,6 +123,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/user/join/join-choir.component').then(m => m.JoinChoirComponent)
             },
             {
+                path: 'register-choir/:token',
+                loadComponent: () => import('./features/referrals/choir-registration/choir-registration.component').then(m => m.ChoirRegistrationComponent),
+                data: { title: 'Chor registrieren' }
+            },
+            {
                 path: 'forgot-password',
                 component: PasswordResetRequestComponent
             },

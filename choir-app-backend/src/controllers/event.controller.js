@@ -9,6 +9,7 @@ const logger = require("../config/logger");
 const { Op, fn, col, where } = require("sequelize");
 const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const jwt = require("jsonwebtoken");
+const { decodeEventPrefillToken } = require('../utils/event-prefill-link');
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -430,6 +431,77 @@ exports.findNext = async (req, res) => {
         .slice(0, limit);
 
     res.status(200).send(merged);
+};
+
+exports.resolveCreatePrefillToken = async (req, res) => {
+    const token = req.params.token;
+    if (!token) {
+        return res.status(400).send({ message: 'Token is required.' });
+    }
+
+    let payload;
+    try {
+        payload = decodeEventPrefillToken(token);
+    } catch (err) {
+        return res.status(400).send({ message: 'Invalid token.' });
+    }
+
+    if (payload?.purpose !== 'missing-service-event-prefill') {
+        return res.status(400).send({ message: 'Invalid token purpose.' });
+    }
+
+    const expiresAt = payload?.expiresAt ? new Date(payload.expiresAt) : null;
+    if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() < Date.now()) {
+        return res.status(410).send({ message: 'Token expired.' });
+    }
+
+    if (Number(payload.userId) !== Number(req.userId)) {
+        return res.status(403).send({ message: 'Token not valid for this user.' });
+    }
+
+    if (Number(payload.choirId) !== Number(req.activeChoirId)) {
+        return res.status(403).send({ message: 'Token not valid for active choir.' });
+    }
+
+    const planEntry = await db.plan_entry.findOne({
+        where: { id: payload.planEntryId },
+        include: [
+            {
+                model: db.monthly_plan,
+                as: 'monthlyPlan',
+                attributes: ['id', 'choirId']
+            }
+        ]
+    });
+
+    if (!planEntry || Number(planEntry.monthlyPlan?.choirId) !== Number(req.activeChoirId)) {
+        return res.status(404).send({ message: 'Plan entry not found.' });
+    }
+
+    const dateOnly = isoDateString(parseDateOnly(planEntry.date));
+    const existingEvent = await db.event.findOne({
+        where: {
+            choirId: req.activeChoirId,
+            type: 'SERVICE',
+            [Op.and]: [where(fn('date', col('date')), dateOnly)]
+        },
+        attributes: ['id']
+    });
+
+    if (existingEvent) {
+        return res.status(409).send({
+            message: 'Für diesen Dienstplan-Eintrag wurde bereits ein Gottesdienst-Ereignis angelegt.'
+        });
+    }
+
+    return res.status(200).send({
+        date: payload.date || dateOnly,
+        type: payload.type || 'SERVICE',
+        notes: payload.notes || '',
+        directorId: payload.directorId ?? null,
+        monthlyPlanId: payload.monthlyPlanId || null,
+        programId: payload.programId || null
+    });
 };
 
 /**

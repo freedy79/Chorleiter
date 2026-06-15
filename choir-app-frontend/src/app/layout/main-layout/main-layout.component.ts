@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, HostListener, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute, NavigationEnd } from '@angular/router';
 import { Meta, Title } from '@angular/platform-browser';
 import { AuthService } from 'src/app/core/services/auth.service';
@@ -33,6 +33,8 @@ import { ChatGlobalUnreadOverview } from '@core/models/chat-room';
 import { ChatService } from '@core/services/chat.service';
 import { PwaInstallService } from '@core/services/pwa-install.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { RecommendDialogComponent } from '@features/referrals/recommend-dialog/recommend-dialog.component';
 
 
 @Component({
@@ -126,6 +128,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private pendingNotificationPermissionRequest = false;
   drawerScrolling = false;
   private drawerScrollTimeout: ReturnType<typeof setTimeout> | null = null;
+  private readonly adminRoutePrefix = '/admin';
+  private readonly adminMenuKey = 'administration';
+  private recommendPromptShown = false;
 
 
   constructor(private authService: AuthService,
@@ -145,7 +150,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     private chatService: ChatService,
     private pushService: PushNotificationService,
     private pwaInstall: PwaInstallService,
-    private dialogHelper: DialogHelperService
+    private dialogHelper: DialogHelperService,
+    private prefsService: UserPreferencesService,
+    private hostElement: ElementRef<HTMLElement>
   ) {
     this.isLoggedIn$ = this.authService.isLoggedIn$;
     this.isAdmin$ = this.authService.isAdmin$;
@@ -280,6 +287,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     ).subscribe(() => {
       this.closeSidenav();
       this.closeFullscreenMenu();
+      this.scrollAdminMenuIntoViewIfNeeded();
     });
 
     this.isLoggedIn$.pipe(
@@ -330,6 +338,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     if (this._appDrawer) {
       this.navService.appDrawer = this._appDrawer as any;
     }
+    this.scrollAdminMenuIntoViewIfNeeded();
   }
 
   @HostListener('window:resize')
@@ -424,6 +433,35 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
       take(1),
       takeUntil(this.destroy$)
     ).subscribe(() => this.pwaInstall.tryShowInstallNotification(this.responsive.checkMobile()));
+
+    this.isLoggedIn$
+      .pipe(
+        filter(Boolean),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        if (this.recommendPromptShown) {
+          return;
+        }
+        this.prefsService.load().pipe(take(1)).subscribe({
+          next: (prefs) => {
+            if (prefs?.recommendPromptDismissed) {
+              return;
+            }
+            this.recommendPromptShown = true;
+            const allowSingerRegistration = !!this.authService.activeChoir$.value?.modules?.joinByLink;
+            this.dialog.open(RecommendDialogComponent, {
+              width: '640px',
+              maxWidth: '95vw',
+              autoFocus: 'first-tabbable',
+              data: { allowSingerRegistration }
+            });
+          },
+          error: () => {
+            // no-op
+          }
+        });
+      });
   }
 
   openChatFromHeader(): void {
@@ -570,35 +608,11 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     };
 
     const administration: NavItem = {
+      key: this.adminMenuKey,
       displayName: 'Administration',
       visibleSubject: this.isAdmin$,
-      route: 'admin',
+      route: '/admin',
       iconName: 'admin_panel_settings',
-      children: [
-        { displayName: 'Dashboard', route: '/admin/dashboard', iconName: 'dashboard' },
-        { displayName: '──────────', route: '', disabled: true },
-        { displayName: 'Organisationen', route: '/admin/organizations', iconName: 'account_balance' },
-        { displayName: 'E-Mail Management', route: '/admin/mail-management', iconName: 'mail' },
-        { displayName: 'PDF Templates', route: '/admin/pdf-templates', iconName: 'picture_as_pdf' },
-        { displayName: 'Metadaten', route: '/admin/metadata', iconName: 'library_music' },
-        { displayName: 'Datenanreicherung', route: '/admin/data-enrichment', iconName: 'auto_fix_high' },
-        { displayName: 'Sicherheit', route: '/admin/security', iconName: 'security' },
-        { displayName: 'Systemeinstellungen', route: '/admin/system-settings', iconName: 'settings' },
-        { displayName: 'PWA Konfiguration', route: '/admin/pwa-config', iconName: 'install_mobile' },
-        { displayName: '──────────', route: '', disabled: true },
-        { displayName: 'Allgemein', route: '/admin/general' },
-        { displayName: 'Chöre', route: '/admin/choirs' },
-        { displayName: 'Benutzer', route: '/admin/users' },
-        { displayName: 'Bezirke', route: '/admin/districts' },
-        { displayName: 'Gemeinden', route: '/admin/congregations' },
-        { displayName: 'Komponisten/Autoren', route: '/admin/creators' },
-        { displayName: 'Verlage', route: '/admin/publishers' },
-        { displayName: 'Änderungsvorschläge', route: '/admin/piece-changes' },
-        { displayName: 'Protokolle', route: '/admin/protocols' },
-        { displayName: 'Spenden', route: '/admin/donations' },
-        { displayName: 'Dateien', route: '/admin/files' },
-        { displayName: 'Develop', route: '/admin/develop' }
-      ]
     };
 
     const forms: NavItem = {
@@ -752,6 +766,37 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
   private isFramelessRoute(url: string): boolean {
     const cleanUrl = (url || '').split('?')[0].split('#')[0];
     return cleanUrl.startsWith('/c/') || cleanUrl.startsWith('/shared-piece/');
+  }
+
+  private scrollAdminMenuIntoViewIfNeeded(): void {
+    const cleanUrl = (this.router.url || '').split('?')[0].split('#')[0];
+    if (!cleanUrl.startsWith(this.adminRoutePrefix)) {
+      return;
+    }
+
+    setTimeout(() => this.scrollMenuItemIntoView(this.adminMenuKey), 0);
+    setTimeout(() => this.scrollMenuItemIntoView(this.adminMenuKey), 180);
+  }
+
+  private scrollMenuItemIntoView(menuKey: string): void {
+    const host = this.hostElement.nativeElement;
+    const drawerScrollContainer = host.querySelector('.appDrawer .mat-drawer-inner-container') as HTMLElement | null;
+    const menuItem = host.querySelector(`.appDrawer [data-nav-key="${menuKey}"]`) as HTMLElement | null;
+
+    if (!drawerScrollContainer || !menuItem) {
+      return;
+    }
+
+    const itemTop = menuItem.offsetTop;
+    const itemBottom = itemTop + menuItem.offsetHeight;
+    const viewportTop = drawerScrollContainer.scrollTop;
+    const viewportBottom = viewportTop + drawerScrollContainer.clientHeight;
+
+    if (itemTop >= viewportTop && itemBottom <= viewportBottom) {
+      return;
+    }
+
+    menuItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   private maybeNotifyAboutNewestUnread(overview: ChatGlobalUnreadOverview): void {

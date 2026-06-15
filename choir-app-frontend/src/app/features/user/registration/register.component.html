@@ -60,6 +60,27 @@
               <mat-hint>z.B. "Kirchenchor St. Marien"</mat-hint>
               <mat-error>{{ getErrorMessage('choirName') }}</mat-error>
             </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Ort</mat-label>
+              <input matInput formControlName="city" type="text" autocomplete="address-level2">
+              <mat-error>{{ getErrorMessage('city') }}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Telefon (optional)</mat-label>
+              <input matInput formControlName="phone" type="tel" autocomplete="tel">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Gemeinde (optional)</mat-label>
+              <input matInput formControlName="congregation" type="text">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Bezirk (optional)</mat-label>
+              <input matInput formControlName="district" type="text">
+            </mat-form-field>
           </div>
 
           <div class="form-section">
@@ -121,11 +142,33 @@
               mat-raised-button
               color="primary"
               type="submit"
-              [disabled]="registerForm.invalid || isLoading"
+              [disabled]="registerForm.invalid || isLoading || isVerificationStarted"
               class="submit-button">
-              <span *ngIf="!isLoading">Registrieren</span>
+              <span *ngIf="!isLoading">Registrierung starten</span>
               <mat-spinner *ngIf="isLoading" diameter="24" class="in-button-spinner"></mat-spinner>
             </button>
+          </div>
+
+          <div class="form-section" *ngIf="requestId">
+            <h3>E-Mail verifizieren</h3>
+            <p>
+              Die Chordaten sind jetzt gesperrt, bis die E-Mail-Verifikation abgeschlossen ist.
+            </p>
+            <mat-form-field appearance="outline">
+              <mat-label>Verifizierungscode</mat-label>
+              <input matInput formControlName="verificationCode" type="text">
+            </mat-form-field>
+            <div class="button-group">
+              <button
+                mat-stroked-button
+                color="primary"
+                type="button"
+                [disabled]="isLoading"
+                (click)="verifyRegistration()"
+                class="submit-button">
+                Code bestätigen
+              </button>
+            </div>
           </div>
 
           <div class="login-link">

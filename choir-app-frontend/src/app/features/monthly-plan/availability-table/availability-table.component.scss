@@ -24,6 +24,39 @@
 // DESKTOP TABLE: STATUS COLORS
 // ============================================================================
 
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  border-radius: 8px;
+  @include card-background;
+  @include adaptive-border(1px);
+}
+
+.selection-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  min-width: 8rem;
+  font-weight: 600;
+  @include readable-text;
+}
+
+.bulk-status-field {
+  min-width: 16rem;
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+.select-cell {
+  flex: 0 0 4rem;
+}
+
 .available {
   background-color: #c8e6c9;
   @include dark-mode { background-color: rgba(76, 175, 80, 0.2); }
@@ -64,6 +97,10 @@
   @include card-background;
   @include adaptive-border(1px);
 
+  &.card-selected {
+    box-shadow: 0 0 0 2px var(--primary-color, #1976d2);
+  }
+
   // Status indicator stripe on left border
   &.card-available {
     border-left: 3px solid #388e3c;
@@ -79,6 +116,26 @@
     border-left: 3px solid #d32f2f;
     @include dark-mode { border-left-color: #ef5350; }
   }
+}
+
+.mobile-bulk-toolbar {
+  align-items: stretch;
+  flex-direction: column;
+  margin-bottom: $spacing-sm;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: $spacing-sm;
+
+  button {
+    flex: 1;
+    min-height: $touch-target-min;
+  }
+}
+
+.card-select-checkbox {
+  align-self: flex-start;
 }
 
 .card-date-row {

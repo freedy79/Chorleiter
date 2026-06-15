@@ -17,4 +17,6 @@ export interface UserPreferences {
   defaultAvailability?: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
   /** Rehearsal reminder preferences */
   rehearsalReminder?: RehearsalReminderPreferences;
+  /** If true, recommendation prompt dialog should no longer auto-show */
+  recommendPromptDismissed?: boolean;
 }

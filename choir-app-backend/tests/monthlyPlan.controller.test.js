@@ -19,6 +19,17 @@ const controller = require('../src/controllers/monthlyPlan.controller');
     assert.strictEqual(res.statusCode, 201);
     const planId = res.data.id;
 
+    const director = await db.user.create({ name: 'Director', firstName: 'Dana', email: 'director@example.com', password: 'x' });
+    await db.user_choir.create({ userId: director.id, choirId: choir.id, rolesInChoir: ['director'] });
+    const addressBookEntry = await db.personal_address_book_entry.create({
+      userId: director.id,
+      choirId: choir.id,
+      firstName: 'Paula',
+      name: 'Privat',
+      email: 'private@example.com',
+      normalizedEmail: 'private@example.com'
+    });
+
     const entries = await db.plan_entry.findAll({ where: { monthlyPlanId: planId } });
     assert.ok(entries.length > 0);
     assert.ok(entries.every(e => e.notes === 'Gottesdienst'));
@@ -39,8 +50,26 @@ const controller = require('../src/controllers/monthlyPlan.controller');
 
     // send plan via email to additional address
     const emailRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
-    await controller.emailPdf({ ...baseReq, params: { id: planId }, body: { recipients: [], emails: ['foo@example.com'] } }, emailRes);
+    await controller.emailPdf({
+      ...baseReq,
+      userId: director.id,
+      params: { id: planId },
+      body: {
+        recipients: [director.id],
+        addressBookEntryIds: [addressBookEntry.id],
+        emails: ['foo@example.com', 'private@example.com']
+      }
+    }, emailRes);
     assert.strictEqual(emailRes.statusCode, 200);
+
+    const prefRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.getEmailRecipientPreference({ ...baseReq, userId: director.id }, prefRes);
+    assert.deepStrictEqual(prefRes.data.selectedUserIds, [director.id]);
+    assert.deepStrictEqual(prefRes.data.selectedAddressBookEntryIds, [addressBookEntry.id]);
+
+    const invalidEmailRes = { status(code) { this.statusCode = code; return this; }, send(data) { this.data = data; } };
+    await controller.emailPdf({ ...baseReq, userId: director.id, params: { id: planId }, body: { recipients: [], emails: ['not-an-email'] } }, invalidEmailRes);
+    assert.strictEqual(invalidEmailRes.statusCode, 400);
 
     // Christmas rules
     const choir2 = await db.choir.create({ name: 'Xmas Choir', modules: { dienstplan: true } });

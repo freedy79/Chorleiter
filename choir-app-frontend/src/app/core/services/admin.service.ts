@@ -16,6 +16,7 @@ import { UploadOverview } from '../models/backend-file';
 import { MailLog } from '../models/mail-log';
 import { MailDeliveryDiagnostics } from '../models/mail-delivery-diagnostics';
 import { Donation } from '../models/donation';
+import { ChoirRegistrationRequest } from '../models/choir-registration-admin';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -210,6 +211,18 @@ export class AdminService {
 
   getDonations(): Observable<Donation[]> {
     return this.http.get<Donation[]>(`${this.apiUrl}/admin/donations`);
+  }
+
+  getChoirRegistrationRequests(): Observable<ChoirRegistrationRequest[]> {
+    return this.http.get<ChoirRegistrationRequest[]>(`${this.apiUrl}/admin/choir-registration-requests`);
+  }
+
+  approveChoirRegistrationRequest(id: number): Observable<{ message: string; choirId: number; userId: number }> {
+    return this.http.post<{ message: string; choirId: number; userId: number }>(`${this.apiUrl}/admin/choir-registration-requests/${id}/approve`, {});
+  }
+
+  rejectChoirRegistrationRequest(id: number, reason?: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/choir-registration-requests/${id}/reject`, { reason });
   }
 
   createDonation(userId: number, amount: number, donatedAt?: Date): Observable<Donation> {

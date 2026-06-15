@@ -1,0 +1,164 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.admin-shell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: 100%;
+  gap: 0;
+
+  &.mobile {
+    flex-direction: column;
+  }
+}
+
+// ===== Persistente Kontext-Navigation (Desktop) =====
+.admin-rail {
+  flex: 0 0 248px;
+  width: 248px;
+  box-sizing: border-box;
+  align-self: flex-start;
+  position: sticky;
+  top: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  padding: $spacing-md $spacing-sm;
+  @include card-background;
+  border: none;
+  border-right: 1px solid;
+  @include apply-theme-var('border-right-color', 'border-primary');
+}
+
+.rail-home {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-md;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  @include readable-text;
+  @include smooth-transition(background-color);
+
+  mat-icon {
+    color: inherit;
+  }
+
+  &:hover {
+    @include hover-state;
+  }
+
+  &.active {
+    background: #1976d2;
+    color: #fff;
+
+    mat-icon {
+      color: #fff;
+    }
+  }
+}
+
+.rail-group {
+  margin-bottom: $spacing-md;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.rail-category {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: $spacing-xs $spacing-md;
+  @include subtle-text;
+}
+
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  width: 100%;
+  box-sizing: border-box;
+  padding: $spacing-sm $spacing-md;
+  border-radius: 8px;
+  text-decoration: none;
+  min-height: $touch-target-min;
+  @include secondary-text;
+  @include smooth-transition(background-color);
+
+  mat-icon {
+    flex: 0 0 auto;
+    color: inherit;
+  }
+
+  .rail-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    @include hover-state;
+  }
+
+  &.active {
+    background: #1976d2;
+    color: #fff;
+    font-weight: 600;
+
+    mat-icon {
+      color: #fff;
+    }
+  }
+}
+
+// ===== Mobile Bar =====
+.admin-mobilebar {
+  position: sticky;
+  top: 0;
+  z-index: $z-index-header;
+  min-height: 52px;
+  height: 52px;
+  padding: 0 $spacing-xs;
+  @include card-background;
+  border-bottom: 1px solid;
+  @include apply-theme-var('border-bottom-color', 'border-primary');
+}
+
+.admin-mobilebar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: $spacing-xs;
+  @include readable-text;
+}
+
+.admin-mobilebar-spacer {
+  flex: 1 1 auto;
+}
+
+// ===== Inhalt =====
+.admin-outlet {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: $spacing-lg;
+  box-sizing: border-box;
+
+  .admin-shell.mobile & {
+    padding: $spacing-sm;
+  }
+}
+
+// Kategorie-Label im Mobile-Overlay-Menü (rendert außerhalb des Hosts)
+::ng-deep .admin-menu .admin-menu-category {
+  padding: $spacing-sm $spacing-md $spacing-xs;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  opacity: 0.6;
+}

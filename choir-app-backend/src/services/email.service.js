@@ -16,6 +16,19 @@ function formatDate(date = new Date()) {
   return date.toLocaleString('de-DE', { timeZone: TIME_ZONE });
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildRecipientList(recipients) {
+  return Array.from(new Set((Array.isArray(recipients) ? recipients : [recipients]).filter(Boolean)));
+}
+
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings, mailOptions = {}, templateOverride) {
   if (emailDisabled()) return;
   const template = templateOverride || await db.mail_template.findOne({ where: { type } });
@@ -348,6 +361,52 @@ exports.sendPieceReportMail = async (recipients, piece, reporter, category, reas
   }
 };
 
+exports.sendImprovementSuggestionMail = async (recipients, { senderName, senderEmail, message }) => {
+  if (emailDisabled()) return;
+  const recipientList = buildRecipientList(recipients);
+  if (recipientList.length === 0) return;
+
+  try {
+    const safeMessage = String(message || '').trim();
+    const subject = 'Neuer Verbesserungsvorschlag für Chorleiter';
+    const text = [
+      'Guten Tag,',
+      '',
+      'es wurde ein neuer Verbesserungsvorschlag eingereicht.',
+      '',
+      `Absender: ${senderName || 'Unbekannt'}`,
+      `E-Mail: ${senderEmail || 'nicht angegeben'}`,
+      '',
+      'Nachricht:',
+      safeMessage,
+      '',
+      'Vielen Dank.'
+    ].join('\n');
+    const rawHtml = `
+      <p>Guten Tag,</p>
+      <p>es wurde ein neuer Verbesserungsvorschlag eingereicht.</p>
+      <p><strong>Absender:</strong> ${escapeHtml(senderName || 'Unbekannt')}</p>
+      <p><strong>E-Mail:</strong> ${senderEmail ? escapeHtml(senderEmail) : 'nicht angegeben'}</p>
+      <p><strong>Nachricht:</strong></p>
+      <p style="white-space:pre-wrap;">${escapeHtml(safeMessage).replace(/\n/g, '<br>')}</p>
+      <p>Vielen Dank.</p>
+    `;
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
+    await sendMail({
+      to: recipientList,
+      subject,
+      text,
+      html,
+      replyTo: senderEmail || undefined
+    });
+  } catch (err) {
+    logger.error(`Error sending improvement suggestion mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
 exports.sendLendingBorrowedNotification = async (to, { title, copyNumber, borrowedAt, borrowerName }, borrower) => {
   if (emailDisabled()) return;
   try {
@@ -557,6 +616,151 @@ exports.sendChatMessageReportMail = async ({ choirId, choirName, roomTitle, auth
     await sendMail({ to: [...recipients], subject, text, html, choirName });
   } catch (err) {
     logger.error(`Error sending chat message report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRecommendationMail = async ({
+  to,
+  recipientName,
+  senderName,
+  registrationLink,
+  expiresAt,
+  invitationType,
+  choirName
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    const frontendUrl = await getFrontendUrl();
+    const teaser = invitationType === 'singer'
+      ? `${senderName} lädt dich in ${choirName || 'einen Chor'} ein – Anmeldung in wenigen Klicks.`
+      : `${senderName} empfiehlt NAK Chorleiter – Chöre digital organisieren, kostenlos starten.`;
+
+    const ctaText = invitationType === 'singer'
+      ? 'Jetzt dem Chor beitreten'
+      : 'Jetzt Chor kostenlos registrieren';
+
+    const templateOverride = {
+      subject: invitationType === 'singer'
+        ? `Einladung zu ${choirName || 'einem Chor'}`
+        : 'NAK Chorleiter – kurz ansehen',
+      body: '<p>Hallo {{recipient_name}},</p>' +
+            '<p><strong>{{teaser}}</strong></p>' +
+            '<p><a href="{{registration_link}}">{{cta_text}}</a></p>' +
+            '<p><a href="{{learn_more_link}}">Mehr erfahren</a></p>'
+    };
+
+    await sendTemplateMail('choir-recommendation', to, {
+      recipient_name: recipientName,
+      sender_name: senderName,
+      registration_link: registrationLink,
+      expiry: expiresAt ? formatDate(expiresAt) : '',
+      invitation_type: invitationType,
+      choir_name: choirName || '',
+      teaser,
+      cta_text: ctaText,
+      learn_more_link: frontendUrl
+    }, undefined, {}, templateOverride);
+  } catch (err) {
+    logger.error(`Error sending choir recommendation mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRegistrationVerificationCodeMail = async ({
+  to,
+  requesterName,
+  code,
+  expiresAt,
+  choirName
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    await sendTemplateMail('choir-registration-verification', to, {
+      requester_name: requesterName,
+      verification_code: code,
+      expiry: formatDate(expiresAt),
+      choir_name: choirName
+    });
+  } catch (err) {
+    logger.error(`Error sending choir registration verification code mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendAdminChoirRegistrationRequestMail = async ({
+  requesterName,
+  requesterEmail,
+  requesterPhone,
+  choirName,
+  city,
+  congregation,
+  district,
+  requestedAt
+}) => {
+  if (emailDisabled()) return;
+  try {
+    const recipients = new Set();
+    const admins = await db.user.findAll();
+    admins
+      .filter(u => Array.isArray(u.roles) && u.roles.includes('admin') && u.email)
+      .forEach(u => recipients.add(u.email));
+
+    const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+    if (systemEmail?.value) {
+      recipients.add(systemEmail.value);
+    }
+
+    if (recipients.size === 0) return;
+
+    const requestedDate = requestedAt ? formatDate(requestedAt) : formatDate();
+    for (const to of recipients) {
+      await sendTemplateMail('choir-registration-admin-notify', to, {
+        requester_name: requesterName,
+        requester_email: requesterEmail,
+        requester_phone: requesterPhone || '-',
+        choir_name: choirName,
+        city,
+        congregation: congregation || '-',
+        district: district || '-',
+        requested_at: requestedDate
+      });
+    }
+  } catch (err) {
+    logger.error(`Error sending admin choir registration notification: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRegistrationDecisionMail = async ({
+  to,
+  requesterName,
+  choirName,
+  approved,
+  rejectionReason,
+  setupPasswordLink
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    await sendTemplateMail('choir-registration-decision', to, {
+      requester_name: requesterName,
+      choir_name: choirName,
+      decision_status: approved ? 'freigegeben' : 'abgelehnt',
+      decision_message: approved
+        ? 'Deine Chorregistrierung wurde freigegeben.'
+        : 'Deine Chorregistrierung wurde leider abgelehnt.',
+      rejection_reason: rejectionReason || '-',
+      setup_password_link: setupPasswordLink || '',
+      setup_password_hint: approved && setupPasswordLink
+        ? 'Bitte richte jetzt über den folgenden Link dein Passwort ein:'
+        : ''
+    });
+  } catch (err) {
+    logger.error(`Error sending choir registration decision mail to ${to}: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }

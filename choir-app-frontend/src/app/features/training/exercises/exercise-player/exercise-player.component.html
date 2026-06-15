@@ -52,9 +52,9 @@
         <div class="rhythm-bars">
           <!-- Count-in bar (beginner mode) -->
           <div *ngIf="isBeginnerMode" class="rhythm-bar count-in-bar">
-            <span *ngFor="let i of [1,2,3,4]"
+            <span *ngFor="let i of countInBeatNumbers"
                   class="rhythm-note count-in-note"
-                  [class.active]="isMetronomeRunning && currentBeat < 0 && (4 + currentBeat) === i"
+                  [class.active]="isMetronomeRunning && currentBeat < 0 && (countInBeats + currentBeat) === i"
                   [style.flex]="1">
               {{ i }}
             </span>
@@ -75,10 +75,10 @@
       </div>
       <p class="tap-instruction" *ngIf="!isMetronomeRunning && tapTimes.length === 0">
         Klopfe die Noten im richtigen Rhythmus. Pausen (grau) werden nicht geklopft.<br>
-        Nach dem Start hörst du 4 Einzählschläge.
+        Nach dem Start hörst du {{ countInBeats }} Einzählschläge.
       </p>
       <div class="metronome-info" *ngIf="isMetronomeRunning">
-        <span *ngIf="currentBeat <= 0" class="count-in">Zähle mit... {{ 4 + currentBeat }}</span>
+        <span *ngIf="currentBeat <= 0" class="count-in">Zähle mit... {{ countInBeats + currentBeat }}</span>
         <span *ngIf="currentBeat > 0" class="beat-display">Takt</span>
       </div>
       <div class="tap-count">Taps: {{ tapTimes.length }}</div>

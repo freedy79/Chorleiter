@@ -1,18 +1,49 @@
 <h1 mat-dialog-title>Dienstplan versenden</h1>
 <div mat-dialog-content>
-  <p>Empfänger auswählen:</p>
-  <mat-selection-list (selectionChange)="toggle($event.options[0].value, $event.options[0].selected)">
-    <mat-list-option *ngFor="let m of data.members" [value]="m.id">
-      {{ m.name }}, {{ m.firstName }} ({{ m.email }})
+  <div class="dialog-intro">
+    <p>Empfänger auswählen:</p>
+    <button mat-stroked-button type="button" (click)="addPersonalEntry()">
+      <mat-icon>person_add</mat-icon>
+      Persönlichen Kontakt hinzufügen
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="state-row" aria-live="polite">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>Empfänger werden geladen …</span>
+  </div>
+
+  <mat-selection-list *ngIf="!loading" (selectionChange)="toggle($event.options[0].value, $event.options[0].selected)">
+    <mat-list-option *ngFor="let option of options; trackBy: trackByOption" [value]="option" [selected]="isSelected(option)">
+      <div class="recipient-row">
+        <div class="recipient-main">
+          <span>{{ displayName(option) }}</span>
+          <span *ngIf="option.type === 'personal'" class="personal-badge">Persönlich</span>
+        </div>
+        <div *ngIf="getPersonalEntry(option) as entry" class="recipient-actions">
+          <button mat-icon-button type="button" aria-label="Persönlichen Kontakt bearbeiten" (click)="editPersonalEntry(entry, $event)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button type="button" aria-label="Persönlichen Kontakt löschen" (click)="deletePersonalEntry(entry, $event)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
     </mat-list-option>
   </mat-selection-list>
+
+  <p *ngIf="!loading && options.length === 0" class="empty-state">Keine Empfänger vorhanden. Füge einen persönlichen Kontakt oder weitere E-Mail-Adressen hinzu.</p>
+
   <mat-form-field appearance="outline" class="extra-emails">
     <mat-label>Weitere E-Mail-Adressen</mat-label>
-    <input matInput [(ngModel)]="emails" placeholder="name@example.com, ..." />
+    <input matInput [(ngModel)]="emails" placeholder="name@example.com, ..." [disabled]="sending" />
     <mat-hint>Mehrere Adressen durch Komma oder Leerzeichen trennen</mat-hint>
   </mat-form-field>
 </div>
 <div mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Abbrechen</button>
-  <button mat-flat-button color="primary" (click)="send()" [disabled]="!canSend">Senden</button>
+  <button mat-button (click)="cancel()" [disabled]="sending">Abbrechen</button>
+  <button mat-flat-button color="primary" (click)="send()" [disabled]="!canSend">
+    <mat-spinner *ngIf="sending" diameter="18"></mat-spinner>
+    <span>{{ sending ? 'Prüfen …' : 'Senden' }}</span>
+  </button>
 </div>

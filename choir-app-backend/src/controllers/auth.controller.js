@@ -54,18 +54,9 @@ function friendlyResetMessage() {
 }
 
 exports.signup = async (req, res) => {
-    try {
-    const [choir] = await db.choir.findOrCreate({ where: { name: req.body.choirName }, defaults: { name: req.body.choirName }});
-    const user = await db.user.create({
-      firstName: req.body.firstName,
-      name: req.body.name,
-      email: req.body.email?.toLowerCase(),
-      password: bcrypt.hashSync(req.body.password, 12)  // Erhöhe Salt Rounds von 8 auf 12
+    return res.status(410).send({
+      message: 'Direkte Registrierung wurde aus Sicherheitsgründen deaktiviert. Bitte nutze den neuen Chor-Registrierungsprozess mit E-Mail-Verifikation.'
     });
-    // Ordnen Sie den Benutzer dem Chor zu (fügt einen Eintrag in 'user_choirs' hinzu)
-    await user.addChoir(choir);
-    res.status(201).send({ message: "User registered successfully!" });
-  } catch (error) { res.status(500).send({ message: error.message }); }
 };
 
 exports.signin = async (req, res) => {

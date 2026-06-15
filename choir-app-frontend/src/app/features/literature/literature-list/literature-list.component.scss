@@ -47,21 +47,53 @@
 .filter-bar {
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 0.5rem;
-  padding: 0.5rem;
-  background-color: rgba(0, 0, 0, 0.04);
+  padding: 0.35rem 0.5rem;
+  background-color: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
   margin-bottom: 0.5rem;
   flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  button[mat-icon-button] {
+    flex-shrink: 0;
+  }
+
+  @include handset {
+    gap: 0.35rem;
+    padding: 0.25rem 0.35rem;
+  }
 }
 
 // Filter-Controls
 // Moved below to consolidate with focus improvements
 
 .preset-select {
-  width: 200px;
-  margin: 0 1rem;
-  background-color: rgba(0, 0, 0, 0.04);
-  height: 100%;
+  width: 220px;
+  min-width: 170px;
+  flex: 1 1 220px;
+  margin: 0;
+  background-color: transparent;
+
+  // Bring select height/spacing in line with icon actions
+  --mat-form-field-container-height: 40px;
+  --mat-form-field-container-vertical-padding: 8px;
+
+  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    background-color: transparent;
+  }
+
+  @include handset {
+    min-width: 150px;
+    flex-basis: 170px;
+  }
 }
 
 // Wrapper für Tabelle und Paginator

@@ -291,6 +291,10 @@ exports.updatePreferences = async (req, res) => {
             }
         }
 
+        if (incoming.recommendPromptDismissed !== undefined && typeof incoming.recommendPromptDismissed !== 'boolean') {
+            return res.status(400).send({ message: 'recommendPromptDismissed must be a boolean.' });
+        }
+
         const prefs = Object.assign({}, user.preferences || {}, incoming);
         user.preferences = prefs;
         await user.save();

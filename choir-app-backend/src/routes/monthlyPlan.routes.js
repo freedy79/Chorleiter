@@ -8,6 +8,7 @@ router.use(auth.verifyToken);
 
 // Specific ID-based routes must be defined before the year/month route to
 // avoid conflicts like GET /1/pdf being handled as year=1, month='pdf'.
+router.get("/email-recipient-preference", wrap(controller.getEmailRecipientPreference));
 router.get("/:id/pdf", wrap(controller.downloadPdf));
 router.post("/:id/email", role.requireNonDemo, role.requireDienstplanManager, wrap(controller.emailPdf));
 router.post("/:id/request-availability", role.requireNonDemo, role.requireDienstplanManager, wrap(controller.requestAvailability));

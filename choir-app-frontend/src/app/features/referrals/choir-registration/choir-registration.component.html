@@ -1,0 +1,75 @@
+<div class="choir-registration-page">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Chor registrieren</mat-card-title>
+      <mat-card-subtitle>
+        Die Nutzung ist kostenlos. Wir sind für den Betrieb auf Spenden angewiesen.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <p>Dieser Link ist 7 Tage gültig. Danach bitte neu über die Startseite registrieren.</p>
+
+      <form [formGroup]="form" class="register-form">
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="requesterName" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>E-Mail</mat-label>
+          <input matInput type="email" formControlName="requesterEmail" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Telefon</mat-label>
+          <input matInput formControlName="requesterPhone" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Chorname</mat-label>
+          <input matInput formControlName="choirName" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Ort</mat-label>
+          <input matInput formControlName="city" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Gemeinde (optional)</mat-label>
+          <input matInput formControlName="congregation" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" style="width:100%">
+          <mat-label>Bezirk (optional)</mat-label>
+          <input matInput formControlName="district" />
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="button" [disabled]="loading || verificationUnlocked" (click)="start()">
+          Registrierung starten
+        </button>
+
+        <ng-container *ngIf="verificationUnlocked">
+          <mat-divider style="margin: 16px 0"></mat-divider>
+
+          <p>
+            Die Chordaten sind jetzt gesperrt, bis die E-Mail-Verifikation abgeschlossen ist.
+          </p>
+
+          <mat-form-field appearance="outline" style="width:100%">
+            <mat-label>E-Mail-Verifizierungscode</mat-label>
+            <input matInput formControlName="code" />
+          </mat-form-field>
+
+          <button mat-stroked-button color="primary" type="button" [disabled]="verifying || verificationCompleted" (click)="verify()">
+            E-Mail verifizieren
+          </button>
+        </ng-container>
+      </form>
+
+      <p *ngIf="message" style="color:#2e7d32">{{ message }}</p>
+      <p *ngIf="error" style="color:#c62828">{{ error }}</p>
+    </mat-card-content>
+  </mat-card>
+</div>

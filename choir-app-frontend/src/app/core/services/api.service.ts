@@ -78,6 +78,11 @@ import { ChoirPublicPage, PublicChoirPageResponse, SlugAvailabilityResponse } fr
 import { ChatRoom, ChatUnreadSummary } from '../models/chat-room';
 import { ChatMessage, ChatMessageListResponse } from '../models/chat-message';
 import { ChatService } from './chat.service';
+import {
+  ReferralRecommendationPayload,
+  StartChoirRegistrationRequestPayload,
+  StartChoirRegistrationResponse
+} from '../models/choir-registration-request';
 
 /**
  * @deprecated ApiService is a legacy facade service that should no longer be used.
@@ -489,6 +494,10 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
+  resolveCreatePrefillToken(token: string): Observable<{ date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }> {
+    return this.eventService.resolveCreatePrefillToken(token);
+  }
+
   updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
@@ -535,8 +544,8 @@ export class ApiService {
     return this.monthlyPlanService.downloadMonthlyPlanPdf(id);
   }
 
-  emailMonthlyPlan(id: number, recipients: number[], emails: string[]): Observable<any> {
-    return this.monthlyPlanService.emailMonthlyPlan(id, recipients, emails);
+  emailMonthlyPlan(id: number, recipients: number[], emails: string[], addressBookEntryIds: number[] = [], saveSelection = true): Observable<any> {
+    return this.monthlyPlanService.emailMonthlyPlan(id, recipients, emails, addressBookEntryIds, saveSelection);
   }
 
   requestAvailability(id: number, recipients: number[]): Observable<any> {
@@ -1198,6 +1207,22 @@ export class ApiService {
   // --- Auth Methods ---
   signup(data: { firstName: string; name: string; email: string; choirName: string; password: string }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/signup`, data);
+  }
+
+  sendChoirRecommendation(data: ReferralRecommendationPayload): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/referrals/recommend`, data);
+  }
+
+  startChoirRegistration(token: string, data: StartChoirRegistrationRequestPayload): Observable<StartChoirRegistrationResponse> {
+    return this.http.post<StartChoirRegistrationResponse>(`${environment.apiUrl}/referrals/register-choir/${token}/start`, data);
+  }
+
+  startPublicChoirRegistration(data: StartChoirRegistrationRequestPayload): Observable<StartChoirRegistrationResponse> {
+    return this.http.post<StartChoirRegistrationResponse>(`${environment.apiUrl}/referrals/register-choir/public/start`, data);
+  }
+
+  verifyChoirRegistration(requestId: number, code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/referrals/register-choir/${requestId}/verify`, { code });
   }
 
   // --- Push Notification Methods ---

@@ -1,6 +1,47 @@
 <!-- Desktop: Table View -->
 <div class="desktop-view">
+  <div class="bulk-toolbar" *ngIf="availabilities.length > 0" role="region" aria-label="Ausgewählte Verfügbarkeiten bearbeiten">
+    <div class="selection-summary" aria-live="polite">
+      <mat-icon aria-hidden="true">checklist</mat-icon>
+      <span>{{ selectedCount }} ausgewählt</span>
+    </div>
+    <mat-form-field appearance="outline" class="bulk-status-field">
+      <mat-label>Status für Auswahl</mat-label>
+      <mat-select [value]="bulkStatus" (selectionChange)="bulkStatus = $any($event.value)" [disabled]="selectedCount === 0 || isBulkSaving">
+        <mat-option value="AVAILABLE">verfügbar</mat-option>
+        <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
+        <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="button" (click)="applyBulkStatus()" [disabled]="!canApplyBulkStatus">
+      <mat-icon aria-hidden="true">done_all</mat-icon>
+      Auf Auswahl anwenden
+    </button>
+    <button mat-button type="button" (click)="clearSelection()" [disabled]="selectedCount === 0 || isBulkSaving">
+      Auswahl aufheben
+    </button>
+  </div>
+
   <mat-table [dataSource]="availabilities" class="mat-elevation-z2">
+    <ng-container matColumnDef="select">
+      <mat-header-cell *matHeaderCellDef class="select-cell">
+        <mat-checkbox
+          [checked]="allVisibleSelected"
+          [indeterminate]="someVisibleSelected"
+          [disabled]="availabilities.length === 0 || isBulkSaving"
+          (change)="toggleAllVisible($event.checked)"
+          aria-label="Alle sichtbaren Termine auswählen">
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell *matCellDef="let a" class="select-cell">
+        <mat-checkbox
+          [checked]="isSelected(a.date)"
+          [disabled]="isBulkSaving"
+          (change)="toggleSelection(a.date, $event.checked)"
+          [attr.aria-label]="'Termin auswählen: ' + (a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE')">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
     <ng-container matColumnDef="date">
       <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
       <mat-cell *matCellDef="let a">
@@ -11,7 +52,7 @@
     <ng-container matColumnDef="status">
       <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
       <mat-cell *matCellDef="let a" [ngClass]="cellClass(a.status)">
-        <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))">
+        <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))" [disabled]="isBulkSaving">
           <mat-option value="AVAILABLE">verfügbar</mat-option>
           <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
           <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
@@ -32,17 +73,49 @@
 
 <!-- Mobile: Card View -->
 <div class="mobile-view">
+  <div class="bulk-toolbar mobile-bulk-toolbar" *ngIf="availabilities.length > 0" role="region" aria-label="Ausgewählte Verfügbarkeiten bearbeiten">
+    <div class="selection-summary" aria-live="polite">
+      <mat-icon aria-hidden="true">checklist</mat-icon>
+      <span>{{ selectedCount }} ausgewählt</span>
+    </div>
+    <mat-form-field appearance="outline" class="bulk-status-field">
+      <mat-label>Status für Auswahl</mat-label>
+      <mat-select [value]="bulkStatus" (selectionChange)="bulkStatus = $any($event.value)" [disabled]="selectedCount === 0 || isBulkSaving">
+        <mat-option value="AVAILABLE">verfügbar</mat-option>
+        <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
+        <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="bulk-actions">
+      <button mat-stroked-button color="primary" type="button" (click)="toggleAllVisible(!allVisibleSelected)" [disabled]="isBulkSaving">
+        {{ allVisibleSelected ? 'Alle abwählen' : 'Alle auswählen' }}
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="applyBulkStatus()" [disabled]="!canApplyBulkStatus">
+        Anwenden
+      </button>
+    </div>
+  </div>
+
   <div class="availability-cards" *ngIf="availabilities.length > 0; else mobileNoData">
-    <div class="availability-card" *ngFor="let a of availabilities"
+    <div class="availability-card" *ngFor="let a of availabilities; trackBy: trackByDate"
          [ngClass]="'card-' + cellClass(a.status)"
+         [class.card-selected]="isSelected(a.date)"
          role="article"
          [attr.aria-label]="(a.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE')">
+      <mat-checkbox
+        class="card-select-checkbox"
+        [checked]="isSelected(a.date)"
+        [disabled]="isBulkSaving"
+        (change)="toggleSelection(a.date, $event.checked)"
+        [attr.aria-label]="'Termin auswählen: ' + (a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE')">
+        auswählen
+      </mat-checkbox>
       <div class="card-date-row">
         <span class="card-date-text">{{ a.date | pureDate | date:'EEE dd.MM.yyyy':'Europe/Berlin':'de-DE' }}</span>
         <span class="card-holiday" *ngIf="a.holidayHint">{{ a.holidayHint }}</span>
       </div>
       <mat-select [value]="a.status" (selectionChange)="setStatus(a.date, $any($event.value))"
-                  class="card-status-select" aria-label="Verfügbarkeit setzen">
+                  class="card-status-select" aria-label="Verfügbarkeit setzen" [disabled]="isBulkSaving">
         <mat-option value="AVAILABLE">verfügbar</mat-option>
         <mat-option value="MAYBE">verfügbar nach Absprache</mat-option>
         <mat-option value="UNAVAILABLE">nicht verfügbar</mat-option>

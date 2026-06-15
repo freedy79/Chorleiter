@@ -1,0 +1,50 @@
+<div class="admin-shell" [class.mobile]="isMobile$ | async">
+
+  <!-- Desktop: persistente Kontext-Navigation -->
+  <nav class="admin-rail" *ngIf="(isMobile$ | async) === false" aria-label="Administration">
+    <a class="rail-home" routerLink="/admin/dashboard" routerLinkActive="active"
+       [routerLinkActiveOptions]="{ exact: true }">
+      <mat-icon>dashboard</mat-icon>
+      <span>Übersicht</span>
+    </a>
+
+    <div class="rail-group" *ngFor="let group of groups">
+      <div class="rail-category">{{ group.label }}</div>
+      <a *ngFor="let item of group.items"
+         class="rail-item"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [matTooltip]="item.description"
+         matTooltipPosition="right">
+        <mat-icon>{{ item.icon }}</mat-icon>
+        <span class="rail-label">{{ item.label }}</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Mobile: kompaktes Menü statt Leiste -->
+  <mat-toolbar class="admin-mobilebar" *ngIf="isMobile$ | async">
+    <a mat-icon-button routerLink="/admin/dashboard" aria-label="Admin-Übersicht">
+      <mat-icon>dashboard</mat-icon>
+    </a>
+    <span class="admin-mobilebar-title">Administration</span>
+    <span class="admin-mobilebar-spacer"></span>
+    <button mat-button [matMenuTriggerFor]="adminMenu" aria-label="Admin-Bereich wählen">
+      <mat-icon>menu</mat-icon>
+      <span>Bereiche</span>
+    </button>
+    <mat-menu #adminMenu="matMenu" class="admin-menu">
+      <ng-container *ngFor="let group of groups">
+        <div class="admin-menu-category">{{ group.label }}</div>
+        <a *ngFor="let item of group.items" mat-menu-item [routerLink]="item.route">
+          <mat-icon>{{ item.icon }}</mat-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      </ng-container>
+    </mat-menu>
+  </mat-toolbar>
+
+  <section class="admin-outlet">
+    <router-outlet></router-outlet>
+  </section>
+</div>

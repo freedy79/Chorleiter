@@ -5,10 +5,73 @@ const { monthlyPlanPdf } = require('../services/pdf.service');
 const emailService = require('../services/email.service');
 const { emailDisabled } = require('../services/emailTransporter');
 const { isPublicHoliday } = require('../services/holiday.service');
+const { normalizeEmail, isValidEmail, normalizeEmailList } = require('../utils/email.utils');
 const {
     getMonthlyPlanWithCache,
     invalidateMonthlyPlanCache
 } = require('../services/monthlyPlanCache.service');
+
+function normalizeIdArray(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return Array.from(new Set(
+        value
+            .map(id => parseInt(id, 10))
+            .filter(id => Number.isInteger(id) && id > 0)
+    ));
+}
+
+function normalizeJsonIdArray(value) {
+    if (Array.isArray(value)) {
+        return normalizeIdArray(value);
+    }
+    if (typeof value === 'string') {
+        try {
+            return normalizeIdArray(JSON.parse(value));
+        } catch {
+            return [];
+        }
+    }
+    return [];
+}
+
+async function saveRecipientPreference(req, selectedUserIds, selectedAddressBookEntryIds) {
+    if (!req.userId || !req.activeChoirId) {
+        return;
+    }
+
+    await db.monthly_plan_recipient_preference.upsert({
+        userId: req.userId,
+        choirId: req.activeChoirId,
+        selectedUserIds,
+        selectedAddressBookEntryIds
+    });
+}
+
+exports.getEmailRecipientPreference = async (req, res) => {
+    const preference = await db.monthly_plan_recipient_preference.findOne({
+        where: { userId: req.userId, choirId: req.activeChoirId }
+    });
+
+    if (!preference) {
+        return res.status(200).send({ selectedUserIds: [], selectedAddressBookEntryIds: [] });
+    }
+
+    const selectedUserIds = normalizeJsonIdArray(preference.selectedUserIds);
+    const selectedAddressBookEntryIds = normalizeJsonIdArray(preference.selectedAddressBookEntryIds);
+    const validAddressBookEntries = selectedAddressBookEntryIds.length > 0
+        ? await db.personal_address_book_entry.findAll({
+            where: { id: selectedAddressBookEntryIds, userId: req.userId, choirId: req.activeChoirId },
+            attributes: ['id']
+        })
+        : [];
+
+    res.status(200).send({
+        selectedUserIds,
+        selectedAddressBookEntryIds: validAddressBookEntries.map(entry => entry.id)
+    });
+};
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
@@ -143,9 +206,14 @@ exports.downloadPdf = async (req, res) => {
 
 exports.emailPdf = async (req, res) => {
     const id = req.params.id;
-    const recipients = Array.isArray(req.body.recipients) ? req.body.recipients : [];
-    const extraEmails = Array.isArray(req.body.emails) ? req.body.emails.filter(e => typeof e === 'string' && e) : [];
-    if (recipients.length === 0 && extraEmails.length === 0) {
+    const recipients = normalizeIdArray(req.body.recipients);
+    const addressBookEntryIds = normalizeIdArray(req.body.addressBookEntryIds);
+    const extraEmails = normalizeEmailList(req.body.emails);
+    const invalidEmails = extraEmails.filter(email => !isValidEmail(email));
+    if (invalidEmails.length > 0) {
+        return res.status(400).send({ message: 'Invalid email address.', invalidEmails });
+    }
+    if (recipients.length === 0 && addressBookEntryIds.length === 0 && extraEmails.length === 0) {
         return res.status(400).send({ message: 'recipients required' });
     }
     try {
@@ -172,10 +240,30 @@ exports.emailPdf = async (req, res) => {
             });
             emails = users.map(u => u.email);
         }
+        if (addressBookEntryIds.length > 0) {
+            const addressBookEntries = await db.personal_address_book_entry.findAll({
+                where: {
+                    id: addressBookEntryIds,
+                    userId: req.userId,
+                    choirId: req.activeChoirId
+                }
+            });
+            emails = emails.concat(addressBookEntries.map(entry => entry.email));
+        }
         emails = emails.concat(extraEmails);
+        emails = Array.from(new Map(emails
+            .map(email => [normalizeEmail(email), email])
+            .filter(([normalized]) => normalized && isValidEmail(normalized))
+        ).values());
+        if (emails.length === 0) {
+            return res.status(400).send({ message: 'recipients required' });
+        }
         const buffer = await monthlyPlanPdf(plan.toJSON());
         if (!emailDisabled()) {
             await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
+        }
+        if (req.body.saveSelection !== false) {
+            await saveRecipientPreference(req, recipients, addressBookEntryIds);
         }
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {

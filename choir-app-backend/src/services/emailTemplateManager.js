@@ -61,6 +61,50 @@ const DEFAULT_TEMPLATES = {
           '<p>dies ist eine Erinnerung an die bevorstehende <b>{{event_type}}</b> am <b>{{event_date}}</b> im Chor <b>{{choir}}</b>.</p>' +
           '<p>{{event_notes}}</p>' +
           '<p>Viele Grüße<br>{{choir}}</p>'
+  },
+  'missing-event-reminder': {
+    subject: 'Bitte Ereignis nachtragen: {{event_type}} vom {{event_date}} – {{choir}}',
+    body: '<p>Hallo {{first_name}} {{surname}},</p>' +
+          '<p>für den Dienstplan-Eintrag <b>{{event_type}}</b> vom <b>{{event_date}}</b> im Chor <b>{{choir}}</b> wurde noch kein passendes Ereignis eingetragen.</p>' +
+          '<p>{{event_notes}}</p>' +
+          '<p><a href="{{link}}">Ereignis jetzt mit vorausgefüllten Werten anlegen</a></p>' +
+          '<p>Viele Grüße<br>{{choir}}</p>'
+  },
+  'choir-recommendation': {
+      subject: 'NAK Chorleiter – kurz ansehen',
+      body: '<p>Hallo {{recipient_name}},</p>' +
+        '<p><strong>{{teaser}}</strong></p>' +
+      '<p><a href="{{registration_link}}">{{cta_text}}</a></p>' +
+      '<p><a href="{{learn_more_link}}">Mehr erfahren</a></p>'
+  },
+  'choir-registration-verification': {
+    subject: 'Verifizierungscode für die Chorregistrierung',
+    body: '<p>Hallo {{requester_name}},</p>' +
+          '<p>dein Verifizierungscode für die Chorregistrierung lautet: <b>{{verification_code}}</b></p>' +
+          '<p>Der Code ist bis {{expiry}} gültig.</p>'
+  },
+  'choir-registration-admin-notify': {
+    subject: 'Neue Chorregistrierung wartet auf Freigabe',
+    body: '<p>Es wurde eine neue Chorregistrierung eingereicht:</p>' +
+          '<ul>' +
+          '<li><b>Name:</b> {{requester_name}}</li>' +
+          '<li><b>E-Mail:</b> {{requester_email}}</li>' +
+          '<li><b>Telefon:</b> {{requester_phone}}</li>' +
+          '<li><b>Chor:</b> {{choir_name}}</li>' +
+          '<li><b>Ort:</b> {{city}}</li>' +
+          '<li><b>Gemeinde:</b> {{congregation}}</li>' +
+          '<li><b>Bezirk:</b> {{district}}</li>' +
+          '</ul>'
+  },
+  'choir-registration-decision': {
+    subject: 'Ergebnis deiner Chorregistrierung',
+    body: '<p>Hallo {{requester_name}},</p>' +
+          '<p>{{decision_message}}</p>' +
+          '<p><b>Chor:</b> {{choir_name}}</p>' +
+          '<p><b>Status:</b> {{decision_status}}</p>' +
+          '<p>{{setup_password_hint}}</p>' +
+          '<p>{{setup_password_link-html}}</p>' +
+          '<p><b>Ablehnungsgrund:</b> {{rejection_reason}}</p>'
   }
 };
 

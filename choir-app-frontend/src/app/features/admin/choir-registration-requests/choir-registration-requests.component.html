@@ -1,0 +1,105 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Chor-Registrierungsanfragen</mat-card-title>
+    <mat-card-subtitle>
+      Neue Chor-Registrierungen prüfen, freigeben oder ablehnen.
+    </mat-card-subtitle>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="toolbar">
+      <mat-button-toggle-group [(ngModel)]="statusFilter" (change)="applyFilter()" aria-label="Statusfilter">
+        <mat-button-toggle value="pending">Offen</mat-button-toggle>
+        <mat-button-toggle value="done">Erledigt</mat-button-toggle>
+        <mat-button-toggle value="all">Alle</mat-button-toggle>
+      </mat-button-toggle-group>
+
+      <button mat-stroked-button type="button" (click)="load()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Aktualisieren
+      </button>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Lade Registrierungsanfragen…</p>
+    </div>
+
+    <div *ngIf="!isLoading && dataSource.filteredData.length === 0" class="empty-state">
+      Keine Registrierungsanfragen für den gewählten Filter.
+    </div>
+
+    <div class="table-wrapper" *ngIf="!isLoading && dataSource.filteredData.length > 0">
+      <table mat-table [dataSource]="dataSource" class="full-width-table">
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-chip [color]="item.status === 'PENDING_REVIEW' ? 'accent' : item.status === 'APPROVED' ? 'primary' : 'warn'" selected>
+              {{ item.status === 'PENDING_REVIEW' ? 'Offen' : item.status === 'APPROVED' ? 'Freigegeben' : item.status === 'REJECTED' ? 'Abgelehnt' : 'Abgelaufen' }}
+            </mat-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="requester">
+          <th mat-header-cell *matHeaderCellDef>Antragsteller</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="strong">{{ item.requesterName }}</div>
+            <div>{{ item.requesterEmail }}</div>
+            <div *ngIf="item.requesterPhone">{{ item.requesterPhone }}</div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="choir">
+          <th mat-header-cell *matHeaderCellDef>Chor</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="strong">{{ item.choirName }}</div>
+            <div *ngIf="item.congregation">Gemeinde: {{ item.congregation }}</div>
+            <div *ngIf="item.district">Bezirk: {{ item.district }}</div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef>Ort</th>
+          <td mat-cell *matCellDef="let item">{{ item.city }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="verified">
+          <th mat-header-cell *matHeaderCellDef>E-Mail bestätigt</th>
+          <td mat-cell *matCellDef="let item">
+            <mat-icon [color]="item.emailVerifiedAt ? 'primary' : 'warn'">
+              {{ item.emailVerifiedAt ? 'verified' : 'error_outline' }}
+            </mat-icon>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef>Eingang</th>
+          <td mat-cell *matCellDef="let item">{{ item.createdAt | date:'dd.MM.yyyy HH:mm' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Aktionen</th>
+          <td mat-cell *matCellDef="let item">
+            <div class="actions" *ngIf="isPending(item); else readonlyState">
+              <button mat-flat-button color="primary" type="button" (click)="approve(item)">
+                Freigeben
+              </button>
+              <button mat-stroked-button color="warn" type="button" (click)="reject(item)">
+                Ablehnen
+              </button>
+            </div>
+            <ng-template #readonlyState>
+              <span class="muted" *ngIf="item.rejectionReason; else staticDone">{{ item.rejectionReason }}</span>
+              <ng-template #staticDone>
+                <span class="muted">Keine Aktion nötig</span>
+              </ng-template>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns; trackBy: trackById"></tr>
+      </table>
+    </div>
+  </mat-card-content>
+</mat-card>
