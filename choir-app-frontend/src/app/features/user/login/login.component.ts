@@ -7,7 +7,6 @@ import { AuthService } from 'src/app/core/services/auth.service';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
 import { PasswordResetDialogComponent } from './password-reset-dialog.component';
-import { DemoLeadDialogComponent } from './demo-lead-dialog.component';
 
 @Component({
   selector: 'app-login',
@@ -29,7 +28,6 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   sessionExpired = false;
   loginError: string | null = null;
-  demoLeadMessage: string | null = null;
   returnUrl: string | null = null;
 
   constructor(
@@ -93,28 +91,6 @@ export class LoginComponent implements OnInit {
       complete: () => {
         this.isLoading = false;
       }
-    });
-  }
-
-  openDemoLeadDialog(): void {
-    const dialogRef = this.dialog.open(DemoLeadDialogComponent, {
-      width: '420px',
-    });
-
-    dialogRef.afterClosed().subscribe((email?: string) => {
-      if (!email) {
-        return;
-      }
-
-      this.demoLeadMessage = null;
-      this.authService.requestDemoLead(email).subscribe({
-        next: (response) => {
-          this.demoLeadMessage = response.message;
-        },
-        error: (err) => {
-          this.demoLeadMessage = err.error?.message || 'Der Demo-Zugang konnte nicht angefragt werden.';
-        }
-      });
     });
   }
 }

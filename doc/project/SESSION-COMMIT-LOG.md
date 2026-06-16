@@ -21,6 +21,7 @@ This file is the shared, repo-local source of truth for session-level one-line s
 
 ## Recent entries
 
+2026-06-16 | feat(frontend): improve login, welcome and availability UX flow | frontend login, home welcome, availability + tests | Refined user-facing flow and added availability component test coverage.
 2026-06-16 | feat(auth): add demo lead flow and tighten admin/choir guard behavior | backend auth/routes/models, frontend guards/login/admin views | Introduced demo lead model/init flow plus role-aware navigation and access updates.
 2026-06-16 | chore(git): enforce session commit log guard via pre-commit hook | root scripts, .githooks, package scripts | Added check script, hook installer, hooksPath bootstrap and LF-safe hook config.
 2026-06-16 | feat(mail): track trigger context for outgoing mails | backend mail logging, frontend admin mail views | Added request-context-aware mail metadata and migration support.

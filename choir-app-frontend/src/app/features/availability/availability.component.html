@@ -36,6 +36,7 @@
       [year]="selected.year"
       [month]="selected.month"
       [availabilitiesData]="monthlyAvailabilities"
+      [notesByDate]="monthlyNotesByDate"
       [targetUserId]="targetUserIdForEdit"
     ></app-availability-table>
   </ng-container>
@@ -56,6 +57,7 @@
           [year]="group.period.year"
           [month]="group.period.month"
           [availabilitiesData]="group.availabilities"
+          [notesByDate]="group.notesByDate"
           [targetUserId]="targetUserIdForEdit"
         ></app-availability-table>
       </section>

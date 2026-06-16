@@ -7,75 +7,58 @@
         Noten, Termine, Chat und Dienstpläne –
         alles an einem Ort, für Sänger und Chorleiter.
       </p>
-
-      <div class="cta-buttons">
-        <a mat-raised-button color="primary"
-           [routerLink]="isBackendAvailable ? '/register' : null"
-           [attr.aria-disabled]="!isBackendAvailable"
-           [class.disabled]="!isBackendAvailable"
-           [attr.tabindex]="!isBackendAvailable ? -1 : null"
-           (click)="!isBackendAvailable && $event.preventDefault()"
-           class="primary-cta">
-          <mat-icon>person_add</mat-icon>
-          Jetzt kostenlos registrieren
-        </a>
-        <a mat-raised-button
-           [routerLink]="isBackendAvailable ? '/login' : null"
-           [attr.aria-disabled]="!isBackendAvailable"
-           [class.disabled]="!isBackendAvailable"
-           [attr.tabindex]="!isBackendAvailable ? -1 : null"
-           (click)="!isBackendAvailable && $event.preventDefault()"
-           class="secondary-cta">
-          Anmelden
-        </a>
-      </div>
     </div>
   </div>
+
+  <section class="auth-section">
+    <p *ngIf="demoLeadMessage" class="demo-message">{{ demoLeadMessage }}</p>
+
+    <div class="cta-buttons">
+      <a mat-flat-button color="primary"
+         [routerLink]="isBackendAvailable ? '/register' : null"
+         [attr.aria-disabled]="!isBackendAvailable"
+         [class.disabled]="!isBackendAvailable"
+         [attr.tabindex]="!isBackendAvailable ? -1 : null"
+         (click)="!isBackendAvailable && $event.preventDefault()"
+         class="primary-cta">
+        <mat-icon>person_add</mat-icon>
+        Jetzt kostenlos registrieren
+      </a>
+      <a mat-stroked-button color="primary"
+         [routerLink]="isBackendAvailable ? '/login' : null"
+         [attr.aria-disabled]="!isBackendAvailable"
+         [class.disabled]="!isBackendAvailable"
+         [attr.tabindex]="!isBackendAvailable ? -1 : null"
+         (click)="!isBackendAvailable && $event.preventDefault()"
+         class="secondary-cta">
+        Anmelden
+      </a>
+    </div>
+  </section>
 
   <div class="demo-section">
     <mat-card class="demo-card">
       <mat-card-header>
         <mat-icon mat-card-avatar class="demo-icon">visibility</mat-icon>
-        <mat-card-title>Demo-Account testen</mat-card-title>
-        <mat-card-subtitle>Probieren Sie Chorleiter ohne Registrierung aus</mat-card-subtitle>
+        <mat-card-title>Demo testen</mat-card-title>
+        <mat-card-subtitle>Probier die App ohne Registrierung im Demo-Umfang aus</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
         <p class="demo-intro">
-          Entdecken Sie alle Funktionen mit unserem Demo-Account:
+          Du möchtest dir einen schnellen Eindruck verschaffen?
+          Dann schick dir jetzt einen persönlichen Demo-Link an deine E-Mail-Adresse.
         </p>
 
-        <div class="demo-credentials">
-          <div class="credential-row">
-            <mat-icon>email</mat-icon>
-            <div class="credential-info">
-              <span class="label">E-Mail:</span>
-              <code class="value">{{ demoEmail }}</code>
-            </div>
-          </div>
-          <div class="credential-row">
-            <mat-icon>lock</mat-icon>
-            <div class="credential-info">
-              <span class="label">Passwort:</span>
-              <code class="value">{{ demoPassword }}</code>
-            </div>
-          </div>
-        </div>
-
         <div class="demo-note">
-          <mat-icon>info</mat-icon>
-          <p>Im Demo-Modus können Sie alle Funktionen ansehen, aber keine Änderungen speichern.</p>
+          <mat-icon>mark_email_read</mat-icon>
+          <p>Du erhältst einen Link per Mail und kannst die Demo direkt öffnen.</p>
         </div>
       </mat-card-content>
       <mat-card-actions align="end">
-        <a mat-button color="primary"
-           [routerLink]="isBackendAvailable ? '/login' : null"
-           [attr.aria-disabled]="!isBackendAvailable"
-           [class.disabled]="!isBackendAvailable"
-           [attr.tabindex]="!isBackendAvailable ? -1 : null"
-           (click)="!isBackendAvailable && $event.preventDefault()">
+        <button mat-raised-button color="primary" type="button" (click)="openDemoLeadDialog()" [disabled]="!isBackendAvailable">
           <mat-icon>login</mat-icon>
-          Demo-Account ausprobieren
-        </a>
+          Demo testen
+        </button>
       </mat-card-actions>
     </mat-card>
   </div>
