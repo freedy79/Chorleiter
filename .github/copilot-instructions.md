@@ -32,6 +32,13 @@ cd choir-app-frontend && npm run startwithtimestamp
 npm run test:backend
 ```
 
+### Session Commit Logging
+- Maintain `doc/project/SESSION-COMMIT-LOG.md` as the source of truth for session-level change summaries.
+- Before creating a commit, review the latest log entries and compare them against the current diff; if the log and diff diverge, update the log line first.
+- After each meaningful session, append exactly one conventional one-liner per coherent change set in the format `YYYY-MM-DD | type(scope): summary | areas | notes`.
+- Prefer one entry per feature/fix/cleanup. If a session contains unrelated changes, split them into separate lines.
+- Use the log entry as the basis for the commit subject whenever possible.
+
 ### Database Initialization
 Backend auto-initializes on first start via `init/index.js`: migrations → schema sync → seed data. Manual commands:
 ```bash

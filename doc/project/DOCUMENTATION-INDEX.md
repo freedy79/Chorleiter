@@ -15,6 +15,7 @@ Dieses Dokument bietet einen Überblick über alle Dokumentationsdateien im Proj
 | Datei | Zweck | Anwendungsbereich |
 |-------|-------|-------------------|
 | [../.github/copilot-instructions.md](../.github/copilot-instructions.md) | 📋 Hauptkonfiguration für GitHub Copilot | Automatisch geladen |
+| [SESSION-COMMIT-LOG.md](SESSION-COMMIT-LOG.md) | 🧾 Session-level commit one-liner log | Commit-Planung & Verifikation |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | 🏗️ **Vollständige System-Architektur** | Backend + Frontend + DB + Deployment |
 | [../.github/agents/ui-ux-instructions.md](../.github/agents/ui-ux-instructions.md) | 🎨 **UI/UX Standards & Guidelines** | Alle Angular-Komponenten |
 
