@@ -12,6 +12,7 @@ export const adminRoutes: Routes = [
         // Persistente Admin-Hülle mit eigener Kontext-Navigation
         path: '',
         component: AdminShellComponent,
+        data: { showPageHeader: false },
         children: [
           // Einstieg / Launchpad
           { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
@@ -81,6 +82,11 @@ export const adminRoutes: Routes = [
             path: 'donations',
             loadComponent: () => import('./donations/donations.component').then(m => m.DonationsComponent),
             data: { title: 'Admin – Spenden' }
+          },
+          {
+            path: 'backup',
+            loadComponent: () => import('./backup-hub/backup-hub.component').then(m => m.BackupHubComponent),
+            data: { title: 'Admin – Backup' }
           },
 
           // ----- Legacy-Routen → Redirect auf den passenden Hub-Tab -----

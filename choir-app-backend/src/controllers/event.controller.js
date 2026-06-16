@@ -10,6 +10,7 @@ const { Op, fn, col, where } = require("sequelize");
 const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const jwt = require("jsonwebtoken");
 const { decodeEventPrefillToken } = require('../utils/event-prefill-link');
+const reminderService = require('../services/reminder.service');
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -502,6 +503,36 @@ exports.resolveCreatePrefillToken = async (req, res) => {
         monthlyPlanId: payload.monthlyPlanId || null,
         programId: payload.programId || null
     });
+};
+
+exports.previewMissingServiceEvents = async (req, res) => {
+    const now = req.query.now ? new Date(req.query.now) : new Date();
+    if (Number.isNaN(now.getTime())) {
+        return res.status(400).send({ message: 'Invalid now query parameter.' });
+    }
+
+    const result = await reminderService.checkAndSendMissingServiceEventReminders({
+        now,
+        choirId: req.activeChoirId,
+        dryRun: true
+    });
+
+    return res.status(200).send(result);
+};
+
+exports.sendMissingServiceEventReminders = async (req, res) => {
+    const now = req.body?.now ? new Date(req.body.now) : new Date();
+    if (Number.isNaN(now.getTime())) {
+        return res.status(400).send({ message: 'Invalid now in request body.' });
+    }
+
+    const result = await reminderService.checkAndSendMissingServiceEventReminders({
+        now,
+        choirId: req.activeChoirId,
+        dryRun: false
+    });
+
+    return res.status(200).send(result);
 };
 
 /**

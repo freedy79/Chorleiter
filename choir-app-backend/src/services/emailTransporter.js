@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const logger = require('../config/logger');
+const { getRequestContext } = require('../config/request-context');
 
 function emailDisabled() {
   return process.env.DISABLE_EMAIL === 'true';
@@ -169,12 +170,23 @@ async function sendMail(options, overrideSettings) {
     try {
       const db = require('../models');
       if (db && db.mail_log) {
+        const ctx = getRequestContext();
+        const triggerUserId = options.triggerUserId ?? ctx.userId ?? null;
+        const triggerChoirId = options.triggerChoirId ?? ctx.activeChoirId ?? null;
+        const triggerSource = options.triggerSource ??
+          (ctx.userId ? 'user_action' : 'system_job');
+        const triggerAction = options.triggerAction ?? null;
+
         await db.mail_log.create({
           recipients: recipients.join(', '),
           subject: options.subject,
           body: options.text || options.html || '',
           status,
-          errorMessage
+          errorMessage,
+          triggerUserId,
+          triggerChoirId,
+          triggerSource,
+          triggerAction
         }).catch(() => {});
       }
     } catch (err) {

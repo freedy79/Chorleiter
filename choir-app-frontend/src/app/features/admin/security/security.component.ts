@@ -7,7 +7,6 @@ import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { LoginAttemptsComponent } from '../login-attempts/login-attempts.component';
 import { ProtocolsComponent } from '../protocols/protocols.component';
-import { BackupComponent } from '../backup/backup.component';
 import { LogViewerComponent } from '../log-viewer/log-viewer.component';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { OtaTokensComponent } from '../ota-tokens/ota-tokens.component';
@@ -25,13 +24,12 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
     AdminPageHeaderComponent,
     LoginAttemptsComponent,
     ProtocolsComponent,
-    BackupComponent,
     LogViewerComponent,
     OtaTokensComponent
   ]
 })
 export class SecurityComponent {
-  private readonly tabKeys = ['login', 'protocols', 'backup', 'logs', 'ota'];
+  private readonly tabKeys = ['login', 'protocols', 'logs', 'ota'];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 

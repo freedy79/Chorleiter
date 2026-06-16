@@ -24,39 +24,6 @@
 // DESKTOP TABLE: STATUS COLORS
 // ============================================================================
 
-.bulk-toolbar {
-  display: flex;
-  align-items: center;
-  gap: $spacing-sm;
-  flex-wrap: wrap;
-  margin-bottom: $spacing-md;
-  padding: $spacing-sm $spacing-md;
-  border-radius: 8px;
-  @include card-background;
-  @include adaptive-border(1px);
-}
-
-.selection-summary {
-  display: inline-flex;
-  align-items: center;
-  gap: $spacing-xs;
-  min-width: 8rem;
-  font-weight: 600;
-  @include readable-text;
-}
-
-.bulk-status-field {
-  min-width: 16rem;
-
-  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-    display: none;
-  }
-}
-
-.select-cell {
-  flex: 0 0 4rem;
-}
-
 .available {
   background-color: #c8e6c9;
   @include dark-mode { background-color: rgba(76, 175, 80, 0.2); }
@@ -75,6 +42,106 @@
 .holiday {
   font-style: italic;
   @include secondary-text;
+}
+
+.status-cell {
+  padding-top: $spacing-xs;
+  padding-bottom: $spacing-xs;
+}
+
+.notes-cell {
+  white-space: normal;
+}
+
+.note-text {
+  @include readable-text;
+  @include responsive-font-size(0.875rem);
+}
+
+.status-toggle-group {
+  display: inline-flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+.status-toggle {
+  appearance: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.45rem 0.9rem;
+  min-height: $touch-target-min;
+  min-width: 0;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+  @include responsive-font-size(0.875rem);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color, #1976d2);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 1;
+  }
+
+  &.status-toggle--active {
+    box-shadow: 0 0 0 1px currentColor inset;
+  }
+
+  &:not(.status-toggle--active) {
+    background: #f1f3f4;
+    color: #7a869a;
+    border-color: #e0e3e7;
+
+    @include dark-mode {
+      background: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.58);
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+  }
+}
+
+.status-toggle--available.status-toggle--active {
+  background: #dcedd8;
+  color: #1f5d1f;
+  border-color: #9ed39a;
+
+  @include dark-mode {
+    background: rgba(76, 175, 80, 0.22);
+    color: #9fe0a3;
+    border-color: rgba(102, 187, 106, 0.45);
+  }
+}
+
+.status-toggle--maybe.status-toggle--active {
+  background: #fff3c4;
+  color: #8c5a00;
+  border-color: #ffd666;
+
+  @include dark-mode {
+    background: rgba(255, 193, 7, 0.18);
+    color: #ffd666;
+    border-color: rgba(255, 213, 79, 0.4);
+  }
+}
+
+.status-toggle--unavailable.status-toggle--active {
+  background: #ffd7da;
+  color: #8d1b24;
+  border-color: #f1a4ad;
+
+  @include dark-mode {
+    background: rgba(244, 67, 54, 0.18);
+    color: #ff9da1;
+    border-color: rgba(239, 83, 80, 0.42);
+  }
 }
 
 // ============================================================================
@@ -118,26 +185,6 @@
   }
 }
 
-.mobile-bulk-toolbar {
-  align-items: stretch;
-  flex-direction: column;
-  margin-bottom: $spacing-sm;
-}
-
-.bulk-actions {
-  display: flex;
-  gap: $spacing-sm;
-
-  button {
-    flex: 1;
-    min-height: $touch-target-min;
-  }
-}
-
-.card-select-checkbox {
-  align-self: flex-start;
-}
-
 .card-date-row {
   display: flex;
   flex-direction: column;
@@ -156,9 +203,19 @@
   @include secondary-text;
 }
 
-.card-status-select {
+.card-note {
+  @include readable-text;
+  @include responsive-font-size(0.875rem);
+}
+
+.status-toggle-group--mobile {
   width: 100%;
-  min-height: $touch-target-min;
+
+  .status-toggle {
+    flex: 1 1 calc(33.333% - #{$spacing-xs});
+    justify-content: center;
+    text-align: center;
+  }
 }
 
 // ============================================================================

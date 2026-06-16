@@ -13,8 +13,8 @@
     <span>Empfänger werden geladen …</span>
   </div>
 
-  <mat-selection-list *ngIf="!loading" (selectionChange)="toggle($event.options[0].value, $event.options[0].selected)">
-    <mat-list-option *ngFor="let option of options; trackBy: trackByOption" [value]="option" [selected]="isSelected(option)">
+  <mat-selection-list *ngIf="!loading" (selectionChange)="toggleByKey($event.options[0].value, $event.options[0].selected)">
+    <mat-list-option *ngFor="let option of options; trackBy: trackByOption" [value]="option.key" [selected]="isSelected(option)">
       <div class="recipient-row">
         <div class="recipient-main">
           <span>{{ displayName(option) }}</span>

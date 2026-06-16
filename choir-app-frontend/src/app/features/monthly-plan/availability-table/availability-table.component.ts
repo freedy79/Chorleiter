@@ -7,10 +7,16 @@ import { getHolidayName } from '@shared/util/holiday';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { parseDateOnly } from '@shared/util/date';
-import { forkJoin, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 type AvailabilityStatus = NonNullable<UserAvailability['status']>;
+
+const STATUS_OPTIONS: Array<{ value: AvailabilityStatus; label: string; className: string }> = [
+  { value: 'AVAILABLE', label: 'Verfügbar', className: 'available' },
+  { value: 'MAYBE', label: 'Vorbehalt', className: 'maybe' },
+  { value: 'UNAVAILABLE', label: 'Nicht verfügbar', className: 'unavailable' }
+];
 
 @Component({
   selector: 'app-availability-table',
@@ -23,12 +29,12 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
   @Input() year!: number;
   @Input() month!: number;
   @Input() availabilitiesData?: UserAvailability[] | null;
+  @Input() notesByDate: Record<string, string> = {};
   @Input() targetUserId?: number;
   availabilities: UserAvailability[] = [];
-  displayedColumns = ['select', 'date', 'status'];
-  selectedDates = new Set<string>();
-  bulkStatus: AvailabilityStatus | null = null;
-  isBulkSaving = false;
+  displayedColumns = ['date', 'notes', 'status'];
+  readonly statusOptions = STATUS_OPTIONS;
+  isSaving = false;
   private useExternalData = false;
   private loadRequestId = 0;
   private destroyed = false;
@@ -75,9 +81,9 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
   private setAvailabilities(data: UserAvailability[]): void {
     this.availabilities = data.map(v => ({
       ...v,
+      status: v.status ?? 'AVAILABLE',
       holidayHint: (v.holidayHint ?? getHolidayName(parseDateOnly(v.date))) || undefined
     }));
-    this.keepOnlyVisibleSelections();
   }
 
   load(): void {
@@ -103,97 +109,48 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
       });
   }
 
-  setStatus(date: string, status: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'): void {
-    const i = this.availabilities.findIndex(v => v.date === date);
-    if (i >= 0) this.availabilities[i].status = status;
-
-    this.saveStatus(date, status).subscribe(updated => this.updateLocalAvailability(updated));
-  }
-
-  toggleSelection(date: string, checked: boolean): void {
-    if (checked) {
-      this.selectedDates.add(date);
-    } else {
-      this.selectedDates.delete(date);
-    }
-  }
-
-  isSelected(date: string): boolean {
-    return this.selectedDates.has(date);
-  }
-
-  toggleAllVisible(checked: boolean): void {
-    if (checked) {
-      this.availabilities.forEach(a => this.selectedDates.add(a.date));
-    } else {
-      this.clearSelection();
-    }
-  }
-
-  get selectedCount(): number {
-    return this.selectedDates.size;
-  }
-
-  get allVisibleSelected(): boolean {
-    return this.availabilities.length > 0 && this.availabilities.every(a => this.selectedDates.has(a.date));
-  }
-
-  get someVisibleSelected(): boolean {
-    return this.availabilities.some(a => this.selectedDates.has(a.date)) && !this.allVisibleSelected;
-  }
-
-  get canApplyBulkStatus(): boolean {
-    return this.selectedCount > 0 && this.bulkStatus !== null && !this.isBulkSaving;
-  }
-
-  applyBulkStatus(): void {
-    if (!this.canApplyBulkStatus || this.bulkStatus === null) {
+  setStatus(date: string, status: AvailabilityStatus): void {
+    const current = this.availabilities.find(v => v.date === date);
+    if (!current || current.status === status || this.isSaving) {
       return;
     }
 
-    const selectedVisibleDates = this.availabilities
-      .map(a => a.date)
-      .filter(date => this.selectedDates.has(date));
+    this.isSaving = true;
+    this.updateLocalStatus(date, status);
 
-    if (selectedVisibleDates.length === 0) {
-      this.clearSelection();
-      return;
-    }
-
-    const status = this.bulkStatus;
-    this.isBulkSaving = true;
-    selectedVisibleDates.forEach(date => this.updateLocalStatus(date, status));
-
-    forkJoin(selectedVisibleDates.map(date => this.saveStatus(date, status)))
-      .pipe(finalize(() => this.isBulkSaving = false))
+    this.saveStatus(date, status)
+      .pipe(finalize(() => this.isSaving = false))
       .subscribe({
-        next: updatedItems => {
-          updatedItems.forEach(updated => this.updateLocalAvailability(updated));
-          this.clearSelection();
-          this.bulkStatus = null;
-        },
+        next: updated => this.updateLocalAvailability(updated),
         error: error => {
-          console.error('Fehler beim Speichern der ausgewählten Verfügbarkeiten', error);
+          console.error('Fehler beim Speichern der Verfügbarkeit', error);
           this.load();
         }
       });
-  }
-
-  clearSelection(): void {
-    this.selectedDates.clear();
   }
 
   trackByDate(_: number, availability: UserAvailability): string {
     return availability.date;
   }
 
-  cellClass(status?: string): string {
-    switch (status) {
-      case 'AVAILABLE': return 'available';
-      case 'MAYBE': return 'maybe';
-      case 'UNAVAILABLE': return 'unavailable';
-      default: return '';
-    }
+  noteForDate(date: string): string {
+    return this.notesByDate[this.dateKey(date)]?.trim() ?? '';
+  }
+
+  hasNote(date: string): boolean {
+    return this.noteForDate(date).length > 0;
+  }
+
+  statusClass(status: AvailabilityStatus): string {
+    return STATUS_OPTIONS.find(option => option.value === status)?.className ?? 'available';
+  }
+
+  isActiveStatus(date: string, status: AvailabilityStatus): boolean {
+    return this.availabilities.find(v => v.date === date)?.status === status;
+  }
+
+  buttonAriaLabel(status: AvailabilityStatus, date: string): string {
+    return `${STATUS_OPTIONS.find(option => option.value === status)?.label ?? status} für ${date}`;
   }
 
   private isStale(loadId: number): boolean {
@@ -211,6 +168,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
     if (index >= 0) {
       this.availabilities[index] = {
         ...updated,
+        status: updated.status ?? 'AVAILABLE',
         holidayHint: getHolidayName(parseDateOnly(updated.date)) || undefined
       };
     }
@@ -226,12 +184,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
     }
   }
 
-  private keepOnlyVisibleSelections(): void {
-    const visibleDates = new Set(this.availabilities.map(a => a.date));
-    this.selectedDates.forEach(date => {
-      if (!visibleDates.has(date)) {
-        this.selectedDates.delete(date);
-      }
-    });
+  private dateKey(date: string): string {
+    return date.slice(0, 10);
   }
 }

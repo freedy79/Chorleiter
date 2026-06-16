@@ -22,16 +22,84 @@ mat-tab-group { width: 100%; }
 // MONTH NAVIGATION
 // ============================================================================
 
-.manual-inputs { margin-bottom: 1rem; display: flex; flex-flow: row; max-width: 400px; }
+.month-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 1rem 0;
+}
 
-.month-nav {
-  display: flex; justify-content: space-between; align-items: center; margin: 1rem 0;
-  button { display: flex; align-items: center; gap: $spacing-xs; min-height: $touch-target-min;
-    @include handset { min-width: $touch-target-min; padding: $spacing-sm; }
+.month-nav-pill {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border: 1px solid #e2e7ef;
+  box-shadow: 0 1px 3px rgba(20, 34, 58, .05);
+  @include dark-mode {
+    background: var(--surface-color, #1e2532);
+    border-color: var(--border-color, #3a4358);
   }
 }
 
-.month-label { font-weight: 600; font-size: 1rem; @include readable-text; }
+.month-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 15px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #5a6678;
+  background: none;
+  border: none;
+  cursor: pointer;
+  @include dark-mode { color: var(--text-secondary, #9aa4b2); }
+  &:hover {
+    background: #f3f6fa;
+    color: #0a6ed8;
+    @include dark-mode { background: var(--hover-color, #2a3347); }
+  }
+  &.prev { border-right: 1px solid #e9edf3; @include dark-mode { border-right-color: var(--border-color, #3a4358); } }
+  &.next { border-left: 1px solid #e9edf3;  @include dark-mode { border-left-color: var(--border-color, #3a4358); } }
+}
+
+.month-current {
+  min-width: 148px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  color: #14223a;
+  @include dark-mode { color: var(--text-primary, #e2e7ef); }
+}
+
+.today-btn {
+  padding: 11px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5a6678;
+  background: #fff;
+  border: 1px solid #e2e7ef;
+  cursor: pointer;
+  @include dark-mode {
+    background: var(--surface-color, #1e2532);
+    border-color: var(--border-color, #3a4358);
+    color: var(--text-secondary, #9aa4b2);
+  }
+  &:hover {
+    background: #f3f6fa;
+    color: #0a6ed8;
+    @include dark-mode { background: var(--hover-color, #2a3347); }
+  }
+}
+
+@include handset {
+  .month-nav-row { flex-wrap: wrap; }
+  .month-btn .nav-month-name { display: none; }
+  .month-current { min-width: 120px; font-size: 14px; }
+}
 
 // ============================================================================
 // PLAN TITLE, CONTROLS, ACTIONS

@@ -45,6 +45,35 @@ describe('SendPlanDialogComponent', () => {
     expect(component.options.length).toBe(2);
   });
 
+  it('should not allow sending without selected recipients or entered email addresses', () => {
+    const { component, dialogRef, addressBook } = createComponent({
+      monthlyPlan: { getEmailRecipientPreference: jasmine.createSpy('getEmailRecipientPreference').and.returnValue(of({ selectedUserIds: [], selectedAddressBookEntryIds: [] })) }
+    });
+
+    component.ngOnInit();
+    component.emails = '';
+    component.send();
+
+    expect(component.canSend).toBeFalse();
+    expect(addressBook.checkEmails).not.toHaveBeenCalled();
+    expect(dialogRef.close).not.toHaveBeenCalled();
+  });
+
+  it('should keep selected recipients after the options list is rebuilt', () => {
+    const { component } = createComponent({
+      monthlyPlan: { getEmailRecipientPreference: jasmine.createSpy('getEmailRecipientPreference').and.returnValue(of({ selectedUserIds: [], selectedAddressBookEntryIds: [] })) }
+    });
+
+    component.ngOnInit();
+    component.toggleByKey('user:1', true);
+    (component as any).rebuildOptions();
+
+    const userOption = component.options.find(option => option.key === 'user:1');
+    expect(userOption).toBeTruthy();
+    expect(component.isSelected(userOption!)).toBeTrue();
+    expect(component.canSend).toBeTrue();
+  });
+
   it('should parse comma, semicolon and whitespace separated emails', () => {
     const { component } = createComponent();
     component.emails = ' A@example.com, b@example.com; c@example.com  d@example.com ';

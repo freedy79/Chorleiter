@@ -27,6 +27,7 @@ const optionalAuth = (req, res, next) => {
       if (ctx) {
         ctx.userId = req.userId;
         ctx.roles = req.userRoles;
+        ctx.activeChoirId = req.activeChoirId;
       }
     }
     next();
@@ -78,6 +79,7 @@ const verifyToken = (req, res, next) => {
     if (ctx) {
       ctx.userId = req.userId;
       ctx.roles = req.userRoles;
+      ctx.activeChoirId = req.activeChoirId;
     }
     next();
   });

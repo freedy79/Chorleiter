@@ -15,7 +15,7 @@ import { MailDeliveryDiagnostics } from 'src/app/core/models/mail-delivery-diagn
 })
 export class MailLogsComponent implements OnInit {
   logs: MailLog[] = [];
-  displayedColumns = ['createdAt', 'status', 'recipients', 'subject', 'errorMessage', 'body'];
+  displayedColumns = ['createdAt', 'triggerUser', 'triggerChoir', 'triggerAction', 'status', 'recipients', 'subject', 'errorMessage'];
   dataSource = new MatTableDataSource<MailLog>();
   showOnlyErrors = true;
   diagnostics: MailDeliveryDiagnostics | null = null;

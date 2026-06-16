@@ -154,7 +154,9 @@
 
     <div class="content-wrapper">
       <div class="container" [class.full-width]="isFullWidthRoute$ | async">
-        <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
+        <ng-container *ngIf="showPageHeader$ | async">
+          <app-page-header *ngIf="pageTitle$ | async as pageTitle" [title]="pageTitle"></app-page-header>
+        </ng-container>
         <router-outlet></router-outlet>
       </div>
     </div>

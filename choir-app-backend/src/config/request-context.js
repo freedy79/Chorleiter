@@ -13,7 +13,16 @@ function getRequestContext() {
   return requestContext.getStore() || {};
 }
 
+/**
+ * Sets a key-value pair in the current request context (no-op outside a request).
+ */
+function setRequestContext(key, value) {
+  const ctx = requestContext.getStore();
+  if (ctx) ctx[key] = value;
+}
+
 module.exports = {
   runWithRequestContext,
   getRequestContext,
+  setRequestContext,
 };

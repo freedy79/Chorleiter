@@ -1,26 +1,17 @@
-<!-- Month/Year Inputs (desktop only) -->
-<div class="manual-inputs desktop-only">
-  <mat-form-field appearance="outline">
-    <mat-label>Monat</mat-label>
-    <input matInput type="number" [(ngModel)]="selectedMonth" min="1" max="12" (change)="monthChanged()" />
-  </mat-form-field>
-  <mat-form-field appearance="outline">
-    <mat-label>Jahr</mat-label>
-    <input matInput type="number" [(ngModel)]="selectedYear" (change)="monthChanged()" />
-  </mat-form-field>
-</div>
-
 <!-- Month Navigation -->
-<div class="month-nav">
-  <button mat-button color="primary" (click)="previousMonth()" aria-label="Vorheriger Monat">
-    <mat-icon>chevron_left</mat-icon>
-    <span class="nav-label desktop-only">{{ prevMonthLabel }}</span>
-  </button>
-  <span class="month-label mobile-only">{{ monthLabel }}</span>
-  <button mat-button color="primary" (click)="nextMonth()" aria-label="Nächster Monat">
-    <span class="nav-label desktop-only">{{ nextMonthLabel }}</span>
-    <mat-icon>chevron_right</mat-icon>
-  </button>
+<div class="month-nav-row">
+  <div class="month-nav-pill">
+    <button class="month-btn prev" (click)="previousMonth()" [attr.aria-label]="'Vorheriger Monat: ' + prevMonthLabel">
+      <span class="arrow">‹</span>
+      <span class="nav-month-name">{{ prevMonthLabel }}</span>
+    </button>
+    <span class="month-current">{{ monthLabel }}</span>
+    <button class="month-btn next" (click)="nextMonth()" [attr.aria-label]="'Nächster Monat: ' + nextMonthLabel">
+      <span class="nav-month-name">{{ nextMonthLabel }}</span>
+      <span class="arrow">›</span>
+    </button>
+  </div>
+  <button class="today-btn" (click)="goToToday()">Heute</button>
 </div>
 
 <!-- Developer metrics (desktop only) -->
@@ -188,6 +179,21 @@
               <ng-template #notesTextDesktop>{{ ev.notes }}</ng-template>
             </mat-cell>
           </ng-container>
+          <ng-container matColumnDef="eventLink">
+            <mat-header-cell *matHeaderCellDef>Termin</mat-header-cell>
+            <mat-cell *matCellDef="let ev">
+              <button
+                *ngIf="ev.linkedEventId"
+                mat-icon-button
+                color="primary"
+                (click)="openLinkedEvent(ev)"
+                aria-label="Korrespondierendes Ereignis öffnen"
+                [matTooltip]="'Korrespondierendes Ereignis öffnen'">
+                <mat-icon>open_in_new</mat-icon>
+              </button>
+              <span *ngIf="!ev.linkedEventId" matTooltip="Kein korrespondierendes Ereignis gefunden">—</span>
+            </mat-cell>
+          </ng-container>
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef></mat-header-cell>
             <mat-cell *matCellDef="let ev">
@@ -235,7 +241,7 @@
               <div class="card-field">
                 <span class="card-label">Chorleiter</span>
                 <ng-container *ngIf="isChoirAdmin && !plan.finalized; else directorTextMobile">
-                  <mat-select [value]="ev.director?.id || null" (selectionChange)="updateDirector(ev, $event.value)"
+                  <mat-select [value]="directorIdFor(ev)" (selectionChange)="updateDirector(ev, $event.value)"
                     class="card-select">
                     <mat-option [value]="null">--</mat-option>
                     <mat-option *ngFor="let m of availableForDate(directors, ev.date); trackBy: trackByMemberId" [value]="m.id">
@@ -245,11 +251,11 @@
                       </span>
                     </mat-option>
                   </mat-select>
-                  <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director?.id, ev.date)" class="warning-icon" color="warn">warning</mat-icon>
+                  <mat-icon *ngIf="hasDirectorMaybeWarning(ev)" class="warning-icon" color="warn">warning</mat-icon>
                 </ng-container>
                 <ng-template #directorTextMobile>
                   <span class="card-value">{{ ev.director | personName }}
-                    <mat-icon *ngIf="ev.director?.id && isMaybe(ev.director?.id, ev.date)" class="warning-icon" color="warn">warning</mat-icon>
+                    <mat-icon *ngIf="hasDirectorMaybeWarning(ev)" class="warning-icon" color="warn">warning</mat-icon>
                   </span>
                 </ng-template>
               </div>
@@ -257,7 +263,7 @@
               <div class="card-field">
                 <span class="card-label">Organist</span>
                 <ng-container *ngIf="isChoirAdmin && !plan.finalized; else organistTextMobile">
-                  <mat-select [value]="ev.organist?.id || null" (selectionChange)="updateOrganist(ev, $event.value)"
+                  <mat-select [value]="organistIdFor(ev)" (selectionChange)="updateOrganist(ev, $event.value)"
                     class="card-select">
                     <mat-option [value]="null">--</mat-option>
                     <mat-option *ngFor="let m of availableForDate(organists, ev.date); trackBy: trackByMemberId" [value]="m.id">
@@ -267,11 +273,11 @@
                       </span>
                     </mat-option>
                   </mat-select>
-                  <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist?.id, ev.date)" class="warning-icon" color="warn">warning</mat-icon>
+                  <mat-icon *ngIf="hasOrganistMaybeWarning(ev)" class="warning-icon" color="warn">warning</mat-icon>
                 </ng-container>
                 <ng-template #organistTextMobile>
                   <span class="card-value">{{ ev.organist | personName }}
-                    <mat-icon *ngIf="ev.organist?.id && isMaybe(ev.organist?.id, ev.date)" class="warning-icon" color="warn">warning</mat-icon>
+                    <mat-icon *ngIf="hasOrganistMaybeWarning(ev)" class="warning-icon" color="warn">warning</mat-icon>
                   </span>
                 </ng-template>
               </div>
@@ -286,6 +292,18 @@
                 <ng-template #notesTextMobile>
                   <span class="card-value">{{ ev.notes }}</span>
                 </ng-template>
+              </div>
+
+              <div class="card-field" *ngIf="ev.linkedEventId">
+                <span class="card-label">Termin</span>
+                <button mat-icon-button color="primary" (click)="openLinkedEvent(ev)" matTooltip="Korrespondierendes Ereignis öffnen" aria-label="Korrespondierendes Ereignis öffnen">
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
+              </div>
+
+              <div class="card-field" *ngIf="!ev.linkedEventId">
+                <span class="card-label">Termin</span>
+                <span class="card-value" matTooltip="Kein korrespondierendes Ereignis gefunden">—</span>
               </div>
 
               <div class="card-field" *ngIf="isChoirAdmin && !plan.finalized; else programTextMobile">
@@ -356,7 +374,11 @@
   <mat-tab label="Verfügbarkeiten">
     <div class="availability-section">
       <h3>Meine Verfügbarkeiten</h3>
-      <app-availability-table [year]="selectedYear" [month]="selectedMonth"></app-availability-table>
+      <app-availability-table
+        [year]="selectedYear"
+        [month]="selectedMonth"
+        [notesByDate]="availabilityNotesByDate">
+      </app-availability-table>
       <div *ngIf="isChoirAdmin" class="member-availabilities">
         <h3>Verfügbarkeiten aller Mitglieder</h3>
         <div class="member-availability-card" *ngFor="let ev of entries; trackBy: trackByEntryId">

@@ -59,6 +59,26 @@
       <th mat-header-cell *matHeaderCellDef>Datum</th>
       <td mat-cell *matCellDef="let log">{{ log.createdAt | date:'short' }}</td>
     </ng-container>
+    <ng-container matColumnDef="triggerUser">
+      <th mat-header-cell *matHeaderCellDef>Ausgelöst von</th>
+      <td mat-cell *matCellDef="let log">
+        <ng-container *ngIf="log.triggerUser; else systemTrigger">
+          {{ log.triggerUser.firstName }} {{ log.triggerUser.name }}
+          <span class="trigger-email">&lt;{{ log.triggerUser.email }}&gt;</span>
+        </ng-container>
+        <ng-template #systemTrigger>
+          <span class="system-label">System</span>
+        </ng-template>
+      </td>
+    </ng-container>
+    <ng-container matColumnDef="triggerChoir">
+      <th mat-header-cell *matHeaderCellDef>Chor</th>
+      <td mat-cell *matCellDef="let log">{{ log.triggerChoir?.name || '—' }}</td>
+    </ng-container>
+    <ng-container matColumnDef="triggerAction">
+      <th mat-header-cell *matHeaderCellDef>Aktion</th>
+      <td mat-cell *matCellDef="let log">{{ log.triggerAction || '—' }}</td>
+    </ng-container>
     <ng-container matColumnDef="status">
       <th mat-header-cell *matHeaderCellDef>Status</th>
       <td mat-cell *matCellDef="let log">

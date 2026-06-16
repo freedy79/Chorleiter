@@ -1,7 +1,7 @@
 <div class="security">
   <app-admin-page-header
     title="Sicherheit & Monitoring"
-    description="Login-Versuche, Protokolle, Datensicherung und Systemstatus">
+    description="Login-Versuche, Protokolle und Systemstatus">
   </app-admin-page-header>
 
   <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
@@ -25,17 +25,6 @@
       </ng-template>
       <div class="tab-content">
         <app-protocols></app-protocols>
-      </div>
-    </mat-tab>
-
-    <!-- Backup Tab -->
-    <mat-tab label="Backup">
-      <ng-template mat-tab-label>
-        <mat-icon matTabLabelPadding>backup</mat-icon>
-        <span class="tab-label">Backup</span>
-      </ng-template>
-      <div class="tab-content">
-        <app-backup></app-backup>
       </div>
     </mat-tab>
 

@@ -1,24 +1,27 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+
 .ckeditor-license-settings {
   .loading-state {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px;
-    gap: 16px;
+    padding: $spacing-xl $spacing-lg;
+    gap: $spacing-md;
 
     p {
       margin: 0;
-      color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+      @include apply-theme-var('color', 'text-secondary');
     }
   }
 
   .error-banner {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 20px;
-    padding: 12px;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-lg;
+    padding: $spacing-sm;
     background-color: var(--error-bg, #ffebee);
     border-left: 4px solid var(--error, #d32f2f);
     border-radius: 4px;
@@ -30,8 +33,8 @@
   }
 
   .info-text {
-    margin-bottom: 16px;
-    color: var(--text-secondary, rgba(0, 0, 0, 0.6));
+    margin-bottom: $spacing-md;
+    @include apply-theme-var('color', 'text-secondary');
     line-height: 1.5;
 
     a {
@@ -43,7 +46,7 @@
 .license-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: $spacing-md;
 
   .full-width {
     width: 100%;
@@ -53,11 +56,11 @@
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
+  gap: $spacing-md;
+  margin-top: $spacing-md;
 }
 
 .button-spinner {
   display: inline-block;
-  margin-right: 8px;
+  margin-right: $spacing-sm;
 }

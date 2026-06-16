@@ -232,13 +232,17 @@ exports.emailPdf = async (req, res) => {
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
 
-        let emails = [];
+        let recipientsForMail = [];
         if (recipients.length > 0) {
             const users = await db.user.findAll({
                 where: { id: recipients },
                 include: [{ model: db.choir, where: { id: req.activeChoirId } }]
             });
-            emails = users.map(u => u.email);
+            recipientsForMail = users.map(u => ({
+                email: u.email,
+                firstName: u.firstName,
+                name: u.name
+            }));
         }
         if (addressBookEntryIds.length > 0) {
             const addressBookEntries = await db.personal_address_book_entry.findAll({
@@ -248,19 +252,27 @@ exports.emailPdf = async (req, res) => {
                     choirId: req.activeChoirId
                 }
             });
-            emails = emails.concat(addressBookEntries.map(entry => entry.email));
+            recipientsForMail = recipientsForMail.concat(addressBookEntries.map(entry => ({
+                email: entry.email,
+                firstName: entry.firstName,
+                name: entry.name
+            })));
         }
-        emails = emails.concat(extraEmails);
-        emails = Array.from(new Map(emails
-            .map(email => [normalizeEmail(email), email])
-            .filter(([normalized]) => normalized && isValidEmail(normalized))
-        ).values());
-        if (emails.length === 0) {
+        recipientsForMail = recipientsForMail.concat(extraEmails.map(email => ({ email })));
+        const uniqueRecipientsByEmail = new Map();
+        for (const recipient of recipientsForMail) {
+            const normalized = normalizeEmail(recipient.email);
+            if (normalized && isValidEmail(normalized) && !uniqueRecipientsByEmail.has(normalized)) {
+                uniqueRecipientsByEmail.set(normalized, recipient);
+            }
+        }
+        recipientsForMail = Array.from(uniqueRecipientsByEmail.values());
+        if (recipientsForMail.length === 0) {
             return res.status(400).send({ message: 'recipients required' });
         }
         const buffer = await monthlyPlanPdf(plan.toJSON());
         if (!emailDisabled()) {
-            await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
+            await emailService.sendMonthlyPlanMail(recipientsForMail, buffer, plan.year, plan.month, plan.choir?.name);
         }
         if (req.body.saveSelection !== false) {
             await saveRecipientPreference(req, recipients, addressBookEntryIds);

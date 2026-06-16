@@ -114,7 +114,7 @@ async function checkAndSendReminders() {
       }
     }
 
-    const missingEventResult = await checkAndSendMissingServiceEventReminders(now);
+    const missingEventResult = await checkAndSendMissingServiceEventReminders({ now });
     totalSent += missingEventResult.sent;
     processedEvents += missingEventResult.processed;
 
@@ -162,10 +162,21 @@ async function hasMatchingServiceEventForPlanEntry(planEntry, choirId) {
   return !!existingEvent;
 }
 
-async function checkAndSendMissingServiceEventReminders(now = new Date()) {
+async function findMissingServiceEventEntries({ now = new Date(), choirId } = {}) {
   const threeDaysAgo = new Date(now);
   threeDaysAgo.setHours(0, 0, 0, 0);
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const monthlyPlanInclude = {
+    model: db.monthly_plan,
+    as: 'monthlyPlan',
+    attributes: ['id', 'choirId'],
+    include: [{ model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
+    required: true
+  };
+  if (choirId) {
+    monthlyPlanInclude.where = { choirId };
+  }
 
   const entries = await db.plan_entry.findAll({
     where: {
@@ -173,12 +184,7 @@ async function checkAndSendMissingServiceEventReminders(now = new Date()) {
       directorId: { [Op.ne]: null }
     },
     include: [
-      {
-        model: db.monthly_plan,
-        as: 'monthlyPlan',
-        attributes: ['id', 'choirId'],
-        include: [{ model: db.choir, as: 'choir', attributes: ['id', 'name'] }]
-      },
+      monthlyPlanInclude,
       {
         model: db.user,
         as: 'director',
@@ -188,22 +194,67 @@ async function checkAndSendMissingServiceEventReminders(now = new Date()) {
   });
 
   if (!entries.length) {
-    return { processed: 0, sent: 0 };
+    return [];
+  }
+
+  const missingEntries = [];
+
+  for (const entry of entries) {
+    const scopedChoirId = entry.monthlyPlan?.choirId;
+    const director = entry.director;
+
+    if (!scopedChoirId || !director?.id) {
+      continue;
+    }
+
+    const hasEvent = await hasMatchingServiceEventForPlanEntry(entry, scopedChoirId);
+    if (hasEvent) {
+      continue;
+    }
+
+    missingEntries.push({
+      planEntryId: entry.id,
+      monthlyPlanId: entry.monthlyPlanId,
+      choirId: scopedChoirId,
+      choirName: entry.monthlyPlan?.choir?.name || '',
+      date: isoDateString(parseDateOnly(entry.date)),
+      notes: entry.notes || '',
+      directorId: director.id,
+      directorName: [director.firstName, director.name].filter(Boolean).join(' ').trim() || director.name || '',
+      directorEmail: director.email || ''
+    });
+  }
+
+  return missingEntries;
+}
+
+async function checkAndSendMissingServiceEventReminders({ now = new Date(), choirId, dryRun = false } = {}) {
+  const missingEntries = await findMissingServiceEventEntries({ now, choirId });
+  if (!missingEntries.length) {
+    return { processed: 0, sent: 0, candidates: [] };
+  }
+
+  if (dryRun) {
+    return {
+      processed: missingEntries.length,
+      sent: 0,
+      candidates: missingEntries
+    };
   }
 
   let sent = 0;
 
-  for (const entry of entries) {
-    const choirId = entry.monthlyPlan?.choirId;
-    const choirName = entry.monthlyPlan?.choir?.name || '';
-    const director = entry.director;
+  for (const candidate of missingEntries) {
+    const scopedChoirId = candidate.choirId;
+    const choirName = candidate.choirName;
+    const director = await db.user.findByPk(candidate.directorId, {
+      attributes: ['id', 'email', 'firstName', 'name', 'preferences']
+    });
+    const entry = await db.plan_entry.findByPk(candidate.planEntryId, {
+      attributes: ['id', 'date', 'notes', 'directorId', 'monthlyPlanId', 'programId']
+    });
 
-    if (!choirId || !director?.id) {
-      continue;
-    }
-
-    const hasEvent = await hasMatchingServiceEventForPlanEntry(entry, choirId);
-    if (hasEvent) {
+    if (!scopedChoirId || !director?.id || !entry) {
       continue;
     }
 
@@ -223,13 +274,13 @@ async function checkAndSendMissingServiceEventReminders(now = new Date()) {
       channels.push('push');
     }
 
-    const prefillLink = await buildMissingEventPrefillLink({ choirId, userId: director.id, planEntry: entry });
+    const prefillLink = await buildMissingEventPrefillLink({ choirId: scopedChoirId, userId: director.id, planEntry: entry });
     const eventDateFormatted = formatEventDate(entry.date);
 
     for (const channel of channels) {
       const channelSent = await sendMissingEventReminderIfNotAlreadySent({
         user: director,
-        choirId,
+        choirId: scopedChoirId,
         choirName,
         planEntry: entry,
         eventDateFormatted,
@@ -243,7 +294,7 @@ async function checkAndSendMissingServiceEventReminders(now = new Date()) {
     }
   }
 
-  return { processed: entries.length, sent };
+  return { processed: missingEntries.length, sent, candidates: missingEntries };
 }
 
 async function sendMissingEventReminderIfNotAlreadySent({ user, choirId, choirName, planEntry, eventDateFormatted, link, channel }) {
@@ -415,5 +466,6 @@ module.exports = {
   formatEventDate,
   eventTypeLabel,
   sendReminderIfNotAlreadySent,
-  checkAndSendMissingServiceEventReminders
+  checkAndSendMissingServiceEventReminders,
+  findMissingServiceEventEntries
 };

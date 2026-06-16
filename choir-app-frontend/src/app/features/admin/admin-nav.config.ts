@@ -120,10 +120,18 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: 'security',
     route: '/admin/security',
     category: 'security',
-    description: 'Login-Versuche, Protokolle, Backup, Logs',
+    description: 'Login-Versuche, Protokolle und Logs',
   },
 
   // ----- System -----
+  {
+    id: 'backup',
+    label: 'Backup',
+    icon: 'backup',
+    route: '/admin/backup',
+    category: 'system',
+    description: 'Datenbank sichern und wiederherstellen',
+  },
   {
     id: 'system-settings',
     label: 'Systemeinstellungen',

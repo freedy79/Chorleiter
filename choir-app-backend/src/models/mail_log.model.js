@@ -20,6 +20,22 @@ module.exports = (sequelize, DataTypes) => {
     errorMessage: {
       type: DataTypes.TEXT,
       allowNull: true
+    },
+    triggerUserId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    triggerChoirId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
+    },
+    triggerSource: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    triggerAction: {
+      type: DataTypes.STRING,
+      allowNull: true
     }
   });
   return MailLog;

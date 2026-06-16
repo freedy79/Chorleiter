@@ -14,6 +14,7 @@ const { ensureProgramLinks } = require('./ensureProgramLinks');
 const { ensureChoirPublicPageTables } = require('./ensureChoirPublicPageTables');
 const { ensureChatTables } = require('./ensureChatTables');
 const { ensureMailLogStatusColumns } = require('./ensureMailLogStatusColumns');
+const { ensureMailLogContextColumns } = require('./ensureMailLogContextColumns');
 const { ensurePracticeListTables } = require('./ensurePracticeListTables');
 const { ensurePollReminderTemplate } = require('./ensurePollReminderTemplate');
 const { ensureMailFooterTemplate } = require('./ensureMailFooterTemplate');
@@ -43,6 +44,7 @@ async function init(options = {}) {
     await ensureChoirPublicPageTables();
     await ensureChatTables();
     await ensureMailLogStatusColumns();
+    await ensureMailLogContextColumns();
     await ensurePracticeListTables();
     await ensurePollReminderTemplate();
     await ensureMailFooterTemplate();
@@ -84,6 +86,7 @@ module.exports = {
     ensureChoirPublicPageTables,
     ensureChatTables,
     ensureMailLogStatusColumns,
+    ensureMailLogContextColumns,
     ensurePracticeListTables,
     ensurePollReminderTemplate,
     ensureMailFooterTemplate,

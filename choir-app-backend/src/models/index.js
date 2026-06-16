@@ -403,6 +403,10 @@ db.choir_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.choir_log, { as: 'choirLogs' });
 db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
+// Mail log context: optional trigger user and choir
+db.mail_log.belongsTo(db.user, { foreignKey: 'triggerUserId', as: 'triggerUser', constraints: false });
+db.mail_log.belongsTo(db.choir, { foreignKey: 'triggerChoirId', as: 'triggerChoir', constraints: false });
+
 // Search history
 db.user.hasMany(db.search_history, { as: 'searchHistory', foreignKey: 'userId' });
 db.search_history.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });

@@ -109,6 +109,7 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
   pageTitle$: Observable<string | null>;
   pageDescription$: Observable<string | null>;
+  showPageHeader$: Observable<boolean>;
   isFramelessRoute$: Observable<boolean>;
   isFullWidthRoute$: Observable<boolean>;
   cartCount$: Observable<number>;
@@ -246,6 +247,10 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.pageDescription$ = routeData$.pipe(
       map(data => data.description ?? null)
+    );
+
+    this.showPageHeader$ = routeData$.pipe(
+      map(data => data.showPageHeader !== false)
     );
 
     this.isFullWidthRoute$ = routeData$.pipe(
@@ -393,13 +398,14 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
     this.authService.switchChoir(id).pipe(takeUntil(this.destroy$)).subscribe();
   }
 
-  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null; fullWidth: boolean } {
+  private getDeepestRouteData(route: ActivatedRoute): { title: string | null; showChoirName: boolean; description: string | null; fullWidth: boolean; showPageHeader: boolean } {
     let child = route.firstChild;
     const data = {
       title: child?.snapshot?.data?.['title'] ?? null,
       showChoirName: child?.snapshot?.data?.['showChoirName'] ?? false,
       description: child?.snapshot?.data?.['description'] ?? null,
-      fullWidth: child?.snapshot?.data?.['fullWidth'] ?? false
+      fullWidth: child?.snapshot?.data?.['fullWidth'] ?? false,
+      showPageHeader: child?.snapshot?.data?.['showPageHeader'] ?? true
     };
     while (child?.firstChild) {
       child = child.firstChild;
@@ -415,6 +421,9 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
         }
         if (child.snapshot.data['fullWidth']) {
           data.fullWidth = child.snapshot.data['fullWidth'];
+        }
+        if (typeof child.snapshot.data['showPageHeader'] === 'boolean') {
+          data.showPageHeader = child.snapshot.data['showPageHeader'];
         }
       }
     }

@@ -33,6 +33,7 @@ import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
+import { Event } from '@core/models/event';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -63,7 +64,7 @@ interface LoadMetrics {
 export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes', 'eventLink'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
@@ -136,6 +137,17 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return rows;
   }
 
+  get availabilityNotesByDate(): Record<string, string> {
+    const notesByDate: Record<string, string> = {};
+    for (const entry of this.entries) {
+      const notes = entry.notes?.trim();
+      if (notes) {
+        notesByDate[this.dateKey(entry.date)] = notes;
+      }
+    }
+    return notesByDate;
+  }
+
   private now(): number {
     if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
       return performance.now();
@@ -198,8 +210,69 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   private updateDisplayedColumns(): void {
-    const base = ['date', 'event', 'program', 'director', 'organist', 'notes'];
+    const base = ['date', 'event', 'program', 'director', 'organist', 'notes', 'eventLink'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
+  }
+
+  private inferExpectedEventType(entry: PlanEntry): 'SERVICE' | 'REHEARSAL' | null {
+    const notes = (entry.notes || '').toLowerCase();
+    if (/\b(chorprobe|probe|cp)\b/.test(notes)) {
+      return 'REHEARSAL';
+    }
+    if (/\b(gottesdienst|gd)\b/.test(notes)) {
+      return 'SERVICE';
+    }
+    return null;
+  }
+
+  private normalizeDateKey(date: string | Date): string {
+    return this.dateKey(typeof date === 'string' ? date : date.toISOString());
+  }
+
+  private attachLinkedEvents(entries: PlanEntry[], events: Event[]): PlanEntry[] {
+    const byDate = new Map<string, Event[]>();
+    for (const event of events || []) {
+      const key = this.normalizeDateKey(event.date);
+      const list = byDate.get(key) || [];
+      list.push(event);
+      byDate.set(key, list);
+    }
+
+    return entries.map(entry => {
+      const key = this.normalizeDateKey(entry.date);
+      const candidates = byDate.get(key) || [];
+      if (!candidates.length) {
+        return { ...entry, linkedEventId: null, linkedEventType: null };
+      }
+
+      const expectedType = this.inferExpectedEventType(entry);
+      let selected: Event | undefined;
+
+      if (expectedType) {
+        selected = candidates.find(ev => ev.type === expectedType);
+      }
+
+      if (!selected && candidates.length === 1) {
+        selected = candidates[0];
+      }
+
+      if (!selected) {
+        selected = candidates.find(ev => ev.type === 'SERVICE') || candidates[0];
+      }
+
+      return {
+        ...entry,
+        linkedEventId: selected?.id ?? null,
+        linkedEventType: (selected?.type === 'SERVICE' || selected?.type === 'REHEARSAL') ? selected.type : null
+      };
+    });
+  }
+
+  openLinkedEvent(entry: PlanEntry): void {
+    if (!entry.linkedEventId) {
+      return;
+    }
+    void this.router.navigate(['/events'], { queryParams: { eventId: entry.linkedEventId } });
   }
 
   private sortEntries(): void {
@@ -308,6 +381,22 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (!userId) return false;
     const key = this.dateKey(date);
     return this.availabilityMap[userId]?.[key] === 'MAYBE';
+  }
+
+  directorIdFor(entry: PlanEntry): number | null {
+    return entry.director?.id ?? null;
+  }
+
+  organistIdFor(entry: PlanEntry): number | null {
+    return entry.organist?.id ?? null;
+  }
+
+  hasDirectorMaybeWarning(entry: PlanEntry): boolean {
+    return this.isMaybe(this.directorIdFor(entry), entry.date);
+  }
+
+  hasOrganistMaybeWarning(entry: PlanEntry): boolean {
+    return this.isMaybe(this.organistIdFor(entry), entry.date);
   }
 
   availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
@@ -571,19 +660,24 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         )
       : of({ members: [] as UserInChoir[], directors: [] as UserInChoir[], organists: [] as UserInChoir[] });
 
+    const monthStart = new Date(Date.UTC(year, month - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    const events$ = this.api.getEvents(undefined, false, monthStart, monthEnd);
+
     this.planSub = forkJoin({
       planData: plan$,
       availabilityMap: availability$,
-      memberData: members$
+      memberData: members$,
+      events: events$
     }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: ({ planData, availabilityMap, memberData }) => {
+      next: ({ planData, availabilityMap, memberData, events }) => {
         if (requestId !== this.planRequestId) {
           return;
         }
         this.plan = planData.plan;
-        this.entries = planData.entries;
+        this.entries = this.attachLinkedEvents(planData.entries, events || []);
         this.availabilityMap = availabilityMap;
         this.members = memberData.members;
         this.directors = memberData.directors;
@@ -665,6 +759,13 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     const next = this.monthNav.next({ year: this.selectedYear, month: this.selectedMonth });
     this.selectedYear = next.year;
     this.selectedMonth = next.month;
+    this.monthChanged();
+  }
+
+  goToToday(): void {
+    const now = new Date();
+    this.selectedYear = now.getFullYear();
+    this.selectedMonth = now.getMonth() + 1;
     this.monthChanged();
   }
 

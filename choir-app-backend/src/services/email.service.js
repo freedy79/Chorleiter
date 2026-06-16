@@ -228,6 +228,21 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
   }
 };
 
+function normalizeMonthlyPlanRecipient(recipient) {
+  if (!recipient) return null;
+  if (typeof recipient === 'string') {
+    return { email: recipient };
+  }
+  if (typeof recipient === 'object' && recipient.email) {
+    return {
+      email: recipient.email,
+      surname: recipient.surname || recipient.name,
+      first_name: recipient.first_name || recipient.firstName
+    };
+  }
+  return null;
+}
+
 exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) => {
   if (emailDisabled()) return;
   const linkBase = await getFrontendUrl();
@@ -247,11 +262,17 @@ exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) 
   const template = { subject: subjectTemplate, body: bodyTemplate };
 
   try {
-    const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+    const recipientList = (Array.isArray(recipients) ? recipients : [recipients])
+      .map(normalizeMonthlyPlanRecipient)
+      .filter(recipient => recipient?.email);
     const attachments = [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }];
 
-    for (const to of recipientList.filter(Boolean)) {
-      await sendTemplateMail('monthly-plan', to, defaults, undefined, { attachments }, template);
+    for (const recipient of recipientList) {
+      await sendTemplateMail('monthly-plan', recipient.email, {
+        ...defaults,
+        surname: recipient.surname,
+        first_name: recipient.first_name
+      }, undefined, { attachments }, template);
     }
   } catch (err) {
     logger.error(`Error sending monthly plan mail: ${err.message}`);

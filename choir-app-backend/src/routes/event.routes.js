@@ -13,6 +13,8 @@ router.use(authJwt.verifyToken);
 router.get("/last", wrap(controller.findLast));
 router.get("/next", wrap(controller.findNext));
 router.get('/prefill/:token', wrap(controller.resolveCreatePrefillToken));
+router.get('/missing-service-events', role.requireDirector, wrap(controller.previewMissingServiceEvents));
+router.post('/missing-service-events/reminders', role.requireNonDemo, role.requireDirector, wrap(controller.sendMissingServiceEventReminders));
 router.get("/", wrap(controller.findAll));
 router.get("/:id", wrap(controller.findOne));
 router.post("/", role.requireNonDemo, role.requireDirector, createEventValidation, validate, wrap(controller.create));

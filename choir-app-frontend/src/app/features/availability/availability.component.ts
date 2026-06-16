@@ -276,7 +276,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
 
     return monthDates.map(entry => ({
       ...entry,
-      status: statusByDate.get(entry.date) ?? undefined
+      status: statusByDate.get(entry.date) ?? entry.status ?? 'AVAILABLE'
     }));
   }
 
@@ -287,6 +287,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   private decorate(data: UserAvailability[]): UserAvailability[] {
     return data.map(v => ({
       ...v,
+      status: v.status ?? 'AVAILABLE',
       holidayHint: (v.holidayHint ?? getHolidayName(parseDateOnly(v.date))) || undefined
     }));
   }

@@ -1,22 +1,21 @@
-<ng-container *ngIf="isHandset$ | async as isHandset">
-  <div class="storage-summary mat-elevation-z1">
-    <div class="storage-summary__item">
-      <span class="label">Gesamtbelegung</span>
-      <strong>{{ formatSize(totalStorageBytes) }}</strong>
-    </div>
-    <div class="storage-summary__item">
-      <span class="label">Cover</span>
-      <span>{{ formatSize(coverStorageBytes) }}</span>
-    </div>
-    <div class="storage-summary__item">
-      <span class="label">Notenbilder</span>
-      <span>{{ formatSize(imageStorageBytes) }}</span>
-    </div>
-    <div class="storage-summary__item">
-      <span class="label">Dateien</span>
-      <span>{{ formatSize(fileStorageBytes) }}</span>
-    </div>
+<div class="storage-summary mat-elevation-z1">
+  <div class="storage-summary__item">
+    <span class="label">Gesamtbelegung</span>
+    <strong>{{ formatSize(totalStorageBytes) }}</strong>
   </div>
+  <div class="storage-summary__item">
+    <span class="label">Cover</span>
+    <span>{{ formatSize(coverStorageBytes) }}</span>
+  </div>
+  <div class="storage-summary__item">
+    <span class="label">Notenbilder</span>
+    <span>{{ formatSize(imageStorageBytes) }}</span>
+  </div>
+  <div class="storage-summary__item">
+    <span class="label">Dateien</span>
+    <span>{{ formatSize(fileStorageBytes) }}</span>
+  </div>
+</div>
 
   <mat-accordion>
     <mat-expansion-panel>
@@ -26,7 +25,7 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
 
-      <ng-container *ngIf="!isHandset; else coversMobile">
+      <ng-container *ngIf="(isHandset$ | async) !== true; else coversMobile">
         <mat-table [dataSource]="covers" class="mat-elevation-z1" *ngIf="covers.length > 0">
           <ng-container matColumnDef="filename">
             <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
@@ -111,7 +110,7 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
 
-      <ng-container *ngIf="!isHandset; else imagesMobile">
+      <ng-container *ngIf="(isHandset$ | async) !== true; else imagesMobile">
         <mat-table [dataSource]="images" class="mat-elevation-z1" *ngIf="images.length > 0">
           <ng-container matColumnDef="filename">
             <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
@@ -196,7 +195,7 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
 
-      <ng-container *ngIf="!isHandset; else filesMobile">
+      <ng-container *ngIf="(isHandset$ | async) !== true; else filesMobile">
         <mat-table [dataSource]="files" class="mat-elevation-z1" *ngIf="files.length > 0">
           <ng-container matColumnDef="filename">
             <mat-header-cell *matHeaderCellDef>Datei</mat-header-cell>
@@ -302,4 +301,3 @@
       </ng-template>
     </mat-expansion-panel>
   </mat-accordion>
-</ng-container>

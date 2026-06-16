@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { RouterModule } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, map, startWith, distinctUntilChanged } from 'rxjs';
 import { ApiService } from 'src/app/core/services/api.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { BackendFile, UploadOverview } from 'src/app/core/models/backend-file';
@@ -27,14 +27,18 @@ export class ManageFilesComponent implements OnInit {
   totalStorageBytes = 0;
   displayedColumns = ['filename', 'sizeBytes', 'linked', 'actions'];
   displayedFileColumns = ['filename', 'downloadName', 'sizeBytes', 'linked', 'actions'];
-  private readonly apiBase = typeof environment.apiUrl === 'string' ? environment.apiUrl.replace(/\/api\/?$/, '') : '';
+  private readonly apiUrl = typeof environment.apiUrl === 'string' ? environment.apiUrl.replace(/\/+$/, '') : '';
 
   constructor(
     responsive: ResponsiveService,
     private api: ApiService,
     private dialogHelper: DialogHelperService
   ) {
-    this.isHandset$ = responsive.isHandset$;
+    this.isHandset$ = responsive.isHandset$.pipe(
+      startWith(false),
+      map((value) => value === true),
+      distinctUntilChanged()
+    );
   }
 
   ngOnInit(): void {
@@ -78,15 +82,15 @@ export class ManageFilesComponent implements OnInit {
   }
 
   getImageUrl(filename: string): string {
-    return `${this.apiBase}/uploads/piece-images/${encodeURIComponent(filename)}`;
+    return `${this.apiUrl}/uploads/piece-images/${encodeURIComponent(filename)}`;
   }
 
   getCoverUrl(filename: string): string {
-    return `${this.apiBase}/uploads/collection-covers/${encodeURIComponent(filename)}`;
+    return `${this.apiUrl}/uploads/collection-covers/${encodeURIComponent(filename)}`;
   }
 
   getFileUrl(filename: string): string {
-    return `${this.apiBase}/uploads/piece-files/${encodeURIComponent(filename)}`;
+    return `${this.apiUrl}/uploads/piece-files/${encodeURIComponent(filename)}`;
   }
 
   formatSize(bytes: number | null | undefined, decimals: number = 1): string {

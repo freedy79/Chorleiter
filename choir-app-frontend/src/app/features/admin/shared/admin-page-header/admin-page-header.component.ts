@@ -36,7 +36,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
       align-items: flex-start;
       gap: 12px;
       margin-bottom: 24px;
-      padding: 16px 0;
+      padding: 0;
 
       .back-button {
         margin-top: 4px;
@@ -101,7 +101,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     // Tablet and mobile refinements
     @media (max-width: 768px) {
       .admin-page-header {
-        padding: 12px 0;
+        padding: 0;
         gap: 8px;
       }
     }

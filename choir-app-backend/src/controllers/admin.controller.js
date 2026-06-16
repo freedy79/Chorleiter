@@ -303,7 +303,21 @@ exports.getMailLogs = async (req, res) => {
 
         const logs = await db.mail_log.findAll({
             where,
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            include: [
+                {
+                    model: db.user,
+                    as: 'triggerUser',
+                    attributes: ['id', 'firstName', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: db.choir,
+                    as: 'triggerChoir',
+                    attributes: ['id', 'name'],
+                    required: false
+                }
+            ]
         });
         res.status(200).send(logs);
     } catch (err) {

@@ -25,6 +25,7 @@ export interface SendPlanDialogResult {
 }
 
 interface RecipientOption {
+  key: string;
   id: number;
   type: 'user' | 'personal';
   name?: string;
@@ -43,6 +44,7 @@ export class SendPlanDialogComponent implements OnInit {
   selectedUsers = new Set<number>();
   selectedPersonalEntries = new Set<number>();
   personalEntries: PersonalAddressBookEntry[] = [];
+  options: RecipientOption[] = [];
   preference: MonthlyPlanRecipientPreference = { selectedUserIds: [], selectedAddressBookEntryIds: [] };
   emails = '';
   loading = true;
@@ -67,17 +69,20 @@ export class SendPlanDialogComponent implements OnInit {
         this.preference = preference || { selectedUserIds: [], selectedAddressBookEntryIds: [] };
         this.selectedUsers = new Set((this.preference.selectedUserIds || []).filter(id => this.data.members.some(m => m.id === id)));
         this.selectedPersonalEntries = new Set((this.preference.selectedAddressBookEntryIds || []).filter(id => entries.some(e => e.id === id)));
+        this.rebuildOptions();
         this.loading = false;
       },
       error: () => {
+        this.rebuildOptions();
         this.loading = false;
         this.notification.error('Empfängerliste konnte nicht vollständig geladen werden.', 4000);
       }
     });
   }
 
-  get options(): RecipientOption[] {
+  private rebuildOptions(): void {
     const users = this.data.members.map(member => ({
+      key: this.optionKey('user', member.id),
       id: member.id,
       type: 'user' as const,
       name: member.name,
@@ -85,13 +90,18 @@ export class SendPlanDialogComponent implements OnInit {
       email: member.email
     }));
     const personal = this.personalEntries.map(entry => ({
+      key: this.optionKey('personal', entry.id),
       id: entry.id,
       type: 'personal' as const,
       name: entry.name,
       firstName: entry.firstName,
       email: entry.email
     }));
-    return [...users, ...personal];
+    this.options = [...users, ...personal];
+  }
+
+  private optionKey(type: RecipientOption['type'], id: number): string {
+    return `${type}:${id}`;
   }
 
   trackByOption(index: number, option: RecipientOption): string {
@@ -109,7 +119,13 @@ export class SendPlanDialogComponent implements OnInit {
       : this.selectedPersonalEntries.has(option.id);
   }
 
-  toggle(option: RecipientOption, checked: boolean): void {
+  toggleByKey(key: string, checked: boolean): void {
+    const option = this.options.find(item => item.key === key);
+    if (!option) return;
+    this.toggle(option, checked);
+  }
+
+  private toggle(option: RecipientOption, checked: boolean): void {
     const target = option.type === 'user' ? this.selectedUsers : this.selectedPersonalEntries;
     if (checked) target.add(option.id); else target.delete(option.id);
   }
@@ -159,6 +175,7 @@ export class SendPlanDialogComponent implements OnInit {
               switchMap(entries => {
                 entries.forEach(entry => this.selectedPersonalEntries.add(entry.id));
                 this.personalEntries = this.mergeEntries(this.personalEntries, entries);
+                this.rebuildOptions();
                 const savedEmailSet = new Set(entries.map(entry => entry.email.toLowerCase()));
                 return of({ emails: parsedEmails.filter(email => !savedEmailSet.has(email.toLowerCase())), saveSelection: true });
               })
@@ -198,6 +215,7 @@ export class SendPlanDialogComponent implements OnInit {
       next: entry => {
         if (!entry) return;
         this.personalEntries = this.mergeEntries(this.personalEntries, [entry]);
+        this.rebuildOptions();
         this.selectedPersonalEntries.add(entry.id);
       },
       error: () => this.notification.error('Kontakt konnte nicht gespeichert werden.', 4000)
@@ -213,6 +231,7 @@ export class SendPlanDialogComponent implements OnInit {
       next: updated => {
         if (!updated) return;
         this.personalEntries = this.personalEntries.map(item => item.id === updated.id ? updated : item);
+        this.rebuildOptions();
       },
       error: () => this.notification.error('Kontakt konnte nicht aktualisiert werden.', 4000)
     });
@@ -233,6 +252,7 @@ export class SendPlanDialogComponent implements OnInit {
         if (result === null) return;
         this.personalEntries = this.personalEntries.filter(item => item.id !== entry.id);
         this.selectedPersonalEntries.delete(entry.id);
+        this.rebuildOptions();
       },
       error: () => this.notification.error('Kontakt konnte nicht gelöscht werden.', 4000)
     });

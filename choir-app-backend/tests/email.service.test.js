@@ -49,6 +49,18 @@ const db = require('../src/models');
       assert.ok(capturedOptions[1].subject.includes('bob'), 'Second recipient first_name not replaced');
       assert.ok(capturedOptions[1].html.includes('bob'), 'Second recipient surname fallback not replaced');
 
+      // Test that monthly plan templates use real recipient names when available
+      capturedOptions = [];
+      await emailService2.sendMonthlyPlanMail([
+        { email: 'alice@example.com', firstName: 'Alice', name: 'Anderson' },
+        { email: 'paula@example.com', firstName: 'Paula', name: 'Privat' }
+      ], Buffer.from('pdf'), 2024, 5, 'Choir');
+      assert.strictEqual(capturedOptions.length, 2, 'Monthly plan should still send one email per named recipient');
+      assert.ok(capturedOptions[0].subject.includes('Alice'), 'First recipient first_name should use real first name');
+      assert.ok(capturedOptions[0].html.includes('Anderson'), 'First recipient surname should use real surname');
+      assert.ok(capturedOptions[1].subject.includes('Paula'), 'Address book recipient first_name should use real first name');
+      assert.ok(capturedOptions[1].html.includes('Privat'), 'Address book recipient surname should use real surname');
+
       // Test improvement suggestion mail formatting
       capturedOptions = [];
       await emailService2.sendImprovementSuggestionMail(
