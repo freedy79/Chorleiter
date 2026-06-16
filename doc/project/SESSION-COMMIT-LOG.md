@@ -4,7 +4,8 @@ This file is the shared, repo-local source of truth for session-level one-line s
 
 ## How to use
 
-- Add one line per coherent change set after each session.
+- Add one line per feature, fix, or cleanup after each session.
+- A single commit can include multiple lines if it bundles multiple features/fixes.
 - Use a Conventional Commit style summary whenever possible.
 - Before committing, compare the latest log entries against the current diff.
 - If the diff changed since the log line was written, update the line before creating the commit.

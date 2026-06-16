@@ -35,8 +35,10 @@ npm run test:backend
 ### Session Commit Logging
 - Maintain `doc/project/SESSION-COMMIT-LOG.md` as the source of truth for session-level change summaries.
 - Before creating a commit, review the latest log entries and compare them against the current diff; if the log and diff diverge, update the log line first.
-- After each meaningful session, append exactly one conventional one-liner per coherent change set in the format `YYYY-MM-DD | type(scope): summary | areas | notes`.
-- Prefer one entry per feature/fix/cleanup. If a session contains unrelated changes, split them into separate lines.
+- A single commit may contain multiple features and fixes.
+- After each meaningful session, append one conventional one-liner per feature/fix/cleanup in the format `YYYY-MM-DD | type(scope): summary | areas | notes`.
+- Every feature or fix must be represented by exactly one line.
+- If a session contains unrelated changes, split them into separate lines so each line maps cleanly to one change.
 - Use the log entry as the basis for the commit subject whenever possible.
 
 ### Database Initialization
