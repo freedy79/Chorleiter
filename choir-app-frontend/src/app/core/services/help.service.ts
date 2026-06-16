@@ -4,6 +4,8 @@ import { UserService } from './user.service';
 
 @Injectable({ providedIn: 'root' })
 export class HelpService {
+  private readonly demoHelpShownKey = 'demo_help_shown';
+
   constructor(private users: UserService) {}
 
   shouldShowHelp(user: User | null): boolean {
@@ -11,15 +13,21 @@ export class HelpService {
       return false;
     }
     if (user.roles?.includes('demo')) {
-      return true;
+      return localStorage.getItem(this.demoHelpShownKey) !== 'true';
     }
     return !user.helpShown;
   }
 
   markHelpShown(user: User | null): void {
-    if (!user || user.roles?.includes('demo')) {
+    if (!user) {
       return;
     }
+
+    if (user.roles?.includes('demo')) {
+      localStorage.setItem(this.demoHelpShownKey, 'true');
+      return;
+    }
+
     this.users.updateCurrentUser({ helpShown: true }).subscribe(() => {
       user.helpShown = true;
     });

@@ -135,6 +135,11 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "git checkout": true
+        "git checkout": true,
+        "/^node -e \"process\\.env\\.DB_DIALECT='sqlite';process\\.env\\.DB_NAME=':memory:';const db=require\\('\\./choir-app-backend/src/models'\\);\\(async\\(\\)=>\\{await db\\.sequelize\\.sync\\(\\{force:true\\}\\);const choir=await db\\.choir\\.create\\(\\{name:'C'\\}\\);const user=await db\\.user\\.create\\(\\{email:'a@b\\.c'\\}\\);await db\\.form\\.create\\(\\{choirId:choir\\.id,title:'T',status:'draft',createdBy:user\\.id\\}\\);try\\{const rows=await db\\.form\\.findAll\\(\\{include:\\[\\{model:db\\.user,as:'creator',attributes:\\['id','firstName','lastName'\\]\\}\\]\\}\\);console\\.log\\('OK',rows\\.length\\);\\}catch\\(e\\)\\{console\\.error\\('ERR',e\\.message\\);\\}finally\\{await db\\.sequelize\\.close\\(\\);\\}\\}\\)\\(\\);\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "npm run dev": true
     }
 }

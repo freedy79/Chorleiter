@@ -86,13 +86,13 @@ async function sendRequest(middleware, context) {
     let res = await sendRequest(requireNonDemo, { userRoles: ['admin'] });
     assert.strictEqual(res.status, 200, 'non demo should pass');
 
-    // requireNonDemo failure
+    // requireNonDemo allows demo users (same permission path as regular users)
     res = await sendRequest(requireNonDemo, { userRoles: ['demo'] });
-    assert.strictEqual(res.status, 403, 'demo should be blocked');
+    assert.strictEqual(res.status, 200, 'demo should pass');
 
-    // requireNonDemo failure with mixed roles
+    // requireNonDemo allows mixed roles including demo
     res = await sendRequest(requireNonDemo, { userRoles: ['user', 'demo'] });
-    assert.strictEqual(res.status, 403, 'demo role should block even with other roles');
+    assert.strictEqual(res.status, 200, 'demo role should not block when combined with other roles');
 
     // requireNonDemo allows requests without explicit roles (e.g. optional auth)
     res = await sendRequest(requireNonDemo, {});

@@ -9,6 +9,7 @@ This file is the shared, repo-local source of truth for session-level one-line s
 - Use a Conventional Commit style summary whenever possible.
 - Before committing, compare the latest log entries against the current diff.
 - If the diff changed since the log line was written, update the line before creating the commit.
+- A pre-commit guard blocks code commits when this file is not staged.
 
 ## Entry format
 
@@ -20,5 +21,7 @@ This file is the shared, repo-local source of truth for session-level one-line s
 
 ## Recent entries
 
+2026-06-16 | feat(auth): add demo lead flow and tighten admin/choir guard behavior | backend auth/routes/models, frontend guards/login/admin views | Introduced demo lead model/init flow plus role-aware navigation and access updates.
+2026-06-16 | chore(git): enforce session commit log guard via pre-commit hook | root scripts, .githooks, package scripts | Added check script, hook installer, hooksPath bootstrap and LF-safe hook config.
 2026-06-16 | feat(mail): track trigger context for outgoing mails | backend mail logging, frontend admin mail views | Added request-context-aware mail metadata and migration support.
 2026-06-16 | feat(admin): add referral, feedback and address-book workflows | backend referrals, backend feedback, frontend admin + monthly plan dialogs | Large feature bundle with new admin workflows and tests.

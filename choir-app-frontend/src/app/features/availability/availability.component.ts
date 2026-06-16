@@ -140,6 +140,17 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     return this.monthNav.nextLabel(this.selected);
   }
 
+  get monthLabel(): string {
+    return new Date(this.selected.year, this.selected.month - 1, 1)
+      .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+
+  goToToday(): void {
+    const now = new Date();
+    this.selected = { year: now.getFullYear(), month: now.getMonth() + 1 };
+    this.monthChanged();
+  }
+
   formatMonthLabel(period: MonthYear): string {
     return new Date(period.year, period.month - 1, 1)
       .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });

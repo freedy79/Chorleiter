@@ -184,15 +184,19 @@ describe('MainLayoutComponent', () => {
     expect(visible).toBeTrue();
   });
 
-  it('hides editing navigation entries for demo users', async () => {
+  it('shows editing navigation entries for privileged choir roles', async () => {
+    globalRolesSubject.next(['user']);
+    choirRolesSubject.next(['director']);
+    currentUserSubject.next({ roles: ['user'] });
+    activeChoirSubject.next({ modules: { programs: true }, membership: { rolesInChoir: ['director'] } });
     isDemoSubject.next(true);
     fixture.detectChanges();
     const manageChoirItem = component.navItems.find(i => i.key === 'manageChoir');
     const programsItem = component.navItems.find(i => i.key === 'programs');
     const manageVisible = await firstValueFrom(manageChoirItem!.visibleSubject!);
     const programsVisible = await firstValueFrom(programsItem!.visibleSubject!);
-    expect(manageVisible).toBeFalse();
-    expect(programsVisible).toBeFalse();
+    expect(manageVisible).toBeTrue();
+    expect(programsVisible).toBeTrue();
   });
 
   it('translates user roles and updates tooltip on changes', async () => {

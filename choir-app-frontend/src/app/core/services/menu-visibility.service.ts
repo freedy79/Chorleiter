@@ -25,15 +25,6 @@ const MENU_KEYS = Object.values(MenuKey);
 
 const CHOIR_ADMIN_ROLES = ['director', 'chorleiter', 'choirleiter', 'choir_admin', 'organist', 'notenwart'] as const;
 const GLOBAL_ADMIN_ROLES = ['admin', 'librarian'] as const;
-const DEMO_RESTRICTED_KEYS = [
-  MenuKey.DIENSTPLAN,
-  MenuKey.AVAILABILITY,
-  MenuKey.PARTICIPATION,
-  MenuKey.PROGRAMS,
-  MenuKey.MANAGE_CHOIR,
-  MenuKey.COLLECTIONS,
-  MenuKey.LIBRARY
-] as const;
 
 export type MenuVisibility = Record<MenuKey, boolean>;
 
@@ -54,12 +45,11 @@ export class MenuVisibilityService {
     combineLatest([
       this.auth.globalRoles$,
       this.auth.choirRoles$,
-      this.auth.activeChoir$,
-      this.auth.isDemo$
+      this.auth.activeChoir$
     ])
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(([globalRoles, choirRoles, choir, isDemo]: [any, any, any, any]) => {
-        const visibility = this.computeVisibility(globalRoles, choirRoles, choir, isDemo);
+      .subscribe(([globalRoles, choirRoles, choir]: [any, any, any]) => {
+        const visibility = this.computeVisibility(globalRoles, choirRoles, choir);
         this.visibilitySubject.next(visibility);
       });
   }
@@ -67,8 +57,7 @@ export class MenuVisibilityService {
   private computeVisibility(
     globalRoles: string[],
     choirRoles: string[],
-    choir: any,
-    isDemo: boolean
+    choir: any
   ): MenuVisibility {
     const visibility = this.getEmptyVisibility();
 
@@ -83,10 +72,6 @@ export class MenuVisibilityService {
 
     const baseVisibility = this.getBaseVisibility(modules, hasPrivilegedRole);
     Object.assign(visibility, baseVisibility);
-
-    if (isDemo) {
-      this.applyDemoRestrictions(visibility);
-    }
 
     if (this.isSingerOnly(choirRoles, hasPrivilegedRole)) {
       this.applySingerMenuRestrictions(visibility, modules);
@@ -127,12 +112,6 @@ export class MenuVisibilityService {
       [MenuKey.COLLECTIONS]: true,
       [MenuKey.LIBRARY]: true
     } as MenuVisibility;
-  }
-
-  private applyDemoRestrictions(visibility: MenuVisibility): void {
-    DEMO_RESTRICTED_KEYS.forEach(key => {
-      (visibility as any)[key] = false;
-    });
   }
 
   private isSingerOnly(choirRoles: string[], hasPrivilegedRole: boolean): boolean {

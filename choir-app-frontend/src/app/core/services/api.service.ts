@@ -1009,6 +1009,10 @@ export class ApiService {
     return this.adminService.getMailTemplates();
   }
 
+  getDemoLeads(): Observable<any[]> {
+    return this.adminService.getDemoLeads();
+  }
+
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.adminService.updateMailTemplates(data);
   }

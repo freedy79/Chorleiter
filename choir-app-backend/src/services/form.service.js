@@ -39,7 +39,7 @@ class FormService {
       where: { choirId },
       include: [
         { model: FormField, as: 'fields', separate: true, order: [['sortOrder', 'ASC']] },
-        { model: db.user, as: 'creator', attributes: ['id', 'firstName', 'lastName'] },
+        { model: db.user, as: 'creator', attributes: ['id', 'firstName', ['name', 'lastName']] },
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -56,7 +56,7 @@ class FormService {
     const form = await Form.findByPk(id, {
       include: [
         { model: FormField, as: 'fields', separate: true, order: [['sortOrder', 'ASC']] },
-        { model: db.user, as: 'creator', attributes: ['id', 'firstName', 'lastName'] },
+        { model: db.user, as: 'creator', attributes: ['id', 'firstName', ['name', 'lastName']] },
       ],
     });
     if (form) {

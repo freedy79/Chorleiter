@@ -34,6 +34,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
 import { Event } from '@core/models/event';
+import { EventDialogComponent } from '@features/events/event-dialog/event-dialog.component';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -272,7 +273,40 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (!entry.linkedEventId) {
       return;
     }
-    void this.router.navigate(['/events'], { queryParams: { eventId: entry.linkedEventId } });
+
+    this.api.getEventById(entry.linkedEventId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (fullEvent) => {
+        const readOnly = !this.isChoirAdmin;
+        const dialogRef = this.dialog.open(EventDialogComponent, {
+          ...this.mobileDialogConfig(),
+          disableClose: readOnly,
+          data: { event: fullEvent, readOnly }
+        });
+
+        if (readOnly) {
+          return;
+        }
+
+        dialogRef.afterClosed().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(result => {
+          if (result && result.id) {
+            this.api.updateEvent(result.id, result).pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: () => {
+                this.notification.success('Termin aktualisiert.', 3000);
+                this.loadPlan(this.selectedYear, this.selectedMonth);
+              },
+              error: () => this.notification.error('Fehler beim Aktualisieren des Termins.', 4000)
+            });
+          }
+        });
+      },
+      error: () => this.notification.error('Termin konnte nicht geladen werden.', 4000)
+    });
   }
 
   private sortEntries(): void {

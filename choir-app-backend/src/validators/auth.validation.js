@@ -21,3 +21,7 @@ exports.signupValidation = [
 exports.resetPasswordValidation = [
   strongPasswordValidator
 ];
+
+exports.demoLeadRequestValidation = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email is required.')
+];

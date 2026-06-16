@@ -181,6 +181,10 @@ export class AdminService {
     return this.http.get<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`);
   }
 
+  getDemoLeads(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/admin/demo-leads`);
+  }
+
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.http.put<MailTemplate[]>(`${this.apiUrl}/admin/mail-templates`, data);
   }

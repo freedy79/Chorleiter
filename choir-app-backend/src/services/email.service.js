@@ -7,6 +7,12 @@ const { wrapWithMailLayout, appendFooterText } = require('./emailLayout');
 const { marked } = require('marked');
 const path = require('path');
 const fs = require('fs');
+let geoip = null;
+try {
+  geoip = require('geoip-lite');
+} catch (_) {
+  geoip = null;
+}
 
 const IMAGES_DIR = path.join(__dirname, '../..', 'uploads', 'post-images');
 
@@ -27,6 +33,33 @@ function escapeHtml(value) {
 
 function buildRecipientList(recipients) {
   return Array.from(new Set((Array.isArray(recipients) ? recipients : [recipients]).filter(Boolean)));
+}
+
+async function getAdminRecipients() {
+  const users = await db.user.findAll();
+  const recipients = new Set();
+  users.forEach(u => {
+    if (Array.isArray(u.roles) && u.roles.includes('admin') && u.email) {
+      recipients.add(u.email);
+    }
+  });
+  const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+  if (systemEmail?.value) {
+    recipients.add(systemEmail.value);
+  }
+  return recipients;
+}
+
+function formatGeoLocation(geo) {
+  if (!geo) return 'nicht verfügbar';
+  const parts = [];
+  if (geo.city) parts.push(geo.city);
+  if (geo.region) parts.push(geo.region);
+  if (geo.country) parts.push(geo.country);
+  if (typeof geo.ll?.[0] === 'number' && typeof geo.ll?.[1] === 'number') {
+    parts.push(`(${geo.ll[0]}, ${geo.ll[1]})`);
+  }
+  return parts.length ? parts.join(', ') : 'nicht verfügbar';
 }
 
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings, mailOptions = {}, templateOverride) {
@@ -177,6 +210,22 @@ exports.sendEmailChangeMail = async (to, token, surname, firstName) => {
     await sendTemplateMail('email-change', to, { link, expiry, surname, first_name: firstName });
   } catch (err) {
     logger.error(`Error sending email change mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendDemoLeadVerificationMail = async (to, token, firstName, expiryAt) => {
+  const linkBase = await getFrontendUrl();
+  const link = `${linkBase}/demo/${token}`;
+  try {
+    await sendTemplateMail('demo-lead-verification', to, {
+      link,
+      expiry: formatDate(expiryAt),
+      first_name: firstName,
+    });
+  } catch (err) {
+    logger.error(`Error sending demo lead verification mail to ${to}: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }
@@ -541,20 +590,63 @@ exports.sendCrashReportMail = async (to, error) => {
   }
 };
 
+exports.notifyAdminsOnDemoLogin = async ({
+  demoEmail,
+  ipAddress,
+  userAgent,
+  attemptedEmail,
+  forwardedFor,
+  timestamp
+}) => {
+  try {
+    if (emailDisabled() || (!process.env.SMTP_HOST && !process.env.SMTP_USER)) return;
+
+    const recipients = await getAdminRecipients();
+    if (recipients.size === 0) return;
+
+    const lookupIp = String(ipAddress || '').trim();
+    const geo = geoip && lookupIp ? geoip.lookup(lookupIp) : null;
+    const eventTime = timestamp || new Date().toISOString();
+
+    const subject = 'Demo-Login erkannt';
+    const lines = [
+      'Ein Demo-User hat sich angemeldet.',
+      '',
+      `Zeit: ${eventTime}`,
+      `Demo-Account: ${demoEmail || 'demo@nak-chorleiter.de'}`,
+      `Eingabe-E-Mail: ${attemptedEmail || demoEmail || '-'}`,
+      `IP: ${lookupIp || 'unbekannt'}`,
+      `X-Forwarded-For: ${forwardedFor || '-'}`,
+      `Geolokalisierung (IP-Datenbank): ${formatGeoLocation(geo)}`,
+      `User-Agent: ${userAgent || '-'}`
+    ];
+
+    const text = lines.join('\n');
+    const rawHtml =
+      '<p>Ein <strong>Demo-User</strong> hat sich angemeldet.</p>' +
+      '<table style="border-collapse:collapse;width:100%;max-width:640px">' +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Zeit</td><td style="padding:6px 10px">${escapeHtml(eventTime)}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Demo-Account</td><td style="padding:6px 10px">${escapeHtml(demoEmail || 'demo@nak-chorleiter.de')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Eingabe-E-Mail</td><td style="padding:6px 10px">${escapeHtml(attemptedEmail || demoEmail || '-')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">IP</td><td style="padding:6px 10px">${escapeHtml(lookupIp || 'unbekannt')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">X-Forwarded-For</td><td style="padding:6px 10px">${escapeHtml(forwardedFor || '-')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Geolokalisierung</td><td style="padding:6px 10px">${escapeHtml(formatGeoLocation(geo))}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">User-Agent</td><td style="padding:6px 10px">${escapeHtml(userAgent || '-')}</td></tr>` +
+      '</table>';
+
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
+    await sendMail({ to: [...recipients], subject, text, html });
+  } catch (err) {
+    logger.error(`Error notifying admins on demo login: ${err.message}`);
+    logger.error(err.stack);
+  }
+};
+
 exports.notifyAdminsOnCrash = async (error, req) => {
   try {
     if (emailDisabled() || (!process.env.SMTP_HOST && !process.env.SMTP_USER)) return;
-    const users = await db.user.findAll();
-    const recipients = new Set();
-    users.forEach(u => {
-      if (Array.isArray(u.roles) && u.roles.includes('admin') && u.email) {
-        recipients.add(u.email);
-      }
-    });
-    const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
-    if (systemEmail?.value) {
-      recipients.add(systemEmail.value);
-    }
+    const recipients = await getAdminRecipients();
     if (recipients.size === 0) return;
 
     const details = [

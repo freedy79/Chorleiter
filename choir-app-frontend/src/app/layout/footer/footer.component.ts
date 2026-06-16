@@ -18,13 +18,16 @@ import { RecommendDialogComponent } from '@features/referrals/recommend-dialog/r
 export class FooterComponent {
     public readonly currentYear: number = new Date().getFullYear();
     public readonly buildDate: string = buildInfo.date;
+  public readonly isDemo$;
     public successMessage: string | null = null;
     private successMessageTimer: ReturnType<typeof setTimeout> | null = null;
 
     constructor(
       private dialog: MatDialog,
       private authService: AuthService
-    ) {}
+    ) {
+      this.isDemo$ = this.authService.isDemo$;
+    }
 
     openRecommendDialog(): void {
       const activeChoir = this.authService.activeChoir$.value;

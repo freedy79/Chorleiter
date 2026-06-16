@@ -9,6 +9,8 @@ const crypto = require("crypto");
 const emailService = require("../services/email.service");
 const { Op } = require("sequelize");
 
+const DemoLead = db.demo_lead;
+
 async function ensureDemoAccount() {
     const [choir] = await Choir.findOrCreate({
         where: { name: "Demo-Chor" },
@@ -25,6 +27,15 @@ async function ensureDemoAccount() {
         }
     });
     await demoUser.addChoir(choir).catch(() => {});
+    await db.user_choir.findOrCreate({
+        where: { userId: demoUser.id, choirId: choir.id },
+        defaults: { rolesInChoir: ['director'] }
+    }).then(async ([membership]) => {
+        const currentRoles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+        if (!currentRoles.includes('director')) {
+            await membership.update({ rolesInChoir: ['director'] });
+        }
+    }).catch(() => {});
 
     const collection = await db.collection.findByPk(1);
     if (collection) {
@@ -53,17 +64,127 @@ function friendlyResetMessage() {
     return "Du hast dein Passwort dreimal falsch eingegeben. Wir haben dir eine E-Mail zum Zurücksetzen deines Passworts geschickt. Bis dahin ist kein Login möglich.";
 }
 
+function getClientIp(req) {
+  const forwarded = (req.headers?.['x-forwarded-for'] || '').toString();
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip;
+}
+
+function normalizeEmail(value) {
+  return value?.trim().toLowerCase();
+}
+
+async function createDemoJwtSession(user, choir, res) {
+  const activeChoirId = choir.id;
+  const token = jwt.sign(
+    { id: user.id, activeChoirId, roles: user.roles },
+    process.env.JWT_SECRET,
+    { expiresIn: '8h' }
+  );
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.cookie('auth-token', token, {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'strict' : 'lax',
+    maxAge: 8 * 60 * 60 * 1000,
+    path: '/',
+  });
+
+  return {
+    id: user.id,
+    firstName: user.firstName,
+    name: user.name,
+    email: user.email,
+    roles: user.roles,
+    accessToken: token,
+    activeChoir: choir,
+    availableChoirs: [choir],
+  };
+}
+
 exports.signup = async (req, res) => {
     return res.status(410).send({
       message: 'Direkte Registrierung wurde aus Sicherheitsgründen deaktiviert. Bitte nutze den neuen Chor-Registrierungsprozess mit E-Mail-Verifikation.'
     });
 };
 
+exports.requestDemoLead = async (req, res) => {
+    const rawEmail = req.body.email;
+    const email = normalizeEmail(rawEmail);
+    const ipAddress = getClientIp(req);
+    const userAgent = req.get('User-Agent');
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
+    const [lead, created] = await DemoLead.findOrCreate({
+      where: { email },
+      defaults: {
+        email,
+        token,
+        expiresAt,
+        requestedIp: ipAddress,
+        userAgent,
+      }
+    });
+
+    if (!created) {
+      await lead.update({
+        token,
+        expiresAt,
+        requestedIp: ipAddress,
+        userAgent,
+      });
+    }
+
+    await emailService.sendDemoLeadVerificationMail(email, token, rawEmail?.split('@')[0] || 'Interessent', expiresAt);
+
+    logger.info(`Demo lead verification requested for ${email} from IP ${ipAddress}`);
+    return res.status(200).send({
+      message: 'Danke für dein Interesse. Bitte prüfe deine E-Mails und bestätige den Demo-Zugang.',
+    });
+};
+
+exports.consumeDemoLead = async (req, res) => {
+    const { token } = req.params;
+    if (!token || token.length !== 64) {
+      return res.status(400).send({ message: 'Ungültiger Token.' });
+    }
+
+    const lead = await DemoLead.findOne({ where: { token } });
+    if (!lead) {
+      return res.status(404).send({ message: 'Token nicht gefunden oder bereits verwendet.' });
+    }
+
+    if (new Date() > lead.expiresAt) {
+      return res.status(410).send({ message: 'Dieser Token ist abgelaufen.' });
+    }
+
+    if (!lead.verifiedAt) {
+      await lead.update({ verifiedAt: new Date(), verifiedIp: getClientIp(req) });
+    } else if (!lead.verifiedIp) {
+      await lead.update({ verifiedIp: getClientIp(req) });
+    }
+
+    const { demoUser, choir } = await ensureDemoAccount();
+    const sessionUser = await User.findByPk(demoUser.id, {
+      include: [{ model: Choir, attributes: ['id', 'name'] }]
+    });
+
+    const payload = await createDemoJwtSession(sessionUser, choir, res);
+
+    logger.info(`Demo lead consumed for ${lead.email} from IP ${getClientIp(req)}`);
+    return res.status(200).send(payload);
+};
+
 exports.signin = async (req, res) => {
     logger.info(`Sign-in request received for: ${req.body.email}`);
     const rawEmail = req.body.email;
     const email = rawEmail?.toLowerCase();
-    const ipAddress = req.ip;
+  const ipAddress = getClientIp(req);
     const userAgent = req.get('User-Agent');
 
     try {
@@ -153,6 +274,17 @@ exports.signin = async (req, res) => {
     if (Array.isArray(user.roles) && user.roles.includes('demo')) {
       const choir = user.choirs[0];
       await resetDemoEvents(user, choir);
+
+      emailService.notifyAdminsOnDemoLogin({
+        demoEmail: user.email,
+        attemptedEmail: rawEmail,
+        ipAddress,
+        userAgent,
+        forwardedFor: req.headers?.['x-forwarded-for'] || '',
+        timestamp: new Date().toISOString()
+      }).catch(err => {
+        logger.error(`Demo login admin notification failed: ${err.message}`);
+      });
     }
 
     // Wählen Sie den ersten Chor in der Liste als Standard-Aktiv-Chor

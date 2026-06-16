@@ -7,6 +7,9 @@
     "test": "npm test --prefix choir-app-frontend",
     "test:backend": "npm test --prefix choir-app-backend",
     "check-backend": "npm run check --prefix choir-app-backend",
+    "check:session-log": "node scripts/check-session-commit-log.js",
+    "hooks:install": "node scripts/install-git-hooks.js",
+    "prepare": "npm run hooks:install",
     "pre-check": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1",
     "pre-check:backend": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1 -BackendOnly",
     "pre-check:frontend": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1 -FrontendOnly"

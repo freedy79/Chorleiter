@@ -91,6 +91,7 @@ db.form = require('./form.model.js')(sequelize, Sequelize);
 db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
 db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
 db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
+db.demo_lead = require('./demo_lead.model.js')(sequelize, Sequelize);
 db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
 db.referral_invitation = require('./referral_invitation.model.js')(sequelize, Sequelize);
 db.choir_registration_request = require('./choir_registration_request.model.js')(sequelize, Sequelize);

@@ -7,6 +7,38 @@ const logger = require('../config/logger');
 const DEBUG_AUTH = (process.env.DEBUG_AUTH || '').toLowerCase() === 'true'
   || (process.env.DEBUG_CSRF || '').toLowerCase() === 'true';
 
+async function resolveActiveChoirId(userId, userRoles, choirParam, decodedActiveChoirId) {
+  if (Array.isArray(userRoles) && userRoles.includes('admin') && !Number.isNaN(choirParam)) {
+    return choirParam;
+  }
+
+  if (decodedActiveChoirId) {
+    return decodedActiveChoirId;
+  }
+
+  const membership = await db.user_choir.findOne({
+    where: { userId },
+    attributes: ['choirId'],
+    order: [['createdAt', 'ASC']],
+  });
+
+  return membership?.choirId || null;
+}
+
+async function applyAuthContext(req, decoded) {
+  req.userId = decoded.id;
+  req.userRoles = decoded.roles || [];
+  const choirParam = parseInt(req.query.choirId, 10);
+  req.activeChoirId = await resolveActiveChoirId(req.userId, req.userRoles, choirParam, decoded.activeChoirId);
+
+  const ctx = getRequestContext();
+  if (ctx) {
+    ctx.userId = req.userId;
+    ctx.roles = req.userRoles;
+    ctx.activeChoirId = req.activeChoirId;
+  }
+}
+
 const optionalAuth = (req, res, next) => {
   let token = req.headers["authorization"];
   if (!token && req.cookies?.['auth-token']) {
@@ -14,23 +46,22 @@ const optionalAuth = (req, res, next) => {
   }
   if (!token) return next();
   token = token.split(' ')[1];
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (!err) {
-      req.userId = decoded.id;
-      req.userRoles = decoded.roles || [];
-      const choirParam = parseInt(req.query.choirId, 10);
-      req.activeChoirId =
-        req.userRoles.includes('admin') && !isNaN(choirParam)
-          ? choirParam
-          : decoded.activeChoirId;
-      const ctx = getRequestContext();
-      if (ctx) {
-        ctx.userId = req.userId;
-        ctx.roles = req.userRoles;
-        ctx.activeChoirId = req.activeChoirId;
+      try {
+        await applyAuthContext(req, decoded);
+      } catch (contextErr) {
+        if (DEBUG_AUTH) {
+          logger.warn('Optional auth context resolution failed', {
+            method: req.method,
+            path: req.originalUrl,
+            error: contextErr.message,
+            ip: req.ip,
+          });
+        }
       }
     }
-    next();
+    return next();
   });
 };
 
@@ -56,7 +87,7 @@ const verifyToken = (req, res, next) => {
   // Expect "Bearer [token]"
   token = token.split(' ')[1];
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+  jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
     if (err) {
       if (DEBUG_AUTH) {
         logger.warn('Auth token invalid/expired', {
@@ -68,20 +99,20 @@ const verifyToken = (req, res, next) => {
       }
       return next(new AuthenticationError("Invalid or expired token!"));
     }
-    req.userId = decoded.id;
-    req.userRoles = decoded.roles || [];
-    const choirParam = parseInt(req.query.choirId, 10);
-    req.activeChoirId =
-      req.userRoles.includes('admin') && !isNaN(choirParam)
-        ? choirParam
-        : decoded.activeChoirId;
-    const ctx = getRequestContext();
-    if (ctx) {
-      ctx.userId = req.userId;
-      ctx.roles = req.userRoles;
-      ctx.activeChoirId = req.activeChoirId;
+    try {
+      await applyAuthContext(req, decoded);
+    } catch (contextErr) {
+      if (DEBUG_AUTH) {
+        logger.warn('Auth context resolution failed', {
+          method: req.method,
+          path: req.originalUrl,
+          error: contextErr.message,
+          ip: req.ip,
+        });
+      }
+      return next(new AuthenticationError('Unable to resolve active choir context'));
     }
-    next();
+    return next();
   });
 };
 

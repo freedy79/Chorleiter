@@ -3,7 +3,7 @@
     <span>© {{ currentYear }} - Chorverwaltung - {{ buildDate | date:'dd.MM.yyyy, HH:mm' }}</span>
     <span class="spacer"></span>
     <div class="footer-links">
-      <a href="" (click)="$event.preventDefault(); openRecommendDialog()">Weiter empfehlen</a>
+      <a *ngIf="(isDemo$ | async) !== true" href="" (click)="$event.preventDefault(); openRecommendDialog()">Weiter empfehlen</a>
       <a routerLink="/imprint">Impressum</a>
       <a routerLink="/privacy">Datenschutz</a>
       <a href="" (click)="$event.preventDefault(); openImprovementSuggestionDialog()">Verbesserung vorschlagen</a>

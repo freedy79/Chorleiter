@@ -4,6 +4,163 @@ const db = require("./models");
 const logger = require("./config/logger");
 const { getDefaultPdfTemplates } = require("./services/pdf-template.defaults");
 
+const DEMO_POST_TITLE = "Willkommen im Demo-Chor";
+const DEMO_POST_TEXT = [
+    "# Willkommen bei NAK Chorleiter 👋",
+    "",
+    "Mit diesem Demo-Beitrag kannst du in 60 Sekunden sehen, wie die interne Chor-Kommunikation funktioniert:",
+    "",
+    "- **Infos veröffentlichen** (inkl. strukturierter Markdown-Inhalte)",
+    "- **Feedback einsammeln** über Kommentare, Antworten und Reaktionen",
+    "- **Schnelle Entscheidungen treffen** mit anonymen Umfragen",
+    "- **Alle auf dem Laufenden halten** ohne WhatsApp-Chaos",
+    "",
+    "> Tipp: Stimme unten direkt in der Demo-Umfrage ab – Mehrfachauswahl ist aktiviert.",
+    "",
+    "Viel Spaß beim Ausprobieren 🚀"
+].join("\n");
+
+const DEMO_POLL_OPTIONS = [
+    "Kommunikation",
+    "Dienstplanung",
+    "Notenbestand",
+    "Abstimmungen"
+];
+
+const DEMO_ANNOUNCEMENT_TITLE = "Probe am Donnerstag – Demo-Ankündigung";
+const DEMO_ANNOUNCEMENT_TEXT = [
+    "## Nächste Probe im Überblick",
+    "",
+    "**Wann?** Donnerstag, 19:30 Uhr  ",
+    "**Wo?** Gemeindesaal (Demo-Ort)",
+    "",
+    "### Geplanter Ablauf",
+    "- Einsingen (10 Min)",
+    "- Repertoire-Block A",
+    "- Repertoire-Block B",
+    "- Kurze Feedbackrunde",
+    "",
+    "### To-do bis dahin",
+    "- Stimmenmaterial kurz durchsehen",
+    "- Verfügbarkeit im Kalender prüfen",
+    "- Rückfragen direkt als Kommentar unter diesem Beitrag posten"
+].join("\n");
+
+async function ensureDemoChoirPost(choir, demoUser) {
+    const [demoPost, created] = await db.post.findOrCreate({
+        where: {
+            choirId: choir.id,
+            title: DEMO_POST_TITLE
+        },
+        defaults: {
+            title: DEMO_POST_TITLE,
+            text: DEMO_POST_TEXT,
+            choirId: choir.id,
+            userId: demoUser.id,
+            published: true,
+            sendAsUser: false
+        }
+    });
+
+    const postUpdates = {};
+    if (demoPost.text !== DEMO_POST_TEXT) {
+        postUpdates.text = DEMO_POST_TEXT;
+    }
+    if (demoPost.userId !== demoUser.id) {
+        postUpdates.userId = demoUser.id;
+    }
+    if (!demoPost.published) {
+        postUpdates.published = true;
+    }
+    if (demoPost.sendAsUser !== false) {
+        postUpdates.sendAsUser = false;
+    }
+    if (Object.keys(postUpdates).length > 0) {
+        await demoPost.update(postUpdates);
+    }
+
+    const [poll] = await db.poll.findOrCreate({
+        where: { postId: demoPost.id },
+        defaults: {
+            postId: demoPost.id,
+            allowMultiple: true,
+            maxSelections: 2,
+            isAnonymous: true
+        }
+    });
+
+    const pollUpdates = {};
+    if (!poll.allowMultiple) {
+        pollUpdates.allowMultiple = true;
+    }
+    if (poll.maxSelections !== 2) {
+        pollUpdates.maxSelections = 2;
+    }
+    if (!poll.isAnonymous) {
+        pollUpdates.isAnonymous = true;
+    }
+    if (Object.keys(pollUpdates).length > 0) {
+        await poll.update(pollUpdates);
+    }
+
+    for (let index = 0; index < DEMO_POLL_OPTIONS.length; index += 1) {
+        const label = DEMO_POLL_OPTIONS[index];
+        const [option] = await db.poll_option.findOrCreate({
+            where: { pollId: poll.id, label },
+            defaults: {
+                pollId: poll.id,
+                label,
+                position: index
+            }
+        });
+        if (option.position !== index) {
+            await option.update({ position: index });
+        }
+    }
+
+    logger.info(created
+        ? "Demo post seeded for Demo-Chor."
+        : "Demo post already present for Demo-Chor (synchronized).");
+}
+
+async function ensureDemoAnnouncementPost(choir, demoUser) {
+    const [announcementPost, created] = await db.post.findOrCreate({
+        where: {
+            choirId: choir.id,
+            title: DEMO_ANNOUNCEMENT_TITLE
+        },
+        defaults: {
+            title: DEMO_ANNOUNCEMENT_TITLE,
+            text: DEMO_ANNOUNCEMENT_TEXT,
+            choirId: choir.id,
+            userId: demoUser.id,
+            published: true,
+            sendAsUser: false
+        }
+    });
+
+    const postUpdates = {};
+    if (announcementPost.text !== DEMO_ANNOUNCEMENT_TEXT) {
+        postUpdates.text = DEMO_ANNOUNCEMENT_TEXT;
+    }
+    if (announcementPost.userId !== demoUser.id) {
+        postUpdates.userId = demoUser.id;
+    }
+    if (!announcementPost.published) {
+        postUpdates.published = true;
+    }
+    if (announcementPost.sendAsUser !== false) {
+        postUpdates.sendAsUser = false;
+    }
+    if (Object.keys(postUpdates).length > 0) {
+        await announcementPost.update(postUpdates);
+    }
+
+    logger.info(created
+        ? "Demo announcement post seeded for Demo-Chor."
+        : "Demo announcement post already present for Demo-Chor (synchronized).");
+}
+
 async function seedDatabase(options = {}) {
     const { includeDemoData = false } = options;
 
@@ -90,6 +247,14 @@ async function seedDatabase(options = {}) {
                 defaults: {
                     subject: 'Bestätige deine neue E-Mail-Adresse',
                     body: '<p>Hallo {{first_name}} {{surname}},</p><p>bitte bestätige deine neue E-Mail-Adresse über <a href="{{link}}">diesen Link</a>.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
+                }
+            });
+
+            await db.mail_template.findOrCreate({
+                where: { type: 'demo-lead-verification' },
+                defaults: {
+                    subject: 'NAK Chorleiter ausprobieren – dein Demo-Zugang',
+                    body: '<p>Hallo {{first_name}},</p><p>vielen Dank für dein Interesse an <strong>NAK Chorleiter</strong>. Hier kannst du dir die Applikation in einem Teilumfang ansehen.</p><p><a href="{{link}}">Demo-Zugang jetzt bestätigen</a></p><p>Fehlt dir etwas? Zögere nicht, uns ein Feedback zu geben – wir freuen uns über jede Rückmeldung.</p><p>Der Link ist bis {{expiry}} gültig.</p>'
                 }
             });
 
@@ -239,10 +404,22 @@ async function seedDatabase(options = {}) {
                 }
             });
             await demoUser.addChoir(choir).catch(() => { });
+            await db.user_choir.findOrCreate({
+                where: { userId: demoUser.id, choirId: choir.id },
+                defaults: { rolesInChoir: ['director'] }
+            }).then(async ([membership]) => {
+                const currentRoles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+                if (!currentRoles.includes('director')) {
+                    await membership.update({ rolesInChoir: ['director'] });
+                }
+            }).catch(() => { });
             const collection = await db.collection.findByPk(1);
             if (collection) {
                 await choir.addCollection(collection).catch(() => { });
             }
+
+            await ensureDemoChoirPost(choir, demoUser);
+            await ensureDemoAnnouncementPost(choir, demoUser);
         } catch (err) {
             logger.error("Error during demo seeding:", err);
         }

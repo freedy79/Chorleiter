@@ -445,7 +445,8 @@ export class MainLayoutComponent implements OnInit, AfterViewInit, OnDestroy{
 
     this.isLoggedIn$
       .pipe(
-        filter(Boolean),
+        withLatestFrom(this.isDemo$),
+        filter(([loggedIn, isDemo]) => loggedIn && !isDemo),
         takeUntil(this.destroy$)
       )
       .subscribe(() => {

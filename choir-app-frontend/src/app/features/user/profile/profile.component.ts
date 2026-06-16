@@ -112,8 +112,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   hasSpecialChar(value: string): boolean {
     return /[@$!%*?&]/.test(value);
   }
-  private isDemoUser = false;
-
   constructor(
     private fb: FormBuilder,
     private apiService: ApiService,
@@ -147,12 +145,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.isDemo$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(isDemo => {
-        this.isDemoUser = isDemo;
-        this.updateFormAccess();
-      });
+    this.isDemo$.pipe(takeUntil(this.destroy$)).subscribe(() => this.updateFormAccess());
 
     this.availableChoirs$
       .pipe(takeUntil(this.destroy$))
@@ -255,9 +248,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onSubmit(): void {
-    if (this.isDemoUser) {
-      return;
-    }
     if (this.profileForm.invalid) {
       return;
     }
@@ -348,9 +338,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onLeaveChoir(choir: Choir): void {
-    if (this.isDemoUser) {
-      return;
-    }
     const multipleChoirs = this.choirList.length > 1;
     const info = this.getChoirLeaveInfo(choir.id);
     const parts: string[] = [];
@@ -387,9 +374,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   onDeleteAccount(): void {
-    if (this.isDemoUser) {
-      return;
-    }
     const parts: string[] = [
       'Möchtest du dich wirklich vom gesamten System abmelden? Dein Profil wird umgehend deaktiviert – du erhältst keine Mails mehr und wirst aus allen Chören entfernt.'
     ];
@@ -423,11 +407,6 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (!this.profileForm) {
       return;
     }
-    if (this.isDemoUser) {
-      this.profileForm.disable({ emitEvent: false });
-      return;
-    }
-
     this.profileForm.enable({ emitEvent: false });
     const rolesControl = this.profileForm.get('roles');
     if (this.currentUser?.roles?.includes('admin')) {

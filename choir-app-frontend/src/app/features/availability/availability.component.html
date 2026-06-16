@@ -7,26 +7,19 @@
   </mat-select>
 </mat-form-field>
 
-<div class="manual-inputs">
-  <mat-form-field appearance="outline">
-    <mat-label>Monat</mat-label>
-    <input matInput type="number" [(ngModel)]="selected.month" min="1" max="12" (change)="monthChanged()" />
-  </mat-form-field>
-  <mat-form-field appearance="outline">
-    <mat-label>Jahr</mat-label>
-    <input matInput type="number" [(ngModel)]="selected.year" (change)="monthChanged()" />
-  </mat-form-field>
-</div>
-
-<div class="month-nav">
-  <button mat-button color="primary" (click)="previousMonth()">
-    <mat-icon>chevron_left</mat-icon>
-    {{ prevMonthLabel }}
-  </button>
-  <button mat-button color="primary" (click)="nextMonth()">
-    {{ nextMonthLabel }}
-    <mat-icon>chevron_right</mat-icon>
-  </button>
+<div class="month-nav-row">
+  <div class="month-nav-pill">
+    <button class="month-btn prev" (click)="previousMonth()" [attr.aria-label]="'Vorheriger Monat: ' + prevMonthLabel">
+      <span class="arrow">‹</span>
+      <span class="nav-month-name">{{ prevMonthLabel }}</span>
+    </button>
+    <span class="month-current">{{ monthLabel }}</span>
+    <button class="month-btn next" (click)="nextMonth()" [attr.aria-label]="'Nächster Monat: ' + nextMonthLabel">
+      <span class="nav-month-name">{{ nextMonthLabel }}</span>
+      <span class="arrow">›</span>
+    </button>
+  </div>
+  <button class="today-btn" (click)="goToToday()">Heute</button>
 </div>
 
 <div class="loading" *ngIf="isLoading">

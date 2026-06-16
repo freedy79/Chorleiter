@@ -39,6 +39,8 @@ npm run test:backend
 - After each meaningful session, append one conventional one-liner per feature/fix/cleanup in the format `YYYY-MM-DD | type(scope): summary | areas | notes`.
 - Every feature or fix must be represented by exactly one line.
 - If a session contains unrelated changes, split them into separate lines so each line maps cleanly to one change.
+- Pre-commit guard: `scripts/check-session-commit-log.js` blocks commits with code changes when `doc/project/SESSION-COMMIT-LOG.md` is not staged.
+- Hook bootstrap: run `npm run hooks:install` once per clone (also executed automatically via root `prepare` script on `npm install`).
 - Use the log entry as the basis for the commit subject whenever possible.
 
 ### Database Initialization

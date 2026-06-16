@@ -11,9 +11,6 @@ exports.requestPasswordReset = async (req, res) => {
     return res.status(400).send({ message: 'Email is required.' });
   }
   try {
-    if (email === 'demo@nak-chorleiter.de') {
-      return res.status(403).send({ message: 'Demo user cannot reset password.' });
-    }
     const user = await db.user.findOne({
       where: db.Sequelize.where(db.Sequelize.fn('lower', db.Sequelize.col('email')), email)
     });
@@ -78,9 +75,6 @@ exports.resetPassword = async (req, res) => {
     });
     if (!user) {
       return res.status(400).send({ message: 'Invalid or expired token.' });
-    }
-    if (user.email === 'demo@nak-chorleiter.de') {
-      return res.status(403).send({ message: 'Demo user cannot reset password.' });
     }
     await user.update({
       password: bcrypt.hashSync(password, 12),  // Erhöhe Salt Rounds von 8 auf 12

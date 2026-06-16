@@ -723,6 +723,18 @@ exports.getMailTemplates = async (req, res) => {
     }
 };
 
+exports.getDemoLeads = async (req, res) => {
+    try {
+        const leads = await db.demo_lead.findAll({
+            order: [['createdAt', 'DESC']],
+            attributes: ['id', 'email', 'expiresAt', 'verifiedAt', 'requestedIp', 'verifiedIp', 'userAgent', 'createdAt', 'updatedAt']
+        });
+        res.status(200).send(leads);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
 exports.updateMailTemplates = async (req, res) => {
     try {
         const updates = req.body;

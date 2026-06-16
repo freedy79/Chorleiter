@@ -9,6 +9,7 @@
     <div class="login-body">
       <p *ngIf="sessionExpired" class="session-expired">Letzte Sitzung abgelaufen.</p>
       <p *ngIf="loginError" class="login-error">{{ loginError }}</p>
+      <p *ngIf="demoLeadMessage" class="demo-lead-message">{{ demoLeadMessage }}</p>
       <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-pf-settings">
         <mat-form-field appearance="outline">
           <mat-label>E-Mail</mat-label>
@@ -32,6 +33,11 @@
         </div>
 
       </form>
+      <div class="demo-actions">
+        <button mat-stroked-button color="primary" type="button" (click)="openDemoLeadDialog()">
+          Demo testen
+        </button>
+      </div>
       <p class="reset-link"><a routerLink="/forgot-password">Passwort vergessen?</a></p>
     </div>
   </div>

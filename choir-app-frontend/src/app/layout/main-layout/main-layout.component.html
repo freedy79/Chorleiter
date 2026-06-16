@@ -22,13 +22,13 @@
 
   <span class="spacer"></span>
 
-  <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu" [disabled]="isDemo$ | async"
+  <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu"
     *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}
   </button>
 
   <!-- Mobile: Choir Switcher als Bottom Sheet -->
-  <button mat-icon-button class="choir-badge-mobile" (click)="openChoirSwitcher()" [disabled]="isDemo$ | async"
+  <button mat-icon-button class="choir-badge-mobile" (click)="openChoirSwitcher()"
     *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (isSmallScreen$ | async)"
     matTooltip="{{ (activeChoir$ | async)?.name || 'Chor wählen' }}"
     aria-label="Chor wechseln">
@@ -74,7 +74,7 @@
         <span>Profil</span>
       </a>
 
-      <button mat-menu-item [matMenuTriggerFor]="choirMenu" *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && (isDemo$ | async) === false">
+      <button mat-menu-item [matMenuTriggerFor]="choirMenu" *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1">
         <mat-icon>groups</mat-icon>
         <span>Chor wechseln</span>
       </button>
@@ -211,7 +211,7 @@
     <mat-icon>forum</mat-icon>
     <span>Chat</span>
   </a>
-  <a mat-menu-item routerLink="/admin" *ngIf="(isAdmin$ | async) && (isDemo$ | async) === false">
+  <a mat-menu-item routerLink="/admin" *ngIf="isAdmin$ | async">
     <mat-icon>settings</mat-icon>
     <span>Admin</span>
   </a>

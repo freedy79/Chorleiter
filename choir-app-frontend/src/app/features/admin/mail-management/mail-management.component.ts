@@ -11,6 +11,7 @@ import { MailTemplatesHubComponent } from './mail-templates-hub.component';
 import { MailSettingsHubComponent } from './mail-settings-hub.component';
 import { MailLogsHubComponent } from './mail-logs-hub.component';
 import { AdminEmailSettingsHubComponent } from './admin-email-settings-hub.component';
+import { DemoLeadsHubComponent } from '../demo-leads/demo-leads-hub.component';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
 
@@ -28,11 +29,12 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
     MailTemplatesHubComponent,
     MailSettingsHubComponent,
     MailLogsHubComponent,
-    AdminEmailSettingsHubComponent
+    AdminEmailSettingsHubComponent,
+    DemoLeadsHubComponent
   ]
 })
 export class MailManagementComponent {
-  private readonly tabKeys = ['templates', 'settings', 'logs', 'admin-email'];
+  private readonly tabKeys = ['templates', 'settings', 'logs', 'admin-email', 'demo-leads'];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
