@@ -16,7 +16,7 @@ import { BaseComponent } from '@shared/components/base.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
 import { SendPlanDialogComponent, SendPlanDialogResult } from './send-plan-dialog/send-plan-dialog.component';
 import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -31,6 +31,7 @@ import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
 import { EventShortPipe } from '@shared/pipes/event-short.pipe';
 import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
 import { Event } from '@core/models/event';
@@ -57,7 +58,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent, DataStateComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -508,7 +509,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private monthNav: MonthNavigationService,
               private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef,
-            private logger: DebugLogService) {
+              private logger: DebugLogService,
+              private dialogHelper: DialogHelperService) {
     super(); // Call BaseComponent constructor
     this.isDeveloper = this.logger.isEnabled();
   }
@@ -1019,9 +1021,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   deleteEntry(ev: PlanEntry): void {
-    const data: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
-    const ref = this.dialog.open(ConfirmDialogComponent, { data });
-    ref.afterClosed().pipe(
+    this.dialogHelper.confirm({
+      title: 'Event löschen?',
+      message: 'Möchten Sie dieses Event wirklich löschen?'
+    }).pipe(
       takeUntil(this.destroy$)
     ).subscribe(confirmed => {
       if (confirmed) {

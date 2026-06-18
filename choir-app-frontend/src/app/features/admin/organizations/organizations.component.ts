@@ -12,6 +12,12 @@ import { ChoirRegistrationRequestsComponent } from '../choir-registration-reques
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
 
+interface OrganizationTab {
+  key: 'districts' | 'congregations' | 'choirs' | 'registration-requests';
+  label: string;
+  icon: string;
+}
+
 @Component({
   selector: 'app-organizations',
   templateUrl: './organizations.component.html',
@@ -29,7 +35,14 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
   ]
 })
 export class OrganizationsComponent {
-  private readonly tabKeys = ['districts', 'congregations', 'choirs', 'registration-requests'];
+  readonly tabs: OrganizationTab[] = [
+    { key: 'districts', label: 'Bezirke', icon: 'map' },
+    { key: 'congregations', label: 'Gemeinden', icon: 'place' },
+    { key: 'choirs', label: 'Chöre', icon: 'group' },
+    { key: 'registration-requests', label: 'Registrierungsanfragen', icon: 'how_to_reg' }
+  ];
+
+  private readonly tabKeys = this.tabs.map(tab => tab.key);
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 

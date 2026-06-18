@@ -13,11 +13,12 @@ import { Observable } from 'rxjs';
 import { BaseListComponent } from '@shared/components/base-list.component';
 import { PaginatorService } from '@core/services/paginator.service';
 import { JoinPipe } from '@shared/pipes/join.pipe';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 
 @Component({
   selector: 'app-manage-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, JoinPipe],
+  imports: [CommonModule, FormsModule, MaterialModule, JoinPipe, DataStateComponent],
   templateUrl: './manage-users.component.html',
   styleUrls: ['./manage-users.component.scss']
 })
@@ -25,6 +26,8 @@ export class ManageUsersComponent extends BaseListComponent<User> {
   displayedColumns = ['name', 'email', 'roles', 'choirs', 'lastLogin', 'resetToken', 'actions'];
   filterValue = '';
   isHandset$: Observable<boolean>;
+  hasLoadError = false;
+  loadErrorMessage = 'Die Benutzerliste konnte nicht geladen werden.';
 
   constructor(
     paginatorService: PaginatorService,
@@ -42,7 +45,27 @@ export class ManageUsersComponent extends BaseListComponent<User> {
   }
 
   loadData(): Observable<User[]> {
+    this.hasLoadError = false;
     return this.api.getUsers();
+  }
+
+  protected override handleLoadError(error: any): void {
+    console.error('Fehler beim Laden der Benutzer:', error);
+    this.hasLoadError = true;
+  }
+
+  get isFilterActive(): boolean {
+    return this.filterValue.trim().length > 0;
+  }
+
+  get emptyStateTitle(): string {
+    return this.isFilterActive ? 'Keine Benutzer gefunden' : 'Keine Benutzer vorhanden';
+  }
+
+  get emptyStateMessage(): string {
+    return this.isFilterActive
+      ? 'Für den aktuellen Filter wurden keine Benutzer gefunden.'
+      : 'Füge den ersten Benutzer hinzu, um zu starten.';
   }
 
   protected override customFilterPredicate(data: User, filter: string): boolean {
@@ -145,6 +168,11 @@ export class ManageUsersComponent extends BaseListComponent<User> {
     const value = (event.target as HTMLInputElement | null)?.value ?? '';
     this.filterValue = value;
     this.applyFilter(value);
+  }
+
+  resetFilter(): void {
+    this.filterValue = '';
+    this.applyFilter('');
   }
 
   onRolesChange(user: User, roles: GlobalRole[]): void {

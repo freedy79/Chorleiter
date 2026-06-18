@@ -19,6 +19,7 @@ import { UserInChoir } from '@core/models/user';
 import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialog.component';
 import { ChatReportDialogComponent, ChatReportDialogResult } from './chat-report-dialog.component';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
@@ -26,7 +27,7 @@ import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.com
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent, MarkdownPipe],
+  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent, DataStateComponent, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
@@ -39,6 +40,7 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   loadingRooms = false;
   loadingMessages = false;
+  loadRoomsError = false;
   loadingOlderMessages = false;
   hasOlderMessages = true;
   sending = false;
@@ -142,6 +144,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       next: rooms => {
         this.rooms = rooms;
         this.loadingRooms = false;
+        this.loadRoomsError = false;
 
         if (!silent) {
           const requestedRoomId = selectRoomId ?? this.targetRoomId ?? this.selectedRoomId ?? null;
@@ -160,6 +163,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.loadingRooms = false;
+        this.loadRoomsError = true;
         if (!silent) {
           this.notification.error('Chat-Räume konnten nicht geladen werden.');
         }

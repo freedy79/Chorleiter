@@ -167,6 +167,10 @@ async function findMissingServiceEventEntries({ now = new Date(), choirId } = {}
   threeDaysAgo.setHours(0, 0, 0, 0);
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
+  const thirtyDaysAgo = new Date(now);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
   const monthlyPlanInclude = {
     model: db.monthly_plan,
     as: 'monthlyPlan',
@@ -180,7 +184,7 @@ async function findMissingServiceEventEntries({ now = new Date(), choirId } = {}
 
   const entries = await db.plan_entry.findAll({
     where: {
-      date: { [Op.lte]: threeDaysAgo },
+      date: { [Op.gte]: thirtyDaysAgo, [Op.lte]: threeDaysAgo },
       directorId: { [Op.ne]: null }
     },
     include: [

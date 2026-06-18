@@ -18,6 +18,7 @@ import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
 import { CHOIR_ROLE_LABELS } from 'src/app/shared/constants/roles.constants';
 import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
 import { LibraryItem } from '@core/models/library-item';
 import { NotificationService } from '@core/services/notification.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
@@ -401,10 +402,27 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
 
     } else {
-      const copiesStr = prompt('Anzahl der Exemplare eingeben:');
-      const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
-      if (!isNaN(copies) && copies > 0) {
-        this.apiService.initCollectionCopies(collection.id, copies).subscribe(() => {
+      this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+        TextInputDialogComponent,
+        {
+          data: {
+            title: 'Exemplare initialisieren',
+            message: 'Anzahl der Exemplare eingeben:',
+            label: 'Anzahl Exemplare',
+            maxLength: 4
+          }
+        }
+      ).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(copiesStr => {
+        const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
+        if (isNaN(copies) || copies <= 0) {
+          return;
+        }
+
+        this.apiService.initCollectionCopies(collection.id, copies).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(() => {
           this.collectionCopyIds.add(collection.id);
           const dialogConfig = new MatDialogConfig();
 
@@ -415,7 +433,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
           dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
           this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
         });
-      }
+      });
     }
   }
 

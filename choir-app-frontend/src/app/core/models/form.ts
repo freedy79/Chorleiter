@@ -15,12 +15,26 @@ export type FormFieldType =
 
 export type FormStatus = 'draft' | 'published' | 'closed';
 
+export type AddressFieldRole =
+  | 'salutation'
+  | 'title'
+  | 'firstName'
+  | 'lastName'
+  | 'street'
+  | 'houseNumber'
+  | 'addressLine2'
+  | 'postalCode'
+  | 'city'
+  | 'country';
+
 export interface FormFieldValidationRules {
   minLength?: number;
   maxLength?: number;
   min?: number;
   max?: number;
   pattern?: string;
+  addressRole?: AddressFieldRole;
+  addressBlockId?: string;
 }
 
 export interface FormFieldShowIf {
@@ -102,6 +116,7 @@ export interface FormSubmitPayload {
   answers: { fieldId: number; value: string | number | boolean | null }[];
   submitterName?: string | null;
   submitterEmail?: string | null;
+  sendCopyToEmail?: boolean;
 }
 
 export interface FormFieldStatistic {

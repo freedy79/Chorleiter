@@ -110,21 +110,33 @@
       </div>
 
       <div class="table-wrapper mat-elevation-z8">
-        <!-- Desktop Table -->
-        <div class="table-scroll-container desktop-view">
-          <!-- Loading skeleton overlay -->
-          <div class="skeleton-table" *ngIf="isLoading">
-            <div class="skeleton-row" *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10]">
-              <div class="skeleton-cell skeleton-shimmer"></div>
-              <div class="skeleton-cell skeleton-shimmer"></div>
-              <div class="skeleton-cell skeleton-shimmer"></div>
-              <div class="skeleton-cell skeleton-shimmer"></div>
-              <div class="skeleton-cell skeleton-shimmer"></div>
-            </div>
-          </div>
+        <app-data-state
+          [isLoading]="isLoading"
+          [hasError]="hasLoadError"
+          [errorTitle]="'Fehler beim Laden des Repertoires'"
+          [errorMessage]="loadErrorMessage"
+          [isEmpty]="!isLoading && !hasLoadError && dataSource.data.length === 0"
+          [emptyTitle]="emptyStateTitle"
+          [emptyMessage]="emptyStateMessage"
+          [emptyIcon]="hasActiveFilters() ? 'filter_alt_off' : 'library_music'"
+          (retry)="reloadList()"
+        >
+          <ng-container empty-actions>
+            <button *ngIf="hasActiveFilters()" mat-stroked-button (click)="clearFilters()">
+              <mat-icon aria-hidden="true">clear</mat-icon>
+              Alle Filter zurücksetzen
+            </button>
+            <button *ngIf="!hasActiveFilters()" mat-flat-button color="primary" (click)="openAddPieceDialog()"
+                    aria-label="Erstes Stück zur Bibliothek hinzufügen">
+              <mat-icon aria-hidden="true">add</mat-icon>
+              Erstes Stück hinzufügen
+            </button>
+          </ng-container>
+        </app-data-state>
 
-          <!-- Actual table (always rendered for ViewChild, hidden during loading) -->
-          <mat-table [dataSource]="dataSource" matSort [class.loading]="isLoading">
+        <!-- Desktop Table -->
+        <div class="table-scroll-container desktop-view" [hidden]="isLoading || hasLoadError || dataSource.data.length === 0">
+            <mat-table [dataSource]="dataSource" matSort>
 
             <!-- Title Column -->
             <ng-container cdkColumnDef="title">
@@ -236,171 +248,94 @@
                 (mousemove)="onRowMouseMove($event)"
                 (mouseleave)="onRowMouseLeave()"></mat-row>
 
-            <!-- Row shown when there is no matching data. -->
-            <ng-container matNoDataRow>
-              <tr class="mat-row" *matNoDataRow>
-                <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                  <div class="table-empty-state">
-                    <ng-container *ngIf="!isLoading">
-                      <!-- Empty state: No data at all -->
-                      <div class="empty-content" *ngIf="!hasActiveFilters()">
-                        <mat-icon class="empty-icon" aria-hidden="true">library_music</mat-icon>
-                        <h3>Willkommen in Ihrer Notenbibliothek</h3>
-                        <p>Fügen Sie Ihr erstes Stück hinzu, um loszulegen.</p>
-                        <button mat-flat-button color="primary" (click)="openAddPieceDialog()"
-                                aria-label="Erstes Stück zur Bibliothek hinzufügen">
-                          <mat-icon aria-hidden="true">add</mat-icon>
-                          Erstes Stück hinzufügen
-                        </button>
-                      </div>
-                      <!-- Empty state: No results for filters -->
-                      <div class="empty-content" *ngIf="hasActiveFilters()">
-                        <mat-icon class="empty-icon" aria-hidden="true">filter_alt_off</mat-icon>
-                        <h3>Keine passenden Stücke gefunden</h3>
-                        <p>Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.</p>
-                        <button mat-button (click)="clearFilters()" aria-label="Alle Filter zurücksetzen">
-                          <mat-icon aria-hidden="true">clear</mat-icon>
-                          Alle Filter zurücksetzen
-                        </button>
-                      </div>
-                    </ng-container>
-                  </div>
-                </td>
-              </tr>
-            </ng-container>
           </mat-table>
         </div>
 
         <!-- Mobile View: Cards -->
-        <div class="mobile-card-container mobile-view">
-          <!-- Loading skeleton for mobile -->
-          <div class="skeleton-cards" *ngIf="isLoading">
-            <div class="skeleton-card" *ngFor="let _ of [1,2,3,4,5]">
-              <div class="skeleton-card-header">
-                <div class="skeleton-title skeleton-shimmer"></div>
-                <div class="skeleton-button skeleton-shimmer"></div>
+        <div class="mobile-card-container mobile-view" [hidden]="isLoading || hasLoadError || dataSource.data.length === 0">
+          <div class="mobile-cards">
+            <div class="card" *ngFor="let piece of dataSource.data; trackBy: trackByPieceId">
+              <div class="card-header">
+                <button mat-button class="card-title" type="button" (click)="openPiece(piece)">
+                  {{ piece.title }}
+                </button>
+                <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)"
+                        [attr.aria-label]="'Stück editieren: ' + piece.title">
+                  <mat-icon aria-hidden="true">edit</mat-icon>
+                </button>
               </div>
-              <div class="skeleton-subtitle skeleton-shimmer"></div>
-              <div class="skeleton-meta">
-                <div class="skeleton-meta-item skeleton-shimmer"></div>
-                <div class="skeleton-meta-item skeleton-shimmer"></div>
+
+              <div class="card-subtitle" *ngIf="piece.composer?.name || piece.origin">
+                {{ piece.composer?.name || piece.origin }}
+              </div>
+
+              <div class="card-meta">
+                <span class="meta-item" *ngIf="piece.category && piece.category.name">
+                  <span class="label">Rubrik:</span>
+                  <span class="value">{{ piece.category.name }}</span>
+                </span>
+                <span class="meta-item">
+                  <span class="label">Nr.:</span>
+                  <span class="value">{{ piece | reference:'' }}</span>
+                </span>
+              </div>
+
+              <div class="card-stats" *ngIf="showLastSung || showLastRehearsed || showTimesSung || showTimesRehearsed">
+                <span class="stat" *ngIf="showLastSung">
+                  <span class="label">Zuletzt gesungen:</span>
+                  <span class="value">{{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }}</span>
+                </span>
+                <span class="stat" *ngIf="showLastRehearsed">
+                  <span class="label">Zuletzt geprobt:</span>
+                  <span class="value">{{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }}</span>
+                </span>
+                <span class="stat" *ngIf="showTimesSung">
+                  <span class="label">Anzahl gesungen:</span>
+                  <span class="value">{{ piece.timesSung || 0 }}</span>
+                </span>
+                <span class="stat" *ngIf="showTimesRehearsed">
+                  <span class="label">Anzahl geprobt:</span>
+                  <span class="value">{{ piece.timesRehearsed || 0 }}</span>
+                </span>
+              </div>
+
+              <div class="card-controls">
+                <div class="control">
+                  <span class="label">Bewertung</span>
+                  <mat-select [value]="piece.choir_repertoire?.rating"
+                              (selectionChange)="onRatingChange($event.value, piece.id)"
+                              [disabled]="!canRate">
+                    <mat-option [value]="null">-</mat-option>
+                    <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
+                  </mat-select>
+                </div>
+                <div class="control">
+                  <span class="label">Status</span>
+                  <ng-container *ngIf="isAdmin || isChoirAdmin || isDirector; else showonlyMobile">
+                    <mat-select [value]="piece.choir_repertoire?.status"
+                                (selectionChange)="onStatusChange($event.value, piece.id)">
+                      <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
+                      <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
+                      <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
+                    </mat-select>
+                  </ng-container>
+                  <ng-template #showonlyMobile>
+                    <span class="value">{{ piece.choir_repertoire?.status | pieceStatusLabel }}</span>
+                  </ng-template>
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Actual cards (hidden during loading) -->
-          <div [class.loading]="isLoading">
-            <ng-container *ngIf="dataSource.data.length; else mobileNoData">
-            <div class="mobile-cards">
-              <div class="card" *ngFor="let piece of dataSource.data; trackBy: trackByPieceId">
-                <div class="card-header">
-                  <button mat-button class="card-title" type="button" (click)="openPiece(piece)">
-                    {{ piece.title }}
-                  </button>
-                  <button mat-icon-button matTooltip="Stück editieren" (click)="openEditPieceDialog(piece.id)"
-                          [attr.aria-label]="'Stück editieren: ' + piece.title">
-                    <mat-icon aria-hidden="true">edit</mat-icon>
-                  </button>
-                </div>
-
-                <div class="card-subtitle" *ngIf="piece.composer?.name || piece.origin">
-                  {{ piece.composer?.name || piece.origin }}
-                </div>
-
-                <div class="card-meta">
-                  <span class="meta-item" *ngIf="piece.category?.name">
-                    <span class="label">Rubrik:</span>
-                    <span class="value">{{ piece.category?.name }}</span>
-                  </span>
-                  <span class="meta-item">
-                    <span class="label">Nr.:</span>
-                    <span class="value">{{ piece | reference:'' }}</span>
-                  </span>
-                </div>
-
-                <div class="card-stats" *ngIf="showLastSung || showLastRehearsed || showTimesSung || showTimesRehearsed">
-                  <span class="stat" *ngIf="showLastSung">
-                    <span class="label">Zuletzt gesungen:</span>
-                    <span class="value">{{ piece.lastSung ? (piece.lastSung | date:'shortDate') : '-' }}</span>
-                  </span>
-                  <span class="stat" *ngIf="showLastRehearsed">
-                    <span class="label">Zuletzt geprobt:</span>
-                    <span class="value">{{ piece.lastRehearsed ? (piece.lastRehearsed | date:'shortDate') : '-' }}</span>
-                  </span>
-                  <span class="stat" *ngIf="showTimesSung">
-                    <span class="label">Anzahl gesungen:</span>
-                    <span class="value">{{ piece.timesSung || 0 }}</span>
-                  </span>
-                  <span class="stat" *ngIf="showTimesRehearsed">
-                    <span class="label">Anzahl geprobt:</span>
-                    <span class="value">{{ piece.timesRehearsed || 0 }}</span>
-                  </span>
-                </div>
-
-                <div class="card-controls">
-                  <div class="control">
-                    <span class="label">Bewertung</span>
-                    <mat-select [value]="piece.choir_repertoire?.rating"
-                                (selectionChange)="onRatingChange($event.value, piece.id)"
-                                [disabled]="!canRate">
-                      <mat-option [value]="null">-</mat-option>
-                      <mat-option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{ r }}</mat-option>
-                    </mat-select>
-                  </div>
-                  <div class="control">
-                    <span class="label">Status</span>
-                    <ng-container *ngIf="isAdmin || isChoirAdmin || isDirector; else showonlyMobile">
-                      <mat-select [value]="piece.choir_repertoire?.status"
-                                  (selectionChange)="onStatusChange($event.value, piece.id)">
-                        <mat-option value="CAN_BE_SUNG">Aufführbar</mat-option>
-                        <mat-option value="IN_REHEARSAL">Wird geprobt</mat-option>
-                        <mat-option value="NOT_READY">Nicht im Repertoire</mat-option>
-                      </mat-select>
-                    </ng-container>
-                    <ng-template #showonlyMobile>
-                      <span class="value">{{ piece.choir_repertoire?.status | pieceStatusLabel }}</span>
-                    </ng-template>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ng-container>
-
-          <ng-template #mobileNoData>
-            <div class="mobile-empty" *ngIf="!isLoading">
-              <!-- Empty state: No data at all -->
-              <div class="empty-content" *ngIf="!hasActiveFilters()">
-                <mat-icon class="empty-icon" aria-hidden="true">library_music</mat-icon>
-                <h3>Willkommen in Ihrer Notenbibliothek</h3>
-                <p>Fügen Sie Ihr erstes Stück hinzu, um loszulegen.</p>
-                <button mat-flat-button color="primary" (click)="openAddPieceDialog()"
-                        aria-label="Erstes Stück zur Bibliothek hinzufügen">
-                  <mat-icon aria-hidden="true">add</mat-icon>
-                  Erstes Stück hinzufügen
-                </button>
-              </div>
-              <!-- Empty state: No results for filters -->
-              <div class="empty-content" *ngIf="hasActiveFilters()">
-                <mat-icon class="empty-icon" aria-hidden="true">filter_alt_off</mat-icon>
-                <h3>Keine passenden Stücke gefunden</h3>
-                <p>Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.</p>
-                <button mat-button (click)="clearFilters()" aria-label="Alle Filter zurücksetzen">
-                  <mat-icon aria-hidden="true">clear</mat-icon>
-                  Alle Filter zurücksetzen
-                </button>
-              </div>
-            </div>
-          </ng-template>
-        </div> <!-- closes div with [class.loading] -->
-        </div> <!-- closes mobile-card-container -->
+        </div>
 
         <!-- The Paginator -->
         <mat-paginator [length]="totalPieces"
                        [pageSizeOptions]="pageSizeOptions"
                        [pageSize]="pageSize"
-                       showFirstLastButtons>
+                       showFirstLastButtons
+                       [hidden]="isLoading || hasLoadError || dataSource.data.length === 0">
         </mat-paginator>
-      </div>
+    </div>
     </div>
     <div class="hover-image" *ngIf="hoverImage"
          [style.top.px]="hoverY + 10" [style.left.px]="hoverX + 10">

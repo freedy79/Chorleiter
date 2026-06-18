@@ -29,6 +29,7 @@ const { encryptUserPersonalData } = require('./encryptUserPersonalData');
 const { ensureRehearsalReminderSetup } = require('./ensureRehearsalReminderSetup');
 const { ensureTrainingSetup } = require('./ensureTrainingSetup');
 const { ensurePersonalAddressBookTables } = require('./ensurePersonalAddressBookTables');
+const { ensurePieceLinkTypes } = require('./ensurePieceLinkTypes');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
@@ -59,6 +60,7 @@ async function init(options = {}) {
     await ensureRehearsalReminderSetup();
     await ensureTrainingSetup();
     await ensurePersonalAddressBookTables();
+    await ensurePieceLinkTypes();
     // 4. Then run data migrations on existing tables
     await encryptUserPersonalData();
     await migrateUserNames();
@@ -96,5 +98,6 @@ module.exports = {
     ensureAudioMarkerTable,
     ensurePageViewTable,
     ensureChatUnreadTemplate,
-    ensurePersonalAddressBookTables
+    ensurePersonalAddressBookTables,
+    ensurePieceLinkTypes
 };

@@ -9,6 +9,20 @@ const FormField = db.form_field;
 const FormSubmission = db.form_submission;
 const FormAnswer = db.form_answer;
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function isValidEmail(value) {
+  const email = String(value || '').trim();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 class FormService {
 
   // ── Form CRUD ────────────────────────────────────────────────
@@ -210,10 +224,64 @@ class FormService {
   }
 
   async reorderFields(formId, fieldIds) {
-    const updates = fieldIds.map((id, idx) =>
-      FormField.update({ sortOrder: idx }, { where: { id, formId } })
-    );
-    await Promise.all(updates);
+    // DEBUG-FORM-REORDER-TEMP: Temporary diagnostics for reorder behavior.
+    logger.info('[DEBUG-FORM-REORDER-TEMP][SERVICE][INPUT]', { formId, fieldIds });
+
+    const normalizedIds = Array.from(new Set(
+      (Array.isArray(fieldIds) ? fieldIds : [])
+        .map(id => Number(id))
+        .filter(id => Number.isInteger(id) && id > 0),
+    ));
+
+    const existingFields = await FormField.findAll({
+      where: { formId },
+      attributes: ['id', 'sortOrder'],
+      order: [['sortOrder', 'ASC']],
+    });
+    const existingIds = existingFields.map(field => field.id);
+    const existingSet = new Set(existingIds);
+
+    const unknownIds = normalizedIds.filter(id => !existingSet.has(id));
+    if (unknownIds.length > 0) {
+      logger.warn('[DEBUG-FORM-REORDER-TEMP][SERVICE][UNKNOWN_IDS]', {
+        formId,
+        unknownIds,
+        existingIds,
+      });
+    }
+
+    const validIds = normalizedIds.filter(id => existingSet.has(id));
+
+    if (validIds.length === 0) {
+      logger.info('[DEBUG-FORM-REORDER-TEMP][SERVICE][NO_VALID_IDS]', { formId, normalizedIds, existingIds });
+      return FormField.findAll({
+        where: { formId },
+        order: [['sortOrder', 'ASC']],
+      });
+    }
+
+    const trailingIds = existingIds.filter(id => !validIds.includes(id));
+
+    await db.sequelize.transaction(async (transaction) => {
+      const updates = [
+        ...validIds.map((id, idx) =>
+          FormField.update({ sortOrder: idx }, { where: { id, formId }, transaction })
+        ),
+        ...trailingIds.map((id, offset) =>
+          FormField.update({ sortOrder: validIds.length + offset }, { where: { id, formId }, transaction })
+        ),
+      ];
+
+      await Promise.all(updates);
+    });
+
+    logger.info('[DEBUG-FORM-REORDER-TEMP][SERVICE][SUCCESS]', {
+      formId,
+      validIds,
+      trailingIds,
+      unknownIds,
+    });
+
     return FormField.findAll({
       where: { formId },
       order: [['sortOrder', 'ASC']],
@@ -222,7 +290,20 @@ class FormService {
 
   // ── Submissions ───────────────────────────────────────────────
 
-  async submitForm(formId, data, userId, ipAddress) {
+  async submitForm(formId, data, userId, ipAddress, options = {}) {
+    const { hydrateResult = true } = options;
+
+    logger.warn('[FORM-SUBMIT] Persisting submission', {
+      formId,
+      userId: userId || null,
+      ipAddress,
+      hasAnswers: Array.isArray(data?.answers),
+      answerCount: Array.isArray(data?.answers) ? data.answers.length : 0,
+      hasSubmitterName: !!data?.submitterName,
+      hasSubmitterEmail: !!data?.submitterEmail,
+      sendCopyToEmail: !!data?.sendCopyToEmail,
+    });
+
     const submission = await FormSubmission.create({
       formId,
       userId: userId || null,
@@ -231,18 +312,49 @@ class FormService {
       ipAddress,
     });
 
+    logger.warn('[FORM-SUBMIT] Created form_submission row', {
+      formId,
+      submissionId: submission.id,
+    });
+
     if (data.answers && Array.isArray(data.answers)) {
+      const invalidFieldIds = data.answers
+        .map(a => a?.fieldId)
+        .filter(id => !Number.isInteger(id));
+
+      if (invalidFieldIds.length > 0) {
+        logger.warn('[FORM-SUBMIT] Non-integer field IDs detected before bulk insert', {
+          formId,
+          submissionId: submission.id,
+          invalidFieldIds,
+        });
+      }
+
       const answers = data.answers.map(a => ({
         submissionId: submission.id,
         fieldId: a.fieldId,
         value: a.value != null ? String(a.value) : null,
       }));
+
+      logger.warn('[FORM-SUBMIT] Inserting answer rows', {
+        formId,
+        submissionId: submission.id,
+        answerRowCount: answers.length,
+      });
+
       await FormAnswer.bulkCreate(answers);
+
+      logger.warn('[FORM-SUBMIT] Inserted answer rows successfully', {
+        formId,
+        submissionId: submission.id,
+      });
     }
 
     // Send email notification if enabled
     try {
-      const form = await Form.findByPk(formId);
+      const form = await Form.findByPk(formId, {
+        include: [{ model: FormField, as: 'fields', separate: true, order: [['sortOrder', 'ASC']] }],
+      });
       if (form && form.notifyOnSubmission) {
         const creator = await db.user.findByPk(form.createdBy, { attributes: ['email', 'firstName'] });
         if (creator && creator.email) {
@@ -261,8 +373,53 @@ class FormService {
           });
         }
       }
+
+      // Optional: send respondent a copy of their own submission if requested
+      if (form && data.sendCopyToEmail) {
+        const answerMap = new Map((data.answers || []).map(a => [a.fieldId, a.value]));
+        const emailField = (form.fields || []).find(field => field.type === 'email' && isValidEmail(answerMap.get(field.id)));
+
+        if (emailField) {
+          const respondentEmail = String(answerMap.get(emailField.id)).trim();
+          const answerRows = (form.fields || [])
+            .filter(field => field.type !== 'heading' && field.type !== 'separator')
+            .map(field => {
+              const rawValue = answerMap.get(field.id);
+              const value = rawValue == null || rawValue === '' ? '—' : String(rawValue);
+              return `<tr><td style="padding:6px 10px;border:1px solid #ddd;"><strong>${escapeHtml(field.label || `Feld ${field.id}`)}</strong></td><td style="padding:6px 10px;border:1px solid #ddd;">${escapeHtml(value)}</td></tr>`;
+            })
+            .join('');
+
+          const plainAnswers = (form.fields || [])
+            .filter(field => field.type !== 'heading' && field.type !== 'separator')
+            .map(field => {
+              const rawValue = answerMap.get(field.id);
+              const value = rawValue == null || rawValue === '' ? '—' : String(rawValue);
+              return `${field.label || `Feld ${field.id}`}: ${value}`;
+            })
+            .join('\n');
+
+          await sendMail({
+            to: respondentEmail,
+            subject: `Kopie deiner Angaben: ${form.title}`,
+            html: `
+              <p>Danke für deine Teilnahme am Formular <strong>${escapeHtml(form.title)}</strong>.</p>
+              <p>Hier ist eine Kopie deiner übermittelten Angaben:</p>
+              <table style="border-collapse:collapse;border:1px solid #ddd;">${answerRows}</table>
+            `,
+            text: `Danke für deine Teilnahme am Formular "${form.title}".\n\nHier ist eine Kopie deiner Angaben:\n\n${plainAnswers}`,
+          });
+        }
+      }
     } catch (err) {
       logger.error(`Fehler beim Senden der Formular-Benachrichtigung: ${err.message}`);
+    }
+
+    if (!hydrateResult) {
+      return {
+        id: submission.id,
+        formId,
+      };
     }
 
     return this.getSubmissionById(submission.id);
@@ -277,7 +434,7 @@ class FormService {
           as: 'answers',
           include: [{ model: FormField, as: 'field', attributes: ['id', 'label', 'type'] }],
         },
-        { model: db.user, as: 'submitter', attributes: ['id', 'firstName', 'lastName'] },
+        { model: db.user, as: 'submitter', attributes: ['id', 'firstName', ['name', 'lastName']] },
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -291,7 +448,7 @@ class FormService {
           as: 'answers',
           include: [{ model: FormField, as: 'field', attributes: ['id', 'label', 'type'] }],
         },
-        { model: db.user, as: 'submitter', attributes: ['id', 'firstName', 'lastName'] },
+        { model: db.user, as: 'submitter', attributes: ['id', 'firstName', ['name', 'lastName']] },
       ],
     });
   }
@@ -302,6 +459,64 @@ class FormService {
 
   async getSubmissionCount(formId) {
     return FormSubmission.count({ where: { formId } });
+  }
+
+  async findSubmissionByEmailFieldValue(formId, email) {
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    if (!normalizedEmail) return null;
+
+    return FormSubmission.findOne({
+      where: { formId },
+      attributes: ['id', 'createdAt'],
+      include: [{
+        model: FormAnswer,
+        as: 'answers',
+        required: true,
+        where: db.sequelize.where(
+          db.sequelize.fn('LOWER', db.sequelize.col('answers.value')),
+          normalizedEmail,
+        ),
+        include: [{
+          model: FormField,
+          as: 'field',
+          required: true,
+          where: { type: 'email', formId },
+          attributes: ['id'],
+        }],
+      }],
+    });
+  }
+
+  async updateSubmissionAnswers(submissionId, formId, data) {
+    const submission = await FormSubmission.findOne({ where: { id: submissionId, formId } });
+    if (!submission) return null;
+
+    await db.sequelize.transaction(async (transaction) => {
+      await FormAnswer.destroy({ where: { submissionId }, transaction });
+
+      if (Array.isArray(data.answers) && data.answers.length > 0) {
+        await FormAnswer.bulkCreate(
+          data.answers.map(a => ({
+            submissionId,
+            fieldId: a.fieldId,
+            value: a.value != null ? String(a.value) : null,
+          })),
+          { transaction },
+        );
+      }
+
+      if (data.submitterName !== undefined || data.submitterEmail !== undefined) {
+        await FormSubmission.update(
+          {
+            submitterName: data.submitterName || null,
+            submitterEmail: data.submitterEmail || null,
+          },
+          { where: { id: submissionId }, transaction },
+        );
+      }
+    });
+
+    return { id: submissionId, formId };
   }
 
   /**

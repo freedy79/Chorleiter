@@ -169,6 +169,7 @@ async function buildPostEmail(text, choirName, postId, hasAttachment) {
 }
 
 exports.buildPostEmail = buildPostEmail;
+exports.sendTemplateMail = sendTemplateMail;
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, surname, invitorName, firstName) => {
   const linkBase = await getFrontendUrl();

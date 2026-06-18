@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MaterialModule } from '@modules/material.module';
 import { TrainingService } from '@core/services/training.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { Exercise, AttemptResult, MODULE_LABELS, DIFFICULTY_LABELS } from '@core/models/training';
 
 type ExercisePhase = 'loading' | 'ready' | 'playing' | 'result';
@@ -101,6 +102,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
 
   constructor(
     private trainingService: TrainingService,
+    private dialogHelper: DialogHelperService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -813,10 +815,19 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
 
   navigateBack(): void {
     if (this.phase === 'playing') {
-      if (!confirm('Übung wirklich abbrechen? Der Fortschritt geht verloren.')) {
-        return;
-      }
-      this.stopMetronome();
+      this.dialogHelper.confirm({
+        title: 'Übung abbrechen?',
+        message: 'Übung wirklich abbrechen? Der Fortschritt geht verloren.'
+      }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+        this.stopMetronome();
+        this.router.navigate(['/training']);
+      });
+      return;
     }
     this.router.navigate(['/training']);
   }

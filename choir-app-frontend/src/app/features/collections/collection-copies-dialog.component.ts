@@ -1,14 +1,18 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { Lending } from '@core/models/lending';
 import { NotificationService } from '@core/services/notification.service';
 import { UserInChoir } from '@core/models/user';
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { ChoirDigitalLicense } from '@core/models/choir-digital-license';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-collection-copies-dialog',
@@ -16,10 +20,11 @@ import { ChoirDigitalLicense } from '@core/models/choir-digital-license';
   imports: [CommonModule, MatDialogModule, MaterialModule, FormsModule],
   templateUrl: './collection-copies-dialog.component.html'
 })
-export class CollectionCopiesDialogComponent implements OnInit {
+export class CollectionCopiesDialogComponent implements OnInit, OnDestroy {
   copies: Lending[] = [];
   digitalLicenses: ChoirDigitalLicense[] = [];
   members: UserInChoir[] = [];
+  private destroy$ = new Subject<void>();
   displayedColumns = ['number', 'name', 'borrowed', 'returned', 'actions'];
   digitalDisplayedColumns = ['licenseNumber', 'licenseType', 'quantity', 'validity', 'document', 'actions'];
   licenseTypes: Array<ChoirDigitalLicense['licenseType']> = ['print', 'display', 'stream', 'archive'];
@@ -36,12 +41,18 @@ export class CollectionCopiesDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: { collectionId: number },
     private dialogRef: MatDialogRef<CollectionCopiesDialogComponent>,
     private api: ApiService,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService
   ) {}
 
   ngOnInit(): void {
     this.load();
     this.api.getChoirMembers().subscribe(m => (this.members = m));
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   load(): void {
@@ -96,23 +107,38 @@ export class CollectionCopiesDialogComponent implements OnInit {
   }
 
   adjustCopies(): void {
-    const copiesStr = prompt('Neue Anzahl der Exemplare eingeben:');
-    const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
-    if (isNaN(copies) || copies < 1) {
-      return;
-    }
-    if (copies < this.copies.length && this.copies.some(c => c.status === 'borrowed')) {
-      this.notification.error('Reduzierung nicht möglich: Ausleihen vorhanden.');
-      return;
-    }
-    this.api.setCollectionCopies(this.data.collectionId, copies).subscribe({
-      next: () => {
-        this.notification.success('Gespeichert');
-        this.load();
-      },
-      error: err => {
-        this.notification.error(err.error?.message || 'Fehler beim Speichern');
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Anzahl Exemplare ändern',
+          message: 'Geben Sie die neue Anzahl der Exemplare ein:',
+          label: 'Anzahl Exemplare',
+          maxLength: 4
+        }
       }
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(copiesStr => {
+      const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
+      if (isNaN(copies) || copies < 1) {
+        return;
+      }
+      if (copies < this.copies.length && this.copies.some(c => c.status === 'borrowed')) {
+        this.notification.error('Reduzierung nicht möglich: Ausleihen vorhanden.');
+        return;
+      }
+      this.api.setCollectionCopies(this.data.collectionId, copies).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.notification.success('Gespeichert');
+          this.load();
+        },
+        error: err => {
+          this.notification.error(err.error?.message || 'Fehler beim Speichern');
+        }
+      });
     });
   }
 

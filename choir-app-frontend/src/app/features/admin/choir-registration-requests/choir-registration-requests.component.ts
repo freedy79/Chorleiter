@@ -7,6 +7,7 @@ import { AdminService } from '@core/services/admin.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { ChoirRegistrationRequest } from '@core/models/choir-registration-admin';
+import { RejectReasonDialogComponent } from '@shared/components/reject-reason-dialog/reject-reason-dialog.component';
 
 @Component({
   selector: 'app-choir-registration-requests',
@@ -47,7 +48,6 @@ export class ChoirRegistrationRequestsComponent implements OnInit {
   }
 
   applyFilter(): void {
-    const requests = this.dataSource.data;
     switch (this.statusFilter) {
       case 'pending':
         this.dataSource.filterPredicate = (item) => item.status === 'PENDING_REVIEW';
@@ -84,27 +84,33 @@ export class ChoirRegistrationRequestsComponent implements OnInit {
   }
 
   reject(request: ChoirRegistrationRequest): void {
-    const reason = window.prompt(`Ablehnungsgrund für "${request.choirName}" (optional):`, request.rejectionReason || '');
-    if (reason === null) {
-      return;
-    }
-    this.dialogHelper.confirm({
-      title: 'Anfrage ablehnen?',
-      message: `Soll die Anfrage von ${request.requesterName} abgelehnt werden?`,
-      confirmButtonText: 'Ablehnen',
-      cancelButtonText: 'Abbrechen'
-    }).subscribe(confirmed => {
-      if (!confirmed) {
-        return;
-      }
-      this.adminService.rejectChoirRegistrationRequest(request.id, reason).subscribe({
-        next: () => {
-          this.notification.success('Anfrage abgelehnt.');
-          this.load();
+    this.dialogHelper.openDialogWithApi<RejectReasonDialogComponent, string | undefined, { message: string }>(
+      RejectReasonDialogComponent,
+      (reason) => this.adminService.rejectChoirRegistrationRequest(request.id, reason),
+      {
+        dialogConfig: {
+          width: '520px',
+          data: {
+            choirName: request.choirName,
+            requesterName: request.requesterName,
+            initialReason: request.rejectionReason || ''
+          }
         },
-        error: (err) => this.notification.error(err?.error?.message || 'Ablehnung fehlgeschlagen.')
-      });
-    });
+        apiConfig: {
+          shouldProceed: (reason) => reason !== undefined,
+          transformResult: (reason) => typeof reason === 'string' ? reason : '',
+          onSuccess: () => {
+            this.notification.success('Anfrage abgelehnt.');
+            this.load();
+          },
+          onError: (err) => {
+            this.notification.error(err?.error?.message || 'Ablehnung fehlgeschlagen.');
+            return true;
+          },
+          silent: true,
+        }
+      }
+    ).subscribe();
   }
 
   isPending(request: ChoirRegistrationRequest): boolean {

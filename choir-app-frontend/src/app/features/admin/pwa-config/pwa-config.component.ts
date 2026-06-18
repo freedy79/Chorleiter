@@ -8,6 +8,7 @@ import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PwaVapidKeysComponent } from './pwa-vapid-keys/pwa-vapid-keys.component';
 import { PwaFeaturesComponent } from './pwa-features/pwa-features.component';
@@ -42,6 +43,7 @@ export class PwaConfigComponent {
   constructor(
     private responsive: ResponsiveService,
     private api: ApiService,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService
   ) {
     this.isMobile$ = responsive.isHandset$;
@@ -52,25 +54,32 @@ export class PwaConfigComponent {
   }
 
   initializeDefaults(): void {
-    if (!confirm('Möchten Sie die Standard-PWA-Konfigurationen initialisieren? Bestehende Einstellungen werden nicht überschrieben.')) {
-      return;
-    }
-
-    this.initializing = true;
-    this.api.initializePwaConfigDefaults().subscribe({
-      next: (result) => {
-        this.initializing = false;
-        this.notification.success(
-          `${result.created} Konfigurationen erstellt, ${result.skipped} übersprungen`,
-          3000
-        );
-        window.location.reload();
-      },
-      error: (err) => {
-        this.initializing = false;
-        console.error('Error initializing PWA config defaults:', err);
-        this.notification.error(err.error?.message || 'Fehler beim Initialisieren der Standardkonfigurationen');
+    this.dialogHelper.confirm({
+      title: 'Standardkonfiguration initialisieren?',
+      message: 'Möchten Sie die Standard-PWA-Konfigurationen initialisieren? Bestehende Einstellungen werden nicht überschrieben.',
+      confirmButtonText: 'Initialisieren',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
       }
+
+      this.initializing = true;
+      this.api.initializePwaConfigDefaults().subscribe({
+        next: (result) => {
+          this.initializing = false;
+          this.notification.success(
+            `${result.created} Konfigurationen erstellt, ${result.skipped} übersprungen`,
+            3000
+          );
+          window.location.reload();
+        },
+        error: (err) => {
+          this.initializing = false;
+          console.error('Error initializing PWA config defaults:', err);
+          this.notification.error(err.error?.message || 'Fehler beim Initialisieren der Standardkonfigurationen');
+        }
+      });
     });
   }
 }

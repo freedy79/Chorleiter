@@ -4,6 +4,9 @@ import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/materia
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
@@ -46,11 +49,14 @@ export class DoublettesDialogComponent implements OnInit {
   mergeCategories = true;
   mergeFiles = false;
 
+  private destroy$ = new Subject<void>();
+
   constructor(
     @Inject(MAT_DIALOG_DATA) public data: { collectionId: number; choirId: number },
     private dialogRef: MatDialogRef<DoublettesDialogComponent>,
     private api: ApiService,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private dialogHelper: DialogHelperService
   ) {
     this.collectionId = data.collectionId;
     this.choirId = data.choirId;
@@ -114,10 +120,20 @@ export class DoublettesDialogComponent implements OnInit {
       return;
     }
 
-    if (!confirm('Möchten Sie diese Stücke wirklich zusammenführen?')) {
-      return;
-    }
+    this.dialogHelper.confirm({
+      title: 'Stücke zusammenführen',
+      message: 'Möchten Sie diese Stücke wirklich zusammenführen?'
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
+      this.performMerge();
+    });
+  }
 
+  private performMerge(): void {
     this.isMerging = true;
 
     const group = this.selectedGroupIndex !== null ? this.groups[this.selectedGroupIndex] : null;

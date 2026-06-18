@@ -1,5 +1,6 @@
 const formService = require('../services/form.service');
-const { NotFoundError, AuthorizationError } = require('../utils/errors');
+const { NotFoundError, AuthorizationError, AppError } = require('../utils/errors');
+const logger = require('../config/logger');
 
 // ── Helper ──────────────────────────────────────────────────────
 
@@ -83,9 +84,47 @@ const deleteField = async (req, res) => {
 };
 
 const reorderFields = async (req, res) => {
-  await ensureFormOwnership(parseInt(req.params.id), req.activeChoirId);
-  const fields = await formService.reorderFields(parseInt(req.params.id), req.body.fieldIds);
-  res.json(fields);
+  const formId = parseInt(req.params.id);
+  await ensureFormOwnership(formId, req.activeChoirId);
+
+  try {
+    // DEBUG-FORM-REORDER-TEMP: Temporary diagnostics for reorder payloads.
+    // eslint-disable-next-line no-console
+    console.info('[DEBUG-FORM-REORDER-TEMP][CONTROLLER][REQUEST]', {
+      formId,
+      choirId: req.activeChoirId,
+      fieldIds: req.body?.fieldIds,
+    });
+
+    const fields = await formService.reorderFields(formId, req.body.fieldIds);
+
+    // eslint-disable-next-line no-console
+    console.info('[DEBUG-FORM-REORDER-TEMP][CONTROLLER][SUCCESS]', {
+      formId,
+      returnedFieldCount: Array.isArray(fields) ? fields.length : 0,
+    });
+
+    res.json(fields);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('[DEBUG-FORM-REORDER-TEMP][CONTROLLER][ERROR]', {
+      formId,
+      fieldIds: req.body?.fieldIds,
+      message: error?.message,
+      stack: error?.stack,
+    });
+
+    throw new AppError(
+      'Fehler beim Aktualisieren der Feldreihenfolge.',
+      500,
+      {
+        debugTag: 'DEBUG-FORM-REORDER-TEMP',
+        formId,
+        fieldIds: req.body?.fieldIds,
+        cause: error?.message,
+      },
+    );
+  }
 };
 
 // ── Submissions ─────────────────────────────────────────────────
@@ -195,8 +234,27 @@ const getPublicForm = async (req, res) => {
 };
 
 const submitPublicForm = async (req, res) => {
+  logger.warn('[FORM-SUBMIT-PUBLIC] Incoming submission request', {
+    guid: req.params.guid,
+    ip: req.ip,
+    hasAnswers: Array.isArray(req.body?.answers),
+    answerCount: Array.isArray(req.body?.answers) ? req.body.answers.length : 0,
+    hasSubmitterName: !!req.body?.submitterName,
+    hasSubmitterEmail: !!req.body?.submitterEmail,
+    sendCopyToEmail: !!req.body?.sendCopyToEmail,
+  });
+
   const form = await formService.getFormByGuid(req.params.guid);
   if (!form) throw new NotFoundError('Formular nicht gefunden');
+
+  logger.warn('[FORM-SUBMIT-PUBLIC] Form resolved', {
+    guid: req.params.guid,
+    formId: form.id,
+    status: form.status,
+    closeDate: form.closeDate,
+    maxSubmissions: form.maxSubmissions,
+    fieldCount: Array.isArray(form.fields) ? form.fields.length : 0,
+  });
 
   const now = new Date();
   if (form.status !== 'published') {
@@ -214,10 +272,76 @@ const submitPublicForm = async (req, res) => {
     }
   }
 
-  const submission = await formService.submitForm(form.id, req.body, null, req.ip);
+  try {
+    const submission = await formService.submitForm(form.id, req.body, null, req.ip, {
+      hydrateResult: false,
+    });
 
-  const confirmationText = form.confirmationText || 'Danke für deine Teilnahme!';
-  res.status(201).json({ message: confirmationText, submission });
+    logger.warn('[FORM-SUBMIT-PUBLIC] Submission stored successfully', {
+      guid: req.params.guid,
+      formId: form.id,
+      submissionId: submission?.id,
+    });
+
+    const confirmationText = form.confirmationText || 'Danke für deine Teilnahme!';
+    res.status(201).json({ message: confirmationText, submission });
+  } catch (error) {
+    const debugDetails = {
+      debugTag: 'FORM-SUBMIT-PUBLIC-TEMP',
+      formId: form.id,
+      guid: req.params.guid,
+      errorName: error?.name || 'UnknownError',
+      errorMessage: error?.message || 'Unknown error',
+      answerCount: Array.isArray(req.body?.answers) ? req.body.answers.length : 0,
+      answerFieldIds: Array.isArray(req.body?.answers)
+        ? req.body.answers.slice(0, 10).map(a => a?.fieldId ?? null)
+        : [],
+    };
+
+    logger.error('[FORM-SUBMIT-PUBLIC] Submission failed', debugDetails);
+    // eslint-disable-next-line no-console
+    console.error('[FORM-SUBMIT-PUBLIC] Submission failed', debugDetails, error);
+
+    throw new AppError(
+      'Fehler beim Absenden des Formulars.',
+      500,
+      debugDetails,
+    );
+  }
+};
+
+const checkPublicDuplicate = async (req, res) => {
+  const { guid } = req.params;
+  const email = String(req.query.email || '').trim();
+
+  if (!email) return res.json({ submissionId: null });
+
+  const form = await formService.getFormByGuid(guid);
+  if (!form) throw new NotFoundError('Formular nicht gefunden');
+
+  const submission = await formService.findSubmissionByEmailFieldValue(form.id, email);
+  res.json({ submissionId: submission?.id ?? null });
+};
+
+const updatePublicSubmission = async (req, res) => {
+  const { guid } = req.params;
+  const submissionId = parseInt(req.params.submissionId);
+
+  const form = await formService.getFormByGuid(guid);
+  if (!form) throw new NotFoundError('Formular nicht gefunden');
+
+  const now = new Date();
+  if (form.status !== 'published') {
+    return res.status(400).json({ message: 'Formular ist nicht verfügbar' });
+  }
+  if (form.closeDate && new Date(form.closeDate) < now) {
+    return res.status(400).json({ message: 'Formular ist geschlossen' });
+  }
+
+  const result = await formService.updateSubmissionAnswers(submissionId, form.id, req.body);
+  if (!result) throw new NotFoundError('Abgabe nicht gefunden');
+
+  res.json({ message: form.confirmationText || 'Danke für deine Teilnahme!' });
 };
 
 module.exports = {
@@ -239,4 +363,6 @@ module.exports = {
   exportSubmissions,
   getPublicForm,
   submitPublicForm,
+  checkPublicDuplicate,
+  updatePublicSubmission,
 };

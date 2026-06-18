@@ -33,11 +33,12 @@ import { NavigationStateService, ListViewState } from '@core/services/navigation
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ImageCacheService } from '@core/services/image-cache.service';
 import { ReferencePipe } from '@shared/pipes/reference.pipe';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe, ReferencePipe],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe, ReferencePipe, DataStateComponent],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
@@ -83,6 +84,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   public pageSizeOptions: number[] = [10, 25, 50];
   public pageSize = 10;
   public isLoading = true;
+  public hasLoadError = false;
+  public loadErrorMessage = 'Die Repertoireliste konnte nicht geladen werden.';
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
   public selectedPieceId: number | null = null;
@@ -243,6 +246,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
         startWith({}),
         tap(() => {
           this.isLoading = true;
+          this.hasLoadError = false;
           const key = this.currentCacheKey();
           if (key !== this.lastCacheKey) {
             this.pageCache.clear();
@@ -273,6 +277,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
           ).pipe(
             catchError((err) => {
               const msg = err.error?.message || 'Could not load repertoire.';
+              this.hasLoadError = true;
+              this.loadErrorMessage = msg;
               console.error('Failed to load repertoire list', err);
               this.errorService.setError({
                 message: msg,
@@ -659,12 +665,18 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     const preset = this.presets.find(p => p.id === this.selectedPresetId);
     if (!preset) return;
     if (!this.canDeleteSelectedPreset()) return;
-    if (confirm('Diesen Filter löschen?')) {
+    this.dialogHelper.confirm({
+      title: 'Filter löschen?',
+      message: 'Diesen Filter löschen?'
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
       this.apiService.deleteRepertoireFilter(preset.id).subscribe(() => {
         this.selectedPresetId = null;
         this.loadPresets();
       });
-    }
+    });
   }
 
   reloadList(): void {
@@ -758,6 +770,18 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       this.filterByLicense$.value.length > 0 ||
       !!(this.searchControl.value && this.searchControl.value.trim().length > 0)
     );
+  }
+
+  get emptyStateTitle(): string {
+    return this.hasActiveFilters()
+      ? 'Keine passenden Stücke gefunden'
+      : 'Willkommen in Ihrer Notenbibliothek';
+  }
+
+  get emptyStateMessage(): string {
+    return this.hasActiveFilters()
+      ? 'Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.'
+      : 'Fügen Sie Ihr erstes Stück hinzu, um loszulegen.';
   }
 
   /**

@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -35,7 +35,7 @@ import { environment } from 'src/environments/environment';
     EventCardComponent,
     EventTypeLabelPipe,
     PureDatePipe,
-    EmptyStateComponent
+    DataStateComponent
   ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss'],
@@ -55,6 +55,8 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
   isLoading = false;
+  hasLoadError = false;
+  loadErrorMessage = 'Die Ereignisse konnten nicht geladen werden.';
 
   // Dynamic past-year filter options
   pastYears: number[] = [];
@@ -161,8 +163,9 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private allEvents: Event[] = [];
 
-  private loadEvents(): void {
+  loadEvents(): void {
     this.isLoading = true;
+    this.hasLoadError = false;
     this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
     const type = this.typeControl.value;
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
@@ -175,10 +178,25 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: () => {
+          this.hasLoadError = true;
           this.isLoading = false;
           this.cdr.markForCheck();
         }
       });
+  }
+
+  get isFilterActive(): boolean {
+    return this.typeControl.value !== 'ALL' || this.timeControl.value !== 'ALL';
+  }
+
+  get emptyStateTitle(): string {
+    return this.isFilterActive ? 'Keine Ereignisse gefunden' : 'Noch keine Ereignisse vorhanden';
+  }
+
+  get emptyStateMessage(): string {
+    return this.isFilterActive
+      ? 'Keine Ereignisse für den aktuellen Filter gefunden.'
+      : 'Lege dein erstes Ereignis an, um zu starten.';
   }
 
   private applyTimeFilter(): void {

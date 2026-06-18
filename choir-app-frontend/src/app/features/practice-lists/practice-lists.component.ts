@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -6,9 +6,13 @@ import { MaterialModule } from '@modules/material.module';
 import { PracticeList, PracticeListCreatePayload } from '@core/models/practice-list';
 import { PracticeListService } from '@core/services/practice-list.service';
 import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { FileSizePipe } from '@shared/pipes/file-size.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-practice-lists',
@@ -17,11 +21,12 @@ import { InlineLoadingComponent } from '@shared/components/inline-loading/inline
   templateUrl: './practice-lists.component.html',
   styleUrls: ['./practice-lists.component.scss']
 })
-export class PracticeListsComponent implements OnInit {
+export class PracticeListsComponent implements OnInit, OnDestroy {
   lists: PracticeList[] = [];
   loading = false;
   creating = false;
   storageUsageBytes = 0;
+  private destroy$ = new Subject<void>();
   newList: PracticeListCreatePayload = {
     title: '',
     description: null,
@@ -31,11 +36,17 @@ export class PracticeListsComponent implements OnInit {
   constructor(
     private practiceListService: PracticeListService,
     private notification: NotificationService,
+    private dialogHelper: DialogHelperService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadLists();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadLists(): void {
@@ -88,35 +99,62 @@ export class PracticeListsComponent implements OnInit {
 
   renameList(list: PracticeList): void {
     const currentTitle = list.title || '';
-    const nextTitle = window.prompt('Neuer Titel der Übungsliste', currentTitle)?.trim();
-    if (!nextTitle || nextTitle === currentTitle) {
-      return;
-    }
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Übungsliste umbenennen',
+          message: 'Geben Sie einen neuen Titel ein:',
+          label: 'Titel',
+          placeholder: currentTitle,
+          initialValue: currentTitle
+        }
+      }
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      const nextTitle = result?.trim();
+      if (!nextTitle || nextTitle === currentTitle) {
+        return;
+      }
 
-    this.practiceListService.updateList(list.id, { title: nextTitle }).subscribe({
-      next: () => {
-        this.notification.success('Titel aktualisiert.');
-        this.loadLists();
-      },
-      error: () => this.notification.error('Titel konnte nicht aktualisiert werden.')
+      this.practiceListService.updateList(list.id, { title: nextTitle }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.notification.success('Titel aktualisiert.');
+          this.loadLists();
+        },
+        error: () => this.notification.error('Titel konnte nicht aktualisiert werden.')
+      });
     });
   }
 
   deleteList(list: PracticeList): void {
-    const confirmed = window.confirm(`Soll die Übungsliste "${list.title}" gelöscht werden?`);
-    if (!confirmed) {
-      return;
-    }
+    this.dialogHelper.confirm({
+      title: 'Übungsliste löschen?',
+      message: `Soll die Übungsliste "${list.title}" gelöscht werden?`
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
 
-    this.practiceListService.deleteList(list.id).subscribe({
-      next: () => {
-        this.notification.success('Übungsliste gelöscht.');
-        this.practiceListService.refreshOfflinePins().subscribe({
-          next: () => this.loadLists(),
-          error: () => this.loadLists()
-        });
-      },
-      error: () => this.notification.error('Übungsliste konnte nicht gelöscht werden.')
+      this.practiceListService.deleteList(list.id).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: () => {
+          this.notification.success('Übungsliste gelöscht.');
+          this.practiceListService.refreshOfflinePins().pipe(
+            takeUntil(this.destroy$)
+          ).subscribe({
+            next: () => this.loadLists(),
+            error: () => this.loadLists()
+          });
+        },
+        error: () => this.notification.error('Übungsliste konnte nicht gelöscht werden.')
+      });
     });
   }
 

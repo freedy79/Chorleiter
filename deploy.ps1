@@ -285,10 +285,16 @@ Write-Host "Uploading frontend archive..."
 Invoke-Scp $FrontendArchive "${Remote}:/tmp/frontend.tar.gz"
 Write-VerboseLog "Frontend archive uploaded."
 
+#Write-Host "Fixing frontend permissions..."
+#Invoke-Ssh "chown -R chorstatistik:nogroup '$FrontendDest' && find '$FrontendDest' -type d -exec chmod 755 {} \; && find '$FrontendDest' -type f -exec chmod 644 {} \;"
+
 # Extract archives on server and clean up
 Write-Host "Extracting backend on server..."
 Invoke-Ssh "tar -xzf /tmp/backend.tar.gz -C '$BackendDest'; rm /tmp/backend.tar.gz"
 Write-VerboseLog "Backend extracted."
+
+#Write-Host "Fixing backend code permissions..."
+#Invoke-Ssh "chown -R chorstatistik:nogroup '$BackendDest' && find '$BackendDest' -type d -exec chmod 755 {} \; && find '$BackendDest' -type f -exec chmod 644 {} \;"
 
 Write-Host "Extracting frontend on server..."
 Invoke-Ssh "tar -xzf /tmp/frontend.tar.gz -C '$FrontendDest'; rm /tmp/frontend.tar.gz"

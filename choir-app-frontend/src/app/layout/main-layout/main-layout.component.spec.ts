@@ -189,7 +189,7 @@ describe('MainLayoutComponent', () => {
     choirRolesSubject.next(['director']);
     currentUserSubject.next({ roles: ['user'] });
     activeChoirSubject.next({ modules: { programs: true }, membership: { rolesInChoir: ['director'] } });
-    isDemoSubject.next(true);
+    isDemoSubject.next(false);
     fixture.detectChanges();
     const manageChoirItem = component.navItems.find(i => i.key === 'manageChoir');
     const programsItem = component.navItems.find(i => i.key === 'programs');

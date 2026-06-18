@@ -341,21 +341,29 @@
 </section>
 
 <ng-template #noRoomSelected>
-  <app-empty-state
-    icon="forum"
-    [title]="rooms.length === 0 ? 'Noch kein Raum vorhanden' : 'Kein Raum ausgewählt'"
-    [message]="rooms.length === 0 && isChoirAdmin ? 'Erstelle jetzt den ersten Chat-Raum.' : 'Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.'"
+  <app-data-state
+    [isLoading]="loadingRooms"
+    [hasError]="loadRoomsError"
+    errorTitle="Chat-Räume konnten nicht geladen werden"
+    errorMessage="Bitte versuche es erneut."
+    [isEmpty]="!loadingRooms && !loadRoomsError && !selectedRoomId"
+    [emptyTitle]="rooms.length === 0 ? 'Noch kein Raum vorhanden' : 'Kein Raum ausgewählt'"
+    [emptyMessage]="rooms.length === 0 && isChoirAdmin ? 'Erstelle jetzt den ersten Chat-Raum.' : 'Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.'"
+    emptyIcon="forum"
+    (retry)="loadRooms()"
   >
-    <button
-      *ngIf="rooms.length === 0 && isChoirAdmin"
-      mat-raised-button
-      color="primary"
-      type="button"
-      (click)="openCreateRoomDialog()"
-      [disabled]="roomMutationInProgress"
-    >
-      <mat-icon>add</mat-icon>
-      Raum erstellen
-    </button>
-  </app-empty-state>
+    <ng-container empty-actions>
+      <button
+        *ngIf="rooms.length === 0 && isChoirAdmin"
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="openCreateRoomDialog()"
+        [disabled]="roomMutationInProgress"
+      >
+        <mat-icon>add</mat-icon>
+        Raum erstellen
+      </button>
+    </ng-container>
+  </app-data-state>
 </ng-template>

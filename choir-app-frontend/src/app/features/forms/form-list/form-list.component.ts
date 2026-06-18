@@ -10,13 +10,13 @@ import { Form } from '@core/models/form';
 import { takeUntil } from 'rxjs/operators';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { DatePipe } from '@angular/common';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
-import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 
 @Component({
   selector: 'app-form-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe, EmptyStateComponent, InlineLoadingComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe, DataStateComponent],
   templateUrl: './form-list.component.html',
   styleUrls: ['./form-list.component.scss'],
 })
@@ -29,6 +29,7 @@ export class FormListComponent extends BaseComponent implements OnInit {
     private formService: FormService,
     private authService: AuthService,
     private notify: NotificationService,
+    private dialogHelper: DialogHelperService,
     private router: Router,
   ) {
     super();
@@ -91,17 +92,22 @@ export class FormListComponent extends BaseComponent implements OnInit {
 
   deleteForm(form: Form, event: Event): void {
     event.stopPropagation();
-    if (!confirm(`Formular "${form.title}" wirklich löschen? Alle Ergebnisse gehen verloren.`)) return;
-
-    this.formService.deleteForm(form.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
+    this.dialogHelper.confirmDelete(
+      {
+        itemName: `das Formular "${form.title}"`,
+        title: 'Formular löschen?',
+        message: `Formular "${form.title}" wirklich löschen? Alle Ergebnisse gehen verloren.`,
+      },
+      () => this.formService.deleteForm(form.id),
+      {
+        successMessage: 'Formular gelöscht',
+        onSuccess: () => {
           this.forms = this.forms.filter(f => f.id !== form.id);
-          this.notify.success('Formular gelöscht');
-        },
-        error: () => this.notify.error('Fehler beim Löschen'),
-      });
+        }
+      }
+    )
+      .pipe(takeUntil(this.destroy$))
+      .subscribe();
   }
 
   copyLink(form: Form, event: Event): void {

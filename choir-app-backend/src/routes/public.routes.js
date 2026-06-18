@@ -11,6 +11,8 @@ router.post('/poll-vote/:token', wrap(postController.consumeReminderVote));
 
 // Public form access (via GUID)
 router.get('/forms/:guid', wrap(formController.getPublicForm));
+router.get('/forms/:guid/check-duplicate', wrap(formController.checkPublicDuplicate));
 router.post('/forms/:guid/submit', submitFormValidation, validate, wrap(formController.submitPublicForm));
+router.put('/forms/:guid/submissions/:submissionId', submitFormValidation, validate, wrap(formController.updatePublicSubmission));
 
 module.exports = router;

@@ -1,0 +1,25 @@
+<div class="data-state" [attr.aria-busy]="isLoading ? 'true' : null">
+  <app-inline-loading [loading]="isLoading" mode="spinner"></app-inline-loading>
+
+  <app-empty-state
+    *ngIf="!isLoading && hasError"
+    [icon]="'error_outline'"
+    [title]="errorTitle"
+  >
+    <p>{{ errorMessage }}</p>
+    <button mat-stroked-button color="primary" (click)="retry.emit()">Erneut versuchen</button>
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!isLoading && !hasError && isEmpty"
+    [icon]="emptyIcon"
+    [title]="emptyTitle"
+  >
+    <p *ngIf="emptyMessage">{{ emptyMessage }}</p>
+    <ng-content select="[empty-actions]"></ng-content>
+  </app-empty-state>
+
+  <div *ngIf="showContent" class="data-state-content" [class.compact]="compact">
+    <ng-content></ng-content>
+  </div>
+</div>

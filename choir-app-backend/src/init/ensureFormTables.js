@@ -40,14 +40,16 @@ async function ensureFormTables() {
         await db.form_submission.sync();
         logger.info('[Migration] Created table: form_submissions');
     } else {
-        logger.info(`[Migration] Table ${formSubmissionsTable} already exists - skipping`);
+        logger.info(`[Migration] Table ${formSubmissionsTable} already exists - checking columns`);
+        await ensureFormSubmissionColumns(queryInterface, formSubmissionsTable);
     }
 
     if (!formAnswersTable) {
         await db.form_answer.sync();
         logger.info('[Migration] Created table: form_answers');
     } else {
-        logger.info(`[Migration] Table ${formAnswersTable} already exists - skipping`);
+        logger.info(`[Migration] Table ${formAnswersTable} already exists - checking columns`);
+        await ensureFormAnswerColumns(queryInterface, formAnswersTable);
     }
 }
 
@@ -96,6 +98,19 @@ async function ensureFormFieldColumns(queryInterface, tableName) {
     try {
         const columns = await queryInterface.describeTable(tableName);
 
+        if (columns.placeholder) {
+            const placeholderType = String(columns.placeholder.type || '').toUpperCase();
+            const isTextLike = placeholderType.includes('TEXT');
+
+            if (!isTextLike) {
+                await queryInterface.changeColumn(tableName, 'placeholder', {
+                    type: db.Sequelize.TEXT,
+                    allowNull: true,
+                });
+                logger.info(`[Migration] Changed column ${tableName}.placeholder to TEXT`);
+            }
+        }
+
         if (!columns.showIf) {
             await queryInterface.addColumn(tableName, 'showIf', {
                 type: db.Sequelize.JSON,
@@ -106,6 +121,73 @@ async function ensureFormFieldColumns(queryInterface, tableName) {
         }
     } catch (err) {
         logger.warn(`[Migration] Error checking/adding form_field columns on ${tableName}:`, err.message);
+    }
+}
+
+/**
+ * Ensure nullable submitter metadata exists for public submissions.
+ */
+async function ensureFormSubmissionColumns(queryInterface, tableName) {
+    try {
+        const columns = await queryInterface.describeTable(tableName);
+
+        if (!columns.submitterName) {
+            await queryInterface.addColumn(tableName, 'submitterName', {
+                type: db.Sequelize.STRING,
+                allowNull: true,
+            });
+            logger.info(`[Migration] Added column ${tableName}.submitterName`);
+        }
+
+        if (!columns.submitterEmail) {
+            await queryInterface.addColumn(tableName, 'submitterEmail', {
+                type: db.Sequelize.STRING,
+                allowNull: true,
+            });
+            logger.info(`[Migration] Added column ${tableName}.submitterEmail`);
+        }
+
+        if (!columns.ipAddress) {
+            await queryInterface.addColumn(tableName, 'ipAddress', {
+                type: db.Sequelize.STRING,
+                allowNull: true,
+            });
+            logger.info(`[Migration] Added column ${tableName}.ipAddress`);
+        }
+
+        if (columns.userId && columns.userId.allowNull === false) {
+            await queryInterface.changeColumn(tableName, 'userId', {
+                type: db.Sequelize.INTEGER,
+                allowNull: true,
+            });
+            logger.info(`[Migration] Changed column ${tableName}.userId to nullable`);
+        }
+    } catch (err) {
+        logger.warn(`[Migration] Error checking/adding form_submission columns on ${tableName}:`, err.message);
+    }
+}
+
+/**
+ * Ensure answer value column supports long text payloads.
+ */
+async function ensureFormAnswerColumns(queryInterface, tableName) {
+    try {
+        const columns = await queryInterface.describeTable(tableName);
+
+        if (columns.value) {
+            const valueType = String(columns.value.type || '').toUpperCase();
+            const isTextLike = valueType.includes('TEXT');
+
+            if (!isTextLike) {
+                await queryInterface.changeColumn(tableName, 'value', {
+                    type: db.Sequelize.TEXT,
+                    allowNull: true,
+                });
+                logger.info(`[Migration] Changed column ${tableName}.value to TEXT`);
+            }
+        }
+    } catch (err) {
+        logger.warn(`[Migration] Error checking/adding form_answer columns on ${tableName}:`, err.message);
     }
 }
 

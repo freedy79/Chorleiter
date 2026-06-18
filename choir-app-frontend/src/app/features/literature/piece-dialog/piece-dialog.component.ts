@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { formatSecondsAsDuration, parseDurationToSeconds } from '@shared/util/duration.utils';
 import {
@@ -20,8 +20,10 @@ import {
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MaterialModule } from '@modules/material.module';
 import { Composer } from '@core/models/composer';
-import { BehaviorSubject, Observable, switchMap, map, of, startWith, forkJoin } from 'rxjs';
+import { BehaviorSubject, Observable, switchMap, map, of, startWith, forkJoin, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { PieceService } from '@core/services/piece.service';
 import { NotificationService } from '@core/services/notification.service';
 import { ComposerDialogComponent } from '../../composers/composer-dialog/composer-dialog.component';
@@ -54,11 +56,12 @@ export function composerOrOriginValidator(): ValidatorFn {
     templateUrl: './piece-dialog.component.html',
     styleUrls: ['./piece-dialog.component.scss'],
 })
-export class PieceDialogComponent implements OnInit {
+export class PieceDialogComponent implements OnInit, OnDestroy {
     pieceForm: FormGroup;
     private refreshComposers$ = new BehaviorSubject<void>(undefined);
     private refreshAuthors$ = new BehaviorSubject<void>(undefined);
     private refreshCategory$ = new BehaviorSubject<void>(undefined);
+    private destroy$ = new Subject<void>();
     public composers$!: Observable<Composer[]>;
     public categories$!: Observable<Category[]>;
     isEditMode = false;
@@ -108,6 +111,7 @@ export class PieceDialogComponent implements OnInit {
         private pieceService: PieceService,
         private authService: AuthService,
         private notification: NotificationService,
+        private dialogHelper: DialogHelperService,
         public dialog: MatDialog,
         public dialogRef: MatDialogRef<PieceDialogComponent>,
         @Inject(MAT_DIALOG_DATA) public data: { pieceId?: number | null; initialTitle?: string }
@@ -182,6 +186,11 @@ export class PieceDialogComponent implements OnInit {
         }
     }
 
+    ngOnDestroy(): void {
+        this.destroy$.next();
+        this.destroy$.complete();
+    }
+
     openAddComposerDialog(name?: string): void {
         const composerDialogRef = this.dialog.open(ComposerDialogComponent, {
             width: '500px',
@@ -200,12 +209,24 @@ export class PieceDialogComponent implements OnInit {
                             this.pieceForm.get('composerId')?.setValue(created.id);
                         },
                         error: err => {
-                            if (err.status === 409 && confirm('Komponist existiert bereits. Trotzdem anlegen?')) {
-                                this.apiService.createComposer(newComposer, true).subscribe(created => {
-                                    this.refreshComposers$.next();
-                                    this.allComposers.push(created);
-                                    this.composerCtrl.setValue(created);
-                                    this.pieceForm.get('composerId')?.setValue(created.id);
+                            if (err.status === 409) {
+                                this.dialogHelper.confirm({
+                                    title: 'Duplikat gefunden',
+                                    message: 'Komponist existiert bereits. Trotzdem anlegen?',
+                                    confirmButtonText: 'Ja, anlegen',
+                                    cancelButtonText: 'Abbrechen'
+                                }).pipe(
+                                    takeUntil(this.destroy$)
+                                ).subscribe(confirmed => {
+                                    if (!confirmed) {
+                                        return;
+                                    }
+                                    this.apiService.createComposer(newComposer, true).subscribe(created => {
+                                        this.refreshComposers$.next();
+                                        this.allComposers.push(created);
+                                        this.composerCtrl.setValue(created);
+                                        this.pieceForm.get('composerId')?.setValue(created.id);
+                                    });
                                 });
                             }
                         }
@@ -235,10 +256,22 @@ export class PieceDialogComponent implements OnInit {
                                 ?.setValue(created.id);
                         },
                         error: err => {
-                            if (err.status === 409 && confirm('Dichter existiert bereits. Trotzdem anlegen?')) {
-                                this.apiService.createAuthor(newAuthor, true).subscribe(created => {
-                                    this.refreshAuthors$.next();
-                                    this.pieceForm.get('authorId')?.setValue(created.id);
+                            if (err.status === 409) {
+                                this.dialogHelper.confirm({
+                                    title: 'Duplikat gefunden',
+                                    message: 'Dichter existiert bereits. Trotzdem anlegen?',
+                                    confirmButtonText: 'Ja, anlegen',
+                                    cancelButtonText: 'Abbrechen'
+                                }).pipe(
+                                    takeUntil(this.destroy$)
+                                ).subscribe(confirmed => {
+                                    if (!confirmed) {
+                                        return;
+                                    }
+                                    this.apiService.createAuthor(newAuthor, true).subscribe(created => {
+                                        this.refreshAuthors$.next();
+                                        this.pieceForm.get('authorId')?.setValue(created.id);
+                                    });
                                 });
                             }
                         }
@@ -270,13 +303,25 @@ export class PieceDialogComponent implements OnInit {
                         this.pieceForm.get('composerId')?.setValue(updated.id);
                     },
                     error: err => {
-                        if (err.status === 409 && confirm('Komponist existiert bereits. Trotzdem speichern?')) {
-                            this.apiService.updateComposer(composer.id, result, true).subscribe(updated => {
-                                this.refreshComposers$.next();
-                                const idx = this.allComposers.findIndex(c => c.id === updated.id);
-                                if (idx !== -1) this.allComposers[idx] = updated;
-                                this.composerCtrl.setValue(updated);
-                                this.pieceForm.get('composerId')?.setValue(updated.id);
+                        if (err.status === 409) {
+                            this.dialogHelper.confirm({
+                                title: 'Duplikat gefunden',
+                                message: 'Komponist existiert bereits. Trotzdem speichern?',
+                                confirmButtonText: 'Ja, speichern',
+                                cancelButtonText: 'Abbrechen'
+                            }).pipe(
+                                takeUntil(this.destroy$)
+                            ).subscribe(confirmed => {
+                                if (!confirmed) {
+                                    return;
+                                }
+                                this.apiService.updateComposer(composer.id, result, true).subscribe(updated => {
+                                    this.refreshComposers$.next();
+                                    const idx = this.allComposers.findIndex(c => c.id === updated.id);
+                                    if (idx !== -1) this.allComposers[idx] = updated;
+                                    this.composerCtrl.setValue(updated);
+                                    this.pieceForm.get('composerId')?.setValue(updated.id);
+                                });
                             });
                         }
                     }
@@ -305,13 +350,25 @@ export class PieceDialogComponent implements OnInit {
                         this.pieceForm.get('authorId')?.setValue(updated.id);
                     },
                     error: err => {
-                        if (err.status === 409 && confirm('Dichter existiert bereits. Trotzdem speichern?')) {
-                            this.apiService.updateAuthor(author.id, result, true).subscribe(updated => {
-                                this.refreshAuthors$.next();
-                                const idx = this.allAuthors.findIndex(a => a.id === updated.id);
-                                if (idx !== -1) this.allAuthors[idx] = updated;
-                                this.authorCtrl.setValue(updated);
-                                this.pieceForm.get('authorId')?.setValue(updated.id);
+                        if (err.status === 409) {
+                            this.dialogHelper.confirm({
+                                title: 'Duplikat gefunden',
+                                message: 'Dichter existiert bereits. Trotzdem speichern?',
+                                confirmButtonText: 'Ja, speichern',
+                                cancelButtonText: 'Abbrechen'
+                            }).pipe(
+                                takeUntil(this.destroy$)
+                            ).subscribe(confirmed => {
+                                if (!confirmed) {
+                                    return;
+                                }
+                                this.apiService.updateAuthor(author.id, result, true).subscribe(updated => {
+                                    this.refreshAuthors$.next();
+                                    const idx = this.allAuthors.findIndex(a => a.id === updated.id);
+                                    if (idx !== -1) this.allAuthors[idx] = updated;
+                                    this.authorCtrl.setValue(updated);
+                                    this.pieceForm.get('authorId')?.setValue(updated.id);
+                                });
                             });
                         }
                     }

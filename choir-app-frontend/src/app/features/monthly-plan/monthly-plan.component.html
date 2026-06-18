@@ -402,16 +402,18 @@
   </mat-tab>
 </mat-tab-group>
 <ng-template #planFallback>
-  <ng-container *ngIf="isLoadingPlan; else noPlan">
-    <div class="loading">
-      <mat-progress-spinner diameter="48" mode="indeterminate"></mat-progress-spinner>
-    </div>
-  </ng-container>
-</ng-template>
-<ng-template #noPlan>
-  <app-empty-state icon="event_note" message="Kein Dienstplan für diesen Monat vorhanden.">
-    <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">
-      <mat-icon>add</mat-icon> Plan erstellen
-    </button>
-  </app-empty-state>
+  <app-data-state
+    [isLoading]="isLoadingPlan"
+    [isEmpty]="!isLoadingPlan"
+    emptyIcon="event_note"
+    emptyTitle="Kein Dienstplan"
+    emptyMessage="Kein Dienstplan für diesen Monat vorhanden."
+    (retry)="reloadPlan()"
+  >
+    <ng-container empty-actions>
+      <button *ngIf="isChoirAdmin" mat-raised-button color="primary" (click)="createPlan()">
+        <mat-icon>add</mat-icon> Plan erstellen
+      </button>
+    </ng-container>
+  </app-data-state>
 </ng-template>

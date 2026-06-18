@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { MatDialog } from '@angular/material/dialog';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { MidiPlaybackService } from './services/midi-playback.service';
 import { formatSecondsAsDuration } from '@shared/util/duration.utils';
@@ -13,6 +14,7 @@ import {
   TrackMixerState
 } from './models/rehearsal-data.types';
 import { RehearsalDataEditorDialogComponent } from './rehearsal-data-editor-dialog.component';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
 import { interval, Subscription } from 'rxjs';
 
 @Component({
@@ -58,6 +60,7 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
   constructor(
     private playbackService: MidiPlaybackService,
     private dialog: MatDialog,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService
   ) {}
 
@@ -226,19 +229,45 @@ export class RehearsalSupportComponent implements OnInit, OnDestroy {
   }
 
   markCurrentAsMeasure(): void {
-    const measureNumber = prompt('Taktnummer:');
-    if (measureNumber) {
-      this.rehearsalData.measureToTick[measureNumber] = this.playbackState.currentTick;
-      this.notification.success(`Takt ${measureNumber} markiert`, 2000);
-    }
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Takt markieren',
+          message: 'Taktnummer:',
+          label: 'Taktnummer',
+          maxLength: 6
+        }
+      }
+    ).subscribe(measureNumber => {
+      const next = measureNumber?.trim();
+      if (!next) {
+        return;
+      }
+      this.rehearsalData.measureToTick[next] = this.playbackState.currentTick;
+      this.notification.success(`Takt ${next} markiert`, 2000);
+    });
   }
 
   markCurrentAsPage(): void {
-    const pageNumber = prompt('Seitennummer:');
-    if (pageNumber) {
-      this.rehearsalData.pageToTick[pageNumber] = this.playbackState.currentTick;
-      this.notification.success(`Seite ${pageNumber} markiert`, 2000);
-    }
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Seite markieren',
+          message: 'Seitennummer:',
+          label: 'Seitennummer',
+          maxLength: 6
+        }
+      }
+    ).subscribe(pageNumber => {
+      const next = pageNumber?.trim();
+      if (!next) {
+        return;
+      }
+      this.rehearsalData.pageToTick[next] = this.playbackState.currentTick;
+      this.notification.success(`Seite ${next} markiert`, 2000);
+    });
   }
 
   get measureKeys(): string[] {

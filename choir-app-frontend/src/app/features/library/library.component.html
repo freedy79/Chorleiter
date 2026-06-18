@@ -31,13 +31,36 @@
       </mat-menu>
     </div>
 
+    <app-data-state
+      [isLoading]="isLoading"
+      [hasError]="hasLoadError"
+      [errorTitle]="'Fehler beim Laden der Bibliothek'"
+      [errorMessage]="loadErrorMessage"
+      [isEmpty]="!isLoading && !hasLoadError && dataSource.data.length === 0"
+      [emptyTitle]="emptyStateTitle"
+      [emptyMessage]="emptyStateMessage"
+      [emptyIcon]="'library_books'"
+      (retry)="refresh()"
+    >
+      <ng-container empty-actions>
+        <button
+          *ngIf="isAdmin || isLibrarian"
+          mat-flat-button
+          color="primary"
+          (click)="openAddDialog()"
+        >
+          <mat-icon>add</mat-icon>
+          Erstes Stück hinzufügen
+        </button>
+      </ng-container>
+
     <!-- Desktop View -->
     <div class="desktop-view">
       <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" multiTemplateDataRows>
         <ng-container matColumnDef="cover">
           <mat-header-cell *matHeaderCellDef></mat-header-cell>
           <mat-cell *matCellDef="let element" class="cover-cell">
-            <img *ngIf="element.collection?.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
+            <img *ngIf="element.collection.coverImageData" [src]="element.collection.coverImageData" alt="Cover" loading="lazy" />
           </mat-cell>
         </ng-container>
 
@@ -78,8 +101,8 @@
               <mat-nav-list>
                 <a mat-list-item *ngFor="let piece of paginatedPieces" [routerLink]="['/pieces', piece.id]" (click)="$event.stopPropagation()">
                   {{ piece.title }}
-                  <span *ngIf="piece.composer?.name || piece.origin">
-                    – {{ piece.composer?.name || piece.origin }}
+                  <span *ngIf="(piece.composer && piece.composer.name) || piece.origin">
+                      – {{ (piece.composer && piece.composer.name) || piece.origin }}
                   </span>
                   <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
                 </a>
@@ -103,7 +126,7 @@
           <div class="mobile-cards">
             <div class="library-card" *ngFor="let element of dataSource.data" (click)="toggleCollection(element)">
               <div class="card-header">
-                <img *ngIf="element.collection?.coverImageData" [src]="element.collection?.coverImageData" alt="Cover" class="card-cover" loading="lazy" />
+                <img *ngIf="element.collection && element.collection.coverImageData" [src]="element.collection && element.collection.coverImageData" alt="Cover" class="card-cover" loading="lazy" />
                 <div class="card-info">
                   <div class="card-composer" *ngIf="getCollectionComposer(element.collection) as composer">{{ composer }}</div>
                   <div class="card-title">{{ element.collection?.title }}</div>
@@ -139,8 +162,8 @@
                     <mat-icon>music_note</mat-icon>
                     <span class="piece-info">
                       {{ piece.title }}
-                      <span *ngIf="piece.composer?.name || piece.origin" class="piece-composer">
-                        – {{ piece.composer?.name || piece.origin }}
+                      <span *ngIf="(piece.composer && piece.composer.name) || piece.origin" class="piece-composer">
+                        – {{ (piece.composer && piece.composer.name) || piece.origin }}
                       </span>
                       <span *ngIf="piece.opus"> ({{ piece.opus }})</span>
                     </span>
@@ -157,6 +180,7 @@
       </div>
       <mat-paginator #libraryPaginator [pageSize]="10" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
     </div>
+    </app-data-state>
   </mat-tab>
 
   <mat-tab *ngIf="isAdmin || isLibrarian" label="Ausleihen">

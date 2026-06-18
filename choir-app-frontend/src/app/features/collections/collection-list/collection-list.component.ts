@@ -17,6 +17,7 @@ import { ResponsiveService } from '@shared/services/responsive.service';
  import { ImageCacheService } from '@core/services/image-cache.service';
 import { CachedImageDirective } from '@shared/directives/cached-image.directive';
 import { DoublettesDialogComponent } from '../doublettes-dialog.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 
 @Component({
   selector: 'app-collection-list',
@@ -25,7 +26,8 @@ import { DoublettesDialogComponent } from '../doublettes-dialog.component';
     CommonModule,
     MaterialModule,
     RouterLink,
-    CachedImageDirective
+    CachedImageDirective,
+    DataStateComponent
   ],
   templateUrl: './collection-list.component.html',
   styleUrls: ['./collection-list.component.scss']

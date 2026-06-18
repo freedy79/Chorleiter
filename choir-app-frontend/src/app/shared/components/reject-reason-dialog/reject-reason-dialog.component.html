@@ -1,0 +1,24 @@
+<h1 mat-dialog-title>{{ data.title || 'Anfrage ablehnen' }}</h1>
+<div mat-dialog-content>
+  <p>
+    Optionaler Ablehnungsgrund für
+    <strong>{{ data.requesterName || 'den Antragsteller' }}</strong>
+    ({{ data.choirName }}):
+  </p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Ablehnungsgrund (optional)</mat-label>
+    <textarea
+      matInput
+      [(ngModel)]="reason"
+      cdkFocusInitial
+      maxlength="500"
+      rows="4"
+    ></textarea>
+    <mat-hint align="end">{{ reason.length }}/500</mat-hint>
+  </mat-form-field>
+</div>
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onDismiss()">Abbrechen</button>
+  <button mat-flat-button color="warn" (click)="onConfirm()">Weiter</button>
+</div>
