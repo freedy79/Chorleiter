@@ -152,3 +152,8 @@ MOBILE-SEARCH-TESTS-REPORT.html
 backups/*
 nul
 test.html
+
+# Deploy secrets – local config and password file must never be committed
+deploy.local.ps1
+*.local.ps1
+.chorleiter_deploy_pw
