@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnInit, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -39,7 +39,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
   private loadRequestId = 0;
   private destroyed = false;
 
-  constructor(private api: ApiService) {}
+  constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     if (this.useExternalData) {
@@ -98,6 +98,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
             return;
           }
           this.setAvailabilities(a);
+          this.cdr.markForCheck();
         },
         error: error => {
           if (this.isStale(currentLoad)) {
@@ -105,6 +106,7 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
           }
           console.error('Fehler beim Laden der Verfügbarkeiten', error);
           this.availabilities = [];
+          this.cdr.markForCheck();
         }
       });
   }
@@ -119,7 +121,10 @@ export class AvailabilityTableComponent implements OnInit, OnChanges, OnDestroy 
     this.updateLocalStatus(date, status);
 
     this.saveStatus(date, status)
-      .pipe(finalize(() => this.isSaving = false))
+      .pipe(finalize(() => {
+        this.isSaving = false;
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: updated => this.updateLocalAvailability(updated),
         error: error => {
