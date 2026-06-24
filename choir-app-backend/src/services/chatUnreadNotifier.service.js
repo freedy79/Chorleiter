@@ -10,18 +10,56 @@ const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 // Notify after 3 days of unread messages
 const UNREAD_THRESHOLD_DAYS = 3;
 
-// Don't re-notify within 7 days for the same room
-const RE_NOTIFY_COOLDOWN_DAYS = 7;
+/**
+ * Total unread messages for a user across all accessible rooms in a choir.
+ * Uses 2 bulk reads + N parallel counts so it stays efficient even for many rooms.
+ */
+async function countTotalUnreadForUser(userId, rooms) {
+  const privateRoomIds = rooms.filter(r => r.isPrivate).map(r => r.id);
 
-// Track sent notifications: "userId-roomId" → timestamp
-const sentNotifications = new Map();
+  // Which private rooms is this user a member of?
+  const privateMemberships = privateRoomIds.length > 0
+    ? await db.chat_room_member.findAll({
+        where: { chatRoomId: { [Op.in]: privateRoomIds }, userId },
+        attributes: ['chatRoomId']
+      })
+    : [];
+  const memberRoomIds = new Set(privateMemberships.map(m => m.chatRoomId));
 
-// Cleanup old tracking entries every 24h
-const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
+  const accessibleRoomIds = rooms
+    .filter(r => !r.isPrivate || memberRoomIds.has(r.id))
+    .map(r => r.id);
+
+  if (accessibleRoomIds.length === 0) return 0;
+
+  // Read states for all rooms in one query
+  const readStates = await db.chat_read_state.findAll({
+    where: { userId, chatRoomId: { [Op.in]: accessibleRoomIds } },
+    attributes: ['chatRoomId', 'lastReadMessageId']
+  });
+  const readMap = new Map(readStates.map(s => [s.chatRoomId, s.lastReadMessageId || 0]));
+
+  // Count unread in all rooms in parallel
+  const counts = await Promise.all(
+    accessibleRoomIds.map(roomId =>
+      db.chat_message.count({
+        where: {
+          chatRoomId: roomId,
+          id: { [Op.gt]: readMap.get(roomId) || 0 },
+          deletedAt: null,
+          userId: { [Op.ne]: userId }
+        }
+      })
+    )
+  );
+
+  return counts.reduce((sum, c) => sum + c, 0);
+}
 
 /**
  * Find users who have unread chat messages older than UNREAD_THRESHOLD_DAYS
- * and send them an email notification.
+ * and send them an email notification — but only if new messages have arrived
+ * since the last notification (tracked via chat_read_state.lastNotifiedMessageId).
  */
 async function checkAndNotifyUnreadMessages() {
   try {
@@ -53,7 +91,6 @@ async function checkAndNotifyUnreadMessages() {
           attributes: ['id', 'firstName', 'name', 'email'],
           where: {
             deletionRequestedAt: null,
-            // Exclude demo users
             roles: { [Op.not]: null }
           }
         }]
@@ -112,9 +149,14 @@ async function checkAndNotifyUnreadMessages() {
             }
           });
 
-          // Determine if user has unread messages older than threshold
+          // Skip if user has already read up to the latest message
           const lastReadId = readState?.lastReadMessageId || 0;
           if (lastReadId >= latestMessage.id) continue;
+
+          // Skip if no new messages have arrived since the last notification email.
+          // This prevents re-sending for the same messages after a server restart.
+          const lastNotifiedId = readState?.lastNotifiedMessageId || 0;
+          if (latestMessage.id <= lastNotifiedId) continue;
 
           // Count unread messages
           const unreadCount = await db.chat_message.count({
@@ -143,22 +185,20 @@ async function checkAndNotifyUnreadMessages() {
           // Only notify if the oldest unread is older than threshold
           if (!oldestUnread || new Date(oldestUnread.createdAt) > thresholdDate) continue;
 
-          // Check cooldown - don't re-notify too often
-          const notifKey = `${user.id}-${room.id}`;
-          const lastNotified = sentNotifications.get(notifKey);
-          if (lastNotified) {
-            const cooldownMs = RE_NOTIFY_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
-            if (Date.now() - lastNotified < cooldownMs) continue;
-          }
-
           // Build notification data
-          const authorName = latestMessage.author
-            ? `${latestMessage.author.firstName || ''} ${latestMessage.author.name || ''}`.trim()
-            : 'Unbekannt';
+          const firstName = latestMessage.author?.firstName || '';
+          const lastName = latestMessage.author?.name || '';
+          const authorName = `${firstName} ${lastName}`.trim() || 'Unbekannt';
+          const authorInitials = [firstName, lastName]
+            .map(s => s.charAt(0).toUpperCase())
+            .filter(Boolean)
+            .join('') || '?';
 
-          const messagePreview = latestMessage.text
-            ? latestMessage.text.substring(0, 150) + (latestMessage.text.length > 150 ? '…' : '')
+          const fullText = latestMessage.text || '';
+          const messagePreview = fullText
+            ? fullText.substring(0, 150) + (fullText.length > 150 ? '…' : '')
             : '(Anhang)';
+          const attachmentName = latestMessage.attachmentOriginalName || latestMessage.attachmentFilename || '';
 
           const oldestUnreadDate = new Date(oldestUnread.createdAt).toLocaleDateString('de-DE', {
             weekday: 'long',
@@ -167,7 +207,19 @@ async function checkAndNotifyUnreadMessages() {
             year: 'numeric'
           });
 
-          const chatLink = `${frontendUrl}/chat`;
+          const lastMessageDate = new Date(latestMessage.createdAt).toLocaleString('de-DE', {
+            weekday: 'long',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          // Link goes directly to the specific chat room
+          const chatLink = `${frontendUrl}/chat?room=${room.id}`;
+
+          const totalUnreadCount = await countTotalUnreadForUser(user.id, choir.chatRooms);
 
           try {
             await sendTemplateMail('chat-unread', user.email, {
@@ -176,14 +228,26 @@ async function checkAndNotifyUnreadMessages() {
               choir: choir.name,
               room_title: room.title,
               room_key: room.key,
+              room_id: String(room.id),
               unread_count: String(unreadCount),
               oldest_unread_date: oldestUnreadDate,
               last_author: authorName,
+              last_author_initials: authorInitials,
+              last_message_text: fullText,
               last_message_preview: messagePreview,
+              last_message_date: lastMessageDate,
+              last_message_attachment_name: attachmentName,
+              total_unread_count: String(totalUnreadCount),
               link: chatLink
             });
 
-            sentNotifications.set(notifKey, Date.now());
+            // Persist the latest message ID so we don't re-notify for the same messages
+            await db.chat_read_state.upsert({
+              chatRoomId: room.id,
+              userId: user.id,
+              lastNotifiedMessageId: latestMessage.id
+            });
+
             logger.info(`Chat unread notification sent to user ${user.id} for room "${room.title}" (${choir.name}): ${unreadCount} unread`);
           } catch (mailErr) {
             logger.error(`Failed to send chat unread notification to user ${user.id}: ${mailErr.message}`);
@@ -196,18 +260,7 @@ async function checkAndNotifyUnreadMessages() {
   }
 }
 
-function cleanupOldNotifications() {
-  const cutoff = Date.now() - RE_NOTIFY_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
-  for (const [key, timestamp] of sentNotifications) {
-    if (timestamp < cutoff) {
-      sentNotifications.delete(key);
-    }
-  }
-  logger.debug('Chat unread notification tracking cache cleaned.');
-}
-
 let checkInterval = null;
-let cleanupInterval = null;
 
 function startScheduler() {
   if (checkInterval) return;
@@ -217,17 +270,12 @@ function startScheduler() {
   // Run first check after 1 minute (let server fully start)
   setTimeout(checkAndNotifyUnreadMessages, 60 * 1000);
   checkInterval = setInterval(checkAndNotifyUnreadMessages, CHECK_INTERVAL_MS);
-  cleanupInterval = setInterval(cleanupOldNotifications, CLEANUP_INTERVAL_MS);
 }
 
 function stopScheduler() {
   if (checkInterval) {
     clearInterval(checkInterval);
     checkInterval = null;
-  }
-  if (cleanupInterval) {
-    clearInterval(cleanupInterval);
-    cleanupInterval = null;
   }
 }
 

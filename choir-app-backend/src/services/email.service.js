@@ -270,6 +270,23 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
       await sendMail({ to, subject: 'Footer-Vorschau', html, text: 'Dies ist eine Beispielmail, um den Footer zu testen.' });
       return;
     }
+    if (type === 'chat-unread') {
+      Object.assign(placeholders, {
+        room_title: '#allgemein',
+        room_id: '1',
+        room_key: 'allgemein',
+        unread_count: '3',
+        total_unread_count: '5',
+        oldest_unread_date: 'Montag, 23.06.2026',
+        last_author: 'Maria Muster',
+        last_author_initials: 'MM',
+        last_message_text: 'Wann ist die nächste Probe?',
+        last_message_preview: 'Wann ist die nächste Probe?',
+        last_message_date: 'Montag, 23.06.2026, 14:35',
+        last_message_attachment_name: '',
+        link: 'https://nak-chorleiter.de/chat?room=1'
+      });
+    }
     await sendTemplateMail(type, to, placeholders);
   } catch (err) {
     logger.error(`Error sending template preview mail to ${to}: ${err.message}`);

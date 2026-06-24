@@ -27,6 +27,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
   emailChangeHtmlMode = false;
   lendingBorrowedHtmlMode = false;
   lendingReturnedHtmlMode = false;
+  chatUnreadHtmlMode = false;
   footerHtmlMode = false;
   public Editor = ClassicEditor;
   public editorConfig: EditorConfig = {
@@ -53,6 +54,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       lendingBorrowedBody: ['', Validators.required],
       lendingReturnedSubject: ['', Validators.required],
       lendingReturnedBody: ['', Validators.required],
+      chatUnreadSubject: ['', Validators.required],
+      chatUnreadBody: ['', Validators.required],
       footerBody: ['', Validators.required]
     });
   }
@@ -84,6 +87,7 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       const emailChange = templates.find(t => t.type === 'email-change');
       const lendingBorrowed = templates.find(t => t.type === 'lending-borrowed');
       const lendingReturned = templates.find(t => t.type === 'lending-returned');
+      const chatUnread = templates.find(t => t.type === 'chat-unread');
       const footer = templates.find(t => t.type === 'mail-footer');
       if (invite) {
         this.form.patchValue({ inviteSubject: invite.subject, inviteBody: invite.body });
@@ -108,6 +112,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
       }
       if (lendingReturned) {
         this.form.patchValue({ lendingReturnedSubject: lendingReturned.subject, lendingReturnedBody: lendingReturned.body });
+      }
+      if (chatUnread) {
+        this.form.patchValue({ chatUnreadSubject: chatUnread.subject, chatUnreadBody: chatUnread.body });
       }
       if (footer) {
         this.form.patchValue({ footerBody: footer.body });
@@ -145,6 +152,9 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     }
     if (!type || type === 'lending-returned') {
       templates.push({ type: 'lending-returned', subject: value.lendingReturnedSubject, body: value.lendingReturnedBody });
+    }
+    if (!type || type === 'chat-unread') {
+      templates.push({ type: 'chat-unread', subject: value.chatUnreadSubject, body: value.chatUnreadBody });
     }
     if (!type || type === 'mail-footer') {
       templates.push({ type: 'mail-footer', subject: '(Footer)', body: value.footerBody });
@@ -187,6 +197,10 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
     this.lendingReturnedHtmlMode = !this.lendingReturnedHtmlMode;
   }
 
+  toggleChatUnreadHtml(): void {
+    this.chatUnreadHtmlMode = !this.chatUnreadHtmlMode;
+  }
+
   toggleFooterHtml(): void {
     this.footerHtmlMode = !this.footerHtmlMode;
   }
@@ -219,6 +233,8 @@ export class MailTemplatesComponent implements OnInit, PendingChanges {
         return ['lendingBorrowedSubject', 'lendingBorrowedBody'];
       case 'lending-returned':
         return ['lendingReturnedSubject', 'lendingReturnedBody'];
+      case 'chat-unread':
+        return ['chatUnreadSubject', 'chatUnreadBody'];
       case 'mail-footer':
         return ['footerBody'];
       default:

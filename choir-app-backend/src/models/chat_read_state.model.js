@@ -7,6 +7,10 @@ module.exports = (sequelize, DataTypes) => {
     lastReadAt: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    lastNotifiedMessageId: {
+      type: DataTypes.INTEGER,
+      allowNull: true
     }
   }, {
     indexes: [

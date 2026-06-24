@@ -269,6 +269,44 @@
         <button mat-raised-button color="primary" type="button" (click)="save('lending-returned')">Speichern</button>
       </div>
     </mat-tab>
+    <mat-tab label="Chat-Benachrichtigung">
+      <mat-form-field appearance="outline">
+        <mat-label>Betreff</mat-label>
+        <input matInput formControlName="chatUnreadSubject" />
+      </mat-form-field>
+      <div class="editor-group">
+        <div class="editor-header">
+          <label class="editor-label">Text (HTML erlaubt)</label>
+          <mat-slide-toggle
+            class="html-toggle"
+            [checked]="chatUnreadHtmlMode"
+            (change)="toggleChatUnreadHtml()"
+            >HTML bearbeiten</mat-slide-toggle>
+        </div>
+        <ckeditor
+          [editor]="Editor"
+          [config]="editorConfig"
+          [hidden]="chatUnreadHtmlMode"
+          formControlName="chatUnreadBody"
+        ></ckeditor>
+        <textarea
+          *ngIf="chatUnreadHtmlMode"
+          class="html-editor"
+          formControlName="chatUnreadBody"
+        ></textarea>
+        <p class="hint">
+          Empfänger: {{'{{first_name}}'}}, {{'{{surname}}'}}, {{'{{choir}}'}}<br>
+          Raum: {{'{{room_title}}'}}, {{'{{room_id}}'}}, {{'{{room_key}}'}}<br>
+          Zähler: {{'{{unread_count}}'}} (dieser Raum), {{'{{total_unread_count}}'}} (alle Räume), {{'{{oldest_unread_date}}'}}<br>
+          Letzte Nachricht: {{'{{last_author}}'}}, {{'{{last_author_initials}}'}}, {{'{{last_message_date}}'}}, {{'{{last_message_text}}'}}, {{'{{last_message_preview}}'}}, {{'{{last_message_attachment_name}}'}}<br>
+          Link: {{'{{link}}'}} (direkter Link zum Chat-Raum)
+        </p>
+      </div>
+      <div class="actions">
+        <button mat-raised-button color="accent" type="button" (click)="sendTest('chat-unread')">Testmail</button>
+        <button mat-raised-button color="primary" type="button" (click)="save('chat-unread')">Speichern</button>
+      </div>
+    </mat-tab>
     <mat-tab label="Mail-Footer">
       <div class="editor-group">
         <div class="editor-header">
