@@ -40,6 +40,11 @@
   .close-button {
     margin-left: auto;
   }
+
+  @include handset {
+    width: min(88vw, 360px);
+    max-width: 88vw;
+  }
 }
 
 // Header der Seite (Titel und Button)
@@ -60,11 +65,40 @@
 
   button[mat-icon-button] {
     flex-shrink: 0;
+    position: relative;
+  }
+
+  .filter-count-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    padding: 0 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    color: #fff;
+    background-color: var(--mdc-theme-primary, #3f51b5);
+  }
+
+  .filter-active {
+    color: var(--mdc-theme-primary, #3f51b5);
+    background: rgba(63, 81, 181, 0.1);
   }
 
   @include handset {
     gap: 0.35rem;
     padding: 0.25rem 0.35rem;
+
+    .preset-select {
+      min-width: 0;
+      flex: 1 1 auto;
+    }
   }
 }
 

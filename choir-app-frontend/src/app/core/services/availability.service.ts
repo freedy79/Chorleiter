@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { UserAvailability } from '../models/user-availability';
@@ -15,29 +15,36 @@ export class AvailabilityService {
     return new HttpContext().set(SKIP_GLOBAL_LOADING, true);
   }
 
-  getAvailabilities(year: number, month: number): Observable<UserAvailability[]> {
+  private buildChoirParams(choirId?: number): HttpParams | undefined {
+    return choirId != null ? new HttpParams().set('choirId', choirId.toString()) : undefined;
+  }
+
+  getAvailabilities(year: number, month: number, choirId?: number): Observable<UserAvailability[]> {
     return this.http.get<UserAvailability[]>(`${this.apiUrl}/availabilities/${year}/${month}`, {
-      context: this.noGlobalLoadingContext
+      context: this.noGlobalLoadingContext,
+      params: this.buildChoirParams(choirId)
     });
   }
 
-  setAvailability(date: string, status: string): Observable<UserAvailability> {
-    return this.http.put<UserAvailability>(`${this.apiUrl}/availabilities`, { date, status });
+  setAvailability(date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.http.put<UserAvailability>(`${this.apiUrl}/availabilities`, { date, status }, { params: this.buildChoirParams(choirId) });
   }
 
-  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
+  getMemberAvailabilities(year: number, month: number, choirId?: number): Observable<MemberAvailability[]> {
     return this.http.get<MemberAvailability[]>(`${this.apiUrl}/availabilities/${year}/${month}/all`, {
-      context: this.noGlobalLoadingContext
+      context: this.noGlobalLoadingContext,
+      params: this.buildChoirParams(choirId)
     });
   }
 
-  getUserAvailabilities(year: number, month: number, userId: number): Observable<UserAvailability[]> {
+  getUserAvailabilities(year: number, month: number, userId: number, choirId?: number): Observable<UserAvailability[]> {
     return this.http.get<UserAvailability[]>(`${this.apiUrl}/availabilities/${year}/${month}/user/${userId}`, {
-      context: this.noGlobalLoadingContext
+      context: this.noGlobalLoadingContext,
+      params: this.buildChoirParams(choirId)
     });
   }
 
-  setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
-    return this.http.put<UserAvailability>(`${this.apiUrl}/availabilities/${userId}`, { date, status });
+  setMemberAvailability(userId: number, date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.http.put<UserAvailability>(`${this.apiUrl}/availabilities/${userId}`, { date, status }, { params: this.buildChoirParams(choirId) });
   }
 }

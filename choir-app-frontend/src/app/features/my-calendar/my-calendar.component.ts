@@ -14,8 +14,11 @@ import { MonthlyPlanService } from '@core/services/monthly-plan.service';
 import { Event } from '@core/models/event';
 import { PlanEntry } from '@core/models/plan-entry';
 import { AuthService } from '@core/services/auth.service';
+import { NotificationService } from '@core/services/notification.service';
 import { DateAdapter, MAT_DATE_LOCALE } from '@angular/material/core';
 import { environment } from 'src/environments/environment';
+
+type AvailabilityStatus = 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
 
 interface HolidayEvent {
     type: 'HOLIDAY';
@@ -39,6 +42,18 @@ type CalendarEntry = Event | HolidayEvent | PlanCalendarEntry;
     styleUrls: ['./my-calendar.component.scss'],
 })
 export class MyCalendarComponent implements OnInit {
+    private readonly availabilityLabels: Record<AvailabilityStatus, string> = {
+        AVAILABLE: 'Zugesagt',
+        MAYBE: 'Vielleicht',
+        UNAVAILABLE: 'Abgesagt'
+    };
+
+    private readonly availabilityIcons: Record<AvailabilityStatus, string> = {
+        AVAILABLE: 'check_circle',
+        MAYBE: 'help',
+        UNAVAILABLE: 'cancel'
+    };
+
     events: Event[] = [];
     eventMap: { [date: string]: Event[] } = {};
     planEntryMap: { [date: string]: PlanEntry[] } = {};
@@ -46,10 +61,21 @@ export class MyCalendarComponent implements OnInit {
     selectedDate: Date = new Date();
     currentUserId: number | null = null;
     private loadedPlanMonths = new Set<string>();
+    private loadedAvailabilityMonths = new Set<string>();
     allPlanEntries: PlanEntry[] = [];
     isAdmin = false;
+    activeChoirId: number | null = null;
+    availableChoirIds: number[] = [];
+    availabilityByKey: Record<string, AvailabilityStatus> = {};
+    savingAvailabilityByKey: Record<string, boolean> = {};
     choirColors: Record<number, string> = {};
     private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
+    readonly availabilityOptions: Array<{ value: AvailabilityStatus; icon: string; label: string }> = [
+        { value: 'AVAILABLE', icon: 'check_circle', label: 'Zusage' },
+        { value: 'MAYBE', icon: 'help', label: 'Vielleicht' },
+        { value: 'UNAVAILABLE', icon: 'cancel', label: 'Absage' }
+    ];
+    selectedEntryForMenu: CalendarEntry | null = null;
 
     @ViewChild('eventList') eventList?: ElementRef<HTMLElement>;
     @ViewChild(MatCalendar) calendar?: MatCalendar<Date>;
@@ -59,17 +85,25 @@ export class MyCalendarComponent implements OnInit {
         private _adapter: DateAdapter<any>,
         private api: ApiService,
         private monthlyPlan: MonthlyPlanService,
-        private auth: AuthService
+        private auth: AuthService,
+        private notification: NotificationService
     ) {
         this._adapter.setLocale(_locale);
     }
 
     ngOnInit(): void {
         this.auth.isAdmin$.subscribe((v) => (this.isAdmin = v));
+        this.auth.activeChoir$.subscribe((choir) => {
+            this.activeChoirId = choir?.id ?? null;
+        });
         this.auth.availableChoirs$.subscribe((choirs) => {
+            this.availableChoirIds = choirs.map(c => c.id);
             choirs.forEach((c, idx) => {
                 this.choirColors[c.id] = this.colorPalette[idx % this.colorPalette.length];
             });
+            const year = this.selectedDate.getFullYear();
+            const month = this.selectedDate.getMonth() + 1;
+            this.loadAvailabilitiesForMonth(year, month);
         });
         this.loadEvents();
         const year = this.selectedDate.getFullYear();
@@ -82,12 +116,14 @@ export class MyCalendarComponent implements OnInit {
                 const year = this.selectedDate.getFullYear();
                 const month = this.selectedDate.getMonth() + 1;
                 this.loadPlanEntriesForMonth(year, month);
+                this.loadAvailabilitiesForMonth(year, month);
 
                 const next = new Date(year, month, 1);
                 this.loadPlanEntriesForMonth(
                     next.getFullYear(),
                     next.getMonth() + 1
                 );
+                this.loadAvailabilitiesForMonth(next.getFullYear(), next.getMonth() + 1);
             }
         });
     }
@@ -126,6 +162,106 @@ export class MyCalendarComponent implements OnInit {
             this.calendar?.updateTodaysDate();
         });
     }
+
+    private loadAvailabilitiesForMonth(year: number, month: number): void {
+        for (const choirId of this.availableChoirIds) {
+            const key = `${choirId}:${year}-${month}`;
+            if (this.loadedAvailabilityMonths.has(key)) continue;
+            this.loadedAvailabilityMonths.add(key);
+            this.api.getAvailabilities(year, month, choirId).subscribe((availabilities) => {
+                for (const availability of availabilities) {
+                    this.availabilityByKey[this.availabilityKey(choirId, availability.date)] = availability.status;
+                }
+            });
+        }
+    }
+
+    private availabilityKey(choirId: number | null | undefined, date: string | Date): string {
+        return `${choirId ?? 'default'}:${String(date).slice(0, 10)}`;
+    }
+
+    private choirIdForEntry(entry: CalendarEntry): number | null {
+        if ((entry as Event).choirId != null) {
+            return (entry as Event).choirId ?? null;
+        }
+        return this.activeChoirId;
+    }
+
+    availabilityStatus(entry: CalendarEntry): AvailabilityStatus | null {
+        if ((entry as HolidayEvent).type === 'HOLIDAY') {
+            return null;
+        }
+        return this.availabilityByKey[this.availabilityKey(this.choirIdForEntry(entry), entry.date)] ?? null;
+    }
+
+    isSavingAvailability(entry: CalendarEntry): boolean {
+        return this.savingAvailabilityByKey[this.availabilityKey(this.choirIdForEntry(entry), entry.date)] === true;
+    }
+
+    setAvailability(entry: CalendarEntry, status: AvailabilityStatus, event: MouseEvent): void {
+        event.stopPropagation();
+        const choirId = this.choirIdForEntry(entry);
+        const key = this.availabilityKey(choirId, entry.date);
+        if (this.savingAvailabilityByKey[key] || this.availabilityStatus(entry) === status) {
+            return;
+        }
+
+        this.savingAvailabilityByKey[key] = true;
+        this.api.setAvailability(String(entry.date).slice(0, 10), status, choirId ?? undefined).subscribe({
+            next: (updated) => {
+                this.availabilityByKey[key] = updated.status;
+                this.savingAvailabilityByKey[key] = false;
+                this.notification.success(`${this.getAvailabilityLabel(updated.status)} gespeichert.`);
+            },
+            error: () => {
+                this.savingAvailabilityByKey[key] = false;
+                this.notification.error('Verfügbarkeit konnte nicht gespeichert werden.');
+            }
+        });
+    }
+
+    openAvailabilityMenu(entry: CalendarEntry, event: MouseEvent): void {
+        event.stopPropagation();
+        this.selectedEntryForMenu = entry;
+    }
+
+    updateAvailabilityFromMenu(status: AvailabilityStatus, event: MouseEvent): void {
+        event.stopPropagation();
+        if (!this.selectedEntryForMenu) {
+            return;
+        }
+        this.setAvailability(this.selectedEntryForMenu, status, event);
+    }
+
+    getAvailabilityLabel(status: AvailabilityStatus | null | undefined): string {
+        return status ? this.availabilityLabels[status] : 'Noch keine Rückmeldung';
+    }
+
+    getAvailabilityIcon(status: AvailabilityStatus | null | undefined): string {
+        return status ? this.availabilityIcons[status] : 'event_available';
+    }
+
+    getAvailabilityClass(status: AvailabilityStatus | null | undefined): string {
+        if (!status) {
+            return 'status-unset';
+        }
+        if (status === 'AVAILABLE') {
+            return 'status-available';
+        }
+        if (status === 'UNAVAILABLE') {
+            return 'status-unavailable';
+        }
+        return 'status-maybe';
+    }
+
+    availabilityAriaLabel(entry: CalendarEntry): string {
+        const labelTarget = (entry as PlanCalendarEntry).entryType === 'PLAN' ? 'Dienst' : 'Termin';
+        return `Status ändern für diesen ${labelTarget}: ${this.getAvailabilityLabel(this.availabilityStatus(entry))}`;
+    }
+
+    trackByCalendarEntry = (index: number, entry: CalendarEntry): string => {
+        return `${(entry as Event).id ?? (entry as HolidayEvent).name ?? 'plan'}-${String(entry.date)}-${(entry as any).entryType ?? (entry as any).type ?? index}`;
+    };
 
     private calculateGermanHolidays(year: number): { [date: string]: string } {
         const toKey = (d: Date) => this.germanDateKey(d);
@@ -177,6 +313,7 @@ export class MyCalendarComponent implements OnInit {
                 date.getFullYear(),
                 date.getMonth() + 1
             );
+            this.loadAvailabilitiesForMonth(date.getFullYear(), date.getMonth() + 1);
             setTimeout(() => {
                 this.eventList?.nativeElement.scrollIntoView({
                     behavior: 'smooth',

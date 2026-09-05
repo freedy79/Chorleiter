@@ -77,6 +77,40 @@ function createRes() {
     assert.strictEqual(res.statusCode, 201);
     const firstReplyId = res.data.id;
 
+    // Direct room is created once and then reused
+    res = createRes();
+    await controller.getOrCreateDirectRoom({
+      body: { targetUserId: memberB.id },
+      userId: memberA.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.reused, false);
+    assert.ok(Number.isInteger(res.data.roomId));
+    const directRoomId = res.data.roomId;
+
+    res = createRes();
+    await controller.getOrCreateDirectRoom({
+      body: { targetUserId: memberA.id },
+      userId: memberB.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 200);
+    assert.strictEqual(res.data.reused, true);
+    assert.strictEqual(res.data.roomId, directRoomId);
+
+    res = createRes();
+    await controller.getRoomMessages({
+      params: { roomId: directRoomId },
+      query: {},
+      userId: outsiderDirector.id,
+      activeChoirId: choir.id,
+      userRoles: []
+    }, res);
+    assert.strictEqual(res.statusCode, 404);
+
     res = createRes();
     await controller.createMessage({
       params: { roomId },

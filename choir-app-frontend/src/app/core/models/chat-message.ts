@@ -3,6 +3,7 @@ export interface ChatAttachment {
   mimeType: string;
   size: number;
   url: string;
+  previewUrl?: string;
 }
 
 export interface ChatReaction {

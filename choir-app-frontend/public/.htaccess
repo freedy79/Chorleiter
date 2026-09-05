@@ -63,6 +63,14 @@
   RewriteBase /
 
   # -----------------------------------------------
+  # Kanonischer Host: www -> non-www (301)
+  # Verhindert CORS-Fehler, da die App fest auf
+  # https://nak-chorleiter.de/api zugreift.
+  # -----------------------------------------------
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # -----------------------------------------------
   # Social-Media-Bot-Erkennung für geteilte Stücke
   # WhatsApp, Facebook, Telegram etc. erhalten eine
   # HTML-Seite mit Open Graph Meta-Tags vom Backend.

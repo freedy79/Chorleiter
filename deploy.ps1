@@ -289,8 +289,8 @@ Write-VerboseLog "Frontend source: $FrontendSourcePath"
 if (-not (Test-Path $BackendSourcePath))  { throw "Backend directory not found: $BackendSourcePath" }
 if (-not (Test-Path $FrontendSourcePath)) { throw "Frontend directory not found: $FrontendSourcePath" }
 
-Write-VerboseLog "Compressing backend (excluding node_modules, logs, uploads)..."
-$tarArgs = @('--exclude=.env', '--exclude=node_modules', '--exclude=logs', '--exclude=uploads', '-czf', $script:BackendArchive, '-C', $BackendSourcePath, '.')
+Write-VerboseLog "Compressing backend (excluding env files, node_modules, logs, uploads)..."
+$tarArgs = @('--exclude=.env*', '--exclude=node_modules', '--exclude=logs', '--exclude=uploads', '-czf', $script:BackendArchive, '-C', $BackendSourcePath, '.')
 & tar $tarArgs
 if ($LASTEXITCODE -ne 0) {
     throw "Backend compression failed with exit code $LASTEXITCODE. Command: tar $($tarArgs -join ' ')"
@@ -384,7 +384,7 @@ if ($httpCheck -notmatch '^0') {
     Write-Host "Backend is running but not responding to HTTP requests!" -ForegroundColor Red
     Write-Host ""
     Write-Host "=== Checking .env Configuration ===" -ForegroundColor Yellow
-    $envCheck = Invoke-Ssh "cd '$BackendDest' && if [ -f .env ]; then echo 'ADDRESS='`$(grep '^ADDRESS=' .env 2>/dev/null || echo 'NOT SET'); echo 'PORT='`$(grep '^PORT=' .env 2>/dev/null || echo 'NOT SET'); echo 'DB_DIALECT='`$(grep '^DB_DIALECT=' .env 2>/dev/null || echo 'NOT SET'); echo ''; ADDRESS_VALUE=`$(grep '^ADDRESS=' .env | cut -d'=' -f2); if [ `"`$ADDRESS_VALUE`" = 'localhost' ]; then echo 'WARNING: ADDRESS is set to localhost - server may not be accessible from outside!'; echo 'Consider changing to ADDRESS=0.0.0.0 in $BackendDest/.env'; fi; else echo '.env file not found!'; fi"
+    $envCheck = Invoke-Ssh "cd '$BackendDest' && if [ -f .env ]; then ADDRESS_VALUE=`$(grep '^ADDRESS=' .env 2>/dev/null | cut -d'=' -f2-); PORT_VALUE=`$(grep '^PORT=' .env 2>/dev/null | cut -d'=' -f2-); DIALECT_VALUE=`$(grep '^DB_DIALECT=' .env 2>/dev/null | cut -d'=' -f2-); echo 'ADDRESS='`$`{ADDRESS_VALUE:-NOT SET`}; echo 'PORT='`$`{PORT_VALUE:-NOT SET`}; echo 'DB_DIALECT='`$`{DIALECT_VALUE:-NOT SET`}; echo ''; if [ `"`$ADDRESS_VALUE`" = 'localhost' ]; then echo 'WARNING: ADDRESS is set to localhost - server may not be accessible from outside!'; echo 'Consider changing to ADDRESS=0.0.0.0 in $BackendDest/.env'; fi; else echo '.env file not found!'; fi"
     Write-Host $envCheck
     Write-Host ""
     Write-Host "=== PM2 Logs ===" -ForegroundColor Yellow

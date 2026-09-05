@@ -297,7 +297,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     const notesByDate: Record<string, string> = {};
     const entries = plan?.entries ?? [];
     for (const entry of entries) {
-      const notes = entry.notes?.trim();
+      const notes = entry.notes?.trim() || (entry.eventType === 'REHEARSAL' ? 'Chorprobe' : entry.eventType === 'SERVICE' ? 'Gottesdienst' : '');
       if (notes) {
         notesByDate[this.dateKey(entry.date)] = notes;
       }

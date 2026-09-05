@@ -4,6 +4,8 @@ import { MatTabChangeEvent } from '@angular/material/tabs';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
@@ -25,6 +27,8 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
     MatTabsModule,
     MatIconModule,
     MatCardModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     MailTemplatesHubComponent,
     MailSettingsHubComponent,
@@ -34,6 +38,13 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
   ]
 })
 export class MailManagementComponent {
+  readonly tabs = [
+    { label: 'Templates', icon: 'mail' },
+    { label: 'Einstellungen', icon: 'settings' },
+    { label: 'Logs', icon: 'history' },
+    { label: 'Admin Email', mobileLabel: 'Admin-E-Mail', icon: 'admin_panel_settings' },
+    { label: 'Demo', icon: 'touch_app' }
+  ];
   private readonly tabKeys = ['templates', 'settings', 'logs', 'admin-email', 'demo-leads'];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
@@ -50,5 +61,10 @@ export class MailManagementComponent {
   onTabChange(event: MatTabChangeEvent): void {
     this.selectedTabIndex = event.index;
     writeTabIndex(this.router, this.route, this.tabKeys, event.index);
+  }
+
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
+    writeTabIndex(this.router, this.route, this.tabKeys, index);
   }
 }

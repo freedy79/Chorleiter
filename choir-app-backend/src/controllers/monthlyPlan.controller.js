@@ -10,6 +10,7 @@ const {
     getMonthlyPlanWithCache,
     invalidateMonthlyPlanCache
 } = require('../services/monthlyPlanCache.service');
+const { syncPlanEntryEvent, defaultNotesForEventType } = require('../services/planEntryEventSync.service');
 
 function normalizeIdArray(value) {
     if (!Array.isArray(value)) {
@@ -77,16 +78,19 @@ async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
     for (const rule of rules) {
         const dates = datesForRule(plan.year, plan.month, rule);
-        const ruleNotes = typeof rule.notes === 'string' && rule.notes.trim() ? rule.notes : 'Gottesdienst';
+        const eventType = rule.eventType === 'REHEARSAL' ? 'REHEARSAL' : 'SERVICE';
+        const ruleNotes = typeof rule.notes === 'string' && rule.notes.trim() ? rule.notes : defaultNotesForEventType(eventType);
         for (const date of dates) {
             if (date.getUTCMonth() === 11 && date.getUTCDate() === 26 && date.getUTCDay() === 0) {
                 continue;
             }
-            await db.plan_entry.create({
+            const entry = await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
+                eventType,
                 notes: ruleNotes
             });
+            await syncPlanEntryEvent(entry);
         }
     }
 
@@ -94,7 +98,8 @@ async function createEntriesFromRules(plan) {
         const dec25 = new Date(Date.UTC(plan.year, 11, 25));
         const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
         if (!hasRuleForDec25) {
-            await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, notes: 'Gottesdienst' });
+            const entry = await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, eventType: 'SERVICE', notes: 'Gottesdienst' });
+            await syncPlanEntryEvent(entry);
         }
     }
 }
@@ -112,7 +117,8 @@ exports.findByMonth = async (req, res) => {
                     include: [
                         { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                         { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                        { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                        { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                        { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                     ]
                 }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
                 order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -189,7 +195,8 @@ exports.downloadPdf = async (req, res) => {
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                    { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -225,7 +232,8 @@ exports.emailPdf = async (req, res) => {
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                    { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]

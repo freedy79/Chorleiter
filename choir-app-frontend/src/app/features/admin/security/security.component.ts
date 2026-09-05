@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
@@ -21,6 +23,8 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     LoginAttemptsComponent,
     ProtocolsComponent,
@@ -29,6 +33,12 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
   ]
 })
 export class SecurityComponent {
+  readonly tabs = [
+    { label: 'Login', icon: 'login' },
+    { label: 'Protokolle', icon: 'history' },
+    { label: 'Logs', icon: 'receipt_long' },
+    { label: 'Zugangstoken', mobileLabel: 'Token', icon: 'vpn_key' }
+  ];
   private readonly tabKeys = ['login', 'protocols', 'logs', 'ota'];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
@@ -45,5 +55,10 @@ export class SecurityComponent {
   onTabChange(event: any): void {
     this.selectedTabIndex = event.index;
     writeTabIndex(this.router, this.route, this.tabKeys, event.index);
+  }
+
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
+    writeTabIndex(this.router, this.route, this.tabKeys, index);
   }
 }

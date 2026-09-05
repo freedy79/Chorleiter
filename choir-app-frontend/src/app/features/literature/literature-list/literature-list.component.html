@@ -1,7 +1,13 @@
 <mat-drawer-container class="drawer-container">
-  <mat-drawer #drawer position="start" mode="side" class="filter-drawer" [(opened)]="filtersExpanded"
+  <mat-drawer
+    #drawer
+    position="start"
+    [mode]="isMobile ? 'over' : 'side'"
+    class="filter-drawer"
+    [opened]="isMobile ? mobileFiltersOpen : filtersExpanded"
+    (openedChange)="onDrawerOpenedChange($event)"
               role="region" aria-label="Filterbereich für Repertoire">
-    <button mat-icon-button class="close-button" (click)="drawer.toggle()" aria-label="Filterbereich schließen">
+    <button mat-icon-button class="close-button" (click)="toggleFilterDrawer()" aria-label="Filterbereich schließen">
       <mat-icon aria-hidden="true">chevron_left</mat-icon>
     </button>
     <div class="filter-controls">
@@ -67,8 +73,11 @@
         </button>
       </div>
       <div class="filter-bar">
-        <button mat-icon-button (click)="drawer.toggle()" aria-label="Filter ein-/ausblenden">
+        <button mat-icon-button (click)="toggleFilterDrawer()"
+          [attr.aria-label]="hasActiveFilters() ? ('Filter ein-/ausblenden, ' + getActiveFilterCount() + ' aktive Filter') : 'Filter ein-/ausblenden'"
+                [class.filter-active]="hasActiveFilters()">
           <mat-icon aria-hidden="true">filter_list</mat-icon>
+          <span class="filter-count-badge" *ngIf="getActiveFilterCount() > 0" aria-hidden="true">{{ getActiveFilterCount() }}</span>
         </button>
         <mat-form-field appearance="outline" class="preset-select dense">
           <mat-select placeholder="Filter" [value]="selectedPresetId" (selectionChange)="onPresetSelect($event.value)">
@@ -80,10 +89,10 @@
             <mat-icon aria-hidden="true">delete</mat-icon>
           </button>
         </mat-form-field>
-        <button mat-icon-button (click)="saveCurrentPreset()" aria-label="Aktuelle Filter speichern">
+        <button mat-icon-button class="desktop-only" (click)="saveCurrentPreset()" aria-label="Aktuelle Filter speichern">
           <mat-icon aria-hidden="true">save</mat-icon>
         </button>
-        <button mat-icon-button [matMenuTriggerFor]="columnMenu" aria-label="Spalten anzeigen/ausblenden">
+        <button mat-icon-button class="desktop-only" [matMenuTriggerFor]="columnMenu" aria-label="Spalten anzeigen/ausblenden">
           <mat-icon aria-hidden="true">view_column</mat-icon>
         </button>
         <mat-menu #columnMenu="matMenu">
@@ -104,9 +113,28 @@
             <span>Anzahl geprobt</span>
           </button>
         </mat-menu>
-        <button mat-icon-button (click)="reloadList()" aria-label="Tabelle neu laden" matTooltip="Tabelle neu laden">
+        <button mat-icon-button class="desktop-only" (click)="reloadList()" aria-label="Tabelle neu laden" matTooltip="Tabelle neu laden">
           <mat-icon aria-hidden="true">refresh</mat-icon>
         </button>
+
+        <button mat-icon-button class="mobile-only" [matMenuTriggerFor]="mobileActionsMenu" aria-label="Weitere Aktionen">
+          <mat-icon aria-hidden="true">more_vert</mat-icon>
+        </button>
+
+        <mat-menu #mobileActionsMenu="matMenu">
+          <button mat-menu-item (click)="saveCurrentPreset()">
+            <mat-icon aria-hidden="true">save</mat-icon>
+            <span>Filter speichern</span>
+          </button>
+          <button mat-menu-item [matMenuTriggerFor]="columnMenu">
+            <mat-icon aria-hidden="true">view_column</mat-icon>
+            <span>Spalten wählen</span>
+          </button>
+          <button mat-menu-item (click)="reloadList()">
+            <mat-icon aria-hidden="true">refresh</mat-icon>
+            <span>Tabelle neu laden</span>
+          </button>
+        </mat-menu>
       </div>
 
       <div class="table-wrapper mat-elevation-z8">

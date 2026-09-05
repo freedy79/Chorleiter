@@ -99,10 +99,18 @@
             <mat-cell *matCellDef="let ev"
               [matTooltip]="eventTooltip(ev)"
               [matTooltipDisabled]="!eventTooltip(ev)">
-              <ng-container *ngIf="(ev | eventShort) as eventType">
-                <span>{{ eventType }}</span>
-                <span *ngIf="eventTooltip(ev) && eventTooltip(ev) !== eventType"> · {{ eventTooltip(ev) }}</span>
+              <ng-container *ngIf="isChoirAdmin && !plan.finalized; else eventTextDesktop">
+                <mat-select [value]="ev.eventType || 'SERVICE'" (selectionChange)="updateEventType(ev, $event.value)">
+                  <mat-option value="SERVICE">Gottesdienst</mat-option>
+                  <mat-option value="REHEARSAL">Chorprobe</mat-option>
+                </mat-select>
               </ng-container>
+              <ng-template #eventTextDesktop>
+                <ng-container *ngIf="(ev | eventShort) as eventType">
+                  <span>{{ eventType }}</span>
+                  <span *ngIf="eventTooltip(ev) && eventTooltip(ev) !== eventType"> · {{ eventTooltip(ev) }}</span>
+                </ng-container>
+              </ng-template>
             </mat-cell>
           </ng-container>
           <ng-container matColumnDef="program">
@@ -232,8 +240,17 @@
               <div class="card-event-type" *ngIf="(ev | eventShort) as eventType"
                 [matTooltip]="eventTooltip(ev)"
                 [matTooltipDisabled]="!eventTooltip(ev)">
-                <mat-icon class="card-icon">event</mat-icon>
-                <span>{{ eventType }}</span>
+                <ng-container *ngIf="isChoirAdmin && !plan.finalized; else eventTextMobile">
+                  <mat-icon class="card-icon">event</mat-icon>
+                  <mat-select [value]="ev.eventType || 'SERVICE'" (selectionChange)="updateEventType(ev, $event.value)" class="card-select">
+                    <mat-option value="SERVICE">Gottesdienst</mat-option>
+                    <mat-option value="REHEARSAL">Chorprobe</mat-option>
+                  </mat-select>
+                </ng-container>
+                <ng-template #eventTextMobile>
+                  <mat-icon class="card-icon">event</mat-icon>
+                  <span>{{ eventType }}</span>
+                </ng-template>
               </div>
 
               <div class="card-field">

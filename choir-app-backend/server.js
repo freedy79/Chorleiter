@@ -81,6 +81,7 @@ async function start() {
         });
     } catch (err) {
         logger.error("Database startup failed:", err);
+        process.exit(1);
     }
 }
 

@@ -4,6 +4,8 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
@@ -27,6 +29,8 @@ import { PwaAllConfigsComponent } from './pwa-all-configs/pwa-all-configs.compon
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     PwaVapidKeysComponent,
     PwaFeaturesComponent,
@@ -36,6 +40,13 @@ import { PwaAllConfigsComponent } from './pwa-all-configs/pwa-all-configs.compon
   ]
 })
 export class PwaConfigComponent {
+  readonly tabs = [
+    { label: 'VAPID Keys', mobileLabel: 'VAPID', icon: 'vpn_key' },
+    { label: 'Features', icon: 'toggle_on' },
+    { label: 'Service Worker', mobileLabel: 'Service-Worker', icon: 'cached' },
+    { label: 'Cache', icon: 'storage' },
+    { label: 'Alle', mobileLabel: 'Alle Einstellungen', icon: 'list' }
+  ];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
   initializing = false;
@@ -51,6 +62,10 @@ export class PwaConfigComponent {
 
   onTabChange(event: any): void {
     this.selectedTabIndex = event.index;
+  }
+
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
   }
 
   initializeDefaults(): void {

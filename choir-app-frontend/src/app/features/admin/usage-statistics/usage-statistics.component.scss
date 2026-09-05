@@ -10,6 +10,29 @@
   }
 }
 
+.mobile-tab-selector {
+  display: none;
+
+  .tab-select-field {
+    width: 100%;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .mobile-option-content {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-sm;
+  }
+
+  @include handset {
+    display: block;
+    margin-bottom: $spacing-sm;
+  }
+}
+
 .header-row {
   display: flex;
   align-items: center;
@@ -104,6 +127,12 @@
 // Tabs
 .stats-tabs {
   border-radius: 8px;
+}
+
+@include handset {
+  ::ng-deep .usage-stats-container .hub-tab-group .mat-mdc-tab-header {
+    display: none;
+  }
 }
 
 .tab-content {

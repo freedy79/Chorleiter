@@ -1,7 +1,7 @@
 <mat-card>
   <mat-card-header>
     <mat-card-title>{{ cardTitle }}</mat-card-title>
-    <button *ngIf="event?.pieces?.length" mat-icon-button (click)="copyPieceList()" matTooltip="Liste kopieren">
+    <button *ngIf="event?.pieces?.length" mat-icon-button (click)="copyPieceList()" matTooltip="Liste kopieren" aria-label="Stückliste kopieren">
       <mat-icon>content_copy</mat-icon>
     </button>
   </mat-card-header>
@@ -12,6 +12,41 @@
         {{ event.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE' }}
         <span class="event-creator" *ngIf="event.director">({{ event.director.name }})</span>
       </h3>
+      <div class="event-meta">
+        <span class="event-type-badge">{{ getEventTypeLabel() }}</span>
+        <span class="availability-summary" *ngIf="allowAvailabilityActions" aria-live="polite">
+          <mat-icon aria-hidden="true">{{ getAvailabilityIcon(availabilityStatus) }}</mat-icon>
+          <span>{{ getAvailabilityLabel(availabilityStatus) }}</span>
+        </span>
+      </div>
+      <div class="availability-section" *ngIf="allowAvailabilityActions">
+        <div class="availability-section__label">Meine Rückmeldung</div>
+        <div class="availability-trigger-row" role="group" aria-label="Rückmeldung für diesen Termin">
+          <button
+            mat-icon-button
+            type="button"
+            class="status-trigger"
+            [ngClass]="getAvailabilityClass(availabilityStatus)"
+            [disabled]="isSavingAvailability"
+            [matMenuTriggerFor]="availabilityMenu"
+            [attr.aria-label]="'Status ändern: ' + getAvailabilityLabel(availabilityStatus)"
+            [matTooltip]="'Status: ' + getAvailabilityLabel(availabilityStatus) + ' · ändern'"
+            (click)="openAvailabilityMenu($event)">
+            <mat-icon aria-hidden="true">{{ isSavingAvailability ? 'hourglass_top' : getAvailabilityIcon(availabilityStatus) }}</mat-icon>
+          </button>
+        </div>
+        <mat-menu #availabilityMenu="matMenu">
+          <button
+            *ngFor="let option of availabilityOptions"
+            mat-menu-item
+            (click)="updateAvailabilityFromMenu(option.value, $event)">
+            <mat-icon>{{ option.icon }}</mat-icon>
+            <span>{{ option.label }}</span>
+            <mat-icon *ngIf="isActiveAvailability(option.value)">done</mat-icon>
+          </button>
+        </mat-menu>
+        <div class="availability-saving" *ngIf="isSavingAvailability" aria-live="polite">Speichert Rückmeldung …</div>
+      </div>
       <ng-container *ngIf="event.pieces && event.pieces.length > 0; else noteBlock">
         <mat-list>
           <mat-list-item *ngFor="let piece of event.pieces">
@@ -36,7 +71,7 @@
     <!-- Diese Vorlage wird angezeigt, wenn das 'event'-Input null ist -->
     <ng-template #noData>
       <div class="no-data-message">
-        <p>Kein Event aufgezeichnet.</p>
+        <p>Für diese Karte ist noch kein Termin vorhanden.</p>
       </div>
     </ng-template>
   </mat-card-content>

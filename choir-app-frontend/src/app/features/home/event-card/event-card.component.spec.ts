@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Clipboard } from '@angular/cdk/clipboard';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { registerLocaleData } from '@angular/common';
 import localeDe from '@angular/common/locales/de';
 import localeDeExtra from '@angular/common/locales/extra/de';
+import { of } from 'rxjs';
 
 import { EventCardComponent } from './event-card.component';
+import { NotificationService } from '@core/services/notification.service';
+import { ApiService } from '@core/services/api.service';
 
 beforeAll(() => {
   registerLocaleData(localeDe, 'de-DE', localeDeExtra);
@@ -15,18 +17,21 @@ describe('EventCardComponent', () => {
   let component: EventCardComponent;
   let fixture: ComponentFixture<EventCardComponent>;
   let clipboardSpy: jasmine.SpyObj<Clipboard>;
-  let snackBarSpy: jasmine.SpyObj<MatSnackBar>;
+  let notificationSpy: jasmine.SpyObj<NotificationService>;
+  let apiSpy: jasmine.SpyObj<ApiService>;
 
   beforeEach(async () => {
     clipboardSpy = jasmine.createSpyObj('Clipboard', ['copy']);
     clipboardSpy.copy.and.returnValue(true);
-    snackBarSpy = jasmine.createSpyObj('MatSnackBar', ['open']);
+    notificationSpy = jasmine.createSpyObj('NotificationService', ['success', 'error']);
+    apiSpy = jasmine.createSpyObj('ApiService', ['setAvailability']);
 
     await TestBed.configureTestingModule({
       imports: [EventCardComponent],
       providers: [
         { provide: Clipboard, useValue: clipboardSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy }
+        { provide: NotificationService, useValue: notificationSpy },
+        { provide: ApiService, useValue: apiSpy }
       ]
     })
     .compileComponents();
@@ -83,5 +88,42 @@ describe('EventCardComponent', () => {
     } as any;
     component.copyPieceList();
     expect(clipboardSpy.copy).toHaveBeenCalledWith('- Song – Comp');
+  });
+
+  it('should update availability status inline', () => {
+    apiSpy.setAvailability.and.returnValue(of({ date: '2023-01-03', status: 'UNAVAILABLE' } as any));
+    component.event = {
+      id: 3,
+      date: '2023-01-03',
+      type: 'REHEARSAL',
+      choirId: 5,
+      createdAt: '2023-01-03',
+      updatedAt: '2023-01-03',
+      pieces: []
+    } as any;
+
+    component.setAvailability('UNAVAILABLE');
+
+    expect(apiSpy.setAvailability).toHaveBeenCalledWith('2023-01-03', 'UNAVAILABLE', 5);
+    expect(component.availabilityStatus).toBe('UNAVAILABLE');
+    expect(notificationSpy.success).toHaveBeenCalledWith('Abgesagt gespeichert.');
+  });
+
+  it('should render the current availability summary when actions are enabled', () => {
+    component.allowAvailabilityActions = true;
+    component.availabilityStatus = 'AVAILABLE';
+    component.event = {
+      id: 4,
+      date: '2023-01-04',
+      type: 'SERVICE',
+      createdAt: '2023-01-04',
+      updatedAt: '2023-01-04',
+      pieces: []
+    } as any;
+
+    fixture.detectChanges();
+
+    const summary = fixture.nativeElement.querySelector('.availability-summary');
+    expect(summary?.textContent).toContain('Zugesagt');
   });
 });

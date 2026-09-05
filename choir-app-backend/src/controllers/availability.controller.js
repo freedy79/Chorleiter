@@ -4,6 +4,20 @@ const { datesForRule, isoDateString } = require('../utils/date.utils');
 
 const { isPublicHoliday } = require('../services/holiday.service');
 
+async function resolveChoirId(req) {
+    const requestedChoirId = req.query?.choirId ? Number(req.query.choirId) : null;
+    if (!requestedChoirId || requestedChoirId === req.activeChoirId) {
+        return req.activeChoirId;
+    }
+
+    const membership = await db.user_choir.findOne({
+        where: { userId: req.userId, choirId: requestedChoirId },
+        attributes: ['userId']
+    });
+
+    return membership ? requestedChoirId : req.activeChoirId;
+}
+
 async function buildAvailabilitiesForUser({ choirId, userId, year, month }) {
     const rules = await db.plan_rule.findAll({ where: { choirId } });
     const dateSet = new Set();
@@ -42,6 +56,20 @@ async function buildAvailabilitiesForUser({ choirId, userId, year, month }) {
         dateSet.add(isoDateString(ev.date));
     }
 
+    const plans = await db.monthly_plan.findAll({
+        where: { choirId, year: Number(year), month: Number(month) },
+        attributes: ['id']
+    });
+    if (plans.length > 0) {
+        const entries = await db.plan_entry.findAll({
+            where: { monthlyPlanId: { [Op.in]: plans.map(plan => plan.id) } },
+            attributes: ['date']
+        });
+        for (const entry of entries) {
+            dateSet.add(isoDateString(entry.date));
+        }
+    }
+
     const dates = Array.from(dateSet).sort();
     const avail = await db.user_availability.findAll({
         where: {
@@ -62,8 +90,9 @@ async function buildAvailabilitiesForUser({ choirId, userId, year, month }) {
 
 exports.findByMonth = async (req, res) => {
     const { year, month } = req.params;
+    const choirId = await resolveChoirId(req);
     const result = await buildAvailabilitiesForUser({
-        choirId: req.activeChoirId,
+        choirId,
         userId: req.userId,
         year,
         month
@@ -73,8 +102,9 @@ exports.findByMonth = async (req, res) => {
 
 exports.findByMonthForUser = async (req, res) => {
     const { year, month, userId } = req.params;
+    const choirId = await resolveChoirId(req);
     const result = await buildAvailabilitiesForUser({
-        choirId: req.activeChoirId,
+        choirId,
         userId,
         year,
         month
@@ -85,8 +115,9 @@ exports.findByMonthForUser = async (req, res) => {
 exports.setAvailability = async (req, res) => {
     const { date, status } = req.body;
     if (!date || !status) return res.status(400).send({ message: 'date and status required' });
+    const choirId = await resolveChoirId(req);
     const [avail] = await db.user_availability.findOrCreate({
-        where: { userId: req.userId, choirId: req.activeChoirId, date },
+        where: { userId: req.userId, choirId, date },
         defaults: { status }
     });
     if (avail.status !== status) await avail.update({ status });
@@ -97,8 +128,9 @@ exports.setUserAvailability = async (req, res) => {
     const { date, status } = req.body;
     const { userId } = req.params;
     if (!date || !status) return res.status(400).send({ message: 'date and status required' });
+    const choirId = await resolveChoirId(req);
     const [avail] = await db.user_availability.findOrCreate({
-        where: { userId, choirId: req.activeChoirId, date },
+        where: { userId, choirId, date },
         defaults: { status }
     });
     if (avail.status !== status) await avail.update({ status });
@@ -108,9 +140,10 @@ exports.setUserAvailability = async (req, res) => {
 exports.findAllByMonth = async (req, res) => {
     const { year, month } = req.params;
     const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+    const choirId = await resolveChoirId(req);
     const avail = await db.user_availability.findAll({
         where: {
-            choirId: req.activeChoirId,
+            choirId,
             date: { [Op.between]: [ `${year}-${String(month).padStart(2,'0')}-01`, `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}` ] }
         },
         attributes: ['userId', 'date', 'status']

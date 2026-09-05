@@ -10,9 +10,10 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
-import { finalize, startWith, takeUntil } from 'rxjs/operators';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { finalize, startWith, take, takeUntil } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
-import { forkJoin, Subject } from 'rxjs';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
@@ -24,6 +25,7 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { environment } from 'src/environments/environment';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-event-list',
@@ -43,7 +45,7 @@ import { environment } from 'src/environments/environment';
 })
 export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   typeControl = new FormControl('ALL');
-  timeControl = new FormControl('RECENT');
+  timeControl = new FormControl('CURRENT_MONTH');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
@@ -77,6 +79,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
               private route: ActivatedRoute,
               private router: Router,
               private responsive: ResponsiveService,
+              private prefs: UserPreferencesService,
               private cdr: ChangeDetectorRef) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
   }
@@ -130,7 +133,13 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
         });
     }
     this.typeControl.valueChanges.pipe(startWith('ALL'), takeUntil(this.destroy$)).subscribe(() => this.loadEvents());
-    this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.applyTimeFilter());
+    this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
+      this.applyTimeFilter();
+      if (value) {
+        this.prefs.update({ eventListTimeFilter: value }).subscribe({ error: () => {} });
+      }
+    });
+    this.restoreTimeFilter();
     this.authService.isChoirAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
@@ -150,6 +159,18 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
       this.isSingerOnly = isSingerOnly;
       this.updateDisplayedColumns();
       this.cdr.markForCheck();
+    });
+  }
+
+  private restoreTimeFilter(): void {
+    const load$: Observable<UserPreferences | null> = this.prefs.isLoaded() ? of(null) : this.prefs.load();
+    load$.pipe(take(1), takeUntil(this.destroy$)).subscribe(() => {
+      const saved = this.prefs.getPreference('eventListTimeFilter');
+      if (saved && saved !== this.timeControl.value) {
+        this.timeControl.setValue(saved, { emitEvent: false });
+        this.applyTimeFilter();
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -211,13 +232,20 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (time === 'RECENT') {
       const pastLimit = new Date(today);
-      pastLimit.setDate(pastLimit.getDate() - 10);
+      pastLimit.setDate(pastLimit.getDate() - 14);
       const futureLimit = new Date(today);
-      futureLimit.setDate(futureLimit.getDate() + 10);
+      futureLimit.setDate(futureLimit.getDate() + 14);
       this.dataSource.data = this.allEvents.filter(ev => {
         const eventDate = new Date(ev.date);
         eventDate.setHours(0, 0, 0, 0);
         return eventDate >= pastLimit && eventDate <= futureLimit;
+      });
+    } else if (time === 'CURRENT_MONTH') {
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        return eventDate >= monthStart && eventDate <= monthEnd;
       });
     } else if (time === 'FUTURE') {
       this.dataSource.data = this.allEvents.filter(ev => {

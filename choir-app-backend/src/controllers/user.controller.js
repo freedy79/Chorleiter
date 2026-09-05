@@ -295,6 +295,10 @@ exports.updatePreferences = async (req, res) => {
             return res.status(400).send({ message: 'recommendPromptDismissed must be a boolean.' });
         }
 
+        if (incoming.eventListTimeFilter !== undefined && typeof incoming.eventListTimeFilter !== 'string') {
+            return res.status(400).send({ message: 'eventListTimeFilter must be a string.' });
+        }
+
         const prefs = Object.assign({}, user.preferences || {}, incoming);
         user.preferences = prefs;
         await user.save();

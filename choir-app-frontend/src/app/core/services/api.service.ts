@@ -511,11 +511,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -558,7 +558,7 @@ export class ApiService {
   }
 
   createPlanRule(
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     options?: { choirId?: number }
   ): Observable<PlanRule> {
     return this.planRuleService.createPlanRule(data, options?.choirId);
@@ -566,7 +566,7 @@ export class ApiService {
 
   updatePlanRule(
     id: number,
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     options?: { choirId?: number }
   ): Observable<PlanRule> {
     return this.planRuleService.updatePlanRule(id, data, options?.choirId);
@@ -577,24 +577,24 @@ export class ApiService {
   }
 
   // --- Availability Methods ---
-  getAvailabilities(year: number, month: number): Observable<UserAvailability[]> {
-    return this.availabilityService.getAvailabilities(year, month);
+  getAvailabilities(year: number, month: number, choirId?: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getAvailabilities(year, month, choirId);
   }
 
-  setAvailability(date: string, status: string): Observable<UserAvailability> {
-    return this.availabilityService.setAvailability(date, status);
+  setAvailability(date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.availabilityService.setAvailability(date, status, choirId);
   }
 
-  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
-    return this.availabilityService.getMemberAvailabilities(year, month);
+  getMemberAvailabilities(year: number, month: number, choirId?: number): Observable<MemberAvailability[]> {
+    return this.availabilityService.getMemberAvailabilities(year, month, choirId);
   }
 
-  getUserAvailabilities(year: number, month: number, userId: number): Observable<UserAvailability[]> {
-    return this.availabilityService.getUserAvailabilities(year, month, userId);
+  getUserAvailabilities(year: number, month: number, userId: number, choirId?: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getUserAvailabilities(year, month, userId, choirId);
   }
 
-  setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
-    return this.availabilityService.setMemberAvailability(userId, date, status);
+  setMemberAvailability(userId: number, date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.availabilityService.setMemberAvailability(userId, date, status, choirId);
   }
 
 

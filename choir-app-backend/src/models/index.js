@@ -166,6 +166,8 @@ db.monthly_plan.hasMany(db.event, { as: "events" });
 db.event.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
 db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
 db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
+db.event.hasOne(db.plan_entry, { as: 'linkedPlanEntry', foreignKey: 'linkedEventId' });
+db.plan_entry.belongsTo(db.event, { foreignKey: 'linkedEventId', as: 'linkedEvent' });
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 

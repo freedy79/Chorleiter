@@ -6,6 +6,7 @@ const pushService = require('./pushNotification.service');
 const { getFrontendUrl } = require('../utils/frontend-url');
 const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const { encodeEventPrefillToken } = require('../utils/event-prefill-link');
+const { normalizeEventType } = require('./planEntryEventSync.service');
 
 const TIME_ZONE = process.env.TZ || 'Europe/Berlin';
 
@@ -52,7 +53,10 @@ async function checkAndSendReminders() {
           [Op.lt]: windowEnd
         }
       },
-      include: [{ model: db.choir, as: 'choir', attributes: ['id', 'name'] }]
+      include: [
+        { model: db.choir, as: 'choir', attributes: ['id', 'name'] },
+        { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'], required: false }
+      ]
     });
 
     let totalSent = 0;
@@ -73,6 +77,17 @@ async function checkAndSendReminders() {
 
         if (daysUntil < 1 || daysUntil > maxDaysAhead) continue;
 
+        // Users who cancelled (UNAVAILABLE) for this date get no reminder
+        const unavailable = await db.user_availability.findAll({
+          where: {
+            choirId,
+            date: isoDateString(parseDateOnly(event.date)),
+            status: 'UNAVAILABLE'
+          },
+          attributes: ['userId']
+        });
+        const unavailableUserIds = new Set(unavailable.map(a => a.userId));
+
         // Get all members of this choir with their preferences
         const memberships = await db.user_choir.findAll({
           where: { choirId, registrationStatus: 'REGISTERED' },
@@ -85,6 +100,7 @@ async function checkAndSendReminders() {
         for (const membership of memberships) {
           const user = membership.user;
           if (!user) continue;
+          if (unavailableUserIds.has(user.id)) continue;
 
           const prefs = user.preferences || {};
           const reminder = prefs.rehearsalReminder;
@@ -138,7 +154,7 @@ function buildMissingEventPrefillLink({ choirId, userId, planEntry }) {
     userId,
     planEntryId: planEntry.id,
     date: isoDateString(eventDate),
-    type: 'SERVICE',
+    type: normalizeEventType(planEntry.eventType, planEntry.notes),
     notes: planEntry.notes || '',
     directorId: planEntry.directorId || null,
     monthlyPlanId: planEntry.monthlyPlanId || null,
@@ -185,6 +201,7 @@ async function findMissingServiceEventEntries({ now = new Date(), choirId } = {}
   const entries = await db.plan_entry.findAll({
     where: {
       date: { [Op.gte]: thirtyDaysAgo, [Op.lte]: threeDaysAgo },
+      eventType: 'SERVICE',
       directorId: { [Op.ne]: null }
     },
     include: [
@@ -433,12 +450,16 @@ async function sendPushReminder({ userId, choirId, event, typeLabel, eventDateFo
 }
 
 async function sendEmailReminder({ user, event, typeLabel, eventDateFormatted, choirName }) {
+  const directorName = event.director
+    ? [event.director.firstName, event.director.name].filter(Boolean).join(' ').trim()
+    : '';
   const replacements = {
     first_name: user.firstName || user.name,
     surname: user.name,
     event_type: typeLabel,
     event_date: eventDateFormatted,
     event_notes: event.notes || '',
+    event_director: directorName || '–',
     choir: choirName
   };
 

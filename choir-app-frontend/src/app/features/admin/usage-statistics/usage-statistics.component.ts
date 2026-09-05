@@ -6,6 +6,7 @@ import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.
 import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
@@ -62,12 +63,19 @@ interface UsageSummary {
   styleUrls: ['./usage-statistics.component.scss']
 })
 export class UsageStatisticsComponent implements OnInit, OnDestroy {
+  readonly tabs = [
+    { label: 'Tagesverlauf', icon: 'insights' },
+    { label: 'Top-Stücke', mobileLabel: 'Top-Stücke', icon: 'music_note' },
+    { label: 'Geteilte Stücke', mobileLabel: 'Geteilte', icon: 'share' },
+    { label: 'Top-Seiten', mobileLabel: 'Seiten', icon: 'web' }
+  ];
   summary: UsageSummary | null = null;
   sharedPieceStats: SharedPieceStat[] = [];
   loading = true;
   sharedLoading = false;
   selectedDays = 30;
   selectedTab = 0;
+  isMobile$;
 
   dayOptions = [
     { value: 7, label: '7 Tage' },
@@ -83,10 +91,17 @@ export class UsageStatisticsComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   constructor(
+    private responsive: ResponsiveService,
     private adminService: AdminService,
     private notification: NotificationService,
     private dialogHelper: DialogHelperService
-  ) {}
+  ) {
+    this.isMobile$ = this.responsive.isHandset$;
+  }
+
+  onSelectedTabChange(index: number): void {
+    this.selectedTab = index;
+  }
 
   ngOnDestroy(): void {
     this.destroy$.next();

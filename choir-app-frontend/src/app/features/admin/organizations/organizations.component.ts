@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
@@ -15,6 +17,7 @@ import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
 interface OrganizationTab {
   key: 'districts' | 'congregations' | 'choirs' | 'registration-requests';
   label: string;
+  mobileLabel?: string;
   icon: string;
 }
 
@@ -27,6 +30,8 @@ interface OrganizationTab {
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     ManageDistrictsComponent,
     ManageCongregationsComponent,
@@ -39,7 +44,7 @@ export class OrganizationsComponent {
     { key: 'districts', label: 'Bezirke', icon: 'map' },
     { key: 'congregations', label: 'Gemeinden', icon: 'place' },
     { key: 'choirs', label: 'Chöre', icon: 'group' },
-    { key: 'registration-requests', label: 'Registrierungsanfragen', icon: 'how_to_reg' }
+    { key: 'registration-requests', label: 'Registrierungsanfragen', mobileLabel: 'Anfragen', icon: 'how_to_reg' }
   ];
 
   private readonly tabKeys = this.tabs.map(tab => tab.key);
@@ -58,5 +63,10 @@ export class OrganizationsComponent {
   onTabChange(event: any): void {
     this.selectedTabIndex = event.index;
     writeTabIndex(this.router, this.route, this.tabKeys, event.index);
+  }
+
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
+    writeTabIndex(this.router, this.route, this.tabKeys, index);
   }
 }

@@ -236,6 +236,44 @@ async function getAccessibleRoomsForChoir(choirId, userId) {
   return rooms.filter(room => !room.isPrivate || allowedPrivate.has(room.id));
 }
 
+async function findDirectRoomForUsers(choirId, userIdA, userIdB) {
+  const privateRooms = await db.chat_room.findAll({
+    where: {
+      choirId,
+      isPrivate: true
+    },
+    attributes: ['id', 'choirId', 'key', 'title', 'isPrivate', 'isDefault']
+  });
+
+  if (!privateRooms.length) return null;
+
+  const roomIds = privateRooms.map(room => room.id);
+  const members = await db.chat_room_member.findAll({
+    where: {
+      chatRoomId: roomIds
+    },
+    attributes: ['chatRoomId', 'userId']
+  });
+
+  const membersByRoom = new Map();
+  for (const member of members) {
+    const list = membersByRoom.get(member.chatRoomId) || [];
+    list.push(member.userId);
+    membersByRoom.set(member.chatRoomId, list);
+  }
+
+  for (const room of privateRooms) {
+    const roomMembers = membersByRoom.get(room.id) || [];
+    const uniqueMembers = Array.from(new Set(roomMembers));
+    if (uniqueMembers.length !== 2) continue;
+    if (uniqueMembers.includes(userIdA) && uniqueMembers.includes(userIdB)) {
+      return room;
+    }
+  }
+
+  return null;
+}
+
 async function getOrCreateReadState(roomId, userId) {
   const [state] = await db.chat_read_state.findOrCreate({
     where: { chatRoomId: roomId, userId },
@@ -443,6 +481,67 @@ exports.createRoom = async (req, res) => {
   res.status(201).send({
     ...toPlain(room),
     memberUserIds: wantsPrivate ? Array.from(new Set([req.userId, ...requestedMemberIds])) : []
+  });
+};
+
+exports.getOrCreateDirectRoom = async (req, res) => {
+  if (!req.activeChoirId || !(await ensureMemberAccess(req))) {
+    return res.status(403).send({ message: 'Kein Zugriff auf Chat-Räume.' });
+  }
+
+  const targetUserId = Number(req.body.targetUserId);
+  if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+    return res.status(400).send({ message: 'Ungültiger Zielnutzer.' });
+  }
+
+  if (targetUserId === req.userId) {
+    return res.status(400).send({ message: 'Direktchat mit dir selbst ist nicht möglich.' });
+  }
+
+  const targetMembership = await db.user_choir.findOne({
+    where: {
+      choirId: req.activeChoirId,
+      userId: targetUserId
+    },
+    attributes: ['userId']
+  });
+
+  if (!targetMembership) {
+    return res.status(404).send({ message: 'Die Person ist nicht Mitglied im aktiven Chor.' });
+  }
+
+  const existing = await findDirectRoomForUsers(req.activeChoirId, req.userId, targetUserId);
+  if (existing) {
+    return res.status(200).send({
+      roomId: existing.id,
+      reused: true
+    });
+  }
+
+  const sortedIds = [req.userId, targetUserId].sort((a, b) => a - b);
+  const roomKey = `dm-${sortedIds[0]}-${sortedIds[1]}`;
+
+  const targetUser = await db.user.findByPk(targetUserId, { attributes: ['firstName', 'name'] });
+  const targetName = targetUser
+    ? `${targetUser.firstName || ''} ${targetUser.name || ''}`.trim()
+    : `Nutzer ${targetUserId}`;
+
+  const createdRoom = await db.chat_room.create({
+    choirId: req.activeChoirId,
+    key: roomKey,
+    title: `Direkt: ${targetName}`,
+    isPrivate: true,
+    isDefault: false
+  });
+
+  await db.chat_room_member.bulkCreate([
+    { chatRoomId: createdRoom.id, userId: req.userId, role: 'member' },
+    { chatRoomId: createdRoom.id, userId: targetUserId, role: 'member' }
+  ]);
+
+  return res.status(200).send({
+    roomId: createdRoom.id,
+    reused: false
   });
 };
 

@@ -8,6 +8,12 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.JSON,
             allowNull: true
         },
+        eventType: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'SERVICE',
+            field: 'event_type'
+        },
         notes: {
             type: DataTypes.TEXT,
             allowNull: true

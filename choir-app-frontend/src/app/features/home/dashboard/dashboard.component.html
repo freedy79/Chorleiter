@@ -41,7 +41,7 @@
         <section class="content-grid" role="region" aria-labelledby="next-events">
           <div class="content-column content-column--primary">
             <app-upcoming-events-widget
-              [events]="vm.upcomingEvents" [choirColors]="choirColors"
+              [events]="vm.upcomingEvents" [choirColors]="choirColors" [availabilityByDate]="vm.upcomingAvailabilityMap"
               (open)="openEvent($event)"
               (exportIcs)="downloadIcs()"
               (exportIcal)="subscribeIcal()"

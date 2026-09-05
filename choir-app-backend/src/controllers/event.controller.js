@@ -11,6 +11,7 @@ const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const jwt = require("jsonwebtoken");
 const { decodeEventPrefillToken } = require('../utils/event-prefill-link');
 const reminderService = require('../services/reminder.service');
+const { normalizeEventType } = require('../services/planEntryEventSync.service');
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -55,6 +56,43 @@ async function validateProgramForChoir(programId, choirId) {
     }
 
     return { valid: true, program };
+}
+
+async function linkEventToMatchingPlanEntry(event, monthlyPlanId, notes) {
+    if (!monthlyPlanId) {
+        return;
+    }
+
+    const dateOnly = isoDateString(parseDateOnly(event.date));
+    const eventType = normalizeEventType(event.type, notes);
+    const planEntry = await db.plan_entry.findOne({
+        where: {
+            monthlyPlanId,
+            eventType,
+            [Op.and]: [where(fn('date', col('date')), dateOnly)]
+        }
+    });
+
+    if (planEntry && Number(planEntry.linkedEventId) !== Number(event.id)) {
+        await planEntry.update({ linkedEventId: event.id }, { silent: true });
+    }
+}
+
+async function syncLinkedPlanEntryFromEvent(event, payload) {
+    const planEntry = await db.plan_entry.findOne({ where: { linkedEventId: event.id } });
+    if (!planEntry) {
+        return;
+    }
+
+    await planEntry.update({
+        date: payload.date,
+        notes: payload.notes,
+        directorId: payload.directorId,
+        organistId: payload.organistId,
+        monthlyPlanId: payload.monthlyPlanId,
+        programId: payload.programId,
+        eventType: normalizeEventType(payload.type, payload.notes)
+    }, { silent: true });
 }
 
 exports.create = async (req, res) => {
@@ -129,6 +167,7 @@ exports.create = async (req, res) => {
 
     // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
     await db.choir_log.create({ choirId, userId: req.userId, action: 'event_created', details: { eventId: event.id, type, date: targetDate } });
+    await linkEventToMatchingPlanEntry(event, monthlyPlanId, notes);
     res.status(201).send({
         message: "Event successfully created.",
         wasUpdated: false,
@@ -614,7 +653,18 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : event.directorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        const nextDirectorId = directorId !== undefined ? directorId : event.directorId;
+        await event.update({ date: targetDate, type, notes, directorId: nextDirectorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        await syncLinkedPlanEntryFromEvent(event, {
+            date: targetDate,
+            type,
+            notes,
+            directorId: nextDirectorId,
+            organistId,
+            monthlyPlanId,
+            programId: nextProgramId
+        });
+        await linkEventToMatchingPlanEntry(event, monthlyPlanId, notes);
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -636,6 +686,11 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
     const id = req.params.id;
+
+    const linkedPlanEntry = await db.plan_entry.findOne({ where: { linkedEventId: id } });
+    if (linkedPlanEntry) {
+        await linkedPlanEntry.update({ linkedEventId: null }, { silent: true });
+    }
 
     const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
         if (num === 1) {

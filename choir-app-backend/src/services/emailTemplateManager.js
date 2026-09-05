@@ -60,6 +60,7 @@ const DEFAULT_TEMPLATES = {
     body: '<p>Hallo {{first_name}} {{surname}},</p>' +
           '<p>dies ist eine Erinnerung an die bevorstehende <b>{{event_type}}</b> am <b>{{event_date}}</b> im Chor <b>{{choir}}</b>.</p>' +
           '<p>{{event_notes}}</p>' +
+          '<p>Geplante Leitung: {{event_director}}</p>' +
           '<p>Viele Grüße<br>{{choir}}</p>'
   },
   'missing-event-reminder': {

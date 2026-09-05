@@ -17,7 +17,9 @@ export class EventTypeLabelPipe implements PipeTransform {
       case 'SERVICE':
         return 'Gottesdienst';
       case 'REHEARSAL':
-        return 'Probe';
+        return 'Chorprobe';
+      case 'PLAN_ENTRY':
+        return 'Dienstplan';
       default:
         return value;
     }

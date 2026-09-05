@@ -109,3 +109,7 @@ exports.toggleReactionValidation = [
 exports.getReactionsValidation = [
   param('id').isInt({ min: 1 }).withMessage('Invalid message id')
 ];
+
+exports.directRoomValidation = [
+  body('targetUserId').isInt({ min: 1 }).withMessage('Invalid target user id')
+];

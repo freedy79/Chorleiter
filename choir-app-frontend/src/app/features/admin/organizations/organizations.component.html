@@ -4,7 +4,23 @@
     description="Zentrale Verwaltung von Bezirken, Gemeinden, Chören und Registrierungsanfragen">
   </app-admin-page-header>
 
-  <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
+  <div class="mobile-tab-selector" *ngIf="isMobile$ | async">
+    <mat-form-field appearance="outline" class="tab-select-field">
+      <mat-label>Unterbereich</mat-label>
+      <mat-select
+        [value]="selectedTabIndex"
+        (selectionChange)="onSelectedTabIndexChange($any($event.value))">
+        <mat-option *ngFor="let tab of tabs; let i = index" [value]="i">
+          <span class="mobile-option-content">
+            <mat-icon>{{ tab.icon }}</mat-icon>
+            <span>{{ tab.mobileLabel || tab.label }}</span>
+          </span>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <mat-tab-group class="hub-tab-group" (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
     <mat-tab *ngFor="let tab of tabs" [label]="tab.label">
       <ng-template mat-tab-label>
         <mat-icon matTabLabelPadding>{{ tab.icon }}</mat-icon>

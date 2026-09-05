@@ -3,10 +3,10 @@
 
 :host {
   display: block;
-  height: calc(100vh - 180px);
+  height: calc(100dvh - 180px);
 
   @include bp.handset {
-    height: calc(100vh - bp.$header-height-mobile - bp.$bottom-nav-height);
+    height: calc(100dvh - bp.$header-height-mobile - bp.$bottom-nav-height);
   }
 }
 
@@ -15,6 +15,7 @@
   grid-template-columns: 260px 1fr;
   gap: bp.$spacing-md;
   height: 100%;
+  min-height: 0;
 
   @include bp.handset {
     grid-template-columns: 1fr;
@@ -117,6 +118,14 @@
   border-radius: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+.context-menu-anchor {
+  position: fixed;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .chat-header {
@@ -285,6 +294,10 @@
   display: flex;
   flex-direction: column;
   gap: bp.$spacing-sm;
+  min-height: 0;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .message {
@@ -368,10 +381,24 @@
 .meta {
   display: flex;
   gap: bp.$spacing-sm;
-  align-items: baseline;
+  align-items: center;
 
-  strong {
-    @include bp.responsive-font-size(0.85rem);
+  .author-context-trigger {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    color: inherit;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+    cursor: context-menu;
+
+    &:focus-visible {
+      outline: 2px solid var(--mat-sys-primary);
+      outline-offset: 2px;
+    }
   }
 
   span {
@@ -420,6 +447,7 @@
   margin-bottom: 8px;
   @include bp.responsive-font-size(0.85rem);
 }
+
 
 // --- Reactions ---
 
@@ -577,6 +605,7 @@
   margin-bottom: bp.$spacing-xs;
 }
 
+
 .composer-field {
   flex: 1;
   margin-bottom: 0 !important;
@@ -612,6 +641,7 @@
 .send-btn {
   color: var(--mat-sys-primary);
 }
+
 
 .text {
   ::ng-deep {

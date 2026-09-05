@@ -30,11 +30,13 @@ const { ensureRehearsalReminderSetup } = require('./ensureRehearsalReminderSetup
 const { ensureTrainingSetup } = require('./ensureTrainingSetup');
 const { ensurePersonalAddressBookTables } = require('./ensurePersonalAddressBookTables');
 const { ensurePieceLinkTypes } = require('./ensurePieceLinkTypes');
+const { ensurePlanEntryEventSyncFields } = require('./ensurePlanEntryEventSyncFields');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
     // 1. Run manual migrations first (these handle complex schema changes)
     await ensurePwaConfig();
+    await ensurePlanEntryEventSyncFields({ skipDataSync: true });
     // 2. Sync database (only creates missing tables, doesn't alter existing)
     await syncDatabase(syncOptions);
     // 3. Create tables that have FK dependencies on core tables (e.g. users)
@@ -61,6 +63,7 @@ async function init(options = {}) {
     await ensureTrainingSetup();
     await ensurePersonalAddressBookTables();
     await ensurePieceLinkTypes();
+    await ensurePlanEntryEventSyncFields();
     // 4. Then run data migrations on existing tables
     await encryptUserPersonalData();
     await migrateUserNames();
@@ -99,5 +102,6 @@ module.exports = {
     ensurePageViewTable,
     ensureChatUnreadTemplate,
     ensurePersonalAddressBookTables,
-    ensurePieceLinkTypes
+    ensurePieceLinkTypes,
+    ensurePlanEntryEventSyncFields
 };

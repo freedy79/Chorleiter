@@ -18,21 +18,27 @@ import { ApiService } from '@core/services/api.service';
 import { UserInChoir } from '@core/models/user';
 import { ChatRoomDialogComponent, ChatRoomDialogResult } from './chat-room-dialog.component';
 import { ChatReportDialogComponent, ChatReportDialogResult } from './chat-report-dialog.component';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { MarkdownPipe } from '@shared/pipes/markdown.pipe';
 import { ProgramPieceDialogComponent } from '../program/program-piece-dialog.component';
+import { MatMenuTrigger } from '@angular/material/menu';
+import { ChatGifDialogComponent } from './chat-gif-dialog.component';
+
+type EmojiCategory = 'smileys' | 'gestures' | 'hearts' | 'objects';
 
 @Component({
   selector: 'app-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, EmptyStateComponent, DataStateComponent, MarkdownPipe],
+  imports: [CommonModule, FormsModule, MaterialModule, DataStateComponent, MarkdownPipe],
   templateUrl: './chat.component.html',
   styleUrls: ['./chat.component.scss']
 })
 export class ChatComponent implements OnInit, OnDestroy {
   private static readonly PAGE_SIZE = 20;
+  private static readonly EMBEDDABLE_IMAGE_URL = /^https?:\/\/[^\s]+\.(?:gif|png|jpe?g|webp)(?:\?[^\s]*)?$/i;
+  private static readonly RECENT_EMOJIS_STORAGE_KEY = 'chat.recentEmojis';
+  private static readonly MAX_RECENT_EMOJIS = 16;
 
   rooms: ChatRoom[] = [];
   selectedRoomId: number | null = null;
@@ -48,6 +54,7 @@ export class ChatComponent implements OnInit, OnDestroy {
   draftText = '';
   replyTo: ChatMessage | null = null;
   selectedAttachment: File | null = null;
+  selectedAttachmentPreviewUrl: string | null = null;
 
   currentUserId: number | null = null;
   pollError = false;
@@ -60,8 +67,55 @@ export class ChatComponent implements OnInit, OnDestroy {
   allReadUpToId: number | null = null;
   piecePreviewCache = new Map<number, { title: string; composer: string }>();
   reactionPickerMessageId: number | null = null;
+  directChatStarting = false;
+  mentionCandidates: Array<{ id: number; displayName: string }> = [];
+
+  contextMenuPosition = { x: 0, y: 0 };
+  contextMenuUser: { id: number; name: string } | null = null;
+  emojiSearchTerm = '';
+  selectedEmojiCategory: EmojiCategory = 'smileys';
+  recentEmojis: string[] = [];
 
   readonly availableEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎵', '🔥', '👏', '🎉'];
+  readonly emojiCategories: Array<{ key: EmojiCategory; label: string; icon: string }> = [
+    { key: 'smileys', label: 'Smileys', icon: 'sentiment_satisfied' },
+    { key: 'gestures', label: 'Gesten', icon: 'back_hand' },
+    { key: 'hearts', label: 'Herzen', icon: 'favorite' },
+    { key: 'objects', label: 'Symbole', icon: 'category' }
+  ];
+  private readonly emojiByCategory: Record<EmojiCategory, string[]> = {
+    smileys: ['😀', '😃', '😄', '😁', '😅', '😂', '🤣', '😊', '🙂', '😉', '😍', '🥰', '😘', '😋', '😜', '🤪', '🤗', '🤔', '😎', '🥳'],
+    gestures: ['👍', '👎', '👌', '🙏', '🙌', '👏', '🤝', '💪', '👋', '✌️', '🤟', '☝️', '👇', '👀', '💯', '🔥'],
+    hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🤍', '🖤', '💖', '💘', '💝', '💕', '💞', '💓', '💗', '💟'],
+    objects: ['🎵', '🎶', '🎤', '🎧', '📣', '📌', '📎', '📝', '📅', '✅', '❗', '⭐', '✨', '💡', '🎉', '🚀']
+  };
+  private readonly emojiKeywords: Record<string, string[]> = {
+    '😀': ['smile', 'happy', 'grinsen'],
+    '😂': ['lachen', 'lol', 'funny'],
+    '🤣': ['lachen', 'rofl', 'witzig'],
+    '😊': ['freundlich', 'nett', 'happy'],
+    '😍': ['liebe', 'love', 'herzaugen'],
+    '🥰': ['liebe', 'warm', 'herz'],
+    '😎': ['cool', 'lässig'],
+    '🥳': ['party', 'feier', 'glückwunsch'],
+    '👍': ['ok', 'top', 'gut', 'like'],
+    '👎': ['schlecht', 'nein', 'dislike'],
+    '🙏': ['bitte', 'danke', 'pray'],
+    '👏': ['applaus', 'bravo'],
+    '🔥': ['hot', 'stark', 'trend'],
+    '❤️': ['liebe', 'herz', 'love'],
+    '💯': ['hundert', 'perfekt', 'volltreffer'],
+    '✅': ['fertig', 'erledigt', 'done'],
+    '❗': ['wichtig', 'achtung', 'alert'],
+    '⭐': ['stern', 'favorit'],
+    '🎉': ['feier', 'party', 'gratulieren'],
+    '🎵': ['musik', 'note', 'song'],
+    '🎶': ['musik', 'noten', 'chor'],
+    '📣': ['ankündigung', 'lautsprecher', 'info'],
+    '📅': ['termin', 'kalender', 'date'],
+    '📝': ['notiz', 'text', 'memo'],
+    '📎': ['anhang', 'datei', 'clip']
+  };
   private targetRoomId: number | null = null;
   private targetMessageId: number | null = null;
 
@@ -72,12 +126,15 @@ export class ChatComponent implements OnInit, OnDestroy {
   private _messagesContainer: HTMLElement | null = null;
   private scrollTimer: ReturnType<typeof setTimeout> | null = null;
   private highlightTimer: ReturnType<typeof setTimeout> | null = null;
+  private authorLongPressTimer: ReturnType<typeof setTimeout> | null = null;
+  private mentionLongPressTimer: ReturnType<typeof setTimeout> | null = null;
 
   @ViewChild('messagesContainer') set messagesContainerRef(el: ElementRef<HTMLElement>) {
     this._messagesContainer = el?.nativeElement ?? null;
   }
 
   @ViewChild('composerTextarea') composerTextarea!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('userContextTrigger') userContextTrigger?: MatMenuTrigger;
 
   constructor(
     private chatService: ChatService,
@@ -94,16 +151,17 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadRecentEmojis();
+
     this.auth.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       this.currentUserId = user?.id ?? null;
     });
 
     this.auth.isChoirAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isAdmin => {
       this.isChoirAdmin = isAdmin;
-      if (isAdmin) {
-        this.loadChoirMembers();
-      }
     });
+
+    this.loadChoirMembers();
 
     this.route.queryParamMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
       const roomParam = Number(params.get('room'));
@@ -132,8 +190,11 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.roomRealtimeStop$.complete();
+    this.revokeSelectedAttachmentPreview();
     if (this.scrollTimer !== null) clearTimeout(this.scrollTimer);
     if (this.highlightTimer !== null) clearTimeout(this.highlightTimer);
+    if (this.authorLongPressTimer !== null) clearTimeout(this.authorLongPressTimer);
+    if (this.mentionLongPressTimer !== null) clearTimeout(this.mentionLongPressTimer);
   }
 
   loadRooms(selectRoomId?: number, silent = false): void {
@@ -284,13 +345,75 @@ export class ChatComponent implements OnInit, OnDestroy {
   }
 
   onMessageContentClick(event: MouseEvent): void {
+    const mentionAnchor = this.resolveMentionAnchor(event.target);
+    if (mentionAnchor) {
+      const mentionUserId = this.extractMentionUserId(mentionAnchor.getAttribute('href'));
+      if (!mentionUserId || mentionUserId === this.currentUserId) return;
+      event.preventDefault();
+      this.openUserContextMenuAt(
+        event.clientX,
+        event.clientY,
+        mentionUserId,
+        mentionAnchor.textContent?.trim() || `Nutzer ${mentionUserId}`
+      );
+      return;
+    }
+
     const target = event.target as HTMLElement;
-    if (target.tagName === 'A') {
-      const href = target.getAttribute('href');
-      if (href && href.startsWith('/')) {
-        event.preventDefault();
-        this.router.navigateByUrl(href);
-      }
+    if (target.tagName !== 'A') return;
+
+    const href = target.getAttribute('href');
+    if (href && href.startsWith('/')) {
+      event.preventDefault();
+      this.router.navigateByUrl(href);
+    }
+  }
+
+  onMessageContentContextMenu(event: MouseEvent): void {
+    const mentionAnchor = this.resolveMentionAnchor(event.target);
+    if (!mentionAnchor) return;
+
+    const mentionUserId = this.extractMentionUserId(mentionAnchor.getAttribute('href'));
+    if (!mentionUserId || mentionUserId === this.currentUserId) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    this.openUserContextMenuAt(
+      event.clientX,
+      event.clientY,
+      mentionUserId,
+      mentionAnchor.textContent?.trim() || `Nutzer ${mentionUserId}`
+    );
+  }
+
+  onMessageContentTouchStart(event: TouchEvent): void {
+    const mentionAnchor = this.resolveMentionAnchor(event.target);
+    if (!mentionAnchor) return;
+
+    const mentionUserId = this.extractMentionUserId(mentionAnchor.getAttribute('href'));
+    if (!mentionUserId || mentionUserId === this.currentUserId) return;
+
+    const touch = event.touches?.[0];
+    if (!touch) return;
+
+    if (this.mentionLongPressTimer !== null) {
+      clearTimeout(this.mentionLongPressTimer);
+    }
+
+    this.mentionLongPressTimer = setTimeout(() => {
+      this.openUserContextMenuAt(
+        touch.clientX,
+        touch.clientY,
+        mentionUserId,
+        mentionAnchor.textContent?.trim() || `Nutzer ${mentionUserId}`
+      );
+    }, 420);
+  }
+
+  onMessageContentTouchEnd(): void {
+    if (this.mentionLongPressTimer !== null) {
+      clearTimeout(this.mentionLongPressTimer);
+      this.mentionLongPressTimer = null;
     }
   }
 
@@ -321,6 +444,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     if (!this.selectedRoomId || this.sending) return;
 
     const trimmed = this.draftText.trim();
+    const normalizedText = this.normalizeOutgoingText(trimmed);
     if (!trimmed && !this.selectedAttachment) return;
 
     this.sending = true;
@@ -330,7 +454,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       id: optimisticId,
       chatRoomId: this.selectedRoomId,
       userId: this.currentUserId ?? 0,
-      text: trimmed || null,
+      text: normalizedText || null,
       createdAt: new Date().toISOString(),
       editedAt: null,
       deletedAt: null,
@@ -341,7 +465,8 @@ export class ChatComponent implements OnInit, OnDestroy {
             originalName: this.selectedAttachment.name,
             mimeType: this.selectedAttachment.type,
             size: this.selectedAttachment.size,
-            url: ''
+            url: '',
+            previewUrl: this.selectedAttachmentPreviewUrl || undefined
           }
         : null,
       author: { id: this.currentUserId ?? 0, firstName: null, name: 'Ich' },
@@ -353,7 +478,7 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.scrollToBottom();
 
     this.chatService.sendMessage(this.selectedRoomId, {
-      text: trimmed,
+      text: normalizedText,
       replyToMessageId: this.replyTo?.id ?? null,
       attachment: this.selectedAttachment
     }).pipe(takeUntil(this.destroy$)).subscribe({
@@ -425,17 +550,109 @@ export class ChatComponent implements OnInit, OnDestroy {
   onAttachmentSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] || null;
+    this.revokeSelectedAttachmentPreview();
+
     if (file && file.size > ChatComponent.MAX_FILE_SIZE) {
       this.notification.error('Datei ist zu groß. Maximal 10 MB erlaubt.');
       input.value = '';
       return;
     }
+
+    if (file && file.type.startsWith('image/')) {
+      this.selectedAttachmentPreviewUrl = URL.createObjectURL(file);
+    }
+
     this.selectedAttachment = file;
   }
 
   clearAttachment(fileInput: HTMLInputElement): void {
+    this.revokeSelectedAttachmentPreview();
     this.selectedAttachment = null;
     fileInput.value = '';
+  }
+
+  insertTextAtCursor(text: string): void {
+    const textarea = this.composerTextarea?.nativeElement;
+    const position = textarea?.selectionStart ?? this.draftText.length;
+    const before = this.draftText.slice(0, position);
+    const after = this.draftText.slice(position);
+    this.draftText = `${before}${text}${after}`;
+
+    setTimeout(() => {
+      if (!textarea) return;
+      const nextPos = position + text.length;
+      textarea.focus();
+      textarea.selectionStart = nextPos;
+      textarea.selectionEnd = nextPos;
+    });
+  }
+
+  insertGifTemplate(): void {
+    this.insertTextAtCursor('![](https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif)');
+  }
+
+  setEmojiCategory(category: EmojiCategory): void {
+    this.selectedEmojiCategory = category;
+  }
+
+  insertComposerEmoji(symbol: string, menuTrigger: MatMenuTrigger): void {
+    this.insertTextAtCursor(`${symbol} `);
+    this.saveRecentEmoji(symbol);
+    menuTrigger.closeMenu();
+  }
+
+  get visibleEmojiCategories(): Array<{ key: EmojiCategory; label: string; icon: string }> {
+    return this.emojiCategories;
+  }
+
+  get filteredComposerEmojis(): string[] {
+    const categoryBase = this.selectedEmojiCategory === 'smileys'
+      ? [...this.recentEmojis, ...(this.emojiByCategory[this.selectedEmojiCategory] || [])]
+      : (this.emojiByCategory[this.selectedEmojiCategory] || []);
+    const base = Array.from(new Set(categoryBase));
+
+    const query = this.emojiSearchTerm.trim();
+    if (!query) return base;
+
+    const q = query.toLowerCase();
+    const allSymbols = Array.from(new Set([
+      ...this.recentEmojis,
+      ...Object.values(this.emojiByCategory).flat()
+    ]));
+
+    return allSymbols.filter(symbol => {
+      if (symbol.includes(q)) return true;
+      const keywords = this.emojiKeywords[symbol] || [];
+      return keywords.some(keyword => keyword.toLowerCase().includes(q));
+    });
+  }
+
+  openGifSearchDialog(): void {
+    const ref = this.dialog.open(ChatGifDialogComponent, {
+      width: '760px',
+      maxWidth: '96vw'
+    });
+
+    ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((gifMarkdown?: string) => {
+      if (!gifMarkdown) return;
+      const withSpacing = this.draftText.trim().length > 0 ? ` ${gifMarkdown}` : gifMarkdown;
+      this.insertTextAtCursor(withSpacing);
+    });
+  }
+
+  isImageAttachment(attachment: ChatMessage['attachment']): boolean {
+    return !!attachment?.mimeType?.toLowerCase().startsWith('image/');
+  }
+
+  isGifAttachment(attachment: ChatMessage['attachment']): boolean {
+    if (!attachment) return false;
+    const mime = attachment.mimeType?.toLowerCase() || '';
+    const name = attachment.originalName?.toLowerCase() || '';
+    return mime.includes('gif') || name.endsWith('.gif');
+  }
+
+  resolveAttachmentUrl(message: ChatMessage): string {
+    return message.attachment?.url || message.attachment?.previewUrl || '';
   }
 
   resolveReplyPreview(message: ChatMessage): string {
@@ -494,6 +711,95 @@ export class ChatComponent implements OnInit, OnDestroy {
   get selectedRoomTitle(): string {
     if (!this.selectedRoomId) return '#allgemein';
     return this.rooms.find(room => room.id === this.selectedRoomId)?.title || '#allgemein';
+  }
+
+  getAuthorDisplayName(message: ChatMessage): string {
+    const firstName = message.author?.firstName?.trim();
+    const lastName = message.author?.name?.trim();
+    const combined = [firstName, lastName].filter(Boolean).join(' ').trim();
+    return combined || message.author?.name || 'Unbekannt';
+  }
+
+  openUserContextMenu(event: Event, message: ChatMessage): void {
+    if (!message.author?.id || message.author.id === this.currentUserId) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    const target = event.target as HTMLElement | null;
+    const rect = target?.getBoundingClientRect();
+
+    const x = event instanceof MouseEvent
+      ? event.clientX
+      : ((rect?.left ?? 0) + (rect?.width ?? 0) / 2);
+    const y = event instanceof MouseEvent
+      ? event.clientY
+      : ((rect?.bottom ?? 0) + 6);
+
+    this.openUserContextMenuAt(x, y, message.author.id, this.getAuthorDisplayName(message));
+  }
+
+  onAuthorTouchStart(event: TouchEvent, message: ChatMessage): void {
+    if (!message.author?.id || message.author.id === this.currentUserId) return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+
+    if (this.authorLongPressTimer !== null) {
+      clearTimeout(this.authorLongPressTimer);
+    }
+
+    this.authorLongPressTimer = setTimeout(() => {
+      this.openUserContextMenuAt(
+        touch.clientX,
+        touch.clientY,
+        message.author!.id,
+        this.getAuthorDisplayName(message)
+      );
+    }, 420);
+  }
+
+  onAuthorTouchEnd(): void {
+    if (this.authorLongPressTimer !== null) {
+      clearTimeout(this.authorLongPressTimer);
+      this.authorLongPressTimer = null;
+    }
+  }
+
+  canOpenAuthorContextMenu(message: ChatMessage): boolean {
+    return !!message.author?.id && message.author.id !== this.currentUserId;
+  }
+
+  openPrivateChatForContextUser(): void {
+    if (!this.contextMenuUser?.id || this.directChatStarting) return;
+
+    const { id, name } = this.contextMenuUser;
+    this.directChatStarting = true;
+
+    this.chatService.getOrCreateDirectRoom(id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: ({ roomId, reused }) => {
+        this.directChatStarting = false;
+        this.userContextTrigger?.closeMenu();
+        this.loadRooms(roomId);
+        this.notification.success(reused
+          ? `Vorhandenen Privat-Chat mit ${name} geöffnet.`
+          : `Neuen Privat-Chat mit ${name} erstellt.`);
+      },
+      error: err => {
+        this.directChatStarting = false;
+        this.notification.error(err?.error?.message || 'Privat-Chat konnte nicht geöffnet werden.');
+      }
+    });
+  }
+
+  private openUserContextMenuAt(x: number, y: number, userId: number, userName: string): void {
+    this.contextMenuUser = { id: userId, name: userName };
+    this.contextMenuPosition = {
+      x: Math.max(8, x),
+      y: Math.max(8, y)
+    };
+
+    setTimeout(() => {
+      this.userContextTrigger?.openMenu();
+    });
   }
 
   get selectedRoom(): ChatRoom | null {
@@ -615,8 +921,66 @@ export class ChatComponent implements OnInit, OnDestroy {
   private afterSendReset(): void {
     this.draftText = '';
     this.replyTo = null;
+    this.revokeSelectedAttachmentPreview();
     this.selectedAttachment = null;
     this.sending = false;
+  }
+
+  private normalizeOutgoingText(text: string): string {
+    if (!text) return text;
+
+    return text
+      .split(/\r?\n/)
+      .map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return line;
+        if (!ChatComponent.EMBEDDABLE_IMAGE_URL.test(trimmed)) return line;
+
+        return line.replace(trimmed, `![](${trimmed})`);
+      })
+      .join('\n');
+  }
+
+  private loadRecentEmojis(): void {
+    try {
+      const raw = localStorage.getItem(ChatComponent.RECENT_EMOJIS_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+
+      this.recentEmojis = parsed
+        .map(item => String(item || '').trim())
+        .filter(Boolean)
+        .slice(0, ChatComponent.MAX_RECENT_EMOJIS);
+    } catch {
+      this.recentEmojis = [];
+    }
+  }
+
+  private saveRecentEmoji(symbol: string): void {
+    const normalized = String(symbol || '').trim();
+    if (!normalized) return;
+
+    const next = [
+      normalized,
+      ...this.recentEmojis.filter(item => item !== normalized)
+    ].slice(0, ChatComponent.MAX_RECENT_EMOJIS);
+
+    this.recentEmojis = next;
+
+    try {
+      localStorage.setItem(ChatComponent.RECENT_EMOJIS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // no-op
+    }
+  }
+
+  private revokeSelectedAttachmentPreview(): void {
+    if (this.selectedAttachmentPreviewUrl) {
+      URL.revokeObjectURL(this.selectedAttachmentPreviewUrl);
+      this.selectedAttachmentPreviewUrl = null;
+    }
   }
 
   private startRealtimeForSelectedRoom(): void {
@@ -723,11 +1087,40 @@ export class ChatComponent implements OnInit, OnDestroy {
     this.api.getChoirMembers().pipe(takeUntil(this.destroy$)).subscribe({
       next: members => {
         this.choirMembers = members || [];
+        this.mentionCandidates = this.choirMembers
+          .filter(member => !!member.id)
+          .map(member => {
+            const fullName = `${member.firstName || ''} ${member.name || ''}`.trim() || member.name || '';
+            return {
+              id: member.id,
+              displayName: fullName
+            };
+          })
+          .filter(item => !!item.displayName);
       },
       error: () => {
         this.choirMembers = [];
+        this.mentionCandidates = [];
       }
     });
+  }
+
+  private resolveMentionAnchor(target: EventTarget | null): HTMLAnchorElement | null {
+    if (!target) return null;
+
+    const element = target instanceof HTMLElement
+      ? target
+      : (target as Node).parentElement;
+
+    const anchor = element?.closest('a[href^="mention://"]') as HTMLAnchorElement | null;
+    return anchor || null;
+  }
+
+  private extractMentionUserId(href: string | null): number | null {
+    if (!href || !href.startsWith('mention://')) return null;
+    const rawId = href.replace('mention://', '').trim();
+    const userId = Number(rawId);
+    return Number.isInteger(userId) && userId > 0 ? userId : null;
   }
 
   private focusTargetMessageIfPresent(): void {
