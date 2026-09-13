@@ -156,4 +156,6 @@ test.html
 # Deploy secrets – local config and password file must never be committed
 deploy.local.ps1
 *.local.ps1
+deploy.local.sh
+*.local.sh
 .chorleiter_deploy_pw
