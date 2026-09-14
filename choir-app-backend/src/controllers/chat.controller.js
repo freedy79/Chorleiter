@@ -236,42 +236,59 @@ async function getAccessibleRoomsForChoir(choirId, userId) {
   return rooms.filter(room => !room.isPrivate || allowedPrivate.has(room.id));
 }
 
+const DIRECT_ROOM_KEY_PATTERN = /^dm-(\d+)-(\d+)$/;
+
+function buildDirectRoomKey(userIdA, userIdB) {
+  const [first, second] = [Number(userIdA), Number(userIdB)].sort((a, b) => a - b);
+  return `dm-${first}-${second}`;
+}
+
 async function findDirectRoomForUsers(choirId, userIdA, userIdB) {
-  const privateRooms = await db.chat_room.findAll({
+  return db.chat_room.findOne({
     where: {
       choirId,
-      isPrivate: true
+      isPrivate: true,
+      key: buildDirectRoomKey(userIdA, userIdB)
     },
     attributes: ['id', 'choirId', 'key', 'title', 'isPrivate', 'isDefault']
   });
+}
 
-  if (!privateRooms.length) return null;
+function getDirectRoomPeerId(roomKey, requestingUserId) {
+  const match = DIRECT_ROOM_KEY_PATTERN.exec(String(roomKey || ''));
+  if (!match) return null;
+  const ids = [Number(match[1]), Number(match[2])];
+  if (!ids.includes(Number(requestingUserId))) return null;
+  return ids.find(id => id !== Number(requestingUserId)) ?? null;
+}
 
-  const roomIds = privateRooms.map(room => room.id);
-  const members = await db.chat_room_member.findAll({
-    where: {
-      chatRoomId: roomIds
-    },
-    attributes: ['chatRoomId', 'userId']
+/**
+ * Direct chats must be labelled with the *other* participant, so the title is
+ * derived per requesting user instead of using the persisted room title.
+ */
+async function resolveDirectRoomTitles(rooms, requestingUserId) {
+  const peerByRoomId = new Map();
+  for (const room of rooms) {
+    const peerId = getDirectRoomPeerId(room.key, requestingUserId);
+    if (peerId) peerByRoomId.set(room.id, peerId);
+  }
+
+  if (!peerByRoomId.size) return new Map();
+
+  const peers = await db.user.findAll({
+    where: { id: Array.from(new Set(peerByRoomId.values())) },
+    attributes: ['id', 'firstName', 'name']
   });
+  const nameById = new Map(peers.map(peer => [
+    peer.id,
+    `${peer.firstName || ''} ${peer.name || ''}`.trim() || `Nutzer ${peer.id}`
+  ]));
 
-  const membersByRoom = new Map();
-  for (const member of members) {
-    const list = membersByRoom.get(member.chatRoomId) || [];
-    list.push(member.userId);
-    membersByRoom.set(member.chatRoomId, list);
+  const titles = new Map();
+  for (const [roomId, peerId] of peerByRoomId) {
+    titles.set(roomId, `Direkt: ${nameById.get(peerId) || `Nutzer ${peerId}`}`);
   }
-
-  for (const room of privateRooms) {
-    const roomMembers = membersByRoom.get(room.id) || [];
-    const uniqueMembers = Array.from(new Set(roomMembers));
-    if (uniqueMembers.length !== 2) continue;
-    if (uniqueMembers.includes(userIdA) && uniqueMembers.includes(userIdB)) {
-      return room;
-    }
-  }
-
-  return null;
+  return titles;
 }
 
 async function getOrCreateReadState(roomId, userId) {
@@ -335,6 +352,7 @@ exports.getRooms = async (req, res) => {
     }
   });
   const readStateByRoomId = new Map(readStates.map(state => [state.chatRoomId, state]));
+  const directTitleByRoomId = await resolveDirectRoomTitles(rooms, req.userId);
 
   const roomPayload = await Promise.all(
     rooms.map(async room => {
@@ -369,7 +387,7 @@ exports.getRooms = async (req, res) => {
         id: room.id,
         choirId: room.choirId,
         key: room.key,
-        title: room.title,
+        title: directTitleByRoomId.get(room.id) || room.title,
         isPrivate: !!room.isPrivate,
         isDefault: room.isDefault,
         canManage: moderator,
@@ -403,12 +421,13 @@ exports.getRoomDetail = async (req, res) => {
   });
 
   const memberUserIds = memberRows.map(item => item.userId);
+  const directTitleByRoomId = await resolveDirectRoomTitles([room], req.userId);
 
   res.status(200).send({
     id: room.id,
     choirId: room.choirId,
     key: room.key,
-    title: room.title,
+    title: directTitleByRoomId.get(room.id) || room.title,
     isPrivate: !!room.isPrivate,
     isDefault: !!room.isDefault,
     memberUserIds
@@ -519,17 +538,21 @@ exports.getOrCreateDirectRoom = async (req, res) => {
   }
 
   const sortedIds = [req.userId, targetUserId].sort((a, b) => a - b);
-  const roomKey = `dm-${sortedIds[0]}-${sortedIds[1]}`;
+  const roomKey = buildDirectRoomKey(req.userId, targetUserId);
 
-  const targetUser = await db.user.findByPk(targetUserId, { attributes: ['firstName', 'name'] });
-  const targetName = targetUser
-    ? `${targetUser.firstName || ''} ${targetUser.name || ''}`.trim()
-    : `Nutzer ${targetUserId}`;
+  const participants = await db.user.findAll({
+    where: { id: sortedIds },
+    attributes: ['id', 'firstName', 'name']
+  });
+  const participantNames = participants.map(user =>
+    `${user.firstName || ''} ${user.name || ''}`.trim() || `Nutzer ${user.id}`
+  );
 
   const createdRoom = await db.chat_room.create({
     choirId: req.activeChoirId,
     key: roomKey,
-    title: `Direkt: ${targetName}`,
+    // Neutral fallback; the displayed title is derived per requesting user.
+    title: `Direkt: ${participantNames.join(' & ')}`,
     isPrivate: true,
     isDefault: false
   });
@@ -919,6 +942,7 @@ exports.getUnreadSummary = async (req, res) => {
     }
   });
   const readStateByRoomId = new Map(readStates.map(state => [state.chatRoomId, state]));
+  const directTitleByRoomId = await resolveDirectRoomTitles(rooms, req.userId);
 
   const byRoom = [];
   let totalUnread = 0;
@@ -934,13 +958,15 @@ exports.getUnreadSummary = async (req, res) => {
 
   for (const { room, unreadInfo } of unreadByRoom) {
 
+    const roomTitle = directTitleByRoomId.get(room.id) || room.title;
+
     totalUnread += unreadInfo.unreadCount;
 
     if (unreadInfo.oldestUnread) {
       const item = {
         chatRoomId: room.id,
         key: room.key,
-        title: room.title,
+        title: roomTitle,
         messageId: unreadInfo.oldestUnread.id,
         createdAt: unreadInfo.oldestUnread.createdAt,
         preview: buildMessagePreview(unreadInfo.oldestUnread),
@@ -955,7 +981,7 @@ exports.getUnreadSummary = async (req, res) => {
       const item = {
         chatRoomId: room.id,
         key: room.key,
-        title: room.title,
+        title: roomTitle,
         messageId: unreadInfo.newestUnread.id,
         createdAt: unreadInfo.newestUnread.createdAt,
         preview: buildMessagePreview(unreadInfo.newestUnread),
@@ -969,7 +995,7 @@ exports.getUnreadSummary = async (req, res) => {
     byRoom.push({
       chatRoomId: room.id,
       key: room.key,
-      title: room.title,
+      title: roomTitle,
       unreadCount: unreadInfo.unreadCount,
       oldestUnreadMessageId: unreadInfo.oldestUnread?.id || null,
       newestUnread: unreadInfo.newestUnread

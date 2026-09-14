@@ -1,6 +1,10 @@
 const formService = require('../services/form.service');
 const { NotFoundError, AuthorizationError, AppError } = require('../utils/errors');
 const logger = require('../config/logger');
+const {
+  createSubmissionUpdateToken,
+  verifySubmissionUpdateToken,
+} = require('../utils/submission-token');
 
 // ── Helper ──────────────────────────────────────────────────────
 
@@ -314,18 +318,27 @@ const checkPublicDuplicate = async (req, res) => {
   const { guid } = req.params;
   const email = String(req.query.email || '').trim();
 
-  if (!email) return res.json({ submissionId: null });
+  if (!email) return res.json({ duplicate: false, updateToken: null });
 
   const form = await formService.getFormByGuid(guid);
   if (!form) throw new NotFoundError('Formular nicht gefunden');
 
   const submission = await formService.findSubmissionByEmailFieldValue(form.id, email);
-  res.json({ submissionId: submission?.id ?? null });
+  if (!submission) return res.json({ duplicate: false, updateToken: null });
+
+  // The submission ID is never exposed; only the signed capability grants update access.
+  res.json({
+    duplicate: true,
+    updateToken: createSubmissionUpdateToken({
+      formId: form.id,
+      submissionId: submission.id,
+      email,
+    }),
+  });
 };
 
 const updatePublicSubmission = async (req, res) => {
   const { guid } = req.params;
-  const submissionId = parseInt(req.params.submissionId);
 
   const form = await formService.getFormByGuid(guid);
   if (!form) throw new NotFoundError('Formular nicht gefunden');
@@ -336,6 +349,11 @@ const updatePublicSubmission = async (req, res) => {
   }
   if (form.closeDate && new Date(form.closeDate) < now) {
     return res.status(400).json({ message: 'Formular ist geschlossen' });
+  }
+
+  const submissionId = verifySubmissionUpdateToken(req.body.updateToken, { formId: form.id });
+  if (!submissionId) {
+    return res.status(403).json({ message: 'Ungültiger oder abgelaufener Bearbeitungs-Token' });
   }
 
   const result = await formService.updateSubmissionAnswers(submissionId, form.id, req.body);

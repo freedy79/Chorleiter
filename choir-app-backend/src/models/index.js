@@ -2,6 +2,8 @@ const dbConfig = require("../config/db.config.js");
 const Sequelize = require("sequelize");
 
 const isTest = process.env.NODE_ENV === 'test' || dbConfig.dialect === 'sqlite';
+// Query logging costs a lot of startup time in production; opt in via DB_LOGGING=true.
+const sqlLogging = !isTest && process.env.DB_LOGGING === 'true' ? console.log : false;
 
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
@@ -9,7 +11,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   dialect: dbConfig.dialect,
   operatorsAliases: 0, // 0 instead of false
   pool: dbConfig.pool,
-  logging: isTest ? false : console.log,
+  logging: sqlLogging,
 });
 
 const db = {};

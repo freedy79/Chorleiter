@@ -138,3 +138,8 @@ exports.submitFormValidation = [
   body('submitterEmail').optional({ nullable: true }).isEmail().withMessage('Ungültige E-Mail-Adresse'),
   body('sendCopyToEmail').optional().isBoolean(),
 ];
+
+exports.updatePublicSubmissionValidation = [
+  ...exports.submitFormValidation,
+  body('updateToken').isString().notEmpty().withMessage('Bearbeitungs-Token ist erforderlich'),
+];

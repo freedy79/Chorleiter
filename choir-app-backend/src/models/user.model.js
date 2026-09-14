@@ -1,4 +1,4 @@
-const { encryptPiiField, decryptPiiField, PII_FIELDS } = require('../init/encryptUserPersonalData');
+const { encryptPiiField, decryptPiiField, PII_FIELDS } = require('../utils/pii-crypto');
 
 const DEFAULT_ROLES = ['user'];
 const ALLOWED_GLOBAL_ROLES = ['admin', 'librarian', 'user', 'demo'];

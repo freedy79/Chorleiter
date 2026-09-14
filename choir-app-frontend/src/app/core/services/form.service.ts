@@ -100,17 +100,17 @@ export class FormService {
     return this.http.post<{ message: string }>(`${this.apiUrl}/public/forms/${guid}/submit`, data);
   }
 
-  checkPublicDuplicate(guid: string, email: string): Observable<{ submissionId: number | null }> {
-    return this.http.get<{ submissionId: number | null }>(
+  checkPublicDuplicate(guid: string, email: string): Observable<{ duplicate: boolean; updateToken: string | null }> {
+    return this.http.get<{ duplicate: boolean; updateToken: string | null }>(
       `${this.apiUrl}/public/forms/${guid}/check-duplicate`,
       { params: { email } },
     );
   }
 
-  updatePublicSubmission(guid: string, submissionId: number, data: FormSubmitPayload): Observable<{ message: string }> {
+  updatePublicSubmission(guid: string, updateToken: string, data: FormSubmitPayload): Observable<{ message: string }> {
     return this.http.put<{ message: string }>(
-      `${this.apiUrl}/public/forms/${guid}/submissions/${submissionId}`,
-      data,
+      `${this.apiUrl}/public/forms/${guid}/submissions`,
+      { ...data, updateToken },
     );
   }
 }

@@ -222,8 +222,21 @@ if [ "$UPLOAD_ONLY" = true ]; then
     fi
 
     echo "Checking HTTP endpoint..."
-    if ! ssh_cmd "$REMOTE" "curl -f -s http://localhost:${BACKEND_PORT}/api/health >/dev/null 2>&1"; then
-        echo "Backend is running but not responding to HTTP requests!" >&2
+    # The backend runs all migrations/seeds before it starts listening, so poll instead of checking once.
+    http_ready=0
+    max_wait=180
+    elapsed=0
+    while [ "$elapsed" -lt "$max_wait" ]; do
+        if ssh_cmd "$REMOTE" "curl -f -s http://localhost:${BACKEND_PORT}/api/health >/dev/null 2>&1"; then
+            http_ready=1
+            break
+        fi
+        sleep 5
+        elapsed=$((elapsed + 5))
+        echo "  ...still waiting for backend startup (${elapsed}/${max_wait} s)"
+    done
+    if [ "$http_ready" -ne 1 ]; then
+        echo "Backend is running but not responding to HTTP requests after ${max_wait} seconds!" >&2
         echo ""
         echo "=== Checking .env Configuration ==="
         ssh_cmd "$REMOTE" "cd \"$BACKEND_DEST\" && if [ -f .env ]; then echo 'ADDRESS='\$(grep '^ADDRESS=' .env 2>/dev/null || echo 'NOT SET'); echo 'PORT='\$(grep '^PORT=' .env 2>/dev/null || echo 'NOT SET'); echo 'DB_DIALECT='\$(grep '^DB_DIALECT=' .env 2>/dev/null || echo 'NOT SET'); echo ''; ADDRESS_VALUE=\$(grep '^ADDRESS=' .env | cut -d'=' -f2); if [ \"\$ADDRESS_VALUE\" = 'localhost' ]; then echo 'WARNING: ADDRESS is set to localhost - server may not be accessible from outside!'; echo 'Consider changing to ADDRESS=0.0.0.0 in $BACKEND_DEST/.env'; fi; else echo '.env file not found!'; fi"

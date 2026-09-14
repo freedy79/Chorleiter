@@ -378,10 +378,23 @@ if ($pm2Status -notmatch 'online') {
 }
 
 # Verify HTTP endpoint is responding
+# The backend runs all migrations/seeds before it starts listening, so poll instead of checking once.
 Write-Host "Checking HTTP endpoint..."
-$httpCheck = Invoke-Ssh "curl -f -s http://localhost:${BackendPort}/api/health >/dev/null 2>&1; echo `$?" 2>$null
-if ($httpCheck -notmatch '^0') {
-    Write-Host "Backend is running but not responding to HTTP requests!" -ForegroundColor Red
+$httpReady = $false
+$maxWaitSeconds = 180
+$elapsed = 0
+while (-not $httpReady -and $elapsed -lt $maxWaitSeconds) {
+    $httpCheck = Invoke-Ssh "curl -f -s http://localhost:${BackendPort}/api/health >/dev/null 2>&1; echo `$?" 2>$null
+    if ($httpCheck -match '^0') {
+        $httpReady = $true
+        break
+    }
+    Start-Sleep -Seconds 5
+    $elapsed += 5
+    Write-Host "  ...still waiting for backend startup ($elapsed/$maxWaitSeconds s)"
+}
+if (-not $httpReady) {
+    Write-Host "Backend is running but not responding to HTTP requests after $maxWaitSeconds seconds!" -ForegroundColor Red
     Write-Host ""
     Write-Host "=== Checking .env Configuration ===" -ForegroundColor Yellow
     $envCheck = Invoke-Ssh "cd '$BackendDest' && if [ -f .env ]; then ADDRESS_VALUE=`$(grep '^ADDRESS=' .env 2>/dev/null | cut -d'=' -f2-); PORT_VALUE=`$(grep '^PORT=' .env 2>/dev/null | cut -d'=' -f2-); DIALECT_VALUE=`$(grep '^DB_DIALECT=' .env 2>/dev/null | cut -d'=' -f2-); echo 'ADDRESS='`$`{ADDRESS_VALUE:-NOT SET`}; echo 'PORT='`$`{PORT_VALUE:-NOT SET`}; echo 'DB_DIALECT='`$`{DIALECT_VALUE:-NOT SET`}; echo ''; if [ `"`$ADDRESS_VALUE`" = 'localhost' ]; then echo 'WARNING: ADDRESS is set to localhost - server may not be accessible from outside!'; echo 'Consider changing to ADDRESS=0.0.0.0 in $BackendDest/.env'; fi; else echo '.env file not found!'; fi"

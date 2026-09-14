@@ -4,18 +4,37 @@ const { datesForRule, isoDateString } = require('../utils/date.utils');
 
 const { isPublicHoliday } = require('../services/holiday.service');
 
-async function resolveChoirId(req) {
+const DIENSTPLAN_MANAGER_ROLES = ['choir_admin', 'director'];
+
+/**
+ * Resolves the choir scope for the request. Switching to another choir via
+ * `?choirId=` requires the same role level there that the route demands.
+ */
+async function resolveChoirId(req, { requireManagerRole = false } = {}) {
     const requestedChoirId = req.query?.choirId ? Number(req.query.choirId) : null;
     if (!requestedChoirId || requestedChoirId === req.activeChoirId) {
         return req.activeChoirId;
     }
 
+    if (req.userRoles?.includes('admin')) {
+        return requestedChoirId;
+    }
+
     const membership = await db.user_choir.findOne({
         where: { userId: req.userId, choirId: requestedChoirId },
-        attributes: ['userId']
+        attributes: ['userId', 'rolesInChoir']
     });
 
-    return membership ? requestedChoirId : req.activeChoirId;
+    if (!membership) return req.activeChoirId;
+
+    if (requireManagerRole) {
+        const roles = Array.isArray(membership.rolesInChoir) ? membership.rolesInChoir : [];
+        if (!DIENSTPLAN_MANAGER_ROLES.some(role => roles.includes(role))) {
+            return req.activeChoirId;
+        }
+    }
+
+    return requestedChoirId;
 }
 
 async function buildAvailabilitiesForUser({ choirId, userId, year, month }) {
@@ -102,7 +121,7 @@ exports.findByMonth = async (req, res) => {
 
 exports.findByMonthForUser = async (req, res) => {
     const { year, month, userId } = req.params;
-    const choirId = await resolveChoirId(req);
+    const choirId = await resolveChoirId(req, { requireManagerRole: true });
     const result = await buildAvailabilitiesForUser({
         choirId,
         userId,
@@ -128,7 +147,7 @@ exports.setUserAvailability = async (req, res) => {
     const { date, status } = req.body;
     const { userId } = req.params;
     if (!date || !status) return res.status(400).send({ message: 'date and status required' });
-    const choirId = await resolveChoirId(req);
+    const choirId = await resolveChoirId(req, { requireManagerRole: true });
     const [avail] = await db.user_availability.findOrCreate({
         where: { userId, choirId, date },
         defaults: { status }
@@ -140,7 +159,7 @@ exports.setUserAvailability = async (req, res) => {
 exports.findAllByMonth = async (req, res) => {
     const { year, month } = req.params;
     const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
-    const choirId = await resolveChoirId(req);
+    const choirId = await resolveChoirId(req, { requireManagerRole: true });
     const avail = await db.user_availability.findAll({
         where: {
             choirId,

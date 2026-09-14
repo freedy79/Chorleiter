@@ -39,7 +39,8 @@ export class MarkdownPipe implements PipeTransform {
         const sanitized = DOMPurify.sanitize(html, {
           ADD_TAGS: ['img'],
           ADD_ATTR: ['src', 'alt', 'width', 'height', 'loading'],
-          ALLOWED_URI_REGEXP: /^(?:https?|mailto|mention):/i,
+          // Also allows in-app links (/pieces/1, #anchor, ?q=x) while rejecting protocol-relative //host.
+          ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|mention):|\/(?!\/)|[#?])/i,
         });
         return this.sanitizer.bypassSecurityTrustHtml(sanitized);
       })

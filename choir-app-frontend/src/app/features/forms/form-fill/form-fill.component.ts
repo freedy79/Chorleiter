@@ -726,9 +726,9 @@ export class FormFillComponent extends BaseComponent implements OnInit {
           .pipe(takeUntil(this.destroy$))
           .subscribe({
             next: (result) => {
-              if (result?.submissionId) {
+              if (result?.duplicate && result.updateToken) {
                 this.submitting = false;
-                this.openDuplicateDialog(result.submissionId, payload);
+                this.openDuplicateDialog(result.updateToken, payload);
               } else {
                 this.doSubmit(payload);
               }
@@ -773,12 +773,12 @@ export class FormFillComponent extends BaseComponent implements OnInit {
     return null;
   }
 
-  private openDuplicateDialog(submissionId: number, payload: any): void {
+  private openDuplicateDialog(updateToken: string, payload: any): void {
     const ref = this.dialog.open(DuplicateSubmissionDialogComponent, { width: '420px' });
     ref.afterClosed().pipe(takeUntil(this.destroy$)).subscribe((choice: string) => {
       if (choice === 'update') {
         this.submitting = true;
-        this.doUpdate(submissionId, payload);
+        this.doUpdate(updateToken, payload);
       } else if (choice === 'new') {
         this.submitting = true;
         this.doSubmit(payload);
@@ -797,8 +797,8 @@ export class FormFillComponent extends BaseComponent implements OnInit {
     });
   }
 
-  private doUpdate(submissionId: number, payload: any): void {
-    this.formService.updatePublicSubmission(this.publicGuid!, submissionId, payload)
+  private doUpdate(updateToken: string, payload: any): void {
+    this.formService.updatePublicSubmission(this.publicGuid!, updateToken, payload)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (result) => this.onSubmitSuccess(result),

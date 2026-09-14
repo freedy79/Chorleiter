@@ -687,12 +687,17 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     const id = req.params.id;
 
-    const linkedPlanEntry = await db.plan_entry.findOne({ where: { linkedEventId: id } });
+    const event = await Event.findOne({ where: { id, choirId: req.activeChoirId }, attributes: ['id'] });
+    if (!event) {
+        return res.status(404).send({ message: 'Event not found.' });
+    }
+
+    const linkedPlanEntry = await db.plan_entry.findOne({ where: { linkedEventId: event.id } });
     if (linkedPlanEntry) {
         await linkedPlanEntry.update({ linkedEventId: null }, { silent: true });
     }
 
-    const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
+    const num = await Event.destroy({ where: { id: event.id, choirId: req.activeChoirId } });
         if (num === 1) {
             await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_deleted', details: { eventId: id } });
             res.send({ message: 'Event deleted successfully!' });
