@@ -425,8 +425,8 @@ export class ApiService {
     return this.collectionService.updateCollection(id, data);
   }
 
-  getCollectionUpdateStatus(jobId: string): Observable<any> {
-    return this.collectionService.getUpdateStatus(jobId);
+  getCollectionUpdateStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    return this.collectionService.getUpdateStatus(jobId, options);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
@@ -636,8 +636,8 @@ export class ApiService {
   }
 
   // Diese Methode fragt den Status eines Jobs ab
-  getImportStatus(jobId: string): Observable<any> {
-    return this.importService.getImportStatus(jobId);
+  getImportStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    return this.importService.getImportStatus(jobId, options);
   }
 
 

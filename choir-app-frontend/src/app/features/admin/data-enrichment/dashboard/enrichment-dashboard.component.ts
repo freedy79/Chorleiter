@@ -68,7 +68,7 @@ export class EnrichmentDashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     timer(0, 30000)
       .pipe(takeUntil(this.destroy$))
-      .subscribe(() => this.loadDashboard());
+      .subscribe((index) => this.loadDashboard(index > 0));
   }
 
   ngOnDestroy(): void {
@@ -76,23 +76,27 @@ export class EnrichmentDashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  loadDashboard(): void {
-    this.loading = true;
+  loadDashboard(silent = false): void {
+    if (!silent) {
+      this.loading = true;
+    }
     this.error = null;
 
-    this.adminService.getEnrichmentStatistics().subscribe({
+    this.adminService.getEnrichmentStatistics(undefined, undefined, { silent }).subscribe({
       next: (response) => {
         this.stats = response.statistics || this.stats;
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading enrichment stats:', err);
-        this.error = 'Fehler beim Laden der Statistik.';
+        if (!silent) {
+          this.error = 'Fehler beim Laden der Statistik.';
+        }
         this.loading = false;
       }
     });
 
-    this.adminService.getEnrichmentProviders().subscribe({
+    this.adminService.getEnrichmentProviders({ silent }).subscribe({
       next: (response) => {
         this.providers = response.providers || [];
       },

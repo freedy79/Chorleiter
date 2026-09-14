@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 import { Choir, normalizeChoir, normalizeChoirs, normalizeMembers } from '../models/choir';
 import { User, UserInChoir } from '../models/user';
 import { LoginAttempt } from '../models/login-attempt';
@@ -286,8 +287,12 @@ export class AdminService {
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/api-keys/status`);
   }
 
-  getEnrichmentProviders(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/providers`);
+  getEnrichmentProviders(options?: { silent?: boolean }): Observable<any> {
+    const httpOptions: { context?: HttpContext } = {};
+    if (options?.silent) {
+      httpOptions.context = new HttpContext().set(SKIP_GLOBAL_LOADING, true);
+    }
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/providers`, httpOptions);
   }
 
   createEnrichmentJob(jobType: string, enrichmentFields: string[], options: any = {}): Observable<any> {
@@ -298,13 +303,21 @@ export class AdminService {
     return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs/${jobId}`);
   }
 
-  listEnrichmentJobs(filters: { status?: string; jobType?: string; limit?: number; offset?: number } = {}): Observable<any> {
+  listEnrichmentJobs(
+    filters: { status?: string; jobType?: string; limit?: number; offset?: number } = {},
+    options?: { silent?: boolean }
+  ): Observable<any> {
     const params: any = {};
     if (filters.status) params.status = filters.status;
     if (filters.jobType) params.jobType = filters.jobType;
     if (filters.limit !== undefined) params.limit = filters.limit;
     if (filters.offset !== undefined) params.offset = filters.offset;
-    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs`, { params });
+
+    const httpOptions: { params: any; context?: HttpContext } = { params };
+    if (options?.silent) {
+      httpOptions.context = new HttpContext().set(SKIP_GLOBAL_LOADING, true);
+    }
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/jobs`, httpOptions);
   }
 
   cancelEnrichmentJob(jobId: string): Observable<any> {
@@ -330,11 +343,20 @@ export class AdminService {
     return this.http.post<any>(`${this.apiUrl}/admin/enrichment/suggestions/${suggestionId}/apply`, {});
   }
 
-  getEnrichmentStatistics(dateFrom?: string, dateTo?: string): Observable<any> {
+  getEnrichmentStatistics(
+    dateFrom?: string,
+    dateTo?: string,
+    options?: { silent?: boolean }
+  ): Observable<any> {
     const params: any = {};
     if (dateFrom) params.dateFrom = dateFrom;
     if (dateTo) params.dateTo = dateTo;
-    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/statistics`, { params });
+
+    const httpOptions: { params: any; context?: HttpContext } = { params };
+    if (options?.silent) {
+      httpOptions.context = new HttpContext().set(SKIP_GLOBAL_LOADING, true);
+    }
+    return this.http.get<any>(`${this.apiUrl}/admin/enrichment/statistics`, httpOptions);
   }
 
   // --- Usage Statistics ---

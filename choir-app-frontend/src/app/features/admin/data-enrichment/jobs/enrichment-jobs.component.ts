@@ -185,12 +185,14 @@ export class EnrichmentJobsComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   /** Load all jobs from backend */
-  loadJobs(): void {
-    this.loadingJobs = true;
+  loadJobs(isAutoRefresh = false): void {
+    if (!isAutoRefresh) {
+      this.loadingJobs = true;
+    }
     const filters: any = { limit: 100 };
     if (this.statusFilter) filters.status = this.statusFilter;
 
-    this.adminService.listEnrichmentJobs(filters).subscribe({
+    this.adminService.listEnrichmentJobs(filters, { silent: isAutoRefresh }).subscribe({
       next: (response) => {
         this.jobs = response.jobs || [];
         this.totalJobs = response.total || 0;
@@ -199,7 +201,9 @@ export class EnrichmentJobsComponent implements OnInit, OnDestroy, OnChanges {
       error: (err) => {
         console.error('Error loading jobs:', err);
         this.loadingJobs = false;
-        this.notification.error('Jobs konnten nicht geladen werden.');
+        if (!isAutoRefresh) {
+          this.notification.error('Jobs konnten nicht geladen werden.');
+        }
       }
     });
   }
@@ -213,7 +217,7 @@ export class EnrichmentJobsComponent implements OnInit, OnDestroy, OnChanges {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
         if (this.activeTabIndex === 3 && this.hasActiveJobs()) {
-          this.loadJobs();
+          this.loadJobs(true);
         }
       });
   }

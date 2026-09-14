@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class ImportService {
@@ -43,7 +44,11 @@ export class ImportService {
     return this.http.post<{ jobId: string }>(`${this.apiUrl}/import/events`, formData, { params });
   }
 
-  getImportStatus(jobId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/import/status/${jobId}`);
+  getImportStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    const httpOptions: { context?: HttpContext } = {};
+    if (options?.silent) {
+      httpOptions.context = new HttpContext().set(SKIP_GLOBAL_LOADING, true);
+    }
+    return this.http.get(`${this.apiUrl}/import/status/${jobId}`, httpOptions);
   }
 }

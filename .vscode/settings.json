@@ -140,6 +140,7 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "npm run dev": true
+        "npm run dev": true,
+        "git -C 'd:\\Angular\\Chorleiter'": true
     }
 }
