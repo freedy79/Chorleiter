@@ -33,11 +33,13 @@ import { NavigationStateService, ListViewState } from '@core/services/navigation
 import { PieceStatusLabelPipe } from '@shared/pipes/piece-status-label.pipe';
 import { ImageCacheService } from '@core/services/image-cache.service';
 import { ReferencePipe } from '@shared/pipes/reference.pipe';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
+import { ResponsiveService } from '@shared/services/responsive.service';
 
 @Component({
   selector: 'app-literature-list',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe, ReferencePipe],
+  imports: [CommonModule, ReactiveFormsModule, MaterialModule, RouterModule, PieceStatusLabelPipe, ReferencePipe, DataStateComponent],
   templateUrl: './literature-list.component.html',
   styleUrls: ['./literature-list.component.scss']
 })
@@ -51,6 +53,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   public status$ = new BehaviorSubject<('CAN_BE_SUNG' | 'IN_REHEARSAL' | 'NOT_READY')[]>([]);
   public searchControl = new FormControl('');
   public filtersExpanded = false;
+  public isMobile = false;
+  public mobileFiltersOpen = false;
   private readonly FILTER_KEY = 'repertoireFilters';
 
   // --- Observables for filter display ---
@@ -83,6 +87,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
   public pageSizeOptions: number[] = [10, 25, 50];
   public pageSize = 10;
   public isLoading = true;
+  public hasLoadError = false;
+  public loadErrorMessage = 'Die Repertoireliste konnte nicht geladen werden.';
   private pageCache = new Map<number, Piece[]>();
   private lastCacheKey = '';
   public selectedPieceId: number | null = null;
@@ -136,7 +142,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     private prefs: UserPreferencesService,
     private router: Router,
     private imageCacheService: ImageCacheService,
-    private navState: NavigationStateService
+    private navState: NavigationStateService,
+    private responsive: ResponsiveService
   ) {
     super(); // Call BaseComponent constructor
     this.pageSize = this.paginatorService.getPageSize('literature-list', this.pageSizeOptions[0]);
@@ -169,6 +176,15 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       takeUntil(this.destroy$)
     ).subscribe(isDirector => this.isDirector = isDirector);
 
+    this.responsive.isMobile$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isMobile => {
+      this.isMobile = isMobile;
+      if (isMobile) {
+        this.mobileFiltersOpen = false;
+      }
+    });
+
     const saved = localStorage.getItem(this.FILTER_KEY);
     if (saved) {
       try {
@@ -197,19 +213,6 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
           this.filterByLicense$.next(s.licenses);
         }
         if (s.search !== undefined) this.searchControl.setValue(s.search, { emitEvent: false });
-        if (
-          (s.composerIds && s.composerIds.length) ||
-          s.composerId ||
-          (s.collectionIds && s.collectionIds.length) ||
-          s.collectionId ||
-          (s.categoryIds && s.categoryIds.length) ||
-          (s as any).categoryId ||
-          (Array.isArray(s.statuses) && s.statuses.length) ||
-          s.status ||
-          (s.licenses && s.licenses.length)
-        ) {
-          this.filtersExpanded = true;
-        }
       } catch {
         this.filtersExpanded = false;
       }
@@ -243,6 +246,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
         startWith({}),
         tap(() => {
           this.isLoading = true;
+          this.hasLoadError = false;
           const key = this.currentCacheKey();
           if (key !== this.lastCacheKey) {
             this.pageCache.clear();
@@ -273,6 +277,8 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
           ).pipe(
             catchError((err) => {
               const msg = err.error?.message || 'Could not load repertoire.';
+              this.hasLoadError = true;
+              this.loadErrorMessage = msg;
               console.error('Failed to load repertoire list', err);
               this.errorService.setError({
                 message: msg,
@@ -413,6 +419,7 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     this.filterByLicense$.next([]);
     this.searchControl.setValue('', { emitEvent: false });
     this.filtersExpanded = false;
+    this.mobileFiltersOpen = false;
     this.pageCache.clear();
     if (this._paginator) {
       this._paginator.firstPage();
@@ -431,13 +438,6 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       licenses: this.filterByLicense$.value
     };
     localStorage.setItem(this.FILTER_KEY, JSON.stringify(state));
-    this.filtersExpanded = !!(
-      (state.composerIds && state.composerIds.length) ||
-      (state.collectionIds && state.collectionIds.length) ||
-      (state.categoryIds && state.categoryIds.length) ||
-      (state.statuses && state.statuses.length) ||
-      (state.licenses && state.licenses.length)
-    );
   }
 
   // =======================================================================
@@ -607,22 +607,26 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       this.filterByLicense$.next([]);
     }
     this.searchControl.setValue(preset.data.search || '', { emitEvent: false });
-    const singleId = (preset.data as any).categoryId;
-    this.filtersExpanded = !!(
-      ((preset.data as any).composerIds && (preset.data as any).composerIds.length) ||
-      (preset.data as any).composerId ||
-      (preset.data.collectionIds && preset.data.collectionIds.length) ||
-      preset.data.collectionId ||
-      (preset.data.categoryIds && preset.data.categoryIds.length) ||
-      singleId ||
-      (Array.isArray(preset.data.statuses) && preset.data.statuses.length) ||
-      preset.data.status ||
-      ((preset.data as any).licenses && (preset.data as any).licenses.length)
-    );
     if (this._paginator) {
       this._paginator.firstPage();
     }
     this.refresh$.next();
+  }
+
+  toggleFilterDrawer(): void {
+    if (this.isMobile) {
+      this.mobileFiltersOpen = !this.mobileFiltersOpen;
+      return;
+    }
+    this.filtersExpanded = !this.filtersExpanded;
+  }
+
+  onDrawerOpenedChange(opened: boolean): void {
+    if (this.isMobile) {
+      this.mobileFiltersOpen = opened;
+      return;
+    }
+    this.filtersExpanded = opened;
   }
 
   saveCurrentPreset(): void {
@@ -659,12 +663,18 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
     const preset = this.presets.find(p => p.id === this.selectedPresetId);
     if (!preset) return;
     if (!this.canDeleteSelectedPreset()) return;
-    if (confirm('Diesen Filter löschen?')) {
+    this.dialogHelper.confirm({
+      title: 'Filter löschen?',
+      message: 'Diesen Filter löschen?'
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
       this.apiService.deleteRepertoireFilter(preset.id).subscribe(() => {
         this.selectedPresetId = null;
         this.loadPresets();
       });
-    }
+    });
   }
 
   reloadList(): void {
@@ -758,6 +768,31 @@ export class LiteratureListComponent extends BaseComponent implements OnInit, Af
       this.filterByLicense$.value.length > 0 ||
       !!(this.searchControl.value && this.searchControl.value.trim().length > 0)
     );
+  }
+
+  getActiveFilterCount(): number {
+    let count = 0;
+
+    if (this.filterByComposerIds$.value.length > 0) count++;
+    if (this.filterByCollectionIds$.value.length > 0) count++;
+    if (this.filterByCategoryIds$.value.length > 0) count++;
+    if (this.status$.value.length > 0) count++;
+    if (this.filterByLicense$.value.length > 0) count++;
+    if (this.searchControl.value && this.searchControl.value.trim().length > 0) count++;
+
+    return count;
+  }
+
+  get emptyStateTitle(): string {
+    return this.hasActiveFilters()
+      ? 'Keine passenden Stücke gefunden'
+      : 'Willkommen in Ihrer Notenbibliothek';
+  }
+
+  get emptyStateMessage(): string {
+    return this.hasActiveFilters()
+      ? 'Passen Sie Ihre Filter an oder suchen Sie nach anderen Begriffen.'
+      : 'Fügen Sie Ihr erstes Stück hinzu, um loszulegen.';
   }
 
   /**

@@ -78,7 +78,7 @@
                   "inlineCritical": true
                 },
                 "fonts": {
-                  "inline": true
+                  "inline": false
                 }
               },
               "sourceMap": {

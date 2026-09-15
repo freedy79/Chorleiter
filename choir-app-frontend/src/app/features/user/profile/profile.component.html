@@ -295,7 +295,7 @@
                 color="warn"
                 type="button"
                 (click)="onLeaveChoir(choir)"
-                [disabled]="(isDemo$ | async) || isLeaveChoirBlocked(choir.id)"
+                [disabled]="isLeaveChoirBlocked(choir.id)"
               >
                 Aus Chor abmelden
               </button>
@@ -315,7 +315,7 @@
               color="warn"
               type="button"
               (click)="onDeleteAccount()"
-              [disabled]="(isDemo$ | async) || isDeleteAccountBlocked()"
+              [disabled]="isDeleteAccountBlocked()"
             >
               Vom gesamten System abmelden
             </button>
@@ -326,7 +326,7 @@
         </mat-card-actions>
       </mat-card>
 
-      <div class="actions-footer" *ngIf="(isDemo$ | async) === false">
+      <div class="actions-footer">
         <button mat-flat-button color="primary" type="submit" [disabled]="profileForm.invalid || profileForm.pristine">
           Speichern
         </button>

@@ -5,6 +5,7 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PwaConfig } from '@core/models/pwa-config';
 import { MatDialog } from '@angular/material/dialog';
@@ -36,6 +37,7 @@ export class PwaAllConfigsComponent implements OnInit {
 
   constructor(
     private api: ApiService,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService,
     private dialog: MatDialog
   ) {}
@@ -73,19 +75,24 @@ export class PwaAllConfigsComponent implements OnInit {
   }
 
   deleteConfig(config: PwaConfig): void {
-    if (!confirm(`Möchten Sie die Konfiguration "${config.key}" wirklich löschen?`)) {
-      return;
-    }
-
-    this.api.deletePwaConfig(config.key).subscribe({
-      next: () => {
-        this.notification.success('Konfiguration gelöscht');
-        this.loadConfigs();
-      },
-      error: (err) => {
-        console.error('Error deleting config:', err);
-        this.notification.error(err.error?.message || 'Fehler beim Löschen der Konfiguration');
+    this.dialogHelper.confirm({
+      title: 'Konfiguration löschen?',
+      message: `Möchten Sie die Konfiguration "${config.key}" wirklich löschen?`
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
       }
+
+      this.api.deletePwaConfig(config.key).subscribe({
+        next: () => {
+          this.notification.success('Konfiguration gelöscht');
+          this.loadConfigs();
+        },
+        error: (err) => {
+          console.error('Error deleting config:', err);
+          this.notification.error(err.error?.message || 'Fehler beim Löschen der Konfiguration');
+        }
+      });
     });
   }
 

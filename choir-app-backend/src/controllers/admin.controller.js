@@ -303,7 +303,21 @@ exports.getMailLogs = async (req, res) => {
 
         const logs = await db.mail_log.findAll({
             where,
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            include: [
+                {
+                    model: db.user,
+                    as: 'triggerUser',
+                    attributes: ['id', 'firstName', 'name', 'email'],
+                    required: false
+                },
+                {
+                    model: db.choir,
+                    as: 'triggerChoir',
+                    attributes: ['id', 'name'],
+                    required: false
+                }
+            ]
         });
         res.status(200).send(logs);
     } catch (err) {
@@ -704,6 +718,18 @@ exports.getMailTemplates = async (req, res) => {
     try {
         const templates = await db.mail_template.findAll();
         res.status(200).send(templates);
+    } catch (err) {
+        res.status(500).send({ message: err.message });
+    }
+};
+
+exports.getDemoLeads = async (req, res) => {
+    try {
+        const leads = await db.demo_lead.findAll({
+            order: [['createdAt', 'DESC']],
+            attributes: ['id', 'email', 'expiresAt', 'verifiedAt', 'requestedIp', 'verifiedIp', 'userAgent', 'createdAt', 'updatedAt']
+        });
+        res.status(200).send(leads);
     } catch (err) {
         res.status(500).send({ message: err.message });
     }

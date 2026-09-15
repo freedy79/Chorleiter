@@ -2,7 +2,24 @@
   <button mat-flat-button color="primary" (click)="addPost()">Neuer Beitrag</button>
 </div>
 
-<ng-container *ngIf="posts.length; else noPosts">
+<app-data-state
+  [isLoading]="isLoading"
+  [hasError]="hasLoadError"
+  [errorTitle]="'Fehler beim Laden der Beiträge'"
+  [errorMessage]="loadErrorMessage"
+  [isEmpty]="!isLoading && !hasLoadError && posts.length === 0"
+  emptyIcon="article"
+  emptyTitle="Noch keine Beiträge"
+  emptyMessage="Noch keine Beiträge angelegt."
+  (retry)="loadPosts()"
+>
+  <ng-container empty-actions>
+    <button *ngIf="isChoirAdmin || isAdmin || isDirector" mat-flat-button color="primary" (click)="addPost()">
+      <mat-icon>add</mat-icon>
+      Ersten Beitrag erstellen
+    </button>
+  </ng-container>
+
   <div class="post-list">
     <ng-container *ngFor="let p of posts | slice:0:displayCount">
       <app-post
@@ -19,8 +36,4 @@
       <a (click)="showMore()">Ältere anzeigen</a>
     </div>
   </div>
-</ng-container>
-
-<ng-template #noPosts>
-  <app-empty-state icon="article" message="Noch keine Beiträge angelegt."></app-empty-state>
-</ng-template>
+</app-data-state>

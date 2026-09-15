@@ -17,7 +17,9 @@ const emailService = require('../src/services/email.service');
     await user.addChoir(choir);
 
     let mailSent = false;
+    let demoAlertPayload = null;
     emailService.sendPasswordResetMail = async () => { mailSent = true; };
+    emailService.notifyAdminsOnDemoLogin = async (payload) => { demoAlertPayload = payload; };
 
     const makeReqRes = (email, password) => {
       const req = { body: { email, password }, ip: '127.0.0.1', get: () => '' };
@@ -89,6 +91,38 @@ const emailService = require('../src/services/email.service');
 
     const attempts2 = await db.login_attempt.count({ where: { email: 'u2@example.com' } });
     assert.strictEqual(attempts2, 5);
+
+    // demo login triggers admin alert with IP/UA context
+    const demoChoir = await db.choir.create({ name: 'Demo Choir Test' });
+    const demoUser = await db.user.create({
+      name: 'Demo User',
+      email: 'demo@nak-chorleiter.de',
+      password: bcrypt.hashSync('demo', 8),
+      roles: ['demo']
+    });
+    await demoUser.addChoir(demoChoir);
+
+    const demoReq = {
+      body: { email: 'demo@nak-chorleiter.de', password: 'demo' },
+      ip: '127.0.0.1',
+      headers: { 'x-forwarded-for': '203.0.113.99, 10.0.0.1' },
+      get: (header) => (header === 'User-Agent' ? 'UnitTest-Agent' : '')
+    };
+    const demoRes = {
+      cookies: {},
+      status(code) { this.statusCode = code; return this; },
+      send(data) { this.data = data; },
+      cookie(name, value, options) {
+        this.cookies[name] = { value, options };
+        return this;
+      }
+    };
+
+    await controller.signin(demoReq, demoRes);
+    assert.strictEqual(demoRes.statusCode, 200);
+    assert.ok(demoAlertPayload, 'demo alert should be sent');
+    assert.strictEqual(demoAlertPayload.ipAddress, '203.0.113.99');
+    assert.strictEqual(demoAlertPayload.userAgent, 'UnitTest-Agent');
 
     await db.sequelize.close();
   } catch (err) {

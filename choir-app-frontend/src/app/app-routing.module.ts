@@ -17,6 +17,7 @@ import { InviteRegistrationComponent } from '@features/user/registration/invite-
 import { PasswordResetRequestComponent } from '@features/user/password-reset/password-reset-request.component';
 import { PasswordResetComponent } from '@features/user/password-reset/password-reset.component';
 import { EmailConfirmComponent } from '@features/user/email-confirm/email-confirm.component';
+import { DemoLoginComponent } from './features/user/demo-login/demo-login.component';
 import { DonateComponent } from '@features/donations/donate.component';
 import { DonationSuccessComponent } from '@features/donations/donation-success.component';
 import { DonationCancelComponent } from '@features/donations/donation-cancel.component';
@@ -123,6 +124,11 @@ export const routes: Routes = [
                 loadComponent: () => import('./features/user/join/join-choir.component').then(m => m.JoinChoirComponent)
             },
             {
+                path: 'register-choir/:token',
+                loadComponent: () => import('./features/referrals/choir-registration/choir-registration.component').then(m => m.ChoirRegistrationComponent),
+                data: { title: 'Chor registrieren' }
+            },
+            {
                 path: 'forgot-password',
                 component: PasswordResetRequestComponent
             },
@@ -133,6 +139,11 @@ export const routes: Routes = [
             {
                 path: 'confirm-email/:token',
                 component: EmailConfirmComponent
+            },
+            {
+                path: 'demo/:token',
+                component: DemoLoginComponent,
+                data: { title: 'Demo-Zugang' }
             },
             { path: 'imprint', component: ImprintComponent },
             { path: 'privacy', component: PrivacyComponent },

@@ -10,6 +10,7 @@ describe('MonthlyPlanComponent', () => {
   let apiStub: {
     getMemberAvailabilities: jasmine.Spy;
     getChoirMembers: jasmine.Spy;
+    getEvents: jasmine.Spy;
   };
   let planServiceStub: {
     getMonthlyPlan: jasmine.Spy;
@@ -23,7 +24,8 @@ describe('MonthlyPlanComponent', () => {
     localStorage.clear();
     apiStub = {
       getMemberAvailabilities: jasmine.createSpy('getMemberAvailabilities'),
-      getChoirMembers: jasmine.createSpy('getChoirMembers')
+      getChoirMembers: jasmine.createSpy('getChoirMembers'),
+      getEvents: jasmine.createSpy('getEvents')
     };
     planServiceStub = {
       getMonthlyPlan: jasmine.createSpy('getMonthlyPlan'),
@@ -55,7 +57,8 @@ describe('MonthlyPlanComponent', () => {
       { prevLabel: () => '', nextLabel: () => '', previous: () => ({ year: 0, month: 0 }), next: () => ({ year: 0, month: 0 }) } as any,
       {} as any,
       { markForCheck: () => void 0 } as any,
-      { isEnabled: () => false } as any
+      { isEnabled: () => false } as any,
+      { confirm: () => of(false) } as any
     );
   });
 
@@ -67,6 +70,7 @@ describe('MonthlyPlanComponent', () => {
     planServiceStub.getMonthlyPlan.and.returnValue(planSubject.asObservable());
     apiStub.getMemberAvailabilities.and.returnValue(availabilitySubject.asObservable());
     apiStub.getChoirMembers.and.returnValue(membersSubject.asObservable());
+    apiStub.getEvents.and.returnValue(of([]));
 
     const existingPlan: MonthlyPlan = { id: 9, year: 2024, month: 6, finalized: false, version: 1, entries: [] };
     const existingEntry: PlanEntry = { id: 99, date: '2024-06-01' };

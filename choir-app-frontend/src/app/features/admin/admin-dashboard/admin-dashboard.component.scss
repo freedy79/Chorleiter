@@ -1,164 +1,13 @@
 @use '../../../../themes/breakpoints' as *;
 @use '../../../../themes/dark-mode-variables' as *;
 
-.admin-container {
+.admin-launchpad {
   display: flex;
-  height: 100vh;
-  @include surface-background;
+  flex-direction: column;
+  gap: $spacing-xl;
 }
 
-.mobile-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: $z-index-header;
-}
-
-.layout-wrapper {
-  display: flex;
-  flex: 1;
-  width: 100%;
-
-  &.mobile {
-    flex-direction: column;
-  }
-}
-
-// ===== SIDEBAR (Desktop) =====
-.admin-sidebar {
-  width: 280px;
-  @include card-background;
-  border: none;
-  border-right: 1px solid;
-  @include apply-theme-var('border-right-color', 'border-primary');
-  overflow-y: auto;
-  padding: $spacing-md 0;
-  @include elevation-shadow(1);
-
-  .sidebar-header {
-    padding: $spacing-md;
-    border: none;
-    border-bottom: 1px solid;
-    @include apply-theme-var('border-bottom-color', 'border-primary');
-    margin-bottom: $spacing-md;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    h2 {
-      margin: 0;
-      font-size: 1.125rem;
-      font-weight: 600;
-      @include readable-text;
-    }
-
-    .version {
-      font-size: 0.75rem;
-      @include subtle-text;
-      @include surface-background;
-      padding: $spacing-xs $spacing-sm;
-      border-radius: 4px;
-    }
-  }
-
-  .sections-container {
-    padding: 0 $spacing-sm;
-  }
-
-  .section-group {
-    margin-bottom: $spacing-lg;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
-
-.category-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  @include subtle-text;
-  text-transform: uppercase;
-  padding: $spacing-sm $spacing-md;
-  letter-spacing: 0.5px;
-}
-
-.section-button {
-  width: 100%;
-  margin-bottom: $spacing-xs;
-  @include secondary-text;
-  text-align: left;
-  height: $touch-target-min;
-  @include smooth-transition(background-color);
-
-  mat-icon {
-    margin-right: $spacing-sm;
-    color: inherit;
-  }
-
-  .label {
-    flex: 1;
-  }
-
-  .badge {
-    background: #ff5252;
-    color: white;
-    border-radius: 50%;
-    min-width: 1.5rem;
-    height: 1.5rem;
-    display: grid;
-    place-items: center;
-    font-size: 0.75rem;
-    font-weight: 600;
-    margin-left: $spacing-sm;
-  }
-
-  &.active {
-    @include hover-state;
-    color: #1976d2;
-    font-weight: 600;
-
-    mat-icon {
-      color: #1976d2;
-    }
-  }
-
-  &:hover {
-    @include hover-state;
-  }
-}
-
-// ===== MOBILE DRAWER =====
-.mobile-drawer-container {
-  flex: 1;
-}
-
-.drawer-header {
-  font-weight: 600;
-  border: none;
-  border-bottom: 1px solid;
-  @include apply-theme-var('border-bottom-color', 'border-primary');
-  font-size: 1rem;
-  padding: $spacing-sm $spacing-md;
-
-  mat-icon {
-    margin-right: $spacing-sm;
-  }
-}
-
-.mobile-content {
-  padding: $spacing-sm;
-}
-
-// ===== MAIN CONTENT =====
-.main-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-lg;
-}
-
-.content-header {
-  margin-bottom: $spacing-xl;
-
+.launchpad-header {
   h1 {
     margin: 0 0 $spacing-sm 0;
     font-size: 1.75rem;
@@ -173,93 +22,82 @@
   }
 }
 
-// ===== DESKTOP GRID LAYOUT =====
-.desktop-grid {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-xl;
+.launchpad-group {
+  .group-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 $spacing-md 0;
+    @include readable-text;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
 
-  .section-group {
-    .category-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: $spacing-md;
-      @include readable-text;
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-
-      &::before {
-        content: '';
-        width: 0.25rem;
-        height: 1.25rem;
-        background: #1976d2;
-        border-radius: 2px;
-      }
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-
-      @include tablet {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      @include handset {
-        grid-template-columns: 1fr;
-      }
+    &::before {
+      content: '';
+      width: 0.25rem;
+      height: 1.25rem;
+      background: #1976d2;
+      border-radius: 2px;
     }
   }
 }
 
-// ===== ADMIN CARD =====
-.admin-card {
-  cursor: pointer;
-  @include smooth-transition(all, $animation-slow);
-  @include adaptive-border(1px, solid);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: $spacing-md;
 
-  &:hover {
+  @include handset {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-card {
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  cursor: pointer;
+  @include adaptive-border(1px, solid);
+  @include smooth-transition(all, $animation-slow);
+
+  &:hover,
+  &:focus-visible {
     transform: translateY(-4px);
     @include elevation-shadow(3);
     border-color: #1976d2;
+    outline: none;
 
     .card-icon {
       background-color: #1976d2;
-      color: white;
+      color: #fff;
     }
-  }
-
-  mat-card-header {
-    margin-bottom: $spacing-sm;
   }
 
   .card-icon {
-    width: 3.5rem;
-    height: 3.5rem;
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
     border-radius: 8px;
     @include surface-background;
+    @include secondary-text;
     display: grid;
     place-items: center;
     @include smooth-transition(all, $animation-slow);
-    @include secondary-text;
 
     mat-icon {
-      font-size: 1.75rem;
-      width: 1.75rem;
-      height: 1.75rem;
+      font-size: 1.6rem;
+      width: 1.6rem;
+      height: 1.6rem;
     }
   }
 
-  mat-card-content {
+  .card-body {
     flex: 1;
+    min-width: 0;
 
     h3 {
-      margin: 0 0 $spacing-sm 0;
+      margin: 0 0 $spacing-xs 0;
       font-size: 1rem;
       font-weight: 600;
       @include readable-text;
@@ -268,68 +106,8 @@
     p {
       margin: 0;
       font-size: 0.875rem;
-      @include secondary-text;
       line-height: 1.5;
+      @include secondary-text;
     }
   }
-
-  mat-card-footer {
-    padding-top: $spacing-sm;
-    border: none;
-    border-top: 1px solid;
-    @include apply-theme-var('border-top-color', 'border-primary');
-    text-align: right;
-
-    .footer-badge {
-      font-size: 0.75rem;
-      color: #ff5252;
-      font-weight: 600;
-    }
-  }
-}
-
-// ===== MOBILE TABS =====
-.mobile-tabs {
-  margin-top: $spacing-md;
-}
-
-.tab-content {
-  padding: $spacing-md;
-}
-
-.quick-access-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-sm;
-}
-
-.quick-button {
-  height: auto;
-  padding: $spacing-md $spacing-sm;
-  flex-direction: column;
-  white-space: normal;
-  line-height: 1.2;
-
-  mat-icon {
-    margin-bottom: $spacing-sm;
-    font-size: 2rem;
-    width: 2rem;
-    height: 2rem;
-  }
-
-  .button-label {
-    font-weight: 600;
-    font-size: 0.8125rem;
-    margin-bottom: $spacing-xs;
-  }
-
-  .button-desc {
-    font-size: 0.6875rem;
-    @include secondary-text;
-  }
-}
-
-// ===== UTILITIES =====
-.spacer {
-  flex: 1 1 auto;
 }

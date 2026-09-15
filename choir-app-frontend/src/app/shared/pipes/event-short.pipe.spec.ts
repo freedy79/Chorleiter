@@ -12,6 +12,10 @@ describe('EventShortPipe', () => {
   });
 
   describe('Gottesdienst (GD) detection', () => {
+    it('should prefer explicit SERVICE eventType', () => {
+      expect(pipe.transform({ eventType: 'SERVICE', notes: 'Konzert' })).toBe('GD');
+    });
+
     it('should return "GD" for "Gottesdienst"', () => {
       expect(pipe.transform({ notes: 'Gottesdienst' })).toBe('GD');
       expect(pipe.transform({ notes: 'Gottesdienst 10:00' })).toBe('GD');
@@ -38,6 +42,10 @@ describe('EventShortPipe', () => {
   });
 
   describe('Chorprobe (CP) detection', () => {
+    it('should prefer explicit REHEARSAL eventType', () => {
+      expect(pipe.transform({ eventType: 'REHEARSAL', notes: 'Sitzung' })).toBe('CP');
+    });
+
     it('should return "CP" for "Chorprobe"', () => {
       expect(pipe.transform({ notes: 'Chorprobe' })).toBe('CP');
       expect(pipe.transform({ notes: 'Chorprobe 18:00' })).toBe('CP');

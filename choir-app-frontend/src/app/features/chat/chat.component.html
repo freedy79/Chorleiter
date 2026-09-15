@@ -115,6 +115,28 @@
       <small *ngIf="pollError" class="poll-warning" aria-live="polite">Verbindungsproblem – erneuter Versuch läuft.</small>
     </header>
 
+    <div
+      class="context-menu-anchor"
+      [style.left.px]="contextMenuPosition.x"
+      [style.top.px]="contextMenuPosition.y"
+      [matMenuTriggerFor]="userContextMenu"
+      #userContextTrigger="matMenuTrigger"
+    ></div>
+
+    <mat-menu #userContextMenu="matMenu" xPosition="after" yPosition="below">
+      <button mat-menu-item [matMenuTriggerFor]="directChatSubMenu" [disabled]="!contextMenuUser || directChatStarting">
+        <mat-icon>person</mat-icon>
+        <span>{{ contextMenuUser?.name || 'Person' }}</span>
+      </button>
+    </mat-menu>
+
+    <mat-menu #directChatSubMenu="matMenu" xPosition="after" yPosition="below">
+      <button mat-menu-item (click)="openPrivateChatForContextUser()" [disabled]="!contextMenuUser || directChatStarting">
+        <mat-icon>chat</mat-icon>
+        <span>Privaten Chat öffnen</span>
+      </button>
+    </mat-menu>
+
     <div class="messages" #messagesContainer *ngIf="!loadingMessages; else loadingTemplate" role="log" aria-live="polite" (scroll)="onMessagesScroll($event)">
       <div class="loading-older" *ngIf="loadingOlderMessages">
         <mat-spinner diameter="20"></mat-spinner>
@@ -162,7 +184,20 @@
         </mat-menu>
 
         <div class="meta">
-          <strong>{{ message.author?.firstName ? (message.author?.firstName + ' ' + message.author?.name) : (message.author?.name || 'Unbekannt') }}</strong>
+          <button
+            type="button"
+            class="author-context-trigger"
+            [disabled]="!canOpenAuthorContextMenu(message)"
+            (contextmenu)="openUserContextMenu($event, message)"
+            (keydown.enter)="openUserContextMenu($event, message)"
+            (touchstart)="onAuthorTouchStart($event, message)"
+            (touchend)="onAuthorTouchEnd()"
+            (touchcancel)="onAuthorTouchEnd()"
+            (touchmove)="onAuthorTouchEnd()"
+            [attr.aria-label]="'Aktionen für ' + getAuthorDisplayName(message)"
+          >
+            {{ getAuthorDisplayName(message) }}
+          </button>
           <span>{{ message.createdAt | date:'short' }}</span>
           <span
             *ngIf="getMessageStatus(message) as status"
@@ -178,7 +213,17 @@
           ↪ {{ resolveReplyPreview(message) }}
         </div>
 
-        <p class="text" [innerHTML]="message.text! | markdown | async" (click)="onMessageContentClick($event)"></p>
+        <p
+          class="text"
+          *ngIf="message.text"
+          [innerHTML]="message.text | markdown: mentionCandidates | async"
+          (click)="onMessageContentClick($event)"
+          (contextmenu)="onMessageContentContextMenu($event)"
+          (touchstart)="onMessageContentTouchStart($event)"
+          (touchend)="onMessageContentTouchEnd()"
+          (touchcancel)="onMessageContentTouchEnd()"
+          (touchmove)="onMessageContentTouchEnd()"
+        ></p>
 
         <div class="piece-previews" *ngIf="extractPieceIds(message.text) as pieceIds">
           <a
@@ -220,17 +265,24 @@
           </a>
         </div>
 
-        <a
-          class="attachment"
-          *ngIf="message.attachment"
-          [href]="message.attachment.url"
-          target="_blank"
-          rel="noopener"
-        >
-          📎 {{ message.attachment.originalName }}
-        </a>
+        <ng-container *ngIf="message.attachment as attachment">
+          <div class="attachment-preview" *ngIf="isImageAttachment(attachment) && resolveAttachmentUrl(message) as attachmentUrl" style="position:relative;max-width:min(320px,100%);margin:6px 0 8px;">
+            <img class="attachment-image" [src]="attachmentUrl" [alt]="attachment.originalName" loading="lazy" style="max-width:min(320px,100%);max-height:240px;border-radius:6px;display:block;" />
+            <span class="gif-badge" *ngIf="isGifAttachment(attachment)" style="position:absolute;top:6px;right:6px;padding:1px 5px;border-radius:999px;background:rgba(0,0,0,0.6);color:#fff;font-size:.65rem;font-weight:700;">GIF</span>
+          </div>
 
-        <div class="reactions-row" *ngIf="message.reactions?.length">
+          <a
+            class="attachment"
+            *ngIf="resolveAttachmentUrl(message) as attachmentUrl"
+            [href]="attachmentUrl"
+            target="_blank"
+            rel="noopener"
+          >
+            📎 {{ attachment.originalName }}
+          </a>
+        </ng-container>
+
+        <div class="reactions-row" *ngIf="message.reactions.length">
           <button
             *ngFor="let reaction of message.reactions"
             class="reaction-chip"
@@ -287,6 +339,9 @@
       </div>
 
       <div class="attachment-row" *ngIf="selectedAttachment as file">
+        <div class="attachment-inline-preview" *ngIf="selectedAttachmentPreviewUrl && file.type.startsWith('image/')">
+          <img [src]="selectedAttachmentPreviewUrl" [alt]="file.name" loading="lazy" style="width:48px;height:48px;object-fit:cover;border-radius:4px;display:block;" />
+        </div>
         <span>📎 {{ file.name }}</span>
         <button mat-button type="button" (click)="clearAttachment(fileInput)">Entfernen</button>
       </div>
@@ -297,15 +352,93 @@
           <mat-icon>attach_file</mat-icon>
         </button>
 
+        <button
+          mat-icon-button
+          type="button"
+          [matMenuTriggerFor]="emojiMenu"
+          #emojiMenuTrigger="matMenuTrigger"
+          aria-label="Emoji oder Icon einfügen"
+          matTooltip="Smiley / Emoji einfügen"
+          class="emoji-btn"
+        >
+          <mat-icon>sentiment_satisfied</mat-icon>
+        </button>
+
         <mat-menu #attachMenu="matMenu" yPosition="above">
           <button mat-menu-item (click)="openPieceDialog()">
             <mat-icon>music_note</mat-icon>
             <span>Stück verlinken</span>
           </button>
+          <button mat-menu-item (click)="openGifSearchDialog()">
+            <mat-icon>gif_box</mat-icon>
+            <span>GIF suchen</span>
+          </button>
+          <button mat-menu-item (click)="insertGifTemplate()">
+            <mat-icon>link</mat-icon>
+            <span>GIF-Link manuell einfügen</span>
+          </button>
           <button mat-menu-item (click)="fileInput.click()">
             <mat-icon>attach_file</mat-icon>
             <span>Datei anhängen</span>
           </button>
+        </mat-menu>
+
+        <mat-menu #emojiMenu="matMenu" yPosition="above">
+          <div class="composer-emoji-picker-wrap" style="width:min(360px,84vw);padding:6px;" (click)="$event.stopPropagation()">
+            <mat-form-field appearance="outline" class="emoji-search-field" style="width:100%;margin-bottom:4px;">
+              <mat-label>Smiley suchen</mat-label>
+              <input matInput [(ngModel)]="emojiSearchTerm" placeholder="z. B. lachen, herz, musik" />
+            </mat-form-field>
+
+            <div *ngIf="!emojiSearchTerm.trim() && recentEmojis.length" style="display:flex;flex-wrap:wrap;gap:4px;max-height:48px;overflow:auto;margin:0 0 6px 0;">
+              <button
+                type="button"
+                *ngFor="let recent of recentEmojis"
+                (click)="insertComposerEmoji(recent, emojiMenuTrigger)"
+                [attr.aria-label]="'Zuletzt verwendet: ' + recent"
+                [title]="'Zuletzt verwendet: ' + recent"
+                style="width:36px;height:36px;border:none;background:rgba(127,127,127,.1);border-radius:8px;cursor:pointer;font-size:1.1rem;line-height:1;"
+              >
+                {{ recent }}
+              </button>
+            </div>
+
+            <div class="emoji-category-row" style="display:flex;gap:3px;margin-bottom:4px;">
+              <button
+                type="button"
+                class="emoji-category-btn"
+                *ngFor="let category of visibleEmojiCategories"
+                [class.active]="selectedEmojiCategory === category.key"
+                (click)="setEmojiCategory(category.key)"
+                [attr.aria-label]="category.label"
+                [title]="category.label"
+                style="width:36px;height:36px;border:1px solid rgba(127,127,127,.25);border-radius:8px;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;"
+                [style.border-color]="selectedEmojiCategory === category.key ? 'var(--mat-sys-primary, #3f51b5)' : 'rgba(127,127,127,.25)'"
+                [style.color]="selectedEmojiCategory === category.key ? 'var(--mat-sys-primary, #3f51b5)' : 'inherit'"
+                [style.background]="selectedEmojiCategory === category.key ? 'rgba(63,81,181,.12)' : 'transparent'"
+              >
+                <mat-icon style="font-size:16px;width:16px;height:16px;">{{ category.icon }}</mat-icon>
+              </button>
+            </div>
+
+            <div class="composer-emoji-grid" style="display:flex;flex-wrap:wrap;gap:3px;max-height:210px;overflow:auto;">
+              <button
+                type="button"
+                class="composer-emoji-btn"
+                *ngFor="let symbol of filteredComposerEmojis"
+                (click)="insertComposerEmoji(symbol, emojiMenuTrigger)"
+                [attr.aria-label]="'Emoji ' + symbol"
+                [title]="symbol"
+                style="width:36px;height:36px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:1.15rem;line-height:1;"
+              >
+                {{ symbol }}
+              </button>
+            </div>
+
+            <div *ngIf="filteredComposerEmojis.length === 0" style="padding:8px 4px;color:rgba(127,127,127,.9);font-size:.85rem;">
+              Keine Emojis gefunden. Versuch z. B. <strong>lachen</strong>, <strong>herz</strong> oder <strong>musik</strong>.
+            </div>
+          </div>
         </mat-menu>
 
         <mat-form-field appearance="outline" class="composer-field">
@@ -341,21 +474,29 @@
 </section>
 
 <ng-template #noRoomSelected>
-  <app-empty-state
-    icon="forum"
-    [title]="rooms.length === 0 ? 'Noch kein Raum vorhanden' : 'Kein Raum ausgewählt'"
-    [message]="rooms.length === 0 && isChoirAdmin ? 'Erstelle jetzt den ersten Chat-Raum.' : 'Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.'"
+  <app-data-state
+    [isLoading]="loadingRooms"
+    [hasError]="loadRoomsError"
+    errorTitle="Chat-Räume konnten nicht geladen werden"
+    errorMessage="Bitte versuche es erneut."
+    [isEmpty]="!loadingRooms && !loadRoomsError && !selectedRoomId"
+    [emptyTitle]="rooms.length === 0 ? 'Noch kein Raum vorhanden' : 'Kein Raum ausgewählt'"
+    [emptyMessage]="rooms.length === 0 && isChoirAdmin ? 'Erstelle jetzt den ersten Chat-Raum.' : 'Wähle links einen Chat-Raum, um Nachrichten zu lesen oder zu schreiben.'"
+    emptyIcon="forum"
+    (retry)="loadRooms()"
   >
-    <button
-      *ngIf="rooms.length === 0 && isChoirAdmin"
-      mat-raised-button
-      color="primary"
-      type="button"
-      (click)="openCreateRoomDialog()"
-      [disabled]="roomMutationInProgress"
-    >
-      <mat-icon>add</mat-icon>
-      Raum erstellen
-    </button>
-  </app-empty-state>
+    <ng-container empty-actions>
+      <button
+        *ngIf="rooms.length === 0 && isChoirAdmin"
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="openCreateRoomDialog()"
+        [disabled]="roomMutationInProgress"
+      >
+        <mat-icon>add</mat-icon>
+        Raum erstellen
+      </button>
+    </ng-container>
+  </app-data-state>
 </ng-template>

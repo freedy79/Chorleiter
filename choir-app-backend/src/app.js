@@ -19,9 +19,11 @@ app.set("trust proxy", 1);
 // Initialize request-scoped context storage
 app.use(runWithRequestContext);
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'https://nak-chorleiter.de')
-    .split(',')
-    .map(o => o.trim());
+const defaultOrigins = ['https://nak-chorleiter.de', 'https://www.nak-chorleiter.de'];
+const envOrigins = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+    : [];
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 if (process.env.NODE_ENV !== 'production') {
     allowedOrigins.push('http://localhost:4200', 'http://localhost:4201');
 }
@@ -86,7 +88,7 @@ app.get("/", (req, res) => {
 app.get(["/ping", "/api/ping"], (req, res) => {
     res.json({ message: "PONG" });
 });
-app.get("/api/health", (req, res) => {
+app.get(["/health", "/api/health"], (req, res) => {
     res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
@@ -97,7 +99,7 @@ app.get("/api/public/post-images/:token", postController.getImageByToken);
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public', '/api/referrals/register-choir/'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }

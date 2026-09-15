@@ -19,7 +19,8 @@ const {
   messageStreamValidation,
   reportMessageValidation,
   toggleReactionValidation,
-  getReactionsValidation
+  getReactionsValidation,
+  directRoomValidation
 } = require('../validators/chat.validation');
 const {
   diskUpload,
@@ -43,6 +44,7 @@ const attachmentUpload = diskUpload('chat-attachments', {
 router.use(authJwt.verifyToken);
 
 router.get('/rooms', wrap(controller.getRooms));
+router.post('/rooms/direct', role.requireNonDemo, directRoomValidation, validate, wrap(controller.getOrCreateDirectRoom));
 router.post('/rooms', role.requireNonDemo, role.requireDirector, createRoomValidation, validate, wrap(controller.createRoom));
 router.get('/rooms/:roomId', role.requireDirector, roomDetailValidation, validate, wrap(controller.getRoomDetail));
 router.put('/rooms/:roomId', role.requireNonDemo, role.requireDirector, updateRoomValidation, validate, wrap(controller.updateRoom));

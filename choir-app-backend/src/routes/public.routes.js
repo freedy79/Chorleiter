@@ -3,7 +3,7 @@ const publicPageController = require('../controllers/public-page.controller');
 const postController = require('../controllers/post.controller');
 const formController = require('../controllers/form.controller');
 const validate = require('../validators/validate');
-const { submitFormValidation } = require('../validators/form.validation');
+const { submitFormValidation, updatePublicSubmissionValidation } = require('../validators/form.validation');
 const { handler: wrap } = require('../utils/async');
 
 router.get('/choirs/:slug', wrap(publicPageController.getPublicPageBySlug));
@@ -11,6 +11,8 @@ router.post('/poll-vote/:token', wrap(postController.consumeReminderVote));
 
 // Public form access (via GUID)
 router.get('/forms/:guid', wrap(formController.getPublicForm));
+router.get('/forms/:guid/check-duplicate', wrap(formController.checkPublicDuplicate));
 router.post('/forms/:guid/submit', submitFormValidation, validate, wrap(formController.submitPublicForm));
+router.put('/forms/:guid/submissions', updatePublicSubmissionValidation, validate, wrap(formController.updatePublicSubmission));
 
 module.exports = router;

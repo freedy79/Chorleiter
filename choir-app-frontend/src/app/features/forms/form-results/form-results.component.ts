@@ -4,17 +4,16 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { BaseComponent } from '@shared/components/base.component';
 import { FormService } from '@core/services/form.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { Form, FormSubmission, FormField, FormFieldStatistic } from '@core/models/form';
 import { takeUntil } from 'rxjs/operators';
-import { DatePipe } from '@angular/common';
-import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 
 @Component({
   selector: 'app-form-results',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PureDatePipe, DatePipe, EmptyStateComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, EmptyStateComponent],
   templateUrl: './form-results.component.html',
   styleUrls: ['./form-results.component.scss'],
 })
@@ -36,6 +35,7 @@ export class FormResultsComponent extends BaseComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private formService: FormService,
+    private dialogHelper: DialogHelperService,
     private notify: NotificationService,
   ) {
     super();
@@ -134,6 +134,15 @@ export class FormResultsComponent extends BaseComponent implements OnInit {
     return sub.submitterName || 'Anonym';
   }
 
+  getSubmissionDate(value: string | Date | null | undefined): Date | null {
+    if (!value) {
+      return null;
+    }
+
+    const parsed = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
   selectSubmission(sub: FormSubmission): void {
     this.selectedSubmission = sub;
     this.viewMode = 'detail';
@@ -146,20 +155,29 @@ export class FormResultsComponent extends BaseComponent implements OnInit {
 
   deleteSubmission(sub: FormSubmission, event: Event): void {
     event.stopPropagation();
-    if (!confirm('Diese Abgabe wirklich löschen?')) return;
+    this.dialogHelper.confirm({
+      title: 'Abgabe löschen?',
+      message: 'Diese Abgabe wirklich löschen?'
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
 
-    this.formService.deleteSubmission(this.formId, sub.id)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: () => {
-          this.submissions = this.submissions.filter(s => s.id !== sub.id);
-          if (this.selectedSubmission?.id === sub.id) {
-            this.backToTable();
-          }
-          this.notify.success('Abgabe gelöscht');
-        },
-        error: () => this.notify.error('Fehler beim Löschen'),
-      });
+      this.formService.deleteSubmission(this.formId, sub.id)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            this.submissions = this.submissions.filter(s => s.id !== sub.id);
+            if (this.selectedSubmission?.id === sub.id) {
+              this.backToTable();
+            }
+            this.notify.success('Abgabe gelöscht');
+          },
+          error: () => this.notify.error('Fehler beim Löschen'),
+        });
+    });
   }
 
   exportCsv(): void {

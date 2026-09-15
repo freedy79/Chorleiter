@@ -1,0 +1,18 @@
+.dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedback-form {
+  display: block;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.user-hint {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.65);
+}

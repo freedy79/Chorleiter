@@ -23,10 +23,17 @@
     </div>
   </div>
 
-  <ng-container *ngIf="(isHandset$ | async) !== true; else mobileView">
-    <div class="table-wrapper mat-elevation-z8">
-      <div class="table-scroll-container">
-        <mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
+  <app-data-state
+    [isLoading]="isLoading"
+    [isEmpty]="!isLoading && dataSource.data.length === 0"
+    emptyIcon="collections_bookmark"
+    emptyTitle="Keine Sammlungen vorhanden"
+    emptyMessage="Es wurden noch keine Sammlungen erstellt."
+  >
+    <ng-container *ngIf="(isHandset$ | async) !== true; else mobileView">
+      <div class="table-wrapper mat-elevation-z8">
+        <div class="table-scroll-container">
+          <mat-table [dataSource]="dataSource" matSort matSortActive="title" matSortDirection="asc">
 
           <!-- Cover Column -->
           <ng-container matColumnDef="cover">
@@ -101,57 +108,51 @@
             </mat-cell>
           </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)"
-            [class.selected]="selectedCollection?.id === row.id" class="highlight-on-hover"></mat-row>
-          <ng-container ataRow>
-            <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell" [attr.colspan]="displayedColumns.length">
-                Es wurden noch keine Sammlungen erstellt.
-              </td>
-            </tr>
-          </ng-container>
-        </mat-table>
+            <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+            <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openCollection(row)"
+              [class.selected]="selectedCollection?.id === row.id" class="highlight-on-hover"></mat-row>
+          </mat-table>
+        </div>
+        <mat-paginator [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons
+          class="mat-paginator-sticky"></mat-paginator>
       </div>
-      <mat-paginator [pageSizeOptions]="pageSizeOptions" [pageSize]="pageSize" showFirstLastButtons
-        class="mat-paginator-sticky"></mat-paginator>
-    </div>
-  </ng-container>
+    </ng-container>
 
-  <ng-template #mobileView>
-    <div class="mobile-list">
-      <div class="mobile-item" *ngFor="let collection of dataSource.data" (click)="toggleSelection(collection)">
-        <img *ngIf="collection.coverImage" [appCachedImage]="collection.id" cacheType="collection" alt="Cover" class="cover-img" [lazyLoad]="true" />
-        <div class="collection_title_block">
-          <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
-          <div class="title">{{ collection.title }}</div>
-          <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
-          <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
-        </div>
+    <ng-template #mobileView>
+      <div class="mobile-list">
+        <div class="mobile-item" *ngFor="let collection of dataSource.data" (click)="toggleSelection(collection)">
+          <img *ngIf="collection.coverImage" [appCachedImage]="collection.id" cacheType="collection" alt="Cover" class="cover-img" [lazyLoad]="true" />
+          <div class="collection_title_block">
+            <div class="prefix-hint" *ngIf="collection.singleEdition">{{ getCollectionComposer(collection) }}</div>
+            <div class="title">{{ collection.title }}</div>
+            <div class="subtitle-hint" *ngIf="collection.subtitle">{{ collection.subtitle }}</div>
+            <div class="prefix-hint" *ngIf="!collection.singleEdition && collection.prefix">{{ collection.prefix }}</div>
+          </div>
 
-        <div class="detail">Status:
-          <mat-icon [color]="collection.isAdded ? 'primary' : 'disabled'">{{ collection.isAdded ? 'check_circle' :
-            'do_not_disturb_on' }}</mat-icon>
-        </div>
-        <div class="detail">Stücke: {{ collection.pieceCount || 0 }}</div>
-        <div class="detail">Verlag: {{ collection.publisher || '-' }}</div>
-        <div class="mobile-actions" *ngIf="selectedCollection === collection">
-          <ng-container *ngIf="isDirector || isChoirAdmin || isAdmin">
-            <button mat-icon-button color="primary" (click)="syncCollection(collection); $event.stopPropagation()"
-              [matTooltip]="collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen'">
-              <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
+          <div class="detail">Status:
+            <mat-icon [color]="collection.isAdded ? 'primary' : 'disabled'">{{ collection.isAdded ? 'check_circle' :
+              'do_not_disturb_on' }}</mat-icon>
+          </div>
+          <div class="detail">Stücke: {{ collection.pieceCount || 0 }}</div>
+          <div class="detail">Verlag: {{ collection.publisher || '-' }}</div>
+          <div class="mobile-actions" *ngIf="selectedCollection === collection">
+            <ng-container *ngIf="isDirector || isChoirAdmin || isAdmin">
+              <button mat-icon-button color="primary" (click)="syncCollection(collection); $event.stopPropagation()"
+                [matTooltip]="collection.isAdded ? 'Aktualisieren' : 'Zum Repertoire hinzufügen'">
+                <mat-icon>{{ collection.isAdded ? 'sync' : 'add_circle_outline' }}</mat-icon>
+              </button>
+            </ng-container>
+            <mat-icon *ngIf="libraryItemIds.has(collection.id)" class="library-icon"
+              matTooltip="In Notenbibliothek vorhanden">
+              library_music
+            </mat-icon>
+            <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button [routerLink]="['/collections/edit', collection.id]"
+              matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
+              <mat-icon>edit</mat-icon>
             </button>
-          </ng-container>
-          <mat-icon *ngIf="libraryItemIds.has(collection.id)" class="library-icon"
-            matTooltip="In Notenbibliothek vorhanden">
-            library_music
-          </mat-icon>
-          <button *ngIf="isChoirAdmin || isAdmin" mat-icon-button [routerLink]="['/collections/edit', collection.id]"
-            matTooltip="Sammlung bearbeiten" (click)="$event.stopPropagation()">
-            <mat-icon>edit</mat-icon>
-          </button>
+          </div>
         </div>
       </div>
-    </div>
-  </ng-template>
+    </ng-template>
+  </app-data-state>
 </div>

@@ -6,6 +6,13 @@
         <mat-label>Datum</mat-label>
         <input matInput type="date" formControlName="date">
       </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Ereignisart</mat-label>
+        <mat-select formControlName="eventType">
+          <mat-option value="SERVICE">Gottesdienst</mat-option>
+          <mat-option value="REHEARSAL">Chorprobe</mat-option>
+        </mat-select>
+      </mat-form-field>
     </div>
     <mat-form-field appearance="outline" class="full-width">
       <mat-label>Notizen</mat-label>

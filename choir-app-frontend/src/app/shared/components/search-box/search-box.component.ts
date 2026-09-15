@@ -7,6 +7,7 @@ import { of } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SearchService, SearchSuggestion, SearchSuggestionType } from '@core/services/search.service';
 import { SearchHistoryService, SearchHistoryEntry } from '@core/services/search-history.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { Router, RouterModule } from '@angular/router';
 import { MaterialModule } from '@modules/material.module';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -58,6 +59,7 @@ export class SearchBoxComponent implements OnInit {
   constructor(
     private search: SearchService,
     private historyService: SearchHistoryService,
+    private dialogHelper: DialogHelperService,
     private router: Router,
     private sanitizer: DomSanitizer
   ) {}
@@ -135,11 +137,20 @@ export class SearchBoxComponent implements OnInit {
   }
 
   clearHistory(): void {
-    if (confirm('Suchhistorie komplett löschen?')) {
+    this.dialogHelper.confirm({
+      title: 'Suchhistorie löschen?',
+      message: 'Suchhistorie komplett löschen?',
+      confirmButtonText: 'Löschen',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
+      }
+
       this.historyService.clearHistory().subscribe(() => {
         this.historyEntries = [];
       });
-    }
+    });
   }
 
   deleteHistoryEntry(event: Event, entryId: number): void {

@@ -3,6 +3,7 @@ import { CommonModule, DOCUMENT, Location } from '@angular/common';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { MaterialModule } from '@modules/material.module';
 import { PracticeList, PracticeListItem } from '@core/models/practice-list';
@@ -13,6 +14,7 @@ import { AudioPlayerComponent } from '@shared/components/audio-player/audio-play
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { InlineLoadingComponent } from '@shared/components/inline-loading/inline-loading.component';
 import { PdfFullscreenDialogComponent } from '@shared/components/pdf-fullscreen-dialog/pdf-fullscreen-dialog.component';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -69,6 +71,7 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
     private practiceListService: PracticeListService,
     private notification: NotificationService,
     private apiService: ApiService,
+    private dialogHelper: DialogHelperService,
     private dialog: MatDialog,
     private sanitizer: DomSanitizer,
     @Inject(DOCUMENT) private document: Document
@@ -124,19 +127,31 @@ export class PracticeListDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const next = window.prompt('Neuer Titel der Übungsliste', this.list.title)?.trim();
-    if (!next || next === this.list.title) {
-      return;
-    }
-
-    this.practiceListService.updateList(this.listId, { title: next }).subscribe({
-      next: () => {
-        if (this.list) {
-          this.list.title = next;
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Übungsliste umbenennen',
+          message: 'Neuer Titel der Übungsliste',
+          label: 'Titel',
+          initialValue: this.list.title
         }
-        this.notification.success('Titel aktualisiert.');
-      },
-      error: () => this.notification.error('Titel konnte nicht aktualisiert werden.')
+      }
+    ).subscribe(result => {
+      const next = result?.trim();
+      if (!next || next === this.list?.title) {
+        return;
+      }
+
+      this.practiceListService.updateList(this.listId, { title: next }).subscribe({
+        next: () => {
+          if (this.list) {
+            this.list.title = next;
+          }
+          this.notification.success('Titel aktualisiert.');
+        },
+        error: () => this.notification.error('Titel konnte nicht aktualisiert werden.')
+      });
     });
   }
 

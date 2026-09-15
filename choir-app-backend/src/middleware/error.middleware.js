@@ -44,6 +44,10 @@ const errorHandler = (err, req, res, next) => {
     message: err.message || 'An unexpected error occurred.'
   };
 
+  if (err.code) {
+    response.code = err.code;
+  }
+
   // Add error details in development mode
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;
@@ -81,6 +85,32 @@ const notFoundHandler = (req, res, next) => {
 };
 
 /**
+ * Builds a searchable error code from the request route and method.
+ * Format: {PREFIX}_{METHOD}_{ROUTER_BASE}_{ROUTE_PATTERN}
+ * Example: DB_DELETE_PIECES_LINK_FILE
+ * Search for any segment of the code in the routes files to find the failing endpoint.
+ */
+function buildErrorCode(req, prefix) {
+  const baseSlug = (req.baseUrl || '')
+    .replace(/^\/api\//, '')
+    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .toUpperCase();
+
+  const routeSlug = ((req.route && req.route.path) || req.path || '')
+    .replace(/[^a-zA-Z0-9]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .toUpperCase();
+
+  return [prefix, req.method, baseSlug, routeSlug]
+    .filter(Boolean)
+    .join('_')
+    .replace(/_+/g, '_');
+}
+
+/**
  * Sequelize Error Handler
  * Converts Sequelize errors to AppError instances
  */
@@ -95,7 +125,8 @@ const sequelizeErrorHandler = (err, req, res, next) => {
     const validationError = new AppError(
       'Validation failed.',
       400,
-      details
+      details,
+      buildErrorCode(req, 'VAL')
     );
     validationError.isOperational = true;
     return next(validationError);
@@ -106,7 +137,9 @@ const sequelizeErrorHandler = (err, req, res, next) => {
     const field = err.errors[0]?.path || 'field';
     const conflictError = new AppError(
       `A record with this ${field} already exists.`,
-      409
+      409,
+      null,
+      buildErrorCode(req, 'UNQ')
     );
     conflictError.isOperational = true;
     return next(conflictError);
@@ -116,7 +149,9 @@ const sequelizeErrorHandler = (err, req, res, next) => {
   if (err.name === 'SequelizeForeignKeyConstraintError') {
     const foreignKeyError = new AppError(
       'Cannot complete operation due to related records.',
-      400
+      400,
+      null,
+      buildErrorCode(req, 'FK')
     );
     foreignKeyError.isOperational = true;
     return next(foreignKeyError);
@@ -124,10 +159,28 @@ const sequelizeErrorHandler = (err, req, res, next) => {
 
   // Handle Sequelize database errors
   if (err.name === 'SequelizeDatabaseError') {
+    const code = buildErrorCode(req, 'DB');
+    logger.error('SequelizeDatabaseError during request', {
+      code,
+      path: req.path,
+      method: req.method,
+      ip: req.ip,
+      message: err.message,
+      sql: err.sql,
+      parentMessage: err.parent?.message,
+      parentCode: err.parent?.code,
+      parentDetail: err.parent?.detail,
+      parentConstraint: err.parent?.constraint,
+      originalMessage: err.original?.message,
+      originalCode: err.original?.code,
+      stack: err.stack,
+    });
+
     const dbError = new AppError(
       'Database operation failed.',
       500,
-      process.env.NODE_ENV === 'development' ? err.message : null
+      process.env.NODE_ENV === 'development' ? err.message : null,
+      code
     );
     return next(dbError);
   }

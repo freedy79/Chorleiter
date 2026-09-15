@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>GIF auswählen</h2>
+
+<div mat-dialog-content class="gif-dialog-content">
+  <div class="gif-search-row">
+    <mat-form-field appearance="outline" class="gif-search-field">
+      <mat-label>GIF suchen</mat-label>
+      <input
+        matInput
+        [(ngModel)]="query"
+        placeholder="z. B. Applaus, Chor, Danke"
+        (keydown.enter)="search()"
+      />
+    </mat-form-field>
+
+    <button mat-raised-button color="primary" type="button" (click)="search()" [disabled]="loading">
+      Suchen
+    </button>
+  </div>
+
+  <div class="gif-loading" *ngIf="loading">
+    <mat-spinner diameter="24"></mat-spinner>
+    <span>GIFs werden geladen…</span>
+  </div>
+
+  <div class="gif-grid" *ngIf="!loading && items.length > 0">
+    <button
+      type="button"
+      class="gif-item"
+      *ngFor="let item of items"
+      (click)="pickGif(item)"
+      [attr.aria-label]="'GIF auswählen: ' + item.title"
+      [title]="item.title"
+    >
+      <img [src]="item.previewUrl" [alt]="item.title" loading="lazy" />
+    </button>
+  </div>
+
+  <div class="gif-empty" *ngIf="!loading && items.length === 0">
+    <mat-icon>search_off</mat-icon>
+    <p *ngIf="searched">Keine GIFs gefunden. Versuch einen anderen Suchbegriff.</p>
+    <p *ngIf="!searched">Keine GIFs verfügbar.</p>
+  </div>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()">Abbrechen</button>
+</div>

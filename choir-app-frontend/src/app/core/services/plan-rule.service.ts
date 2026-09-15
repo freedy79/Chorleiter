@@ -16,7 +16,7 @@ export class PlanRuleService {
   }
 
   createPlanRule(
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     choirId?: number
   ): Observable<PlanRule> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
@@ -25,7 +25,7 @@ export class PlanRuleService {
 
   updatePlanRule(
     id: number,
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     choirId?: number
   ): Observable<PlanRule> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;

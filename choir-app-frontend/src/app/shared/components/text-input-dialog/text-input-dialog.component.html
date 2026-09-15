@@ -1,0 +1,27 @@
+<div mat-dialog-container>
+  <div mat-dialog-header *ngIf="data.title">
+    <h2 mat-dialog-title>{{ data.title }}</h2>
+  </div>
+
+  <div mat-dialog-content>
+    <p *ngIf="data.message" class="dialog-message">{{ data.message }}</p>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label *ngIf="data.label">{{ data.label }}</mat-label>
+      <input matInput
+             [(ngModel)]="inputValue"
+             [placeholder]="data.placeholder || ''"
+             [maxlength]="data.maxLength || 1000"
+             (keydown)="onKeyDown($event)"
+             cdkFocusInitial>
+      <mat-hint *ngIf="data.maxLength">
+        {{ inputValue.length }} / {{ data.maxLength }}
+      </mat-hint>
+    </mat-form-field>
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Abbrechen</button>
+    <button mat-raised-button color="primary" (click)="onConfirm()">OK</button>
+  </div>
+</div>

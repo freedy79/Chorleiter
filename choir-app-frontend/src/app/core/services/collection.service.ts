@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { Collection } from '../models/collection';
 import { ImageCacheService } from './image-cache.service';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class CollectionService {
@@ -31,8 +32,12 @@ export class CollectionService {
     return this.http.put<{ jobId: string }>(`${this.apiUrl}/collections/${id}`, data);
   }
 
-  getUpdateStatus(jobId: string): Observable<any> {
-    return this.http.get(`${this.apiUrl}/collections/status/${jobId}`);
+  getUpdateStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    const httpOptions: { context?: HttpContext } = {};
+    if (options?.silent) {
+      httpOptions.context = new HttpContext().set(SKIP_GLOBAL_LOADING, true);
+    }
+    return this.http.get(`${this.apiUrl}/collections/status/${jobId}`, httpOptions);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {

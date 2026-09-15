@@ -18,6 +18,7 @@ import { environment } from 'src/environments/environment';
 import { ChoirLog } from 'src/app/core/models/choir-log';
 import { CHOIR_ROLE_LABELS } from 'src/app/shared/constants/roles.constants';
 import { CollectionCopiesDialogComponent } from '../../collections/collection-copies-dialog.component';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
 import { LibraryItem } from '@core/models/library-item';
 import { NotificationService } from '@core/services/notification.service';
 import { DialogHelperService } from '@core/services/dialog-helper.service';
@@ -77,8 +78,11 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
   sundayWeeks: number[] = [];
   weekdayDay: number | null = null;
   weekdayWeeks: number[] = [];
+  rehearsalDay: number | null = null;
+  rehearsalWeeks: number[] = [];
   private sundayRuleId: number | null = null;
   private weekdayRuleId: number | null = null;
+  private rehearsalRuleId: number | null = null;
 
 
   joinLink = '';
@@ -159,16 +163,24 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
           this.singerMenu[opt.key] = menu[opt.key] !== false;
         });
         const rules = pageData.planRules as any[] || [];
-        const sundayRule = rules.find(r => r.dayOfWeek === 0);
+        const serviceRules = rules.filter(r => (r.eventType || 'SERVICE') === 'SERVICE');
+        const rehearsalRules = rules.filter(r => r.eventType === 'REHEARSAL');
+        const sundayRule = serviceRules.find(r => r.dayOfWeek === 0);
         if (sundayRule) {
           this.sundayRuleId = sundayRule.id;
           this.sundayWeeks = sundayRule.weeks && sundayRule.weeks.length ? sundayRule.weeks : [0];
         }
-        const weekdayRule = rules.find(r => r.dayOfWeek === 3 || r.dayOfWeek === 4);
+        const weekdayRule = serviceRules.find(r => r.dayOfWeek === 3 || r.dayOfWeek === 4);
         if (weekdayRule) {
           this.weekdayRuleId = weekdayRule.id;
           this.weekdayDay = weekdayRule.dayOfWeek;
           this.weekdayWeeks = weekdayRule.weeks && weekdayRule.weeks.length ? weekdayRule.weeks : [0];
+        }
+        const rehearsalRule = rehearsalRules.find(r => typeof r.dayOfWeek === 'number');
+        if (rehearsalRule) {
+          this.rehearsalRuleId = rehearsalRule.id;
+          this.rehearsalDay = rehearsalRule.dayOfWeek;
+          this.rehearsalWeeks = rehearsalRule.weeks && rehearsalRule.weeks.length ? rehearsalRule.weeks : [0];
         }
         const choir = this.authService.activeChoir$.value;
         if (choir) {
@@ -352,19 +364,20 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
 
     const sundayWeeks = (this.sundayWeeks.includes(0) || this.sundayWeeks.length === 0) ? null : this.sundayWeeks;
     const weekdayWeeks = (this.weekdayWeeks.includes(0) || this.weekdayWeeks.length === 0) ? null : this.weekdayWeeks;
+    const rehearsalWeeks = (this.rehearsalWeeks.includes(0) || this.rehearsalWeeks.length === 0) ? null : this.rehearsalWeeks;
 
     const ops = [] as Observable<any>[];
 
     if (this.sundayRuleId) {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks }, opts));
+      ops.push(this.apiService.updatePlanRule(this.sundayRuleId, { dayOfWeek: 0, weeks: sundayWeeks, eventType: 'SERVICE', notes: 'Gottesdienst' }, opts));
     } else {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
-      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks }, opts));
+      ops.push(this.apiService.createPlanRule({ dayOfWeek: 0, weeks: sundayWeeks, eventType: 'SERVICE', notes: 'Gottesdienst' }, opts));
     }
 
     if (this.weekdayDay !== null) {
-      const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks };
+      const data = { dayOfWeek: this.weekdayDay, weeks: weekdayWeeks, eventType: 'SERVICE' as const, notes: 'Gottesdienst' };
       if (this.weekdayRuleId) {
         const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
         ops.push(this.apiService.updatePlanRule(this.weekdayRuleId, data, opts));
@@ -375,6 +388,20 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
     } else if (this.weekdayRuleId) {
       const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
       ops.push(this.apiService.deletePlanRule(this.weekdayRuleId, opts));
+    }
+
+    if (this.rehearsalDay !== null) {
+      const rehearsalData = { dayOfWeek: this.rehearsalDay, weeks: rehearsalWeeks, eventType: 'REHEARSAL' as const, notes: 'Chorprobe' };
+      if (this.rehearsalRuleId) {
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        ops.push(this.apiService.updatePlanRule(this.rehearsalRuleId, rehearsalData, opts));
+      } else {
+        const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+        ops.push(this.apiService.createPlanRule(rehearsalData, opts));
+      }
+    } else if (this.rehearsalRuleId) {
+      const opts = this.adminChoirId ? { choirId: this.adminChoirId } : undefined;
+      ops.push(this.apiService.deletePlanRule(this.rehearsalRuleId, opts));
     }
 
     forkJoin(ops).subscribe({
@@ -401,10 +428,27 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
       this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
 
     } else {
-      const copiesStr = prompt('Anzahl der Exemplare eingeben:');
-      const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
-      if (!isNaN(copies) && copies > 0) {
-        this.apiService.initCollectionCopies(collection.id, copies).subscribe(() => {
+      this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+        TextInputDialogComponent,
+        {
+          data: {
+            title: 'Exemplare initialisieren',
+            message: 'Anzahl der Exemplare eingeben:',
+            label: 'Anzahl Exemplare',
+            maxLength: 4
+          }
+        }
+      ).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(copiesStr => {
+        const copies = copiesStr ? parseInt(copiesStr, 10) : NaN;
+        if (isNaN(copies) || copies <= 0) {
+          return;
+        }
+
+        this.apiService.initCollectionCopies(collection.id, copies).pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(() => {
           this.collectionCopyIds.add(collection.id);
           const dialogConfig = new MatDialogConfig();
 
@@ -415,7 +459,7 @@ export class ManageChoirComponent implements OnInit, OnDestroy {
           dialogConfig.data = { collectionId: collection.id }; // Pass data to the dialog component
           this.dialog.open(CollectionCopiesDialogComponent, dialogConfig);
         });
-      }
+      });
     }
   }
 

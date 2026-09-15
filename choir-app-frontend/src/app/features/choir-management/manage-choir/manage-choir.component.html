@@ -99,6 +99,29 @@
           <div class="actions-footer">
             <button mat-flat-button color="primary" (click)="saveServiceRules()">Speichern</button>
           </div>
+
+          <h3>Chorproben</h3>
+          <div class="weekday-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Wochentag</mat-label>
+              <mat-select [(ngModel)]="rehearsalDay">
+                <mat-option [value]="null">-</mat-option>
+                <mat-option [value]="1">Montag</mat-option>
+                <mat-option [value]="2">Dienstag</mat-option>
+                <mat-option [value]="3">Mittwoch</mat-option>
+                <mat-option [value]="4">Donnerstag</mat-option>
+                <mat-option [value]="5">Freitag</mat-option>
+                <mat-option [value]="6">Samstag</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="rehearsalDay !== null">
+              <mat-label>Wochen</mat-label>
+              <mat-select multiple [(ngModel)]="rehearsalWeeks">
+                <mat-option [value]="0">jeden</mat-option>
+                <mat-option *ngFor="let w of [1,2,3,4,5]" [value]="w">{{w}}.</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
         </section>
 
       </div>

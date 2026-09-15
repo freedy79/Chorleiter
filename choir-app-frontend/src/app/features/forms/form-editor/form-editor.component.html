@@ -21,8 +21,9 @@
         <mat-icon>publish</mat-icon> Veröffentlichen
       </button>
       <button mat-stroked-button color="warn" (click)="closeForm()"
-        *ngIf="isEdit && form.get('status')?.value === 'published'">
-        <mat-icon>lock</mat-icon> Schließen
+        *ngIf="isEdit && form.get('status')?.value === 'published'"
+        matTooltip="Beendet die Umfrage für neue Abgaben. Ergebnisse bleiben erhalten.">
+        <mat-icon>lock</mat-icon> Umfrage beenden
       </button>
     </div>
   </div>
@@ -37,13 +38,17 @@
       <mat-card-content>
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Formulartitel</mat-label>
-          <input matInput formControlName="title" placeholder="z.B. Anmeldung Chorfreizeit">
+          <input matInput formControlName="title" placeholder="z.B. Anmeldung Chorfreizeit" [maxlength]="formTitleMaxLength">
+          <mat-hint align="end">{{ getLength(form.get('title')?.value) }} / {{ formTitleMaxLength }}</mat-hint>
+          <mat-error *ngIf="form.get('title')?.hasError('maxlength')">Maximal {{ formTitleMaxLength }} Zeichen</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Beschreibung (optional)</mat-label>
-          <textarea matInput formControlName="description" rows="3"
+          <textarea matInput formControlName="description" rows="3" [maxlength]="descriptionMaxLength"
             placeholder="Kurze Beschreibung oder Einleitung zum Formular"></textarea>
+          <mat-hint align="end">{{ getLength(form.get('description')?.value) }} / {{ descriptionMaxLength }}</mat-hint>
+          <mat-error *ngIf="form.get('description')?.hasError('maxlength')">Maximal {{ descriptionMaxLength }} Zeichen</mat-error>
         </mat-form-field>
 
         <div class="date-row">
@@ -65,9 +70,28 @@
         </div>
 
         <div class="checkbox-row">
-          <mat-checkbox formControlName="allowAnonymous">Anonyme Teilnahme erlauben</mat-checkbox>
+          <mat-checkbox formControlName="allowAnonymous">
+            Anonyme Teilnahme erlauben
+          </mat-checkbox>
           <mat-checkbox formControlName="allowMultipleSubmissions">Mehrfach-Abgabe erlauben</mat-checkbox>
           <mat-checkbox formControlName="notifyOnSubmission">E-Mail-Benachrichtigung bei Abgabe</mat-checkbox>
+        </div>
+        <p class="form-setting-hint">
+          Wenn anonym <strong>deaktiviert</strong> ist, zeigt das öffentliche Formular systemseitige Felder für Name und E-Mail an.
+          Wenn anonym <strong>aktiviert</strong> ist, werden diese Systemfelder ausgeblendet – ideal, wenn du eigene Pflichtfelder dafür angelegt hast.
+        </p>
+        <div class="form-setting-warning" *ngIf="shouldShowSubmitterDuplicateWarning()">
+          <mat-icon>warning_amber</mat-icon>
+          <div class="warning-content">
+            <span>
+              {{ getSubmitterDuplicateWarningText() }}
+              Aktiviere „Anonyme Teilnahme erlauben“, wenn nur deine eigenen Felder verwendet werden sollen.
+            </span>
+            <button mat-stroked-button type="button" color="warn" class="warning-action"
+              (click)="enableAnonymousParticipation()">
+              Jetzt aktivieren
+            </button>
+          </div>
         </div>
 
         <mat-form-field appearance="outline">
@@ -78,7 +102,9 @@
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Bestätigungstext nach Absenden</mat-label>
-          <input matInput formControlName="confirmationText">
+          <input matInput formControlName="confirmationText" [maxlength]="confirmationTextMaxLength">
+          <mat-hint align="end">{{ getLength(form.get('confirmationText')?.value) }} / {{ confirmationTextMaxLength }}</mat-hint>
+          <mat-error *ngIf="form.get('confirmationText')?.hasError('maxlength')">Maximal {{ confirmationTextMaxLength }} Zeichen</mat-error>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
@@ -90,116 +116,238 @@
         <mat-card-subtitle>Ziehe Felder um die Reihenfolge zu ändern</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <div class="fields-list" cdkDropList (cdkDropListDropped)="dropField($event)">
-          <div *ngFor="let field of fields.controls; let i = index" cdkDrag class="field-item" [formGroupName]="i"
-            formArrayName="fields">
-            <div class="drag-handle" cdkDragHandle>
-              <mat-icon>drag_indicator</mat-icon>
-            </div>
-
-            <div class="field-content" [formGroup]="$any(field)">
-              <div class="field-header">
-                <mat-icon class="field-type-icon">{{ getFieldTypeIcon($any(field).get('type').value) }}</mat-icon>
-                <span class="field-type-label">{{ getFieldTypeLabel($any(field).get('type').value) }}</span>
-
-                <mat-form-field appearance="outline" class="type-select">
-                  <mat-label>Typ</mat-label>
-                  <mat-select formControlName="type">
-                    <mat-option *ngFor="let t of fieldTypes" [value]="t.value">
-                      <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
-                    </mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <span class="spacer"></span>
-
-                <mat-checkbox formControlName="required" *ngIf="!isDecorativeField($any(field).get('type').value)">
-                  Pflichtfeld
-                </mat-checkbox>
-
-                <button mat-icon-button color="warn" type="button" (click)="removeField(i)" matTooltip="Feld entfernen">
-                  <mat-icon>delete</mat-icon>
-                </button>
+        <div formArrayName="fields">
+          <div class="fields-list" cdkDropList (cdkDropListDropped)="dropField($event)">
+            <div *ngFor="let item of getEditorItems(); trackBy: trackByEditorItem"
+              cdkDrag class="field-item" [class.address-editor-block]="isAddressBlockItem(item)">
+              <div class="drag-handle" cdkDragHandle>
+                <mat-icon>drag_indicator</mat-icon>
               </div>
 
-              <mat-form-field appearance="outline" class="full-width"
-                *ngIf="!isDecorativeField($any(field).get('type').value)">
-                <mat-label>Feldbezeichnung</mat-label>
-                <input matInput formControlName="label" placeholder="z.B. Dein Name">
-              </mat-form-field>
+              <div class="field-content" *ngIf="!isAddressBlockItem(item)" [formGroupName]="getFieldIndexFromItem(item)">
+                <ng-container *ngIf="getFieldControlAt(getFieldIndexFromItem(item)) as field">
+                  <div class="field-header">
+                    <mat-icon class="field-type-icon">{{ getFieldTypeIcon($any(field).get('type').value) }}</mat-icon>
+                    <span class="field-type-label">{{ getFieldTypeLabel($any(field).get('type').value) }}</span>
 
-              <mat-form-field appearance="outline" class="full-width"
-                *ngIf="isDecorativeField($any(field).get('type').value) && $any(field).get('type').value === 'heading'">
-                <mat-label>Überschrift</mat-label>
-                <input matInput formControlName="label" placeholder="Abschnittsüberschrift">
-              </mat-form-field>
+                    <mat-form-field appearance="outline" class="type-select">
+                      <mat-label>Typ</mat-label>
+                      <mat-select formControlName="type" (selectionChange)="onFieldTypeChanged(getFieldIndexFromItem(item), $event.value)">
+                        <mat-option *ngFor="let t of fieldTypes" [value]="t.value">
+                          <mat-icon>{{ t.icon }}</mat-icon> {{ t.label }}
+                        </mat-option>
+                      </mat-select>
+                    </mat-form-field>
 
-              <mat-form-field appearance="outline" class="full-width"
-                *ngIf="!isDecorativeField($any(field).get('type').value)">
-                <mat-label>Platzhalter (optional)</mat-label>
-                <input matInput formControlName="placeholder">
-              </mat-form-field>
+                    <span class="spacer"></span>
 
-              <!-- Options for Select/Radio/Multi-Checkbox fields -->
-              <div *ngIf="needsOptions($any(field).get('type').value)" class="options-section">
-                <h4>Auswahloptionen</h4>
-                <div *ngFor="let opt of getOptions(i); let oi = index" class="option-row">
-                  <mat-form-field appearance="outline" class="option-input">
-                    <mat-label>Option {{ oi + 1 }}</mat-label>
-                    <input matInput [value]="opt" (input)="updateOption(i, oi, $any($event.target).value)">
+                    <mat-checkbox formControlName="required" *ngIf="!isDecorativeField($any(field).get('type').value)">
+                      Pflichtfeld
+                    </mat-checkbox>
+
+                    <button mat-icon-button color="warn" type="button"
+                      (click)="removeField(getFieldIndexFromItem(item))" matTooltip="Feld entfernen">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+
+                  <mat-form-field appearance="outline" class="full-width"
+                    *ngIf="!isDecorativeField($any(field).get('type').value)">
+                    <mat-label>Feldbezeichnung</mat-label>
+                    <input matInput formControlName="label" placeholder="z.B. Dein Name" [maxlength]="fieldLabelMaxLength">
+                    <mat-hint align="end">{{ getLength($any(field).get('label').value) }} / {{ fieldLabelMaxLength }}</mat-hint>
+                    <mat-error *ngIf="$any(field).get('label').hasError('maxlength')">Maximal {{ fieldLabelMaxLength }} Zeichen</mat-error>
                   </mat-form-field>
-                  <button mat-icon-button color="warn" type="button" (click)="removeOption(i, oi)">
-                    <mat-icon>remove_circle</mat-icon>
-                  </button>
+
+                  <mat-form-field appearance="outline" class="full-width"
+                    *ngIf="isDecorativeField($any(field).get('type').value) && $any(field).get('type').value === 'heading'">
+                    <mat-label>Überschrift</mat-label>
+                    <input matInput formControlName="label" placeholder="Abschnittsüberschrift" [maxlength]="fieldLabelMaxLength">
+                    <mat-hint align="end">{{ getLength($any(field).get('label').value) }} / {{ fieldLabelMaxLength }}</mat-hint>
+                    <mat-error *ngIf="$any(field).get('label').hasError('maxlength')">Maximal {{ fieldLabelMaxLength }} Zeichen</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="full-width"
+                    *ngIf="!isDecorativeField($any(field).get('type').value)">
+                    <mat-label>Platzhalter (optional)</mat-label>
+                    <input matInput formControlName="placeholder" [maxlength]="fieldPlaceholderMaxLength">
+                    <mat-hint align="end">{{ getLength($any(field).get('placeholder').value) }} / {{ fieldPlaceholderMaxLength }}</mat-hint>
+                    <mat-error *ngIf="$any(field).get('placeholder').hasError('maxlength')">Maximal {{ fieldPlaceholderMaxLength }} Zeichen</mat-error>
+                  </mat-form-field>
+
+                  <div *ngIf="needsOptions($any(field).get('type').value)" class="options-section">
+                    <h4>Auswahloptionen</h4>
+                    <div *ngFor="let opt of getOptions(getFieldIndexFromItem(item)); let oi = index; trackBy: trackByOptionIndex" class="option-row">
+                      <mat-form-field appearance="outline" class="option-input">
+                        <mat-label>Option {{ oi + 1 }}</mat-label>
+                        <input matInput [value]="opt" (input)="updateOption(getFieldIndexFromItem(item), oi, $any($event.target).value)">
+                      </mat-form-field>
+                      <button mat-icon-button color="warn" type="button" (click)="removeOption(getFieldIndexFromItem(item), oi)">
+                        <mat-icon>remove_circle</mat-icon>
+                      </button>
+                    </div>
+                    <button mat-stroked-button type="button" (click)="addOption(getFieldIndexFromItem(item))">
+                      <mat-icon>add</mat-icon> Option hinzufügen
+                    </button>
+                  </div>
+
+                  <div *ngIf="getFieldIndexFromItem(item) > 0 && !isDecorativeField($any(field).get('type').value)" class="show-if-section">
+                    <mat-checkbox [checked]="!!$any(field).get('showIf').value"
+                      (change)="toggleShowIf(getFieldIndexFromItem(item), $event.checked)">
+                      Bedingte Sichtbarkeit
+                    </mat-checkbox>
+                    <div *ngIf="$any(field).get('showIf').value" class="show-if-config">
+                      <span class="show-if-label">Zeige dieses Feld nur wenn</span>
+                      <mat-form-field appearance="outline" class="show-if-field-select">
+                        <mat-label>Feld</mat-label>
+                        <mat-select [value]="$any(field).get('showIf').value?.fieldId"
+                          (selectionChange)="updateShowIf(getFieldIndexFromItem(item), 'fieldId', $event.value)">
+                          <mat-option *ngFor="let f of getPreviousFields(getFieldIndexFromItem(item))" [value]="f.id ?? f.sortOrder">
+                            {{ f.label || '(Ohne Bezeichnung)' }}
+                          </mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="show-if-operator">
+                        <mat-label>Bedingung</mat-label>
+                        <mat-select [value]="$any(field).get('showIf').value?.operator"
+                          (selectionChange)="updateShowIf(getFieldIndexFromItem(item), 'operator', $event.value)">
+                          <mat-option value="equals">ist gleich</mat-option>
+                          <mat-option value="not_equals">ist nicht gleich</mat-option>
+                          <mat-option value="contains">enthält</mat-option>
+                          <mat-option value="not_empty">ist nicht leer</mat-option>
+                          <mat-option value="is_empty">ist leer</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="show-if-value"
+                        *ngIf="$any(field).get('showIf').value?.operator !== 'not_empty' && $any(field).get('showIf').value?.operator !== 'is_empty'">
+                        <mat-label>Wert</mat-label>
+                        <input matInput [value]="$any(field).get('showIf').value?.value || ''"
+                          (input)="updateShowIf(getFieldIndexFromItem(item), 'value', $any($event.target).value)">
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+
+              <div class="field-content address-block-editor-content" *ngIf="isAddressBlockItem(item)">
+                <div class="address-block-editor-header">
+                  <div class="address-block-editor-title">
+                    <mat-icon>home</mat-icon>
+                    <div>
+                      <h3>Adressblock</h3>
+                      <p>Einmalig im Formular, intern weiterhin als einzelne Felder gespeichert.</p>
+                    </div>
+                  </div>
+
+                  <div class="address-block-editor-actions">
+                    <mat-slide-toggle
+                      [checked]="isAddressBlockFullyRequired(item.blockId!)"
+                      (change)="setAddressBlockRequired(item.blockId!, $event.checked)">
+                      Pflichtfelder aktiv
+                    </mat-slide-toggle>
+                    <button mat-icon-button color="warn" type="button" (click)="removeAddressBlock(item.blockId!)"
+                      matTooltip="Adressblock entfernen">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
                 </div>
-                <button mat-stroked-button type="button" (click)="addOption(i)">
-                  <mat-icon>add</mat-icon> Option hinzufügen
-                </button>
-              </div>
 
-              <!-- Conditional Visibility (showIf) -->
-              <div *ngIf="i > 0 && !isDecorativeField($any(field).get('type').value)" class="show-if-section">
-                <mat-checkbox [checked]="!!$any(field).get('showIf').value"
-                  (change)="toggleShowIf(i, $event.checked)">
-                  Bedingte Sichtbarkeit
-                </mat-checkbox>
-                <div *ngIf="$any(field).get('showIf').value" class="show-if-config">
-                  <span class="show-if-label">Zeige dieses Feld nur wenn</span>
-                  <mat-form-field appearance="outline" class="show-if-field-select">
-                    <mat-label>Feld</mat-label>
-                    <mat-select [value]="$any(field).get('showIf').value?.fieldId"
-                      (selectionChange)="updateShowIf(i, 'fieldId', $event.value)">
-                      <mat-option *ngFor="let f of getPreviousFields(i)" [value]="f.id ?? f.sortOrder">
-                        {{ f.label || '(Ohne Bezeichnung)' }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="show-if-operator">
-                    <mat-label>Bedingung</mat-label>
-                    <mat-select [value]="$any(field).get('showIf').value?.operator"
-                      (selectionChange)="updateShowIf(i, 'operator', $event.value)">
-                      <mat-option value="equals">ist gleich</mat-option>
-                      <mat-option value="not_equals">ist nicht gleich</mat-option>
-                      <mat-option value="contains">enthält</mat-option>
-                      <mat-option value="not_empty">ist nicht leer</mat-option>
-                      <mat-option value="is_empty">ist leer</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="show-if-value"
-                    *ngIf="$any(field).get('showIf').value?.operator !== 'not_empty' && $any(field).get('showIf').value?.operator !== 'is_empty'">
-                    <mat-label>Wert</mat-label>
-                    <input matInput [value]="$any(field).get('showIf').value?.value || ''"
-                      (input)="updateShowIf(i, 'value', $any($event.target).value)">
-                  </mat-form-field>
+                <div class="address-block-sections">
+                  <section class="address-block-section">
+                    <h4>PERSÖNLICHE ANGABEN</h4>
+                    <div class="address-block-grid personal-grid">
+                      <div class="address-block-field-editor"
+                        *ngFor="let blockField of getAddressBlockControls(item)"
+                        [formGroupName]="blockField.index"
+                        [ngClass]="'role-' + getAddressBlockRole(blockField.control)"
+                        [class.optional-field]="isOptionalAddressRole(getAddressBlockRole(blockField.control)!)"
+                        [hidden]="!['salutation','title','firstName','lastName'].includes(getAddressBlockRole(blockField.control) || '')">
+                        <div class="address-block-field-label-row">
+                          <span class="mini-label">{{ getAddressRoleLabel(getAddressBlockRole(blockField.control)) }}</span>
+                          <mat-chip-set>
+                            <mat-chip>{{ blockField.control.get('required')?.value ? 'Pflicht' : 'Optional' }}</mat-chip>
+                          </mat-chip-set>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Bezeichnung</mat-label>
+                          <input matInput formControlName="label" [maxlength]="fieldLabelMaxLength">
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width" *ngIf="$any(blockField.control).get('type').value === 'text_short' || $any(blockField.control).get('type').value === 'select'">
+                          <mat-label>Platzhalter</mat-label>
+                          <input matInput formControlName="placeholder" [maxlength]="fieldPlaceholderMaxLength">
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section class="address-block-section">
+                    <h4>ANSCHRIFT</h4>
+                    <div class="address-block-grid address-grid">
+                      <div class="address-block-field-editor"
+                        *ngFor="let blockField of getAddressBlockControls(item)"
+                        [formGroupName]="blockField.index"
+                        [ngClass]="'role-' + getAddressBlockRole(blockField.control)"
+                        [class.optional-field]="isOptionalAddressRole(getAddressBlockRole(blockField.control)!)"
+                        [hidden]="['salutation','title','firstName','lastName'].includes(getAddressBlockRole(blockField.control) || '')">
+                        <div class="address-block-field-label-row">
+                          <span class="mini-label">{{ getAddressRoleLabel(getAddressBlockRole(blockField.control)) }}</span>
+                          <mat-chip-set>
+                            <mat-chip>{{ blockField.control.get('required')?.value ? 'Pflicht' : 'Optional' }}</mat-chip>
+                          </mat-chip-set>
+                        </div>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Bezeichnung</mat-label>
+                          <input matInput formControlName="label" [maxlength]="fieldLabelMaxLength">
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="full-width">
+                          <mat-label>Platzhalter</mat-label>
+                          <input matInput formControlName="placeholder" [maxlength]="fieldPlaceholderMaxLength">
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <div class="field-presets-section">
+          <div class="preset-card">
+            <div class="preset-header">
+              <mat-icon>home</mat-icon>
+              <div>
+                <h3>Standardblock: Adresse</h3>
+                <p>
+                  Fügt Anrede, Vorname, Name, Straße & Hausnummer, Adresszusatz, PLZ, Wohnort und optional Land
+                  als einzeln auswertbare Felder ein.
+                </p>
+              </div>
+            </div>
+            <div class="preset-actions">
+              <button mat-flat-button color="primary" type="button" (click)="addStandardAddressBlock(true)" [disabled]="hasStandardAddressBlock()">
+                <mat-icon>playlist_add</mat-icon>
+                Als Pflichtfelder einfügen
+              </button>
+              <button mat-stroked-button type="button" (click)="addStandardAddressBlock(false)" [disabled]="hasStandardAddressBlock()">
+                <mat-icon>add</mat-icon>
+                Ohne Pflichtfelder einfügen
+              </button>
+            </div>
+            <small class="preset-hint">
+              Hinweis: Der Block kann nur <strong>einmal</strong> eingefügt werden. <strong>Land</strong>, <strong>Titel</strong>
+              und <strong>Adresszusatz</strong> bleiben bewusst optional.
+            </small>
+          </div>
+        </div>
+
         <!-- Add field buttons -->
         <div class="add-field-section">
-          <p class="add-label">Feld hinzufügen:</p>
+          <p class="add-label">Einzelfeld hinzufügen:</p>
           <div class="add-field-buttons">
             <button *ngFor="let t of fieldTypes" mat-stroked-button type="button"
               (click)="addField(t.value)" class="add-field-btn" [matTooltip]="t.label">

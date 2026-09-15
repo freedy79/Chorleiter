@@ -1,6 +1,12 @@
 const db = require('../models');
 const logger = require('../config/logger');
-const { encryptGCM, decryptGCM } = require('../services/encryption.service');
+const { encryptGCM } = require('../services/encryption.service');
+const {
+    ENC_PREFIX,
+    PII_FIELDS,
+    encryptPiiField,
+    decryptPiiField,
+} = require('../utils/pii-crypto');
 
 /**
  * Migration: encrypt sensitive personal fields in the users table.
@@ -19,8 +25,6 @@ const { encryptGCM, decryptGCM } = require('../services/encryption.service');
  */
 
 const MIGRATION_FLAG = 'user_pii_encrypted_v1';
-const ENC_PREFIX = 'enc:';
-const PII_FIELDS = ['phone', 'street', 'postalCode', 'city', 'congregation', 'district'];
 
 async function encryptUserPersonalData() {
     try {
@@ -84,15 +88,4 @@ async function encryptUserPersonalData() {
 /**
  * Helpers exported so the user model hooks can use the same prefix/logic.
  */
-function encryptPiiField(val) {
-    if (!val || val.startsWith(ENC_PREFIX)) return val;
-    const ciphertext = encryptGCM(val);
-    return ciphertext ? ENC_PREFIX + ciphertext : val;
-}
-
-function decryptPiiField(val) {
-    if (!val || !val.startsWith(ENC_PREFIX)) return val;
-    return decryptGCM(val.slice(ENC_PREFIX.length)) ?? val;
-}
-
 module.exports = { encryptUserPersonalData, encryptPiiField, decryptPiiField, PII_FIELDS };

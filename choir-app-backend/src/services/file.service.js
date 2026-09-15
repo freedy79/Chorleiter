@@ -19,11 +19,37 @@ async function safeReaddir(sub) {
   }
 }
 
+async function listFilesWithSizes(sub) {
+  const names = await safeReaddir(sub);
+  const entries = await Promise.all(
+    names.map(async (name) => {
+      try {
+        const stat = await fs.stat(path.join(BASE_DIR, sub, name));
+        return {
+          filename: name,
+          sizeBytes: stat.isFile() ? stat.size : 0,
+        };
+      } catch {
+        return {
+          filename: name,
+          sizeBytes: 0,
+        };
+      }
+    })
+  );
+
+  return entries;
+}
+
+function sumSize(entries) {
+  return entries.reduce((total, entry) => total + (entry.sizeBytes || 0), 0);
+}
+
 async function listFiles() {
-  const [coverNames, imageNames, fileNames, collections, pieces, links] = await Promise.all([
-    safeReaddir(DIRS.covers),
-    safeReaddir(DIRS.images),
-    safeReaddir(DIRS.files),
+  const [coverEntries, imageEntries, fileEntries, collections, pieces, links] = await Promise.all([
+    listFilesWithSizes(DIRS.covers),
+    listFilesWithSizes(DIRS.images),
+    listFilesWithSizes(DIRS.files),
     db.collection.findAll({ attributes: ['id', 'title', 'coverImage'], where: { coverImage: { [Op.not]: null } } }),
     db.piece.findAll({ attributes: ['id', 'title', 'imageIdentifier'], where: { imageIdentifier: { [Op.not]: null } } }),
     db.piece_link.findAll({
@@ -49,23 +75,36 @@ async function listFiles() {
     if (file) fileMap.set(file, { id: l.piece?.id, title: l.piece?.title, downloadName: l.downloadName });
   });
 
+  const usage = {
+    covers: sumSize(coverEntries),
+    images: sumSize(imageEntries),
+    files: sumSize(fileEntries),
+  };
+
   return {
-    covers: coverNames.map(name => ({
-      filename: name,
-      collectionId: coverMap.get(name)?.id || null,
-      collectionTitle: coverMap.get(name)?.title || null,
+    covers: coverEntries.map(entry => ({
+      filename: entry.filename,
+      sizeBytes: entry.sizeBytes,
+      collectionId: coverMap.get(entry.filename)?.id || null,
+      collectionTitle: coverMap.get(entry.filename)?.title || null,
     })),
-    images: imageNames.map(name => ({
-      filename: name,
-      pieceId: imageMap.get(name)?.id || null,
-      pieceTitle: imageMap.get(name)?.title || null,
+    images: imageEntries.map(entry => ({
+      filename: entry.filename,
+      sizeBytes: entry.sizeBytes,
+      pieceId: imageMap.get(entry.filename)?.id || null,
+      pieceTitle: imageMap.get(entry.filename)?.title || null,
     })),
-    files: fileNames.map(name => ({
-      filename: name,
-      pieceId: fileMap.get(name)?.id || null,
-      pieceTitle: fileMap.get(name)?.title || null,
-      downloadName: fileMap.get(name)?.downloadName || null,
+    files: fileEntries.map(entry => ({
+      filename: entry.filename,
+      sizeBytes: entry.sizeBytes,
+      pieceId: fileMap.get(entry.filename)?.id || null,
+      pieceTitle: fileMap.get(entry.filename)?.title || null,
+      downloadName: fileMap.get(entry.filename)?.downloadName || null,
     })),
+    usage: {
+      ...usage,
+      total: usage.covers + usage.images + usage.files,
+    },
   };
 }
 

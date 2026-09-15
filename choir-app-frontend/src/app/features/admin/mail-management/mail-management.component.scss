@@ -1,10 +1,28 @@
 .mail-management {
-  padding: 24px;
-  max-width: 1400px;
-  margin: 0 auto;
+  width: 100%;
+  padding: 0;
+}
+
+.mobile-tab-selector {
+  display: none;
+
+  .tab-select-field {
+    width: 100%;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+  }
+
+  .mobile-option-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
   @media (max-width: 600px) {
-    padding: 12px;
+    display: block;
+    margin-bottom: 8px;
   }
 }
 
@@ -59,6 +77,12 @@ mat-tab-group {
     @media (max-width: 600px) {
       min-width: 50px !important;
       padding: 0 12px !important;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .mail-management .hub-tab-group .mat-mdc-tab-header {
+      display: none;
     }
   }
 }

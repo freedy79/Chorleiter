@@ -92,6 +92,55 @@
   margin: 12px 0 16px;
 }
 
+.form-setting-hint {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(0, 0, 0, 0.7);
+
+  @include dm.dark-mode {
+    color: rgba(255, 255, 255, 0.75);
+  }
+}
+
+.form-setting-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  margin: 0 0 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(245, 124, 0, 0.35);
+  background: rgba(255, 243, 224, 0.8);
+  color: #8a5200;
+  font-size: 0.88rem;
+  line-height: 1.4;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+  }
+
+  .warning-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .warning-action {
+    min-height: 32px;
+  }
+
+  @include dm.dark-mode {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: rgba(255, 152, 0, 0.45);
+    color: #ffcc80;
+  }
+}
+
 // ── Fields Editor ──────────────────────────────────────────
 
 .fields-list {
@@ -122,6 +171,16 @@
   }
 }
 
+.address-editor-block {
+  border-left: 4px solid rgba(25, 118, 210, 0.45);
+  background: linear-gradient(135deg, rgba(25, 118, 210, 0.06), rgba(255, 255, 255, 0.94));
+
+  @include dm.dark-mode {
+    border-left-color: rgba(100, 181, 246, 0.55);
+    background: linear-gradient(135deg, rgba(25, 118, 210, 0.18), rgba(66, 66, 66, 0.96));
+  }
+}
+
 .cdk-drag-preview {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
@@ -146,6 +205,144 @@
 .field-content {
   flex: 1;
   min-width: 0;
+}
+
+.address-block-editor-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.address-block-editor-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.address-block-editor-title {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+
+  mat-icon {
+    color: var(--primary-color, #1976d2);
+  }
+
+  h3 {
+    margin: 0 0 4px;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: rgba(0, 0, 0, 0.65);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.72);
+    }
+  }
+}
+
+.address-block-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.address-block-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.address-block-section {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+
+  @include dm.dark-mode {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  h4 {
+    margin: 0 0 14px;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: rgba(25, 118, 210, 0.88);
+  }
+}
+
+.address-block-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.address-block-field-editor {
+  grid-column: span 12;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(25, 118, 210, 0.04);
+  border: 1px solid rgba(25, 118, 210, 0.1);
+
+  @include dm.dark-mode {
+    background: rgba(25, 118, 210, 0.08);
+    border-color: rgba(100, 181, 246, 0.14);
+  }
+
+  &.role-salutation,
+  &.role-title,
+  &.role-firstName,
+  &.role-lastName,
+  &.role-houseNumber,
+  &.role-postalCode,
+  &.role-city {
+    grid-column: span 6;
+  }
+
+  &.role-salutation,
+  &.role-title {
+    grid-column: span 6;
+  }
+
+  &.role-street,
+  &.role-addressLine2,
+  &.role-country {
+    grid-column: span 12;
+  }
+
+  &.optional-field {
+    background: rgba(0, 0, 0, 0.02);
+
+    @include dm.dark-mode {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  }
+}
+
+.address-block-field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+
+  .mini-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.7);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.82);
+    }
+  }
 }
 
 .field-header {
@@ -254,7 +451,70 @@
   }
 }
 
-// ── Add field section ───────────────────────────────────────
+// ── Preset + Add field section ──────────────────────────────
+
+.field-presets-section {
+  margin-top: 8px;
+  margin-bottom: 20px;
+
+  .preset-card {
+    border-radius: 14px;
+    border: 1px solid rgba(25, 118, 210, 0.2);
+    background: linear-gradient(135deg, rgba(25, 118, 210, 0.08), rgba(76, 175, 80, 0.06));
+    padding: 14px;
+
+    @include dm.dark-mode {
+      border-color: rgba(100, 181, 246, 0.28);
+      background: linear-gradient(135deg, rgba(25, 118, 210, 0.2), rgba(76, 175, 80, 0.12));
+    }
+  }
+
+  .preset-header {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+
+    mat-icon {
+      color: var(--primary-color, #1976d2);
+      margin-top: 1px;
+    }
+
+    h3 {
+      margin: 0 0 4px;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      color: rgba(0, 0, 0, 0.72);
+
+      @include dm.dark-mode {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+  }
+
+  .preset-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .preset-hint {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.64);
+
+    @include dm.dark-mode {
+      color: rgba(255, 255, 255, 0.72);
+    }
+  }
+}
 
 .add-field-section {
   margin-top: 24px;
@@ -332,8 +592,31 @@
     }
   }
 
+  .address-block-field-editor {
+    grid-column: span 12 !important;
+  }
+
   .date-row {
     flex-direction: column;
     gap: 0;
+  }
+
+  .form-setting-warning {
+    .warning-action {
+      width: 100%;
+    }
+  }
+
+  .field-presets-section {
+    .preset-actions {
+      button {
+        width: 100%;
+      }
+    }
+  }
+
+  .address-block-editor-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 }

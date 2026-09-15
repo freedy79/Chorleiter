@@ -2,14 +2,17 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { LoginAttemptsComponent } from '../login-attempts/login-attempts.component';
 import { ProtocolsComponent } from '../protocols/protocols.component';
-import { BackupComponent } from '../backup/backup.component';
 import { LogViewerComponent } from '../log-viewer/log-viewer.component';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { OtaTokensComponent } from '../ota-tokens/ota-tokens.component';
+import { readTabIndex, writeTabIndex } from '../shared/admin-tab-sync';
 
 @Component({
   selector: 'app-security',
@@ -20,23 +23,42 @@ import { OtaTokensComponent } from '../ota-tokens/ota-tokens.component';
     CommonModule,
     MatTabsModule,
     MatIconModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     LoginAttemptsComponent,
     ProtocolsComponent,
-    BackupComponent,
     LogViewerComponent,
     OtaTokensComponent
   ]
 })
 export class SecurityComponent {
+  readonly tabs = [
+    { label: 'Login', icon: 'login' },
+    { label: 'Protokolle', icon: 'history' },
+    { label: 'Logs', icon: 'receipt_long' },
+    { label: 'Zugangstoken', mobileLabel: 'Token', icon: 'vpn_key' }
+  ];
+  private readonly tabKeys = ['login', 'protocols', 'logs', 'ota'];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
 
-  constructor(responsive: ResponsiveService) {
+  constructor(
+    responsive: ResponsiveService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
     this.isMobile$ = responsive.isHandset$;
+    this.selectedTabIndex = readTabIndex(route, this.tabKeys);
   }
 
   onTabChange(event: any): void {
     this.selectedTabIndex = event.index;
+    writeTabIndex(this.router, this.route, this.tabKeys, event.index);
+  }
+
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
+    writeTabIndex(this.router, this.route, this.tabKeys, index);
   }
 }

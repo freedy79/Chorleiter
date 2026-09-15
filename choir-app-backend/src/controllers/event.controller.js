@@ -9,6 +9,9 @@ const logger = require("../config/logger");
 const { Op, fn, col, where } = require("sequelize");
 const { isoDateString, parseDateOnly } = require('../utils/date.utils');
 const jwt = require("jsonwebtoken");
+const { decodeEventPrefillToken } = require('../utils/event-prefill-link');
+const reminderService = require('../services/reminder.service');
+const { normalizeEventType } = require('../services/planEntryEventSync.service');
 
 async function autoUpdatePieceStatuses(eventType, choirId, pieceIds) {
     if (!Array.isArray(pieceIds) || pieceIds.length === 0) return;
@@ -53,6 +56,43 @@ async function validateProgramForChoir(programId, choirId) {
     }
 
     return { valid: true, program };
+}
+
+async function linkEventToMatchingPlanEntry(event, monthlyPlanId, notes) {
+    if (!monthlyPlanId) {
+        return;
+    }
+
+    const dateOnly = isoDateString(parseDateOnly(event.date));
+    const eventType = normalizeEventType(event.type, notes);
+    const planEntry = await db.plan_entry.findOne({
+        where: {
+            monthlyPlanId,
+            eventType,
+            [Op.and]: [where(fn('date', col('date')), dateOnly)]
+        }
+    });
+
+    if (planEntry && Number(planEntry.linkedEventId) !== Number(event.id)) {
+        await planEntry.update({ linkedEventId: event.id }, { silent: true });
+    }
+}
+
+async function syncLinkedPlanEntryFromEvent(event, payload) {
+    const planEntry = await db.plan_entry.findOne({ where: { linkedEventId: event.id } });
+    if (!planEntry) {
+        return;
+    }
+
+    await planEntry.update({
+        date: payload.date,
+        notes: payload.notes,
+        directorId: payload.directorId,
+        organistId: payload.organistId,
+        monthlyPlanId: payload.monthlyPlanId,
+        programId: payload.programId,
+        eventType: normalizeEventType(payload.type, payload.notes)
+    }, { silent: true });
 }
 
 exports.create = async (req, res) => {
@@ -127,6 +167,7 @@ exports.create = async (req, res) => {
 
     // Senden Sie eine Antwort, die dem Frontend mitteilt, was passiert ist.
     await db.choir_log.create({ choirId, userId: req.userId, action: 'event_created', details: { eventId: event.id, type, date: targetDate } });
+    await linkEventToMatchingPlanEntry(event, monthlyPlanId, notes);
     res.status(201).send({
         message: "Event successfully created.",
         wasUpdated: false,
@@ -432,6 +473,107 @@ exports.findNext = async (req, res) => {
     res.status(200).send(merged);
 };
 
+exports.resolveCreatePrefillToken = async (req, res) => {
+    const token = req.params.token;
+    if (!token) {
+        return res.status(400).send({ message: 'Token is required.' });
+    }
+
+    let payload;
+    try {
+        payload = decodeEventPrefillToken(token);
+    } catch (err) {
+        return res.status(400).send({ message: 'Invalid token.' });
+    }
+
+    if (payload?.purpose !== 'missing-service-event-prefill') {
+        return res.status(400).send({ message: 'Invalid token purpose.' });
+    }
+
+    const expiresAt = payload?.expiresAt ? new Date(payload.expiresAt) : null;
+    if (!expiresAt || Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() < Date.now()) {
+        return res.status(410).send({ message: 'Token expired.' });
+    }
+
+    if (Number(payload.userId) !== Number(req.userId)) {
+        return res.status(403).send({ message: 'Token not valid for this user.' });
+    }
+
+    if (Number(payload.choirId) !== Number(req.activeChoirId)) {
+        return res.status(403).send({ message: 'Token not valid for active choir.' });
+    }
+
+    const planEntry = await db.plan_entry.findOne({
+        where: { id: payload.planEntryId },
+        include: [
+            {
+                model: db.monthly_plan,
+                as: 'monthlyPlan',
+                attributes: ['id', 'choirId']
+            }
+        ]
+    });
+
+    if (!planEntry || Number(planEntry.monthlyPlan?.choirId) !== Number(req.activeChoirId)) {
+        return res.status(404).send({ message: 'Plan entry not found.' });
+    }
+
+    const dateOnly = isoDateString(parseDateOnly(planEntry.date));
+    const existingEvent = await db.event.findOne({
+        where: {
+            choirId: req.activeChoirId,
+            type: 'SERVICE',
+            [Op.and]: [where(fn('date', col('date')), dateOnly)]
+        },
+        attributes: ['id']
+    });
+
+    if (existingEvent) {
+        return res.status(409).send({
+            message: 'Für diesen Dienstplan-Eintrag wurde bereits ein Gottesdienst-Ereignis angelegt.'
+        });
+    }
+
+    return res.status(200).send({
+        date: payload.date || dateOnly,
+        type: payload.type || 'SERVICE',
+        notes: payload.notes || '',
+        directorId: payload.directorId ?? null,
+        monthlyPlanId: payload.monthlyPlanId || null,
+        programId: payload.programId || null
+    });
+};
+
+exports.previewMissingServiceEvents = async (req, res) => {
+    const now = req.query.now ? new Date(req.query.now) : new Date();
+    if (Number.isNaN(now.getTime())) {
+        return res.status(400).send({ message: 'Invalid now query parameter.' });
+    }
+
+    const result = await reminderService.checkAndSendMissingServiceEventReminders({
+        now,
+        choirId: req.activeChoirId,
+        dryRun: true
+    });
+
+    return res.status(200).send(result);
+};
+
+exports.sendMissingServiceEventReminders = async (req, res) => {
+    const now = req.body?.now ? new Date(req.body.now) : new Date();
+    if (Number.isNaN(now.getTime())) {
+        return res.status(400).send({ message: 'Invalid now in request body.' });
+    }
+
+    const result = await reminderService.checkAndSendMissingServiceEventReminders({
+        now,
+        choirId: req.activeChoirId,
+        dryRun: false
+    });
+
+    return res.status(200).send(result);
+};
+
 /**
  * Find a single event with its pieces by ID
  */
@@ -511,7 +653,18 @@ exports.update = async (req, res) => {
             return res.status(200).send(full);
         }
 
-        await event.update({ date: targetDate, type, notes, directorId: directorId !== undefined ? directorId : event.directorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        const nextDirectorId = directorId !== undefined ? directorId : event.directorId;
+        await event.update({ date: targetDate, type, notes, directorId: nextDirectorId, organistId, finalized, version, monthlyPlanId, programId: nextProgramId });
+        await syncLinkedPlanEntryFromEvent(event, {
+            date: targetDate,
+            type,
+            notes,
+            directorId: nextDirectorId,
+            organistId,
+            monthlyPlanId,
+            programId: nextProgramId
+        });
+        await linkEventToMatchingPlanEntry(event, monthlyPlanId, notes);
 
         if (Array.isArray(pieceIds)) {
             await event.setPieces(pieceIds);
@@ -534,7 +687,17 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     const id = req.params.id;
 
-    const num = await Event.destroy({ where: { id, choirId: req.activeChoirId } });
+    const event = await Event.findOne({ where: { id, choirId: req.activeChoirId }, attributes: ['id'] });
+    if (!event) {
+        return res.status(404).send({ message: 'Event not found.' });
+    }
+
+    const linkedPlanEntry = await db.plan_entry.findOne({ where: { linkedEventId: event.id } });
+    if (linkedPlanEntry) {
+        await linkedPlanEntry.update({ linkedEventId: null }, { silent: true });
+    }
+
+    const num = await Event.destroy({ where: { id: event.id, choirId: req.activeChoirId } });
         if (num === 1) {
             await db.choir_log.create({ choirId: req.activeChoirId, userId: req.userId, action: 'event_deleted', details: { eventId: id } });
             res.send({ message: 'Event deleted successfully!' });

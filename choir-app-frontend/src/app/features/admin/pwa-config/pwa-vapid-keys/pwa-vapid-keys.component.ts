@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PwaConfig } from '@core/models/pwa-config';
 
@@ -34,6 +35,7 @@ export class PwaVapidKeysComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private api: ApiService,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService
   ) {
     this.form = this.fb.group({
@@ -120,28 +122,39 @@ export class PwaVapidKeysComponent implements OnInit {
       return;
     }
 
-    if (this.form.value.publicKey && !confirm(
-      'Es sind bereits VAPID-Schlüssel konfiguriert. Wenn Sie neue generieren, werden die bisherigen überschrieben. ' +
-      'Alle bestehenden Push-Abonnements der Benutzer werden dadurch ungültig und müssen erneuert werden.\n\n' +
-      'Möchten Sie fortfahren?'
-    )) {
+    const executeGeneration = () => {
+      this.generating = true;
+      this.api.generateVapidKeys(true, subject).subscribe({
+        next: (result) => {
+          this.generating = false;
+          this.notification.success(result.message || 'VAPID-Schlüssel wurden generiert und gespeichert.');
+          this.loadConfigs();
+          this.loadPushStatus();
+        },
+        error: (err) => {
+          this.generating = false;
+          console.error('Error generating VAPID keys:', err);
+          this.notification.error(err.error?.message || 'Fehler beim Generieren der VAPID-Schlüssel');
+        }
+      });
+    };
+
+    if (this.form.value.publicKey) {
+      this.dialogHelper.confirm({
+        title: 'VAPID-Schlüssel überschreiben?',
+        message: 'Es sind bereits VAPID-Schlüssel konfiguriert. Wenn Sie neue generieren, werden die bisherigen überschrieben. Alle bestehenden Push-Abonnements der Benutzer werden dadurch ungültig und müssen erneuert werden.',
+        confirmButtonText: 'Überschreiben',
+        cancelButtonText: 'Abbrechen'
+      }).subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+        executeGeneration();
+      });
       return;
     }
 
-    this.generating = true;
-    this.api.generateVapidKeys(true, subject).subscribe({
-      next: (result) => {
-        this.generating = false;
-        this.notification.success(result.message || 'VAPID-Schlüssel wurden generiert und gespeichert.');
-        this.loadConfigs();
-        this.loadPushStatus();
-      },
-      error: (err) => {
-        this.generating = false;
-        console.error('Error generating VAPID keys:', err);
-        this.notification.error(err.error?.message || 'Fehler beim Generieren der VAPID-Schlüssel');
-      }
-    });
+    executeGeneration();
   }
 
   testNotification(): void {

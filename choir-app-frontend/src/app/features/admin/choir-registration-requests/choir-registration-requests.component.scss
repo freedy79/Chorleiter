@@ -1,0 +1,57 @@
+@use '../../../../themes/breakpoints' as *;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  align-items: center;
+  margin-bottom: $spacing-md;
+  flex-wrap: wrap;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xl $spacing-md;
+  @include apply-theme-var('color', 'text-secondary');
+  text-align: center;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.muted {
+  @include apply-theme-var('color', 'text-secondary');
+  font-size: 0.875rem;
+}
+
+mat-chip {
+  min-width: 104px;
+  justify-content: center;
+}
+
+@media (max-width: 700px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -12,6 +12,8 @@ const controller = require('../src/controllers/availability.controller');
     const user = await db.user.create({ email: 't@example.com' });
     await db.plan_rule.create({ choirId: choir.id, dayOfWeek: 5 }); // Fridays
     await db.plan_rule.create({ choirId: choir.id, dayOfWeek: 4 }); // Thursdays
+    const aprilPlan = await db.monthly_plan.create({ choirId: choir.id, year: 2025, month: 4 });
+    await db.plan_entry.create({ monthlyPlanId: aprilPlan.id, date: new Date('2025-04-22'), eventType: 'REHEARSAL', notes: 'Zusätzliche Chorprobe' });
 
     const baseReq = { activeChoirId: choir.id, userId: user.id };
     const res = { status(code) { this.statusCode = code; return this; }, send(d) { this.data = d; } };
@@ -20,6 +22,7 @@ const controller = require('../src/controllers/availability.controller');
     assert.strictEqual(res.statusCode, 200);
     const aprilDates = res.data.map(a => a.date);
     assert.ok(!aprilDates.includes('2025-04-18'));
+    assert.ok(aprilDates.includes('2025-04-22'));
     assert.ok(res.data.every(a => a.status === undefined));
 
     await controller.findByMonth({ ...baseReq, params: { year: 2025, month: 5 } }, res);

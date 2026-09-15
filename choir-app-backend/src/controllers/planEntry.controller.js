@@ -4,6 +4,7 @@ const MonthlyPlan = db.monthly_plan;
 const UserChoir = db.user_choir;
 const User = db.user;
 const { invalidateMonthlyPlanCacheById } = require('../services/monthlyPlanCache.service');
+const { syncPlanEntryEvent, normalizeEventType } = require('../services/planEntryEventSync.service');
 
 /**
  * Validates that a user has the required choir role to be assigned
@@ -41,7 +42,7 @@ async function validateProgramForChoir(programId, choirId) {
 }
 
 exports.create = async (req, res) => {
-    const { monthlyPlanId, date, notes, directorId, organistId, programId } = req.body;
+    const { monthlyPlanId, date, notes, directorId, organistId, programId, eventType } = req.body;
     if (!monthlyPlanId || !date) {
         return res.status(400).send({ message: 'monthlyPlanId and date are required.' });
     }
@@ -58,12 +59,22 @@ exports.create = async (req, res) => {
     const progErr = await validateProgramForChoir(programId, plan.choirId);
     if (progErr) return res.status(400).send({ message: progErr });
 
-    const entry = await PlanEntry.create({ monthlyPlanId, date, notes, directorId, organistId, programId: programId || null });
+    const entry = await PlanEntry.create({
+        monthlyPlanId,
+        date,
+        notes,
+        directorId,
+        organistId,
+        programId: programId || null,
+        eventType: normalizeEventType(eventType, notes)
+    });
+    await syncPlanEntryEvent(entry);
     const full = await PlanEntry.findByPk(entry.id, {
         include: [
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
             { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+            { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
         ]
     });
     await invalidateMonthlyPlanCacheById(monthlyPlanId);
@@ -76,7 +87,7 @@ exports.update = async (req, res) => {
     if (!entry) return res.status(404).send({ message: 'Entry not found.' });
 
     // Validate director/organist roles if they are being changed
-    const { directorId, organistId, programId } = req.body;
+    const { directorId, organistId, programId, eventType, notes } = req.body;
     if (directorId !== undefined || organistId !== undefined) {
         const plan = await MonthlyPlan.findByPk(entry.monthlyPlanId);
         if (!plan) {
@@ -104,15 +115,20 @@ exports.update = async (req, res) => {
             updateData[key] = req.body[key];
         }
     }
+    if (eventType !== undefined) {
+        updateData.eventType = normalizeEventType(eventType, notes ?? entry.notes);
+    }
 
     const previousMonthlyPlanId = entry.monthlyPlanId;
     await entry.update(updateData);
+    await syncPlanEntryEvent(entry);
     const newMonthlyPlanId = entry.monthlyPlanId;
     const full = await PlanEntry.findByPk(id, {
         include: [
             { model: User, as: 'director', attributes: ['id', 'firstName', 'name'] },
             { model: User, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+            { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+            { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
         ]
     });
     await invalidateMonthlyPlanCacheById(previousMonthlyPlanId);
@@ -128,7 +144,11 @@ exports.delete = async (req, res) => {
     if (!entry) {
         return res.status(404).send({ message: 'Entry not found.' });
     }
+    const linkedEventId = entry.linkedEventId;
     await entry.destroy();
+    if (linkedEventId) {
+        await db.event.destroy({ where: { id: linkedEventId } });
+    }
     await invalidateMonthlyPlanCacheById(entry.monthlyPlanId);
     res.send({ message: 'Entry deleted.' });
 };

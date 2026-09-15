@@ -47,11 +47,22 @@
 .welcome-description {
   font-size: 1.1rem;
   line-height: 1.6;
-  margin: 0 0 2.5rem 0;
+  margin: 0;
   opacity: 0.95;
 
   @include handset {
     font-size: 1rem;
+  }
+}
+
+.auth-section {
+  padding: 1.5rem 2rem 2rem;
+  background: #ffffff;
+  text-align: center;
+  border-bottom: 1px solid #e6e9ef;
+
+  @include handset {
+    padding: 1.25rem 1rem 1.5rem;
   }
 }
 
@@ -82,12 +93,6 @@
     font-size: 1.1rem;
     padding: 0 2rem;
     height: 48px;
-    background: rgba(255, 255, 255, 0.2);
-    color: white;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
 
     &.disabled,
     &[aria-disabled='true'] {
@@ -115,6 +120,11 @@
   mat-card-header {
     margin-bottom: 16px;
 
+    mat-card-subtitle {
+      color: #4b5563;
+      opacity: 1;
+    }
+
     .demo-icon {
       background-color: #005d9d;
       color: white;
@@ -129,63 +139,18 @@
   }
 }
 
+.demo-message {
+  margin: 0 0 1rem 0;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: rgba(46, 125, 50, 0.12);
+  color: #1b5e20;
+  border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
 .demo-intro {
   margin: 0 0 1.5rem 0;
   color: #333333;
-}
-
-.demo-credentials {
-  background: #fafafa;
-  border-radius: 8px;
-  padding: 1.5rem;
-  margin: 1rem 0;
-  border: 1px solid #e0e0e0;
-}
-
-.credential-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  mat-icon {
-    color: #005d9d;
-  }
-}
-
-.credential-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-
-  @include tablet {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .label {
-    font-weight: 500;
-    color: #666666;
-    min-width: 80px;
-  }
-
-  .value {
-    background: #f0f0f0;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    font-family: 'Courier New', monospace;
-    font-size: 1rem;
-    color: #005d9d;
-    font-weight: 600;
-    user-select: all;
-    flex: 1;
-  }
 }
 
 .demo-note {
@@ -194,12 +159,12 @@
   align-items: flex-start;
   margin-top: 1.5rem;
   padding: 1rem;
-  background: rgba(244, 67, 54, 0.1);
-  border-radius: 4px;
-  border-left: 4px solid #f44336;
+  background: #edf4ff;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
 
   mat-icon {
-    color: #f44336;
+    color: #1976d2;
     font-size: 1.25rem;
     width: 1.25rem;
     height: 1.25rem;
@@ -208,7 +173,7 @@
   p {
     margin: 0;
     font-size: 1rem;
-    color: #333333;
+    color: #1f3b5b;
   }
 }
 
@@ -387,4 +352,20 @@
   .separator {
     color: #666666;
   }
+}
+
+:host ::ng-deep .demo-lead-dialog-panel .mat-mdc-dialog-surface {
+  background: #ffffff;
+  color: #1f2937;
+  border-radius: 12px;
+}
+
+:host ::ng-deep .demo-lead-dialog-panel .mat-mdc-dialog-title,
+:host ::ng-deep .demo-lead-dialog-panel .mat-mdc-dialog-content,
+:host ::ng-deep .demo-lead-dialog-panel .mat-mdc-dialog-actions {
+  color: #1f2937;
+}
+
+:host ::ng-deep .demo-lead-dialog-panel .mat-mdc-form-field .mdc-text-field--outlined {
+  background-color: #ffffff;
 }

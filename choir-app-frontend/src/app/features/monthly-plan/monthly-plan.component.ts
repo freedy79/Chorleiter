@@ -14,9 +14,9 @@ import { Subscription, forkJoin, of } from 'rxjs';
 import { map, take, tap, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@shared/components/base.component';
 import { PlanEntryDialogComponent } from './plan-entry-dialog/plan-entry-dialog.component';
-import { SendPlanDialogComponent } from './send-plan-dialog/send-plan-dialog.component';
+import { SendPlanDialogComponent, SendPlanDialogResult } from './send-plan-dialog/send-plan-dialog.component';
 import { RequestAvailabilityDialogComponent } from './request-availability-dialog/request-availability-dialog.component';
-import { ConfirmDialogComponent, ConfirmDialogData } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { AvailabilityTableComponent } from './availability-table/availability-table.component';
 import { getHolidayName } from '@shared/util/holiday';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -31,8 +31,11 @@ import { WeekdayPipe } from '@shared/pipes/weekday.pipe';
 import { EventShortPipe } from '@shared/pipes/event-short.pipe';
 import { PersonNamePipe } from '@shared/pipes/person-name.pipe';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { ProgramService } from '@core/services/program.service';
 import { Program } from '@core/models/program';
+import { Event } from '@core/models/event';
+import { EventDialogComponent } from '@features/events/event-dialog/event-dialog.component';
 
 type LoadStepKey = 'planResponseAt' |
   'planProcessedAt' |
@@ -55,7 +58,7 @@ interface LoadMetrics {
 @Component({
   selector: 'app-monthly-plan',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityTableComponent, PureDatePipe, WeekdayPipe, EventShortPipe, PersonNamePipe, RouterModule, EmptyStateComponent, DataStateComponent],
   templateUrl: './monthly-plan.component.html',
   styleUrls: ['./monthly-plan.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -63,7 +66,7 @@ interface LoadMetrics {
 export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDestroy {
   plan: MonthlyPlan | null = null;
   entries: PlanEntry[] = [];
-  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes'];
+  displayedColumns = ['date', 'event', 'program', 'director', 'organist', 'notes', 'eventLink'];
   isChoirAdmin = false;
   selectedYear!: number;
   selectedMonth!: number;
@@ -136,6 +139,27 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return rows;
   }
 
+  get availabilityNotesByDate(): Record<string, string> {
+    const notesByDate: Record<string, string> = {};
+    for (const entry of this.entries) {
+      const notes = (entry.notes?.trim() || this.eventTypeLabel(entry.eventType));
+      if (notes) {
+        notesByDate[this.dateKey(entry.date)] = notes;
+      }
+    }
+    return notesByDate;
+  }
+
+  private eventTypeLabel(eventType?: 'SERVICE' | 'REHEARSAL' | null): string {
+    if (eventType === 'REHEARSAL') {
+      return 'Chorprobe';
+    }
+    if (eventType === 'SERVICE') {
+      return 'Gottesdienst';
+    }
+    return '';
+  }
+
   private now(): number {
     if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
       return performance.now();
@@ -181,25 +205,130 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   eventTooltip(entry: PlanEntry): string {
-    const notes = entry.notes?.trim();
-    if (!notes) {
-      return '';
+    const typeLabel = this.eventTypeLabel(entry.eventType);
+    const notes = entry.notes?.trim() || '';
+    if (typeLabel && notes && notes !== typeLabel) {
+      return `${typeLabel} · ${notes}`;
     }
-
-    const normalizedNotes = notes.toLowerCase();
-    if (/\b(gottesdienst|gd)\b/.test(normalizedNotes)) {
-      return 'Gottesdienst';
+    if (typeLabel) {
+      return typeLabel;
     }
-    if (/\b(chorprobe|probe|cp)\b/.test(normalizedNotes)) {
-      return 'Chorprobe';
+    if (notes) {
+      return notes;
     }
-
-    return notes;
+    return '';
   }
 
   private updateDisplayedColumns(): void {
-    const base = ['date', 'event', 'program', 'director', 'organist', 'notes'];
+    const base = ['date', 'event', 'program', 'director', 'organist', 'notes', 'eventLink'];
     this.displayedColumns = (this.isChoirAdmin && !this.plan?.finalized) ? [...base, 'actions'] : base;
+  }
+
+  private inferExpectedEventType(entry: PlanEntry): 'SERVICE' | 'REHEARSAL' | null {
+    if (entry.eventType === 'SERVICE' || entry.eventType === 'REHEARSAL') {
+      return entry.eventType;
+    }
+    const notes = (entry.notes || '').toLowerCase();
+    if (/\b(chorprobe|probe|cp)\b/.test(notes)) {
+      return 'REHEARSAL';
+    }
+    if (/\b(gottesdienst|gd)\b/.test(notes)) {
+      return 'SERVICE';
+    }
+    return null;
+  }
+
+  private normalizeDateKey(date: string | Date): string {
+    return this.dateKey(typeof date === 'string' ? date : date.toISOString());
+  }
+
+  private attachLinkedEvents(entries: PlanEntry[], events: Event[]): PlanEntry[] {
+    const byDate = new Map<string, Event[]>();
+    for (const event of events || []) {
+      const key = this.normalizeDateKey(event.date);
+      const list = byDate.get(key) || [];
+      list.push(event);
+      byDate.set(key, list);
+    }
+
+    return entries.map(entry => {
+      if (entry.linkedEventId) {
+        const selected = events.find(ev => ev.id === entry.linkedEventId);
+        return {
+          ...entry,
+          linkedEventType: (selected?.type === 'SERVICE' || selected?.type === 'REHEARSAL')
+            ? selected.type
+            : (entry.linkedEvent?.type ?? entry.linkedEventType ?? entry.eventType ?? null)
+        };
+      }
+
+      const key = this.normalizeDateKey(entry.date);
+      const candidates = byDate.get(key) || [];
+      if (!candidates.length) {
+        return { ...entry, linkedEventId: entry.linkedEventId ?? null, linkedEventType: entry.linkedEvent?.type ?? entry.linkedEventType ?? null };
+      }
+
+      const expectedType = this.inferExpectedEventType(entry);
+      let selected: Event | undefined;
+
+      if (expectedType) {
+        selected = candidates.find(ev => ev.type === expectedType);
+      }
+
+      if (!selected && candidates.length === 1) {
+        selected = candidates[0];
+      }
+
+      if (!selected) {
+        selected = candidates.find(ev => ev.type === 'SERVICE') || candidates[0];
+      }
+
+      return {
+        ...entry,
+        linkedEventId: selected?.id ?? null,
+        linkedEventType: (selected?.type === 'SERVICE' || selected?.type === 'REHEARSAL') ? selected.type : null
+      };
+    });
+  }
+
+  openLinkedEvent(entry: PlanEntry): void {
+    if (!entry.linkedEventId) {
+      return;
+    }
+
+    this.api.getEventById(entry.linkedEventId).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (fullEvent) => {
+        const readOnly = !this.isChoirAdmin;
+        const dialogRef = this.dialog.open(EventDialogComponent, {
+          ...this.mobileDialogConfig(),
+          disableClose: readOnly,
+          data: { event: fullEvent, readOnly }
+        });
+
+        if (readOnly) {
+          return;
+        }
+
+        dialogRef.afterClosed().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(result => {
+          if (result && result.id) {
+            this.api.updateEvent(result.id, result).pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: () => {
+                this.notification.success('Termin aktualisiert.', 3000);
+                this.loadPlan(this.selectedYear, this.selectedMonth);
+              },
+              error: () => this.notification.error('Fehler beim Aktualisieren des Termins.', 4000)
+            });
+          }
+        });
+      },
+      error: () => this.notification.error('Termin konnte nicht geladen werden.', 4000)
+    });
   }
 
   private sortEntries(): void {
@@ -310,6 +439,22 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     return this.availabilityMap[userId]?.[key] === 'MAYBE';
   }
 
+  directorIdFor(entry: PlanEntry): number | null {
+    return entry.director?.id ?? null;
+  }
+
+  organistIdFor(entry: PlanEntry): number | null {
+    return entry.organist?.id ?? null;
+  }
+
+  hasDirectorMaybeWarning(entry: PlanEntry): boolean {
+    return this.isMaybe(this.directorIdFor(entry), entry.date);
+  }
+
+  hasOrganistMaybeWarning(entry: PlanEntry): boolean {
+    return this.isMaybe(this.organistIdFor(entry), entry.date);
+  }
+
   availableForDate(list: UserInChoir[], date: string): UserInChoir[] {
     return list.filter(u => this.isAvailable(u.id, date));
   }
@@ -385,7 +530,8 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
               private monthNav: MonthNavigationService,
               private responsive: ResponsiveService,
               private cdr: ChangeDetectorRef,
-            private logger: DebugLogService) {
+              private logger: DebugLogService,
+              private dialogHelper: DialogHelperService) {
     super(); // Call BaseComponent constructor
     this.isDeveloper = this.logger.isEnabled();
   }
@@ -571,19 +717,24 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
         )
       : of({ members: [] as UserInChoir[], directors: [] as UserInChoir[], organists: [] as UserInChoir[] });
 
+    const monthStart = new Date(Date.UTC(year, month - 1, 1));
+    const monthEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+    const events$ = this.api.getEvents(undefined, false, monthStart, monthEnd);
+
     this.planSub = forkJoin({
       planData: plan$,
       availabilityMap: availability$,
-      memberData: members$
+      memberData: members$,
+      events: events$
     }).pipe(
       takeUntil(this.destroy$)
     ).subscribe({
-      next: ({ planData, availabilityMap, memberData }) => {
+      next: ({ planData, availabilityMap, memberData, events }) => {
         if (requestId !== this.planRequestId) {
           return;
         }
         this.plan = planData.plan;
-        this.entries = planData.entries;
+        this.entries = this.attachLinkedEvents(planData.entries, events || []);
         this.availabilityMap = availabilityMap;
         this.members = memberData.members;
         this.directors = memberData.directors;
@@ -668,6 +819,13 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     this.monthChanged();
   }
 
+  goToToday(): void {
+    const now = new Date();
+    this.selectedYear = now.getFullYear();
+    this.selectedMonth = now.getMonth() + 1;
+    this.monthChanged();
+  }
+
   private getStoredPlanningState(): { year: number; month: number; tab: number } | null {
     if (typeof localStorage === 'undefined') {
       return null;
@@ -714,6 +872,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   updateDirector(ev: PlanEntry, userId: number | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
+      eventType: ev.eventType,
       notes: ev.notes || '',
       directorId: userId,
       organistId: ev.organist?.id ?? undefined
@@ -730,6 +889,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   updateOrganist(ev: PlanEntry, userId: number | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
+      eventType: ev.eventType,
       notes: ev.notes || '',
       directorId: ev.director?.id ?? undefined,
       organistId: userId
@@ -746,6 +906,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   updateNotes(ev: PlanEntry, notes: string): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
+      eventType: ev.eventType,
       notes,
       directorId: ev.director?.id ?? undefined,
       organistId: ev.organist?.id ?? undefined
@@ -758,9 +919,34 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     });
   }
 
+  updateEventType(ev: PlanEntry, eventType: 'SERVICE' | 'REHEARSAL'): void {
+    const previousLabel = this.eventTypeLabel(ev.eventType);
+    const nextLabel = this.eventTypeLabel(eventType);
+    const nextNotes = !ev.notes?.trim() || ev.notes === previousLabel ? nextLabel : ev.notes;
+
+    this.api.updatePlanEntry(ev.id, {
+      date: ev.date,
+      eventType,
+      notes: nextNotes,
+      directorId: ev.director?.id ?? undefined,
+      organistId: ev.organist?.id ?? undefined,
+      programId: ev.program?.id ?? null
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(updated => {
+      ev.eventType = updated.eventType ?? eventType;
+      ev.notes = updated.notes;
+      ev.linkedEventId = updated.linkedEventId ?? ev.linkedEventId ?? null;
+      ev.linkedEventType = updated.linkedEvent?.type ?? updated.linkedEventType ?? ev.linkedEventType ?? eventType;
+      this.monthlyPlan.clearMonthlyPlanCache(this.selectedYear, this.selectedMonth);
+      this.cdr.markForCheck();
+    });
+  }
+
   updateProgram(ev: PlanEntry, programId: string | null): void {
     this.api.updatePlanEntry(ev.id, {
       date: ev.date,
+      eventType: ev.eventType,
       notes: ev.notes || '',
       directorId: ev.director?.id ?? undefined,
       organistId: ev.organist?.id ?? undefined,
@@ -823,9 +1009,9 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     });
     ref.afterClosed().pipe(
       takeUntil(this.destroy$)
-    ).subscribe((result: { ids: number[]; emails: string[] }) => {
-      if (result && (result.ids.length > 0 || result.emails.length > 0)) {
-        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails).pipe(
+    ).subscribe((result: SendPlanDialogResult) => {
+      if (result && (result.ids.length > 0 || result.addressBookEntryIds.length > 0 || result.emails.length > 0)) {
+        this.monthlyPlan.emailMonthlyPlan(this.plan!.id, result.ids, result.emails, result.addressBookEntryIds, result.saveSelection).pipe(
           takeUntil(this.destroy$)
         ).subscribe({
           next: () => this.notification.success('E-Mail gesendet.', 3000),
@@ -884,9 +1070,10 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
   }
 
   deleteEntry(ev: PlanEntry): void {
-    const data: ConfirmDialogData = { title: 'Event löschen?', message: 'Möchten Sie dieses Event wirklich löschen?' };
-    const ref = this.dialog.open(ConfirmDialogComponent, { data });
-    ref.afterClosed().pipe(
+    this.dialogHelper.confirm({
+      title: 'Event löschen?',
+      message: 'Möchten Sie dieses Event wirklich löschen?'
+    }).pipe(
       takeUntil(this.destroy$)
     ).subscribe(confirmed => {
       if (confirmed) {

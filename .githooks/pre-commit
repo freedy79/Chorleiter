@@ -1,0 +1,10 @@
+#!/bin/sh
+
+node scripts/check-session-commit-log.js
+status=$?
+
+if [ $status -ne 0 ]; then
+  exit $status
+fi
+
+exit 0

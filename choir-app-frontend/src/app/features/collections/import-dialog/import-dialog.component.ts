@@ -101,7 +101,7 @@ export class ImportDialogComponent implements OnDestroy {
     // und dann alle 2000ms wiederholt.
     this.statusSubscription = timer(0, 500).pipe(
       // Holen Sie den Job-Status vom Server
-      switchMap(() => this.apiService.getImportStatus(jobId)),
+      switchMap(() => this.apiService.getImportStatus(jobId, { silent: true })),
       // Fahren Sie fort, bis der Job abgeschlossen oder fehlgeschlagen ist
       takeWhile(job => job.status === 'running' || job.status === 'pending', true)
     ).subscribe({

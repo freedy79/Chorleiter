@@ -69,7 +69,7 @@ export class EventImportDialogComponent implements OnDestroy {
     if (this.statusSubscription) this.statusSubscription.unsubscribe();
 
     this.statusSubscription = timer(0, 500).pipe(
-      switchMap(() => this.apiService.getImportStatus(jobId)),
+      switchMap(() => this.apiService.getImportStatus(jobId, { silent: true })),
       takeWhile(job => job.status === 'running' || job.status === 'pending', true)
     ).subscribe({
       next: job => {

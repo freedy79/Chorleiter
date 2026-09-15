@@ -48,6 +48,10 @@ export class EventService {
     return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
   }
 
+  resolveCreatePrefillToken(token: string): Observable<{ date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }> {
+    return this.http.get<{ date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }>(`${this.apiUrl}/events/prefill/${encodeURIComponent(token)}`);
+  }
+
   updateEvent(id: number, data: { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.http.put<Event>(`${this.apiUrl}/events/${id}`, data);
   }

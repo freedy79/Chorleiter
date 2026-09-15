@@ -92,7 +92,7 @@ function sanitizeRichBlocks(input) {
 
         switch (type) {
             case 'rich-text':
-                return { ...base, content: sanitizeHtml(String(block?.content || ''), RICH_TEXT_OPTS).substring(0, 50000) };
+                return { ...base, html: sanitizeHtml(String(block?.html || ''), RICH_TEXT_OPTS).substring(0, 50000) };
             case 'hero-banner':
                 return {
                     ...base,
@@ -117,7 +117,7 @@ function sanitizeRichBlocks(input) {
                     ...base,
                     imageUrl: sanitizeUrl(block?.imageUrl),
                     imageAlt: sanitizeText(block?.imageAlt, 200),
-                    content: sanitizeHtml(String(block?.content || ''), RICH_TEXT_OPTS).substring(0, 50000),
+                    html: sanitizeHtml(String(block?.html || ''), RICH_TEXT_OPTS).substring(0, 50000),
                     imagePosition: block?.imagePosition === 'right' ? 'right' : 'left',
                 };
             case 'gallery': {
@@ -224,6 +224,7 @@ exports.getPublicPageBySlug = async (req, res) => {
             headline: page.headline,
             subheadline: page.subheadline,
             contentBlocks: page.contentBlocks || [],
+            richBlocks: page.richBlocks || [],
             contactEmail: page.contactEmail,
             contactPhone: page.contactPhone,
             websiteUrl: page.websiteUrl,

@@ -2,13 +2,8 @@
 @use '../../../../themes/dark-mode-variables' as *;
 
 .data-enrichment {
-  padding: $spacing-lg;
-  max-width: 1400px;
-  margin: 0 auto;
-
-  @include handset {
-    padding: $spacing-md;
-  }
+  width: 100%;
+  padding: 0;
 }
 
 mat-tab-group {

@@ -9,14 +9,12 @@ describe('ProgramGuard', () => {
   let guard: ProgramGuard;
   let isAdminSubject: BehaviorSubject<boolean>;
   let activeChoirSubject: BehaviorSubject<any>;
-  let isDemoSubject: BehaviorSubject<boolean>;
   let router: jasmine.SpyObj<Router>;
   let redirectTree: UrlTree;
 
   beforeEach(() => {
     isAdminSubject = new BehaviorSubject<boolean>(false);
     activeChoirSubject = new BehaviorSubject<any>(null);
-    isDemoSubject = new BehaviorSubject<boolean>(false);
     router = jasmine.createSpyObj('Router', ['createUrlTree']);
     redirectTree = {} as UrlTree;
     router.createUrlTree.and.returnValue(redirectTree);
@@ -28,8 +26,7 @@ describe('ProgramGuard', () => {
           provide: AuthService,
           useValue: {
             isAdmin$: isAdminSubject.asObservable(),
-            activeChoir$: activeChoirSubject.asObservable(),
-            isDemo$: isDemoSubject.asObservable()
+            activeChoir$: activeChoirSubject.asObservable()
           }
         },
         { provide: Router, useValue: router }
@@ -67,12 +64,10 @@ describe('ProgramGuard', () => {
     expect(result).toEqual(redirectTree);
   });
 
-  it('redirects demo users even when they have privileges', async () => {
+  it('allows users with choir privilege when module is enabled', async () => {
     isAdminSubject.next(true);
-    isDemoSubject.next(true);
     activeChoirSubject.next({ modules: { programs: true }, membership: { rolesInChoir: ['choir_admin'] } });
     const result = await firstValueFrom(guard.canActivate());
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/dashboard']);
-    expect(result).toEqual(redirectTree);
+    expect(result).toBeTrue();
   });
 });

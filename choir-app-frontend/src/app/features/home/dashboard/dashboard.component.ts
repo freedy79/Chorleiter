@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { Observable, BehaviorSubject, of, combineLatest } from 'rxjs';
+import { Observable, BehaviorSubject, of, combineLatest, forkJoin } from 'rxjs';
 
 import { map, switchMap, take, shareReplay, takeUntil } from 'rxjs/operators';
 import { BaseComponent } from '@shared/components/base.component';
@@ -50,6 +50,7 @@ type VM = {
   latestPost: any | null;
   lastProgram: Program | null;
   upcomingEvents: any[];
+  upcomingAvailabilityMap: Record<string, 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'>;
   dashboardContacts: DashboardContact[];
   performableCount: number;
 };
@@ -90,6 +91,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   pieceChanges$!: Observable<PieceChange[]>;
 
   upcomingEvents$!: Observable<Event[]>;
+  upcomingAvailabilityMap$!: Observable<Record<string, 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'>>;
   nextEvents$!: Observable<Event[]>;
   nextRehearsal$!: Observable<Event | null>;
   memberCount$!: Observable<number>;
@@ -178,6 +180,11 @@ export class DashboardComponent extends BaseComponent implements OnInit {
       map(events => events.find(ev => ev.type === 'REHEARSAL') || null)
     );
 
+    this.upcomingAvailabilityMap$ = this.upcomingEvents$.pipe(
+      switchMap(events => this.buildAvailabilityMapForEvents(events)),
+      shareReplay(1)
+    );
+
     this.latestPost$ = this.refresh$.pipe(
       switchMap(() => this.apiService.getLatestPost())
     );
@@ -226,9 +233,51 @@ export class DashboardComponent extends BaseComponent implements OnInit {
       latestPost: this.latestPost$,
       lastProgram: this.lastProgram$,
       upcomingEvents: this.upcomingEvents$,
+      upcomingAvailabilityMap: this.upcomingAvailabilityMap$,
       dashboardContacts: this.dashboardContacts$,
       performableCount: this.performableCount$
     }).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  private buildAvailabilityMapForEvents(events: ReadonlyArray<Event>): Observable<Record<string, 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'>> {
+    const requests: Array<{ choirId?: number; year: number; month: number }> = [];
+    const seen = new Set<string>();
+
+    for (const event of events) {
+      const date = new Date(event.date);
+      if (Number.isNaN(date.getTime())) {
+        continue;
+      }
+      const choirId = event.choirId;
+      const key = `${choirId ?? 'default'}:${date.getFullYear()}-${date.getMonth() + 1}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        requests.push({ choirId, year: date.getFullYear(), month: date.getMonth() + 1 });
+      }
+    }
+
+    if (requests.length === 0) {
+      return of({});
+    }
+
+    return forkJoin(
+      requests.map(request => this.apiService.getAvailabilities(request.year, request.month, request.choirId))
+    ).pipe(
+      map((responses: Array<Array<{ date: string; status: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' }>>) => {
+        const mapByDate: Record<string, 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE'> = {};
+        responses.forEach((availabilities, index: number) => {
+          const choirId = requests[index].choirId;
+          availabilities.forEach((availability) => {
+            mapByDate[this.availabilityKey(choirId, availability.date)] = availability.status;
+          });
+        });
+        return mapByDate;
+      })
+    );
+  }
+
+  private availabilityKey(choirId: number | undefined, date: string | Date): string {
+    return `${choirId ?? 'default'}:${String(date).slice(0, 10)}`;
   }
 
   /**

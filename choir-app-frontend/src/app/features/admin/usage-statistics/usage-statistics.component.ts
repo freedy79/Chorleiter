@@ -1,10 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MaterialModule } from '@modules/material.module';
 import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
 import { AdminService } from '@core/services/admin.service';
 import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { ResponsiveService } from '@shared/services/responsive.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface ViewsByDay {
   date: string;
@@ -58,13 +62,20 @@ interface UsageSummary {
   templateUrl: './usage-statistics.component.html',
   styleUrls: ['./usage-statistics.component.scss']
 })
-export class UsageStatisticsComponent implements OnInit {
+export class UsageStatisticsComponent implements OnInit, OnDestroy {
+  readonly tabs = [
+    { label: 'Tagesverlauf', icon: 'insights' },
+    { label: 'Top-Stücke', mobileLabel: 'Top-Stücke', icon: 'music_note' },
+    { label: 'Geteilte Stücke', mobileLabel: 'Geteilte', icon: 'share' },
+    { label: 'Top-Seiten', mobileLabel: 'Seiten', icon: 'web' }
+  ];
   summary: UsageSummary | null = null;
   sharedPieceStats: SharedPieceStat[] = [];
   loading = true;
   sharedLoading = false;
   selectedDays = 30;
   selectedTab = 0;
+  isMobile$;
 
   dayOptions = [
     { value: 7, label: '7 Tage' },
@@ -77,10 +88,25 @@ export class UsageStatisticsComponent implements OnInit {
   // For the simple bar chart
   maxDailyViews = 0;
 
+  private destroy$ = new Subject<void>();
+
   constructor(
+    private responsive: ResponsiveService,
     private adminService: AdminService,
-    private notification: NotificationService
-  ) {}
+    private notification: NotificationService,
+    private dialogHelper: DialogHelperService
+  ) {
+    this.isMobile$ = this.responsive.isHandset$;
+  }
+
+  onSelectedTabChange(index: number): void {
+    this.selectedTab = index;
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ngOnInit(): void {
     this.loadSummary();
@@ -158,16 +184,27 @@ export class UsageStatisticsComponent implements OnInit {
   }
 
   cleanupOldData(): void {
-    if (!confirm('Möchtest du Seitenaufrufe älter als 1 Jahr löschen?')) return;
+    this.dialogHelper.confirm({
+      title: 'Daten bereinigen',
+      message: 'Möchtest du Seitenaufrufe älter als 1 Jahr löschen?',
+      confirmButtonText: 'Löschen',
+      cancelButtonText: 'Abbrechen'
+    }).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(confirmed => {
+      if (!confirmed) return;
 
-    this.adminService.cleanupOldPageViews(365).subscribe({
-      next: (result: any) => {
-        this.notification.success(`${result.deleted} alte Einträge gelöscht.`);
-        this.loadSummary();
-      },
-      error: () => {
-        this.notification.error('Fehler beim Aufräumen.');
-      }
+      this.adminService.cleanupOldPageViews(365).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: (result: any) => {
+          this.notification.success(`${result.deleted} alte Einträge gelöscht.`);
+          this.loadSummary();
+        },
+        error: () => {
+          this.notification.error('Fehler beim Aufräumen.');
+        }
+      });
     });
   }
 }

@@ -10,19 +10,22 @@ import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { CreateEventResponse, Event } from '@core/models/event';
 import { MatPaginator } from '@angular/material/paginator';
 import { PaginatorService } from '@core/services/paginator.service';
-import { startWith, takeUntil } from 'rxjs/operators';
+import { UserPreferencesService } from '@core/services/user-preferences.service';
+import { finalize, startWith, take, takeUntil } from 'rxjs/operators';
 import { SelectionModel } from '@angular/cdk/collections';
-import { forkJoin, Subject } from 'rxjs';
+import { forkJoin, Observable, of, Subject } from 'rxjs';
 import { EventDialogComponent } from '../event-dialog/event-dialog.component';
 import { EventImportDialogComponent } from '../event-import-dialog/event-import-dialog.component';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { EventCardComponent } from '../../home/event-card/event-card.component';
 import { ActivatedRoute } from '@angular/router';
+import { Router } from '@angular/router';
 import { ListDataSource } from '@shared/util/list-data-source';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
 import { ResponsiveService } from '@shared/services/responsive.service';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { environment } from 'src/environments/environment';
+import { UserPreferences } from '@core/models/user-preferences';
 
 @Component({
   selector: 'app-event-list',
@@ -34,7 +37,7 @@ import { environment } from 'src/environments/environment';
     EventCardComponent,
     EventTypeLabelPipe,
     PureDatePipe,
-    EmptyStateComponent
+    DataStateComponent
   ],
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.scss'],
@@ -42,7 +45,7 @@ import { environment } from 'src/environments/environment';
 })
 export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   typeControl = new FormControl('ALL');
-  timeControl = new FormControl('RECENT');
+  timeControl = new FormControl('CURRENT_MONTH');
   displayedColumns: string[] = ['date', 'type', 'updatedAt', 'director', 'actions'];
   dataSource: ListDataSource<Event>;
   selectedEvent: Event | null = null;
@@ -54,6 +57,8 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   pageSizeOptions: number[] = [10, 25, 50, 100];
   pageSize: number = this.pageSizeOptions[0];
   isLoading = false;
+  hasLoadError = false;
+  loadErrorMessage = 'Die Ereignisse konnten nicht geladen werden.';
 
   // Dynamic past-year filter options
   pastYears: number[] = [];
@@ -72,7 +77,9 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
               private notification: NotificationService,
               private paginatorService: PaginatorService,
               private route: ActivatedRoute,
+              private router: Router,
               private responsive: ResponsiveService,
+              private prefs: UserPreferencesService,
               private cdr: ChangeDetectorRef) {
     this.dataSource = new ListDataSource<Event>(this.paginatorService, 'event-list');
   }
@@ -94,8 +101,45 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     if (eventId) {
       this.apiService.getEventById(eventId).pipe(takeUntil(this.destroy$)).subscribe(e => { this.selectedEvent = e; this.cdr.markForCheck(); });
     }
+    const createEventToken = this.route.snapshot.queryParamMap.get('createEventToken');
+    if (createEventToken) {
+      this.apiService.resolveCreatePrefillToken(createEventToken)
+        .pipe(
+          takeUntil(this.destroy$),
+          finalize(() => {
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { createEventToken: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true
+            });
+          })
+        )
+        .subscribe({
+          next: (prefill) => {
+            this.openAddEventDialog(prefill);
+          },
+          error: (err) => {
+            if (err?.status === 409) {
+              this.notification.info(err?.error?.message || 'Das Ereignis wurde bereits eingetragen.');
+            } else if (err?.status === 410) {
+              this.notification.error('Der Link ist abgelaufen.');
+            } else if (err?.status === 403) {
+              this.notification.error('Der Link ist für dein aktuelles Konto oder den aktiven Chor nicht gültig.');
+            } else {
+              this.notification.error('Der Link konnte nicht verarbeitet werden.');
+            }
+          }
+        });
+    }
     this.typeControl.valueChanges.pipe(startWith('ALL'), takeUntil(this.destroy$)).subscribe(() => this.loadEvents());
-    this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => this.applyTimeFilter());
+    this.timeControl.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(value => {
+      this.applyTimeFilter();
+      if (value) {
+        this.prefs.update({ eventListTimeFilter: value }).subscribe({ error: () => {} });
+      }
+    });
+    this.restoreTimeFilter();
     this.authService.isChoirAdmin$.pipe(takeUntil(this.destroy$)).subscribe(isChoirAdmin => {
       this.isChoirAdmin = isChoirAdmin;
       this.updateDisplayedColumns();
@@ -118,6 +162,18 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private restoreTimeFilter(): void {
+    const load$: Observable<UserPreferences | null> = this.prefs.isLoaded() ? of(null) : this.prefs.load();
+    load$.pipe(take(1), takeUntil(this.destroy$)).subscribe(() => {
+      const saved = this.prefs.getPreference('eventListTimeFilter');
+      if (saved && saved !== this.timeControl.value) {
+        this.timeControl.setValue(saved, { emitEvent: false });
+        this.applyTimeFilter();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   private updateDisplayedColumns(): void {
     const base = ['date', 'type', 'updatedAt', 'director'];
     if (!this.isSingerOnly) {
@@ -128,8 +184,9 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private allEvents: Event[] = [];
 
-  private loadEvents(): void {
+  loadEvents(): void {
     this.isLoading = true;
+    this.hasLoadError = false;
     this.mobileVisibleCount = this.MOBILE_PAGE_SIZE;
     const type = this.typeControl.value;
     this.apiService.getEvents(type === 'ALL' ? undefined : (type as any))
@@ -142,10 +199,25 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.cdr.markForCheck();
         },
         error: () => {
+          this.hasLoadError = true;
           this.isLoading = false;
           this.cdr.markForCheck();
         }
       });
+  }
+
+  get isFilterActive(): boolean {
+    return this.typeControl.value !== 'ALL' || this.timeControl.value !== 'ALL';
+  }
+
+  get emptyStateTitle(): string {
+    return this.isFilterActive ? 'Keine Ereignisse gefunden' : 'Noch keine Ereignisse vorhanden';
+  }
+
+  get emptyStateMessage(): string {
+    return this.isFilterActive
+      ? 'Keine Ereignisse für den aktuellen Filter gefunden.'
+      : 'Lege dein erstes Ereignis an, um zu starten.';
   }
 
   private applyTimeFilter(): void {
@@ -160,13 +232,20 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (time === 'RECENT') {
       const pastLimit = new Date(today);
-      pastLimit.setDate(pastLimit.getDate() - 10);
+      pastLimit.setDate(pastLimit.getDate() - 14);
       const futureLimit = new Date(today);
-      futureLimit.setDate(futureLimit.getDate() + 10);
+      futureLimit.setDate(futureLimit.getDate() + 14);
       this.dataSource.data = this.allEvents.filter(ev => {
         const eventDate = new Date(ev.date);
         eventDate.setHours(0, 0, 0, 0);
         return eventDate >= pastLimit && eventDate <= futureLimit;
+      });
+    } else if (time === 'CURRENT_MONTH') {
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+      this.dataSource.data = this.allEvents.filter(ev => {
+        const eventDate = new Date(ev.date);
+        return eventDate >= monthStart && eventDate <= monthEnd;
       });
     } else if (time === 'FUTURE') {
       this.dataSource.data = this.allEvents.filter(ev => {
@@ -336,7 +415,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
     this.mobileVisibleCount += this.MOBILE_PAGE_SIZE;
   }
 
-  openAddEventDialog(): void {
+  openAddEventDialog(prefill?: { date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }): void {
     this.dialogHelper.openDialogWithApi<
       EventDialogComponent,
       { date: string; type: string; notes?: string; pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null },
@@ -345,7 +424,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
       EventDialogComponent,
       (result) => this.apiService.createEvent(result),
       {
-        dialogConfig: { width: '600px', disableClose: true },
+        dialogConfig: { width: '600px', disableClose: true, data: prefill ? { prefill } : undefined },
         apiConfig: {
           onSuccess: (response: CreateEventResponse) => {
             const baseMessage = response.wasUpdated ?

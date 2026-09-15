@@ -9,18 +9,21 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { PostDialogComponent } from './post-dialog.component';
 import { PostComponent } from './post.component';
-import { EmptyStateComponent } from '@shared/components/empty-state/empty-state.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 
 @Component({
   selector: 'app-post-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, MaterialModule, PostComponent, EmptyStateComponent],
+  imports: [CommonModule, RouterModule, MaterialModule, PostComponent, DataStateComponent],
   templateUrl: './post-list.component.html',
   styleUrls: ['./post-list.component.scss']
 })
 export class PostListComponent implements OnInit {
   posts: Post[] = [];
   displayCount = 5;
+  isLoading = false;
+  hasLoadError = false;
+  loadErrorMessage = 'Die Beiträge konnten nicht geladen werden.';
   currentUserId: number | null = null;
   isChoirAdmin = false;
   isAdmin = false;
@@ -44,12 +47,21 @@ export class PostListComponent implements OnInit {
   }
 
   loadPosts(): void {
-    this.api.getPosts().subscribe(p => {
-      this.posts = p;
-      this.displayCount = Math.min(5, this.posts.length);
-      const fragment = this.route.snapshot.fragment;
-      if (fragment) {
-        setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth' }), 0);
+    this.isLoading = true;
+    this.hasLoadError = false;
+    this.api.getPosts().subscribe({
+      next: p => {
+        this.posts = p;
+        this.displayCount = Math.min(5, this.posts.length);
+        this.isLoading = false;
+        const fragment = this.route.snapshot.fragment;
+        if (fragment) {
+          setTimeout(() => document.getElementById(fragment)?.scrollIntoView({ behavior: 'smooth' }), 0);
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.hasLoadError = true;
       }
     });
   }

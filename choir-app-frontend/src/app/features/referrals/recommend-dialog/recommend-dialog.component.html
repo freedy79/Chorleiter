@@ -1,0 +1,41 @@
+<h2 mat-dialog-title>Chorseite weiterempfehlen</h2>
+
+<mat-dialog-content>
+  <p>
+    Empfiehl NAK Chorleiter weiter. Die Nutzung ist kostenlos – für den laufenden Betrieb sind wir aber auf Spenden angewiesen.
+  </p>
+
+  <form [formGroup]="form" class="recommend-form">
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>Name der Empfängerin / des Empfängers</mat-label>
+      <input matInput formControlName="recipientName" />
+      <mat-error *ngIf="form.get('recipientName')?.invalid">Name ist erforderlich.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>E-Mail-Adresse</mat-label>
+      <input matInput type="email" formControlName="recipientEmail" />
+      <mat-error *ngIf="form.get('recipientEmail')?.invalid">Gültige E-Mail erforderlich.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width:100%" *ngIf="allowSingerRegistration">
+      <mat-label>Empfehlungstyp</mat-label>
+      <mat-select formControlName="invitationType">
+        <mat-option value="choir-admin">Chor registrieren & Admin werden</mat-option>
+        <mat-option value="singer">Als Sänger registrieren</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="dismissPrompt">Nicht mehr anzeigen</mat-checkbox>
+
+    <p class="error" *ngIf="error">{{ error }}</p>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-stroked-button type="button" (click)="openDonate()">Spenden</button>
+  <button mat-button type="button" (click)="cancel()">Später</button>
+  <button mat-flat-button color="primary" type="button" [disabled]="loading" (click)="submit()">
+    Empfehlung senden
+  </button>
+</mat-dialog-actions>

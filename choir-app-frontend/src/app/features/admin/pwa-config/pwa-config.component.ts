@@ -4,10 +4,13 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { Observable } from 'rxjs';
 import { AdminPageHeaderComponent } from '../shared/admin-page-header/admin-page-header.component';
 import { ApiService } from '@core/services/api.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { NotificationService } from '@core/services/notification.service';
 import { PwaVapidKeysComponent } from './pwa-vapid-keys/pwa-vapid-keys.component';
 import { PwaFeaturesComponent } from './pwa-features/pwa-features.component';
@@ -26,6 +29,8 @@ import { PwaAllConfigsComponent } from './pwa-all-configs/pwa-all-configs.compon
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatSelectModule,
     AdminPageHeaderComponent,
     PwaVapidKeysComponent,
     PwaFeaturesComponent,
@@ -35,6 +40,13 @@ import { PwaAllConfigsComponent } from './pwa-all-configs/pwa-all-configs.compon
   ]
 })
 export class PwaConfigComponent {
+  readonly tabs = [
+    { label: 'VAPID Keys', mobileLabel: 'VAPID', icon: 'vpn_key' },
+    { label: 'Features', icon: 'toggle_on' },
+    { label: 'Service Worker', mobileLabel: 'Service-Worker', icon: 'cached' },
+    { label: 'Cache', icon: 'storage' },
+    { label: 'Alle', mobileLabel: 'Alle Einstellungen', icon: 'list' }
+  ];
   selectedTabIndex = 0;
   isMobile$: Observable<boolean>;
   initializing = false;
@@ -42,6 +54,7 @@ export class PwaConfigComponent {
   constructor(
     private responsive: ResponsiveService,
     private api: ApiService,
+    private dialogHelper: DialogHelperService,
     private notification: NotificationService
   ) {
     this.isMobile$ = responsive.isHandset$;
@@ -51,26 +64,37 @@ export class PwaConfigComponent {
     this.selectedTabIndex = event.index;
   }
 
-  initializeDefaults(): void {
-    if (!confirm('Möchten Sie die Standard-PWA-Konfigurationen initialisieren? Bestehende Einstellungen werden nicht überschrieben.')) {
-      return;
-    }
+  onSelectedTabIndexChange(index: number): void {
+    this.selectedTabIndex = index;
+  }
 
-    this.initializing = true;
-    this.api.initializePwaConfigDefaults().subscribe({
-      next: (result) => {
-        this.initializing = false;
-        this.notification.success(
-          `${result.created} Konfigurationen erstellt, ${result.skipped} übersprungen`,
-          3000
-        );
-        window.location.reload();
-      },
-      error: (err) => {
-        this.initializing = false;
-        console.error('Error initializing PWA config defaults:', err);
-        this.notification.error(err.error?.message || 'Fehler beim Initialisieren der Standardkonfigurationen');
+  initializeDefaults(): void {
+    this.dialogHelper.confirm({
+      title: 'Standardkonfiguration initialisieren?',
+      message: 'Möchten Sie die Standard-PWA-Konfigurationen initialisieren? Bestehende Einstellungen werden nicht überschrieben.',
+      confirmButtonText: 'Initialisieren',
+      cancelButtonText: 'Abbrechen'
+    }).subscribe(confirmed => {
+      if (!confirmed) {
+        return;
       }
+
+      this.initializing = true;
+      this.api.initializePwaConfigDefaults().subscribe({
+        next: (result) => {
+          this.initializing = false;
+          this.notification.success(
+            `${result.created} Konfigurationen erstellt, ${result.skipped} übersprungen`,
+            3000
+          );
+          window.location.reload();
+        },
+        error: (err) => {
+          this.initializing = false;
+          console.error('Error initializing PWA config defaults:', err);
+          this.notification.error(err.error?.message || 'Fehler beim Initialisieren der Standardkonfigurationen');
+        }
+      });
     });
   }
 }

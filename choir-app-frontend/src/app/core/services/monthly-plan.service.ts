@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { shareReplay, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { MonthlyPlan } from '../models/monthly-plan';
+import { MonthlyPlanRecipientPreference } from '../models/personal-address-book-entry';
 
 @Injectable({ providedIn: 'root' })
 export class MonthlyPlanService {
@@ -52,8 +53,18 @@ export class MonthlyPlanService {
     return this.http.get(`${this.apiUrl}/monthly-plans/${id}/pdf`, { responseType: 'blob' });
   }
 
-  emailMonthlyPlan(id: number, recipients: number[], emails: string[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients, emails });
+  emailMonthlyPlan(
+    id: number,
+    recipients: number[],
+    emails: string[],
+    addressBookEntryIds: number[] = [],
+    saveSelection = true
+  ): Observable<any> {
+    return this.http.post(`${this.apiUrl}/monthly-plans/${id}/email`, { recipients, emails, addressBookEntryIds, saveSelection });
+  }
+
+  getEmailRecipientPreference(): Observable<MonthlyPlanRecipientPreference> {
+    return this.http.get<MonthlyPlanRecipientPreference>(`${this.apiUrl}/monthly-plans/email-recipient-preference`);
   }
 
   requestAvailability(id: number, recipients: number[]): Observable<any> {

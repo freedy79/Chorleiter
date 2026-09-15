@@ -1,5 +1,29 @@
 @use '../../../../themes/breakpoints' as *;
 
+.dialog-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  p {
+    margin: 0;
+  }
+
+  @include handset {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+.state-row {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  min-height: 72px;
+}
+
 mat-selection-list {
   max-height: 300px;
   overflow: auto;
@@ -13,6 +37,43 @@ mat-selection-list {
   }
 }
 
+.recipient-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-sm;
+  width: 100%;
+}
+
+.recipient-main {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $spacing-xs;
+  min-width: 0;
+}
+
+.personal-badge {
+  border-radius: 999px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: var(--accent-color, rgba(63, 81, 181, 0.12));
+}
+
+.recipient-actions {
+  display: flex;
+  flex: 0 0 auto;
+
+  button {
+    width: $touch-target-min;
+    height: $touch-target-min;
+  }
+}
+
+.empty-state {
+  margin: $spacing-md 0;
+}
+
 .extra-emails {
   display: block;
   margin-top: 1rem;
@@ -20,6 +81,12 @@ mat-selection-list {
 }
 
 [mat-dialog-actions] {
+  button mat-spinner {
+    display: inline-block;
+    margin-right: $spacing-xs;
+    vertical-align: middle;
+  }
+
   @include handset {
     padding: $spacing-sm $spacing-md;
 

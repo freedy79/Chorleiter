@@ -10,10 +10,11 @@
  * All custom errors extend from this class
  */
 class AppError extends Error {
-  constructor(message, statusCode = 500, details = null) {
+  constructor(message, statusCode = 500, details = null, code = null) {
     super(message);
     this.statusCode = statusCode;
     this.details = details;
+    this.code = code;
     this.isOperational = true; // Distinguishes operational errors from programming errors
     Error.captureStackTrace(this, this.constructor);
   }

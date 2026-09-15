@@ -35,7 +35,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     placeholder: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: true
     },
     required: {

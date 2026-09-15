@@ -10,7 +10,6 @@ describe('ChoirAdminGuard', () => {
   let guard: ChoirAdminGuard;
   let isAdminSubject: BehaviorSubject<boolean>;
   let isChoirAdminSubject: BehaviorSubject<boolean>;
-  let isDemoSubject: BehaviorSubject<boolean>;
   let router: jasmine.SpyObj<Router>;
   let redirectTree: UrlTree;
   let apiService: { checkChoirAdminStatus: jasmine.Spy };
@@ -18,7 +17,6 @@ describe('ChoirAdminGuard', () => {
   beforeEach(() => {
     isAdminSubject = new BehaviorSubject<boolean>(false);
     isChoirAdminSubject = new BehaviorSubject<boolean>(false);
-    isDemoSubject = new BehaviorSubject<boolean>(false);
     router = jasmine.createSpyObj('Router', ['createUrlTree']);
     redirectTree = {} as UrlTree;
     router.createUrlTree.and.returnValue(redirectTree);
@@ -33,8 +31,7 @@ describe('ChoirAdminGuard', () => {
           provide: AuthService,
           useValue: {
             isAdmin$: isAdminSubject.asObservable(),
-            isChoirAdmin$: isChoirAdminSubject.asObservable(),
-            isDemo$: isDemoSubject.asObservable()
+            isChoirAdmin$: isChoirAdminSubject.asObservable()
           }
         },
         { provide: ApiService, useValue: apiService },
@@ -64,11 +61,9 @@ describe('ChoirAdminGuard', () => {
     expect(result).toEqual(redirectTree);
   });
 
-  it('redirects demo users even if they are choir admins', async () => {
+  it('allows choir admins regardless of additional global roles', async () => {
     isChoirAdminSubject.next(true);
-    isDemoSubject.next(true);
     const result = await firstValueFrom(guard.canActivate());
-    expect(router.createUrlTree).toHaveBeenCalledWith(['/collections']);
-    expect(result).toEqual(redirectTree);
+    expect(result).toBeTrue();
   });
 });

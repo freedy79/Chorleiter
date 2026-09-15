@@ -78,6 +78,11 @@ import { ChoirPublicPage, PublicChoirPageResponse, SlugAvailabilityResponse } fr
 import { ChatRoom, ChatUnreadSummary } from '../models/chat-room';
 import { ChatMessage, ChatMessageListResponse } from '../models/chat-message';
 import { ChatService } from './chat.service';
+import {
+  ReferralRecommendationPayload,
+  StartChoirRegistrationRequestPayload,
+  StartChoirRegistrationResponse
+} from '../models/choir-registration-request';
 
 /**
  * @deprecated ApiService is a legacy facade service that should no longer be used.
@@ -420,8 +425,8 @@ export class ApiService {
     return this.collectionService.updateCollection(id, data);
   }
 
-  getCollectionUpdateStatus(jobId: string): Observable<any> {
-    return this.collectionService.getUpdateStatus(jobId);
+  getCollectionUpdateStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    return this.collectionService.getUpdateStatus(jobId, options);
   }
 
   uploadCollectionCover(id: number, file: File): Observable<any> {
@@ -489,6 +494,10 @@ export class ApiService {
     return this.eventService.getEventById(id);
   }
 
+  resolveCreatePrefillToken(token: string): Observable<{ date: string; type: string; notes?: string; directorId?: number | null; monthlyPlanId?: number | null; programId?: string | null }> {
+    return this.eventService.resolveCreatePrefillToken(token);
+  }
+
   updateEvent(id: number, data: { date: string, type: string, notes?: string, pieceIds?: number[]; directorId?: number | null; organistId?: number; finalized?: boolean; version?: number; monthlyPlanId?: number; programId?: string | null }): Observable<Event> {
     return this.eventService.updateEvent(id, data);
   }
@@ -502,11 +511,11 @@ export class ApiService {
   }
 
   // --- Plan Entry Methods ---
-  createPlanEntry(data: { monthlyPlanId: number; date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
+  createPlanEntry(data: { monthlyPlanId: number; date: string; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.createPlanEntry(data);
   }
 
-  updatePlanEntry(id: number, data: { date: string; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
+  updatePlanEntry(id: number, data: { date: string; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string; directorId?: number | null; organistId?: number | null; programId?: string | null }): Observable<PlanEntry> {
     return this.planEntryService.updatePlanEntry(id, data);
   }
 
@@ -535,8 +544,8 @@ export class ApiService {
     return this.monthlyPlanService.downloadMonthlyPlanPdf(id);
   }
 
-  emailMonthlyPlan(id: number, recipients: number[], emails: string[]): Observable<any> {
-    return this.monthlyPlanService.emailMonthlyPlan(id, recipients, emails);
+  emailMonthlyPlan(id: number, recipients: number[], emails: string[], addressBookEntryIds: number[] = [], saveSelection = true): Observable<any> {
+    return this.monthlyPlanService.emailMonthlyPlan(id, recipients, emails, addressBookEntryIds, saveSelection);
   }
 
   requestAvailability(id: number, recipients: number[]): Observable<any> {
@@ -549,7 +558,7 @@ export class ApiService {
   }
 
   createPlanRule(
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     options?: { choirId?: number }
   ): Observable<PlanRule> {
     return this.planRuleService.createPlanRule(data, options?.choirId);
@@ -557,7 +566,7 @@ export class ApiService {
 
   updatePlanRule(
     id: number,
-    data: { dayOfWeek: number; weeks?: number[] | null; notes?: string | null },
+    data: { dayOfWeek: number; weeks?: number[] | null; eventType?: 'SERVICE' | 'REHEARSAL'; notes?: string | null },
     options?: { choirId?: number }
   ): Observable<PlanRule> {
     return this.planRuleService.updatePlanRule(id, data, options?.choirId);
@@ -568,24 +577,24 @@ export class ApiService {
   }
 
   // --- Availability Methods ---
-  getAvailabilities(year: number, month: number): Observable<UserAvailability[]> {
-    return this.availabilityService.getAvailabilities(year, month);
+  getAvailabilities(year: number, month: number, choirId?: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getAvailabilities(year, month, choirId);
   }
 
-  setAvailability(date: string, status: string): Observable<UserAvailability> {
-    return this.availabilityService.setAvailability(date, status);
+  setAvailability(date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.availabilityService.setAvailability(date, status, choirId);
   }
 
-  getMemberAvailabilities(year: number, month: number): Observable<MemberAvailability[]> {
-    return this.availabilityService.getMemberAvailabilities(year, month);
+  getMemberAvailabilities(year: number, month: number, choirId?: number): Observable<MemberAvailability[]> {
+    return this.availabilityService.getMemberAvailabilities(year, month, choirId);
   }
 
-  getUserAvailabilities(year: number, month: number, userId: number): Observable<UserAvailability[]> {
-    return this.availabilityService.getUserAvailabilities(year, month, userId);
+  getUserAvailabilities(year: number, month: number, userId: number, choirId?: number): Observable<UserAvailability[]> {
+    return this.availabilityService.getUserAvailabilities(year, month, userId, choirId);
   }
 
-  setMemberAvailability(userId: number, date: string, status: string): Observable<UserAvailability> {
-    return this.availabilityService.setMemberAvailability(userId, date, status);
+  setMemberAvailability(userId: number, date: string, status: string, choirId?: number): Observable<UserAvailability> {
+    return this.availabilityService.setMemberAvailability(userId, date, status, choirId);
   }
 
 
@@ -627,8 +636,8 @@ export class ApiService {
   }
 
   // Diese Methode fragt den Status eines Jobs ab
-  getImportStatus(jobId: string): Observable<any> {
-    return this.importService.getImportStatus(jobId);
+  getImportStatus(jobId: string, options?: { silent?: boolean }): Observable<any> {
+    return this.importService.getImportStatus(jobId, options);
   }
 
 
@@ -1000,6 +1009,10 @@ export class ApiService {
     return this.adminService.getMailTemplates();
   }
 
+  getDemoLeads(): Observable<any[]> {
+    return this.adminService.getDemoLeads();
+  }
+
   updateMailTemplates(data: MailTemplate[]): Observable<MailTemplate[]> {
     return this.adminService.updateMailTemplates(data);
   }
@@ -1198,6 +1211,22 @@ export class ApiService {
   // --- Auth Methods ---
   signup(data: { firstName: string; name: string; email: string; choirName: string; password: string }): Observable<any> {
     return this.http.post(`${environment.apiUrl}/auth/signup`, data);
+  }
+
+  sendChoirRecommendation(data: ReferralRecommendationPayload): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/referrals/recommend`, data);
+  }
+
+  startChoirRegistration(token: string, data: StartChoirRegistrationRequestPayload): Observable<StartChoirRegistrationResponse> {
+    return this.http.post<StartChoirRegistrationResponse>(`${environment.apiUrl}/referrals/register-choir/${token}/start`, data);
+  }
+
+  startPublicChoirRegistration(data: StartChoirRegistrationRequestPayload): Observable<StartChoirRegistrationResponse> {
+    return this.http.post<StartChoirRegistrationResponse>(`${environment.apiUrl}/referrals/register-choir/public/start`, data);
+  }
+
+  verifyChoirRegistration(requestId: number, code: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/referrals/register-choir/${requestId}/verify`, { code });
   }
 
   // --- Push Notification Methods ---

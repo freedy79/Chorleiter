@@ -27,16 +27,14 @@ async function userHasChoirRole(req, choirRoles) {
 }
 
 /**
- * Middleware to disallow actions for demo users.
+ * Legacy middleware kept for route compatibility.
  *
- * Checks the global roles provided in {@link req.userRoles}.
+ * Demo users now follow the same authorization path as regular users
+ * (including choir director checks). Therefore this middleware no longer
+ * applies a role-based block.
  */
 function requireNonDemo(req, res, next) {
-    const roles = Array.isArray(req.userRoles) ? req.userRoles : [];
-    if (roles.includes('demo')) {
-        return res.status(403).send({ message: 'Demo user cannot perform this action.' });
-    }
-    next();
+    return next();
 }
 
 /**

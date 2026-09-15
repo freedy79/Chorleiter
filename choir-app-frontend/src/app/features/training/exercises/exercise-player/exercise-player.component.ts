@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MaterialModule } from '@modules/material.module';
 import { TrainingService } from '@core/services/training.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
 import { Exercise, AttemptResult, MODULE_LABELS, DIFFICULTY_LABELS } from '@core/models/training';
 
 type ExercisePhase = 'loading' | 'ready' | 'playing' | 'result';
@@ -101,6 +102,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
 
   constructor(
     private trainingService: TrainingService,
+    private dialogHelper: DialogHelperService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -238,12 +240,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     if (!this.exercise?.content) return;
     const rounds = this.exercise.content.rounds;
     if (rounds && rounds.length > 0) {
-      this.currentRound = rounds[this.recognitionRoundIndex % rounds.length];
+      const sourceRound = rounds[this.recognitionRoundIndex % rounds.length];
+      this.currentRound = {
+        ...sourceRound,
+        options: this.shuffleOptions(sourceRound.options || [])
+      };
     } else {
       // Legacy single-round format
       this.currentRound = {
         correctPattern: this.exercise.content.correctPattern,
-        options: this.exercise.content.options
+        options: this.shuffleOptions(this.exercise.content.options || [])
       };
     }
   }
@@ -258,9 +264,16 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     const bpm = this.exercise?.content?.bpm || 80;
     const beatDuration = 60000 / bpm;
     const pattern = this.currentRound.correctPattern;
+    const countInBeats = this.countInBeats;
     this.isPlayingRhythm = true;
 
     let currentTime = 0;
+    for (let beat = 0; beat < countInBeats; beat++) {
+      const accent = beat === 0;
+      setTimeout(() => this.playMetronomeClick(accent), currentTime);
+      currentTime += beatDuration;
+    }
+
     for (const note of pattern) {
       const durationBeats = this.getNoteDurationBeats(note.type);
       if (!note.type.startsWith('rest')) {
@@ -322,7 +335,8 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     const bpm = this.exercise.content.bpm || 80;
     const beatInterval = 60000 / bpm;
     const bars = this.exercise.content.bars || 2;
-    const countInBeats = 4; // One bar count-in
+    const beatsPerBar = this.getBeatsPerBar();
+    const countInBeats = this.countInBeats;
 
     // Build beat timeline for note highlighting
     this.buildBeatTimeline();
@@ -350,7 +364,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
         this.updateActiveNote(this.currentBeat);
       }
 
-      const totalBeats = bars * 4 + 2;
+      const totalBeats = bars * beatsPerBar + 2;
       if (this.currentBeat > totalBeats) {
         this.stopMetronome();
         if (this.tapTimes.length > 0) {
@@ -676,6 +690,38 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
     this.playTone(accent ? 1200 : 800, 0.05);
   }
 
+  private shuffleOptions<T extends { id?: string; correct?: boolean }>(options: T[]): T[] {
+    const shuffled = [...options];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }
+
+  private getBeatsPerBar(): number {
+    const timeSignature = this.exercise?.content?.timeSignature;
+    if (typeof timeSignature === 'string') {
+      const numerator = parseInt(timeSignature.split('/')[0], 10);
+      if (Number.isFinite(numerator) && numerator > 0) {
+        return numerator;
+      }
+    }
+    return 4;
+  }
+
+  get countInBeats(): number {
+    const explicitCountIn = this.exercise?.content?.countInBeats;
+    if (typeof explicitCountIn === 'number' && explicitCountIn > 0) {
+      return explicitCountIn;
+    }
+    return this.getBeatsPerBar();
+  }
+
+  get countInBeatNumbers(): number[] {
+    return Array.from({ length: this.countInBeats }, (_, index) => index + 1);
+  }
+
   private noteToFreq(note: string): number {
     const notes: Record<string, number> = {
       'C': 0, 'D': 2, 'E': 4, 'F': 5, 'G': 7, 'A': 9, 'B': 11, 'H': 11
@@ -769,10 +815,19 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
 
   navigateBack(): void {
     if (this.phase === 'playing') {
-      if (!confirm('Übung wirklich abbrechen? Der Fortschritt geht verloren.')) {
-        return;
-      }
-      this.stopMetronome();
+      this.dialogHelper.confirm({
+        title: 'Übung abbrechen?',
+        message: 'Übung wirklich abbrechen? Der Fortschritt geht verloren.'
+      }).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(confirmed => {
+        if (!confirmed) {
+          return;
+        }
+        this.stopMetronome();
+        this.router.navigate(['/training']);
+      });
+      return;
     }
     this.router.navigate(['/training']);
   }
@@ -1036,7 +1091,7 @@ export class ExercisePlayerComponent implements OnInit, OnDestroy {
   get rhythmBars(): { notes: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] }[] {
     if (!this.exercise?.content?.pattern) return [];
     const pattern = this.exercise.content.pattern;
-    const beatsPerBar = 4; // 4/4 time
+    const beatsPerBar = this.getBeatsPerBar();
     const bars: { notes: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] }[] = [];
     let currentBar: { symbol: string; isRest: boolean; width: number; noteIndex: number }[] = [];
     let barBeatCount = 0;

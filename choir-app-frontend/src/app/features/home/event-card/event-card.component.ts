@@ -7,6 +7,9 @@ import { NotificationService } from '@core/services/notification.service';
 import { MaterialModule } from '@modules/material.module';
 import { Event, EventPiece } from 'src/app/core/models/event';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
+import { ApiService } from '@core/services/api.service';
+
+type AvailabilityStatus = 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
 
 @Component({
   selector: 'app-event-card',
@@ -21,6 +24,18 @@ import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
   styleUrls: ['./event-card.component.scss']
 })
 export class EventCardComponent {
+  private readonly availabilityLabels: Record<AvailabilityStatus, string> = {
+    AVAILABLE: 'Zugesagt',
+    MAYBE: 'Vielleicht',
+    UNAVAILABLE: 'Abgesagt'
+  };
+
+  private readonly availabilityIcons: Record<AvailabilityStatus, string> = {
+    AVAILABLE: 'check_circle',
+    MAYBE: 'help',
+    UNAVAILABLE: 'cancel'
+  };
+
   /**
    * Der Titel, der in der Kopfzeile der Karte angezeigt wird (z.B. "Letzter Gottesdienst").
    */
@@ -30,10 +45,22 @@ export class EventCardComponent {
    * Das Event-Objekt, das angezeigt werden soll. Kann null sein, wenn kein Event gefunden wurde.
    */
   @Input() event: Event | null = null;
+  @Input() availabilityStatus: AvailabilityStatus | null = null;
+  @Input() allowAvailabilityActions = false;
+  @Input() choirId?: number | null;
+  availabilityMenuOpen = false;
+
+  readonly availabilityOptions: Array<{ value: AvailabilityStatus; icon: string; label: string }> = [
+    { value: 'AVAILABLE', icon: 'check_circle', label: 'Zusage' },
+    { value: 'MAYBE', icon: 'help', label: 'Vielleicht' },
+    { value: 'UNAVAILABLE', icon: 'cancel', label: 'Absage' }
+  ];
+  isSavingAvailability = false;
 
   constructor(
     private clipboard: Clipboard,
-    private notification: NotificationService
+    private notification: NotificationService,
+    private api: ApiService
   ) {}
 
   getPieceSubtitle(piece: EventPiece): string {
@@ -75,5 +102,70 @@ export class EventCardComponent {
     if (this.clipboard.copy(text)) {
       this.notification.success('Liste kopiert');
     }
+  }
+
+  setAvailability(status: AvailabilityStatus, event?: MouseEvent): void {
+    event?.stopPropagation();
+    if (!this.event?.date || this.isSavingAvailability || this.availabilityStatus === status) {
+      return;
+    }
+
+    this.isSavingAvailability = true;
+    this.api.setAvailability(this.event.date.slice(0, 10), status, this.choirId ?? this.event.choirId).subscribe({
+      next: (updated) => {
+        this.availabilityStatus = updated.status;
+        this.isSavingAvailability = false;
+        this.notification.success(`${this.getAvailabilityLabel(updated.status)} gespeichert.`);
+      },
+      error: () => {
+        this.isSavingAvailability = false;
+        this.notification.error('Verfügbarkeit konnte nicht gespeichert werden.');
+      }
+    });
+  }
+
+  isActiveAvailability(status: AvailabilityStatus): boolean {
+    return this.availabilityStatus === status;
+  }
+
+  openAvailabilityMenu(event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.availabilityMenuOpen = true;
+  }
+
+  updateAvailabilityFromMenu(status: AvailabilityStatus, event: MouseEvent): void {
+    event.stopPropagation();
+    this.setAvailability(status, event);
+  }
+
+  getAvailabilityLabel(status: AvailabilityStatus | null | undefined): string {
+    return status ? this.availabilityLabels[status] : 'Noch keine Rückmeldung';
+  }
+
+  getAvailabilityIcon(status: AvailabilityStatus | null | undefined): string {
+    return status ? this.availabilityIcons[status] : 'event_available';
+  }
+
+  getAvailabilityClass(status: AvailabilityStatus | null | undefined): string {
+    if (!status) {
+      return 'status-unset';
+    }
+    if (status === 'AVAILABLE') {
+      return 'status-available';
+    }
+    if (status === 'UNAVAILABLE') {
+      return 'status-unavailable';
+    }
+    return 'status-maybe';
+  }
+
+  getEventTypeLabel(): string {
+    if (this.event?.type === 'SERVICE') {
+      return 'Gottesdienst';
+    }
+    if (this.event?.type === 'REHEARSAL') {
+      return 'Probe';
+    }
+    return 'Termin';
   }
 }

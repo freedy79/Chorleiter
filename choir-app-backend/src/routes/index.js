@@ -44,6 +44,9 @@ const pageViewRoutes = require('./page-view.routes');
 const formRoutes = require('./form.routes');
 const otaRoutes = require('./ota.routes');
 const trainingRoutes = require('./training.routes');
+const feedbackRoutes = require('./feedback.routes');
+const referralRoutes = require('./referral.routes');
+const personalAddressBookRoutes = require('./personalAddressBook.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -91,6 +94,9 @@ const routeDefinitions = [
     ['/api/forms', formRoutes],
     ['/api/ota', otaRoutes],
     ['/api/training', trainingRoutes],
+    ['/api/feedback', feedbackRoutes],
+    ['/api/referrals', referralRoutes],
+    ['/api/personal-address-book', personalAddressBookRoutes],
 ];
 
 function registerRoutes(app) {

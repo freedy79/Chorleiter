@@ -4,6 +4,7 @@ import { Pipe, PipeTransform } from '@angular/core';
  * Interface for plan entry with notes.
  */
 export interface PlanEntry {
+  eventType?: 'SERVICE' | 'REHEARSAL' | null;
   notes?: string | null;
 }
 
@@ -38,7 +39,19 @@ export class EventShortPipe implements PipeTransform {
    * @returns Short abbreviation ("GD" for Gottesdienst, "CP" for Chorprobe) or empty string
    */
   transform(value: PlanEntry | null | undefined): string {
-    if (!value || !value.notes) {
+    if (!value) {
+      return '';
+    }
+
+    if (value.eventType === 'SERVICE') {
+      return 'GD';
+    }
+
+    if (value.eventType === 'REHEARSAL') {
+      return 'CP';
+    }
+
+    if (!value.notes) {
       return '';
     }
 

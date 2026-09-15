@@ -1,5 +1,6 @@
 <a *ngIf="isVisible && item && !item.disabled" mat-list-item [ngStyle]="{'padding-left': (depth * 36) + 'px'}"
   (click)="onItemSelected(item)" class="menu-list-item"
+  [attr.data-nav-key]="item.key || null"
   [routerLink]="item.children?.length ? null : (item.route || null)" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
   [ngClass]="{'expanded': expanded}">
 

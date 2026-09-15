@@ -81,6 +81,8 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+choir-app-backend/.env*
+!choir-app-backend/.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -152,3 +154,10 @@ MOBILE-SEARCH-TESTS-REPORT.html
 backups/*
 nul
 test.html
+
+# Deploy secrets – local config and password file must never be committed
+deploy.local.ps1
+*.local.ps1
+deploy.local.sh
+*.local.sh
+.chorleiter_deploy_pw

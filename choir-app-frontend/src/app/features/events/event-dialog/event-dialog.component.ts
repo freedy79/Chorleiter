@@ -37,6 +37,15 @@ import { Program } from '@core/models/program';
 import { UserInChoir } from '@core/models/user';
 import { AuthService } from '@core/services/auth.service';
 
+type EventPrefillData = {
+    date?: string;
+    type?: string;
+    notes?: string;
+    directorId?: number | null;
+    monthlyPlanId?: number | null;
+    programId?: string | null;
+};
+
 @Component({
     selector: 'app-event-dialog',
     standalone: true,
@@ -62,6 +71,7 @@ export class EventDialogComponent implements OnInit {
     isEditMode = false;
     readOnly = false;
     private editEventId: number | null = null;
+    private prefillMonthlyPlanId: number | null = null;
     programs: Program[] = [];
     directors: UserInChoir[] = [];
 
@@ -74,7 +84,7 @@ export class EventDialogComponent implements OnInit {
         private programService: ProgramService,
         private dialog: MatDialog,
         public dialogRef: MatDialogRef<EventDialogComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { event?: Event; readOnly?: boolean } | null
+        @Inject(MAT_DIALOG_DATA) public data: { event?: Event; readOnly?: boolean; prefill?: EventPrefillData } | null
     ) {
         this.eventForm = this.fb.group({
             date: [new Date().toISOString().split('T')[0], Validators.required],
@@ -90,6 +100,17 @@ export class EventDialogComponent implements OnInit {
         }
         if (data && data.readOnly) {
             this.readOnly = true;
+        }
+
+        if (!this.isEditMode && data?.prefill) {
+            this.prefillMonthlyPlanId = data.prefill.monthlyPlanId ?? null;
+            this.eventForm.patchValue({
+                date: data.prefill.date || this.eventForm.get('date')?.value,
+                type: data.prefill.type || '',
+                notes: data.prefill.notes || '',
+                directorId: data.prefill.directorId ?? null,
+                programId: data.prefill.programId ?? null
+            });
         }
     }
 
@@ -315,6 +336,7 @@ export class EventDialogComponent implements OnInit {
                 ...formValue,
                 date: dateStr,
                 pieceIds: this.selectedPieces.map((p) => p.id), // Senden Sie nur die IDs
+                monthlyPlanId: this.prefillMonthlyPlanId,
             };
             if (this.isEditMode && this.editEventId) {
                 this.dialogRef.close({ id: this.editEventId, ...payload });

@@ -2,6 +2,8 @@ const dbConfig = require("../config/db.config.js");
 const Sequelize = require("sequelize");
 
 const isTest = process.env.NODE_ENV === 'test' || dbConfig.dialect === 'sqlite';
+// Query logging costs a lot of startup time in production; opt in via DB_LOGGING=true.
+const sqlLogging = !isTest && process.env.DB_LOGGING === 'true' ? console.log : false;
 
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
@@ -9,7 +11,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   dialect: dbConfig.dialect,
   operatorsAliases: 0, // 0 instead of false
   pool: dbConfig.pool,
-  logging: isTest ? false : console.log,
+  logging: sqlLogging,
 });
 
 const db = {};
@@ -91,8 +93,14 @@ db.form = require('./form.model.js')(sequelize, Sequelize);
 db.form_field = require('./form_field.model.js')(sequelize, Sequelize);
 db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize);
 db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
+db.demo_lead = require('./demo_lead.model.js')(sequelize, Sequelize);
 db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
+db.referral_invitation = require('./referral_invitation.model.js')(sequelize, Sequelize);
+db.choir_registration_request = require('./choir_registration_request.model.js')(sequelize, Sequelize);
 db.reminder_log = require('./reminder_log.model.js')(sequelize, Sequelize);
+db.missing_event_reminder_log = require('./missing_event_reminder_log.model.js')(sequelize, Sequelize);
+db.personal_address_book_entry = require('./personal_address_book_entry.model.js')(sequelize, Sequelize);
+db.monthly_plan_recipient_preference = require('./monthly_plan_recipient_preference.model.js')(sequelize, Sequelize);
 
 // Training models
 db.training_profile = require('./training_profile.model.js')(sequelize, Sequelize);
@@ -115,6 +123,21 @@ db.user.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'us
 db.push_subscription.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
 db.choir.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'choirId' });
 db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+
+db.user.hasMany(db.referral_invitation, { as: 'sentReferrals', foreignKey: 'senderUserId' });
+db.referral_invitation.belongsTo(db.user, { as: 'sender', foreignKey: 'senderUserId' });
+
+db.referral_invitation.hasMany(db.choir_registration_request, { as: 'registrationRequests', foreignKey: 'referralInvitationId' });
+db.choir_registration_request.belongsTo(db.referral_invitation, { as: 'referralInvitation', foreignKey: 'referralInvitationId' });
+
+db.user.hasMany(db.choir_registration_request, { as: 'approvedChoirRegistrationRequests', foreignKey: 'approvedByUserId' });
+db.choir_registration_request.belongsTo(db.user, { as: 'approvedBy', foreignKey: 'approvedByUserId' });
+
+db.user.hasMany(db.choir_registration_request, { as: 'rejectedChoirRegistrationRequests', foreignKey: 'rejectedByUserId' });
+db.choir_registration_request.belongsTo(db.user, { as: 'rejectedBy', foreignKey: 'rejectedByUserId' });
+
+db.choir.hasMany(db.choir_registration_request, { as: 'createdFromRequests', foreignKey: 'createdChoirId' });
+db.choir_registration_request.belongsTo(db.choir, { as: 'createdChoir', foreignKey: 'createdChoirId' });
 
 // A Choir has many Pieces
 db.choir.belongsToMany(db.piece, { through: db.choir_repertoire });
@@ -145,6 +168,8 @@ db.monthly_plan.hasMany(db.event, { as: "events" });
 db.event.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
 db.monthly_plan.hasMany(db.plan_entry, { as: "entries" });
 db.plan_entry.belongsTo(db.monthly_plan, { foreignKey: "monthlyPlanId", as: "monthlyPlan" });
+db.event.hasOne(db.plan_entry, { as: 'linkedPlanEntry', foreignKey: 'linkedEventId' });
+db.plan_entry.belongsTo(db.event, { foreignKey: 'linkedEventId', as: 'linkedEvent' });
 db.choir.hasMany(db.plan_rule, { as: "planRules" });
 db.plan_rule.belongsTo(db.choir, { foreignKey: "choirId", as: "choir" });
 
@@ -383,6 +408,10 @@ db.choir_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.user.hasMany(db.choir_log, { as: 'choirLogs' });
 db.choir_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
 
+// Mail log context: optional trigger user and choir
+db.mail_log.belongsTo(db.user, { foreignKey: 'triggerUserId', as: 'triggerUser', constraints: false });
+db.mail_log.belongsTo(db.choir, { foreignKey: 'triggerChoirId', as: 'triggerChoir', constraints: false });
+
 // Search history
 db.user.hasMany(db.search_history, { as: 'searchHistory', foreignKey: 'userId' });
 db.search_history.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
@@ -441,6 +470,25 @@ db.choir.hasMany(db.reminder_log, { as: 'reminderLogs', foreignKey: 'choirId', o
 db.reminder_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
 db.event.hasMany(db.reminder_log, { as: 'reminderLogs', foreignKey: 'eventId', onDelete: 'CASCADE' });
 db.reminder_log.belongsTo(db.event, { foreignKey: 'eventId', as: 'event' });
+
+// Reminder logs for missing events compared to plan entries
+db.user.hasMany(db.missing_event_reminder_log, { as: 'missingEventReminderLogs', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.missing_event_reminder_log.belongsTo(db.user, { foreignKey: 'userId', as: 'user' });
+db.choir.hasMany(db.missing_event_reminder_log, { as: 'missingEventReminderLogs', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.missing_event_reminder_log.belongsTo(db.choir, { foreignKey: 'choirId', as: 'choir' });
+db.plan_entry.hasMany(db.missing_event_reminder_log, { as: 'missingEventReminderLogs', foreignKey: 'planEntryId', onDelete: 'CASCADE' });
+db.missing_event_reminder_log.belongsTo(db.plan_entry, { foreignKey: 'planEntryId', as: 'planEntry' });
+
+// Personal address book and monthly plan recipient preferences
+db.user.hasMany(db.personal_address_book_entry, { as: 'personalAddressBookEntries', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.personal_address_book_entry.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.choir.hasMany(db.personal_address_book_entry, { as: 'personalAddressBookEntries', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.personal_address_book_entry.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+
+db.user.hasMany(db.monthly_plan_recipient_preference, { as: 'monthlyPlanRecipientPreferences', foreignKey: 'userId', onDelete: 'CASCADE' });
+db.monthly_plan_recipient_preference.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
+db.choir.hasMany(db.monthly_plan_recipient_preference, { as: 'monthlyPlanRecipientPreferences', foreignKey: 'choirId', onDelete: 'CASCADE' });
+db.monthly_plan_recipient_preference.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
 
 // Training associations
 db.user.hasMany(db.training_profile, { as: 'trainingProfiles', foreignKey: 'userId', onDelete: 'CASCADE' });

@@ -1,4 +1,6 @@
 
+@use '../../../themes/breakpoints' as *;
+
 :host {
   ::ng-deep .has-event .mat-calendar-body-cell-content {
     background-color: #3f51b5;
@@ -58,6 +60,16 @@
     width: 100%;
     max-width: 360px;
 
+    h3 {
+      margin-bottom: 0.25rem;
+    }
+
+    .event-list-summary {
+      margin: 0 0 0.75rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
     ::ng-deep .mat-mdc-list-item {
       height: auto !important;
       min-height: 48px;
@@ -84,5 +96,123 @@
 
   .me {
     font-weight: bold;
+  }
+
+  .availability-trigger-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+
+  .status-trigger {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+
+    mat-icon {
+      width: 1rem;
+      height: 1rem;
+      font-size: 1rem;
+    }
+
+    &.status-unset {
+      background: rgba(148, 163, 184, 0.18);
+      color: #64748b;
+    }
+
+    &.status-available {
+      background: rgba(34, 197, 94, 0.16);
+      color: #15803d;
+    }
+
+    &.status-maybe {
+      background: rgba(234, 179, 8, 0.2);
+      color: #a16207;
+    }
+
+    &.status-unavailable {
+      background: rgba(239, 68, 68, 0.18);
+      color: #b91c1c;
+    }
+  }
+
+  .availability-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 4px;
+    color: #4b5563;
+    font-size: 0.9rem;
+
+    mat-icon {
+      width: 1rem;
+      height: 1rem;
+      font-size: 1rem;
+    }
+  }
+
+  .empty-day-state {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    color: #6b7280;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  @include handset {
+    .event-list {
+      .event-list-summary,
+      .availability-state,
+      .empty-day-state p {
+        @include responsive-font-size(0.9rem);
+      }
+
+      .status-trigger {
+        position: relative;
+        width: $touch-target-min;
+        height: $touch-target-min;
+        min-width: $touch-target-min;
+        min-height: $touch-target-min;
+        background: transparent;
+        border-color: transparent;
+
+        &::before {
+          content: '';
+          position: absolute;
+          width: 2rem;
+          height: 2rem;
+          border-radius: 999px;
+          z-index: 0;
+        }
+
+        mat-icon {
+          position: relative;
+          z-index: 1;
+        }
+
+        &.status-unset::before {
+          background: rgba(148, 163, 184, 0.18);
+        }
+
+        &.status-available::before {
+          background: rgba(34, 197, 94, 0.16);
+        }
+
+        &.status-maybe::before {
+          background: rgba(234, 179, 8, 0.2);
+        }
+
+        &.status-unavailable::before {
+          background: rgba(239, 68, 68, 0.18);
+        }
+      }
+    }
   }
 }

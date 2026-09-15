@@ -336,6 +336,18 @@ export class AuthService {
     return this.http.post(`${environment.apiUrl}/auth/signup`, data);
   }
 
+  requestDemoLead(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${environment.apiUrl}/auth/demo-lead`, { email });
+  }
+
+  consumeDemoLead(token: string): Observable<User> {
+    return this.http.get<User>(`${environment.apiUrl}/auth/demo-lead/${encodeURIComponent(token)}`, { withCredentials: true }).pipe(
+      tap((user: User) => {
+        this.establishSession(user);
+      })
+    );
+  }
+
   login(credentials: any): Observable<User> {
     return this.http.post<User>(`${environment.apiUrl}/auth/signin`, credentials, { withCredentials: true }).pipe(
       tap((user: User) => {

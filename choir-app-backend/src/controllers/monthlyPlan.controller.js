@@ -5,25 +5,92 @@ const { monthlyPlanPdf } = require('../services/pdf.service');
 const emailService = require('../services/email.service');
 const { emailDisabled } = require('../services/emailTransporter');
 const { isPublicHoliday } = require('../services/holiday.service');
+const { normalizeEmail, isValidEmail, normalizeEmailList } = require('../utils/email.utils');
 const {
     getMonthlyPlanWithCache,
     invalidateMonthlyPlanCache
 } = require('../services/monthlyPlanCache.service');
+const { syncPlanEntryEvent, defaultNotesForEventType } = require('../services/planEntryEventSync.service');
+
+function normalizeIdArray(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return Array.from(new Set(
+        value
+            .map(id => parseInt(id, 10))
+            .filter(id => Number.isInteger(id) && id > 0)
+    ));
+}
+
+function normalizeJsonIdArray(value) {
+    if (Array.isArray(value)) {
+        return normalizeIdArray(value);
+    }
+    if (typeof value === 'string') {
+        try {
+            return normalizeIdArray(JSON.parse(value));
+        } catch {
+            return [];
+        }
+    }
+    return [];
+}
+
+async function saveRecipientPreference(req, selectedUserIds, selectedAddressBookEntryIds) {
+    if (!req.userId || !req.activeChoirId) {
+        return;
+    }
+
+    await db.monthly_plan_recipient_preference.upsert({
+        userId: req.userId,
+        choirId: req.activeChoirId,
+        selectedUserIds,
+        selectedAddressBookEntryIds
+    });
+}
+
+exports.getEmailRecipientPreference = async (req, res) => {
+    const preference = await db.monthly_plan_recipient_preference.findOne({
+        where: { userId: req.userId, choirId: req.activeChoirId }
+    });
+
+    if (!preference) {
+        return res.status(200).send({ selectedUserIds: [], selectedAddressBookEntryIds: [] });
+    }
+
+    const selectedUserIds = normalizeJsonIdArray(preference.selectedUserIds);
+    const selectedAddressBookEntryIds = normalizeJsonIdArray(preference.selectedAddressBookEntryIds);
+    const validAddressBookEntries = selectedAddressBookEntryIds.length > 0
+        ? await db.personal_address_book_entry.findAll({
+            where: { id: selectedAddressBookEntryIds, userId: req.userId, choirId: req.activeChoirId },
+            attributes: ['id']
+        })
+        : [];
+
+    res.status(200).send({
+        selectedUserIds,
+        selectedAddressBookEntryIds: validAddressBookEntries.map(entry => entry.id)
+    });
+};
 
 async function createEntriesFromRules(plan) {
     const rules = await db.plan_rule.findAll({ where: { choirId: plan.choirId } });
     for (const rule of rules) {
         const dates = datesForRule(plan.year, plan.month, rule);
-        const ruleNotes = typeof rule.notes === 'string' && rule.notes.trim() ? rule.notes : 'Gottesdienst';
+        const eventType = rule.eventType === 'REHEARSAL' ? 'REHEARSAL' : 'SERVICE';
+        const ruleNotes = typeof rule.notes === 'string' && rule.notes.trim() ? rule.notes : defaultNotesForEventType(eventType);
         for (const date of dates) {
             if (date.getUTCMonth() === 11 && date.getUTCDate() === 26 && date.getUTCDay() === 0) {
                 continue;
             }
-            await db.plan_entry.create({
+            const entry = await db.plan_entry.create({
                 monthlyPlanId: plan.id,
                 date,
+                eventType,
                 notes: ruleNotes
             });
+            await syncPlanEntryEvent(entry);
         }
     }
 
@@ -31,7 +98,8 @@ async function createEntriesFromRules(plan) {
         const dec25 = new Date(Date.UTC(plan.year, 11, 25));
         const hasRuleForDec25 = rules.some(r => r.dayOfWeek === dec25.getUTCDay());
         if (!hasRuleForDec25) {
-            await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, notes: 'Gottesdienst' });
+            const entry = await db.plan_entry.create({ monthlyPlanId: plan.id, date: dec25, eventType: 'SERVICE', notes: 'Gottesdienst' });
+            await syncPlanEntryEvent(entry);
         }
     }
 }
@@ -49,7 +117,8 @@ exports.findByMonth = async (req, res) => {
                     include: [
                         { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                         { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                        { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                        { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                        { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                     ]
                 }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
                 order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -126,7 +195,8 @@ exports.downloadPdf = async (req, res) => {
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                    { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
@@ -143,9 +213,14 @@ exports.downloadPdf = async (req, res) => {
 
 exports.emailPdf = async (req, res) => {
     const id = req.params.id;
-    const recipients = Array.isArray(req.body.recipients) ? req.body.recipients : [];
-    const extraEmails = Array.isArray(req.body.emails) ? req.body.emails.filter(e => typeof e === 'string' && e) : [];
-    if (recipients.length === 0 && extraEmails.length === 0) {
+    const recipients = normalizeIdArray(req.body.recipients);
+    const addressBookEntryIds = normalizeIdArray(req.body.addressBookEntryIds);
+    const extraEmails = normalizeEmailList(req.body.emails);
+    const invalidEmails = extraEmails.filter(email => !isValidEmail(email));
+    if (invalidEmails.length > 0) {
+        return res.status(400).send({ message: 'Invalid email address.', invalidEmails });
+    }
+    if (recipients.length === 0 && addressBookEntryIds.length === 0 && extraEmails.length === 0) {
         return res.status(400).send({ message: 'recipients required' });
     }
     try {
@@ -157,25 +232,58 @@ exports.emailPdf = async (req, res) => {
                 include: [
                     { model: db.user, as: 'director', attributes: ['id', 'firstName', 'name'] },
                     { model: db.user, as: 'organist', attributes: ['id', 'firstName', 'name'], required: false },
-                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false }
+                    { model: db.program, as: 'program', attributes: ['id', 'title', 'status'], required: false },
+                    { model: db.event, as: 'linkedEvent', attributes: ['id', 'type', 'date'], required: false }
                 ]
             }, { model: db.choir, as: 'choir', attributes: ['id', 'name'] }],
             order: [[{ model: db.plan_entry, as: 'entries' }, 'date', 'ASC']]
         });
         if (!plan) return res.status(404).send({ message: 'Plan not found.' });
 
-        let emails = [];
+        let recipientsForMail = [];
         if (recipients.length > 0) {
             const users = await db.user.findAll({
                 where: { id: recipients },
                 include: [{ model: db.choir, where: { id: req.activeChoirId } }]
             });
-            emails = users.map(u => u.email);
+            recipientsForMail = users.map(u => ({
+                email: u.email,
+                firstName: u.firstName,
+                name: u.name
+            }));
         }
-        emails = emails.concat(extraEmails);
+        if (addressBookEntryIds.length > 0) {
+            const addressBookEntries = await db.personal_address_book_entry.findAll({
+                where: {
+                    id: addressBookEntryIds,
+                    userId: req.userId,
+                    choirId: req.activeChoirId
+                }
+            });
+            recipientsForMail = recipientsForMail.concat(addressBookEntries.map(entry => ({
+                email: entry.email,
+                firstName: entry.firstName,
+                name: entry.name
+            })));
+        }
+        recipientsForMail = recipientsForMail.concat(extraEmails.map(email => ({ email })));
+        const uniqueRecipientsByEmail = new Map();
+        for (const recipient of recipientsForMail) {
+            const normalized = normalizeEmail(recipient.email);
+            if (normalized && isValidEmail(normalized) && !uniqueRecipientsByEmail.has(normalized)) {
+                uniqueRecipientsByEmail.set(normalized, recipient);
+            }
+        }
+        recipientsForMail = Array.from(uniqueRecipientsByEmail.values());
+        if (recipientsForMail.length === 0) {
+            return res.status(400).send({ message: 'recipients required' });
+        }
         const buffer = await monthlyPlanPdf(plan.toJSON());
         if (!emailDisabled()) {
-            await emailService.sendMonthlyPlanMail(emails, buffer, plan.year, plan.month, plan.choir?.name);
+            await emailService.sendMonthlyPlanMail(recipientsForMail, buffer, plan.year, plan.month, plan.choir?.name);
+        }
+        if (req.body.saveSelection !== false) {
+            await saveRecipientPreference(req, recipients, addressBookEntryIds);
         }
         res.status(200).send({ message: 'Mail sent.' });
     } catch (err) {

@@ -2,10 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
 import { MaterialModule } from '@modules/material.module';
 import { AuthService } from '@core/services/auth.service';
 import { BackendStatusService } from '@core/services/backend-status.service';
 import { take } from 'rxjs/operators';
+import { DemoLeadDialogComponent } from '@features/user/login/demo-lead-dialog.component';
 
 @Component({
   selector: 'app-welcome',
@@ -15,8 +17,7 @@ import { take } from 'rxjs/operators';
   styleUrls: ['./welcome.component.scss']
 })
 export class WelcomeComponent implements OnInit {
-  demoEmail = 'demo@nak-chorleiter.de';
-  demoPassword = 'demo';
+  demoLeadMessage: string | null = null;
   isBackendAvailable = true;
   isPwa = window.matchMedia('(display-mode: standalone)').matches
        || (navigator as any).standalone === true;
@@ -24,7 +25,8 @@ export class WelcomeComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router,
-    private backendStatusService: BackendStatusService
+    private backendStatusService: BackendStatusService,
+    private dialog: MatDialog
   ) {
     this.isBackendAvailable = this.backendStatusService.isBackendAvailable();
   }
@@ -81,4 +83,31 @@ export class WelcomeComponent implements OnInit {
       description: 'Verfolge deine Probe-Teilnahmen und entdecke die öffentliche Seite deines Chors'
     }
   ];
+
+  openDemoLeadDialog(): void {
+    if (!this.isBackendAvailable) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(DemoLeadDialogComponent, {
+      width: '420px',
+      panelClass: 'demo-lead-dialog-panel',
+    });
+
+    dialogRef.afterClosed().subscribe((email?: string) => {
+      if (!email) {
+        return;
+      }
+
+      this.demoLeadMessage = null;
+      this.authService.requestDemoLead(email).subscribe({
+        next: (response) => {
+          this.demoLeadMessage = response.message;
+        },
+        error: (err) => {
+          this.demoLeadMessage = err.error?.message || 'Der Demo-Zugang konnte nicht angefragt werden.';
+        }
+      });
+    });
+  }
 }

@@ -14,9 +14,11 @@ const { ensureProgramLinks } = require('./ensureProgramLinks');
 const { ensureChoirPublicPageTables } = require('./ensureChoirPublicPageTables');
 const { ensureChatTables } = require('./ensureChatTables');
 const { ensureMailLogStatusColumns } = require('./ensureMailLogStatusColumns');
+const { ensureMailLogContextColumns } = require('./ensureMailLogContextColumns');
 const { ensurePracticeListTables } = require('./ensurePracticeListTables');
 const { ensurePollReminderTemplate } = require('./ensurePollReminderTemplate');
 const { ensureMailFooterTemplate } = require('./ensureMailFooterTemplate');
+const { ensureDemoLeadVerificationTemplate } = require('./ensureDemoLeadVerificationTemplate');
 const { ensureAudioMarkerTable } = require('./ensureAudioMarkerTable');
 const { ensurePageViewTable } = require('./ensurePageViewTable');
 const { ensureFormTables } = require('./ensureFormTables');
@@ -26,11 +28,15 @@ const { ensureChatUnreadTemplate } = require('./ensureChatUnreadTemplate');
 const { encryptUserPersonalData } = require('./encryptUserPersonalData');
 const { ensureRehearsalReminderSetup } = require('./ensureRehearsalReminderSetup');
 const { ensureTrainingSetup } = require('./ensureTrainingSetup');
+const { ensurePersonalAddressBookTables } = require('./ensurePersonalAddressBookTables');
+const { ensurePieceLinkTypes } = require('./ensurePieceLinkTypes');
+const { ensurePlanEntryEventSyncFields } = require('./ensurePlanEntryEventSyncFields');
 
 async function init(options = {}) {
     const { includeDemoData = true, syncOptions = {} } = options;
     // 1. Run manual migrations first (these handle complex schema changes)
     await ensurePwaConfig();
+    await ensurePlanEntryEventSyncFields({ skipDataSync: true });
     // 2. Sync database (only creates missing tables, doesn't alter existing)
     await syncDatabase(syncOptions);
     // 3. Create tables that have FK dependencies on core tables (e.g. users)
@@ -42,9 +48,11 @@ async function init(options = {}) {
     await ensureChoirPublicPageTables();
     await ensureChatTables();
     await ensureMailLogStatusColumns();
+    await ensureMailLogContextColumns();
     await ensurePracticeListTables();
     await ensurePollReminderTemplate();
     await ensureMailFooterTemplate();
+    await ensureDemoLeadVerificationTemplate();
     await ensureAudioMarkerTable();
     await ensurePageViewTable();
     await ensureFormTables();
@@ -53,6 +61,9 @@ async function init(options = {}) {
     await ensureChatUnreadTemplate();
     await ensureRehearsalReminderSetup();
     await ensureTrainingSetup();
+    await ensurePersonalAddressBookTables();
+    await ensurePieceLinkTypes();
+    await ensurePlanEntryEventSyncFields();
     // 4. Then run data migrations on existing tables
     await encryptUserPersonalData();
     await migrateUserNames();
@@ -82,10 +93,15 @@ module.exports = {
     ensureChoirPublicPageTables,
     ensureChatTables,
     ensureMailLogStatusColumns,
+    ensureMailLogContextColumns,
     ensurePracticeListTables,
     ensurePollReminderTemplate,
     ensureMailFooterTemplate,
+    ensureDemoLeadVerificationTemplate,
     ensureAudioMarkerTable,
     ensurePageViewTable,
-    ensureChatUnreadTemplate
+    ensureChatUnreadTemplate,
+    ensurePersonalAddressBookTables,
+    ensurePieceLinkTypes,
+    ensurePlanEntryEventSyncFields
 };

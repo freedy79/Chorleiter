@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MaterialModule } from '@modules/material.module';
 import { ApiService } from '@core/services/api.service';
@@ -17,20 +17,22 @@ import { MatPaginator, PageEvent } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { FileUploadService } from '@core/services/file-upload.service';
 import { LibraryUtilService } from '@core/services/library-util.service';
-import { map } from 'rxjs/operators';
+import { map, takeUntil } from 'rxjs/operators';
 import { LoanListComponent } from './loan-list.component';
 import { BaseListComponent } from '@shared/components/base-list.component';
 import { PaginatorService } from '@core/services/paginator.service';
+import { TextInputDialogComponent } from '@shared/components/text-input-dialog/text-input-dialog.component';
+import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 
 
 @Component({
   selector: 'app-library',
   standalone: true,
-  imports: [CommonModule, MaterialModule, RouterModule, LoanListComponent],
+  imports: [CommonModule, MaterialModule, RouterModule, LoanListComponent, DataStateComponent],
   templateUrl: './library.component.html',
   styleUrls: ['./library.component.scss']
 })
-export class LibraryComponent extends BaseListComponent<LibraryItem> implements OnInit, AfterViewInit {
+export class LibraryComponent extends BaseListComponent<LibraryItem> {
   @ViewChild(MatSort) override sort?: MatSort = undefined;
   @ViewChild('libraryPaginator') override paginator?: MatPaginator = undefined;
 
@@ -38,6 +40,8 @@ export class LibraryComponent extends BaseListComponent<LibraryItem> implements 
   isAdmin = false;
   isLibrarian = false;
   isSingerOnly = false;
+  hasLoadError = false;
+  loadErrorMessage = 'Die Bibliothekseinträge konnten nicht geladen werden.';
   displayedColumns: string[] = ['cover', 'title', 'copies', 'actions'];
 
   constructor(
@@ -57,8 +61,25 @@ export class LibraryComponent extends BaseListComponent<LibraryItem> implements 
     return 'library';
   }
 
+  get isFilterActive(): boolean {
+    return false;
+  }
+
+  get emptyStateTitle(): string {
+    return 'Keine Bibliothekseinträge vorhanden';
+  }
+
+  get emptyStateMessage(): string {
+    return 'Fügen Sie den ersten Bibliothekseintrag hinzu, um zu starten.';
+  }
+
   loadData(): Observable<LibraryItem[]> {
+    this.hasLoadError = false;
     return this.apiService.getLibraryItems();
+  }
+
+  protected override handleLoadError(): void {
+    this.hasLoadError = true;
   }
 
   protected override onDataLoaded(items: LibraryItem[]): void {
@@ -109,11 +130,6 @@ export class LibraryComponent extends BaseListComponent<LibraryItem> implements 
 
     // Call parent ngOnInit to trigger data loading
     super.ngOnInit();
-  }
-
-  override ngAfterViewInit(): void {
-    // Call parent to setup sort/paginator
-    super.ngAfterViewInit();
   }
 
   onFileSelected(event: any): void {
@@ -181,13 +197,30 @@ export class LibraryComponent extends BaseListComponent<LibraryItem> implements 
 
   editCopies(item: LibraryItem, event: Event): void {
     event.stopPropagation();
-    const input = prompt('Neue Anzahl Exemplare:', item.copies.toString());
-    if (input !== null) {
-      const copies = Number(input);
-      if (!isNaN(copies) && copies > 0) {
-        this.apiService.updateLibraryItem(item.id, { copies }).subscribe(() => this.refresh());
+    this.dialogHelper.openDialog<TextInputDialogComponent, string | undefined>(
+      TextInputDialogComponent,
+      {
+        data: {
+          title: 'Anzahl Exemplare ändern',
+          message: 'Geben Sie die neue Anzahl der Exemplare ein:',
+          label: 'Anzahl Exemplare',
+          placeholder: item.copies.toString(),
+          initialValue: item.copies.toString(),
+          maxLength: 4
+        }
       }
-    }
+    ).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(result => {
+      if (result !== undefined) {
+        const copies = Number(result);
+        if (!isNaN(copies) && copies > 0) {
+          this.apiService.updateLibraryItem(item.id, { copies }).pipe(
+            takeUntil(this.destroy$)
+          ).subscribe(() => this.refresh());
+        }
+      }
+    });
   }
 
   changeStatus(item: LibraryItem, event: Event): void {

@@ -4,7 +4,19 @@ const { getPdfTemplateConfig } = require('./pdf-template.service');
 const logger = require('../config/logger');
 const db = require('../models');
 
-function eventShort(notes) {
+function eventShort(entryOrNotes) {
+  if (entryOrNotes && typeof entryOrNotes === 'object') {
+    if (entryOrNotes.eventType === 'SERVICE') {
+      return 'GD';
+    }
+    if (entryOrNotes.eventType === 'REHEARSAL') {
+      return 'CP';
+    }
+  }
+
+  const notes = typeof entryOrNotes === 'string'
+    ? entryOrNotes
+    : entryOrNotes?.notes;
   const value = (notes || '').toLowerCase();
   // Suffix-Match for German compounds:
   // Hauptgottesdienst, Sonntagsgottesdienst, Abendgottesdienst, ...
@@ -303,7 +315,7 @@ async function monthlyPlanPdf(plan) {
   for (const entry of plan.entries || []) {
     const cells = [
       shortWeekdayDateString(new Date(entry.date)),
-      eventShort(entry.notes),
+      eventShort(entry),
       entry.director?.name || '',
       entry.organist?.name || '',
       entry.notes || ''

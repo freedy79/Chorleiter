@@ -7,6 +7,12 @@ const { wrapWithMailLayout, appendFooterText } = require('./emailLayout');
 const { marked } = require('marked');
 const path = require('path');
 const fs = require('fs');
+let geoip = null;
+try {
+  geoip = require('geoip-lite');
+} catch (_) {
+  geoip = null;
+}
 
 const IMAGES_DIR = path.join(__dirname, '../..', 'uploads', 'post-images');
 
@@ -14,6 +20,46 @@ const TIME_ZONE = process.env.TZ || 'Europe/Berlin';
 
 function formatDate(date = new Date()) {
   return date.toLocaleString('de-DE', { timeZone: TIME_ZONE });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function buildRecipientList(recipients) {
+  return Array.from(new Set((Array.isArray(recipients) ? recipients : [recipients]).filter(Boolean)));
+}
+
+async function getAdminRecipients() {
+  const users = await db.user.findAll();
+  const recipients = new Set();
+  users.forEach(u => {
+    if (Array.isArray(u.roles) && u.roles.includes('admin') && u.email) {
+      recipients.add(u.email);
+    }
+  });
+  const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+  if (systemEmail?.value) {
+    recipients.add(systemEmail.value);
+  }
+  return recipients;
+}
+
+function formatGeoLocation(geo) {
+  if (!geo) return 'nicht verfügbar';
+  const parts = [];
+  if (geo.city) parts.push(geo.city);
+  if (geo.region) parts.push(geo.region);
+  if (geo.country) parts.push(geo.country);
+  if (typeof geo.ll?.[0] === 'number' && typeof geo.ll?.[1] === 'number') {
+    parts.push(`(${geo.ll[0]}, ${geo.ll[1]})`);
+  }
+  return parts.length ? parts.join(', ') : 'nicht verfügbar';
 }
 
 async function sendTemplateMail(type, to, replacements = {}, overrideSettings, mailOptions = {}, templateOverride) {
@@ -123,6 +169,7 @@ async function buildPostEmail(text, choirName, postId, hasAttachment) {
 }
 
 exports.buildPostEmail = buildPostEmail;
+exports.sendTemplateMail = sendTemplateMail;
 
 exports.sendInvitationMail = async (to, token, choirName, expiry, surname, invitorName, firstName) => {
   const linkBase = await getFrontendUrl();
@@ -169,6 +216,22 @@ exports.sendEmailChangeMail = async (to, token, surname, firstName) => {
   }
 };
 
+exports.sendDemoLeadVerificationMail = async (to, token, firstName, expiryAt) => {
+  const linkBase = await getFrontendUrl();
+  const link = `${linkBase}/demo/${token}`;
+  try {
+    await sendTemplateMail('demo-lead-verification', to, {
+      link,
+      expiry: formatDate(expiryAt),
+      first_name: firstName,
+    });
+  } catch (err) {
+    logger.error(`Error sending demo lead verification mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
 exports.sendTestMail = async (to, override, surname, firstName) => {
   try {
     const fallback = to.split('@')[0];
@@ -207,6 +270,23 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
       await sendMail({ to, subject: 'Footer-Vorschau', html, text: 'Dies ist eine Beispielmail, um den Footer zu testen.' });
       return;
     }
+    if (type === 'chat-unread') {
+      Object.assign(placeholders, {
+        room_title: '#allgemein',
+        room_id: '1',
+        room_key: 'allgemein',
+        unread_count: '3',
+        total_unread_count: '5',
+        oldest_unread_date: 'Montag, 23.06.2026',
+        last_author: 'Maria Muster',
+        last_author_initials: 'MM',
+        last_message_text: 'Wann ist die nächste Probe?',
+        last_message_preview: 'Wann ist die nächste Probe?',
+        last_message_date: 'Montag, 23.06.2026, 14:35',
+        last_message_attachment_name: '',
+        link: 'https://nak-chorleiter.de/chat?room=1'
+      });
+    }
     await sendTemplateMail(type, to, placeholders);
   } catch (err) {
     logger.error(`Error sending template preview mail to ${to}: ${err.message}`);
@@ -214,6 +294,21 @@ exports.sendTemplatePreviewMail = async (to, type, surname, firstName) => {
     throw err;
   }
 };
+
+function normalizeMonthlyPlanRecipient(recipient) {
+  if (!recipient) return null;
+  if (typeof recipient === 'string') {
+    return { email: recipient };
+  }
+  if (typeof recipient === 'object' && recipient.email) {
+    return {
+      email: recipient.email,
+      surname: recipient.surname || recipient.name,
+      first_name: recipient.first_name || recipient.firstName
+    };
+  }
+  return null;
+}
 
 exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) => {
   if (emailDisabled()) return;
@@ -234,11 +329,17 @@ exports.sendMonthlyPlanMail = async (recipients, pdfBuffer, year, month, choir) 
   const template = { subject: subjectTemplate, body: bodyTemplate };
 
   try {
-    const recipientList = Array.isArray(recipients) ? recipients : [recipients];
+    const recipientList = (Array.isArray(recipients) ? recipients : [recipients])
+      .map(normalizeMonthlyPlanRecipient)
+      .filter(recipient => recipient?.email);
     const attachments = [{ filename: `dienstplan-${year}-${month}.pdf`, content: pdfBuffer }];
 
-    for (const to of recipientList.filter(Boolean)) {
-      await sendTemplateMail('monthly-plan', to, defaults, undefined, { attachments }, template);
+    for (const recipient of recipientList) {
+      await sendTemplateMail('monthly-plan', recipient.email, {
+        ...defaults,
+        surname: recipient.surname,
+        first_name: recipient.first_name
+      }, undefined, { attachments }, template);
     }
   } catch (err) {
     logger.error(`Error sending monthly plan mail: ${err.message}`);
@@ -343,6 +444,52 @@ exports.sendPieceReportMail = async (recipients, piece, reporter, category, reas
     await sendMail({ to: recipients, subject, text, html });
   } catch (err) {
     logger.error(`Error sending piece report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendImprovementSuggestionMail = async (recipients, { senderName, senderEmail, message }) => {
+  if (emailDisabled()) return;
+  const recipientList = buildRecipientList(recipients);
+  if (recipientList.length === 0) return;
+
+  try {
+    const safeMessage = String(message || '').trim();
+    const subject = 'Neuer Verbesserungsvorschlag für Chorleiter';
+    const text = [
+      'Guten Tag,',
+      '',
+      'es wurde ein neuer Verbesserungsvorschlag eingereicht.',
+      '',
+      `Absender: ${senderName || 'Unbekannt'}`,
+      `E-Mail: ${senderEmail || 'nicht angegeben'}`,
+      '',
+      'Nachricht:',
+      safeMessage,
+      '',
+      'Vielen Dank.'
+    ].join('\n');
+    const rawHtml = `
+      <p>Guten Tag,</p>
+      <p>es wurde ein neuer Verbesserungsvorschlag eingereicht.</p>
+      <p><strong>Absender:</strong> ${escapeHtml(senderName || 'Unbekannt')}</p>
+      <p><strong>E-Mail:</strong> ${senderEmail ? escapeHtml(senderEmail) : 'nicht angegeben'}</p>
+      <p><strong>Nachricht:</strong></p>
+      <p style="white-space:pre-wrap;">${escapeHtml(safeMessage).replace(/\n/g, '<br>')}</p>
+      <p>Vielen Dank.</p>
+    `;
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
+    await sendMail({
+      to: recipientList,
+      subject,
+      text,
+      html,
+      replyTo: senderEmail || undefined
+    });
+  } catch (err) {
+    logger.error(`Error sending improvement suggestion mail: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }
@@ -461,20 +608,63 @@ exports.sendCrashReportMail = async (to, error) => {
   }
 };
 
+exports.notifyAdminsOnDemoLogin = async ({
+  demoEmail,
+  ipAddress,
+  userAgent,
+  attemptedEmail,
+  forwardedFor,
+  timestamp
+}) => {
+  try {
+    if (emailDisabled() || (!process.env.SMTP_HOST && !process.env.SMTP_USER)) return;
+
+    const recipients = await getAdminRecipients();
+    if (recipients.size === 0) return;
+
+    const lookupIp = String(ipAddress || '').trim();
+    const geo = geoip && lookupIp ? geoip.lookup(lookupIp) : null;
+    const eventTime = timestamp || new Date().toISOString();
+
+    const subject = 'Demo-Login erkannt';
+    const lines = [
+      'Ein Demo-User hat sich angemeldet.',
+      '',
+      `Zeit: ${eventTime}`,
+      `Demo-Account: ${demoEmail || 'demo@nak-chorleiter.de'}`,
+      `Eingabe-E-Mail: ${attemptedEmail || demoEmail || '-'}`,
+      `IP: ${lookupIp || 'unbekannt'}`,
+      `X-Forwarded-For: ${forwardedFor || '-'}`,
+      `Geolokalisierung (IP-Datenbank): ${formatGeoLocation(geo)}`,
+      `User-Agent: ${userAgent || '-'}`
+    ];
+
+    const text = lines.join('\n');
+    const rawHtml =
+      '<p>Ein <strong>Demo-User</strong> hat sich angemeldet.</p>' +
+      '<table style="border-collapse:collapse;width:100%;max-width:640px">' +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Zeit</td><td style="padding:6px 10px">${escapeHtml(eventTime)}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Demo-Account</td><td style="padding:6px 10px">${escapeHtml(demoEmail || 'demo@nak-chorleiter.de')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Eingabe-E-Mail</td><td style="padding:6px 10px">${escapeHtml(attemptedEmail || demoEmail || '-')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">IP</td><td style="padding:6px 10px">${escapeHtml(lookupIp || 'unbekannt')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">X-Forwarded-For</td><td style="padding:6px 10px">${escapeHtml(forwardedFor || '-')}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">Geolokalisierung</td><td style="padding:6px 10px">${escapeHtml(formatGeoLocation(geo))}</td></tr>` +
+      `<tr><td style="padding:6px 10px;font-weight:bold">User-Agent</td><td style="padding:6px 10px">${escapeHtml(userAgent || '-')}</td></tr>` +
+      '</table>';
+
+    const frontendUrl = await getFrontendUrl();
+    const html = await wrapWithMailLayout(rawHtml, { frontendUrl });
+    await sendMail({ to: [...recipients], subject, text, html });
+  } catch (err) {
+    logger.error(`Error notifying admins on demo login: ${err.message}`);
+    logger.error(err.stack);
+  }
+};
+
 exports.notifyAdminsOnCrash = async (error, req) => {
   try {
     if (emailDisabled() || (!process.env.SMTP_HOST && !process.env.SMTP_USER)) return;
-    const users = await db.user.findAll();
-    const recipients = new Set();
-    users.forEach(u => {
-      if (Array.isArray(u.roles) && u.roles.includes('admin') && u.email) {
-        recipients.add(u.email);
-      }
-    });
-    const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
-    if (systemEmail?.value) {
-      recipients.add(systemEmail.value);
-    }
+    const recipients = await getAdminRecipients();
     if (recipients.size === 0) return;
 
     const details = [
@@ -557,6 +747,151 @@ exports.sendChatMessageReportMail = async ({ choirId, choirName, roomTitle, auth
     await sendMail({ to: [...recipients], subject, text, html, choirName });
   } catch (err) {
     logger.error(`Error sending chat message report mail: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRecommendationMail = async ({
+  to,
+  recipientName,
+  senderName,
+  registrationLink,
+  expiresAt,
+  invitationType,
+  choirName
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    const frontendUrl = await getFrontendUrl();
+    const teaser = invitationType === 'singer'
+      ? `${senderName} lädt dich in ${choirName || 'einen Chor'} ein – Anmeldung in wenigen Klicks.`
+      : `${senderName} empfiehlt NAK Chorleiter – Chöre digital organisieren, kostenlos starten.`;
+
+    const ctaText = invitationType === 'singer'
+      ? 'Jetzt dem Chor beitreten'
+      : 'Jetzt Chor kostenlos registrieren';
+
+    const templateOverride = {
+      subject: invitationType === 'singer'
+        ? `Einladung zu ${choirName || 'einem Chor'}`
+        : 'NAK Chorleiter – kurz ansehen',
+      body: '<p>Hallo {{recipient_name}},</p>' +
+            '<p><strong>{{teaser}}</strong></p>' +
+            '<p><a href="{{registration_link}}">{{cta_text}}</a></p>' +
+            '<p><a href="{{learn_more_link}}">Mehr erfahren</a></p>'
+    };
+
+    await sendTemplateMail('choir-recommendation', to, {
+      recipient_name: recipientName,
+      sender_name: senderName,
+      registration_link: registrationLink,
+      expiry: expiresAt ? formatDate(expiresAt) : '',
+      invitation_type: invitationType,
+      choir_name: choirName || '',
+      teaser,
+      cta_text: ctaText,
+      learn_more_link: frontendUrl
+    }, undefined, {}, templateOverride);
+  } catch (err) {
+    logger.error(`Error sending choir recommendation mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRegistrationVerificationCodeMail = async ({
+  to,
+  requesterName,
+  code,
+  expiresAt,
+  choirName
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    await sendTemplateMail('choir-registration-verification', to, {
+      requester_name: requesterName,
+      verification_code: code,
+      expiry: formatDate(expiresAt),
+      choir_name: choirName
+    });
+  } catch (err) {
+    logger.error(`Error sending choir registration verification code mail to ${to}: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendAdminChoirRegistrationRequestMail = async ({
+  requesterName,
+  requesterEmail,
+  requesterPhone,
+  choirName,
+  city,
+  congregation,
+  district,
+  requestedAt
+}) => {
+  if (emailDisabled()) return;
+  try {
+    const recipients = new Set();
+    const admins = await db.user.findAll();
+    admins
+      .filter(u => Array.isArray(u.roles) && u.roles.includes('admin') && u.email)
+      .forEach(u => recipients.add(u.email));
+
+    const systemEmail = await db.system_setting.findByPk('SYSTEM_ADMIN_EMAIL');
+    if (systemEmail?.value) {
+      recipients.add(systemEmail.value);
+    }
+
+    if (recipients.size === 0) return;
+
+    const requestedDate = requestedAt ? formatDate(requestedAt) : formatDate();
+    for (const to of recipients) {
+      await sendTemplateMail('choir-registration-admin-notify', to, {
+        requester_name: requesterName,
+        requester_email: requesterEmail,
+        requester_phone: requesterPhone || '-',
+        choir_name: choirName,
+        city,
+        congregation: congregation || '-',
+        district: district || '-',
+        requested_at: requestedDate
+      });
+    }
+  } catch (err) {
+    logger.error(`Error sending admin choir registration notification: ${err.message}`);
+    logger.error(err.stack);
+    throw err;
+  }
+};
+
+exports.sendChoirRegistrationDecisionMail = async ({
+  to,
+  requesterName,
+  choirName,
+  approved,
+  rejectionReason,
+  setupPasswordLink
+}) => {
+  if (emailDisabled() || !to) return;
+  try {
+    await sendTemplateMail('choir-registration-decision', to, {
+      requester_name: requesterName,
+      choir_name: choirName,
+      decision_status: approved ? 'freigegeben' : 'abgelehnt',
+      decision_message: approved
+        ? 'Deine Chorregistrierung wurde freigegeben.'
+        : 'Deine Chorregistrierung wurde leider abgelehnt.',
+      rejection_reason: rejectionReason || '-',
+      setup_password_link: setupPasswordLink || '',
+      setup_password_hint: approved && setupPasswordLink
+        ? 'Bitte richte jetzt über den folgenden Link dein Passwort ein:'
+        : ''
+    });
+  } catch (err) {
+    logger.error(`Error sending choir registration decision mail to ${to}: ${err.message}`);
     logger.error(err.stack);
     throw err;
   }

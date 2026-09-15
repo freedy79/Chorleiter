@@ -7,126 +7,147 @@
   </mat-form-field>
 </div>
 
-<mat-table
-  [dataSource]="dataSource"
-  class="mat-elevation-z8"
-  *ngIf="(isHandset$ | async) !== true"
+<app-data-state
+  [isLoading]="isLoading"
+  [hasError]="hasLoadError"
+  [errorTitle]="'Fehler beim Laden der Benutzer'"
+  [errorMessage]="loadErrorMessage"
+  [isEmpty]="!isLoading && !hasLoadError && dataSource.filteredData.length === 0"
+  [emptyTitle]="emptyStateTitle"
+  [emptyMessage]="emptyStateMessage"
+  [emptyIcon]="'group_off'"
+  (retry)="refresh()"
 >
-  <ng-container matColumnDef="name">
-    <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element.name }}, {{ element.firstName }}</mat-cell>
+  <ng-container empty-actions>
+    <button *ngIf="isFilterActive" mat-stroked-button (click)="resetFilter()">
+      Filter zurücksetzen
+    </button>
+    <button *ngIf="!isFilterActive" mat-flat-button color="primary" (click)="addUser()">
+      Benutzer hinzufügen
+    </button>
   </ng-container>
 
-  <ng-container matColumnDef="email">
-    <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element.email }}</mat-cell>
-  </ng-container>
+  <mat-table
+    [dataSource]="dataSource"
+    class="mat-elevation-z8"
+    *ngIf="(isHandset$ | async) !== true"
+  >
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element.name }}, {{ element.firstName }}</mat-cell>
+    </ng-container>
 
-  <ng-container matColumnDef="roles">
-    <mat-header-cell *matHeaderCellDef>Rollen</mat-header-cell>
-    <mat-cell *matCellDef="let element">
-      <mat-form-field appearance="outline" class="roles-select dense">
-        <mat-select
-          [ngModel]="element.roles"
-          (ngModelChange)="onRolesChange(element, $event)"
-          multiple
-        >
-          <mat-option value="user">Standardnutzer</mat-option>
-          <mat-option value="admin">Administrator</mat-option>
-          <mat-option value="librarian">Bibliothekar</mat-option>
-          <mat-option value="demo">Demo</mat-option>
-        </mat-select>
-      </mat-form-field>
-    </mat-cell>
-  </ng-container>
+    <ng-container matColumnDef="email">
+      <mat-header-cell *matHeaderCellDef>E-Mail</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element.email }}</mat-cell>
+    </ng-container>
 
-  <ng-container matColumnDef="choirs">
-    <mat-header-cell *matHeaderCellDef>Chöre</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element.choirs | join:'name' }}</mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="lastLogin">
-    <mat-header-cell *matHeaderCellDef>Letzter Login</mat-header-cell>
-    <mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="resetToken">
-    <mat-header-cell *matHeaderCellDef>Reset-Token</mat-header-cell>
-    <mat-cell *matCellDef="let element">
-      <ng-container *ngIf="element.resetToken">
-        {{ element.resetTokenExpiry | date:'short' }}
-      </ng-container>
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="actions">
-    <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let element">
-      <button mat-icon-button color="primary" (click)="editUser(element)">
-        <mat-icon>edit</mat-icon>
-      </button>
-      <button mat-icon-button (click)="addToChoir(element)">
-        <mat-icon>group_add</mat-icon>
-      </button>
-      <button mat-icon-button (click)="sendReset(element)">
-        <mat-icon>mail</mat-icon>
-      </button>
-      <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
-        <mat-icon>clear</mat-icon>
-      </button>
-      <button mat-icon-button color="warn" (click)="deleteUser(element)">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </mat-cell>
-  </ng-container>
-
-  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
-</mat-table>
-
-<mat-accordion *ngIf="isHandset$ | async">
-  <mat-expansion-panel *ngFor="let element of dataSource.filteredData">
-    <mat-expansion-panel-header>
-      <mat-panel-title>{{ element.name }}, {{ element.firstName }}</mat-panel-title>
-      <mat-panel-description>{{ element.email }}</mat-panel-description>
-    </mat-expansion-panel-header>
-    <div class="mobile-user-row">
-      <div><strong>E-Mail:</strong> {{ element.email }}</div>
-      <div>
-        <strong>Rollen:</strong>
-        <mat-form-field appearance="outline" class="roles-select">
+    <ng-container matColumnDef="roles">
+      <mat-header-cell *matHeaderCellDef>Rollen</mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <mat-form-field appearance="outline" class="roles-select dense">
           <mat-select
             [ngModel]="element.roles"
             (ngModelChange)="onRolesChange(element, $event)"
             multiple
           >
-            <mat-option value="user" disabled>Standardnutzer</mat-option>
+            <mat-option value="user">Standardnutzer</mat-option>
             <mat-option value="admin">Administrator</mat-option>
             <mat-option value="librarian">Bibliothekar</mat-option>
             <mat-option value="demo">Demo</mat-option>
           </mat-select>
         </mat-form-field>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="choirs">
+      <mat-header-cell *matHeaderCellDef>Chöre</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element.choirs | join:'name' }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="lastLogin">
+      <mat-header-cell *matHeaderCellDef>Letzter Login</mat-header-cell>
+      <mat-cell *matCellDef="let element">{{ element.lastLogin | date:'short' }}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="resetToken">
+      <mat-header-cell *matHeaderCellDef>Reset-Token</mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <ng-container *ngIf="element.resetToken">
+          {{ element.resetTokenExpiry | date:'short' }}
+        </ng-container>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let element">
+        <button mat-icon-button color="primary" (click)="editUser(element)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="addToChoir(element)">
+          <mat-icon>group_add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="sendReset(element)">
+          <mat-icon>mail</mat-icon>
+        </button>
+        <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
+          <mat-icon>clear</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteUser(element)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+  </mat-table>
+
+  <mat-accordion *ngIf="isHandset$ | async">
+    <mat-expansion-panel *ngFor="let element of dataSource.filteredData">
+      <mat-expansion-panel-header>
+        <mat-panel-title>{{ element.name }}, {{ element.firstName }}</mat-panel-title>
+        <mat-panel-description>{{ element.email }}</mat-panel-description>
+      </mat-expansion-panel-header>
+      <div class="mobile-user-row">
+        <div><strong>E-Mail:</strong> {{ element.email }}</div>
+        <div>
+          <strong>Rollen:</strong>
+          <mat-form-field appearance="outline" class="roles-select">
+            <mat-select
+              [ngModel]="element.roles"
+              (ngModelChange)="onRolesChange(element, $event)"
+              multiple
+            >
+              <mat-option value="user" disabled>Standardnutzer</mat-option>
+              <mat-option value="admin">Administrator</mat-option>
+              <mat-option value="librarian">Bibliothekar</mat-option>
+              <mat-option value="demo">Demo</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div><strong>Chöre:</strong> {{ element.choirs | join:'name' }}</div>
+        <div><strong>Letzter Login:</strong> {{ element.lastLogin | date:'short' }}</div>
+        <div *ngIf="element.resetToken"><strong>Reset-Token:</strong> {{ element.resetTokenExpiry | date:'short' }}</div>
       </div>
-      <div><strong>Chöre:</strong> {{ element.choirs | join:'name' }}</div>
-      <div><strong>Letzter Login:</strong> {{ element.lastLogin | date:'short' }}</div>
-      <div *ngIf="element.resetToken"><strong>Reset-Token:</strong> {{ element.resetTokenExpiry | date:'short' }}</div>
-    </div>
-    <div class="mobile-actions">
-      <button mat-icon-button color="primary" (click)="editUser(element)">
-        <mat-icon>edit</mat-icon>
-      </button>
-      <button mat-icon-button (click)="addToChoir(element)">
-        <mat-icon>group_add</mat-icon>
-      </button>
-      <button mat-icon-button (click)="sendReset(element)">
-        <mat-icon>mail</mat-icon>
-      </button>
-      <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
-        <mat-icon>clear</mat-icon>
-      </button>
-      <button mat-icon-button color="warn" (click)="deleteUser(element)">
-        <mat-icon>delete</mat-icon>
-      </button>
-    </div>
-  </mat-expansion-panel>
-</mat-accordion>
+      <div class="mobile-actions">
+        <button mat-icon-button color="primary" (click)="editUser(element)">
+          <mat-icon>edit</mat-icon>
+        </button>
+        <button mat-icon-button (click)="addToChoir(element)">
+          <mat-icon>group_add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="sendReset(element)">
+          <mat-icon>mail</mat-icon>
+        </button>
+        <button mat-icon-button (click)="clearReset(element)" *ngIf="element.resetToken">
+          <mat-icon>clear</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteUser(element)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </mat-expansion-panel>
+  </mat-accordion>
+</app-data-state>

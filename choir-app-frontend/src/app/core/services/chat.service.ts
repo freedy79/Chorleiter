@@ -30,6 +30,10 @@ export class ChatService {
     return this.http.get<ChatRoom[]>(`${this.apiUrl}/rooms`, httpOptions);
   }
 
+  getOrCreateDirectRoom(targetUserId: number): Observable<{ roomId: number; reused: boolean }> {
+    return this.http.post<{ roomId: number; reused: boolean }>(`${this.apiUrl}/rooms/direct`, { targetUserId });
+  }
+
   createRoom(payload: { title: string; key?: string; isPrivate?: boolean; memberUserIds?: number[] }): Observable<ChatRoom> {
     return this.http.post<ChatRoom>(`${this.apiUrl}/rooms`, payload);
   }

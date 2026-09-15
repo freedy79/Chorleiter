@@ -4,9 +4,20 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.DATE,
             allowNull: false
         },
+        eventType: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: 'SERVICE',
+            field: 'event_type'
+        },
         notes: {
             type: DataTypes.TEXT,
             allowNull: true
+        },
+        linkedEventId: {
+            type: DataTypes.INTEGER,
+            allowNull: true,
+            field: 'linked_event_id'
         },
         programId: {
             type: DataTypes.UUID,
@@ -18,6 +29,10 @@ module.exports = (sequelize, DataTypes) => {
             {
                 name: 'plan_entry_monthly_plan_date',
                 fields: ['monthlyPlanId', 'date']
+            },
+            {
+                name: 'plan_entry_linked_event_id',
+                fields: ['linked_event_id']
             }
         ]
     });

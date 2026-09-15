@@ -395,7 +395,7 @@ export class CollectionEditComponent extends BaseComponent implements OnInit, Af
             this.statusSub.unsubscribe();
         }
         this.statusSub = timer(0, 500).pipe(
-            switchMap(() => this.apiService.getCollectionUpdateStatus(jobId)),
+            switchMap(() => this.apiService.getCollectionUpdateStatus(jobId, { silent: true })),
             takeWhile((job) => job.status === 'running', true),
             takeUntil(this.destroy$)
         ).subscribe({

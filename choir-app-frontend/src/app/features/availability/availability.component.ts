@@ -10,6 +10,7 @@ import { ApiService } from '@core/services/api.service';
 import { AuthService } from '@core/services/auth.service';
 import { UserAvailability } from '@core/models/user-availability';
 import { MemberAvailability } from '@core/models/member-availability';
+import { MonthlyPlan } from '@core/models/monthly-plan';
 import { UserInChoir } from '@core/models/user';
 import { getHolidayName } from '@shared/util/holiday';
 import { parseDateOnly } from '@shared/util/date';
@@ -19,6 +20,12 @@ import { take } from 'rxjs/operators';
 interface AvailabilityMonthGroup {
   period: MonthYear;
   availabilities: UserAvailability[];
+  notesByDate: Record<string, string>;
+}
+
+interface AvailabilityMonthData {
+  availabilities: UserAvailability[];
+  notesByDate: Record<string, string>;
 }
 
 @Component({
@@ -33,6 +40,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   selected!: MonthYear;
   viewMode: 'monthly' | 'combined' = 'monthly';
   monthlyAvailabilities: UserAvailability[] | null = null;
+  monthlyNotesByDate: Record<string, string> = {};
   combinedMonths: AvailabilityMonthGroup[] = [];
   combinedTotalEvents = 0;
   isLoading = false;
@@ -140,6 +148,17 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     return this.monthNav.nextLabel(this.selected);
   }
 
+  get monthLabel(): string {
+    return new Date(this.selected.year, this.selected.month - 1, 1)
+      .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  }
+
+  goToToday(): void {
+    const now = new Date();
+    this.selected = { year: now.getFullYear(), month: now.getMonth() + 1 };
+    this.monthChanged();
+  }
+
   formatMonthLabel(period: MonthYear): string {
     return new Date(period.year, period.month - 1, 1)
       .toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
@@ -167,6 +186,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     this.loadError = false;
     this.viewMode = 'monthly';
     this.monthlyAvailabilities = null;
+    this.monthlyNotesByDate = {};
     this.combinedMonths = [];
     this.combinedTotalEvents = 0;
     this.limitedToTen = false;
@@ -177,15 +197,16 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
       const first = await this.fetchMonth(start);
       if (this.isStale(currentLoad)) return;
 
-      const firstCount = first.length;
+      const firstCount = first.availabilities.length;
 
       if (firstCount > 5) {
         this.viewMode = 'monthly';
-        this.monthlyAvailabilities = first;
+        this.monthlyAvailabilities = first.availabilities;
+        this.monthlyNotesByDate = first.notesByDate;
         this.combinedTotalEvents = firstCount;
       } else {
         this.viewMode = 'combined';
-        const groups: AvailabilityMonthGroup[] = [{ period: start, availabilities: first }];
+        const groups: AvailabilityMonthGroup[] = [{ period: start, availabilities: first.availabilities, notesByDate: first.notesByDate }];
         let totalEvents = firstCount;
 
         if (firstCount > 3) {
@@ -194,7 +215,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
             current = this.monthNav.next(current);
             const data = await this.fetchMonth(current);
             if (this.isStale(currentLoad)) return;
-            groups.push({ period: current, availabilities: data });
+            groups.push({ period: current, availabilities: data.availabilities, notesByDate: data.notesByDate });
           }
           totalEvents = groups.reduce((sum, g) => sum + g.availabilities.length, 0);
         } else {
@@ -207,19 +228,19 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
             if (this.isStale(currentLoad)) return;
             checked++;
 
-            if (data.length === 0) {
+            const remainingSlots = 10 - totalEvents;
+            const monthAvailabilities = data.availabilities;
+            if (monthAvailabilities.length === 0) {
               continue;
             }
-
-            const remainingSlots = 10 - totalEvents;
-            const portion = data.length > remainingSlots ? data.slice(0, remainingSlots) : data;
-            groups.push({ period: current, availabilities: portion });
+            const portion = monthAvailabilities.length > remainingSlots ? monthAvailabilities.slice(0, remainingSlots) : monthAvailabilities;
+            groups.push({ period: current, availabilities: portion, notesByDate: data.notesByDate });
             totalEvents += portion.length;
-            if (portion.length < data.length || totalEvents >= 10) {
+            if (portion.length < monthAvailabilities.length || totalEvents >= 10) {
               this.limitedToTen = true;
             }
 
-            if (portion.length < data.length) {
+            if (portion.length < monthAvailabilities.length) {
               break;
             }
           }
@@ -242,7 +263,8 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async fetchMonth(period: MonthYear): Promise<UserAvailability[]> {
+  private async fetchMonth(period: MonthYear): Promise<AvailabilityMonthData> {
+    const notesByDatePromise = this.fetchNotesByDate(period);
     let data: UserAvailability[];
     if (!this.isViewingOwnAvailability && this.selectedUserId != null) {
       try {
@@ -259,7 +281,28 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
     } else {
       data = await firstValueFrom(this.api.getAvailabilities(period.year, period.month));
     }
-    return this.decorate(data);
+    const notesByDate = await notesByDatePromise;
+    return {
+      availabilities: this.decorate(data),
+      notesByDate
+    };
+  }
+
+  private async fetchNotesByDate(period: MonthYear): Promise<Record<string, string>> {
+    const plan = await firstValueFrom(this.api.getMonthlyPlan(period.year, period.month));
+    return this.buildNotesByDate(plan);
+  }
+
+  private buildNotesByDate(plan: MonthlyPlan | null): Record<string, string> {
+    const notesByDate: Record<string, string> = {};
+    const entries = plan?.entries ?? [];
+    for (const entry of entries) {
+      const notes = entry.notes?.trim() || (entry.eventType === 'REHEARSAL' ? 'Chorprobe' : entry.eventType === 'SERVICE' ? 'Gottesdienst' : '');
+      if (notes) {
+        notesByDate[this.dateKey(entry.date)] = notes;
+      }
+    }
+    return notesByDate;
   }
 
   private async fetchMonthForSelectedUserLegacy(period: MonthYear, selectedUserId: number): Promise<UserAvailability[]> {
@@ -276,7 +319,7 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
 
     return monthDates.map(entry => ({
       ...entry,
-      status: statusByDate.get(entry.date) ?? undefined
+      status: statusByDate.get(entry.date) ?? entry.status ?? 'AVAILABLE'
     }));
   }
 
@@ -287,11 +330,16 @@ export class AvailabilityComponent implements OnInit, OnDestroy {
   private decorate(data: UserAvailability[]): UserAvailability[] {
     return data.map(v => ({
       ...v,
+      status: v.status ?? 'AVAILABLE',
       holidayHint: (v.holidayHint ?? getHolidayName(parseDateOnly(v.date))) || undefined
     }));
   }
 
   private isStale(loadId: number): boolean {
     return this.destroyed || loadId !== this.loadRequestId;
+  }
+
+  private dateKey(date: string): string {
+    return date.slice(0, 10);
   }
 }

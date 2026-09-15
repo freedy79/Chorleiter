@@ -11,7 +11,7 @@ exports.findAll = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { dayOfWeek, weeks, notes } = req.body;
+  const { dayOfWeek, weeks, notes, eventType } = req.body;
   if (typeof dayOfWeek !== 'number') {
     return res.status(400).send({ message: 'dayOfWeek required' });
   }
@@ -20,7 +20,8 @@ exports.create = async (req, res) => {
       choirId: req.activeChoirId,
       dayOfWeek,
       weeks,
-      notes
+      notes,
+      eventType: eventType === 'REHEARSAL' ? 'REHEARSAL' : 'SERVICE'
     });
     res.status(201).send(rule);
   } catch (err) {
@@ -30,11 +31,11 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const id = req.params.id;
-  const { dayOfWeek, weeks, notes } = req.body;
+  const { dayOfWeek, weeks, notes, eventType } = req.body;
   try {
     const rule = await PlanRule.findOne({ where: { id, choirId: req.activeChoirId } });
     if (!rule) return res.status(404).send({ message: 'Rule not found.' });
-    await rule.update({ dayOfWeek, weeks, notes });
+    await rule.update({ dayOfWeek, weeks, notes, eventType: eventType === 'REHEARSAL' ? 'REHEARSAL' : 'SERVICE' });
     res.status(200).send(rule);
   } catch (err) {
     res.status(500).send({ message: err.message || 'Could not update rule.' });

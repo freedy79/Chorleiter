@@ -49,6 +49,22 @@ async function ensureTablesExist() {
   }
 
   await ensureChatRoomColumns(queryInterface, tableSet);
+  await ensureChatReadStateColumns(queryInterface, tableSet);
+}
+
+async function ensureChatReadStateColumns(queryInterface, tableSet) {
+  const tableName = tableSet.has('chat_read_states') ? 'chat_read_states' : (tableSet.has('chat_read_state') ? 'chat_read_state' : null);
+  if (!tableName) return;
+
+  const columns = await queryInterface.describeTable(tableName);
+  if (!columns.lastNotifiedMessageId) {
+    await queryInterface.addColumn(tableName, 'lastNotifiedMessageId', {
+      type: db.Sequelize.INTEGER,
+      allowNull: true,
+      defaultValue: null
+    });
+    logger.info('[Migration] Added column chat_read_states.lastNotifiedMessageId');
+  }
 }
 
 async function ensureChatRoomColumns(queryInterface, tableSet) {

@@ -1,7 +1,7 @@
 const { verifyToken } = require("../middleware/auth.middleware");
 const controller = require("../controllers/auth.controller");
 const role = require("../middleware/role.middleware");
-const { signupValidation } = require("../validators/auth.validation");
+const { signupValidation, demoLeadRequestValidation } = require("../validators/auth.validation");
 const validate = require("../validators/validate");
 const router = require("express").Router();
 const { handler: wrap } = require("../utils/async");
@@ -17,6 +17,8 @@ const authLimiter = RateLimit({
 
 router.post("/signup", role.requireNonDemo, authLimiter, signupValidation, validate, wrap(controller.signup));
 router.post("/signin", role.requireNonDemo, authLimiter, wrap(controller.signin));
+router.post("/demo-lead", authLimiter, demoLeadRequestValidation, validate, wrap(controller.requestDemoLead));
+router.get("/demo-lead/:token", wrap(controller.consumeDemoLead));
 
 router.post("/switch-choir/:choirId", verifyToken, role.requireNonDemo, wrap(controller.switchChoir));
 router.get("/check-choir-admin", verifyToken, wrap(controller.checkChoirAdminStatus));

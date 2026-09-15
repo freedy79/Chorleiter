@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const db = require('../models');
 const logger = require('../config/logger');
 
@@ -69,7 +69,7 @@ async function getSummary(options = {}) {
                 [fn('COUNT', col('id')), 'viewCount']
             ],
             group: ['entityId'],
-            order: [[literal('viewCount'), 'DESC']],
+            order: [[fn('COUNT', col('id')), 'DESC']],
             limit: 20,
             raw: true
         }),
@@ -85,7 +85,7 @@ async function getSummary(options = {}) {
                 [fn('COUNT', fn('DISTINCT', col('ipHash'))), 'uniqueVisitors']
             ],
             group: ['entityId', 'shareToken'],
-            order: [[literal('viewCount'), 'DESC']],
+            order: [[fn('COUNT', col('id')), 'DESC']],
             limit: 20,
             raw: true
         }),
@@ -99,7 +99,7 @@ async function getSummary(options = {}) {
                 [fn('COUNT', col('id')), 'viewCount']
             ],
             group: ['entityId'],
-            order: [[literal('viewCount'), 'DESC']],
+            order: [[fn('COUNT', col('id')), 'DESC']],
             limit: 20,
             raw: true
         }),
@@ -112,7 +112,7 @@ async function getSummary(options = {}) {
                 [fn('COUNT', col('id')), 'viewCount']
             ],
             group: ['path'],
-            order: [[literal('viewCount'), 'DESC']],
+            order: [[fn('COUNT', col('id')), 'DESC']],
             limit: 20,
             raw: true
         }),
@@ -128,7 +128,7 @@ async function getSummary(options = {}) {
                 [fn('COUNT', col('id')), 'viewCount']
             ],
             group: ['category'],
-            order: [[literal('viewCount'), 'DESC']],
+            order: [[fn('COUNT', col('id')), 'DESC']],
             raw: true
         })
     ]);
@@ -235,7 +235,7 @@ async function getSharedPieceStats(options = {}) {
             [fn('MAX', col('timestamp')), 'lastView']
         ],
         group: ['entityId', 'shareToken'],
-        order: [[literal('totalViews'), 'DESC']],
+        order: [[fn('COUNT', col('id')), 'DESC']],
         raw: true
     });
 

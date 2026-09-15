@@ -9,9 +9,9 @@ export class AdminGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
   canActivate(): Observable<boolean | UrlTree> {
-    return combineLatest([this.authService.isAdmin$, this.authService.isDemo$]).pipe(
-      map(([isAdmin, isDemo]) => {
-        if (isAdmin && !isDemo) {
+    return combineLatest([this.authService.isAdmin$]).pipe(
+      map(([isAdmin]) => {
+        if (isAdmin) {
           return true;
         }
         return this.router.createUrlTree(['/dashboard']);

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { RouterModule } from '@angular/router';
@@ -7,6 +7,9 @@ import { MaterialModule } from '@modules/material.module';
 import { EventTypeLabelPipe } from '@shared/pipes/event-type-label.pipe';
 import { ApiService } from '@core/services/api.service';
 import { NotificationService } from '@core/services/notification.service';
+import { DialogHelperService } from '@core/services/dialog-helper.service';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { Piece, PieceNote } from '@core/models/piece';
 import { PieceLink } from '@core/models/piece-link';
 import { AuthService } from '@core/services/auth.service';
@@ -72,7 +75,7 @@ type FileLinkGroup = {
   templateUrl: './piece-detail.component.html',
   styleUrls: ['./piece-detail.component.scss']
 })
-export class PieceDetailComponent implements OnInit {
+export class PieceDetailComponent implements OnInit, OnDestroy {
   piece?: Piece;
   newNoteText = '';
   editState: { [id: number]: string } = {};
@@ -91,6 +94,7 @@ export class PieceDetailComponent implements OnInit {
   practiceLists: PracticeList[] = [];
   practiceListsLoading = false;
   private practiceListContext: { link?: PieceLink | null; pinOffline: boolean } = { pinOffline: false };
+  private destroy$ = new Subject<void>();
 
   get hasVisibleMp3Player(): boolean {
     return this.fileLinks.some(link => !!link.isMp3);
@@ -110,8 +114,14 @@ export class PieceDetailComponent implements OnInit {
     private practiceListService: PracticeListService,
     private pieceService: PieceService,
     private responsive: ResponsiveService,
-    private pageViewTracking: PageViewTrackingService
+    private pageViewTracking: PageViewTrackingService,
+    private dialogHelper: DialogHelperService
   ) {}
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -384,17 +394,28 @@ export class PieceDetailComponent implements OnInit {
           });
         } else {
           // Piece is not in any collections, confirm deletion
-          if (confirm(`Möchten Sie das Stück "${piece.title}" wirklich löschen?`)) {
-            this.apiService.deletePiece(piece.id, choirId).subscribe({
-              next: () => {
-                this.notification.success('Stück wurde gelöscht');
-                this.location.back();
-              },
-              error: (err: any) => {
-                this.notification.error('Fehler beim Löschen: ' + (err.error?.message || err.message));
-              }
-            });
-          }
+          this.dialogHelper.confirm({
+            title: 'Stück löschen',
+            message: `Möchten Sie das Stück "${piece.title}" wirklich löschen?`,
+            confirmButtonText: 'Löschen',
+            cancelButtonText: 'Abbrechen'
+          }).pipe(
+            takeUntil(this.destroy$)
+          ).subscribe(confirmed => {
+            if (confirmed) {
+              this.apiService.deletePiece(piece.id, choirId).pipe(
+                takeUntil(this.destroy$)
+              ).subscribe({
+                next: () => {
+                  this.notification.success('Stück wurde gelöscht');
+                  this.location.back();
+                },
+                error: (err: any) => {
+                  this.notification.error('Fehler beim Löschen: ' + (err.error?.message || err.message));
+                }
+              });
+            }
+          });
         }
       },
       error: (err: any) => {

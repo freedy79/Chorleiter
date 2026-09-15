@@ -1,0 +1,37 @@
+<h1 mat-dialog-title>Verbesserung vorschlagen</h1>
+
+<div mat-dialog-content class="dialog-content">
+  <p>
+    Schreib uns kurz, was wir verbessern können oder welche Funktion dir fehlt.
+    Der Vorschlag wird an alle Admins und an dich selbst per E-Mail geschickt.
+  </p>
+
+  <p class="user-hint" *ngIf="currentUser$ | async as user">
+    Absender: <strong>{{ user.firstName || user.name || user.email }}</strong>
+    <span *ngIf="user.email">({{ user.email }})</span>
+  </p>
+
+  <form [formGroup]="form" class="feedback-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Dein Verbesserungsvorschlag</mat-label>
+      <textarea
+        matInput
+        formControlName="message"
+        rows="8"
+        maxlength="4000"
+        placeholder="Beschreibe dein Anliegen möglichst konkret"
+      ></textarea>
+      <mat-hint align="end">{{ form.get('message')?.value?.length || 0 }}/4000</mat-hint>
+      <mat-error *ngIf="form.get('message')?.hasError('required')">Bitte gib einen Text ein.</mat-error>
+      <mat-error *ngIf="form.get('message')?.hasError('minlength')">Bitte mindestens 10 Zeichen eingeben.</mat-error>
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="close()" [disabled]="saving">Abbrechen</button>
+  <button mat-flat-button color="primary" type="button" (click)="send()" [disabled]="saving">
+    <span *ngIf="!saving">Senden</span>
+    <span *ngIf="saving">Wird gesendet…</span>
+  </button>
+</div>
