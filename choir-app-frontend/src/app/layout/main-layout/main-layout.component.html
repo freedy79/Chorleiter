@@ -22,6 +22,18 @@
 
   <span class="spacer"></span>
 
+  <ng-container *ngIf="(isLoggedIn$ | async) === false">
+    <a mat-button routerLink="/register" class="register-link">Registrieren</a>
+
+    <a
+      mat-icon-button
+      routerLink="/login"
+      matTooltip="Anmelden"
+      aria-label="Anmelden">
+      <mat-icon>login</mat-icon>
+    </a>
+  </ng-container>
+
   <button mat-raised-button color="accent" class="choir-badge" [matMenuTriggerFor]="choirMenu"
     *ngIf="((availableChoirs$ | async)?.length ?? 0) > 1 && ((isSmallScreen$ | async) !== true)">
     {{ (activeChoir$ | async)?.name || 'Chor wählen' }}

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { RouterModule } from '@angular/router';
@@ -16,11 +16,18 @@ import { DemoLeadDialogComponent } from '@features/user/login/demo-lead-dialog.c
   templateUrl: './welcome.component.html',
   styleUrls: ['./welcome.component.scss']
 })
-export class WelcomeComponent implements OnInit {
+export class WelcomeComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('hero') heroRef?: ElementRef<HTMLElement>;
   demoLeadMessage: string | null = null;
   isBackendAvailable = true;
   isPwa = window.matchMedia('(display-mode: standalone)').matches
        || (navigator as any).standalone === true;
+
+  /** true, sobald der Hero aus dem Viewport gescrollt ist. */
+  showStickyCta = false;
+  currentYear = new Date().getFullYear();
+
+  private heroObserver?: IntersectionObserver;
 
   constructor(
     private authService: AuthService,
@@ -49,6 +56,25 @@ export class WelcomeComponent implements OnInit {
     this.backendStatusService.backendAvailable$.subscribe(available => {
       this.isBackendAvailable = available;
     });
+  }
+
+  ngAfterViewInit(): void {
+    const hero = this.heroRef?.nativeElement;
+    if (!hero || typeof IntersectionObserver === 'undefined') {
+      return;
+    }
+
+    // Die CTA-Leisten erscheinen erst, wenn der Hero (mit denselben
+    // Buttons) nicht mehr sichtbar ist – vorher wären sie redundant.
+    this.heroObserver = new IntersectionObserver(
+      ([entry]) => { this.showStickyCta = !entry.isIntersecting; },
+      { threshold: 0, rootMargin: '-72px 0px 0px 0px' }
+    );
+    this.heroObserver.observe(hero);
+  }
+
+  ngOnDestroy(): void {
+    this.heroObserver?.disconnect();
   }
 
   features = [

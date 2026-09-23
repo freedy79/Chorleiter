@@ -1,111 +1,136 @@
 <div class="welcome-page">
-  <div class="hero-section">
-    <div class="hero-content">
-      <h1 class="welcome-title">NAK Chorleiter</h1>
-      <p class="welcome-subtitle">Die App für deinen Chor</p>
-      <p class="welcome-description">
-        Noten, Termine, Chat und Dienstpläne –
-        alles an einem Ort, für Sänger und Chorleiter.
-      </p>
+  <section class="hero-section" #hero>
+    <div class="hero-inner">
+      <div class="hero-content">
+        <p class="hero-eyebrow"><mat-icon>groups</mat-icon>Für Sänger und Chorleiter</p>
+        <h1 class="welcome-title">Die App für<br />deinen Chor</h1>
+        <p class="welcome-description">
+          Noten, Termine, Chat und Dienstpläne –
+          alles an einem Ort, für Sänger und Chorleiter.
+        </p>
+        <div class="cta-buttons">
+          <a class="btn-accent primary-cta"
+             [routerLink]="isBackendAvailable ? '/register' : null"
+             [attr.aria-disabled]="!isBackendAvailable"
+             [class.disabled]="!isBackendAvailable"
+             [attr.tabindex]="!isBackendAvailable ? -1 : null"
+             (click)="!isBackendAvailable && $event.preventDefault()">
+            <mat-icon>person_add</mat-icon>
+            Jetzt kostenlos registrieren
+          </a>
+          <a class="btn-ghost secondary-cta"
+             [routerLink]="isBackendAvailable ? '/login' : null"
+             [attr.aria-disabled]="!isBackendAvailable"
+             [class.disabled]="!isBackendAvailable"
+             [attr.tabindex]="!isBackendAvailable ? -1 : null"
+             (click)="!isBackendAvailable && $event.preventDefault()">
+            Anmelden
+          </a>
+        </div>
+        <p class="hero-meta">Kostenlos · Ohne App Store installierbar</p>
+      </div>
+
+      <!-- Screenshots ragen in den Hero hinein. Auf Handsets nur einer. -->
+      <div class="hero-media" aria-hidden="true">
+        <div class="hero-shot hero-shot--back">
+          <img src="assets/landing/app-termine.png" alt="" />
+        </div>
+        <div class="hero-shot hero-shot--front">
+          <img src="assets/landing/app-dashboard.png" alt="" />
+        </div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <section class="auth-section">
-    <p *ngIf="demoLeadMessage" class="demo-message">{{ demoLeadMessage }}</p>
+  <p *ngIf="demoLeadMessage" class="demo-message">{{ demoLeadMessage }}</p>
 
-    <div class="cta-buttons">
-      <a mat-flat-button color="primary"
+  <section class="demo-band">
+    <div class="demo-band-inner">
+      <div class="demo-band-text">
+        <span class="demo-band-icon"><mat-icon>visibility</mat-icon></span>
+        <div>
+          <p class="demo-band-title">Probier die App ohne Registrierung im Demo-Umfang aus</p>
+          <p class="demo-band-sub">Du erhältst einen Link per Mail und kannst die Demo direkt öffnen.</p>
+        </div>
+      </div>
+      <button class="btn-outline" type="button" (click)="openDemoLeadDialog()" [disabled]="!isBackendAvailable">
+        <mat-icon>login</mat-icon>
+        Demo testen
+      </button>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <h2>Funktionen im Überblick</h2>
+    <div class="features-grid">
+      <article *ngFor="let feature of features" class="feature-item">
+        <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+        <h3>{{ feature.title }}</h3>
+        <p>{{ feature.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section *ngIf="!isPwa" class="pwa-section">
+    <div class="pwa-inner">
+      <div class="pwa-text">
+        <p class="section-eyebrow">Mobil</p>
+        <h2>Als App installieren</h2>
+        <p>
+          Du hast die Möglichkeit, Chorleiter direkt auf deinem Smartphone zu installieren –
+          ohne App Store. Erhalte Benachrichtigungen und bleibe immer informiert.
+        </p>
+        <ul class="pwa-chips">
+          <li><mat-icon>install_mobile</mat-icon>Ohne App Store</li>
+          <li><mat-icon>notifications_active</mat-icon>Benachrichtigungen</li>
+          <li><mat-icon>offline_bolt</mat-icon>Offline nutzbar</li>
+        </ul>
+      </div>
+      <div class="pwa-device" aria-hidden="true">
+        <div class="pwa-device-screen">
+          <img src="assets/landing/app-mobile.png" alt="" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="register-cta-section">
+    <div class="register-cta-inner">
+      <h2>Bereit loszulegen?</h2>
+      <p>Registriere dich jetzt kostenlos und werde Teil deines Chors</p>
+      <a class="btn-accent final-cta"
          [routerLink]="isBackendAvailable ? '/register' : null"
          [attr.aria-disabled]="!isBackendAvailable"
          [class.disabled]="!isBackendAvailable"
          [attr.tabindex]="!isBackendAvailable ? -1 : null"
-         (click)="!isBackendAvailable && $event.preventDefault()"
-         class="primary-cta">
+         (click)="!isBackendAvailable && $event.preventDefault()">
         <mat-icon>person_add</mat-icon>
-        Jetzt kostenlos registrieren
-      </a>
-      <a mat-stroked-button color="primary"
-         [routerLink]="isBackendAvailable ? '/login' : null"
-         [attr.aria-disabled]="!isBackendAvailable"
-         [class.disabled]="!isBackendAvailable"
-         [attr.tabindex]="!isBackendAvailable ? -1 : null"
-         (click)="!isBackendAvailable && $event.preventDefault()"
-         class="secondary-cta">
-        Anmelden
+        Kostenlos registrieren
       </a>
     </div>
   </section>
 
-  <div class="demo-section">
-    <mat-card class="demo-card">
-      <mat-card-header>
-        <mat-icon mat-card-avatar class="demo-icon">visibility</mat-icon>
-        <mat-card-title>Demo testen</mat-card-title>
-        <mat-card-subtitle>Probier die App ohne Registrierung im Demo-Umfang aus</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p class="demo-intro">
-          Du möchtest dir einen schnellen Eindruck verschaffen?
-          Dann schick dir jetzt einen persönlichen Demo-Link an deine E-Mail-Adresse.
-        </p>
-
-        <div class="demo-note">
-          <mat-icon>mark_email_read</mat-icon>
-          <p>Du erhältst einen Link per Mail und kannst die Demo direkt öffnen.</p>
-        </div>
-      </mat-card-content>
-      <mat-card-actions align="end">
-        <button mat-raised-button color="primary" type="button" (click)="openDemoLeadDialog()" [disabled]="!isBackendAvailable">
-          <mat-icon>login</mat-icon>
-          Demo testen
-        </button>
-      </mat-card-actions>
-    </mat-card>
-  </div>
-
-  <div class="features-section">
-    <h2>Funktionen im Überblick</h2>
-    <div class="features-grid">
-      <mat-card *ngFor="let feature of features" class="feature-card">
-        <mat-card-content>
-          <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
-          <h3>{{ feature.title }}</h3>
-          <p>{{ feature.description }}</p>
-        </mat-card-content>
-      </mat-card>
+  <footer class="welcome-footer">
+    <span class="footer-copy">© {{ currentYear }} NAK Chorleiter</span>
+    <div class="footer-links">
+      <a routerLink="/imprint">Impressum</a>
+      <a routerLink="/privacy">Datenschutz</a>
     </div>
-  </div>
+  </footer>
 
-  <mat-card *ngIf="!isPwa" class="pwa-install-card">
-    <mat-card-content>
-      <mat-icon class="feature-icon">install_mobile</mat-icon>
-      <h3>Als App installieren</h3>
-      <p>
-        Du hast die Möglichkeit, Chorleiter direkt auf deinem Smartphone zu installieren –
-        ohne App Store. Erhalte Benachrichtigungen und bleibe immer informiert.
-      </p>
-    </mat-card-content>
-  </mat-card>
-
-  <div class="register-cta-section">
-    <h2>Bereit loszulegen?</h2>
-    <p>Registriere dich jetzt kostenlos und werde Teil deines Chors</p>
-    <a mat-raised-button color="primary"
+  <!-- Mobile: feste CTA-Leiste unten statt sticky Topbar. -->
+  <div class="mobile-cta-bar" [class.is-visible]="showStickyCta">
+    <a class="mobile-cta-login"
+       [routerLink]="isBackendAvailable ? '/login' : null"
+       [attr.aria-disabled]="!isBackendAvailable"
+       [class.disabled]="!isBackendAvailable"
+       [attr.tabindex]="!isBackendAvailable ? -1 : null"
+       (click)="!isBackendAvailable && $event.preventDefault()">Anmelden</a>
+    <a class="btn-accent"
        [routerLink]="isBackendAvailable ? '/register' : null"
        [attr.aria-disabled]="!isBackendAvailable"
        [class.disabled]="!isBackendAvailable"
        [attr.tabindex]="!isBackendAvailable ? -1 : null"
-       (click)="!isBackendAvailable && $event.preventDefault()"
-       class="final-cta">
-      Kostenlos registrieren
-    </a>
+       (click)="!isBackendAvailable && $event.preventDefault()">Kostenlos registrieren</a>
   </div>
-
-  <footer class="welcome-footer">
-    <div class="footer-links">
-      <a routerLink="/imprint">Impressum</a>
-      <span class="separator">•</span>
-      <a routerLink="/privacy">Datenschutz</a>
-    </div>
-  </footer>
 </div>

@@ -176,6 +176,16 @@ app-search-box {
   flex: 1 1 auto;
 }
 
+.register-link {
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .register-link {
+    display: none;
+  }
+}
+
 .main-content {
   flex: 1;
   position: relative;
@@ -220,6 +230,17 @@ app-search-box {
   }
 }
 
+// The public landing page is intentionally full-bleed. Keep normal
+// container behavior for all other public routes.
+.public-content:has(app-welcome) {
+  background-color: #005d9d;
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+}
+
 @media (max-width: 599px) {
   :host {
     --header-height: 56px; // Material Design Standard für mobile Header
@@ -230,6 +251,10 @@ app-search-box {
 
   .public-content .container {
     padding: 1rem;
+  }
+
+  .public-content:has(app-welcome) .container {
+    padding: 0;
   }
 }
 
