@@ -11,6 +11,7 @@ const { sendCrashReportMail } = require("./src/services/email.service");
 const { startScheduler: startDutyReminder } = require("./src/services/dutyReminder.service");
 const { startScheduler: startChatUnreadNotifier } = require("./src/services/chatUnreadNotifier.service");
 const { startScheduler: startRehearsalReminder } = require("./src/services/rehearsalReminder.scheduler");
+const { startScheduler: startApiTokenExpiryNotifier } = require("./src/services/apiTokenExpiryNotifier.service");
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 let shuttingDown = false;
@@ -72,6 +73,7 @@ async function start() {
             startDutyReminder();
             startChatUnreadNotifier();
             startRehearsalReminder();
+            startApiTokenExpiryNotifier();
         });
         // Close requests that take longer than 20 seconds
         server.setTimeout(20 * 1000);

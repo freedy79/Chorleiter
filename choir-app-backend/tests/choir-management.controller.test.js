@@ -2,6 +2,7 @@ const assert = require('assert');
 
 process.env.DB_DIALECT = 'sqlite';
 process.env.DB_NAME = ':memory:';
+process.env.ENCRYPTION_KEY = 'encryption-key-for-tests-1234567890';
 
 const db = require('../src/models');
 const { createUserWithRoles } = require('./utils/userFactory');

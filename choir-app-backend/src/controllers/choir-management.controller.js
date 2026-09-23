@@ -6,6 +6,7 @@ const { Op } = require('sequelize');
 const { participationPdf } = require('../services/pdf.service');
 const { parseDateOnly } = require('../utils/date.utils');
 const { decryptPiiField } = require('../utils/pii-crypto');
+const choirApiTokenService = require('../services/choirApiToken.service');
 
 async function cleanupExpiredInvitations() {
     const expired = await db.user_choir.findAll({
@@ -382,6 +383,8 @@ exports.removeUserFromChoir = async (req, res, next) => {
         const result = await choir.removeUser(userId);
 
         if (result > 0) {
+            // A token outlives its creator's membership otherwise, so revoke it here.
+            await choirApiTokenService.revokeTokensCreatedBy({ choirId, userId, revokedByUserId: req.userId });
             const userName = userToRemove ? `${userToRemove.firstName} ${userToRemove.name}` : null;
             await db.choir_log.create({ choirId, userId, action: 'member_leave', details: { removedBy: req.userId, userName } });
             res.status(200).send({ message: "User removed from choir." });
@@ -426,6 +429,11 @@ exports.updateMember = async (req, res, next) => {
         });
 
         if (rolesInChoir) {
+            const MANAGER_ROLES = ['choir_admin', 'director'];
+            const keepsManagementRole = rolesInChoir.some(role => MANAGER_ROLES.includes(role));
+            if (!keepsManagementRole && oldRoles.some(role => MANAGER_ROLES.includes(role))) {
+                await choirApiTokenService.revokeTokensCreatedBy({ choirId, userId: parseInt(userId, 10), revokedByUserId: req.userId });
+            }
             const user = await db.user.findByPk(userId, { attributes: ['firstName', 'name'] });
             const userName = user ? `${user.firstName} ${user.name}` : null;
             await db.choir_log.create({ choirId, userId: parseInt(userId, 10), action: 'member_role_change', details: { userName, oldRoles, newRoles: rolesInChoir, changedBy: req.userId } });

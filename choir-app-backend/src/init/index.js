@@ -30,6 +30,7 @@ const { ensureRehearsalReminderSetup } = require('./ensureRehearsalReminderSetup
 const { ensureTrainingSetup } = require('./ensureTrainingSetup');
 const { ensurePersonalAddressBookTables } = require('./ensurePersonalAddressBookTables');
 const { ensureChoirApiTokenTables } = require('./ensureChoirApiTokenTables');
+const { ensureApiTokenExpiryTemplate } = require('./ensureApiTokenExpiryTemplate');
 const { ensurePieceLinkTypes } = require('./ensurePieceLinkTypes');
 const { ensurePlanEntryEventSyncFields } = require('./ensurePlanEntryEventSyncFields');
 
@@ -64,6 +65,7 @@ async function init(options = {}) {
     await ensureTrainingSetup();
     await ensurePersonalAddressBookTables();
     await ensureChoirApiTokenTables();
+    await ensureApiTokenExpiryTemplate();
     await ensurePieceLinkTypes();
     await ensurePlanEntryEventSyncFields();
     // 4. Then run data migrations on existing tables
@@ -105,6 +107,7 @@ module.exports = {
     ensureChatUnreadTemplate,
     ensurePersonalAddressBookTables,
     ensureChoirApiTokenTables,
+    ensureApiTokenExpiryTemplate,
     ensurePieceLinkTypes,
     ensurePlanEntryEventSyncFields
 };

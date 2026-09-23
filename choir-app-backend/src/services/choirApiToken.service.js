@@ -171,9 +171,9 @@ async function revokeToken({ id, choirId, revokedByUserId }) {
 }
 
 /** Revokes every token a user created for a choir - used when their role is removed. */
-async function revokeTokensCreatedBy({ choirId, userId }) {
+async function revokeTokensCreatedBy({ choirId, userId, revokedByUserId }) {
     const [count] = await db.choir_api_token.update(
-        { revokedAt: new Date(), revokedByUserId: userId },
+        { revokedAt: new Date(), revokedByUserId: revokedByUserId ?? userId },
         { where: { choirId, createdByUserId: userId, revokedAt: null } }
     );
     if (count > 0) {

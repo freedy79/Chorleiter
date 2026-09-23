@@ -106,6 +106,16 @@ const DEFAULT_TEMPLATES = {
           '<p>{{setup_password_hint}}</p>' +
           '<p>{{setup_password_link-html}}</p>' +
           '<p><b>Ablehnungsgrund:</b> {{rejection_reason}}</p>'
+  },
+  'api-token-expiry': {
+    subject: 'API-Token "{{label}}" läuft in {{days_left}} Tagen ab – {{choir}}',
+    body: '<p>Hallo {{first_name}} {{surname}},</p>' +
+          '<p>der API-Token <b>{{label}}</b> ({{token_prefix}}…) für den Chor <b>{{choir}}</b> ' +
+          'läuft am <b>{{expires_at}}</b> ab – das ist in {{days_left}} Tagen.</p>' +
+          '<p>Danach kann der verbundene Dienst keine Chordaten mehr abrufen. ' +
+          'Du kannst den Token in der Chorverwaltung verlängern.</p>' +
+          '<p><a href="{{link}}">Token verlängern</a></p>' +
+          '<p>Viele Grüße<br>{{choir}}</p>'
   }
 };
 
