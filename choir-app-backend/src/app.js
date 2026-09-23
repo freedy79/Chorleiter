@@ -79,8 +79,15 @@ const limiter = RateLimit({
         });
     },
 });
-// Apply rate limiter to all requests
-app.use(limiter);
+// Apply rate limiter to all requests except /mcp, which enforces its own
+// per-token quotas (an IP-based limit would throttle all choirs behind one
+// MCP provider together).
+app.use((req, res, next) => {
+    if (req.path === '/mcp' || req.path.startsWith('/mcp/')) {
+        return next();
+    }
+    return limiter(req, res, next);
+});
 
 app.get("/", (req, res) => {
     res.json({ message: "Welcome to the Choir App API." });
