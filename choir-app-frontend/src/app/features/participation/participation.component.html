@@ -89,37 +89,29 @@
       <div class="event-list" *ngIf="displayMode === 'events'">
         <div class="event-status-row" *ngFor="let col of eventColumns">
           <span class="event-date">{{ col.label }}</span>
-          <button
-            mat-icon-button
-            class="status-button"
-            [ngClass]="classFor(status(member.id, col.key))"
-            [disabled]="!isChoirAdmin || isUpdating(member.id, col.key)"
-            [attr.aria-label]="getStatusAriaLabel(status(member.id, col.key), member.name + ', ' + member.firstName, col.label)"
-            (click)="changeStatus(member.id, col.key, $event)">
-            <mat-spinner diameter="24" *ngIf="isUpdating(member.id, col.key)"></mat-spinner>
-            <mat-icon *ngIf="!isUpdating(member.id, col.key)">
-              {{ iconFor(status(member.id, col.key)) }}
-            </mat-icon>
-          </button>
-          <span class="status-text">{{ getStatusText(status(member.id, col.key)) }}</span>
+          <app-availability-control
+            [date]="col.key"
+            [targetUserId]="member.id"
+            [status]="asAvailabilityStatus(status(member.id, col.key))"
+            [labelTarget]="member.name + ', ' + member.firstName + ': ' + col.label"
+            [disabled]="!isChoirAdmin"
+            [showSummary]="true"
+            (statusChange)="onMemberStatusChange(member.id, col.key, $event)">
+          </app-availability-control>
         </div>
       </div>
       <div class="month-list" *ngIf="displayMode === 'months'">
         <div class="event-status-row" *ngFor="let col of dateColumns">
           <span class="event-date">{{ col.monthKey }} - {{ col.label }}</span>
-          <button
-            mat-icon-button
-            class="status-button"
-            [ngClass]="classFor(status(member.id, col.key))"
-            [disabled]="!isChoirAdmin || isUpdating(member.id, col.key)"
-            [attr.aria-label]="getStatusAriaLabel(status(member.id, col.key), member.name + ', ' + member.firstName, col.label)"
-            (click)="changeStatus(member.id, col.key, $event)">
-            <mat-spinner diameter="24" *ngIf="isUpdating(member.id, col.key)"></mat-spinner>
-            <mat-icon *ngIf="!isUpdating(member.id, col.key)">
-              {{ iconFor(status(member.id, col.key)) }}
-            </mat-icon>
-          </button>
-          <span class="status-text">{{ getStatusText(status(member.id, col.key)) }}</span>
+          <app-availability-control
+            [date]="col.key"
+            [targetUserId]="member.id"
+            [status]="asAvailabilityStatus(status(member.id, col.key))"
+            [labelTarget]="member.name + ', ' + member.firstName + ': ' + col.label"
+            [disabled]="!isChoirAdmin"
+            [showSummary]="true"
+            (statusChange)="onMemberStatusChange(member.id, col.key, $event)">
+          </app-availability-control>
         </div>
       </div>
     </mat-card-content>
@@ -154,18 +146,14 @@
           <span class="date-label">{{ col.label }}</span>
         </mat-header-cell>
         <mat-cell *matCellDef="let m" class="date-column">
-          <button
-            mat-icon-button
-            class="status-button"
-            [ngClass]="classFor(status(m.id, col.key))"
-            [disabled]="!isChoirAdmin || isUpdating(m.id, col.key)"
-            [attr.aria-label]="getStatusAriaLabel(status(m.id, col.key), m.name + ', ' + m.firstName, col.label)"
-            (click)="changeStatus(m.id, col.key, $event)">
-            <mat-spinner diameter="20" *ngIf="isUpdating(m.id, col.key)"></mat-spinner>
-            <mat-icon *ngIf="!isUpdating(m.id, col.key)">
-              {{ iconFor(status(m.id, col.key)) }}
-            </mat-icon>
-          </button>
+          <app-availability-control
+            [date]="col.key"
+            [targetUserId]="m.id"
+            [status]="asAvailabilityStatus(status(m.id, col.key))"
+            [labelTarget]="m.name + ', ' + m.firstName + ': ' + col.label"
+            [disabled]="!isChoirAdmin"
+            (statusChange)="onMemberStatusChange(m.id, col.key, $event)">
+          </app-availability-control>
         </mat-cell>
         <mat-footer-cell *matFooterCellDef class="date-column">
           <div class="summary-grid">
@@ -194,18 +182,14 @@
       <ng-container *ngFor="let col of dateColumns" [matColumnDef]="col.key">
         <mat-header-cell *matHeaderCellDef class="date-column">{{ col.label }}</mat-header-cell>
         <mat-cell *matCellDef="let m" class="date-column">
-          <button
-            mat-icon-button
-            class="status-button"
-            [ngClass]="classFor(status(m.id, col.key))"
-            [disabled]="!isChoirAdmin || isUpdating(m.id, col.key)"
-            [attr.aria-label]="getStatusAriaLabel(status(m.id, col.key), m.name + ', ' + m.firstName, col.label)"
-            (click)="changeStatus(m.id, col.key, $event)">
-            <mat-spinner diameter="20" *ngIf="isUpdating(m.id, col.key)"></mat-spinner>
-            <mat-icon *ngIf="!isUpdating(m.id, col.key)">
-              {{ iconFor(status(m.id, col.key)) }}
-            </mat-icon>
-          </button>
+          <app-availability-control
+            [date]="col.key"
+            [targetUserId]="m.id"
+            [status]="asAvailabilityStatus(status(m.id, col.key))"
+            [labelTarget]="m.name + ', ' + m.firstName + ': ' + col.label"
+            [disabled]="!isChoirAdmin"
+            (statusChange)="onMemberStatusChange(m.id, col.key, $event)">
+          </app-availability-control>
         </mat-cell>
         <mat-footer-cell *matFooterCellDef class="date-column">
           <div class="summary-grid">
@@ -230,7 +214,12 @@
       </ng-container>
 
       <ng-container *ngFor="let month of monthColumns" [matColumnDef]="month.key">
-        <mat-header-cell *matHeaderCellDef [attr.colspan]="month.dates.length">{{ month.label }}</mat-header-cell>
+        <mat-header-cell
+          *matHeaderCellDef
+          class="month-header-cell"
+          [style.flex]="'0 0 ' + (month.dates.length * dateColumnWidth) + 'px'">
+          {{ month.label }}
+        </mat-header-cell>
         <mat-footer-cell *matFooterCellDef>
           <div class="summary-grid">
             <span class="summary-item">

@@ -208,9 +208,26 @@
 .date-column {
   width: 72px;
   min-width: 72px;
+  flex: 0 0 72px;
+  box-sizing: border-box;
   padding: 8px 4px;
   display: grid;
   place-items: center;
+}
+
+.month-header-cell {
+  box-sizing: border-box;
+  justify-content: center;
+  text-align: center;
+}
+
+// Material tables use flexbox, so reserve the fixed member columns in the
+// second header row to retain the visual effect of a native-table rowspan.
+mat-header-row + mat-header-row {
+  .mat-column-name,
+  .mat-column-voice {
+    visibility: hidden;
+  }
 }
 
 .date-label {

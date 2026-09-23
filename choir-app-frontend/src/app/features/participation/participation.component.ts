@@ -14,6 +14,7 @@ import { BaseComponent } from '@shared/components/base.component';
 import { VOICE_DISPLAY_MAP, BASE_VOICE_MAP, VOICE_ORDER } from '@shared/constants/voices.constants';
 import { ResponsiveService } from '@shared/services/responsive.service';
 import { NotificationService } from '@core/services/notification.service';
+import { AvailabilityControlComponent, AvailabilityStatus } from '@shared/components/availability-control/availability-control.component';
 
 interface EventColumn {
   key: string;
@@ -31,11 +32,12 @@ interface MonthColumn extends EventColumn {
 @Component({
   selector: 'app-participation',
   standalone: true,
-  imports: [CommonModule, FormsModule, MaterialModule],
+  imports: [CommonModule, FormsModule, MaterialModule, AvailabilityControlComponent],
   templateUrl: './participation.component.html',
   styleUrls: ['./participation.component.scss']
 })
 export class ParticipationComponent extends BaseComponent implements OnInit {
+  readonly dateColumnWidth = 72;
   members: UserInChoir[] = [];
   sortMode: 'voice' | 'name' = 'voice';
   displayMode: 'events' | 'months' = 'events';
@@ -55,7 +57,6 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
   isLoadingAvailability = false;
   hasError = false;
   errorMessage = '';
-  updatingStatus: { [key: string]: boolean } = {};
 
   // Mobile detection
   isMobile$!: Observable<boolean>;
@@ -164,8 +165,8 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
           col.dates.map(d => ({ key: d, label: dateLabelMap.get(d)!, monthKey: col.key }))
         );
         this.monthHeaderColumns = ['name', 'voice', ...this.monthColumns.map(c => c.key)];
-        this.dateHeaderColumns = this.dateColumns.map(c => c.key);
-        this.displayedColumns = ['name', 'voice', ...this.dateHeaderColumns];
+        this.dateHeaderColumns = ['name', 'voice', ...this.dateColumns.map(c => c.key)];
+        this.displayedColumns = [...this.dateHeaderColumns];
         this.loadAvailabilities(this.monthColumns.map(c => this.parseMonthKey(c.key)));
       }
     });
@@ -201,24 +202,6 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     return this.availabilityMap[userId]?.[this.dateKey(date)];
   }
 
-  iconFor(status?: string): string {
-    switch (status) {
-      case 'AVAILABLE': return 'check';
-      case 'MAYBE': return 'check';
-      case 'UNAVAILABLE': return 'close';
-      default: return 'help';
-    }
-  }
-
-  classFor(status?: string): string {
-    switch (status) {
-      case 'AVAILABLE': return 'available';
-      case 'MAYBE': return 'maybe';
-      case 'UNAVAILABLE': return 'unavailable';
-      default: return 'unknown';
-    }
-  }
-
   statusCount(dateKey: string, type: 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE' | 'UNKNOWN'): number {
     let count = 0;
     for (const m of this.members) {
@@ -246,60 +229,13 @@ export class ParticipationComponent extends BaseComponent implements OnInit {
     );
   }
 
-  private nextStatus(current?: string): string {
-    switch (current) {
-      case 'UNAVAILABLE': return 'AVAILABLE';
-      case 'AVAILABLE': return 'MAYBE';
-      case 'MAYBE': return 'UNAVAILABLE';
-      default: return 'UNAVAILABLE';
-    }
+  asAvailabilityStatus(status?: string): AvailabilityStatus | null {
+    return status === 'AVAILABLE' || status === 'MAYBE' || status === 'UNAVAILABLE' ? status : null;
   }
 
-  changeStatus(userId: number, date: string, event?: Event): void {
-    if (!this.isChoirAdmin) return;
-    // Prevent row click when clicking status button
-    if (event) {
-      event.stopPropagation();
-    }
-    const key = this.dateKey(date);
-    const statusKey = `${userId}-${key}`;
-    const current = this.status(userId, key);
-    const next = this.nextStatus(current);
-
-    this.updatingStatus[statusKey] = true;
-    this.api.setMemberAvailability(userId, key, next).pipe(
-      finalize(() => delete this.updatingStatus[statusKey]),
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      catchError(_err => {
-        this.notification.error('Fehler beim Aktualisieren des Status', 3000);
-        return of(null);
-      })
-    ).subscribe(avail => {
-      if (avail) {
-        if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
-        this.availabilityMap[userId][key] = avail.status!;
-        this.notification.success('Status aktualisiert', 1500);
-      }
-    });
-  }
-
-  isUpdating(userId: number, date: string): boolean {
-    const key = this.dateKey(date);
-    return this.updatingStatus[`${userId}-${key}`] ?? false;
-  }
-
-  getStatusAriaLabel(status: string | undefined, memberName: string, date: string): string {
-    const statusText = this.getStatusText(status);
-    return `${memberName} - ${date}: ${statusText}. Klicken zum Ändern.`;
-  }
-
-  getStatusText(status?: string): string {
-    switch (status) {
-      case 'AVAILABLE': return 'Verfügbar';
-      case 'MAYBE': return 'Vielleicht';
-      case 'UNAVAILABLE': return 'Nicht verfügbar';
-      default: return 'Unbekannt';
-    }
+  onMemberStatusChange(userId: number, date: string, status: AvailabilityStatus): void {
+    if (!this.availabilityMap[userId]) this.availabilityMap[userId] = {};
+    this.availabilityMap[userId][this.dateKey(date)] = status;
   }
 
   retryLoad(): void {
