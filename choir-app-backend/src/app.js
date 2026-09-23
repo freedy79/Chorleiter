@@ -79,11 +79,12 @@ const limiter = RateLimit({
         });
     },
 });
-// Apply rate limiter to all requests except /mcp, which enforces its own
-// per-token quotas (an IP-based limit would throttle all choirs behind one
-// MCP provider together).
+// Apply rate limiter to all requests except the MCP endpoint, which enforces
+// its own per-token quotas (an IP-based limit would throttle all choirs behind
+// one MCP provider together).
+const MCP_PATH = /^\/(api\/)?mcp(\/|$)/;
 app.use((req, res, next) => {
-    if (req.path === '/mcp' || req.path.startsWith('/mcp/')) {
+    if (MCP_PATH.test(req.path)) {
         return next();
     }
     return limiter(req, res, next);
@@ -104,9 +105,10 @@ app.get(["/health", "/api/health"], (req, res) => {
 app.get("/api/public/post-images/:token", postController.getImageByToken);
 
 // CSRF protection: validate token on state-changing requests for authenticated routes.
-// Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting).
+// Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting),
+// and /api/mcp, which authenticates with a bearer API token instead of a session cookie.
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public', '/api/referrals/register-choir/'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public', '/api/referrals/register-choir/', '/api/mcp'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }

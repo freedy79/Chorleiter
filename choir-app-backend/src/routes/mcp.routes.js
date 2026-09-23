@@ -38,7 +38,7 @@ router.get('/info', (req, res) => {
         server: SERVER_NAME,
         version: SERVER_VERSION,
         transport: 'streamable-http',
-        endpoint: '/mcp',
+        endpoint: req.baseUrl,
         choir: req.apiChoir?.name || null,
         scopes: req.apiToken.scopes,
         writeEnabled: req.apiToken.allowWrite,

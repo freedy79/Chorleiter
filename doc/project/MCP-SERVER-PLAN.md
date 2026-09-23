@@ -155,12 +155,17 @@ stabil über Requests hinweg (für Korrelation im Modell), aber nicht auf die Us
 
 ## 6. MCP-Server
 
-### 6.1 Variante A (empfohlen): In-Process unter `/mcp`
+### 6.1 Variante A (empfohlen): In-Process unter `/api/mcp`
 - Paket `@modelcontextprotocol/sdk`, Transport **Streamable HTTP** (`StreamableHTTPServerTransport`).
 - Neue Dateien:
   - `src/mcp/server.js` – Server-Factory, Tool-Registrierung
   - `src/mcp/tools/*.js` – je ein Tool
-  - `src/routes/mcp.routes.js` – mountet `/mcp` mit `verifyChoirApiToken` + Rate-Limiter
+  - `src/routes/mcp.routes.js` – mountet `/api/mcp` mit `verifyChoirApiToken` + Rate-Limiter
+- **Wichtig:** Der Reverse-Proxy in Produktion leitet nur `/api/*` an Node weiter; alles andere
+  wird als Angular-SPA ausgeliefert. Deshalb ist `/api/mcp` die produktive Adresse. `/mcp` bleibt
+  zusätzlich gemountet für Setups, die es direkt proxen. `/api/mcp` ist von der CSRF-Prüfung und
+  vom globalen IP-Rate-Limiter ausgenommen, da es per Bearer-Token authentifiziert und per Token
+  gedrosselt wird.
 - Vorteil: kein zweiter Deploy-Artefakt, gleiche DB-Session, direkte Wiederverwendung der
   bestehenden Controller-Services.
 

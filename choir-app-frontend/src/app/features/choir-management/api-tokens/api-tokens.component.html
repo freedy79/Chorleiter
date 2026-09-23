@@ -21,7 +21,7 @@
       </div>
       <p class="secret-hint">
         Trage ihn im MCP-Client als <code>Authorization: Bearer &lt;Token&gt;</code> für den Endpunkt
-        <code>/mcp</code> ein.
+        <code>/api/mcp</code> ein.
       </p>
     </mat-card-content>
     <mat-card-actions align="end">
@@ -213,12 +213,12 @@
         <li>Token oben erstellen und den angezeigten Wert kopieren.</li>
         <li>Im Client einen MCP-Server vom Typ <strong>Streamable HTTP</strong> anlegen.</li>
         <li>
-          Als URL <code>https://nak-chorleiter.de/mcp</code> eintragen und den Header
+          Als URL <code>https://nak-chorleiter.de/api/mcp</code> eintragen und den Header
           <code>Authorization: Bearer &lt;Token&gt;</code> setzen.
         </li>
         <li>
           Prüfen lässt sich die Verbindung mit
-          <code>GET https://nak-chorleiter.de/mcp/info</code>.
+          <code>GET https://nak-chorleiter.de/api/mcp/info</code>.
         </li>
       </ol>
       <p class="privacy-note">

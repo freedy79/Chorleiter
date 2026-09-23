@@ -107,9 +107,10 @@ function registerRoutes(app) {
         app.use(path, router);
     });
 
-    // Mounted outside /api on purpose: MCP clients authenticate with a choir API
-    // token instead of a session cookie, so the CSRF guard must not apply.
+    // The reverse proxy only forwards /api/* to Node, so /api/mcp is the
+    // address MCP clients use. /mcp is kept for setups that proxy it directly.
     if (String(process.env.MCP_ENABLED ?? 'true').toLowerCase() !== 'false') {
+        app.use('/api/mcp', mcpRoutes);
         app.use('/mcp', mcpRoutes);
     }
 
