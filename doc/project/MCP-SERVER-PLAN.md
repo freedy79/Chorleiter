@@ -275,7 +275,7 @@ exakten Payload-Hash gebunden – ein abweichender Commit schlägt fehl.
 | R7 | **Rechteausweitung** (API-Token trifft Schreib-Route) | Vollständig getrennte Middleware-Pfade; MCP-Router lehnt `POST/PUT/PATCH/DELETE` außerhalb des MCP-Protokolls ab; Test, der ein API-Token gegen `/api/events` wirft und 401 erwartet |
 | R8 | **DoS / Kostenexplosion** | Eigener Rate-Limiter pro Token zusätzlich zum globalen Limiter; DB-Query-Timeouts; `limit`-Parameter serverseitig gekappt |
 | R9 | **Ex-Chorverwalter behält Zugriff** | Beim Entzug der `choir_admin`/`director`-Rolle bzw. Entfernen aus dem Chor werden alle von ihm erstellten Tokens automatisch revoked (Hook in der Choir-Management-Logik) |
-| R10 | **ChatGPT-Connector unterstützt keinen statischen Bearer-Token** | Phase 1: Einsatz über Clients mit Custom-Header (Claude Desktop, VS Code, eigene Agents) + stdio-Proxy. Phase 2: minimaler OAuth-2.1-Flow (Authorization Code + PKCE + Dynamic Client Registration) vor `/mcp`, der intern genau denselben Token ausstellt. **Kein** Token im URL-Pfad (landet in Access-Logs) |
+| R10 | **ChatGPT-Connector unterstützt keinen statischen Bearer-Token** | **Umgesetzt:** OAuth-2.1-Fassade unter `/api/oauth` mit Dynamic Client Registration (RFC 7591), Authorization Code + PKCE-S256 und rotierenden Refresh-Tokens. Der ausgestellte Access-Token *ist* ein regulärer Chor-API-Token, sodass alle bestehenden Kontrollen greifen. Discovery läuft über den `WWW-Authenticate`-Header auf `/api/oauth/.well-known/oauth-protected-resource`. **Kein** Token im URL-Pfad |
 | R11 | **Token im Klartext geloggt** | Winston-Redaction für `authorization`-Header; `paramsDigest` statt Rohparameter im Usage-Log |
 | R12 | **Stale Cache liefert Daten anderer Chöre** | MCP nutzt den `monthlyPlanCache` mit demselben Key-Schema `choirId:year:month`; Test dafür |
 | R13 | **DSGVO/Auftragsverarbeitung** | Einwilligungs-Checkbox im Erstell-Dialog („Daten werden an einen externen KI-Dienst übertragen"); Hinweis in der Datenschutzerklärung; Admin-Übersicht aller aktiven Tokens systemweit |
@@ -285,6 +285,10 @@ exakten Payload-Hash gebunden – ein abweichender Commit schlägt fehl.
 | R17 | **Schreibrechte als Einfallstor** | `events:write` ist opt-in, nur für `director`, zusätzliches `allowWrite`-Flag in der DB, eigene Tagesquota, eigener Audit-Trail, global abschaltbar über `MCP_WRITE_ENABLED=false` |
 | R18 | **Statistik-Leak über Chorgrenzen** | Der `global=true`-Pfad aus `stats.controller.js` wird im MCP-Layer hart auf `false` gesetzt; Test dafür |
 | R19 | **SQL-Injection über `literal()`-Subqueries** | `validateChoirId()` bleibt verbindlich; Statistik-Subqueries erhalten die `choirId` ausschließlich aus dem Token, nie aus Tool-Parametern |
+| R20 | **Offener Redirector über `redirect_uri`** | `redirect_uri` muss exakt einem bei der Registrierung hinterlegten Wert entsprechen; nur `https` oder `http` auf Loopback; bei Abweichung wird **nicht** redirected, sondern ein Fehler gerendert |
+| R21 | **Abgefangener Authorization Code** | PKCE mit S256 ist Pflicht (`plain` wird abgelehnt), Code ist 10 Minuten gültig und Single-Use; ein Replay widerruft genau den daraus entstandenen Grant |
+| R22 | **Gestohlener Refresh-Token** | Refresh-Tokens rotieren bei jeder Nutzung; die Wiederverwendung eines bereits rotierten Tokens widerruft sofort den gesamten Grant inklusive Access-Token |
+| R23 | **Fremdes Chor-Grant über die Consent-Seite** | Die Entscheidung läuft über die Session des Webclients; der Server prüft erneut, dass der Nutzer `choir_admin`/`director` im gewählten Chor ist. `POST /api/oauth/authorize` bleibt CSRF-geschützt |
 
 ---
 
@@ -302,6 +306,9 @@ Nach bestehendem Muster (`tests/*.controller.test.js`, In-Memory-SQLite, plain `
   Single-Use; fremde `pieceId` abgelehnt; `finalized`-Termin abgelehnt; `version`-Konflikt → 409;
   Token ohne `events:write` → 403
 - `tests/apiTokenExpiryNotifier.test.js` – 7-Tage-Fenster, Idempotenz über `expiryNotifiedAt`
+- `tests/oauth.controller.test.js` – Metadaten, Registrierung (unsichere `redirect_uri` abgelehnt),
+  PKCE-Pflicht, Consent nur für verwaltete Chöre, Code-Replay, Refresh-Rotation und Reuse-Erkennung,
+  Revoke; der ausgestellte Access-Token wird gegen die MCP-Middleware geprüft
 
 ---
 
@@ -317,7 +324,51 @@ Nach bestehendem Muster (`tests/*.controller.test.js`, In-Memory-SQLite, plain `
 | **5a – Statistik & Rückblick** | Extraktion `repertoireStats.service.js` + `stats.service.js`; Tools `get_last_event`, `list_recent_events`, `get_piece_history`, `get_repertoire_stats`, `suggest_pieces` | „Was war letzte Probe?", „Wann zuletzt gesungen?" beantwortbar |
 | **5b – Schreibzugriff** | Scope `events:write`, `resolve_pieces`, `prepare_event_pieces`, `commit_event_pieces`, Write-Audit, Frontend-Opt-in | Liederliste per Chat pflegbar |
 | **6 – Härtung** | Usage-Log, Per-Token-Quota, Auto-Revoke bei Rollenverlust, Log-Redaction, Isolations-/PII-/Write-Tests im CI | Produktionsreif |
-| **7 – ChatGPT** | OAuth-2.1-Fassade vor `/mcp` (PKCE + DCR), Setup-Anleitung, stdio-Proxy-Paket | Connector in ChatGPT einrichtbar |
+| **7 – ChatGPT** | OAuth-2.1-Fassade vor `/api/mcp` (PKCE + DCR), Consent-Seite im Frontend, Setup-Anleitung | Connector in ChatGPT einrichtbar |
+
+---
+
+## 12. OAuth-Fassade (Phase 7, umgesetzt)
+
+> Ziel: Clients, die keinen statischen Bearer-Header anbieten, können sich selbst verbinden.
+> Der ausgestellte Access-Token ist bewusst ein **regulärer Chor-API-Token** – damit gelten
+> Ablaufobergrenze, Ablaufmail, Quoten, Auto-Revoke und der Widerruf in der UI unverändert.
+
+### Endpunkte
+
+| Methode | Pfad | Zweck |
+|---------|------|-------|
+| `GET` | `/api/oauth/.well-known/oauth-protected-resource` | RFC 9728, verweist auf den Authorization Server |
+| `GET` | `/api/oauth/.well-known/oauth-authorization-server` | RFC 8414 Metadaten |
+| `POST` | `/api/oauth/register` | RFC 7591 Dynamic Client Registration, nur Public Clients |
+| `GET` | `/api/oauth/authorize` | Validiert die Anfrage und leitet auf die Consent-Seite |
+| `GET` | `/api/oauth/consent-info` | Daten für die Consent-Seite (Session-Auth) |
+| `POST` | `/api/oauth/authorize` | Consent-Entscheidung, erzeugt den Authorization Code |
+| `POST` | `/api/oauth/token` | `authorization_code` und `refresh_token` |
+| `POST` | `/api/oauth/revoke` | RFC 7009 |
+
+Zusätzlich sind die Discovery-Dokumente auf `/.well-known/oauth-*` gemountet, falls der
+Reverse-Proxy diese Pfade an Node weiterleitet.
+
+### Ablauf
+
+1. Client ruft `POST /api/mcp` ohne Token auf → `401` mit
+   `WWW-Authenticate: Bearer resource_metadata="…/api/oauth/.well-known/oauth-protected-resource"`.
+2. Client liest die Metadaten, registriert sich über `/register` und erhält eine `client_id`
+   (kein Secret – PKCE ersetzt es).
+3. Browser-Redirect auf `/api/oauth/authorize` → Weiterleitung auf `/oauth/consent` im Frontend.
+   Nicht angemeldete Nutzer landen über den `AuthGuard` im Login und kommen zurück.
+4. Der Chorverwalter wählt den Chor, sieht die angefragten Rechte und bestätigt.
+5. `POST /api/oauth/token` tauscht Code + `code_verifier` gegen einen Chor-API-Token
+   (Label `OAuth: <Clientname>`) und einen Refresh-Token.
+6. Refresh rotiert beide Geheimnisse und verlängert die Laufzeit auf erneut 90 Tage.
+
+### Einschränkungen
+
+- Nur `response_type=code`, nur `code_challenge_method=S256`, nur `token_endpoint_auth_method=none`.
+- `scope` akzeptiert ausschließlich die bekannten Scope-Namen; `events:write` wird still entfernt,
+  wenn `MCP_WRITE_ENABLED=false` gesetzt ist.
+- Ein Grant zählt gegen `API_TOKEN_MAX_PER_CHOIR`.
 
 ---
 

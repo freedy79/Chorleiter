@@ -3,6 +3,7 @@ const db = require('../models');
 const logger = require('../config/logger');
 const { sendTemplateMail } = require('./email.service');
 const { getFrontendUrl } = require('../utils/frontend-url');
+const oauthService = require('./oauth.service');
 
 const WARN_DAYS = parseInt(process.env.API_TOKEN_EXPIRY_WARN_DAYS, 10) || 7;
 const CHECK_INTERVAL_MS = parseInt(process.env.API_TOKEN_EXPIRY_CHECK_INTERVAL_MS, 10) || 60 * 60 * 1000;
@@ -91,11 +92,23 @@ async function notifyExpiringTokens() {
 
 let interval = null;
 
+async function runMaintenance() {
+  await notifyExpiringTokens();
+  try {
+    const pruned = await oauthService.pruneExpired();
+    if (pruned.codes || pruned.refresh) {
+      logger.debug(`[OAuth] Pruned ${pruned.codes} codes and ${pruned.refresh} refresh tokens`);
+    }
+  } catch (err) {
+    logger.warn(`[OAuth] Pruning expired records failed: ${err.message}`);
+  }
+}
+
 function startScheduler() {
   if (interval) return;
   logger.info(`API token expiry notifier started (warn ${WARN_DAYS} days ahead, interval ${CHECK_INTERVAL_MS / 60000}min)`);
-  notifyExpiringTokens();
-  interval = setInterval(notifyExpiringTokens, CHECK_INTERVAL_MS);
+  runMaintenance();
+  interval = setInterval(runMaintenance, CHECK_INTERVAL_MS);
 }
 
 function stopScheduler() {

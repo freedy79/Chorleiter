@@ -147,7 +147,7 @@ async function renewToken({ id, choirId, validDays }) {
     return serializeToken(token);
 }
 
-async function rotateToken({ id, choirId }) {
+async function rotateToken({ id, choirId, validDays }) {
     const token = await findTokenForChoir(id, choirId);
     if (!token) return null;
     if (token.revokedAt) {
@@ -157,7 +157,15 @@ async function rotateToken({ id, choirId }) {
     }
 
     const { plaintext, tokenHash, tokenPrefix } = generateToken();
-    await token.update({ tokenHash, tokenPrefix, usageCount: 0, lastUsedAt: null, lastUsedIp: null });
+    await token.update({
+        tokenHash,
+        tokenPrefix,
+        usageCount: 0,
+        lastUsedAt: null,
+        lastUsedIp: null,
+        // OAuth refresh rotates and extends in one step; manual rotation keeps the expiry.
+        ...(validDays ? { expiresAt: expiryFromNow(validDays), renewedAt: new Date(), renewCount: (token.renewCount || 0) + 1, expiryNotifiedAt: null } : {}),
+    });
     return { token: serializeToken(token), plaintext };
 }
 

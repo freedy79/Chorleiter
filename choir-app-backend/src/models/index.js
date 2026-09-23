@@ -96,6 +96,9 @@ db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
 db.demo_lead = require('./demo_lead.model.js')(sequelize, Sequelize);
 db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
 db.choir_api_token = require('./choir_api_token.model.js')(sequelize, Sequelize);
+db.oauth_client = require('./oauth_client.model.js')(sequelize, Sequelize);
+db.oauth_authorization_code = require('./oauth_authorization_code.model.js')(sequelize, Sequelize);
+db.oauth_refresh_token = require('./oauth_refresh_token.model.js')(sequelize, Sequelize);
 db.referral_invitation = require('./referral_invitation.model.js')(sequelize, Sequelize);
 db.choir_registration_request = require('./choir_registration_request.model.js')(sequelize, Sequelize);
 db.reminder_log = require('./reminder_log.model.js')(sequelize, Sequelize);
@@ -129,6 +132,8 @@ db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' })
 db.choir.hasMany(db.choir_api_token, { as: 'apiTokens', foreignKey: 'choirId' });
 db.choir_api_token.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
 db.choir_api_token.belongsTo(db.user, { as: 'createdBy', foreignKey: 'createdByUserId' });
+db.choir_api_token.hasMany(db.oauth_refresh_token, { as: 'refreshTokens', foreignKey: 'choirApiTokenId', onDelete: 'CASCADE' });
+db.oauth_refresh_token.belongsTo(db.choir_api_token, { as: 'apiToken', foreignKey: 'choirApiTokenId' });
 
 db.user.hasMany(db.referral_invitation, { as: 'sentReferrals', foreignKey: 'senderUserId' });
 db.referral_invitation.belongsTo(db.user, { as: 'sender', foreignKey: 'senderUserId' });

@@ -81,10 +81,11 @@ const limiter = RateLimit({
 });
 // Apply rate limiter to all requests except the MCP endpoint, which enforces
 // its own per-token quotas (an IP-based limit would throttle all choirs behind
-// one MCP provider together).
+// one MCP provider together). OAuth discovery must stay reachable too.
 const MCP_PATH = /^\/(api\/)?mcp(\/|$)/;
+const OAUTH_DISCOVERY_PATH = /^\/(\.well-known\/oauth-|api\/oauth\/\.well-known\/)/;
 app.use((req, res, next) => {
-    if (MCP_PATH.test(req.path)) {
+    if (MCP_PATH.test(req.path) || OAUTH_DISCOVERY_PATH.test(req.path)) {
         return next();
     }
     return limiter(req, res, next);
@@ -106,9 +107,10 @@ app.get("/api/public/post-images/:token", postController.getImageByToken);
 
 // CSRF protection: validate token on state-changing requests for authenticated routes.
 // Excluded: auth (login/signup/logout), password-reset, join (public endpoints), client-errors (error reporting),
-// and /api/mcp, which authenticates with a bearer API token instead of a session cookie.
+// /api/mcp (bearer API token instead of a session cookie) and the unauthenticated OAuth endpoints.
+// POST /api/oauth/authorize is the consent decision and stays CSRF protected.
 app.use('/api', (req, res, next) => {
-    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public', '/api/referrals/register-choir/', '/api/mcp'];
+    const exemptPrefixes = ['/api/auth/', '/api/password-reset', '/api/join', '/api/client-errors', '/api/public/', '/api/page-views/track-public', '/api/referrals/register-choir/', '/api/mcp', '/api/oauth/register', '/api/oauth/token', '/api/oauth/revoke'];
     if (exemptPrefixes.some(prefix => req.originalUrl.startsWith(prefix))) {
         return next();
     }

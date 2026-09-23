@@ -49,6 +49,7 @@ const referralRoutes = require('./referral.routes');
 const personalAddressBookRoutes = require('./personalAddressBook.routes');
 const choirApiTokenRoutes = require('./choirApiToken.routes');
 const mcpRoutes = require('./mcp.routes');
+const oauthRoutes = require('./oauth.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -100,6 +101,7 @@ const routeDefinitions = [
     ['/api/referrals', referralRoutes],
     ['/api/personal-address-book', personalAddressBookRoutes],
     ['/api/choir-api-tokens', choirApiTokenRoutes],
+    ['/api/oauth', oauthRoutes],
 ];
 
 function registerRoutes(app) {
@@ -112,6 +114,19 @@ function registerRoutes(app) {
     if (String(process.env.MCP_ENABLED ?? 'true').toLowerCase() !== 'false') {
         app.use('/api/mcp', mcpRoutes);
         app.use('/mcp', mcpRoutes);
+
+        // Discovery documents are defined at the origin root by RFC 8414/9728.
+        // They only reach Node if the proxy forwards them; the always reachable
+        // copies under /api/oauth are what the WWW-Authenticate header points at.
+        const oauthController = require('../controllers/oauth.controller');
+        app.get([
+            '/.well-known/oauth-authorization-server',
+            '/.well-known/oauth-authorization-server/api/oauth',
+        ], oauthController.authorizationServerMetadata);
+        app.get([
+            '/.well-known/oauth-protected-resource',
+            '/.well-known/oauth-protected-resource/api/mcp',
+        ], oauthController.protectedResourceMetadata);
     }
 
     // Special mount that directly binds endpoints to app

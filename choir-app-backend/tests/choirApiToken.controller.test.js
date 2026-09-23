@@ -12,7 +12,9 @@ const { verifyChoirApiToken, requireScope, requireWriteAccess, resetUsageCacheFo
 function res() {
   return {
     statusCode: 200,
+    headers: {},
     status(code) { this.statusCode = code; return this; },
+    set(name, value) { this.headers[name] = value; return this; },
     send(data) { this.data = data; return this; },
     json(data) { this.data = data; return this; }
   };

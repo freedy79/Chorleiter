@@ -16,6 +16,24 @@ function extractBearerToken(req) {
     return value.trim();
 }
 
+/**
+ * RFC 9728: the 401 tells an MCP client where to find the resource metadata,
+ * which in turn points at the OAuth authorization server. Without this header
+ * clients cannot start the OAuth flow on their own.
+ */
+function challenge(req, res, error) {
+    const host = typeof req.get === 'function' ? req.get('host') : req.headers?.host;
+    const base = process.env.PUBLIC_BASE_URL
+        ? process.env.PUBLIC_BASE_URL.replace(/\/$/, '')
+        : `${req.protocol || 'https'}://${host || 'localhost'}`;
+    const parts = [
+        'Bearer',
+        `resource_metadata="${base}/api/oauth/.well-known/oauth-protected-resource"`,
+    ];
+    if (error) parts.push(`error="${error}"`);
+    res.set('WWW-Authenticate', parts.join(', '));
+}
+
 function touchUsage(token, ip) {
     const now = Date.now();
     const last = lastUsageFlush.get(token.id) || 0;
@@ -38,6 +56,7 @@ function touchUsage(token, ip) {
 async function verifyChoirApiToken(req, res, next) {
     const plaintext = extractBearerToken(req);
     if (!plaintext) {
+        challenge(req, res);
         return next(new AuthenticationError('API token required.'));
     }
 
@@ -50,17 +69,21 @@ async function verifyChoirApiToken(req, res, next) {
 
     if (!token) {
         logger.warn(`[ApiToken] Unknown token presented from ${req.ip}`);
+        challenge(req, res, 'invalid_token');
         return next(new AuthenticationError('Invalid API token.'));
     }
     if (token.revokedAt) {
+        challenge(req, res, 'invalid_token');
         return next(new AuthenticationError('API token has been revoked.'));
     }
     if (new Date(token.expiresAt) <= new Date()) {
+        challenge(req, res, 'invalid_token');
         return next(new AuthenticationError('API token has expired.'));
     }
 
     const choir = await db.choir.findByPk(token.choirId, { attributes: ['id', 'name', 'location', 'modules'] });
     if (!choir) {
+        challenge(req, res, 'invalid_token');
         return next(new AuthenticationError('Choir for this API token no longer exists.'));
     }
 
