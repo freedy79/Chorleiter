@@ -41,7 +41,7 @@ export class ErrorInterceptor implements HttpInterceptor {
           file: undefined,
           line: undefined
         });
-        console.error('HTTP Error:', error);
+        console.error(`HTTP ${error.status ?? 'error'} ${req.method} ${req.urlWithParams}: ${message}`);
 
         return throwError(() => error);
       })

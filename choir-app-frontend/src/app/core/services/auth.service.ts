@@ -131,9 +131,14 @@ export class AuthService {
       const token = this.getToken();
       if (token && !this.isTokenExpired(token)) {
         this.reloadUserFromServer();
-        this.prefs.load().subscribe(p => {
-          if (p.theme) {
-            this.theme.setTheme(p.theme, false);
+        this.prefs.load().subscribe({
+          next: p => {
+            if (p.theme) {
+              this.theme.setTheme(p.theme, false);
+            }
+          },
+          error: () => {
+            // Preferences are optional; keep the local/default theme.
           }
         });
       } else {
@@ -369,9 +374,14 @@ export class AuthService {
     this.setActiveChoir(normalizedUser.activeChoir || null);
     this.availableChoirs$.next(normalizedUser.availableChoirs || []);
 
-    this.prefs.load().subscribe(p => {
-      if (p.theme) {
-        this.theme.setTheme(p.theme, false);
+    this.prefs.load().subscribe({
+      next: p => {
+        if (p.theme) {
+          this.theme.setTheme(p.theme, false);
+        }
+      },
+      error: () => {
+        // Preferences are optional; keep the local/default theme.
       }
     });
   }

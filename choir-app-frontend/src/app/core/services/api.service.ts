@@ -481,9 +481,10 @@ export class ApiService {
     type?: 'SERVICE' | 'REHEARSAL',
     allChoirs: boolean = false,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
+    options?: { silent?: boolean }
   ): Observable<Event[]> {
-    return this.eventService.getEvents(type, allChoirs, startDate, endDate);
+    return this.eventService.getEvents(type, allChoirs, startDate, endDate, options);
   }
 
   getNextEvents(limit?: number, mine?: boolean): Observable<Event[]> {
@@ -779,8 +780,8 @@ export class ApiService {
     return this.choirService.updateMyChoir(choirData, options?.choirId);
   }
 
-  getChoirMembers(options?: { choirId?: number }): Observable<UserInChoir[]> {
-    return this.choirService.getChoirMembers(options?.choirId);
+  getChoirMembers(options?: { choirId?: number; silent?: boolean }): Observable<UserInChoir[]> {
+    return this.choirService.getChoirMembers(options?.choirId, options);
   }
 
   getChoirMemberCount(options?: { choirId?: number }): Observable<number> {
