@@ -209,6 +209,16 @@
       <mat-card-title>Einrichtung im MCP-Client</mat-card-title>
     </mat-card-header>
     <mat-card-content>
+      <h3>Variante A: automatisch per OAuth (z. B. ChatGPT)</h3>
+      <p>
+        Clients, die MCP-OAuth beherrschen, brauchen keinen Token von dieser Seite. Trage dort
+        einfach <code>https://nak-chorleiter.de/api/mcp</code> als Server-URL ein. Der Client
+        registriert sich selbst, du wirst hierher zur Anmeldung geschickt, wählst den Chor und
+        bestätigst den Zugriff. Der entstehende Token taucht anschließend oben in der Liste auf
+        und lässt sich dort genauso widerrufen.
+      </p>
+
+      <h3>Variante B: Token manuell eintragen</h3>
       <ol>
         <li>Token oben erstellen und den angezeigten Wert kopieren.</li>
         <li>Im Client einen MCP-Server vom Typ <strong>Streamable HTTP</strong> anlegen.</li>

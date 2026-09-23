@@ -1,0 +1,78 @@
+<div class="consent-page">
+  <mat-card class="consent-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>link</mat-icon>
+      <mat-card-title>Zugriff erlauben?</mat-card-title>
+      <mat-card-subtitle *ngIf="info">
+        {{ info.client.name }} möchte auf deine Chordaten zugreifen.
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="isLoading" class="state-block">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Anfrage wird geprüft…</span>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-block" role="alert">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <ng-container *ngIf="info && !isLoading && !errorMessage">
+        <p *ngIf="info.choirs.length === 0" class="no-choir">
+          Du verwaltest keinen Chor. Nur Chorleiter und Chor-Administratoren können einen
+          Zugriff freigeben.
+        </p>
+
+        <ng-container *ngIf="info.choirs.length > 0">
+          <mat-form-field appearance="outline" class="choir-select">
+            <mat-label>Chor</mat-label>
+            <mat-select [(ngModel)]="selectedChoirId" name="choirId">
+              <mat-option *ngFor="let choir of info.choirs" [value]="choir.id">{{ choir.name }}</mat-option>
+            </mat-select>
+            <mat-hint>Der Zugriff gilt ausschließlich für diesen Chor.</mat-hint>
+          </mat-form-field>
+
+          <h3>Erlaubte Aktionen</h3>
+          <ul class="scope-list">
+            <li *ngFor="let scope of info.scopes" [class.write-scope]="scope === 'events:write'">
+              <mat-icon>{{ scope === 'events:write' ? 'edit' : 'visibility' }}</mat-icon>
+              <span>{{ scopeLabel(scope) }}</span>
+            </li>
+          </ul>
+
+          <div class="privacy-box">
+            <mat-icon>shield</mat-icon>
+            <div>
+              <strong>Was nicht übertragen wird:</strong>
+              E-Mail-Adressen, Telefonnummern, Anschriften, Verfügbarkeiten, Chat- und
+              Umfragedaten. Mitglieder erscheinen ausschließlich mit ihrem Namen, etwa als
+              musikalische Leitung im Dienstplan.
+            </div>
+          </div>
+
+          <div *ngIf="info.allowWrite" class="write-warning" role="alert">
+            <mat-icon color="warn">warning</mat-icon>
+            <span>
+              Diese Anwendung darf die Liederliste von Terminen ändern. Jede Änderung wird dir
+              vorher als Vorschau angezeigt und muss bestätigt werden.
+            </span>
+          </div>
+
+          <p class="expiry-note">
+            Der Zugriff läuft nach {{ info.maxDays }} Tagen automatisch ab und kann jederzeit
+            unter „API-Zugriff“ in den Choreinstellungen widerrufen werden.
+          </p>
+        </ng-container>
+      </ng-container>
+    </mat-card-content>
+
+    <mat-card-actions align="end" *ngIf="!isLoading && !errorMessage">
+      <button mat-button (click)="decide(false)" [disabled]="isSubmitting">Ablehnen</button>
+      <button mat-raised-button color="primary" (click)="decide(true)" [disabled]="!canApprove">
+        Zugriff erlauben
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

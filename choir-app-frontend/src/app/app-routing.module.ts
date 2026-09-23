@@ -322,6 +322,12 @@ export const routes: Routes = [
                 canActivate: [AuthGuard, ChoirAdminGuard],
                 data: { title: 'API-Zugriff (MCP)' }
             },
+            {
+                path: 'oauth/consent',
+                loadComponent: () => import('./features/oauth/consent/oauth-consent.component').then(m => m.OAuthConsentComponent),
+                canActivate: [AuthGuard],
+                data: { title: 'Zugriff erlauben' }
+            },
         ],
     },
     {

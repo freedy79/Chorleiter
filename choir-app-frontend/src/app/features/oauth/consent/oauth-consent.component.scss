@@ -1,0 +1,102 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.consent-page {
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px;
+
+  @include bp.handset {
+    padding: 12px;
+  }
+}
+
+.consent-card {
+  width: 100%;
+  max-width: 620px;
+  @include card-background;
+
+  h3 {
+    margin: 20px 0 8px;
+    font-size: 1rem;
+    @include readable-text;
+  }
+}
+
+.state-block,
+.error-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  @include secondary-text;
+}
+
+.error-block {
+  color: var(--mat-sys-error, #d32f2f);
+}
+
+.no-choir {
+  @include secondary-text;
+}
+
+.choir-select {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.scope-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    @include readable-text;
+
+    mat-icon {
+      flex: none;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      @include subtle-text;
+    }
+
+    &.write-scope mat-icon {
+      color: var(--mat-sys-error, #d32f2f);
+    }
+  }
+}
+
+.privacy-box,
+.write-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+
+  @include bp.handset {
+    font-size: bp.$mobile-font-scale * 0.875rem;
+  }
+}
+
+.privacy-box {
+  background: rgba(63, 81, 181, 0.08);
+  @include readable-text;
+}
+
+.write-warning {
+  background: rgba(211, 47, 47, 0.08);
+  color: var(--mat-sys-error, #d32f2f);
+}
+
+.expiry-note {
+  margin: 16px 0 0;
+  @include subtle-text;
+}

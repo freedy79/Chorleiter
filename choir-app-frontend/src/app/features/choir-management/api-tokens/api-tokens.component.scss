@@ -201,6 +201,21 @@ mat-card {
 }
 
 .help-card {
+  h3 {
+    margin: 16px 0 6px;
+    font-size: 0.95rem;
+    @include readable-text;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  p {
+    max-width: 75ch;
+    @include secondary-text;
+  }
+
   ol {
     margin: 0 0 12px;
     padding-left: 20px;
