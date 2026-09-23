@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { CreateEventResponse, Event } from '../models/event';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class EventService {
@@ -24,7 +25,8 @@ export class EventService {
     type?: 'SERVICE' | 'REHEARSAL',
     allChoirs: boolean = false,
     startDate?: Date | string,
-    endDate?: Date | string
+    endDate?: Date | string,
+    options?: { silent?: boolean }
   ): Observable<Event[]> {
     let params = new HttpParams();
     if (type) params = params.set('type', type);
@@ -35,7 +37,10 @@ export class EventService {
     if (endDate) {
       params = params.set('endDate', endDate instanceof Date ? endDate.toISOString() : endDate);
     }
-    return this.http.get<Event[]>(`${this.apiUrl}/events`, { params });
+    const context = options?.silent
+      ? new HttpContext().set(SKIP_GLOBAL_LOADING, true)
+      : undefined;
+    return this.http.get<Event[]>(`${this.apiUrl}/events`, { params, context });
   }
 
   getNextEvents(limit: number = 5, mine: boolean = false): Observable<Event[]> {

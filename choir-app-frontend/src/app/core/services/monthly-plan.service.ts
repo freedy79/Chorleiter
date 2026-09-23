@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { shareReplay, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { MonthlyPlan } from '../models/monthly-plan';
 import { MonthlyPlanRecipientPreference } from '../models/personal-address-book-entry';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class MonthlyPlanService {
@@ -14,13 +15,16 @@ export class MonthlyPlanService {
 
   constructor(private http: HttpClient) {}
 
-  getMonthlyPlan(year: number, month: number): Observable<MonthlyPlan | null> {
+  getMonthlyPlan(year: number, month: number, options?: { silent?: boolean }): Observable<MonthlyPlan | null> {
     const key = this.cacheKey(year, month);
     const cached = this.planCache.get(key);
     if (cached) {
       return cached;
     }
-    const request$ = this.http.get<MonthlyPlan | null>(`${this.apiUrl}/monthly-plans/${year}/${month}`).pipe(
+    const context = options?.silent
+      ? new HttpContext().set(SKIP_GLOBAL_LOADING, true)
+      : undefined;
+    const request$ = this.http.get<MonthlyPlan | null>(`${this.apiUrl}/monthly-plans/${year}/${month}`, { context }).pipe(
       tap({
         next: plan => this.setCacheEntry(year, month, plan),
         error: () => this.planCache.delete(key)

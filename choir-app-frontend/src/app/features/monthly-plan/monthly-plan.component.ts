@@ -656,6 +656,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     const previousPlan = this.plan;
     const previousEntries = this.entries;
     const previousAvailabilityMap = this.availabilityMap;
+    const silentRefresh = previousPlan !== null;
 
     const requestId = ++this.planRequestId;
     this.loadMetrics = {
@@ -680,7 +681,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
     if (this.planSub) {
       this.planSub.unsubscribe();
     }
-    const plan$ = this.monthlyPlan.getMonthlyPlan(year, month).pipe(
+    const plan$ = this.monthlyPlan.getMonthlyPlan(year, month, { silent: silentRefresh }).pipe(
       tap(() => this.markLoadStep('planResponseAt', requestId)),
       map(plan => {
         const entries = (plan?.entries || [])
@@ -704,7 +705,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
       : of<{ [userId: number]: { [date: string]: string } }>({});
 
     const members$ = this.isChoirAdmin
-      ? this.api.getChoirMembers().pipe(
+      ? this.api.getChoirMembers({ silent: silentRefresh }).pipe(
           tap(() => this.markLoadStep('membersResponseAt', requestId)),
           map(members => {
             const directors = members.filter(u => {
@@ -719,7 +720,7 @@ export class MonthlyPlanComponent extends BaseComponent implements OnInit, OnDes
 
     const monthStart = new Date(Date.UTC(year, month - 1, 1));
     const monthEnd = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-    const events$ = this.api.getEvents(undefined, false, monthStart, monthEnd);
+    const events$ = this.api.getEvents(undefined, false, monthStart, monthEnd, { silent: silentRefresh });
 
     this.planSub = forkJoin({
       planData: plan$,

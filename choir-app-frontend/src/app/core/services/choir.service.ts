@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
@@ -9,6 +9,7 @@ import { UserInChoir } from '../models/user';
 import { Collection } from '../models/collection';
 import { ChoirLog } from '../models/choir-log';
 import { ChoirPublicPage, PublicChoirPageResponse, SlugAvailabilityResponse } from '../models/choir-public-page';
+import { SKIP_GLOBAL_LOADING } from '../interceptors/loading-interceptor';
 
 @Injectable({ providedIn: 'root' })
 export class ChoirService {
@@ -27,9 +28,12 @@ export class ChoirService {
     return this.http.put(`${this.apiUrl}/choir-management`, choirData, { params });
   }
 
-  getChoirMembers(choirId?: number): Observable<UserInChoir[]> {
+  getChoirMembers(choirId?: number, options?: { silent?: boolean }): Observable<UserInChoir[]> {
     const params = choirId ? new HttpParams().set('choirId', choirId.toString()) : undefined;
-    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params })
+    const context = options?.silent
+      ? new HttpContext().set(SKIP_GLOBAL_LOADING, true)
+      : undefined;
+    return this.http.get<UserInChoir[]>(`${this.apiUrl}/choir-management/members`, { params, context })
       .pipe(map(members => normalizeMembers(members)));
   }
 
