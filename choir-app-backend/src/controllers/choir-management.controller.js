@@ -5,6 +5,7 @@ const emailService = require('../services/email.service');
 const { Op } = require('sequelize');
 const { participationPdf } = require('../services/pdf.service');
 const { parseDateOnly } = require('../utils/date.utils');
+const { decryptPiiField } = require('../utils/pii-crypto');
 
 async function cleanupExpiredInvitations() {
     const expired = await db.user_choir.findAll({
@@ -247,9 +248,11 @@ exports.getChoirMembers = async (req, res, next) => {
         await cleanupExpiredInvitations();
 
         // Choir-Rollen des anfragenden Nutzers ermitteln
-        const membership = await db.user_choir.findOne({
-            where: { userId: req.userId, choirId: req.activeChoirId }
-        });
+        const membership = req.userId
+            ? await db.user_choir.findOne({
+                where: { userId: req.userId, choirId: req.activeChoirId }
+            })
+            : null;
         const choirRoles = membership?.rolesInChoir || [];
         const canSeeAddresses = globalRoles.includes('admin')
             || choirRoles.includes('choir_admin')
@@ -277,6 +280,10 @@ exports.getChoirMembers = async (req, res, next) => {
         // Sequelize fügt die 'through'-Daten in ein verschachteltes Objekt ein.
         // Wir formatieren die Antwort, um sie für das Frontend einfacher zu machen.
         const members = choir.users.map(user => {
+            const phone = decryptPiiField(user.phone);
+            const street = decryptPiiField(user.street);
+            const postalCode = decryptPiiField(user.postalCode);
+            const city = decryptPiiField(user.city);
             const base = {
                 id: user.id,
                 firstName: user.firstName,
@@ -290,12 +297,12 @@ exports.getChoirMembers = async (req, res, next) => {
             };
             if (canSeeAddresses) {
                 base.shareWithChoir = user.shareWithChoir;
-                if (user.shareWithChoir) {
-                    base.phone = user.phone;
-                    base.street = user.street;
-                    base.postalCode = user.postalCode;
-                    base.city = user.city;
-                }
+            }
+            if (user.shareWithChoir || canSeeAddresses) {
+                base.phone = phone;
+                base.street = street;
+                base.postalCode = postalCode;
+                base.city = city;
             }
             return base;
         });
@@ -303,7 +310,11 @@ exports.getChoirMembers = async (req, res, next) => {
         res.status(200).send(members);
     } catch (err) {
         err.message = `Error fetching members for choirId ${req.activeChoirId}: ${err.message}`;
-        next(err);
+        if (typeof next === 'function') {
+            next(err);
+        } else {
+            throw err;
+        }
     }
 };
 
