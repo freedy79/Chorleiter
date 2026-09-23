@@ -8,6 +8,8 @@
     "test:backend": "npm test --prefix choir-app-backend",
     "check-backend": "npm run check --prefix choir-app-backend",
     "check:session-log": "node scripts/check-session-commit-log.js",
+    "branches:cleanup": "node scripts/cleanup-local-branches.js",
+    "branches:cleanup:force": "node scripts/cleanup-local-branches.js --force",
     "hooks:install": "node scripts/install-git-hooks.js",
     "prepare": "npm run hooks:install",
     "pre-check": "powershell -ExecutionPolicy Bypass -File ./pre-check.ps1",
