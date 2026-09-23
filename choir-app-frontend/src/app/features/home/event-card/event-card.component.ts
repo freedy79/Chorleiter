@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Clipboard } from '@angular/cdk/clipboard';
@@ -7,9 +7,7 @@ import { NotificationService } from '@core/services/notification.service';
 import { MaterialModule } from '@modules/material.module';
 import { Event, EventPiece } from 'src/app/core/models/event';
 import { PureDatePipe } from '@shared/pipes/pure-date.pipe';
-import { ApiService } from '@core/services/api.service';
-
-type AvailabilityStatus = 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
+import { AvailabilityControlComponent, AvailabilityStatus } from '@shared/components/availability-control/availability-control.component';
 
 @Component({
   selector: 'app-event-card',
@@ -18,24 +16,13 @@ type AvailabilityStatus = 'AVAILABLE' | 'MAYBE' | 'UNAVAILABLE';
     CommonModule,
     MaterialModule,
     RouterModule,
-    PureDatePipe
+    PureDatePipe,
+    AvailabilityControlComponent
   ],
   templateUrl: './event-card.component.html',
   styleUrls: ['./event-card.component.scss']
 })
 export class EventCardComponent {
-  private readonly availabilityLabels: Record<AvailabilityStatus, string> = {
-    AVAILABLE: 'Zugesagt',
-    MAYBE: 'Vielleicht',
-    UNAVAILABLE: 'Abgesagt'
-  };
-
-  private readonly availabilityIcons: Record<AvailabilityStatus, string> = {
-    AVAILABLE: 'check_circle',
-    MAYBE: 'help',
-    UNAVAILABLE: 'cancel'
-  };
-
   /**
    * Der Titel, der in der Kopfzeile der Karte angezeigt wird (z.B. "Letzter Gottesdienst").
    */
@@ -48,19 +35,12 @@ export class EventCardComponent {
   @Input() availabilityStatus: AvailabilityStatus | null = null;
   @Input() allowAvailabilityActions = false;
   @Input() choirId?: number | null;
-  availabilityMenuOpen = false;
-
-  readonly availabilityOptions: Array<{ value: AvailabilityStatus; icon: string; label: string }> = [
-    { value: 'AVAILABLE', icon: 'check_circle', label: 'Zusage' },
-    { value: 'MAYBE', icon: 'help', label: 'Vielleicht' },
-    { value: 'UNAVAILABLE', icon: 'cancel', label: 'Absage' }
-  ];
-  isSavingAvailability = false;
+  @Input() canEdit = false;
+  @Output() edit = new EventEmitter<Event>();
 
   constructor(
     private clipboard: Clipboard,
-    private notification: NotificationService,
-    private api: ApiService
+    private notification: NotificationService
   ) {}
 
   getPieceSubtitle(piece: EventPiece): string {
@@ -104,68 +84,13 @@ export class EventCardComponent {
     }
   }
 
-  setAvailability(status: AvailabilityStatus, event?: MouseEvent): void {
-    event?.stopPropagation();
-    if (!this.event?.date || this.isSavingAvailability || this.availabilityStatus === status) {
-      return;
+  onAvailabilityChange(status: AvailabilityStatus): void {
+    this.availabilityStatus = status;
+  }
+
+  editEvent(): void {
+    if (this.event && this.canEdit) {
+      this.edit.emit(this.event);
     }
-
-    this.isSavingAvailability = true;
-    this.api.setAvailability(this.event.date.slice(0, 10), status, this.choirId ?? this.event.choirId).subscribe({
-      next: (updated) => {
-        this.availabilityStatus = updated.status;
-        this.isSavingAvailability = false;
-        this.notification.success(`${this.getAvailabilityLabel(updated.status)} gespeichert.`);
-      },
-      error: () => {
-        this.isSavingAvailability = false;
-        this.notification.error('Verfügbarkeit konnte nicht gespeichert werden.');
-      }
-    });
-  }
-
-  isActiveAvailability(status: AvailabilityStatus): boolean {
-    return this.availabilityStatus === status;
-  }
-
-  openAvailabilityMenu(event?: MouseEvent): void {
-    event?.stopPropagation();
-    this.availabilityMenuOpen = true;
-  }
-
-  updateAvailabilityFromMenu(status: AvailabilityStatus, event: MouseEvent): void {
-    event.stopPropagation();
-    this.setAvailability(status, event);
-  }
-
-  getAvailabilityLabel(status: AvailabilityStatus | null | undefined): string {
-    return status ? this.availabilityLabels[status] : 'Noch keine Rückmeldung';
-  }
-
-  getAvailabilityIcon(status: AvailabilityStatus | null | undefined): string {
-    return status ? this.availabilityIcons[status] : 'event_available';
-  }
-
-  getAvailabilityClass(status: AvailabilityStatus | null | undefined): string {
-    if (!status) {
-      return 'status-unset';
-    }
-    if (status === 'AVAILABLE') {
-      return 'status-available';
-    }
-    if (status === 'UNAVAILABLE') {
-      return 'status-unavailable';
-    }
-    return 'status-maybe';
-  }
-
-  getEventTypeLabel(): string {
-    if (this.event?.type === 'SERVICE') {
-      return 'Gottesdienst';
-    }
-    if (this.event?.type === 'REHEARSAL') {
-      return 'Probe';
-    }
-    return 'Termin';
   }
 }

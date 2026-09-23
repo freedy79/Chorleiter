@@ -49,7 +49,8 @@
             </app-upcoming-events-widget>
 
             <app-event-card *ngIf="vm.lastService as lastService"
-                            cardTitle="Letzter Gottesdienst" [event]="lastService">
+                            cardTitle="Letzter Gottesdienst" [event]="lastService"
+                            [canEdit]="(canEditEvents$ | async) === true" (edit)="openEvent($event)">
             </app-event-card>
 
             <ng-container *ngIf="vm.lastProgram as lastProgram">
@@ -59,7 +60,8 @@
             </ng-container>
 
             <app-event-card *ngIf="vm.lastRehearsal as lastRehearsal"
-                            cardTitle="Letzte Probe" [event]="lastRehearsal">
+                            cardTitle="Letzte Probe" [event]="lastRehearsal"
+                            [canEdit]="(canEditEvents$ | async) === true" (edit)="openEvent($event)">
             </app-event-card>
           </div>
 

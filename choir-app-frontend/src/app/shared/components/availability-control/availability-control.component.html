@@ -1,0 +1,25 @@
+<span class="availability-summary" *ngIf="showSummary" aria-live="polite">
+  <mat-icon aria-hidden="true">{{ isSaving ? 'hourglass_top' : icon }}</mat-icon>
+  <span>{{ label }}</span>
+</span>
+
+<button
+  mat-icon-button
+  type="button"
+  class="status-trigger"
+  [ngClass]="statusClass"
+  [disabled]="disabled || isSaving"
+  [matMenuTriggerFor]="availabilityMenu"
+  [attr.aria-label]="ariaLabel"
+  [matTooltip]="'Status: ' + label + ' · ändern'"
+  (click)="$event.stopPropagation()">
+  <mat-icon aria-hidden="true">{{ isSaving ? 'hourglass_top' : icon }}</mat-icon>
+</button>
+
+<mat-menu #availabilityMenu="matMenu">
+  <button *ngFor="let option of options" mat-menu-item (click)="select(option.value, $event)">
+    <mat-icon>{{ option.icon }}</mat-icon>
+    <span>{{ option.label }}</span>
+    <mat-icon *ngIf="currentStatus === option.value" aria-hidden="true">done</mat-icon>
+  </button>
+</mat-menu>

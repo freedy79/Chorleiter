@@ -28,93 +28,64 @@
     <h3>{{ selectedDate | date:'longDate' }}</h3>
     <p class="event-list-summary">{{ eventsForSelectedDate.length }} Termin{{ eventsForSelectedDate.length === 1 ? '' : 'e' }} an diesem Tag</p>
     <mat-list>
-      <mat-list-item *ngFor="let ev of eventsForSelectedDate; trackBy: trackByCalendarEntry">
-        <span class="choir-dot" *ngIf="$any(ev).choirId" [style.background]="choirColors[$any(ev).choirId]"></span>
-        <ng-container [ngSwitch]="$any(ev).entryType">
-          <ng-container *ngSwitchCase="'PLAN'">
-            <div matLine>
-              Dienst:
-              <span *ngIf="$any(ev).director">
-                <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung {{ $any(ev).director.name
-                  }}</span>
-              </span>
-              <span *ngIf="$any(ev).organist">
-                {{ $any(ev).director ? ', ' : '' }}<span [class.me]="$any(ev).organist?.id === currentUserId">Orgel {{
-                  $any(ev).organist.name }}</span>
-              </span>
-            </div>
+      <mat-list-item *ngFor="let ev of eventsForSelectedDate; trackBy: trackByCalendarEntry"
+        [matTooltip]="descriptionForEntry($any(ev))"
+        [matTooltipDisabled]="!descriptionForEntry($any(ev))"
+        matTooltipPosition="above">
+        <div class="event-entry-content">
+          <ng-container [ngSwitch]="$any(ev).entryType">
+            <ng-container *ngSwitchCase="'PLAN'">
+              <div matLine class="event-title-line">
+                <span class="choir-dot" *ngIf="$any(ev).choirId" [style.background]="choirColors[$any(ev).choirId]"></span>
+                Dienst:<ng-container *ngIf="isSamePlanPerson($any(ev)); else planSeparatePeople"> <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung und Orgel {{ $any(ev).director.name }}</span></ng-container><ng-template #planSeparatePeople><ng-container *ngIf="$any(ev).director"> <span [class.me]="$any(ev).director?.id === currentUserId">Chorleitung {{ $any(ev).director.name }}</span></ng-container><ng-container *ngIf="$any(ev).organist">{{ $any(ev).director ? ', ' : ' ' }}<span [class.me]="$any(ev).organist?.id === currentUserId">Orgel {{ $any(ev).organist.name }}</span></ng-container></ng-template>
+              </div>
             <div matLine *ngIf="$any(ev).program">
               <a [routerLink]="['/programs', $any(ev).program.id]" class="event-link">Programm: {{ $any(ev).program.title }}</a>
             </div>
             <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
-            <div matLine class="availability-state" aria-live="polite">
-              <mat-icon aria-hidden="true">{{ getAvailabilityIcon(availabilityStatus($any(ev))) }}</mat-icon>
-              <span>{{ getAvailabilityLabel(availabilityStatus($any(ev))) }}</span>
-            </div>
-            <div matLine class="availability-trigger-row" role="group" aria-label="Rückmeldung für diesen Dienst">
-              <button
-                mat-icon-button
-                type="button"
-                class="status-trigger"
-                [ngClass]="getAvailabilityClass(availabilityStatus($any(ev)))"
-                [disabled]="isSavingAvailability($any(ev))"
-                [matMenuTriggerFor]="availabilityMenu"
-                [attr.aria-label]="availabilityAriaLabel($any(ev))"
-                [matTooltip]="'Status: ' + getAvailabilityLabel(availabilityStatus($any(ev))) + ' · ändern'"
-                (click)="openAvailabilityMenu($any(ev), $event)">
-                <mat-icon aria-hidden="true">{{ isSavingAvailability($any(ev)) ? 'hourglass_top' : getAvailabilityIcon(availabilityStatus($any(ev))) }}</mat-icon>
-              </button>
-            </div>
+            <app-availability-control
+              matLine
+              [date]="$any(ev).date"
+              [choirId]="choirIdForEntry($any(ev))"
+              [status]="availabilityStatus($any(ev))"
+              labelTarget="Dienst"
+              (statusChange)="onAvailabilityChange($any(ev), $event)">
+            </app-availability-control>
+            </ng-container>
+            <ng-container *ngSwitchDefault>
+              <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel" class="event-title-line">
+                <span class="choir-dot" *ngIf="$any(ev).choirId" [style.background]="choirColors[$any(ev).choirId]"></span>
+                <a [routerLink]="['/events']" [queryParams]="{ eventId: $any(ev).id }" class="event-link">
+                  {{ $any(ev).choir?.name }} -
+                  {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' :
+                  $any(ev).name) }}
+                </a>
+              </div>
+              <div matLine *ngIf="$any(ev).program">
+                <a [routerLink]="['/programs', $any(ev).program.id]" class="event-link">Programm: {{ $any(ev).program.title }}</a>
+              </div>
+              <ng-template #holidayLabel>
+                <div matLine class="event-title-line">
+                  <span class="choir-dot" *ngIf="$any(ev).choirId" [style.background]="choirColors[$any(ev).choirId]"></span>
+                  {{ $any(ev).name }}
+                </div>
+              </ng-template>
+              <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
+              <app-availability-control
+                *ngIf="$any(ev).type !== 'HOLIDAY'"
+                matLine
+                [date]="$any(ev).date"
+                [choirId]="choirIdForEntry($any(ev))"
+                [status]="availabilityStatus($any(ev))"
+                labelTarget="Termin"
+                (statusChange)="onAvailabilityChange($any(ev), $event)">
+              </app-availability-control>
+            </ng-container>
           </ng-container>
-          <ng-container *ngSwitchDefault>
-            <div matLine *ngIf="$any(ev).type !== 'HOLIDAY'; else holidayLabel">
-              <a [routerLink]="['/events']" [queryParams]="{ eventId: $any(ev).id }" class="event-link">
-                {{ $any(ev).choir?.name }} -
-                {{ $any(ev).type === 'SERVICE' ? 'Gottesdienst' : ($any(ev).type === 'REHEARSAL' ? 'Probe' :
-                $any(ev).name) }}
-              </a>
-            </div>
-            <div matLine *ngIf="$any(ev).program">
-              <a [routerLink]="['/programs', $any(ev).program.id]" class="event-link">Programm: {{ $any(ev).program.title }}</a>
-            </div>
-            <ng-template #holidayLabel>
-              <div matLine>{{ $any(ev).name }}</div>
-            </ng-template>
-            <div matLine class="notes" *ngIf="$any(ev).notes">{{ $any(ev).notes }}</div>
-            <div matLine class="availability-state" *ngIf="$any(ev).type !== 'HOLIDAY'" aria-live="polite">
-              <mat-icon aria-hidden="true">{{ getAvailabilityIcon(availabilityStatus($any(ev))) }}</mat-icon>
-              <span>{{ getAvailabilityLabel(availabilityStatus($any(ev))) }}</span>
-            </div>
-            <div matLine class="availability-trigger-row" *ngIf="$any(ev).type !== 'HOLIDAY'" role="group" aria-label="Rückmeldung für diesen Termin">
-              <button
-                mat-icon-button
-                type="button"
-                class="status-trigger"
-                [ngClass]="getAvailabilityClass(availabilityStatus($any(ev)))"
-                [disabled]="isSavingAvailability($any(ev))"
-                [matMenuTriggerFor]="availabilityMenu"
-                [attr.aria-label]="availabilityAriaLabel($any(ev))"
-                [matTooltip]="'Status: ' + getAvailabilityLabel(availabilityStatus($any(ev))) + ' · ändern'"
-                (click)="openAvailabilityMenu($any(ev), $event)">
-                <mat-icon aria-hidden="true">{{ isSavingAvailability($any(ev)) ? 'hourglass_top' : getAvailabilityIcon(availabilityStatus($any(ev))) }}</mat-icon>
-              </button>
-            </div>
-          </ng-container>
-        </ng-container>
+        </div>
       </mat-list-item>
     </mat-list>
 
-    <mat-menu #availabilityMenu="matMenu">
-      <button
-        *ngFor="let option of availabilityOptions"
-        mat-menu-item
-        [disabled]="!selectedEntryForMenu"
-        (click)="updateAvailabilityFromMenu(option.value, $event)">
-        <mat-icon>{{ option.icon }}</mat-icon>
-        <span>{{ option.label }}</span>
-        <mat-icon *ngIf="selectedEntryForMenu && availabilityStatus(selectedEntryForMenu) === option.value">done</mat-icon>
-      </button>
-    </mat-menu>
   </div>
     <div class="empty-day-state" *ngIf="eventsForSelectedDate.length === 0">
       <mat-icon aria-hidden="true">event_available</mat-icon>

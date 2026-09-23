@@ -50,7 +50,6 @@ mat-card-content h3 {
     margin: 0.75rem 0 0.875rem;
 }
 
-.event-type-badge,
 .availability-summary {
     display: inline-flex;
     align-items: center;
@@ -59,12 +58,6 @@ mat-card-content h3 {
     padding: 0.35rem 0.75rem;
     font-size: 0.9rem;
     line-height: 1.2;
-}
-
-.event-type-badge {
-    background: rgba(25, 118, 210, 0.1);
-    color: #0d47a1;
-    font-weight: 600;
 }
 
 .availability-summary {
@@ -157,7 +150,6 @@ mat-card-content h3 {
         gap: 0.4rem;
     }
 
-    .event-type-badge,
     .availability-summary {
         font-size: 0.95rem;
     }
@@ -208,11 +200,6 @@ mat-card-content h3 {
     mat-card-content h3 {
         color: #ccc;
         border-bottom-color: #444;
-    }
-
-    .event-type-badge {
-        background: rgba(100, 181, 246, 0.18);
-        color: #dbeafe;
     }
 
     .availability-summary {

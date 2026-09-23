@@ -105,6 +105,7 @@ export class DashboardComponent extends BaseComponent implements OnInit {
   showOnlyMine = false;
   isAdmin$: Observable<boolean | false>;
   isSingerOnly$!: Observable<boolean>;
+  canEditEvents$!: Observable<boolean>;
   choirColors: Record<number, string> = {};
   private colorPalette = ['#e57373', '#64b5f6', '#81c784', '#ba68c8', '#ffb74d', '#4dd0e1', '#9575cd', '#4db6ac'];
 
@@ -125,6 +126,13 @@ export class DashboardComponent extends BaseComponent implements OnInit {
     this.activeChoir$ = this.authService.activeChoir$;
     this.isAdmin$ = this.authService.isAdmin$;
     this.isSingerOnly$ = this.authService.isSingerOnly$;
+    this.canEditEvents$ = combineLatest([
+      this.authService.isChoirAdmin$,
+      this.authService.isDirector$
+    ]).pipe(
+      map(([isChoirAdmin, isDirector]) => isChoirAdmin || isDirector),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
 
     // Subscribe with automatic cleanup on component destroy
     this.authService.availableChoirs$.pipe(

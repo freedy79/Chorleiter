@@ -17,34 +17,17 @@
             {{ ev.choir?.name || '—' }}
           </div>
           <div class="timeline-response">
-            <button
-              mat-icon-button
-              type="button"
-              class="status-trigger"
-              [ngClass]="getAvailabilityClass(availabilityStatus(ev))"
-              [disabled]="isSaving(ev)"
-              [matMenuTriggerFor]="availabilityMenu"
-              [attr.aria-label]="'Status ändern: ' + getAvailabilityLabel(availabilityStatus(ev))"
-              [matTooltip]="'Status: ' + getAvailabilityLabel(availabilityStatus(ev)) + ' · ändern'"
-              (click)="openAvailabilityMenu(ev, $event)">
-              <mat-icon aria-hidden="true">{{ isSaving(ev) ? 'hourglass_top' : getAvailabilityIcon(availabilityStatus(ev)) }}</mat-icon>
-            </button>
+            <app-availability-control
+              [date]="ev.date"
+              [choirId]="ev.choirId"
+              [status]="availabilityStatus(ev)"
+              labelTarget="Termin"
+              (statusChange)="onAvailabilityChange(ev, $event)">
+            </app-availability-control>
           </div>
         </div>
       </li>
     </ul>
-
-    <mat-menu #availabilityMenu="matMenu">
-      <button
-        *ngFor="let option of availabilityOptions"
-        mat-menu-item
-        [disabled]="!selectedEventForMenu"
-        (click)="updateAvailabilityFromMenu(option.value, $event)">
-        <mat-icon>{{ option.icon }}</mat-icon>
-        <span>{{ option.label }}</span>
-        <mat-icon *ngIf="selectedEventForMenu && availabilityStatus(selectedEventForMenu) === option.value">done</mat-icon>
-      </button>
-    </mat-menu>
 
     <ng-template #emptyState>
       <div class="timeline-empty-state">
