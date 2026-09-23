@@ -316,6 +316,12 @@ export const routes: Routes = [
                 resolve: { publicPage: PublicPageEditorResolver },
                 data: { title: 'Vorstellungsseite' }
             },
+            {
+                path: 'api-tokens',
+                loadComponent: () => import('./features/choir-management/api-tokens/api-tokens.component').then(m => m.ApiTokensComponent),
+                canActivate: [AuthGuard, ChoirAdminGuard],
+                data: { title: 'API-Zugriff (MCP)' }
+            },
         ],
     },
     {

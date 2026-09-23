@@ -1,0 +1,227 @@
+@use '../../../../themes/breakpoints' as bp;
+@use '../../../../themes/dark-mode-variables' as *;
+
+.api-tokens-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+
+  @include bp.handset {
+    padding: 12px;
+    gap: 16px;
+  }
+}
+
+.page-header {
+  h1 {
+    margin: 0 0 8px;
+    font-size: 1.6rem;
+    @include readable-text;
+
+    @include bp.handset {
+      font-size: bp.$mobile-font-scale * 1.4rem;
+    }
+  }
+
+  .intro {
+    margin: 0;
+    max-width: 70ch;
+    @include secondary-text;
+  }
+}
+
+mat-card {
+  @include card-background;
+}
+
+.secret-card {
+  border-left: 4px solid var(--mat-sys-primary, #3f51b5);
+
+  .secret-value {
+    margin: 12px 0;
+    padding: 12px;
+    border-radius: 4px;
+    overflow-wrap: anywhere;
+    @include input-background;
+    @include adaptive-border;
+
+    code {
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+      @include readable-text;
+    }
+  }
+
+  .secret-hint {
+    margin: 0;
+    @include secondary-text;
+  }
+}
+
+.token-table {
+  width: 100%;
+
+  @include bp.handset {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .label-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .label-text {
+    font-weight: 500;
+    @include readable-text;
+  }
+
+  .prefix {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.8rem;
+    @include subtle-text;
+  }
+
+  .write-badge {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+
+  .status {
+    font-weight: 500;
+
+    &.revoked,
+    &.expired {
+      @include subtle-text;
+    }
+  }
+
+  .expiring {
+    font-weight: 600;
+    color: var(--mat-sys-error, #d32f2f);
+  }
+
+  .expiry-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--mat-sys-error, #d32f2f);
+  }
+
+  .muted {
+    @include subtle-text;
+  }
+
+  .inactive-row {
+    opacity: 0.55;
+  }
+}
+
+.state-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 0;
+  @include secondary-text;
+}
+
+.empty-state {
+  padding: 16px 0;
+  @include secondary-text;
+}
+
+.limit-warning {
+  margin: 0 0 16px;
+  padding: 12px;
+  border-radius: 4px;
+  background: rgba(211, 47, 47, 0.08);
+  color: var(--mat-sys-error, #d32f2f);
+}
+
+.create-card {
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .full-width {
+    width: 100%;
+    max-width: 460px;
+  }
+}
+
+.scope-group {
+  margin: 8px 0 0;
+  padding: 8px 12px 12px;
+  border-radius: 6px;
+  @include adaptive-border;
+
+  legend {
+    padding: 0 6px;
+    font-weight: 500;
+    @include readable-text;
+  }
+
+  .scope-label {
+    display: block;
+    font-weight: 500;
+  }
+
+  .scope-description {
+    display: block;
+    font-size: 0.8rem;
+    @include subtle-text;
+  }
+
+  &.write-group {
+    border-color: var(--mat-sys-error, #d32f2f);
+
+    .consent {
+      display: block;
+      margin-top: 12px;
+      max-width: 60ch;
+    }
+  }
+}
+
+.form-actions {
+  margin-top: 16px;
+
+  @include bp.handset {
+    button {
+      width: 100%;
+    }
+  }
+}
+
+.help-card {
+  ol {
+    margin: 0 0 12px;
+    padding-left: 20px;
+    @include secondary-text;
+
+    li {
+      margin-bottom: 6px;
+    }
+  }
+
+  code {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85rem;
+    padding: 1px 4px;
+    border-radius: 3px;
+    @include input-background;
+  }
+
+  .privacy-note {
+    margin: 0;
+    max-width: 75ch;
+    @include subtle-text;
+  }
+}

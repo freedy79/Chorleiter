@@ -1,0 +1,231 @@
+<div class="api-tokens-page">
+  <header class="page-header">
+    <h1>API-Zugriff (MCP)</h1>
+    <p class="intro">
+      Mit einem API-Token kann ein KI-Assistent wie ChatGPT lesend auf die Daten dieses Chors zugreifen –
+      Termine, Repertoire, Suche, Dienstplan und Statistik. Persönliche Daten der Mitglieder außer dem
+      Namen werden dabei grundsätzlich nicht übertragen, Verfügbarkeiten gar nicht.
+    </p>
+  </header>
+
+  <!-- One-time secret display -->
+  <mat-card *ngIf="revealedSecret" class="secret-card" role="alert">
+    <mat-card-header>
+      <mat-icon mat-card-avatar color="warn">key</mat-icon>
+      <mat-card-title>Token für „{{ revealedLabel }}“</mat-card-title>
+      <mat-card-subtitle>Dieser Wert wird nur jetzt angezeigt und lässt sich später nicht erneut abrufen.</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="secret-value">
+        <code>{{ revealedSecret }}</code>
+      </div>
+      <p class="secret-hint">
+        Trage ihn im MCP-Client als <code>Authorization: Bearer &lt;Token&gt;</code> für den Endpunkt
+        <code>/mcp</code> ein.
+      </p>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-button (click)="copySecret()">
+        <mat-icon>content_copy</mat-icon>
+        Kopieren
+      </button>
+      <button mat-raised-button color="primary" (click)="dismissSecret()">Gespeichert</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Existing tokens -->
+  <mat-card class="list-card">
+    <mat-card-header>
+      <mat-card-title>Vorhandene Tokens</mat-card-title>
+      <mat-card-subtitle>{{ activeTokenCount }} von {{ maxPerChoir }} aktiven Tokens</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <div *ngIf="isLoading" class="state-block">
+        <mat-spinner diameter="32"></mat-spinner>
+        <span>Tokens werden geladen…</span>
+      </div>
+
+      <div *ngIf="hasLoadError && !isLoading" class="state-block">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <span>Die Tokens konnten nicht geladen werden.</span>
+        <button mat-button color="primary" (click)="load()">Erneut versuchen</button>
+      </div>
+
+      <p *ngIf="!isLoading && !hasLoadError && tokens.length === 0" class="empty-state">
+        Für diesen Chor wurde noch kein API-Token erstellt.
+      </p>
+
+      <table mat-table [dataSource]="tokens" *ngIf="!isLoading && !hasLoadError && tokens.length > 0" class="token-table">
+        <ng-container matColumnDef="label">
+          <th mat-header-cell *matHeaderCellDef>Bezeichnung</th>
+          <td mat-cell *matCellDef="let token">
+            <div class="label-cell">
+              <span class="label-text">{{ token.label }}</span>
+              <code class="prefix">{{ token.tokenPrefix }}…</code>
+              <mat-icon
+                *ngIf="token.allowWrite"
+                class="write-badge"
+                color="warn"
+                matTooltip="Dieser Token darf die Liederliste von Terminen ändern">edit</mat-icon>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="scopes">
+          <th mat-header-cell *matHeaderCellDef>Berechtigungen</th>
+          <td mat-cell *matCellDef="let token">
+            <mat-chip-set>
+              <mat-chip *ngFor="let scope of token.scopes">{{ scopeLabel(scope) }}</mat-chip>
+            </mat-chip-set>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="expiresAt">
+          <th mat-header-cell *matHeaderCellDef>Gültig bis</th>
+          <td mat-cell *matCellDef="let token">
+            <span *ngIf="token.revokedAt" class="status revoked">Widerrufen</span>
+            <span *ngIf="!token.revokedAt && !token.active" class="status expired">Abgelaufen</span>
+            <ng-container *ngIf="token.active">
+              <span [class.expiring]="expiresSoon(token)">
+                {{ token.expiresAt | date: 'dd.MM.yyyy' }}
+              </span>
+              <span *ngIf="expiresSoon(token)" class="expiry-hint">
+                noch {{ daysUntilExpiry(token) }} Tage
+              </span>
+            </ng-container>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="lastUsedAt">
+          <th mat-header-cell *matHeaderCellDef>Zuletzt genutzt</th>
+          <td mat-cell *matCellDef="let token">
+            <span *ngIf="token.lastUsedAt">{{ token.lastUsedAt | date: 'dd.MM.yyyy HH:mm' }}</span>
+            <span *ngIf="!token.lastUsedAt" class="muted">nie</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef aria-label="Aktionen"></th>
+          <td mat-cell *matCellDef="let token">
+            <button
+              mat-icon-button
+              *ngIf="!token.revokedAt"
+              (click)="renew(token)"
+              matTooltip="Um {{ maxDays }} Tage verlängern"
+              attr.aria-label="Token {{ token.label }} verlängern">
+              <mat-icon>update</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              *ngIf="!token.revokedAt"
+              (click)="rotate(token)"
+              matTooltip="Neues Geheimnis erzeugen"
+              attr.aria-label="Token {{ token.label }} neu erzeugen">
+              <mat-icon>autorenew</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              color="warn"
+              *ngIf="!token.revokedAt"
+              (click)="revoke(token)"
+              matTooltip="Widerrufen"
+              attr.aria-label="Token {{ token.label }} widerrufen">
+              <mat-icon>block</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" [class.inactive-row]="!row.active"></tr>
+      </table>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Create -->
+  <mat-card class="create-card">
+    <mat-card-header>
+      <mat-card-title>Neuen Token erstellen</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p *ngIf="limitReached" class="limit-warning">
+        Es sind bereits {{ maxPerChoir }} aktive Tokens vorhanden. Widerrufe einen davon, um einen neuen anzulegen.
+      </p>
+
+      <form [formGroup]="createForm" (ngSubmit)="create()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Bezeichnung</mat-label>
+          <input matInput formControlName="label" placeholder="z. B. ChatGPT Arbeitsplatz" maxlength="80">
+          <mat-hint>Hilft später zu erkennen, wo der Token im Einsatz ist.</mat-hint>
+          <mat-error *ngIf="createForm.get('label')?.hasError('required')">Bitte eine Bezeichnung angeben.</mat-error>
+          <mat-error *ngIf="createForm.get('label')?.hasError('minlength')">Mindestens 3 Zeichen.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Laufzeit</mat-label>
+          <mat-select formControlName="validDays">
+            <mat-option *ngFor="let days of validDayOptions" [value]="days">{{ days }} Tage</mat-option>
+          </mat-select>
+          <mat-hint>Maximal {{ maxDays }} Tage. Du kannst jederzeit verlängern.</mat-hint>
+        </mat-form-field>
+
+        <fieldset class="scope-group">
+          <legend>Lesezugriff</legend>
+          <mat-selection-list formControlName="scopes">
+            <mat-list-option *ngFor="let scope of readScopes" [value]="scope.value" checkboxPosition="before">
+              <span class="scope-label">{{ scope.label }}</span>
+              <span class="scope-description">{{ scope.description }}</span>
+            </mat-list-option>
+          </mat-selection-list>
+        </fieldset>
+
+        <fieldset class="scope-group write-group" *ngIf="writeEnabled">
+          <legend>Schreibzugriff</legend>
+          <mat-slide-toggle
+            formControlName="allowWrite"
+            (change)="onWriteToggle($event.checked)">
+            {{ writeScope.label }}
+          </mat-slide-toggle>
+          <p class="scope-description">{{ writeScope.description }}</p>
+
+          <mat-checkbox formControlName="writeConsent" *ngIf="writeSelected" class="consent">
+            Mir ist bewusst, dass Chordaten an einen externen KI-Dienst übertragen werden und dieser Token
+            Termine verändern kann.
+          </mat-checkbox>
+        </fieldset>
+
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit" [disabled]="!canSubmit">
+            <mat-icon>add</mat-icon>
+            Token erstellen
+          </button>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Setup help -->
+  <mat-card class="help-card">
+    <mat-card-header>
+      <mat-card-title>Einrichtung im MCP-Client</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <ol>
+        <li>Token oben erstellen und den angezeigten Wert kopieren.</li>
+        <li>Im Client einen MCP-Server vom Typ <strong>Streamable HTTP</strong> anlegen.</li>
+        <li>
+          Als URL <code>https://nak-chorleiter.de/mcp</code> eintragen und den Header
+          <code>Authorization: Bearer &lt;Token&gt;</code> setzen.
+        </li>
+        <li>
+          Prüfen lässt sich die Verbindung mit
+          <code>GET https://nak-chorleiter.de/mcp/info</code>.
+        </li>
+      </ol>
+      <p class="privacy-note">
+        Ausgeliefert werden ausschließlich Chordaten. Mitglieder erscheinen nur mit ihrem Anzeigenamen,
+        etwa als musikalische Leitung im Dienstplan. E-Mail-Adressen, Telefonnummern, Anschriften,
+        Verfügbarkeiten, Chat- und Umfragedaten sind vollständig ausgeschlossen.
+      </p>
+    </mat-card-content>
+  </mat-card>
+</div>
