@@ -47,6 +47,7 @@ const trainingRoutes = require('./training.routes');
 const feedbackRoutes = require('./feedback.routes');
 const referralRoutes = require('./referral.routes');
 const personalAddressBookRoutes = require('./personalAddressBook.routes');
+const choirApiTokenRoutes = require('./choirApiToken.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -97,6 +98,7 @@ const routeDefinitions = [
     ['/api/feedback', feedbackRoutes],
     ['/api/referrals', referralRoutes],
     ['/api/personal-address-book', personalAddressBookRoutes],
+    ['/api/choir-api-tokens', choirApiTokenRoutes],
 ];
 
 function registerRoutes(app) {

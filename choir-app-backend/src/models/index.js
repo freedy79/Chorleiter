@@ -95,6 +95,7 @@ db.form_submission = require('./form_submission.model.js')(sequelize, Sequelize)
 db.form_answer = require('./form_answer.model.js')(sequelize, Sequelize);
 db.demo_lead = require('./demo_lead.model.js')(sequelize, Sequelize);
 db.one_time_token = require('./one_time_token.model.js')(sequelize, Sequelize);
+db.choir_api_token = require('./choir_api_token.model.js')(sequelize, Sequelize);
 db.referral_invitation = require('./referral_invitation.model.js')(sequelize, Sequelize);
 db.choir_registration_request = require('./choir_registration_request.model.js')(sequelize, Sequelize);
 db.reminder_log = require('./reminder_log.model.js')(sequelize, Sequelize);
@@ -123,6 +124,11 @@ db.user.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'us
 db.push_subscription.belongsTo(db.user, { as: 'user', foreignKey: 'userId' });
 db.choir.hasMany(db.push_subscription, { as: 'pushSubscriptions', foreignKey: 'choirId' });
 db.push_subscription.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+
+// Choir-scoped API tokens for the MCP server
+db.choir.hasMany(db.choir_api_token, { as: 'apiTokens', foreignKey: 'choirId' });
+db.choir_api_token.belongsTo(db.choir, { as: 'choir', foreignKey: 'choirId' });
+db.choir_api_token.belongsTo(db.user, { as: 'createdBy', foreignKey: 'createdByUserId' });
 
 db.user.hasMany(db.referral_invitation, { as: 'sentReferrals', foreignKey: 'senderUserId' });
 db.referral_invitation.belongsTo(db.user, { as: 'sender', foreignKey: 'senderUserId' });
