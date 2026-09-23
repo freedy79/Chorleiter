@@ -173,12 +173,30 @@ function serializeCollection(collection) {
     };
 }
 
+/**
+ * The modules blob mixes feature flags with configuration such as
+ * dashboardContactUserIds, so only boolean flags are carried over.
+ */
+function serializeModules(modules, depth = 0) {
+    if (!modules || typeof modules !== 'object' || depth > 2) return {};
+    const result = {};
+    for (const [key, value] of Object.entries(modules)) {
+        if (typeof value === 'boolean') {
+            result[key] = value;
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const nested = serializeModules(value, depth + 1);
+            if (Object.keys(nested).length) result[key] = nested;
+        }
+    }
+    return result;
+}
+
 function serializeChoir(choir, extra = {}) {
     if (!choir) return null;
     return {
         name: sanitizeText(choir.name, 200),
         location: sanitizeText(choir.location, 200),
-        modules: choir.modules || {},
+        modules: serializeModules(choir.modules),
         ...extra,
     };
 }
@@ -196,5 +214,6 @@ module.exports = {
     serializeEvent,
     serializePlanEntry,
     serializeCollection,
+    serializeModules,
     serializeChoir,
 };

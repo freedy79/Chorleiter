@@ -51,7 +51,12 @@ function assertNoPii(value, path = 'root') {
 async function setup() {
   await db.sequelize.sync({ force: true });
 
-  const choirA = await db.choir.create({ name: 'Chor A', location: 'Musterstadt' });
+  const choirA = await db.choir.create({
+    name: 'Chor A',
+    location: 'Musterstadt',
+    // dashboardContactUserIds is real config that must not reach the client.
+    modules: { dienstplan: true, programs: false, singerMenu: { events: true, repertoire: false }, dashboardContactUserIds: [2, 1] },
+  });
   const choirB = await db.choir.create({ name: 'Chor B', location: 'Anderswo' });
 
   const director = await db.user.create({ name: 'Leiter', firstName: 'Dora', email: 'dora@example.com', password: 'x', phone: '0123456789' });
@@ -109,6 +114,14 @@ async function setup() {
     assert.strictEqual(r.payload.data.name, 'Chor A');
     assert.strictEqual(r.payload.data.repertoireCount, 2);
     assert.strictEqual(r.payload.untrusted_content, true);
+
+    // modules must be reduced to feature flags - no user ids, no other config
+    assert.deepStrictEqual(r.payload.data.modules, {
+      dienstplan: true,
+      programs: false,
+      singerMenu: { events: true, repertoire: false },
+    });
+    assert.ok(!JSON.stringify(r.payload).includes('dashboardContactUserIds'), 'config keys with user ids must be stripped');
 
     // --- upcoming events ---
     r = await callTool(client, 'list_upcoming_events', { from: '2026-10-01', limit: 10 });
