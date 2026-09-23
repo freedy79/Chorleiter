@@ -100,30 +100,9 @@ if ($buildFrontend -or $buildBackend) {
 }
 
 if ($buildFrontend) {
-    # Check if frontend build is already up-to-date
-    $skipBuild = $false
-    $distPath      = Join-Path $PSScriptRoot "choir-app-frontend/dist/choir-app-frontend/browser"
-    $buildInfoPath = Join-Path $PSScriptRoot "choir-app-frontend/src/environments/build-info.ts"
-
-    if ((Test-Path $distPath) -and (Test-Path $buildInfoPath)) {
-        $currentCommit   = (git rev-parse --short HEAD 2>$null)
-        $frontendChanges = (git status --porcelain -- choir-app-frontend/src/ 2>$null)
-
-        if ($currentCommit -and -not $frontendChanges) {
-            $buildInfoContent = Get-Content $buildInfoPath -Raw
-            if ($buildInfoContent -match "commit:\s*'($currentCommit)'") {
-                Write-Host "Frontend build is already up-to-date (commit: $currentCommit). Skipping build." -ForegroundColor Green
-                $skipBuild = $true
-            }
-        }
-    }
-
-    if (-not $skipBuild) {
-        Write-Host "Building Angular frontend..."
-        npm --prefix choir-app-frontend run build
-        if ($LASTEXITCODE -ne 0) { throw "Build failed. Aborting deployment." }
-        Write-Host "Build finished."
-    }
+    Write-Host "Checking frontend build inputs..."
+    npm --prefix choir-app-frontend run build
+    if ($LASTEXITCODE -ne 0) { throw "Build failed. Aborting deployment." }
 }
 
 if ($buildBackend) {
@@ -175,24 +154,45 @@ if (-not $sshUseAgent -and -not $sshUsePlink) {
     Write-Host "plink not found and no ssh-agent keys loaded. You will be prompted for the password." -ForegroundColor Yellow
 }
 
+# Recent plink/pscp (PuTTY 0.78+) support -pwfile, which reads the password from a
+# file instead of taking it as a command-line argument (which any local user could
+# read via process listings). Detect support once so we can avoid -pw entirely.
+$script:PlinkSupportsPwFile = $false
+if ($sshUsePlink) {
+    try {
+        $plinkHelp = & plink --help 2>&1 | Out-String
+        if ($plinkHelp -match '-pwfile') { $script:PlinkSupportsPwFile = $true }
+    } catch {}
+}
+
+function Protect-PasswordFile {
+    param([string]$Path)
+    # Restrict the ACL to the current user only, removing inherited grants to
+    # other local accounts. Safe/reversible local operation, so apply it directly
+    # instead of just warning.
+    try {
+        $acl = Get-Acl $Path
+        $otherAccess = $acl.Access | Where-Object {
+            $_.IdentityReference -notmatch [regex]::Escape($env:USERNAME) -and
+            $_.FileSystemRights  -notmatch 'Synchronize' -and
+            $_.IdentityReference -notmatch '^BUILTIN\\Administrators'
+        }
+        if ($otherAccess) {
+            icacls $Path /inheritance:r /grant:r "${env:USERDOMAIN}\${env:USERNAME}:(R)" 2>$null | Out-Null
+            Write-Host "Restricted permissions on $Path to the current user only." -ForegroundColor Yellow
+        }
+    } catch {}
+}
+
 # --- Password handling (only when plink is used without a key file) -------
 if (-not $sshUseAgent -and -not $SshKeyFile) {
     if (Test-Path $PasswordFile) {
-        # Warn if the file may be readable by other accounts
-        try {
-            $acl = Get-Acl $PasswordFile
-            $otherAccess = $acl.Access | Where-Object {
-                $_.IdentityReference -notmatch [regex]::Escape($env:USERNAME) -and
-                $_.FileSystemRights  -notmatch 'Synchronize' -and
-                $_.IdentityReference -notmatch '^BUILTIN\\Administrators'
-            }
-            if ($otherAccess) {
-                Write-Host "Warning: $PasswordFile may be readable by other accounts. Run to restrict:" -ForegroundColor Yellow
-                Write-Host "  icacls `"$PasswordFile`" /inheritance:r /grant:r `"${env:USERDOMAIN}\${env:USERNAME}:(R)`"" -ForegroundColor Yellow
-            }
-        } catch {}
+        Protect-PasswordFile -Path $PasswordFile
         $script:Password = (Get-Content $PasswordFile -Raw).Trim()
-        if ($script:Password) { Write-Host "Using password from $PasswordFile." }
+        if ($script:Password) {
+            Write-Host "Using password from $PasswordFile."
+            if ($script:PlinkSupportsPwFile) { $script:PwFilePath = $PasswordFile }
+        }
     } else {
         $create = Read-Host "Password file $PasswordFile not found. Create it? (y/N)"
         if ($create -match '^[Yy]') {
@@ -204,6 +204,7 @@ if (-not $sshUseAgent -and -not $SshKeyFile) {
             # Restrict to current user only
             icacls $PasswordFile /inheritance:r /grant:r "${env:USERDOMAIN}\${env:USERNAME}:(R)" 2>$null | Out-Null
             Write-Host "Password saved to $PasswordFile with restricted permissions."
+            if ($script:PlinkSupportsPwFile) { $script:PwFilePath = $PasswordFile }
         }
     }
     if (-not $script:Password) {
@@ -212,8 +213,17 @@ if (-not $sshUseAgent -and -not $SshKeyFile) {
             [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePass)
         )
     }
-    if ($sshUsePlink -and $script:Password) {
-        Write-Warning "SSH password is passed as a plink argument and may appear in process listings. Set CHORLEITER_SSH_KEY_FILE in deploy.local.ps1 to use key-based auth instead."
+    if ($sshUsePlink -and $script:Password -and -not $script:PwFilePath) {
+        if ($script:PlinkSupportsPwFile) {
+            # Password was entered interactively and not persisted to a file yet;
+            # write it to a restricted temp file so plink can use -pwfile instead of -pw.
+            $script:PwFilePath = [IO.Path]::GetFullPath([IO.Path]::GetTempFileName())
+            Set-Content -Path $script:PwFilePath -Value $script:Password -NoNewline
+            icacls $script:PwFilePath /inheritance:r /grant:r "${env:USERDOMAIN}\${env:USERNAME}:(R)" 2>$null | Out-Null
+            $script:PwFileIsTemp = $true
+        } else {
+            Write-Warning "SSH password is passed as a plink argument and may appear in process listings. Set CHORLEITER_SSH_KEY_FILE in deploy.local.ps1 to use key-based auth instead."
+        }
     }
 }
 # ---- End authentication --------------------------------------------------
@@ -226,6 +236,8 @@ function Invoke-Ssh {
         if ($SshKeyFile) {
             if ($VerboseLogging) { $plinkArgs += '-v' }
             $plinkArgs += @('-i', $SshKeyFile)
+        } elseif ($script:PwFilePath) {
+            $plinkArgs += @('-pwfile', $script:PwFilePath)
         } elseif ($script:Password) {
             # Verbose mode is intentionally omitted here to avoid logging the password.
             # Use an SSH key file (CHORLEITER_SSH_KEY_FILE) for verbose deploys.
@@ -253,6 +265,8 @@ function Invoke-Scp {
         if ($SshKeyFile) {
             if ($VerboseLogging) { $pscpArgs += '-v' }
             $pscpArgs += @('-i', $SshKeyFile)
+        } elseif ($script:PwFilePath) {
+            $pscpArgs += @('-pwfile', $script:PwFilePath)
         } elseif ($script:Password) {
             $pscpArgs += @('-pw', "$($script:Password)")
         }
@@ -430,8 +444,14 @@ finally {
     if ($script:BackendArchive  -and (Test-Path $script:BackendArchive))  { Remove-Item $script:BackendArchive  -Force -ErrorAction SilentlyContinue }
     if ($script:FrontendArchive -and (Test-Path $script:FrontendArchive)) { Remove-Item $script:FrontendArchive -Force -ErrorAction SilentlyContinue }
 
+    # Remove the temporary password file used for plink -pwfile, if one was created
+    if ($script:PwFileIsTemp -and $script:PwFilePath -and (Test-Path $script:PwFilePath)) {
+        Remove-Item $script:PwFilePath -Force -ErrorAction SilentlyContinue
+    }
+
     # Clear password from memory
     $script:Password = $null
+    $script:PwFilePath = $null
 
     Write-Host ("[{0}] Script finished" -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
 }

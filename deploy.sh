@@ -75,29 +75,10 @@ if [ "$BUILD_FRONTEND" = true ] || [ "$BUILD_BACKEND" = true ]; then
 fi
 
 if [ "$BUILD_FRONTEND" = true ]; then
-    SKIP_BUILD=false
-    DIST_PATH="choir-app-frontend/dist/choir-app-frontend/browser"
-    BUILD_INFO_PATH="choir-app-frontend/src/environments/build-info.ts"
-
-    if [ -d "$DIST_PATH" ] && [ -f "$BUILD_INFO_PATH" ]; then
-        CURRENT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || true)
-        FRONTEND_CHANGES=$(git status --porcelain -- choir-app-frontend/src/ 2>/dev/null || true)
-
-        if [ -n "$CURRENT_COMMIT" ] && [ -z "$FRONTEND_CHANGES" ]; then
-            if grep -q "commit:.*'$CURRENT_COMMIT'" "$BUILD_INFO_PATH" 2>/dev/null || grep -q 'commit:.*"'$CURRENT_COMMIT'"' "$BUILD_INFO_PATH" 2>/dev/null; then
-                echo "Frontend build is already up-to-date (commit: $CURRENT_COMMIT). Skipping build."
-                SKIP_BUILD=true
-            fi
-        fi
-    fi
-
-    if [ "$SKIP_BUILD" = false ]; then
-        echo "Building Angular frontend..."
-        if ! npm --prefix choir-app-frontend run build; then
-            echo "Build failed. Aborting deployment." >&2
-            exit 1
-        fi
-        echo "Build finished."
+    echo "Checking frontend build inputs..."
+    if ! npm --prefix choir-app-frontend run build; then
+        echo "Build failed. Aborting deployment." >&2
+        exit 1
     fi
 fi
 
