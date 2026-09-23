@@ -176,6 +176,13 @@ table.mat-mdc-table {
   }
 }
 
+.title-link {
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  padding-left: 0 !important;
+}
+
 // ========================================
 // Skeleton Loaders (prevents layout shift)
 // ========================================

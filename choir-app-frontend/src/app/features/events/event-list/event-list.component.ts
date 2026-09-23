@@ -26,6 +26,7 @@ import { ResponsiveService } from '@shared/services/responsive.service';
 import { DataStateComponent } from '@shared/components/data-state/data-state.component';
 import { environment } from 'src/environments/environment';
 import { UserPreferences } from '@core/models/user-preferences';
+import { parseDateOnly } from '@shared/util/date';
 
 @Component({
   selector: 'app-event-list',
@@ -59,6 +60,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
   isLoading = false;
   hasLoadError = false;
   loadErrorMessage = 'Die Ereignisse konnten nicht geladen werden.';
+  nextUpcomingEventId: number | null = null;
 
   // Dynamic past-year filter options
   pastYears: number[] = [];
@@ -193,6 +195,7 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
       .subscribe({
         next: events => {
           this.allEvents = events;
+          this.nextUpcomingEventId = this.findNextUpcomingEventId(events);
           this.applyTimeFilter();
           this.selectedEvent = null;
           this.isLoading = false;
@@ -204,6 +207,27 @@ export class EventListComponent implements OnInit, AfterViewInit, OnDestroy {
           this.cdr.markForCheck();
         }
       });
+  }
+
+  isNextUpcomingEvent(event: Event): boolean {
+    return event.id === this.nextUpcomingEventId;
+  }
+
+  private findNextUpcomingEventId(events: Event[]): number | null {
+    const today = this.getTodayTimestamp();
+    return events
+      .filter(event => this.getEventDateTimestamp(event) >= today)
+      .sort((a, b) => this.getEventDateTimestamp(a) - this.getEventDateTimestamp(b) || a.id - b.id)
+      .at(0)?.id ?? null;
+  }
+
+  private getEventDateTimestamp(event: Event): number {
+    return parseDateOnly(event.date).getTime();
+  }
+
+  private getTodayTimestamp(): number {
+    const today = new Date();
+    return Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
   }
 
   get isFilterActive(): boolean {

@@ -77,7 +77,7 @@
             </mat-option>
             <mat-option *ngFor="let piece of filteredPieces$ | async" [value]="piece">
               <div class="option-grid">
-                <span class="col-reference">{{ piece.reference }}</span>
+                <span class="col-reference" [title]="piece.reference">{{ piece.reference }}</span>
                 <span class="col-title">{{ piece.title }}</span>
                 <span class="col-composer">{{ piece.composerName }}</span>
                 <span class="col-collection">{{ piece.collectionTitle }}</span>
@@ -96,7 +96,7 @@
     <div class="selected-pieces-list" *ngIf="selectedPieces.length; else noPieces">
       <div class="piece-item" *ngFor="let piece of selectedPieces">
         <div class="piece-info">
-          <span class="piece-reference">{{ piece.reference }}</span>
+          <span class="piece-reference" [title]="piece.reference">{{ piece.reference }}</span>
           <span class="piece-title">{{ piece.title }}</span>
         </div>
         <button *ngIf="!readOnly" mat-icon-button color="warn" (click)="remove(piece)" aria-label="Stück entfernen">

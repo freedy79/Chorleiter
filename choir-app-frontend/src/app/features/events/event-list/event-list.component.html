@@ -117,7 +117,13 @@
         </ng-container>
         <ng-container matColumnDef="date">
           <mat-header-cell *matHeaderCellDef>Datum</mat-header-cell>
-          <mat-cell *matCellDef="let ev">{{ ev.date | pureDate | date:'shortDate':'Europe/Berlin':'de-DE' }}</mat-cell>
+          <mat-cell *matCellDef="let ev" class="date-cell">
+            <span>{{ ev.date | pureDate | date:'shortDate':'Europe/Berlin':'de-DE' }}</span>
+            <span *ngIf="isNextUpcomingEvent(ev)" class="next-upcoming-label">
+              <mat-icon aria-hidden="true">schedule</mat-icon>
+              Nächster Termin
+            </span>
+          </mat-cell>
         </ng-container>
 
         <ng-container matColumnDef="type">
@@ -148,7 +154,9 @@
         </ng-container>
 
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selectEvent(row)"></mat-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"
+           [class.next-upcoming]="isNextUpcomingEvent(row)"
+           (click)="selectEvent(row)"></mat-row>
       </mat-table>
 
       <mat-paginator [pageSizeOptions]="pageSizeOptions"
@@ -163,6 +171,7 @@
           <div class="event-card"
                *ngFor="let ev of mobileVisibleEvents; trackBy: trackByEventId"
                [class.selected]="selectedEvent?.id === ev.id"
+            [class.next-upcoming]="isNextUpcomingEvent(ev)"
                matRipple
                role="button"
                tabindex="0"
@@ -172,6 +181,10 @@
             <div class="card-header">
               <div class="card-main">
                 <div class="card-date">{{ ev.date | pureDate | date:'fullDate':'Europe/Berlin':'de-DE' }}</div>
+                <div *ngIf="isNextUpcomingEvent(ev)" class="next-upcoming-label" aria-label="Nächster Termin">
+                  <mat-icon aria-hidden="true">schedule</mat-icon>
+                  Nächster Termin
+                </div>
                 <div class="card-type">
                   <mat-icon class="type-icon">{{ ev.type === 'SERVICE' ? 'event' : 'school' }}</mat-icon>
                   <span>{{ ev.type | eventTypeLabel }}</span>
