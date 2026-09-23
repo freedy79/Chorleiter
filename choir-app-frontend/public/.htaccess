@@ -84,9 +84,14 @@
   # aber nur /api/* erreicht das Node-Backend. Beide
   # Varianten (mit und ohne angehängtem Ressourcenpfad)
   # zeigen auf dieselben Dokumente unter /api/oauth.
+  # Gematcht wird über REQUEST_URI, da das Rewrite-Muster
+  # den führenden Punkt von .well-known nicht trifft.
   # -----------------------------------------------
-  RewriteRule ^\.well-known/oauth-protected-resource(/.*)?$ /api/oauth/.well-known/oauth-protected-resource [R=302,L]
-  RewriteRule ^\.well-known/oauth-authorization-server(/.*)?$ /api/oauth/.well-known/oauth-authorization-server [R=302,L]
+  RewriteCond %{REQUEST_URI} ^/\.well-known/oauth-protected-resource [NC]
+  RewriteRule ^ /api/oauth/.well-known/oauth-protected-resource [R=302,L]
+
+  RewriteCond %{REQUEST_URI} ^/\.well-known/oauth-authorization-server [NC]
+  RewriteRule ^ /api/oauth/.well-known/oauth-authorization-server [R=302,L]
 
   # Keine Rewrite für existierende Dateien und Verzeichnisse
   RewriteCond %{REQUEST_FILENAME} !-f
