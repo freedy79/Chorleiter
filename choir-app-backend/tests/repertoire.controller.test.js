@@ -79,6 +79,37 @@ function makeRes() {
       passed++;
     }
 
+    // 4. Lookup returns all references when a piece is listed in multiple collections
+    {
+      const collection2 = await db.collection.create({ title: 'Gesangbuch', prefix: 'GL' });
+      await db.collection_piece.create({ collectionId: collection2.id, pieceId: piece1.id, numberInCollection: 123 });
+
+      const res = makeRes();
+      await controller.lookup({ activeChoirId: choir.id }, res);
+      const first = res.data.find(p => p.id === piece1.id);
+      assert.ok(first, 'piece1 found');
+      assert.strictEqual(first.reference, 'CB42 / GL123', 'both references present');
+      assert.strictEqual(first.collectionTitle, 'Choralbuch / Gesangbuch', 'both collection titles present');
+      passed++;
+    }
+
+    // 5. Lookup returns both references when a piece is catalogued under two collections
+    // sharing the same prefix (e.g. "146a" and "146b" of the same hymnal) - regression test
+    // for the association-based dedup bug where only the last reference was kept.
+    {
+      const collection3 = await db.collection.create({ title: 'Neuapostolisches Gesangbuch', prefix: 'NGB' });
+      const collection4 = await db.collection.create({ title: 'Neuapostolisches Gesangbuch (2)', prefix: 'NGB' });
+      await db.collection_piece.create({ collectionId: collection3.id, pieceId: piece2.id, numberInCollection: '146a' });
+      await db.collection_piece.create({ collectionId: collection4.id, pieceId: piece2.id, numberInCollection: '146b' });
+
+      const res = makeRes();
+      await controller.lookup({ activeChoirId: choir.id }, res);
+      const second = res.data.find(p => p.id === piece2.id);
+      assert.ok(second, 'piece2 found');
+      assert.strictEqual(second.reference, 'NGB146a / NGB146b', 'both numbers within same-prefix collections present');
+      passed++;
+    }
+
     // === updateStatus ===
 
     // 4. Update status of a piece in repertoire

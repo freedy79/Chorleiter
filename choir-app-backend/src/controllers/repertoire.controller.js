@@ -111,19 +111,46 @@ exports.lookup = async (req, res) => {
         const pieces = await choir.getPieces({
             joinTableAttributes: [], // Wir brauchen den Status hier nicht.
             include: [
-                { model: db.composer, as: 'composer', attributes: ['name'] },
-                {
-                    model: db.collection,
-                    as: 'collections',
-                    attributes: ['prefix', 'title', 'singleEdition'],
-                    through: {
-                        model: db.collection_piece,
-                        attributes: ['numberInCollection']
-                    }
-                }
+                { model: db.composer, as: 'composer', attributes: ['name'] }
             ],
             order: [['title', 'ASC']]
         });
+
+        // Referenzen separat laden: belongsToMany-Includes deduplizieren Ziel-Datensätze anhand
+        // ihres Primärschlüssels, sodass mehrere collection_piece-Zeilen für dieselbe Sammlung
+        // (z.B. ein Stück zweimal in derselben Sammlung mit unterschiedlicher Nummer) verloren
+        // gingen. Deshalb werden alle Zeilen direkt über das Join-Modell geladen und die
+        // Sammlungen manuell zugeordnet (keine explizite Association auf collection_piece nötig).
+        const pieceIds = pieces.map(p => p.id);
+        const collectionPieceRows = pieceIds.length
+            ? await db.collection_piece.findAll({
+                where: { pieceId: pieceIds },
+                order: [['id', 'ASC']],
+                raw: true
+            })
+            : [];
+
+        const collectionIds = [...new Set(collectionPieceRows.map(row => row.collectionId))];
+        const collectionsById = new Map();
+        if (collectionIds.length) {
+            const collections = await db.collection.findAll({
+                where: { id: collectionIds },
+                attributes: ['id', 'prefix', 'title', 'singleEdition'],
+                raw: true
+            });
+            for (const collection of collections) {
+                collectionsById.set(collection.id, collection);
+            }
+        }
+
+        const referencesByPieceId = new Map();
+        for (const row of collectionPieceRows) {
+            const collection = collectionsById.get(row.collectionId);
+            if (!collection) continue;
+            const list = referencesByPieceId.get(row.pieceId) || [];
+            list.push({ numberInCollection: row.numberInCollection, collection });
+            referencesByPieceId.set(row.pieceId, list);
+        }
 
         // Verarbeiten Sie die Ergebnisse, um eine saubere, flache Liste zu erstellen.
         const lookupResults = pieces.map(piece => {
@@ -131,15 +158,21 @@ exports.lookup = async (req, res) => {
             let referenceString = null;
             let collectionTitle = null;
 
-            // Erstellen Sie den Referenz-String, falls das Stück in einer Sammlung ist.
-            if (plainPiece.collections && plainPiece.collections.length > 0) {
-                const ref = plainPiece.collections[0]; // Nehmen Sie die erste Referenz
-                const num = ref.collection_piece.numberInCollection;
-                const prefix = ref.singleEdition
-                    ? plainPiece.composer?.name || plainPiece.origin || ''
-                    : ref.prefix || '';
-                referenceString = `${prefix}${num}`;
-                collectionTitle = ref.title || null;
+            // Erstellen Sie den Referenz-String für ALLE Sammlungen, in denen das Stück gelistet ist,
+            // damit die Lookup-Suche und -Anzeige jede Nummer/Referenz berücksichtigt.
+            const refRows = referencesByPieceId.get(plainPiece.id) || [];
+            if (refRows.length > 0) {
+                const refs = refRows.map(row => {
+                    const prefix = row.collection.singleEdition
+                        ? plainPiece.composer?.name || plainPiece.origin || ''
+                        : row.collection.prefix || '';
+                    return `${prefix}${row.numberInCollection}`;
+                });
+                referenceString = refs.join(' / ');
+                collectionTitle = refRows
+                    .map(row => row.collection.title)
+                    .filter(Boolean)
+                    .join(' / ') || null;
             }
 
             // Geben Sie ein sauberes Objekt zurück, das nur das Nötigste enthält.
