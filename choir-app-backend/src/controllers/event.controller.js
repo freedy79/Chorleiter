@@ -765,3 +765,6 @@ exports.recalculatePieceStatuses = async (req, res) => {
         `);
     res.status(200).send({ message: 'Piece statuses recalculated.' });
 };
+
+// Shared with the MCP write flow so both paths derive repertoire status identically.
+exports.autoUpdatePieceStatuses = autoUpdatePieceStatuses;

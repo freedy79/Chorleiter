@@ -48,6 +48,7 @@ const feedbackRoutes = require('./feedback.routes');
 const referralRoutes = require('./referral.routes');
 const personalAddressBookRoutes = require('./personalAddressBook.routes');
 const choirApiTokenRoutes = require('./choirApiToken.routes');
+const mcpRoutes = require('./mcp.routes');
 
 const routeDefinitions = [
     ['/api/auth', authRoutes],
@@ -105,6 +106,12 @@ function registerRoutes(app) {
     routeDefinitions.forEach(([path, router]) => {
         app.use(path, router);
     });
+
+    // Mounted outside /api on purpose: MCP clients authenticate with a choir API
+    // token instead of a session cookie, so the CSRF guard must not apply.
+    if (String(process.env.MCP_ENABLED ?? 'true').toLowerCase() !== 'false') {
+        app.use('/mcp', mcpRoutes);
+    }
 
     // Special mount that directly binds endpoints to app
     doubletteRoutes(app);
