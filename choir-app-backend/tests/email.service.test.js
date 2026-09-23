@@ -33,6 +33,21 @@ const db = require('../src/models');
       await emailService2.sendInvitationMail('tester@example.com', 'tok', 'Choir', new Date(), undefined, 'Invitor', undefined);
       assert.ok(capturedOptions.at(-1).html.includes('tester tester'), 'Fallback to email prefix failed');
 
+      // Template and footer must both resolve the legacy choirname alias to {{choir}}
+      capturedOptions = [];
+      await emailService2.sendTemplateMail(
+        'invite',
+        'tester@example.com',
+        { choirname: 'Aliaschor', link: 'https://example.com' },
+        undefined,
+        {},
+        { subject: 'Einladung {{choir}}', body: '<p>{{choir}}</p>' }
+      );
+      assert.strictEqual(capturedOptions.at(-1).subject, 'Einladung Aliaschor', 'Choir alias missing in subject');
+      assert.ok(capturedOptions.at(-1).html.includes('<p>Aliaschor</p>'), 'Choir alias missing in body');
+      assert.ok(capturedOptions.at(-1).html.includes('im Chor <strong>Aliaschor</strong>'), 'Choir alias missing in footer');
+      assert.ok(!capturedOptions.at(-1).html.includes('{{choir}}'), 'Choir placeholder remained unresolved');
+
       // Test that first_name does not fall back to surname when only surname is provided
       capturedOptions = [];
       await db.mail_template.create({ type: 'reset', subject: '', body: 'Hallo {{first_name}} {{surname}}' });

@@ -11,6 +11,16 @@ const { replacePlaceholders, buildTemplate } = require('../src/services/emailTem
       assert.ok(replaced.includes('<a href="http://example.com">http://example.com</a>'));
     }
 
+    const aliases = replacePlaceholders(
+      '{{choir}}|{{CHOIR}}|{{choir_name}}|{{copy_number}}|{{demo-link-html}}|{{missing}}',
+      'demo',
+      { choirname: 'Testchor', copyNumber: 12, link: 'https://example.com' }
+    );
+    assert.strictEqual(
+      aliases,
+      'Testchor|Testchor|Testchor|12|<a href="https://example.com">https://example.com</a>|{{missing}}'
+    );
+
     const mail = buildTemplate({ subject: 'Hi {{first_name}}', body: '<p>Use {{link}}</p>' }, 'reset', { first_name: 'Bob', link: 'http://example.com' });
     assert.strictEqual(mail.subject, 'Hi Bob');
     assert.strictEqual(mail.text.trim(), 'Use http://example.com');

@@ -109,20 +109,51 @@ const DEFAULT_TEMPLATES = {
   }
 };
 
-function replacePlaceholders(text, type, replacements) {
-  let result = text;
-  for (const [key, value] of Object.entries(replacements)) {
-    const anchor = key.toLowerCase().includes('link')
-      ? `<a href="${value}">${value}</a>`
-      : value;
-    result = result.split(`{{${key}}}`).join(value);
-    result = result.split(`{{${key}-html}}`).join(anchor);
-    if (type) {
-      result = result.split(`{{${type}-${key}}}`).join(value);
-      result = result.split(`{{${type}-${key}-html}}`).join(anchor);
+function normalizePlaceholderKey(key) {
+  return String(key).toLowerCase().replace(/[_-]/g, '');
+}
+
+function getReplacement(replacements, key, type) {
+  const candidates = [key];
+  if (type) {
+    const normalizedKey = normalizePlaceholderKey(key);
+    const normalizedType = normalizePlaceholderKey(type);
+    if (normalizedKey.startsWith(normalizedType) && normalizedKey.length > normalizedType.length) {
+      candidates.push(normalizedKey.slice(normalizedType.length));
     }
   }
-  return result;
+
+  // `{{choir}}` is the public template name. Older callers and templates
+  // also use `choirname` or `choir_name`, so treat these as aliases.
+  if (normalizePlaceholderKey(key) === 'choir') {
+    candidates.push('choir', 'choirname', 'choir_name');
+  }
+
+  const entries = Object.entries(replacements || {});
+  for (const candidate of candidates) {
+    const normalizedCandidate = normalizePlaceholderKey(candidate);
+    const entry = entries.find(([entryKey, value]) => (
+      normalizePlaceholderKey(entryKey) === normalizedCandidate && value !== undefined && value !== null
+    ));
+    if (entry) return String(entry[1]);
+  }
+
+  return undefined;
+}
+
+function replacePlaceholders(text, type, replacements = {}) {
+  if (text === undefined || text === null) return '';
+
+  return String(text).replace(/\{\{([^{}]+)\}\}/g, (match, token) => {
+    const isHtmlLink = token.toLowerCase().endsWith('-html');
+    const key = isHtmlLink ? token.slice(0, -5) : token;
+    const value = getReplacement(replacements, key, type);
+    if (value === undefined) return match;
+
+    return isHtmlLink
+      ? `<a href="${value}">${value}</a>`
+      : value;
+  });
 }
 
 function buildTemplate(template, type, replacements) {
